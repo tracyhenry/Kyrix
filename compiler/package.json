@@ -1,0 +1,27 @@
+{
+  "name": "kyrix-compiler",
+  "version": "1.0.0",
+  "description": "Compiler for compiling kyrix specs.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/tracyhenry/Kyrix"
+  },
+  "keywords": [
+    "interactive",
+    "visualization",
+    "panning",
+    "zooming",
+    "prefetching",
+    "caching"
+  ],
+  "author": "Wenbo Tao",
+  "license": "ISC",
+  "devDependencies": {},
+  "dependencies": {
+    "mysql": "^2.15.0"
+  }
+}
