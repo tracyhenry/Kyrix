@@ -1,4 +1,4 @@
-const project = require("./project/index").project;
+const Project = require("./project/index").Project;
 
-p1 = new project("helloworld", "dbconfig.txt");
+p1 = new Project("helloworld", "dbconfig.txt");
 console.log(p1);
