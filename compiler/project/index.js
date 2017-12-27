@@ -1,5 +1,6 @@
 // imports
 const fs = require("fs");
+const addCanvas = require("./addCanvas");
 
 /**
  *
@@ -17,12 +18,21 @@ function Project(name, dbFile) {
 
     // the set of canvases
     this.canvases = [];
+
+    // the set of layered canvases
+    this.layeredCanvases = [];
+
+    // a flag indicating whether this project has been saved to database
+    this.savedToDB = false;
 }
 
 // define prototype functions
-
+Project.prototype = {
+    addCanvas : addCanvas.addCanvas,
+    addLayeredCanvas : addCanvas.addLayeredCanvas
+};
 
 // exports
 module.exports = {
     Project : Project
-}
+};

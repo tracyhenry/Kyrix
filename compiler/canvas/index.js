@@ -29,7 +29,6 @@ function Canvas(id, query, placement, transform, rendering, separable)
     this.separable = separable;
 }
 
-
 /**
  * Constructor for a layered canvas.
  * @param {string} id - id of the layered canvas.
@@ -53,4 +52,4 @@ function LayeredCanvas(id, subCanvases)
 module.exports = {
     Canvas : Canvas,
     LayeredCanvas : LayeredCanvas
-}
+};
