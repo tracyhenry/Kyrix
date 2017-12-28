@@ -14,4 +14,6 @@ for (var i = 0; i < 10; i ++)
 p1.layerCanvases(["c1", "c2", "c3"]);
 p1.layerCanvases(["c5", "c0", "c9"]);
 p1.layerCanvases(["c6", "c4"]);
+p1.initialCanvas("c0", 0, 0);
+
 console.log(p1);

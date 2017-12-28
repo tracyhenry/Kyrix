@@ -2,7 +2,8 @@
 const fs = require("fs");
 const addCanvas = require("./addCanvas");
 const layerCanvases = require("./layerCanvases");
-const saveToDB = require("./saveToDB");
+const initialCanvas = require("./initialCanvas");
+const saveToDb = require("./saveToDb");
 
 /**
  *
@@ -30,7 +31,7 @@ function Project(name, dbFile, viewportWidth, viewportHeight) {
     this.layeredCanvases = [];
 
     // initial viewport, canvas
-    this.initialCanvasID = "";
+    this.initialCanvasId = "";
     this.initialViewportX = 0;
     this.initialViewportY = 0;
 }
@@ -38,7 +39,8 @@ function Project(name, dbFile, viewportWidth, viewportHeight) {
 // define prototype functions
 Project.prototype = {
     addCanvas : addCanvas.addCanvas,
-    layerCanvases : layerCanvases.layerCanvases
+    layerCanvases : layerCanvases.layerCanvases,
+    initialCanvas : initialCanvas.initialCanvas
 };
 
 // exports
