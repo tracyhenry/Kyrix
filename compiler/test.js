@@ -16,4 +16,5 @@ p1.layerCanvases(["c5", "c0", "c9"]);
 p1.layerCanvases(["c6", "c4"]);
 p1.initialCanvas("c0", 0, 0);
 
+p1.addJump("c1", "c2", rendering, transform);
 console.log(p1);

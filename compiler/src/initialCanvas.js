@@ -25,6 +25,7 @@ function initialCanvas(id, viewportX, viewportY) {
     this.initialViewportY = viewportY;
 }
 
+
 module.exports = {
   initialCanvas : initialCanvas
 };

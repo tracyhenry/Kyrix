@@ -1,6 +1,7 @@
 // imports
 const fs = require("fs");
 const addCanvas = require("./addCanvas");
+const addJump = require("./addJump");
 const layerCanvases = require("./layerCanvases");
 const initialCanvas = require("./initialCanvas");
 const saveToDb = require("./saveToDb");
@@ -30,6 +31,9 @@ function Project(name, dbFile, viewportWidth, viewportHeight) {
     // the set of layered canvases
     this.layeredCanvases = [];
 
+    // the set of jump transitions
+    this.jumps = [];
+
     // initial viewport, canvas
     this.initialCanvasId = "";
     this.initialViewportX = 0;
@@ -39,6 +43,7 @@ function Project(name, dbFile, viewportWidth, viewportHeight) {
 // define prototype functions
 Project.prototype = {
     addCanvas : addCanvas.addCanvas,
+    addJump : addJump.addJump,
     layerCanvases : layerCanvases.layerCanvases,
     initialCanvas : initialCanvas.initialCanvas
 };
