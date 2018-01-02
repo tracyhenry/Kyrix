@@ -45,7 +45,8 @@ Project.prototype = {
     addCanvas : addCanvas.addCanvas,
     addJump : addJump.addJump,
     layerCanvases : layerCanvases.layerCanvases,
-    initialCanvas : initialCanvas.initialCanvas
+    initialCanvas : initialCanvas.initialCanvas,
+    saveToDb : saveToDb.saveToDb
 };
 
 // exports

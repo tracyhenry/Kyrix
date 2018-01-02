@@ -17,4 +17,4 @@ p1.layerCanvases(["c6", "c4"]);
 p1.initialCanvas("c0", 0, 0);
 
 p1.addJump("c1", "c2", rendering, transform);
-console.log(p1);
+p1.saveToDb();
