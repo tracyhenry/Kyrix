@@ -16,13 +16,22 @@ public class IndexHandler implements HttpHandler {
 	@Override
 	public void handle(HttpExchange httpExchange) throws IOException {
 
+		System.out.println("Serving /");
+
+		// check if it is GET request
+		if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
+			httpExchange.sendResponseHeaders(HttpsURLConnection.HTTP_BAD_METHOD, 0);
+			httpExchange.close();
+			return;
+		}
+
 		// read the frontend file and return
 		FileReader fr = new FileReader("../front-end/index.html");
 		BufferedReader br = new BufferedReader(fr);
 		StringBuilder content = new StringBuilder(1024);
 		String s;
 		while((s = br.readLine())!=null)
-			content.append(s);
+			content.append(s + "\n");
 		byte[] byteContent = content.toString().getBytes();
 
 		// send back a ok response

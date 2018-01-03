@@ -132,5 +132,4 @@ modules.xml
 
 ################# Kyrix-specific #################
 dbconfig.txt
-
-
+serverconfig.txt
