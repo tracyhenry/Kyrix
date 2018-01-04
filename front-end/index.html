@@ -5,10 +5,13 @@
     <script src = "https://d3js.org/d3.v4.min.js"></script>
 
     <script>
+        var project;
+
         function pageOnLoad() {
             // send the first request to backend server
             $.post("/first/", {}, function (data, status) {
-               alert(data);
+               project = JSON.parse(data);
+               console.log(project);
             });
         };
         $(document).ready(pageOnLoad);

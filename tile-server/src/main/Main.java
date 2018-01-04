@@ -1,6 +1,9 @@
 package main;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpServer;
+import project.Project;
 import server.FirstRequestHandler;
 import server.IndexHandler;
 import server.TileRequestHandler;
@@ -17,8 +20,9 @@ public class Main {
 
 	private static Connection dbConn = null;
 	private static String projectName, dbServer, userName, password;
-	public static String projectJSON;
+	private static String projectJSON;
 	private static int portNumber;
+	private static Project project;
 
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
@@ -28,12 +32,17 @@ public class Main {
 
 		// get project definition, create project object
 		getProjectJSON();
-		//System.out.println(projectJSON);
+		Gson gson = new GsonBuilder().create();
+		project = gson.fromJson(projectJSON, Project.class);
 
 		// precompute
 
 		// start server
 		startServer();
+	}
+
+	public static Project getProject() {
+		return project;
 	}
 
 	private static void connectDB() throws IOException, ClassNotFoundException, SQLException {

@@ -133,3 +133,6 @@ modules.xml
 ################# Kyrix-specific #################
 dbconfig.txt
 serverconfig.txt
+tile-server/lib
+.DS_Store
+test.html
