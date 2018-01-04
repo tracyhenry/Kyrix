@@ -48,7 +48,11 @@ function saveToDb()
     dbConn.query(createTableQuery, function (err) {});
 
     // turn the current project into a json blob
-    var projectJSON = JSON.stringify(this);
+    var projectJSON = JSON.stringify(this, function (key, value) {
+        if (typeof value === 'function')
+            return value.toString();
+        return value;
+    });
     console.log(projectJSON);
 
     // insert the JSON blob into the project table
