@@ -1,22 +1,80 @@
 <html>
+<body></body>
 <head>
     <script src = "https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src = "https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.min.js"></script>
     <script src = "https://d3js.org/d3.v4.min.js"></script>
 
     <script>
-        var project;
+        var project, tileW, tileH;
+        var viewportX, viewportY, canvasId;
+        var viewportWidth, viewportHeight;
+
+        function initialCanvas() {
+            var svg = d3.select("body").append("svg")
+                .attr("width", project.viewportWidth)
+                .attr("height", project.viewportHeight);
+
+            var margin = 0;
+            for (var x = viewportX; x < viewportX + viewportWidth; x += tileW)
+                for (var y = viewportY; y < viewportY + viewportHeight; y += tileH)
+                {
+                    // new svg
+                    var curSvg = svg.append("svg")
+                        .attr("x", x - viewportX + x / tileW * margin)
+                        .attr("y", y - viewportY + y / tileH * margin)
+                        .attr("width", tileW)
+                        .attr("height", tileH)
+                        .attr("viewBox", x + " " + y + " " + tileW + " " + tileH);
+                    curSvg.append("g").append("rect")
+                        .attr("x", x)
+                        .attr("y", y)
+                        .attr("width", tileW)
+                        .attr("height", tileH)
+                        .style("fill", "beige");
+
+                    // send request to backend to get render func and data
+                    $.ajax({
+                        type : "POST",
+                        url : "/tile",
+                        data : {
+                        "id" : project.initialCanvasId,
+                        "x" : x,
+                        "y" : y
+                        },
+                        success : function (data, status) {
+                            var response = JSON.parse(data);
+                            var renderData = response.renderData;
+                            var renderFuncStr = response.renderFunc;
+                            eval(renderFuncStr);
+                            render(curSvg, renderData);
+                        },
+                        async : false
+                    });
+                }
+        };
 
         function pageOnLoad() {
             // send the first request to backend server
             $.post("/first/", {}, function (data, status) {
-               project = JSON.parse(data);
-               console.log(project);
+                response = JSON.parse(data);
+                project = response.project;
+                viewportX = project.initialViewportX;
+                viewportY = project.initialViewportY;
+                viewportWidth = project.viewportWidth;
+                viewportHeight = project.viewportHeight;
+                canvasId = project.initialCanvasId;
+                tileW = response.tileW;
+                tileH = response.tileH;
+
+                console.log(response.project);
+                initialCanvas();
             });
         };
+
         $(document).ready(pageOnLoad);
+
     </script>
 
 </head>
-<body></body>
 </html>

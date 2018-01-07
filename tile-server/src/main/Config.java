@@ -6,21 +6,24 @@ package main;
 public class Config {
 
 	// config file name
-	static String configFileName = "./serverconfig.txt";
+	public static String configFileName = "./serverconfig.txt";
 
 	// config file row numbers
-	static int projectNameRow = 0;
-	static int portNumberRow = 1;
-	static int dbServerRow = 2;
-	static int userNameRow = 3;
-	static int passwordRow = 4;
+	public static int projectNameRow = 0;
+	public static int portNumberRow = 1;
+	public static int dbServerRow = 2;
+	public static int userNameRow = 3;
+	public static int passwordRow = 4;
 
 	// db name
-	static String databaseName = "Kyrix";
+	public static String databaseName = "Kyrix";
 
 	// table name
-	static String projectTableName = "project";
+	public static String projectTableName = "project";
 
 	// project content column
-	static int contentColumn = 2;
+	public static int contentColumn = 2;
+
+	// tile size
+	public static int tileW = 256, tileH = 256;
 }

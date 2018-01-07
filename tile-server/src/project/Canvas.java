@@ -1,7 +1,5 @@
 package project;
 
-import static sun.jvm.hotspot.code.CompressedStream.H;
-
 /**
  * Created by wenbo on 1/4/18.
  */
@@ -24,7 +22,7 @@ public class Canvas {
 	}
 
 	public int getH() {
-		return H;
+		return h;
 	}
 
 	public String getQuery() {

@@ -1,10 +1,21 @@
 const Project = require("./src/index").Project;
 
-p1 = new Project("helloworld", "dbconfig.txt", 1024, 768);
+p1 = new Project("demo7", "dbconfig.txt", 1000, 900);
 
 var placement = function () {};
 var transform = function () {};
-var rendering = function () {};
+var rendering = function render(svg, data) {
+    g = svg.append("g");
+    g.selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("cx", function(d) {return d[0];})
+        .attr("cy", function(d) {return d[1];})
+        .attr("r", 50)
+        .style("fill", "orange");
+};
+
 var separable = false;
 var query = "SELECT * from table;";
 

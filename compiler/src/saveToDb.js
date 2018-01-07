@@ -53,6 +53,9 @@ function saveToDb()
             return value.toString();
         return value;
     });
+
+    // add escape character to projectJSON
+    projectJSON = (projectJSON + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
     console.log(projectJSON);
 
     // insert the JSON blob into the project table
