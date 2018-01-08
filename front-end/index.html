@@ -7,18 +7,23 @@
 
     <script>
         var project, tileW, tileH;
-        var viewportX, viewportY, canvasId;
+        var viewportX, viewportY, curCanvasId, curCanvas;
         var viewportWidth, viewportHeight;
+        var canvases;
 
         function initialCanvas() {
+
             var svg = d3.select("body").append("svg")
                 .attr("width", project.viewportWidth)
                 .attr("height", project.viewportHeight);
 
+            // get current canvas by curCanvasId
+            getCurCanvas();
+
+            // process tiles
             var margin = 0;
             for (var x = viewportX; x < viewportX + viewportWidth; x += tileW)
-                for (var y = viewportY; y < viewportY + viewportHeight; y += tileH)
-                {
+                for (var y = viewportY; y < viewportY + viewportHeight; y += tileH) {
                     // new svg
                     var curSvg = svg.append("svg")
                         .attr("x", x - viewportX + x / tileW * margin)
@@ -34,19 +39,16 @@
                         .style("fill", "beige");
 
                     // send request to backend to get render func and data
+                    var postData = "id=" + project.initialCanvasId + "&"
+                        + "x=" + x + "&"
+                        + "y=" + y;
                     $.ajax({
                         type : "POST",
                         url : "/tile",
-                        data : {
-                        "id" : project.initialCanvasId,
-                        "x" : x,
-                        "y" : y
-                        },
+                        data : postData,
                         success : function (data, status) {
-                            var response = JSON.parse(data);
-                            var renderData = response.renderData;
-                            var renderFuncStr = response.renderFunc;
-                            eval(renderFuncStr);
+                            var renderData = JSON.parse(data).renderData;
+                            eval(curCanvas.rendering);
                             render(curSvg, renderData);
                         },
                         async : false
@@ -55,6 +57,7 @@
         };
 
         function pageOnLoad() {
+
             // send the first request to backend server
             $.post("/first/", {}, function (data, status) {
                 response = JSON.parse(data);
@@ -63,7 +66,8 @@
                 viewportY = project.initialViewportY;
                 viewportWidth = project.viewportWidth;
                 viewportHeight = project.viewportHeight;
-                canvasId = project.initialCanvasId;
+                curCanvasId = project.initialCanvasId;
+                canvases = project.canvases;
                 tileW = response.tileW;
                 tileH = response.tileH;
 
@@ -73,6 +77,13 @@
         };
 
         $(document).ready(pageOnLoad);
+
+        function getCurCanvas() {
+
+            for (var i = 0; i < canvases.length; i ++)
+                if (canvases[i].id === curCanvasId)
+                    curCanvas = canvases[i];
+        }
 
     </script>
 
