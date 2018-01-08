@@ -5,6 +5,8 @@ package main;
  */
 public class Config {
 
+	// front-end file name
+	public static String frontendFile = "../front-end/index.html";
 	// config file name
 	public static String configFileName = "./serverconfig.txt";
 

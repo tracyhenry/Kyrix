@@ -2,6 +2,7 @@ package server;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import main.Config;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -26,7 +27,7 @@ public class IndexHandler implements HttpHandler {
 		}
 
 		// read the frontend file and return
-		FileReader fr = new FileReader("../front-end/index.html");	//TODO: move the front-end file into the tile-server folder
+		FileReader fr = new FileReader(Config.frontendFile);	//TODO: move the front-end file into the tile-server folder
 		BufferedReader br = new BufferedReader(fr);
 		StringBuilder content = new StringBuilder(1024);
 		String s;
