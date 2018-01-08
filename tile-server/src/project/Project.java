@@ -1,6 +1,8 @@
 package project;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by wenbo on 1/4/18.
@@ -10,7 +12,15 @@ public class Project {
 	// TODO switch to maven
 	// TODO add gson dependency
 
-	// fields
+	public Project() {
+		mapInitialized = false;
+	}
+
+	// private variables
+	private boolean mapInitialized = false;
+	private Map<String, Canvas> canvasMap;
+
+	// JSON fields
 	private String name;
 	private int viewportWidth;
 	private int viewportHeight;
@@ -62,5 +72,20 @@ public class Project {
 		return name
 				+ " " + canvases.toString()
 				+ " " + layeredCanvases.toString() + "\n";
+	}
+
+	public Canvas getCanvas(String canvasId) {
+
+		if (! mapInitialized) {
+			mapInitialized = true;
+			canvasMap = new HashMap<>();
+			for (Canvas c : canvases)
+				canvasMap.put(c.getId(), c);
+		}
+
+		if (canvasMap.containsKey(canvasId))
+			return canvasMap.get(canvasId);
+		else
+			return null;
 	}
 }

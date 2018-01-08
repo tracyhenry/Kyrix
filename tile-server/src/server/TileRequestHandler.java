@@ -96,11 +96,8 @@ public class TileRequestHandler implements HttpHandler {
 
 		ArrayList<ArrayList<String>> data = new ArrayList<>();
 
-		// get the current canvas  TODO: use a map to speed up
-		Canvas curCanvas = null;
-		for (Canvas c : project.getCanvases())
-			if (c.getId().equals(canvasId))
-				curCanvas = c;
+		// get the current canvas
+		Canvas curCanvas = project.getCanvas(canvasId);
 
 		// get db connector
 		Statement stmt = DbConnector.getStmtByDbName(curCanvas.getDb());
@@ -132,11 +129,7 @@ public class TileRequestHandler implements HttpHandler {
 		int miny = Integer.valueOf(queryMap.get("y"));
 
 		// check whether this canvas exists
-		boolean exist = false;
-		for (Canvas c : project.getCanvases())
-			if (c.getId().equals(canvasId))
-				exist = true;
-		if (! exist)
+		if (project.getCanvas(canvasId) == null)
 			return "Canvas " + canvasId + " does not exist!";
 
 		// check whether x and y corresponds to the top-left corner of a tile

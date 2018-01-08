@@ -27,7 +27,7 @@ public class IndexHandler implements HttpHandler {
 		}
 
 		// read the frontend file and return
-		FileReader fr = new FileReader(Config.frontendFile);	//TODO: move the front-end file into the tile-server folder
+		FileReader fr = new FileReader(Config.frontendFile);
 		BufferedReader br = new BufferedReader(fr);
 		StringBuilder content = new StringBuilder(1024);
 		String s;

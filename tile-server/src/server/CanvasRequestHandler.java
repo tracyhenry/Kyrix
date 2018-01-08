@@ -46,11 +46,8 @@ public class CanvasRequestHandler implements HttpHandler {
 		BufferedReader br = new BufferedReader(isr);
 		String query = br.readLine();
 
-		// get the current canvas TODO: use map to retrieve
-		Canvas curCanvas = null;
-		for (Canvas c : project.getCanvases())
-			if (c.getId().equals(query))
-				curCanvas = c;
+		// get the current canvas
+		Canvas curCanvas = project.getCanvas(query);
 		if (curCanvas == null) {
 			// canvas id does not exist and send back a bad request response
 			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "canvas " + query + " does not exist.");
