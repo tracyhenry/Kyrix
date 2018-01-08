@@ -14,7 +14,6 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -28,10 +27,11 @@ import java.util.Map;
 public class TileRequestHandler implements HttpHandler {
 
 	// gson builder
-	private Gson gson;
-	private Project project;
+	private final Gson gson;
+	private final Project project;
 
 	public TileRequestHandler() {
+
 		gson = new GsonBuilder().create();
 		project = Main.getProject();
 	}
@@ -50,8 +50,7 @@ public class TileRequestHandler implements HttpHandler {
 
 		// check if this is a POST request
 		if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
-			httpExchange.sendResponseHeaders(HttpsURLConnection.HTTP_BAD_METHOD, 0);
-			httpExchange.close();
+			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
 			return;
 		}
 
@@ -59,7 +58,7 @@ public class TileRequestHandler implements HttpHandler {
 		InputStreamReader isr =  new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
 		BufferedReader br = new BufferedReader(isr);
 		String query = br.readLine();
-		Map<String, String> queryMap = queryToMap(query);
+		Map<String, String> queryMap = Server.queryToMap(query);
 		// print
 		for (String s : queryMap.keySet())
 			System.out.println(s + " : " + queryMap.get(s));
@@ -69,7 +68,7 @@ public class TileRequestHandler implements HttpHandler {
 		// check parameters, if not pass, send a bad request response
 		response = checkParameters(queryMap);
 		if (response.length() > 0) {
-			sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, response);
+			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, response);
 			return;
 		}
 
@@ -89,7 +88,7 @@ public class TileRequestHandler implements HttpHandler {
 		response = gson.toJson(respMap);
 
 		// send back response
-		sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
+		Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
 	}
 
 	// get a tile
@@ -146,32 +145,5 @@ public class TileRequestHandler implements HttpHandler {
 
 		// check passed
 		return "";
-	}
-
-	// send response
-	private void sendResponse(HttpExchange httpExchange, int responseCode, String response) throws IOException {
-
-		// write response
-		httpExchange.sendResponseHeaders(responseCode, response.getBytes().length);
-		OutputStream os = httpExchange.getResponseBody();
-		os.write(response.getBytes());
-		os.close();
-	}
-
-	// https://stackoverflow.com/questions/11640025/how-to-obtain-the-query-string-in-a-get-with-java-httpserver-httpexchange
-	private Map<String, String> queryToMap(String query) {
-
-		Map<String, String> result = new HashMap<>();
-		// check if query is null
-		if (query == null)
-			return result;
-		for (String param : query.split("&")) {
-			String pair[] = param.split("=");
-			if (pair.length>1)
-				result.put(pair[0], pair[1]);
-			else
-				result.put(pair[0], "");
-		}
-		return result;
 	}
 }

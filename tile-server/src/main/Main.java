@@ -2,17 +2,12 @@ package main;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.net.httpserver.HttpServer;
 import project.Project;
-import server.FirstRequestHandler;
-import server.IndexHandler;
-import server.TileRequestHandler;
+import server.*;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +36,7 @@ public class Main {
 		// precompute
 
 		// start server
-		startServer();
+		Server.startServer(portNumber);
 	}
 
 	public static Project getProject() {
@@ -84,15 +79,5 @@ public class Main {
 		ResultSet rs = stmt.executeQuery(sql);
 		while (rs.next())
 			projectJSON = rs.getString(Config.contentColumn);
-	}
-
-	private static void startServer() throws IOException {
-
-		HttpServer server = HttpServer.create(new InetSocketAddress(portNumber), 0);
-		server.createContext("/", new IndexHandler());
-		server.createContext("/first", new FirstRequestHandler());
-		server.createContext("/tile", new TileRequestHandler());
-		server.setExecutor(null); // TODO: the default executor is not parallel
-		server.start();
 	}
 }

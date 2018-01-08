@@ -13,6 +13,7 @@ import java.io.OutputStream;
  * Created by wenbo on 1/2/18.
  */
 public class IndexHandler implements HttpHandler {
+
 	@Override
 	public void handle(HttpExchange httpExchange) throws IOException {
 
@@ -20,8 +21,7 @@ public class IndexHandler implements HttpHandler {
 
 		// check if it is GET request
 		if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
-			httpExchange.sendResponseHeaders(HttpsURLConnection.HTTP_BAD_METHOD, 0);
-			httpExchange.close();
+			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
 			return;
 		}
 

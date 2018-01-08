@@ -21,7 +21,7 @@ import java.util.Map;
 public class FirstRequestHandler implements HttpHandler {
 
 	// gson builder
-	private Gson gson;
+	private final Gson gson;
 
 	public FirstRequestHandler() {
 		gson = new GsonBuilder().create();
@@ -34,8 +34,7 @@ public class FirstRequestHandler implements HttpHandler {
 
 		// check if this is a POST request
 		if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
-			httpExchange.sendResponseHeaders(HttpsURLConnection.HTTP_BAD_METHOD, 0);
-			httpExchange.close();
+			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
 			return;
 		}
 
@@ -44,7 +43,11 @@ public class FirstRequestHandler implements HttpHandler {
 
 		// construct a response map
 		Map<String, Object> respMap = new HashMap<>();
-		respMap.put("project", project);
+		respMap.put("initialViewportX", project.getInitialViewportX());
+		respMap.put("initialViewportY", project.getInitialViewportY());
+		respMap.put("viewportWidth", project.getViewportWidth());
+		respMap.put("viewportHeight", project.getViewportHeight());
+		respMap.put("initialCanvasId", project.getInitialCanvasId());
 		respMap.put("tileH", Config.tileH);
 		respMap.put("tileW", Config.tileW);
 

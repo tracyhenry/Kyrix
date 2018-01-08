@@ -6,19 +6,19 @@
     <script src = "https://d3js.org/d3.v4.min.js"></script>
 
     <script>
-        var project, tileW, tileH;
+        var tileW, tileH;
         var viewportX, viewportY, curCanvasId, curCanvas;
         var viewportWidth, viewportHeight;
-        var canvases;
 
         function initialCanvas() {
 
             var svg = d3.select("body").append("svg")
-                .attr("width", project.viewportWidth)
-                .attr("height", project.viewportHeight);
+                .attr("width", viewportWidth)
+                .attr("height", viewportHeight);
 
-            // get current canvas by curCanvasId
+            // get the current canvas
             getCurCanvas();
+            console.log(curCanvas);
 
             // process tiles
             var margin = 0;
@@ -39,7 +39,7 @@
                         .style("fill", "beige");
 
                     // send request to backend to get render func and data
-                    var postData = "id=" + project.initialCanvasId + "&"
+                    var postData = "id=" + curCanvasId + "&"
                         + "x=" + x + "&"
                         + "y=" + y;
                     $.ajax({
@@ -61,17 +61,14 @@
             // send the first request to backend server
             $.post("/first/", {}, function (data, status) {
                 response = JSON.parse(data);
-                project = response.project;
-                viewportX = project.initialViewportX;
-                viewportY = project.initialViewportY;
-                viewportWidth = project.viewportWidth;
-                viewportHeight = project.viewportHeight;
-                curCanvasId = project.initialCanvasId;
-                canvases = project.canvases;
+                console.log(response);
+                viewportX = response.initialViewportX;
+                viewportY = response.initialViewportY;
+                viewportWidth = response.viewportWidth;
+                viewportHeight = response.viewportHeight;
+                curCanvasId = response.initialCanvasId;
                 tileW = response.tileW;
                 tileH = response.tileH;
-
-                console.log(response.project);
                 initialCanvas();
             });
         };
@@ -80,9 +77,16 @@
 
         function getCurCanvas() {
 
-            for (var i = 0; i < canvases.length; i ++)
-                if (canvases[i].id === curCanvasId)
-                    curCanvas = canvases[i];
+            // TODO: client cache
+            $.ajax({
+                type : "POST",
+                url : "canvas",
+                data : curCanvasId,
+                success : function (data, status) {
+                    curCanvas = JSON.parse(data).canvas;
+                },
+                async : false
+            });
         }
 
     </script>
