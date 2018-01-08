@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import main.Config;
+import main.DbConnector;
 import main.Main;
 import project.Canvas;
 import project.Project;
@@ -14,10 +15,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 /**
  * Created by wenbo on 1/2/18.
@@ -26,24 +29,11 @@ public class TileRequestHandler implements HttpHandler {
 
 	// gson builder
 	private Gson gson;
-	private String response;
 	private Project project;
-	private ArrayList<ArrayList<Integer>> data;
-	private String canvasId;
-	private int minx, miny;
 
 	public TileRequestHandler() {
 		gson = new GsonBuilder().create();
 		project = Main.getProject();
-		Random rand = new Random();
-		data = new ArrayList<>();
-		for (int i = 0; i < 20; i ++)
-		{
-			ArrayList<Integer> curList = new ArrayList<>();
-			curList.add(rand.nextInt(800));
-			curList.add(rand.nextInt(800));
-			data.add(curList);
-		}
 	}
 
 	@Override
@@ -51,6 +41,12 @@ public class TileRequestHandler implements HttpHandler {
 
 		// TODO: this method should be thread safe, allowing concurrent requests
 		System.out.println("Serving /tile");
+
+		// variable definitions;
+		String response;
+		String canvasId;
+		int minx, miny;
+		ArrayList<ArrayList<String>> data = null;
 
 		// check if this is a POST request
 		if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
@@ -70,14 +66,22 @@ public class TileRequestHandler implements HttpHandler {
 		System.out.println();
 
 
-		// check parameters, send a bad request response
-		if (! checkParameters(queryMap)) {
-			sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST);
+		// check parameters, if not pass, send a bad request response
+		response = checkParameters(queryMap);
+		if (response.length() > 0) {
+			sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, response);
 			return;
 		}
 
 		// get data
-		getData();
+		canvasId = queryMap.get("id");
+		minx = Integer.valueOf(queryMap.get("x"));
+		miny = Integer.valueOf(queryMap.get("y"));
+		try {
+			data = getData(canvasId, minx, miny);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		// construct response
 		Map<String, Object> respMap = new HashMap<>();
@@ -85,54 +89,67 @@ public class TileRequestHandler implements HttpHandler {
 		response = gson.toJson(respMap);
 
 		// send back response
-		sendResponse(httpExchange, HttpsURLConnection.HTTP_OK);
+		sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
 	}
 
-	// get data
-	private void getData() {
+	// get a tile
+	private ArrayList<ArrayList<String>> getData(String canvasId, int minx, int miny) throws SQLException, ClassNotFoundException {
 
+		ArrayList<ArrayList<String>> data = new ArrayList<>();
+
+		// get the current canvas  TODO: use a map to speed up
+		Canvas curCanvas = null;
+		for (Canvas c : project.getCanvases())
+			if (c.getId().equals(canvasId))
+				curCanvas = c;
+
+		// get db connector
+		Statement stmt = DbConnector.getStmtByDbName(curCanvas.getDb());
+
+		// run query
+		ResultSet rs = stmt.executeQuery(curCanvas.getQuery());
+		int numColumn = rs.getMetaData().getColumnCount();
+		while (rs.next()) {
+			ArrayList<String> curRow = new ArrayList<>();
+			for (int i = 1; i <= numColumn; i ++)
+				curRow.add(rs.getString(i));
+			data.add(curRow);
+		}
+
+		return data;
 	}
 
-	// check paramters, also assign fields minx, miny and canvasId
-	private boolean checkParameters(Map<String, String> queryMap) {
+	// check paramters
+	private String checkParameters(Map<String, String> queryMap) {
 
 		// check fields
-		if (! queryMap.containsKey("id")) {
-			response = "canvas id missing.";
-			return false;
-		}
-		if (! queryMap.containsKey("x") || ! queryMap.containsKey("y")) {
-			response = "x or y missing.";
-			return false;
-		}
+		if (! queryMap.containsKey("id"))
+			return "canvas id missing.";
+		if (! queryMap.containsKey("x") || ! queryMap.containsKey("y"))
+			return "x or y missing.";
 
-		// assign fields
-		canvasId = queryMap.get("id");
-		minx = Integer.valueOf(queryMap.get("x"));
-		miny = Integer.valueOf(queryMap.get("y"));
+		String canvasId = queryMap.get("id");
+		int minx = Integer.valueOf(queryMap.get("x"));
+		int miny = Integer.valueOf(queryMap.get("y"));
 
 		// check whether this canvas exists
 		boolean exist = false;
 		for (Canvas c : project.getCanvases())
 			if (c.getId().equals(canvasId))
 				exist = true;
-		if (! exist) {
-			response = "Canvas " + canvasId + " does not exist!";
-			return false;
-		}
+		if (! exist)
+			return "Canvas " + canvasId + " does not exist!";
 
 		// check whether x and y corresponds to the top-left corner of a tile
-		if (minx % Config.tileW != 0 || miny % Config.tileH != 0) {
-			response = "x and y must be a multiple of tile size!";
-			return false;
-		}
+		if (minx % Config.tileW != 0 || miny % Config.tileH != 0)
+			return "x and y must be a multiple of tile size!";
 
 		// check passed
-		return true;
+		return "";
 	}
 
 	// send response
-	private void sendResponse(HttpExchange httpExchange, int responseCode) throws IOException {
+	private void sendResponse(HttpExchange httpExchange, int responseCode, String response) throws IOException {
 
 		// write response
 		httpExchange.sendResponseHeaders(responseCode, response.getBytes().length);

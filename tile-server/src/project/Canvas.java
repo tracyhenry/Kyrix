@@ -8,6 +8,7 @@ public class Canvas {
 	private int w;
 	private int h;
 	private String query;
+	private String db;
 	private String placement;
 	private String transform;
 	private String rendering;
@@ -27,6 +28,10 @@ public class Canvas {
 
 	public String getQuery() {
 		return query;
+	}
+
+	public String getDb() {
+		return db;
 	}
 
 	public String getPlacement() {

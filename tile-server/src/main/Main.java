@@ -9,6 +9,7 @@ import server.IndexHandler;
 import server.TileRequestHandler;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -18,8 +19,10 @@ import java.util.List;
 
 public class Main {
 
-	private static Connection dbConn = null;
-	private static String projectName, dbServer, userName, password;
+	private static String projectName;
+	private static String dbServer;
+	private static String userName;
+	private static String password;
 	private static String projectJSON;
 	private static int portNumber;
 	private static Project project;
@@ -27,8 +30,8 @@ public class Main {
 
 	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
 
-		// connect to db
-		connectDB();
+		// read config file
+		readConfigFile();
 
 		// get project definition, create project object
 		getProjectJSON();
@@ -45,7 +48,19 @@ public class Main {
 		return project;
 	}
 
-	private static void connectDB() throws IOException, ClassNotFoundException, SQLException {
+	public static String getDbServer() {
+		return dbServer;
+	}
+
+	public static String getUserName() {
+		return userName;
+	}
+
+	public static String getPassword() {
+		return password;
+	}
+
+	private static void readConfigFile() throws IOException {
 
 		// read config file
 		BufferedReader br = new BufferedReader(new FileReader(Config.configFileName));
@@ -60,22 +75,19 @@ public class Main {
 		userName = inputStrings.get(Config.userNameRow);
 		password = inputStrings.get(Config.passwordRow);
 
-		// connect db
-		Class.forName("com.mysql.jdbc.Driver");
-		dbConn = DriverManager.getConnection("jdbc:mysql://" + dbServer +
-						"/" + Config.databaseName + "?useUnicode=true&characterEncoding=gbk&jdbcCompliantTruncation=false",
-				userName, password);
 	}
 
-	private static void getProjectJSON() throws SQLException {
+	private static void getProjectJSON() throws SQLException, ClassNotFoundException {
+
 		String sql = "SELECT * FROM " + Config.projectTableName + " WHERE name = \"" + projectName + "\";";
-		Statement stmt = dbConn.createStatement();
+		Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
 		ResultSet rs = stmt.executeQuery(sql);
 		while (rs.next())
 			projectJSON = rs.getString(Config.contentColumn);
 	}
 
 	private static void startServer() throws IOException {
+
 		HttpServer server = HttpServer.create(new InetSocketAddress(portNumber), 0);
 		server.createContext("/", new IndexHandler());
 		server.createContext("/first", new FirstRequestHandler());
