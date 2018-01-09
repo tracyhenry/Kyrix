@@ -85,6 +85,8 @@ public class TileRequestHandler implements HttpHandler {
 		// construct response
 		Map<String, Object> respMap = new HashMap<>();
 		respMap.put("renderData", data);
+		respMap.put("minx", minx);
+		respMap.put("miny", miny);
 		response = gson.toJson(respMap);
 
 		// send back response

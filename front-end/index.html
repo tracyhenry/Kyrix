@@ -34,16 +34,22 @@
 
             // process tiles
             var margin = 0;
+            var svgs= new Array(Math.floor(viewportWidth / tileW + (viewportWidth % tileW > 0 ? 1 : 0)));
+            for (var i = 0; i < svgs.length; i ++)
+                svgs[i] = new Array(Math.floor(viewportHeight / tileH + (viewportHeight % tileH > 0 ? 1 : 0)));
             for (var x = viewportX; x < viewportX + viewportWidth; x += tileW)
                 for (var y = viewportY; y < viewportY + viewportHeight; y += tileH) {
-                    // new svg
-                    var curSvg = svg.append("svg")
+                    // get i, j
+                    var i = (x - viewportX) / tileW;
+                    var j = (y - viewportY) / tileH;
+
+                    svgs[i][j] = svg.append("svg")
                         .attr("x", x - viewportX + x / tileW * margin)
                         .attr("y", y - viewportY + y / tileH * margin)
                         .attr("width", tileW)
                         .attr("height", tileH)
                         .attr("viewBox", x + " " + y + " " + tileW + " " + tileH);
-                    curSvg.append("g").append("rect")
+                    svgs[i][j].append("g").append("rect")
                         .attr("x", x)
                         .attr("y", y)
                         .attr("width", tileW)
@@ -54,15 +60,14 @@
                     var postData = "id=" + curCanvasId + "&"
                         + "x=" + x + "&"
                         + "y=" + y;
-                    $.ajax({
-                        type : "POST",
-                        url : "/tile",
-                        data : postData,
-                        success : function (data, status) {
-                            var renderData = JSON.parse(data).renderData;
-                            renderFunc(curSvg, renderData);
-                        },
-                        async : false
+                    $.post("/tile", postData, function (data, status) {
+                        var response = JSON.parse(data);
+                        var renderData = response.renderData;
+                        var x = response.minx;
+                        var y = response.miny;
+                        var i = Math.floor((x - viewportX) / tileW);
+                        var j = Math.floor((y - viewportY) / tileH);
+                        renderFunc(svgs[i][j], renderData);
                     });
                 }
         };

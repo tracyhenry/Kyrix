@@ -22,7 +22,6 @@ public class Main {
 	private static int portNumber;
 	private static Project project;
 
-
 	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
 
 		// read config file
