@@ -10,15 +10,27 @@
         var viewportX, viewportY, curCanvasId, curCanvas;
         var viewportWidth, viewportHeight;
 
+        if (typeof String.prototype.parseFunction != 'function') {
+            String.prototype.parseFunction = function () {
+                var funcReg = /function *[^()]*\(([^()]*)\)[ \n\t]*\{(.*)\}/gmi;
+                var match = funcReg.exec(this.replace(/\n/g, ' '));
+                if(match)
+                    return new Function(match[1].split(','), match[2]);
+                else
+                    return null;
+            };
+        }
+
         function initialCanvas() {
 
             var svg = d3.select("body").append("svg")
                 .attr("width", viewportWidth)
                 .attr("height", viewportHeight);
 
-            // get the current canvas
+            // get the current canvas and rendering function
             getCurCanvas();
             console.log(curCanvas);
+            var renderFunc = curCanvas.rendering.parseFunction();
 
             // process tiles
             var margin = 0;
@@ -48,8 +60,7 @@
                         data : postData,
                         success : function (data, status) {
                             var renderData = JSON.parse(data).renderData;
-                            eval(curCanvas.rendering);
-                            render(curSvg, renderData);
+                            renderFunc(curSvg, renderData);
                         },
                         async : false
                     });
