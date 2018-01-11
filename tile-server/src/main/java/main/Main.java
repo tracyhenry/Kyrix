@@ -3,7 +3,7 @@ package main;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import project.Project;
-import server.*;
+import server.Server;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
