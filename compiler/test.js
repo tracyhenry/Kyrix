@@ -4,16 +4,21 @@ const d3 = require("d3");
 p1 = new Project("demo", "dbconfig.txt", 1000, 900);
 
 var placement = {};
-placement.centroid_x = d3.scaleLinear().domain([0, 1000000]).range([0, 1023]);
-placement.centroid_y = d3.scaleLinear().domain([0, 1000000]).range([0, 1023]);
-placement.width = function () {return 50; };
-placement.height = function () {return 50; };
+placement.centroid_x = function (row) {
+    return d3.scaleLinear().domain([0, 1000000]).range([0, 1023])(row[0]);
+};
+
+placement.centroid_y = function (row) {
+    return d3.scaleLinear().domain([0, 1000000]).range([0, 1023])(row[0]);
+};
+
+placement.width = function (row) {return 50; };
+placement.height = function (row) {return 50; };
 
 placement.cx_col = "x";
 placement.cy_col = "y";
 placement.width_col = "";
 placement.height_col = "";
-
 
 
 var transform = function () {};
