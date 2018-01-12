@@ -9,9 +9,6 @@ import java.util.Map;
  */
 public class Project {
 
-	// TODO switch to maven
-	// TODO add gson dependency
-
 	public Project() {
 		mapInitialized = false;
 	}

@@ -31,8 +31,19 @@ function addCanvas(id, w, h, query, db, placement, transform, rendering, separab
         throw new Error("Adding canvas: w must be an integer.");
     if (typeof h !== "number")
         throw new Error("Adding canvas: h must be an integer.");
-    if (typeof placement !== "function")
-        throw new Error("Adding canvas: placement must be a javascript function.");
+    if (! ('centroid_x' in placement) ||
+    ! ('centroid_y' in placement) ||
+    ! ('width' in placement) ||
+    ! ('height' in placement) ||
+    ! ('cx_col' in placement) ||
+    ! ('cy_col' in placement) ||
+    ! ('width_col' in placement) ||
+    ! ('height_col' in placement) ||
+    typeof placement.centroid_x !== "function" ||
+    typeof placement.centroid_y !== "function" ||
+    typeof placement.width !== "function" ||
+    typeof placement.height !== "function")
+        throw new Error("Adding canvas: malformed placement object.");
     if (typeof transform !== "function")
         throw new Error("Adding canvas: transform must be a javascript function.");
     if (typeof rendering !== "function")

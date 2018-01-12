@@ -1,8 +1,21 @@
 const Project = require("./src/index").Project;
+const d3 = require("d3");
 
 p1 = new Project("demo", "dbconfig.txt", 1000, 900);
 
-var placement = function () {};
+var placement = {};
+placement.centroid_x = d3.scaleLinear().domain([0, 1000000]).range([0, 1023]);
+placement.centroid_y = d3.scaleLinear().domain([0, 1000000]).range([0, 1023]);
+placement.width = function () {return 50; };
+placement.height = function () {return 50; };
+
+placement.cx_col = "x";
+placement.cy_col = "y";
+placement.width_col = "";
+placement.height_col = "";
+
+
+
 var transform = function () {};
 var rendering = function render(svg, data) {
     g = svg.append("g");

@@ -35,5 +35,10 @@
             <version>5.1.40</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.eclipsesource.j2v8</groupId>
+            <artifactId>j2v8_macosx_x86_64</artifactId>
+            <version>2.2.1</version>
+        </dependency>
     </dependencies>
 </project>
