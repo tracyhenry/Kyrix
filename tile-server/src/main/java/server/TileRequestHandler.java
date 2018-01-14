@@ -102,10 +102,18 @@ public class TileRequestHandler implements HttpHandler {
 		Canvas curCanvas = project.getCanvas(canvasId);
 
 		// get db connector
-		Statement stmt = DbConnector.getStmtByDbName(curCanvas.getDb());
+		Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
+
+		// construct range query
+		String sql = "select * from bbox_" + curCanvas.getId() + " where "
+				+ "minx <= " + (minx + Config.tileW) + " and "
+				+ "maxx >= " + minx + " and "
+				+ "miny <= " + (miny + Config.tileH) + " and "
+				+ "maxy >= " + miny + ";";
+		System.out.println(minx + " " + miny + " : " + sql);
 
 		// run query
-		ResultSet rs = stmt.executeQuery(curCanvas.getQuery());
+		ResultSet rs = stmt.executeQuery(sql);
 		int numColumn = rs.getMetaData().getColumnCount();
 		while (rs.next()) {
 			ArrayList<String> curRow = new ArrayList<>();

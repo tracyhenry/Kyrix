@@ -12,8 +12,8 @@ placement.centroid_y = function (row) {
     return d3.scaleLinear().domain([0, 1000000]).range([0, 1023])(row[0]);
 };
 
-placement.width = function (row) {return 50; };
-placement.height = function (row) {return 50; };
+placement.width = function (row) {return 101; };
+placement.height = function (row) {return 101; };
 
 placement.cx_col = "x";
 placement.cy_col = "y";
