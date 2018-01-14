@@ -124,19 +124,15 @@ public class PlacementNaiveIndexer extends Indexer {
 				ArrayList<Double> curBbox = new ArrayList<>();
 				curBbox.add(centroid_xs[i]);	// cx
 				curBbox.add(centroid_ys[i]);	// cy
-				curBbox.add(centroid_xs[i] - widths[i]);	// top-left x
-				curBbox.add(centroid_ys[i] - heights[i]);	// top-left y
-				curBbox.add(centroid_xs[i] + widths[i]);	// top-right x
-				curBbox.add(centroid_ys[i] - heights[i]);	// top-right y
-				curBbox.add(centroid_xs[i] - widths[i]);	// bottom-left x
-				curBbox.add(centroid_ys[i] + heights[i]);	// bottom-left y
-				curBbox.add(centroid_xs[i] + widths[i]);	// bottom-right x
-				curBbox.add(centroid_ys[i] + heights[i]);	// bottom-right y
+				curBbox.add(centroid_xs[i] - widths[i] / 2.0);	// min x
+				curBbox.add(centroid_ys[i] - heights[i] / 2.0);	// min y
+				curBbox.add(centroid_xs[i] + widths[i] / 2.0);	// max x
+				curBbox.add(centroid_ys[i] + heights[i] / 2.0);	// max y
 				bboxes.add(curBbox);
 			}
 
 			// step 3: create a new table storing the tuple 2D array
-			// and index on the last 10 columns
+			// and index on the last 4 columns
 
 			// drop table if exists
 			String sql = "drop table if exists " + "bbox_" + c.getId() + ";";
@@ -146,8 +142,7 @@ public class PlacementNaiveIndexer extends Indexer {
 			sql = "create table bbox_" + c.getId() + " (";
 			for (int i = 1; i <= numColumn; i ++)
 				sql += metaData.getColumnName(i) + " text, ";
-			sql += "cx double, cy double, topleftx double, toplefty double, toprightx double, toprighty double, "
-					+ "bottomleftx double, bottomlefty double, bottomrightx double, bottomrighty double);";
+			sql += "cx double, cy double, minx double, miny double, maxx double, maxy double);";
 			kyrix_stmt.executeUpdate(sql);	// create table
 
 			// TODO: prepared statement here
@@ -170,8 +165,7 @@ public class PlacementNaiveIndexer extends Indexer {
 			// build index
 			try {
 				sql = "create index bbox_" + c.getId() + "_indx on bbox_" + c.getId()
-						+ "(topleftx, toplefty, toprightx, toprighty,"
-						+ "bottomleftx, bottomlefty, bottomrightx, bottomrighty);";
+						+ "(minx, miny, maxx, maxy);";
 				kyrix_stmt.executeUpdate(sql);
 			} catch (Exception e) {}
 		}
@@ -180,7 +174,7 @@ public class PlacementNaiveIndexer extends Indexer {
 	}
 
 	/**
-	 * get values for one of the 10 columns related to the bounding box
+	 * get values for one of the 6 columns related to the bounding box
 	 * @param columns the names of the columns specified by the user
 	 * @param tuples the query result of the current canvas
 	 * @param methodName the javascript method name for calculating this column
