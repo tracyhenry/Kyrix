@@ -23,13 +23,14 @@ placement.height_col = "";
 
 var transform = function () {};
 var rendering = function render(svg, data) {
+    var xyscale = d3.scaleLinear().domain([0, 1000000]).range([0, 1023]);
     g = svg.append("g");
     g.selectAll("circle")
         .data(data)
         .enter()
         .append("circle")
-        .attr("cx", function(d) {return d[1];})
-        .attr("cy", function(d) {return d[2];})
+        .attr("cx", function(d) {return xyscale(d[1]);})
+        .attr("cy", function(d) {return xyscale(d[2]);})
         .attr("r", 50)
         .style("fill", "orange");
 };

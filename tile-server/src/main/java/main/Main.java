@@ -2,9 +2,12 @@ package main;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import index.Indexer;
+import index.PlacementNaiveIndexer;
 import project.Project;
 import server.Server;
 
+import javax.script.ScriptException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,15 +17,14 @@ import java.util.List;
 
 public class Main {
 
-	private static String projectName;
-	private static String dbServer;
-	private static String userName;
-	private static String password;
-	private static String projectJSON;
-	private static int portNumber;
 	private static Project project;
+	public static String projectJSON;
 
-	public static void main(String[] args) throws IOException, ClassNotFoundException, SQLException {
+	public static void main(String[] args) throws IOException,
+			ClassNotFoundException,
+			SQLException,
+			ScriptException,
+			NoSuchMethodException {
 
 		// read config file
 		readConfigFile();
@@ -33,25 +35,15 @@ public class Main {
 		project = gson.fromJson(projectJSON, Project.class);
 
 		// precompute
+		Indexer indexer = new PlacementNaiveIndexer();
+		indexer.precompute();
 
 		// start server
-		Server.startServer(portNumber);
+		Server.startServer(Config.portNumber);
 	}
 
 	public static Project getProject() {
 		return project;
-	}
-
-	public static String getDbServer() {
-		return dbServer;
-	}
-
-	public static String getUserName() {
-		return userName;
-	}
-
-	public static String getPassword() {
-		return password;
 	}
 
 	private static void readConfigFile() throws IOException {
@@ -63,17 +55,18 @@ public class Main {
 		while ((line = br.readLine()) != null)
 			inputStrings.add(line);
 
-		projectName = inputStrings.get(Config.projectNameRow);
-		portNumber = Integer.valueOf(inputStrings.get(Config.portNumberRow));
-		dbServer = inputStrings.get(Config.dbServerRow);
-		userName = inputStrings.get(Config.userNameRow);
-		password = inputStrings.get(Config.passwordRow);
+		Config.projectName = inputStrings.get(Config.projectNameRow);
+		Config.portNumber = Integer.valueOf(inputStrings.get(Config.portNumberRow));
+		Config.dbServer = inputStrings.get(Config.dbServerRow);
+		Config.userName = inputStrings.get(Config.userNameRow);
+		Config.password = inputStrings.get(Config.passwordRow);
+		Config.d3Dir = inputStrings.get(Config.d3DirRow);
 
 	}
 
 	private static void getProjectJSON() throws SQLException, ClassNotFoundException {
 
-		String sql = "SELECT * FROM " + Config.projectTableName + " WHERE name = \"" + projectName + "\";";
+		String sql = "SELECT * FROM " + Config.projectTableName + " WHERE name = \"" + Config.projectName + "\";";
 		Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
 		ResultSet rs = stmt.executeQuery(sql);
 		while (rs.next())

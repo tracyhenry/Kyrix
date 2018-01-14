@@ -64,13 +64,6 @@ public class Project {
 		return jumps;
 	}
 
-	@Override
-	public String toString() {
-		return name
-				+ " " + canvases.toString()
-				+ " " + layeredCanvases.toString() + "\n";
-	}
-
 	public Canvas getCanvas(String canvasId) {
 
 		if (! mapInitialized) {
@@ -84,5 +77,22 @@ public class Project {
 			return canvasMap.get(canvasId);
 		else
 			return null;
+	}
+
+	@Override
+	public String toString() {
+		return "Project{" +
+				"mapInitialized=" + mapInitialized +
+				", canvasMap=" + canvasMap +
+				", name='" + name + '\'' +
+				", viewportWidth=" + viewportWidth +
+				", viewportHeight=" + viewportHeight +
+				", initialCanvasId='" + initialCanvasId + '\'' +
+				", initialViewportX=" + initialViewportX +
+				", initialViewportY=" + initialViewportY +
+				", layeredCanvases=" + layeredCanvases +
+				", canvases=" + canvases +
+				", jumps=" + jumps +
+				'}';
 	}
 }

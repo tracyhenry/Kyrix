@@ -19,7 +19,7 @@ public class DbConnector {
 
 		// create db conn and statement if not existed
 		if (! connections.containsKey(dbName)) {
-			Connection conn = getDbConn(Main.getDbServer(), dbName, Main.getUserName(), Main.getPassword());
+			Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
 			Statement stmt = conn.createStatement();
 			connections.put(dbName, conn);
 			statements.put(dbName, stmt);

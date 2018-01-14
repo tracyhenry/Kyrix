@@ -4,6 +4,7 @@ package project;
  * Created by wenbo on 1/4/18.
  */
 public class Jump {
+
 	private String sourceId;
 	private String destId;
 	private String newViewport;

@@ -4,12 +4,13 @@ package project;
  * Created by wenbo on 1/4/18.
  */
 public class Canvas {
+
 	private String id;
 	private int w;
 	private int h;
 	private String query;
 	private String db;
-	private String placement;
+	private Placement placement;
 	private String transform;
 	private String rendering;
 	private boolean separable;
@@ -34,7 +35,7 @@ public class Canvas {
 		return db;
 	}
 
-	public String getPlacement() {
+	public Placement getPlacement() {
 		return placement;
 	}
 
@@ -52,8 +53,16 @@ public class Canvas {
 
 	@Override
 	public String toString() {
-		return id
-				+ " " + query
-				+ " " + placement + "\n";
+		return "Canvas{" +
+				"id='" + id + '\'' +
+				", w=" + w +
+				", h=" + h +
+				", query='" + query + '\'' +
+				", db='" + db + '\'' +
+				", placement='" + placement + '\'' +
+				", transform='" + transform + '\'' +
+				", rendering='" + rendering + '\'' +
+				", separable=" + separable +
+				'}';
 	}
 }
