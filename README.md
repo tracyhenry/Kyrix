@@ -22,6 +22,6 @@ Install MySQL: [Mac](https://gist.github.com/nrollr/3f57fc15ded7dddddcc4e82fe137
     Three things to expect after running the spec: 
     (1) a `Kyrix` MySQL database will be created (if not existed), (2) a `project` table will be created to store the definition of the project and (3) a `tile` table will be created to store some precomputed tiles. 
 
-* Get the tile server running (see documentation in the backend repo). 
+* Get the tile server running (see documentation in `tile-server/`). 
 
 * Open the index page of the server in the browser and start browsing! 
