@@ -21,6 +21,7 @@ public class Server {
 		server.createContext("/first", new FirstRequestHandler());
 		server.createContext("/tile", new TileRequestHandler());
 		server.createContext("/canvas", new CanvasRequestHandler());
+		server.createContext("/viewport", new ViewportRequestHandler());
 		server.setExecutor(null); // TODO: the default executor is not parallel
 		server.start();
 	}
@@ -43,11 +44,8 @@ public class Server {
 		if (query == null)
 			return result;
 		for (String param : query.split("&")) {
-			String pair[] = param.split("=");
-			if (pair.length>1)
-				result.put(pair[0], pair[1]);
-			else
-				result.put(pair[0], "");
+			int pos = param.indexOf("=");
+			result.put(param.substring(0, pos), param.substring(pos + 1));
 		}
 		return result;
 	}

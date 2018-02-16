@@ -16,6 +16,7 @@ public class Project {
 	// private variables
 	private boolean mapInitialized = false;
 	private Map<String, Canvas> canvasMap;
+	private Map<String, ArrayList<Jump>> jumpMap;
 
 	// JSON fields
 	private String name;
@@ -24,6 +25,7 @@ public class Project {
 	private String initialCanvasId;
 	private int initialViewportX;
 	private int initialViewportY;
+	private String initialPredicate;
 	private ArrayList<ArrayList<String>> layeredCanvases;
 	private ArrayList<Canvas> canvases;
 	private ArrayList<Jump> jumps;
@@ -52,6 +54,10 @@ public class Project {
 		return initialViewportY;
 	}
 
+	public String getInitialPredicate() {
+		return initialPredicate;
+	}
+
 	public ArrayList<ArrayList<String>> getLayeredCanvases() {
 		return layeredCanvases;
 	}
@@ -68,9 +74,7 @@ public class Project {
 
 		if (! mapInitialized) {
 			mapInitialized = true;
-			canvasMap = new HashMap<>();
-			for (Canvas c : canvases)
-				canvasMap.put(c.getId(), c);
+			initializeMaps();
 		}
 
 		if (canvasMap.containsKey(canvasId))
@@ -79,17 +83,47 @@ public class Project {
 			return null;
 	}
 
+	public ArrayList<Jump> getJumps(String canvasId) {
+		if (! mapInitialized) {
+			mapInitialized = true;
+			initializeMaps();
+		}
+
+		if (jumpMap.containsKey(canvasId))
+			return jumpMap.get(canvasId);
+		else
+			return null;
+	}
+
+	private void initializeMaps() {
+
+		// initialize canvas map
+		canvasMap = new HashMap<>();
+		for (Canvas c : canvases)
+			canvasMap.put(c.getId(), c);
+
+		// initialize jump map
+		jumpMap = new HashMap<>();
+		for (Canvas c : canvases) {
+
+			String curCanvasId = c.getId();
+			jumpMap.put(curCanvasId, new ArrayList<Jump>());
+			for (Jump j : jumps)
+				if (j.getSourceId().equals(c.getId()))
+					jumpMap.get(curCanvasId).add(j);
+		}
+	}
+
 	@Override
 	public String toString() {
 		return "Project{" +
-				"mapInitialized=" + mapInitialized +
-				", canvasMap=" + canvasMap +
-				", name='" + name + '\'' +
+				"name='" + name + '\'' +
 				", viewportWidth=" + viewportWidth +
 				", viewportHeight=" + viewportHeight +
 				", initialCanvasId='" + initialCanvasId + '\'' +
 				", initialViewportX=" + initialViewportX +
 				", initialViewportY=" + initialViewportY +
+				", initialPredicate=" + initialPredicate +
 				", layeredCanvases=" + layeredCanvases +
 				", canvases=" + canvases +
 				", jumps=" + jumps +

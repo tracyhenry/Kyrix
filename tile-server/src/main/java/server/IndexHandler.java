@@ -33,14 +33,8 @@ public class IndexHandler implements HttpHandler {
 		String s;
 		while((s = br.readLine())!=null)
 			content.append(s + "\n");
-		byte[] byteContent = content.toString().getBytes();
 
 		// send back a ok response
-		httpExchange.sendResponseHeaders(HttpsURLConnection.HTTP_OK, byteContent.length);
-
-		// write response
-		OutputStream os = httpExchange.getResponseBody();
-		os.write(byteContent);
-		os.close();
+		Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content.toString());
 	}
 }

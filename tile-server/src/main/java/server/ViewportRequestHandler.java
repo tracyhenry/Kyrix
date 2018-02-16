@@ -22,15 +22,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by wenbo on 1/2/18.
+ * Created by wenbo on 2/14/18.
  */
-public class TileRequestHandler implements HttpHandler {
+public class ViewportRequestHandler implements HttpHandler {
 
-	// gson builder
 	private final Gson gson;
 	private final Project project;
 
-	public TileRequestHandler() {
+	public ViewportRequestHandler() {
 
 		gson = new GsonBuilder().create();
 		project = Main.getProject();
@@ -40,14 +39,13 @@ public class TileRequestHandler implements HttpHandler {
 	public void handle(HttpExchange httpExchange) throws IOException {
 
 		// TODO: this method should be thread safe, allowing concurrent requests
-		System.out.println("Serving /tile");
+		System.out.println("Serving /viewport");
 
-		// variable definitions;
+		// variable definitions
 		String response;
 		String canvasId;
-		int minx, miny;
 		String predicate;
-		ArrayList<ArrayList<String>> data = null;
+		ArrayList<String> data = null;
 
 		// check if this is a POST request
 		if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
@@ -74,32 +72,53 @@ public class TileRequestHandler implements HttpHandler {
 		}
 
 		// get data
-		canvasId = queryMap.get("id");
-		minx = Integer.valueOf(queryMap.get("x"));
-		miny = Integer.valueOf(queryMap.get("y"));
+		canvasId = queryMap.get("canvasId");
 		predicate = queryMap.get("predicate");
 		try {
-			data = getData(canvasId, minx, miny, predicate);
+			data = getData(canvasId, predicate);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
+		if (data == null)
+		{
+			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicate.");
+			return ;
+		}
+
 		// construct response
 		Map<String, Object> respMap = new HashMap<>();
-		respMap.put("renderData", data);
-		respMap.put("minx", minx);
-		respMap.put("miny", miny);
+		respMap.put("cx", data.get(0));
+		respMap.put("cy", data.get(1));
 		response = gson.toJson(respMap);
 
 		// send back response
 		Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
 	}
 
-	// get a tile
-	private ArrayList<ArrayList<String>> getData(String canvasId, int minx, int miny, String predicate)
+	private String checkParameters(Map<String, String> queryMap) {
+
+		// check fields
+		if (! queryMap.containsKey("canvasId"))
+			return "canvas id missing.";
+		if (! queryMap.containsKey("predicate"))
+			return "x or y missing.";
+
+		String canvasId = queryMap.get("canvasId");
+		String predicate = queryMap.get("predicate");
+
+		// check whether this canvas exists
+		if (project.getCanvas(canvasId) == null)
+			return "Canvas " + canvasId + " does not exist!";
+
+		// check passed
+		return "";
+	}
+
+	private ArrayList<String> getData(String canvasId, String predicate)
 			throws SQLException, ClassNotFoundException {
 
-		ArrayList<ArrayList<String>> data = new ArrayList<>();
+		ArrayList<String> data = new ArrayList<>();
 
 		// get the current canvas
 		Canvas curCanvas = project.getCanvas(canvasId);
@@ -108,51 +127,27 @@ public class TileRequestHandler implements HttpHandler {
 		Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
 
 		// construct range query
-		String sql = "select * from bbox_" + curCanvas.getId() + " where "
-				+ "minx <= " + (minx + Config.tileW) + " and "
-				+ "maxx >= " + minx + " and "
-				+ "miny <= " + (miny + Config.tileH) + " and "
-				+ "maxy >= " + miny;
-		if (predicate.length() > 0)
-			sql += " and " + predicate;
-		sql += ";";
-		System.out.println(minx + " " + miny + " : " + sql);
+		String sql = "select cx, cy from bbox_" + curCanvas.getId() + " where "
+				+ predicate + ";";
+		System.out.println(canvasId + " " + predicate + " : " + sql);
 
 		// run query
 		ResultSet rs = stmt.executeQuery(sql);
-		int numColumn = rs.getMetaData().getColumnCount();
+		int rowCount = 0;
+		String cx = "", cy = "";
 		while (rs.next()) {
-			ArrayList<String> curRow = new ArrayList<>();
-			for (int i = 1; i <= numColumn; i ++)
-				curRow.add(rs.getString(i));
-			data.add(curRow);
+			rowCount ++;
+			cx = rs.getString(1);
+			cy = rs.getString(2);
 		}
 
+		// not a predicate that uniquely determines a tuple
+		if (rowCount != 1)
+			return null;
+
+		// return cx & cy
+		data.add(cx);
+		data.add(cy);
 		return data;
-	}
-
-	// check paramters
-	private String checkParameters(Map<String, String> queryMap) {
-
-		// check fields
-		if (! queryMap.containsKey("id"))
-			return "canvas id missing.";
-		if (! queryMap.containsKey("x") || ! queryMap.containsKey("y"))
-			return "x or y missing.";
-
-		String canvasId = queryMap.get("id");
-		int minx = Integer.valueOf(queryMap.get("x"));
-		int miny = Integer.valueOf(queryMap.get("y"));
-
-		// check whether this canvas exists
-		if (project.getCanvas(canvasId) == null)
-			return "Canvas " + canvasId + " does not exist!";
-
-		// check whether x and y corresponds to the top-left corner of a tile
-		if (minx % Config.tileW != 0 || miny % Config.tileH != 0)
-			return "x and y must be a multiple of tile size!";
-
-		// check passed
-		return "";
 	}
 }

@@ -3,8 +3,9 @@
  * @param {string} id - the id of the canvas
  * @param {number} viewportX - x coordinate of the initial viewport (top left)
  * @param {number} viewportY - y coordinate of the initial viewport (top left)
+ * @param {string} predicate - the initial predicate to be added to the sql query
  */
-function initialCanvas(id, viewportX, viewportY) {
+function initialCanvas(id, viewportX, viewportY, predicate) {
     // check if this id exists
     var exist = false;
     for (var i = 0; i < this.canvases.length; i ++)
@@ -23,6 +24,7 @@ function initialCanvas(id, viewportX, viewportY) {
     this.initialCanvasId = id;
     this.initialViewportX = viewportX;
     this.initialViewportY = viewportY;
+    this.initialPredicate = predicate;
 }
 
 

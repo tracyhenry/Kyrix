@@ -32,6 +32,7 @@ public class Main {
 		// get project definition, create project object
 		getProjectJSON();
 		Gson gson = new GsonBuilder().create();
+		//System.out.println(projectJSON);
 		project = gson.fromJson(projectJSON, Project.class);
 
 		// precompute

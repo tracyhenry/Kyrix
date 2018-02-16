@@ -28,7 +28,11 @@ public class Jump {
 
 	@Override
 	public String toString() {
-		return sourceId + " " + destId;
-
+		return "Jump{" +
+				"sourceId='" + sourceId + '\'' +
+				", destId='" + destId + '\'' +
+				", newViewport='" + newViewport + '\'' +
+				", newPredicate='" + newPredicate + '\'' +
+				'}';
 	}
 }

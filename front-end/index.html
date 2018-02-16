@@ -7,8 +7,11 @@
 
     <script>
         var tileW, tileH;
-        var viewportX, viewportY, curCanvasId, curCanvas;
+        var viewportX, viewportY, predicate, curCanvasId, curCanvas, curJump;
         var viewportWidth, viewportHeight;
+        var svg;
+        var jumpOptions = d3.select("body").append("div");
+
 
         if (typeof String.prototype.parseFunction != 'function') {
             String.prototype.parseFunction = function () {
@@ -21,11 +24,36 @@
             };
         }
 
-        function initialCanvas() {
 
-            var svg = d3.select("body").append("svg")
-                .attr("width", viewportWidth)
-                .attr("height", viewportHeight);
+        // get the information about the first canvas to render
+        function pageOnLoad() {
+
+            // send the first request to backend server
+            $.post("/first/", {}, function (data, status) {
+                response = JSON.parse(data);
+                console.log(response);
+                viewportX = response.initialViewportX;
+                viewportY = response.initialViewportY;
+                predicate = response.initialPredicate;
+                viewportWidth = response.viewportWidth;
+                viewportHeight = response.viewportHeight;
+                curCanvasId = response.initialCanvasId;
+                tileW = response.tileW;
+                tileH = response.tileH;
+                svg = d3.select("body").append("svg")
+                    .attr("width", viewportWidth)
+                    .attr("height", viewportHeight);
+                renderSVG();
+            });
+        };
+
+        $(document).ready(pageOnLoad);
+
+        function renderSVG() {
+
+            // clear base svg and the jump options
+            svg.node().innerHTML = '';
+            jumpOptions.node().innerHTML = '';
 
             // get the current canvas and rendering function
             getCurCanvas();
@@ -34,7 +62,7 @@
 
             // process tiles
             var margin = 0;
-            var svgs= new Array(Math.floor(viewportWidth / tileW + (viewportWidth % tileW > 0 ? 1 : 0)));
+            var svgs = new Array(Math.floor(viewportWidth / tileW + (viewportWidth % tileW > 0 ? 1 : 0)));
             for (var i = 0; i < svgs.length; i ++)
                 svgs[i] = new Array(Math.floor(viewportHeight / tileH + (viewportHeight % tileH > 0 ? 1 : 0)));
             for (var x = viewportX; x < viewportX + viewportWidth; x += tileW)
@@ -59,7 +87,8 @@
                     // send request to backend to get render func and data
                     var postData = "id=" + curCanvasId + "&"
                         + "x=" + x + "&"
-                        + "y=" + y;
+                        + "y=" + y + "&"
+                        + "predicate=" + predicate;
                     $.post("/tile", postData, function (data, status) {
                         var response = JSON.parse(data);
                         var renderData = response.renderData;
@@ -68,29 +97,12 @@
                         var i = Math.floor((x - viewportX) / tileW);
                         var j = Math.floor((y - viewportY) / tileH);
                         renderFunc(svgs[i][j], renderData);
+                        registerJumps(svgs[i][j], renderData);
                     });
                 }
-        };
+        }
 
-        function pageOnLoad() {
-
-            // send the first request to backend server
-            $.post("/first/", {}, function (data, status) {
-                response = JSON.parse(data);
-                console.log(response);
-                viewportX = response.initialViewportX;
-                viewportY = response.initialViewportY;
-                viewportWidth = response.viewportWidth;
-                viewportHeight = response.viewportHeight;
-                curCanvasId = response.initialCanvasId;
-                tileW = response.tileW;
-                tileH = response.tileH;
-                initialCanvas();
-            });
-        };
-
-        $(document).ready(pageOnLoad);
-
+        // get from backend the current canvas object assuming curCanvasId is already correctly set
         function getCurCanvas() {
 
             // TODO: client cache
@@ -100,9 +112,71 @@
                 data : curCanvasId,
                 success : function (data, status) {
                     curCanvas = JSON.parse(data).canvas;
+                    curJump = JSON.parse(data).jump;
                 },
                 async : false
             });
+        }
+
+        // register jump info for a tile
+        function registerJumps(svg, data) {
+            var gs = svg.selectAll("g").nodes();
+            for (var i = 0; i < gs.length; i ++) {
+                var shapes = gs[i].childNodes;
+                for (var j = 0; j < shapes.length; j ++)
+
+                    shapes[j].onclick = function () {
+
+                        jumpOptions.node().innerHTML = '';
+                        for (var k = 0; k < curJump.length; k ++) {
+
+                            // create a button and append it to jumpOptions
+                            var button = document.createElement("input");
+                            button.type = "button";
+                            button.value = curJump[k].destId;
+                            button.setAttribute("data-tuple", this.getAttribute("data-tuple"));
+                            button.setAttribute("data-jump-id", k);
+                            button.onclick = function () {
+
+                                var tuple = this.getAttribute("data-tuple");
+                                var jumpId = this.getAttribute("data-jump-id");
+                                curCanvasId = curJump[jumpId].destId;
+
+                                // calculate a new viewport & predicate
+                                console.log(tuple);
+                                console.log(curJump[jumpId].newViewport);
+                                var newViewportFunc = curJump[jumpId].newViewport.parseFunction();
+                                var newViewportRet = newViewportFunc(tuple.split(","));
+                                console.log(newViewportRet);
+                                if (newViewportRet[0] == 0) {
+                                    // constant viewport, no predicate
+                                    viewportX = newViewportRet[1];
+                                    viewportY = newViewportRet[2];
+                                    predicate = '';
+                                }
+                                else {
+                                    // viewport is fixed at a certain tuple, predicate will be added
+                                    predicate = newViewportRet[1];
+                                    $.ajax({
+                                        type : "POST",
+                                        url : "viewport",
+                                        data : "canvasId=" + curCanvasId + "&predicate=" + predicate,
+                                        success : function (data, status) {
+                                            var cx = JSON.parse(data).cx;
+                                            var cy = JSON.parse(data).cy;
+                                            viewportX = cx - viewportWidth / 2;
+                                            viewportY = cy - viewportHeight / 2;
+                                        },
+                                        async : false
+                                    });
+                                }
+
+                                renderSVG();
+                            };
+                            jumpOptions.node().appendChild(button);
+                        }
+                    }
+            }
         }
 
     </script>
