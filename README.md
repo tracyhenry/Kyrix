@@ -1,7 +1,8 @@
-# Kyrix
+# Kyrix - Generalized Interactive Panning/Zooming Interfaces
+## How to Contribute
+See [development workflow](https://github.com/tracyhenry/Kyrix/wiki/Development-Workflow).
 
-## Introduction
-Generalized interactive panning/zooming interfaces
+
 
 ## Dependencies
 ### Node.js
@@ -9,6 +10,7 @@ Install Node.js ([https://nodejs.org/en/](https://nodejs.org/en/)). The `node.js
 
 ### MySQL
 Install MySQL: [Mac](https://gist.github.com/nrollr/3f57fc15ded7dddddcc4e82fe137b58e)/[Windows](https://dev.mysql.com/doc/refman/5.7/en/windows-installation.html)
+
 
 ## How to Run Kyrix
 * Get a MySQL server running. 
