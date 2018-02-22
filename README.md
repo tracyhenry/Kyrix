@@ -27,3 +27,10 @@ Install MySQL: [Mac](https://gist.github.com/nrollr/3f57fc15ded7dddddcc4e82fe137
 * Get the tile server running (see documentation in `tile-server/`). 
 
 * Open the index page of the server in the browser and start browsing! 
+
+### TODOs
+
+- [ ] Literal zoom (time consuming)
+- [ ] Panning and Zooming animation (purely frontend, assigned to Brett)
+- [ ] Static Trim (mostly engineering)
+- [ ] Canvas Layering (mostly engineering)
