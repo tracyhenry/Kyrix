@@ -10,7 +10,9 @@
         var viewportX, viewportY, predicate, curCanvasId, curCanvas, curJump;
         var viewportWidth, viewportHeight;
         var svg;
-        var jumpOptions = d3.select("body").append("div");
+        var jumpOptions = d3.select("body").append("div")
+            .style("margin-bottom", "40px")
+            .style("text-align", "center");
 
 
         if (typeof String.prototype.parseFunction != 'function') {
@@ -24,8 +26,7 @@
             };
         }
 
-
-        // get the information about the first canvas to render
+        // get information about the first canvas to render
         function pageOnLoad() {
 
             // send the first request to backend server
@@ -127,7 +128,7 @@
 
                     shapes[j].onclick = function () {
 
-                        jumpOptions.node().innerHTML = '';
+                        jumpOptions.node().innerHTML = "<div>Jump to: </div>";
                         for (var k = 0; k < curJump.length; k ++) {
 
                             // create a button and append it to jumpOptions
@@ -136,6 +137,11 @@
                             button.value = curJump[k].destId;
                             button.setAttribute("data-tuple", this.getAttribute("data-tuple"));
                             button.setAttribute("data-jump-id", k);
+                            button.style.webkitAppearance = "none";
+                            button.style.margin = "10px";
+                            button.style.height = "30px";
+                            button.style.width = "100px";
+                            button.style.fontSize = "20px";
                             button.onclick = function () {
 
                                 var tuple = this.getAttribute("data-tuple");
