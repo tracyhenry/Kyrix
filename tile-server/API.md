@@ -1,5 +1,5 @@
 # Tile Server API
-**:eyes: Fetching the Definition of the First Canvas**
+**:basketball: Fetching the Definition of the First Canvas**
 ----
 * **URL:**  `/first`
 
@@ -40,13 +40,13 @@
           .attr("width", viewportWidth)
           .attr("height", viewportHeight);
       renderSVG();
-  });
+    });
   ```
 
 * **Notes:**
   This API is called when the frontend file is first loaded. Note that frontend can only get the **definition** of this first canvas. Relevant tuples inside the viewport should be retrieved using the `window` request.  
 
-**:eyes: Fetching the Definition of a Canvas by ID**
+**:basketball: Fetching the Definition of a Canvas by ID**
 ----
 * **URL:**  `/canvas`
 
@@ -54,7 +54,7 @@
   
 *  **URL Params:** none.
 
-* **Data Params:** `id` a string representing the id of the canvas requested.
+* **Data Params:** `id`- a string representing the id of the canvas requested.
 
 * **Success Response:**
 
@@ -77,11 +77,14 @@
     |:---:|:---:|
     |`sourceId`|The id of the source canvas. This equals the id of the requested canvas. |
     |`destId`|The id of the destination canvas. |
-    |`newViewport`|A Javascript function calculating the new viewport after jump. See spec API for details on input/output of this function.|
+    |`newViewport`|A Javascript function calculating the new viewport after jump. This function will either calculate a constant viewport, or a viewport centered at one tuple. See spec API for details on input/output of this function.|
 
    
 * **Error Response:**
   * **Code:** 405 BAD METHOD <br />
+  
+  Or
+  
   * **Code:** 400 BAD REQUEST <br/> 
     **Content:** canvas `id` does not exist.
 
@@ -99,3 +102,43 @@
     });
   ```
   
+**:basketball: Calculating a New Viewport after Jump**
+----
+* **URL:**  `/viewport`
+
+* **Method:** `POST`
+  
+*  **URL Params:** none.
+
+* **Data Params:** 
+  * `canvasId`- The id of the destination canvas.
+  * `predicate`- A PK/FK or PK/PK join predicate which should uniquely determine a tuple of the destination canvas. 
+
+* **Success Response:**
+
+  * **Code:** 200 <br />
+    **Content:** a JSON object containing two fields `cx` and `cy` representing the viewport center after jump, which is the centroid of the tuple filtered by `predicate`. 
+    
+* **Error Response:**
+  * **Code:** 405 BAD METHOD <br />
+  
+  Or
+  * **Code:** 400 BAD REQUEST <br />
+    **Content:** canvas id missing/predicate missing/canvas `canvasId` does not exist/Bad predicate (predicate does not uniquely determine a tuple).
+
+* **Sample Call:**
+  ```javascript
+    $.ajax({
+        type : "POST",
+        url : "viewport",
+        data : "canvasId=" + curCanvasId + "&predicate=" + predicate,
+        success : function (data, status) {
+            var cx = JSON.parse(data).cx;
+            var cy = JSON.parse(data).cy;
+        },
+        async : false
+    });
+  ```
+
+* **Notes:**
+  This API call is used when the `newViewport` function of this jump is **NOT** producing a constant viewport. In this case, frontend needs to communicate with the tile server using this API call to get the new viewport center coordinates. 
