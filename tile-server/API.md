@@ -1,11 +1,9 @@
 # Tile Server API
-**:basketball: Fetching the Definition of the First Canvas**
+**:small_orange_diamond: Fetching the Definition of the First Canvas**
 ----
 * **URL:**  `/first`
 
 * **Method:** `POST`
-  
-*  **URL Params:** none.
 
 * **Data Params:** none.
 
@@ -46,13 +44,11 @@
 * **Notes:**
   This API is called when the frontend file is first loaded. Note that frontend can only get the **definition** of this first canvas. Relevant tuples inside the viewport should be retrieved using the `window` request.  
 
-**:basketball: Fetching the Definition of a Canvas by ID**
+**:small_orange_diamond: Fetching the Definition of a Canvas by ID**
 ----
 * **URL:**  `/canvas`
 
 * **Method:** `POST`
-  
-*  **URL Params:** none.
 
 * **Data Params:** `id`- a string representing the id of the canvas requested.
 
@@ -102,13 +98,11 @@
     });
   ```
   
-**:basketball: Calculating a New Viewport after Jump**
+**:small_orange_diamond: Calculating a New Viewport after Jump**
 ----
 * **URL:**  `/viewport`
 
 * **Method:** `POST`
-  
-*  **URL Params:** none.
 
 * **Data Params:** 
   * `canvasId`- The id of the destination canvas.
@@ -142,3 +136,43 @@
 
 * **Notes:**
   This API call is used when the `newViewport` function of this jump is **NOT** producing a constant viewport. In this case, frontend needs to communicate with the tile server using this API call to get the new viewport center coordinates. 
+
+
+**:small_orange_diamond: Fetching Data inside a Window**
+----
+* **URL:**  `/window`
+
+* **Method:** `POST`
+
+* **Data Params:** 
+  * `id`- The id of the current canvas. 
+  * `x1`, `x2`, `y1`, `y2`- four screen coordinates determining a window. 
+  * `predicate`- the predicate that is supplied to the query of the current canvas.
+
+* **Success Response:**
+
+  * **Code:** 200 <br />
+    **Content:** an array `renderData` containing data tuples inside the requested window. The definition of *inside a window* may be different when different algorithms (centroid/bounding box) are used. 
+    
+* **Error Response:**
+  * **Code:** 405 BAD METHOD <br />
+  
+  Or
+  * **Code:** 400 BAD REQUEST <br />
+    **Content:** canvas id missing/window coordinate missing/canvas `id` does not exist.
+
+* **Sample Call:**
+  ```javascript
+    var postData = "id=" + curCanvasId + "&"
+        + "x1=" + x1 + "&"
+        + "y1=" + y1 + "&"
+        + "x2=" + y2 + "&"
+        + "y2=" + y2 + "&"
+        + "predicate=" + predicate;
+    $.post("/window", postData, function (data, status) {
+        var response = JSON.parse(data);
+        var renderData = response.renderData;
+        renderFunc(svgs[i][j], renderData);
+        registerJumps(svgs[i][j], renderData);
+    });
+  ```
