@@ -102,7 +102,7 @@ public class ViewportRequestHandler implements HttpHandler {
 		if (! queryMap.containsKey("canvasId"))
 			return "canvas id missing.";
 		if (! queryMap.containsKey("predicate"))
-			return "x or y missing.";
+			return "predicate missing.";
 
 		String canvasId = queryMap.get("canvasId");
 		String predicate = queryMap.get("predicate");

@@ -61,24 +61,30 @@
             console.log(curCanvas);
             var renderFunc = curCanvas.rendering.parseFunction();
 
-            // process tiles
-            var margin = 0;
-            var svgs = new Array(Math.floor(viewportWidth / tileW + (viewportWidth % tileW > 0 ? 1 : 0)));
-            for (var i = 0; i < svgs.length; i ++)
-                svgs[i] = new Array(Math.floor(viewportHeight / tileH + (viewportHeight % tileH > 0 ? 1 : 0)));
-            for (var x = viewportX; x < viewportX + viewportWidth; x += tileW)
-                for (var y = viewportY; y < viewportY + viewportHeight; y += tileH) {
-                    // get i, j
-                    var i = (x - viewportX) / tileW;
-                    var j = (y - viewportY) / tileH;
+            // calculate the tile range that the viewport spans
+            var xStart = Math.floor(viewportX / tileW);
+            var xEnd = Math.floor((viewportX + viewportWidth) / tileW);
+            var yStart = Math.floor(viewportY / tileH);
+            var yEnd = Math.floor((viewportY + viewportHeight) / tileH);
 
-                    svgs[i][j] = svg.append("svg")
-                        .attr("x", x - viewportX + x / tileW * margin)
-                        .attr("y", y - viewportY + y / tileH * margin)
+            // render tiles
+            var margin = 0;
+            var tiles = new Array(xEnd - xStart + 1);
+            for (var i = 0; i < tiles.length; i ++)
+                tiles[i] = new Array(yEnd- yStart + 1);
+            for (var i = 0; i <= xEnd - xStart; i ++)
+                for (var j = 0; j <= yEnd - yStart; j ++) {
+                    // get x, y, which are the coordinates of the top-left corner
+                    var x = (i + xStart) * tileW;
+                    var y = (j + yStart) * tileH;
+
+                    tiles[i][j] = svg.append("svg")
+                        .attr("x", x - viewportX + i * margin)
+                        .attr("y", y - viewportY + j * margin)
                         .attr("width", tileW)
                         .attr("height", tileH)
                         .attr("viewBox", x + " " + y + " " + tileW + " " + tileH);
-                    svgs[i][j].append("g").append("rect")
+                    tiles[i][j].append("g").append("rect")
                         .attr("x", x)
                         .attr("y", y)
                         .attr("width", tileW)
@@ -97,8 +103,8 @@
                         var y = response.miny;
                         var i = Math.floor((x - viewportX) / tileW);
                         var j = Math.floor((y - viewportY) / tileH);
-                        renderFunc(svgs[i][j], renderData);
-                        registerJumps(svgs[i][j], renderData);
+                        renderFunc(tiles[i][j], renderData);
+                        registerJumps(tiles[i][j], renderData);
                     });
                 }
         }
