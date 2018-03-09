@@ -44,13 +44,61 @@
                 svg = d3.select("body").append("svg")
                     .attr("width", viewportWidth)
                     .attr("height", viewportHeight);
-                renderSVG();
+                RefreshCanvas();
             });
         };
 
         $(document).ready(pageOnLoad);
 
-        function renderSVG() {
+        // get an array of tile ids based on the current viewport location
+        function getTileArray(viewportX, viewportY) {
+
+            // calculate the tile range that the viewport spans
+            var xStart = Math.max(0, Math.floor(viewportX / tileW));
+            var yStart = Math.max(0, Math.floor(viewportY / tileH));
+            var xEnd = Math.min(Math.floor(curCanvas.w / tileW), Math.floor((viewportX + viewportWidth) / tileW));
+            var yEnd = Math.min(Math.floor(curCanvas.h / tileH), Math.floor((viewportY + viewportHeight) / tileH));
+/*            var xStart = Math.floor(viewportX / tileW);
+            var yStart = Math.floor(viewportY / tileH);
+            var xEnd = Math.floor((viewportX + viewportWidth) / tileW);
+            var yEnd = Math.floor((viewportY + viewportHeight) / tileH);*/
+
+            var tileIds = [];
+            for (var i = xStart; i <= xEnd; i ++)
+                for (var j = yStart; j <= yEnd; j ++)
+                    tileIds.push([i * tileW, j * tileH, curCanvasId]);
+
+            return tileIds;
+        }
+
+        // Setup a tile, 1) send a tile request; 2) call renderer; 3) register jumps
+        // tileSvg is the svg corresponding to a tile
+        // i and j are tile coordinates
+        function renderTile(tileSvg, x, y, renderFunc, canvasId, predicate) {
+
+            // send request to backend to get render func and data
+            var postData = "id=" + curCanvasId + "&"
+                + "x=" + x + "&"
+                + "y=" + y + "&"
+                + "predicate=" + predicate;
+            $.post("/tile", postData, function (data, status) {
+                var response = JSON.parse(data);
+                var renderData = response.renderData;
+                var x = response.minx;
+                var y = response.miny;
+                var tileSvg = d3.select("#a" + x + y);
+                tileSvg.append("g").append("rect")
+                    .attr("x", x)
+                    .attr("y", y)
+                    .attr("width", tileW)
+                    .attr("height", tileH)
+                    .style("fill", "beige");
+                renderFunc(tileSvg, renderData);
+                registerJumps(tileSvg);
+            });
+        }
+
+        function RefreshCanvas() {
 
             // clear base svg and the jump options
             svg.node().innerHTML = '';
@@ -61,52 +109,28 @@
             console.log(curCanvas);
             var renderFunc = curCanvas.rendering.parseFunction();
 
-            // calculate the tile range that the viewport spans
-            var xStart = Math.floor(viewportX / tileW);
-            var xEnd = Math.floor((viewportX + viewportWidth) / tileW);
-            var yStart = Math.floor(viewportY / tileH);
-            var yEnd = Math.floor((viewportY + viewportHeight) / tileH);
+            // get tile ids
+            var tileIds = getTileArray(viewportX, viewportY);
 
             // render tiles
-            var margin = 0;
-            var tiles = new Array(xEnd - xStart + 1);
-            for (var i = 0; i < tiles.length; i ++)
-                tiles[i] = new Array(yEnd- yStart + 1);
-            for (var i = 0; i <= xEnd - xStart; i ++)
-                for (var j = 0; j <= yEnd - yStart; j ++) {
-                    // get x, y, which are the coordinates of the top-left corner
-                    var x = (i + xStart) * tileW;
-                    var y = (j + yStart) * tileH;
-
-                    tiles[i][j] = svg.append("svg")
-                        .attr("x", x - viewportX + i * margin)
-                        .attr("y", y - viewportY + j * margin)
-                        .attr("width", tileW)
-                        .attr("height", tileH)
-                        .attr("viewBox", x + " " + y + " " + tileW + " " + tileH);
-                    tiles[i][j].append("g").append("rect")
-                        .attr("x", x)
-                        .attr("y", y)
-                        .attr("width", tileW)
-                        .attr("height", tileH)
-                        .style("fill", "beige");
-
-                    // send request to backend to get render func and data
-                    var postData = "id=" + curCanvasId + "&"
-                        + "x=" + x + "&"
-                        + "y=" + y + "&"
-                        + "predicate=" + predicate;
-                    $.post("/tile", postData, function (data, status) {
-                        var response = JSON.parse(data);
-                        var renderData = response.renderData;
-                        var x = response.minx;
-                        var y = response.miny;
-                        var i = Math.floor((x - viewportX) / tileW);
-                        var j = Math.floor((y - viewportY) / tileH);
-                        renderFunc(tiles[i][j], renderData);
-                        registerJumps(tiles[i][j], renderData);
-                    });
-                }
+            var tiles = svg
+                .attr("viewBox", viewportX + " " + viewportY + " "
+                    + viewportWidth + " " + viewportHeight)
+                .selectAll("svg")
+                .data(tileIds);
+            tiles.exit().remove();
+            tiles.enter().append("svg")
+                .attr("width", tileW)
+                .attr("height", tileH)
+                .attr("id", function(d) {return "a" + d[0] + d[1];}) //TODO: add canvasID
+                .attr("x", function(d) {return d[0];})
+                .attr("y", function(d) {return d[1];})
+                .attr("viewBox", function (d) {
+                    return d[0] + " " + d[1] + " " + tileW + " " + tileH;
+                })
+                .each(function(d) {
+                    renderTile(this, d[0], d[1], renderFunc, curCanvasId, predicate);
+                });
         }
 
         // get from backend the current canvas object assuming curCanvasId is already correctly set
@@ -126,7 +150,7 @@
         }
 
         // register jump info for a tile
-        function registerJumps(svg, data) {
+        function registerJumps(svg) {
             var gs = svg.selectAll("g").nodes();
             for (var i = 0; i < gs.length; i ++) {
                 var shapes = gs[i].childNodes;
@@ -183,7 +207,7 @@
                                     });
                                 }
 
-                                renderSVG();
+                                RefreshCanvas();
                             };
                             jumpOptions.node().appendChild(button);
                         }

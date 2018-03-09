@@ -120,7 +120,7 @@ rendering = function render(svg, data) {
 };
 
 p1.addCanvas("lastname", 1000, 1000, query, db, placement, transform, rendering, separable);
-p1.initialCanvas("fullname", 0, 0, "");
+p1.initialCanvas("fullname", 200, 600, "");
 
 
 
