@@ -11,11 +11,11 @@ p1 = new Project("demo", "dbconfig.txt", 1000, 1000);
 // specify the placement object of a canvas
 var placement = {};
 placement.centroid_x = function (row) {
-    return d3.scaleLinear().domain([0, 1000000]).range([0, 1000])(row[0]);
+    return d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[0]);
 };
 
 placement.centroid_y = function (row) {
-    return d3.scaleLinear().domain([0, 1000000]).range([0, 1000])(row[0]);
+    return d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[0]);
 };
 placement.width = function (row) {return 161; };
 placement.height = function (row) {return 161; };
@@ -28,7 +28,7 @@ placement.height_col = "";
 // rendering function
 var transform = function () {};
 var rendering = function render(svg, data) {
-    var xyscale = d3.scaleLinear().domain([0, 1000000]).range([0, 1000]);
+    var xyscale = d3.scaleLinear().domain([0, 5000000]).range([0, 5000]);
     g = svg.append("g");
     g.selectAll("circle")
         .data(data)
@@ -55,7 +55,7 @@ var rendering = function render(svg, data) {
 var separable = false;
 var query = "SELECT * from pi;";
 var db = "wenbo";
-p1.addCanvas("fullname", 1000, 1000, query, db, placement, transform, rendering, separable);
+p1.addCanvas("fullname", 5000, 5000, query, db, placement, transform, rendering, separable);
 
 
 
@@ -120,7 +120,7 @@ rendering = function render(svg, data) {
 };
 
 p1.addCanvas("lastname", 1000, 1000, query, db, placement, transform, rendering, separable);
-p1.initialCanvas("fullname", 200, 600, "");
+p1.initialCanvas("fullname", 500, 500, "");
 
 
 

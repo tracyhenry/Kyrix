@@ -63,8 +63,8 @@
 /*            if (viewportX >= 0 &&
                 viewportY >= 0 &&
                 viewportX + globalVar.viewportWidth < globalVar.curCanvas.w &&
-                viewportY + globalVar.viewportHeight < globalVar.curCanvas.h)*/
-                RefreshCanvas(viewportX, viewportY);
+                viewportY + globalVar.viewportHeight < globalVar.curCanvas.h) */
+            RefreshCanvas(viewportX, viewportY);
         }
 
         // get information about the first canvas to render
@@ -87,6 +87,7 @@
                     .attr("height", globalVar.viewportHeight);
                 globalVar.svg.call(globalVar.zoom);
                 getCurCanvas();
+                globalVar.jumpOptions.node().innerHTML = '';
                 RefreshCanvas(globalVar.initialViewportX,
                     globalVar.initialViewportY);
             });
@@ -132,12 +133,6 @@
                 var tileSvg = d3.select("#a" + x + y + canvasId);
                 if (tileSvg == null) // it's possible when the tile data is delayed and this tile is already removed
                     return ;
-/*                tileSvg.append("g").append("rect")
-                    .attr("x", x)
-                    .attr("y", y)
-                    .attr("width", globalVar.tileW)
-                    .attr("height", globalVar.tileH)
-                    .style("fill", "beige");*/
                 renderFunc(tileSvg, renderData);
                 registerJumps(tileSvg);
             });
@@ -147,9 +142,6 @@
 
             var tileW = globalVar.tileW;
             var tileH = globalVar.tileH;
-
-            // clear base svg and the jump options
-            globalVar.jumpOptions.node().innerHTML = '';
 
             // get the current canvas and rendering function
             var renderFunc = globalVar.curCanvas.rendering.parseFunction();
@@ -250,6 +242,7 @@
                                             var newViewportX = cx - globalVar.viewportWidth / 2;
                                             var newViewportY = cy - globalVar.viewportHeight / 2;
                                             getCurCanvas();
+                                            globalVar.jumpOptions.node().innerHTML = '';
                                             RefreshCanvas(newViewportX, newViewportY);
                                         },
                                         async : false
