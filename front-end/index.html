@@ -31,10 +31,13 @@
         globalVar.curJump = {};
 
         // the global svg
+        globalVar.containerSvg = null;
         globalVar.svg = null;
 
         // d3 zoom
-        globalVar.zoom = d3.zoom().scaleExtent([1, 1]).on("zoom", zoomed);
+        globalVar.zoom = d3.zoom()
+            .scaleExtent([1, 1])
+            .on("zoom", zoomed);
 
         // div for jump options
         globalVar.jumpOptions = d3.select("body").append("div")
@@ -60,10 +63,27 @@
             var viewportX = globalVar.initialViewportX - transform.x;
             var viewportY = globalVar.initialViewportY - transform.y;
 
-/*            if (viewportX >= 0 &&
-                viewportY >= 0 &&
-                viewportX + globalVar.viewportWidth < globalVar.curCanvas.w &&
-                viewportY + globalVar.viewportHeight < globalVar.curCanvas.h) */
+            if (viewportX < 0){
+                viewportX = 0;
+                d3.event.transform.x = globalVar.initialViewportX;
+            }
+
+
+            if (viewportX > globalVar.curCanvas.w - globalVar.viewportWidth) {
+                viewportX = globalVar.curCanvas.w - globalVar.viewportWidth;
+                d3.event.transform.x = globalVar.initialViewportX - globalVar.curCanvas.w + globalVar.viewportWidth;
+            }
+
+            if (viewportY < 0){
+                viewportY = 0;
+                d3.event.transform.y = globalVar.initialViewportY;
+            }
+
+            if (viewportY > globalVar.curCanvas.h - globalVar.viewportHeight) {
+                viewportY = globalVar.curCanvas.h - globalVar.viewportHeight;
+                d3.event.transform.y = globalVar.initialViewportY - globalVar.curCanvas.h + globalVar.viewportHeight;
+            }
+
             RefreshCanvas(viewportX, viewportY);
         }
 
@@ -82,10 +102,16 @@
                 globalVar.curCanvasId = response.initialCanvasId;
                 globalVar.tileW = response.tileW;
                 globalVar.tileH = response.tileH;
-                globalVar.svg = d3.select("body").append("svg")
+                globalVar.containerSvg = d3.select("body").append("svg")
                     .attr("width", globalVar.viewportWidth)
                     .attr("height", globalVar.viewportHeight);
-                globalVar.svg.call(globalVar.zoom);
+                globalVar.svg = globalVar.containerSvg.append("svg")
+                    .attr("width", globalVar.viewportWidth)
+                    .attr("height", globalVar.viewportHeight)
+                    .attr("x", 0)
+                    .attr("y", 0);
+
+                globalVar.containerSvg.call(globalVar.zoom);
                 getCurCanvas();
                 globalVar.jumpOptions.node().innerHTML = '';
                 RefreshCanvas(globalVar.initialViewportX,
@@ -133,6 +159,7 @@
                 var tileSvg = d3.select("#a" + x + y + canvasId);
                 if (tileSvg == null) // it's possible when the tile data is delayed and this tile is already removed
                     return ;
+
                 renderFunc(tileSvg, renderData);
                 registerJumps(tileSvg);
             });
