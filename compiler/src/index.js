@@ -83,11 +83,11 @@ function addJump(jump) {
 function initialCanvas(id, viewportX, viewportY, predicates) {
 
     // check if this id exists
-    var exist = false;
+    var canvasId = -1;
     for (var i = 0; i < this.canvases.length; i ++)
         if (this.canvases[i].id === id)
-            exist = true;
-    if (! exist)
+            canvasId = i;
+    if (canvasId == -1)
         throw new Error("Initial canvas: canvas " + id + " does not exist.");
 
     // check viewport range
@@ -96,9 +96,9 @@ function initialCanvas(id, viewportX, viewportY, predicates) {
     if (viewportY < 0 || viewportY > this.viewportHeight)
         throw new Error("Initial canvas: viewportY out of range.");
 
-    // check if the size of the predicates array equals the number of canvases
-    if (predicates.length != this.canvases.length)
-        throw new Error("Initial canvas: # predicates does not equal # canvases.");
+    // check if the size of the predicates array equals the number of layers
+    if (predicates.length != this.canvases[canvasId].layers.length)
+        throw new Error("Initial canvas: # predicates does not equal # layers.");
 
     // assign fields
     this.initialCanvasId = id;
@@ -110,7 +110,7 @@ function initialCanvas(id, viewportX, viewportY, predicates) {
 // save the current to project to the database it's associated with
 function saveToDb()
 {
-    
+
     // connecting with mysql
     var dbConn = mysql.createConnection({
         host     : this.dbConfig.host,
@@ -154,7 +154,6 @@ function saveToDb()
     // add escape character to projectJSON
     projectJSON = (projectJSON + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
 //    console.log(projectJSON);
-    return ;
 
     // insert the JSON blob into the project table
     var insertQuery = "INSERT INTO project (name, content) VALUES (\'" +
@@ -166,7 +165,6 @@ function saveToDb()
 
     dbConn.end();
 }
-
 
 // define prototype functions
 Project.prototype = {

@@ -25,8 +25,7 @@ public class Project {
 	private String initialCanvasId;
 	private int initialViewportX;
 	private int initialViewportY;
-	private String initialPredicate;
-	private ArrayList<ArrayList<String>> layeredCanvases;
+	private ArrayList<String> initialPredicates;
 	private ArrayList<Canvas> canvases;
 	private ArrayList<Jump> jumps;
 
@@ -54,12 +53,8 @@ public class Project {
 		return initialViewportY;
 	}
 
-	public String getInitialPredicate() {
-		return initialPredicate;
-	}
-
-	public ArrayList<ArrayList<String>> getLayeredCanvases() {
-		return layeredCanvases;
+	public ArrayList<String> getInitialPredicate() {
+		return initialPredicates;
 	}
 
 	public ArrayList<Canvas> getCanvases() {
@@ -117,14 +112,16 @@ public class Project {
 	@Override
 	public String toString() {
 		return "Project{" +
-				"name='" + name + '\'' +
+				"mapInitialized=" + mapInitialized +
+				", canvasMap=" + canvasMap +
+				", jumpMap=" + jumpMap +
+				", name='" + name + '\'' +
 				", viewportWidth=" + viewportWidth +
 				", viewportHeight=" + viewportHeight +
 				", initialCanvasId='" + initialCanvasId + '\'' +
 				", initialViewportX=" + initialViewportX +
 				", initialViewportY=" + initialViewportY +
-				", initialPredicate=" + initialPredicate +
-				", layeredCanvases=" + layeredCanvases +
+				", initialPredicates=" + initialPredicates +
 				", canvases=" + canvases +
 				", jumps=" + jumps +
 				'}';

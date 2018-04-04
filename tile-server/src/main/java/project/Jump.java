@@ -8,7 +8,6 @@ public class Jump {
 	private String sourceId;
 	private String destId;
 	private String newViewport;
-	private String newPredicate;
 
 	public String getSourceId() {
 		return sourceId;
@@ -22,17 +21,12 @@ public class Jump {
 		return newViewport;
 	}
 
-	public String getNewPredicate() {
-		return newPredicate;
-	}
-
 	@Override
 	public String toString() {
 		return "Jump{" +
 				"sourceId='" + sourceId + '\'' +
 				", destId='" + destId + '\'' +
 				", newViewport='" + newViewport + '\'' +
-				", newPredicate='" + newPredicate + '\'' +
 				'}';
 	}
 }

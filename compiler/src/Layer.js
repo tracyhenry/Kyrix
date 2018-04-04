@@ -10,18 +10,14 @@ function Layer(transformId) {
 
 /**
  * add a placement object to a layer object
- * @param placement - an object containing functions that calculate the placement of objects. See spec api for more details.
+ * @param placement - an object containing strings that represent either a column or a constant. See spec api for more details.
  */
 function addPlacement(placement) {
 
     if (! ('centroid_x' in placement) ||
         ! ('centroid_y' in placement) ||
         ! ('width' in placement) ||
-        ! ('height' in placement) ||
-        typeof placement.centroid_x !== "function" ||
-        typeof placement.centroid_y !== "function" ||
-        typeof placement.width !== "function" ||
-        typeof placement.height !== "function")
+        ! ('height' in placement))
         throw new Error("Constructing Layer: malformed placement object.");
 
     this.placement = placement;

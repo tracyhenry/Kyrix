@@ -4,10 +4,11 @@
  * @param {string} query - a SQL query. The result of this query is fed as input to the transform function.
  * @param {string} db - the database that query is run in.
  * @param transformFunc - a Javascript function receiving the SQL query result as input and doing some data transforms.
+ * @param columnNames - an array containing the names of the columns after data transformation
  * @param {boolean} separable - whether the calculation of transformFunc is per-tuple based. If yes, the input to transformFunc is a single tuple. Otherwise their input is the whole query result. The separability of a layer depends on the separability of the data transform it uses.
  * @constructor
  */
-function Transform(id, query, db, transformFunc, separable) {
+function Transform(id, query, db, transformFunc, columnNames, separable) {
 
     if (typeof transformFunc !== "function")
         throw new Error("Constructing Transform: transformFunc must be a javascript function.");
@@ -18,6 +19,7 @@ function Transform(id, query, db, transformFunc, separable) {
     this.id = id;
     this.query = query;
     this.db = db;
+    this.columnNames = columnNames;
     this.transformFunc = transformFunc;
     this.separable = separable;
 };

@@ -27,6 +27,7 @@ var c1ScalexyPi = new Transform("scalexy_pi",
         ret[4] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(ret[4]);
         return ret;
     },
+    ["id", "firstname", "lastname", "x", "y"],
     true
 );
 c1.addTransform(c1ScalexyPi);
@@ -41,6 +42,7 @@ var c1ScalexyStu = new Transform("scalexy_stu",
         ret[4] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(ret[4]);
         return ret;
     },
+    ["id", "firstname", "lastname", "x", "y"],
     true
 );
 c1.addTransform(c1ScalexyStu);
@@ -49,7 +51,7 @@ c1.addTransform(c1ScalexyStu);
 var c1Empty = new Transform("empty",
     "",
     "",
-    function (row) {}, true);
+    function (row) {}, [], true);
 c1.addTransform(c1Empty);
 
 
@@ -59,14 +61,10 @@ c1.addLayer(c1L1);
 
 // placement object
 var c1L1Placement = {};
-c1L1Placement.centroid_x = function (row) {
-    return row[3];
-};
-c1L1Placement.centroid_y = function (row) {
-    return row[4];
-};
-c1L1Placement.width = function (row) {return 161; };
-c1L1Placement.height = function (row) {return 161; };
+c1L1Placement.centroid_x = "col:x";
+c1L1Placement.centroid_y = "col:y";
+c1L1Placement.width = "con:161";
+c1L1Placement.height = "con:161";
 c1L1.addPlacement(c1L1Placement);
 
 // rendering function
@@ -138,10 +136,10 @@ c1.addLayer(c1L3);
 
 // dummy placement object
 c1L3Placement = {};
-c1L3Placement.centroid_x = function (row) {};
-c1L3Placement.centroid_y = function (row) {};
-c1L3Placement.width = function (row) {};
-c1L3Placement.height = function (row) {};
+c1L3Placement.centroid_x = "con:0";
+c1L3Placement.centroid_y = "con:0";
+c1L3Placement.width = "con:0";
+c1L3Placement.height = "con:0";
 c1L3.addPlacement(c1L3Placement);
 
 // rendering function, an empty g with a background color fill
@@ -171,6 +169,7 @@ var c2IDTransform = new Transform("identical",
     function (row) {
         return row;
     },
+    ["id", "firstname", "lastname", "x", "y"],
     true
 );
 c2.addTransform(c2IDTransform);
@@ -181,10 +180,10 @@ c2.addLayer(c2L1);
 
 // constant placement object
 c2L1Placement = {};
-c2L1Placement.centroid_x = function (row) {return 500; };
-c2L1Placement.centroid_y = function (row) {return 500; };
-c2L1Placement.width = function (row) {return 200; };
-c2L1Placement.height = function (row) {return 200; };
+c2L1Placement.centroid_x = "con:500";
+c2L1Placement.centroid_y = "con:500";
+c2L1Placement.width = "con:200";
+c2L1Placement.height = "con:200";
 c2L1.addPlacement(c2L1Placement);
 
 c2L1Rendering = function render(svg, data) {
