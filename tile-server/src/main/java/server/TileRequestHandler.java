@@ -47,7 +47,7 @@ public class TileRequestHandler implements HttpHandler {
 		String canvasId;
 		int minx, miny;
 		String predicate;
-		ArrayList<ArrayList<String>> data = null;
+		ArrayList<ArrayList<ArrayList<String>>> data = null;
 
 		// check if this is a POST request
 		if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
@@ -77,9 +77,13 @@ public class TileRequestHandler implements HttpHandler {
 		canvasId = queryMap.get("id");
 		minx = Integer.valueOf(queryMap.get("x"));
 		miny = Integer.valueOf(queryMap.get("y"));
-		predicate = queryMap.get("predicate");
+		Canvas c = project.getCanvas(canvasId);
+		ArrayList<String> predicates = new ArrayList<>();
+		for (int i = 0; i < c.getLayers().size(); i ++)
+			predicates.add(queryMap.get("predicate" + i));
+
 		try {
-			data = getData(canvasId, minx, miny, predicate);
+			data = getData(canvasId, minx, miny, predicates);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -96,10 +100,10 @@ public class TileRequestHandler implements HttpHandler {
 	}
 
 	// get a tile
-	private ArrayList<ArrayList<String>> getData(String canvasId, int minx, int miny, String predicate)
+	private ArrayList<ArrayList<ArrayList<String>>> getData(String canvasId, int minx, int miny, ArrayList<String> predicates)
 			throws SQLException, ClassNotFoundException {
 
-		ArrayList<ArrayList<String>> data = new ArrayList<>();
+		ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
 
 		// get the current canvas
 		Canvas curCanvas = project.getCanvas(canvasId);
@@ -107,25 +111,35 @@ public class TileRequestHandler implements HttpHandler {
 		// get db connector
 		Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
 
-		// construct range query
-		String sql = "select * from bbox_" + curCanvas.getId() + " where "
-				+ "minx <= " + (minx + Config.tileW) + " and "
-				+ "maxx >= " + minx + " and "
-				+ "miny <= " + (miny + Config.tileH) + " and "
-				+ "maxy >= " + miny;
-		if (predicate.length() > 0)
-			sql += " and " + predicate;
-		sql += ";";
-		System.out.println(minx + " " + miny + " : " + sql);
+		// loop through each layer
+		for (int i = 0; i < curCanvas.getLayers().size(); i ++) {
 
-		// run query
-		ResultSet rs = stmt.executeQuery(sql);
-		int numColumn = rs.getMetaData().getColumnCount();
-		while (rs.next()) {
-			ArrayList<String> curRow = new ArrayList<>();
-			for (int i = 1; i <= numColumn; i ++)
-				curRow.add(rs.getString(i));
-			data.add(curRow);
+			ArrayList<ArrayList<String>> curData = new ArrayList<>();
+
+			// construct range query
+			String sql = "select * from bbox_" + curCanvas.getId() + "layer" + i + " where "
+					+ "minx <= " + (minx + Config.tileW) + " and "
+					+ "maxx >= " + minx + " and "
+					+ "miny <= " + (miny + Config.tileH) + " and "
+					+ "maxy >= " + miny;
+			if (predicates.get(i).length() > 0)
+				sql += " and " + predicates.get(i);
+			sql += ";";
+
+			System.out.println(minx + " " + miny + " : " + sql);
+
+			// run query
+			ResultSet rs = stmt.executeQuery(sql);
+			int numColumn = rs.getMetaData().getColumnCount();
+			while (rs.next()) {
+				ArrayList<String> curRow = new ArrayList<>();
+				for (int j = 1; j <= numColumn; j ++)
+					curRow.add(rs.getString(j));
+				curData.add(curRow);
+			}
+
+			// add to response
+			data.add(curData);
 		}
 
 		return data;

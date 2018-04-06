@@ -1,5 +1,7 @@
 package project;
 
+import java.util.ArrayList;
+
 /**
  * Created by wenbo on 1/4/18.
  */
@@ -7,7 +9,8 @@ public class Jump {
 
 	private String sourceId;
 	private String destId;
-	private String newViewport;
+	private ArrayList<String> newViewports;
+	private ArrayList<String> newPredicates;
 
 	public String getSourceId() {
 		return sourceId;
@@ -17,8 +20,12 @@ public class Jump {
 		return destId;
 	}
 
-	public String getNewViewport() {
-		return newViewport;
+	public ArrayList<String> getNewViewports() {
+		return newViewports;
+	}
+
+	public ArrayList<String> getNewPredicates() {
+		return newPredicates;
 	}
 
 	@Override
@@ -26,7 +33,8 @@ public class Jump {
 		return "Jump{" +
 				"sourceId='" + sourceId + '\'' +
 				", destId='" + destId + '\'' +
-				", newViewport='" + newViewport + '\'' +
+				", newViewports=" + newViewports +
+				", newPredicates=" + newPredicates +
 				'}';
 	}
 }

@@ -44,7 +44,7 @@ public class ViewportRequestHandler implements HttpHandler {
 		// variable definitions
 		String response;
 		String canvasId;
-		String predicate;
+		ArrayList<String> predicates = new ArrayList<>();
 		ArrayList<String> data = null;
 
 		// check if this is a POST request
@@ -73,16 +73,18 @@ public class ViewportRequestHandler implements HttpHandler {
 
 		// get data
 		canvasId = queryMap.get("canvasId");
-		predicate = queryMap.get("predicate");
+		Canvas c = project.getCanvas(canvasId);
+		for (int i = 0; i < c.getLayers().size(); i ++)
+			predicates.add(queryMap.get("predicate" + i));
 		try {
-			data = getData(canvasId, predicate);
+			data = getData(canvasId, predicates);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		if (data == null)
 		{
-			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicate.");
+			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicates.");
 			return ;
 		}
 
@@ -101,22 +103,32 @@ public class ViewportRequestHandler implements HttpHandler {
 		// check fields
 		if (! queryMap.containsKey("canvasId"))
 			return "canvas id missing.";
-		if (! queryMap.containsKey("predicate"))
-			return "predicate missing.";
 
 		String canvasId = queryMap.get("canvasId");
-		String predicate = queryMap.get("predicate");
 
 		// check whether this canvas exists
 		if (project.getCanvas(canvasId) == null)
 			return "Canvas " + canvasId + " does not exist!";
 
+		Canvas c = project.getCanvas(canvasId);
+		for (int i = 0; i < c.getLayers().size(); i ++)
+			if (! queryMap.containsKey("predicate" + i))
+				return "predicate" + i + " missing.";
+
 		// check passed
 		return "";
 	}
 
-	private ArrayList<String> getData(String canvasId, String predicate)
+	private ArrayList<String> getData(String canvasId, ArrayList<String> predicates)
 			throws SQLException, ClassNotFoundException {
+
+		// check if only one non-empty predicate
+		int nonEmptyCount = 0;
+		for (int i = 0; i < predicates.size(); i ++)
+			if (! predicates.get(i).isEmpty())
+				nonEmptyCount ++;
+		if (nonEmptyCount != 1)
+			return null;
 
 		ArrayList<String> data = new ArrayList<>();
 
@@ -126,28 +138,35 @@ public class ViewportRequestHandler implements HttpHandler {
 		// get db connector
 		Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
 
-		// construct range query
-		String sql = "select cx, cy from bbox_" + curCanvas.getId() + " where "
-				+ predicate + ";";
-		System.out.println(canvasId + " " + predicate + " : " + sql);
+		for (int i = 0; i < predicates.size(); i ++) {
 
-		// run query
-		ResultSet rs = stmt.executeQuery(sql);
-		int rowCount = 0;
-		String cx = "", cy = "";
-		while (rs.next()) {
-			rowCount ++;
-			cx = rs.getString(1);
-			cy = rs.getString(2);
+			if (predicates.get(i).isEmpty())
+				continue;
+			// construct range query
+			String sql = "select cx, cy from bbox_" + curCanvas.getId() + "layer" + i + " where "
+					+ predicates.get(i) + ";";
+			System.out.println("hahaha: " + sql);
+
+			// run query
+			ResultSet rs = stmt.executeQuery(sql);
+			int rowCount = 0;
+			String cx = "", cy = "";
+			while (rs.next()) {
+				rowCount ++;
+				cx = rs.getString(1);
+				cy = rs.getString(2);
+			}
+
+			System.out.println(rowCount);
+			// not a predicate that uniquely determines a tuple
+			if (rowCount != 1)
+				return null;
+
+			// return cx & cy
+			data.add(cx);
+			data.add(cy);
 		}
 
-		// not a predicate that uniquely determines a tuple
-		if (rowCount != 1)
-			return null;
-
-		// return cx & cy
-		data.add(cx);
-		data.add(cy);
 		return data;
 	}
 }

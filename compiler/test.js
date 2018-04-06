@@ -22,10 +22,9 @@ var c1ScalexyPi = new Transform("scalexy_pi",
     "select * from pi;",
     "wenbo",
     function (row) {
-        var ret = row.slice();
-        ret[3] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(ret[3]);
-        ret[4] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(ret[4]);
-        return ret;
+        row[3] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[3]);
+        row[4] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[4]);
+        return row;
     },
     ["id", "firstname", "lastname", "x", "y"],
     true
@@ -37,10 +36,9 @@ var c1ScalexyStu = new Transform("scalexy_stu",
     "select * from stu;",
     "wenbo",
     function (row) {
-        var ret = row.slice();
-        ret[3] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(ret[3]);
-        ret[4] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(ret[4]);
-        return ret;
+        row[3] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[3]);
+        row[4] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[4]);
+        return row;
     },
     ["id", "firstname", "lastname", "x", "y"],
     true
@@ -210,8 +208,18 @@ c2L1.addRenderingFunc(c2L1Rendering);
 var c3 = new Canvas("lastname", 1000, 1000);
 p.addCanvas(c3);
 
-// data transform for canvas 3, same as the one for canvas 2
-c3.addTransform(c2IDTransform);
+// data transform for canvas 3
+var c3IDTransform = new Transform("identical",
+    "select * from stu;",
+    "wenbo",
+    function (row) {
+        return row;
+    },
+    ["id", "firstname", "lastname", "x", "y"],
+    true
+);
+
+c3.addTransform(c3IDTransform);
 
 // ******** canvas3 only layer ********
 var c3L1 = new Layer("identical");
@@ -246,8 +254,11 @@ p.initialCanvas("fullname", 500, 500, ["", "", ""]);
 var newViewport = function (row) {
     return [1, ["id=" + row[0]]];
 };
+var newPredicate = function (row) {
+    return ["id=" + row[0]];
+};
 
-p.addJump(new Jump("fullname", "firstname", newViewport));
-p.addJump(new Jump("fullname", "lastname", newViewport));
+p.addJump(new Jump("fullname", "firstname", [newViewport, "", ""], [newPredicate, "", ""]));
+p.addJump(new Jump("fullname", "lastname", ["", newViewport, ""], ["", newPredicate, ""]));
 
 p.saveToDb();

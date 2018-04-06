@@ -26,7 +26,6 @@ public class Config {
 	public static int portNumber;
 	public static String d3Dir;
 
-
 	// db name
 	public static String databaseName = "Kyrix";
 

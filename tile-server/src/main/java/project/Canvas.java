@@ -33,6 +33,15 @@ public class Canvas {
 		return layers;
 	}
 
+	public Transform getTransformById(String id) {
+
+		for (Transform t : transforms)
+			if (t.getId().equals(id))
+				return t;
+
+		return null;
+	}
+
 	@Override
 	public String toString() {
 		return "Canvas{" +

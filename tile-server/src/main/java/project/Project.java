@@ -53,7 +53,7 @@ public class Project {
 		return initialViewportY;
 	}
 
-	public ArrayList<String> getInitialPredicate() {
+	public ArrayList<String> getInitialPredicates() {
 		return initialPredicates;
 	}
 

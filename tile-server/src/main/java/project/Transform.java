@@ -30,6 +30,10 @@ public class Transform {
 		return transformFunc;
 	}
 
+	public ArrayList<String> getColumnNames() {
+		return columnNames;
+	}
+
 	public boolean isSeparable() {
 		return separable;
 	}

@@ -63,12 +63,21 @@ function addJump(jump) {
             exist = true;
     if (! exist)
         throw new Error("Constructing Jump: canvas " + jump.sourceId + " does not exist.");
+
+    // check whether destId exists
     exist = false;
     for (var i = 0; i < this.canvases.length; i ++)
         if (this.canvases[i].id === jump.destId)
             exist = true;
     if (! exist)
         throw new Error("Constructing Jump: canvas " + jump.destId + " does not exist.");
+
+    // check whether newViewports & newpredicates have the same number of elements as the # of layers in sourceId
+    for (var i = 0; i < this.canvases.length; i ++)
+        if (this.canvases[i].id === jump.sourceId)
+            if (jump.newViewports.length != this.canvases[i].layers.length ||
+                jump.newPredicates.length != this.canvases[i].layers.length)
+                throw new Error ("Constructing Jump: wrong number of newViewport/newPredicates functions.");
 
     this.jumps.push(jump);
 }

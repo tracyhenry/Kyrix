@@ -32,8 +32,8 @@ public class Main {
 		// get project definition, create project object
 		getProjectJSON();
 		Gson gson = new GsonBuilder().create();
-		//System.out.println(projectJSON);
 		project = gson.fromJson(projectJSON, Project.class);
+		System.out.println(project);
 
 		// precompute
 		Indexer indexer = new PlacementNaiveIndexer();
@@ -61,7 +61,7 @@ public class Main {
 		Config.dbServer = inputStrings.get(Config.dbServerRow);
 		Config.userName = inputStrings.get(Config.userNameRow);
 		Config.password = inputStrings.get(Config.passwordRow);
-		Config.d3Dir = inputStrings.get(Config.d3DirRow);
+		Config.d3Dir = inputStrings.get(Config.d3DirRow);	// TODO: add this line to readme
 
 	}
 
