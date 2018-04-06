@@ -30,7 +30,7 @@ Install MySQL: [Mac](https://gist.github.com/nrollr/3f57fc15ded7dddddcc4e82fe137
 
 ### TODOs
 
-- [ ] Literal zoom (time consuming)
-- [ ] Panning and Zooming animation (purely frontend, assigned to Brett)
-- [ ] Static Trim (mostly engineering)
-- [ ] Canvas Layering (mostly engineering)
+- [ ] Literal zoom API
+- [ ] Jumping animation
+- [ ] Static Trim
+- [ ] Pretty examples
