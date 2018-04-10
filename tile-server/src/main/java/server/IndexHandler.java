@@ -8,7 +8,6 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * Created by wenbo on 1/2/18.
@@ -19,6 +18,7 @@ public class IndexHandler implements HttpHandler {
 	public void handle(HttpExchange httpExchange) throws IOException {
 
 		System.out.println("Serving /");
+		System.out.println(httpExchange.getRequestURI().getPath());
 
 		// check if it is GET request
 		if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
@@ -26,8 +26,11 @@ public class IndexHandler implements HttpHandler {
 			return;
 		}
 
+		String path = httpExchange.getRequestURI().getPath();
+		if (path.equals("/"))
+			path = "/" + Config.indexFileName;
 		// read the frontend file and return
-		FileReader fr = new FileReader(Config.frontendFile);
+		FileReader fr = new FileReader(Config.webRoot + path);
 		BufferedReader br = new BufferedReader(fr);
 		StringBuilder content = new StringBuilder(1024);
 		String s;
@@ -36,5 +39,6 @@ public class IndexHandler implements HttpHandler {
 
 		// send back a ok response
 		Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content.toString());
+		System.out.println("end" + httpExchange.getRequestURI().getPath());
 	}
 }

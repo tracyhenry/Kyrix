@@ -145,7 +145,6 @@ public class ViewportRequestHandler implements HttpHandler {
 			// construct range query
 			String sql = "select cx, cy from bbox_" + curCanvas.getId() + "layer" + i + " where "
 					+ predicates.get(i) + ";";
-			System.out.println("hahaha: " + sql);
 
 			// run query
 			ResultSet rs = stmt.executeQuery(sql);
