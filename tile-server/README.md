@@ -12,4 +12,4 @@ To configure the server, rename `serverconfig.txt.example` to `serverconfig.txt`
 * path to a directory containing d3-scale
 
 ## Run the server
-The entrance of the server is `tile-server/src/main/java/main/main.java`. Run this file to start the server. Open your browser and go to `http://localhost:port#` to see the initial canvas. 
+Run `mvn compile` to build the backend server. Run `mvn exec:java -Dexec.mainClass="main.Main"` to start the server. Then open your browser and go to `http://localhost:port#` to see the initial canvas. 
