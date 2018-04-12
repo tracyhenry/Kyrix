@@ -150,3 +150,6 @@ serverconfig.txt
 tile-server/lib
 .DS_Store
 test.html
+zoomable.html
+favicon.ico
+flare.json

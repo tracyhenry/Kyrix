@@ -42,24 +42,23 @@ function registerJumps(svg) {
                     button.style.fontSize = "20px";
                     button.onclick = function () {
 
-                        var tuple = this.getAttribute("data-tuple");
+                        var tuple = this.getAttribute("data-tuple").split(",");
                         var jumpId = this.getAttribute("data-jump-id");
                         var layerId = this.getAttribute("data-layer-id");
                         globalVar.curCanvasId = jumps[jumpId].destId;
 
                         // calculate new predicates
                         var newPredicateFunc = jumps[jumpId].newPredicates[layerId].parseFunction();
-                        globalVar.predicates = newPredicateFunc(tuple.split(","));
+                        globalVar.predicates = newPredicateFunc(tuple);
 
                         // calculate new viewport
                         var newViewportFunc = jumps[jumpId].newViewports[layerId].parseFunction();
-                        var newViewportRet = newViewportFunc(tuple.split(","));
+                        var newViewportRet = newViewportFunc(tuple);
                         if (newViewportRet[0] == 0) {
                             // constant viewport, no predicate
                             var newViewportX = newViewportRet[1];
                             var newViewportY = newViewportRet[2];
-                            getCurCanvas();
-                            RefreshCanvas(newViewportX, newViewportY);
+                            completeJump(tuple, newViewportX, newViewportY);
                         }
                         else {
                             // viewport is fixed at a certain tuple
@@ -76,9 +75,7 @@ function registerJumps(svg) {
                                     var cy = JSON.parse(data).cy;
                                     var newViewportX = cx - globalVar.viewportWidth / 2;
                                     var newViewportY = cy - globalVar.viewportHeight / 2;
-                                    getCurCanvas();
-                                    globalVar.jumpOptions.node().innerHTML = '';
-                                    RefreshCanvas(newViewportX, newViewportY);
+                                    completeJump(tuple, newViewportX, newViewportY);
                                 },
                                 async: false
                             });
@@ -89,4 +86,5 @@ function registerJumps(svg) {
             }
         }
     }
-}
+};
+

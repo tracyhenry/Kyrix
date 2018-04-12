@@ -39,6 +39,5 @@ public class IndexHandler implements HttpHandler {
 
 		// send back a ok response
 		Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content.toString());
-		System.out.println("end" + httpExchange.getRequestURI().getPath());
 	}
 }

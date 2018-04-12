@@ -27,4 +27,4 @@ function zoomed() {
     }
 
     RefreshCanvas(viewportX, viewportY);
-}
+};

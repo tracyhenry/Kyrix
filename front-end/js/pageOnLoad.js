@@ -31,12 +31,14 @@ function pageOnLoad() {
         globalVar.tileH = response.tileH;
         globalVar.containerSvg = d3.select("body").append("svg")
             .attr("width", globalVar.viewportWidth)
-            .attr("height", globalVar.viewportHeight);
+            .attr("height", globalVar.viewportHeight)
+            .attr("id", "containerSvg");
         globalVar.svg = globalVar.containerSvg.append("svg")
             .attr("width", globalVar.viewportWidth)
             .attr("height", globalVar.viewportHeight)
             .attr("x", 0)
-            .attr("y", 0);
+            .attr("y", 0)
+            .attr("id", "mainSvg");
 
         globalVar.containerSvg.call(globalVar.zoom);
         getCurCanvas();

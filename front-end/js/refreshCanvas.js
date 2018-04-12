@@ -15,7 +15,7 @@ function getTileArray(canvasId, viewportX, viewportY, w, h) {
             tileIds.push([i * tileW, j * tileH, canvasId]);
 
     return tileIds;
-}
+};
 
 // Setup a tile, 1) send a tile request; 2) call renderer; 3) register jumps
 // tileSvg is the svg corresponding to a tile
@@ -44,7 +44,7 @@ function renderTile(tileSvg, x, y, renderFuncs, canvasId, predicates) {
 
         registerJumps(tileSvg);
     });
-}
+};
 
 function RefreshCanvas(viewportX, viewportY) {
 
@@ -79,4 +79,4 @@ function RefreshCanvas(viewportX, viewportY) {
         .each(function(d) {
             renderTile(this, d[0], d[1], renderFuncs, globalVar.curCanvasId, globalVar.predicates);
         });
-}
+};
