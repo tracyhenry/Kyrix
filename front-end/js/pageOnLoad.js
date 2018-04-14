@@ -29,18 +29,19 @@ function pageOnLoad() {
         globalVar.curCanvasId = response.initialCanvasId;
         globalVar.tileW = response.tileW;
         globalVar.tileH = response.tileH;
-        globalVar.containerSvg = d3.select("body").append("svg")
+        globalVar.containerSvg
             .attr("width", globalVar.viewportWidth)
             .attr("height", globalVar.viewportHeight)
-            .attr("id", "containerSvg");
-        globalVar.svg = globalVar.containerSvg.append("svg")
+            .call(globalVar.zoom)
+            .append("svg")
+            .attr("id", "mainSvg")
             .attr("width", globalVar.viewportWidth)
             .attr("height", globalVar.viewportHeight)
             .attr("x", 0)
             .attr("y", 0)
-            .attr("id", "mainSvg");
+            .attr("viewBox", "0 0 " + globalVar.viewportWidth
+                + " " + globalVar.viewportHeight);
 
-        globalVar.containerSvg.call(globalVar.zoom);
         getCurCanvas();
         globalVar.jumpOptions.node().innerHTML = '';
         RefreshCanvas(globalVar.initialViewportX,

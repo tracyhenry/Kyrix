@@ -21,14 +21,14 @@ globalVar.curCanvasId = "";
 globalVar.curCanvas = {};
 globalVar.curJump = {};
 
-// the global svg
-globalVar.containerSvg = null;
-globalVar.svg = null;
-
 // d3 zoom
 globalVar.zoom = d3.zoom()
     .scaleExtent([1, 1])
     .on("zoom", zoomed);
+
+// container svg
+globalVar.containerSvg = d3.select("body").append("svg")
+    .attr("id", "containerSvg");
 
 // div for jump options
 globalVar.jumpOptions = d3.select("body").append("div")

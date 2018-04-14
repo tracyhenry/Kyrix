@@ -60,12 +60,18 @@ function RefreshCanvas(viewportX, viewportY) {
     var tileIds = getTileArray(globalVar.curCanvasId, viewportX, viewportY,
         globalVar.curCanvas.w, globalVar.curCanvas.h);
 
-    // render tiles
-    var tiles = globalVar.svg
+
+    // set viewport, here we only change min-x and min-y of the viewport.
+    // Size of the viewport is set either by pageOnLoad.js or completeJump.js
+    // and should not be changed in this function
+    var curViewport = d3.select("#mainSvg").attr("viewBox").split(" ");
+    var tiles = d3.select("#mainSvg")
         .attr("viewBox", viewportX + " " + viewportY + " "
-            + globalVar.viewportWidth + " " + globalVar.viewportHeight)
+            + curViewport[2]+ " " + curViewport[3])
         .selectAll("svg")
         .data(tileIds, function (d){return d;});
+
+    // render tiles
     tiles.exit().remove();
     tiles.enter().append("svg")
         .attr("width", tileW)
