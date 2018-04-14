@@ -43,7 +43,7 @@ function pageOnLoad() {
                 + " " + globalVar.viewportHeight);
 
         getCurCanvas();
-        globalVar.jumpOptions.node().innerHTML = '';
+        globalVar.jumpOptions.html("");
         RefreshCanvas(globalVar.initialViewportX,
             globalVar.initialViewportY);
     });

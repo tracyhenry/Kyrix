@@ -1,17 +1,18 @@
 // register jump info for a tile
 function registerJumps(svg) {
     var jumps = globalVar.curJump;
-    var gs = svg.selectAll("g").nodes();
-    for (var i = 0; i < gs.length; i ++) {
-        var layerId = gs.length - i - 1;
-        var shapes = gs[i].childNodes;
-        for (var j = 0; j < shapes.length; j ++) {
+    var gs = svg.selectAll("g");
+    gs.attr("data-num-layer", gs.size());
+    gs.each(function(d, i) {
 
-            shapes[j].setAttribute("data-layer-id", layerId);
-            shapes[j].onclick = function () {
+        var layerId = d3.select(this).attr("data-num-layer") - i - 1;
+        var shapes = d3.select(this).selectAll("*")
+            .attr("data-layer-id", layerId);
+        shapes.each(function(p, j){
 
-                var layerId = this.getAttribute("data-layer-id");
+            d3.select(this).on("click", function () {
 
+                var layerId = d3.select(this).attr("data-layer-id");
                 // check if there is any jump related
                 var jumpCount = 0;
                 for (var k = 0; k < jumps.length; k ++)
@@ -21,7 +22,7 @@ function registerJumps(svg) {
                 if (jumpCount == 0)
                     return ;
 
-                globalVar.jumpOptions.node().innerHTML = "<div>Jump to: </div>";
+                globalVar.jumpOptions.html("<div>Jump to: </div>");
                 for (var k = 0; k < jumps.length; k ++) {
 
                     // check if this jump is applied in this layer
@@ -29,22 +30,23 @@ function registerJumps(svg) {
                         continue;
 
                     // create a button and append it to jumpOptions
-                    var button = document.createElement("input");
-                    button.type = "button";
-                    button.value = jumps[k].destId;
-                    button.setAttribute("data-tuple", this.getAttribute("data-tuple"));
-                    button.setAttribute("data-jump-id", k);
-                    button.setAttribute("data-layer-id", layerId);
-                    button.style.webkitAppearance = "none";
-                    button.style.margin = "10px";
-                    button.style.height = "30px";
-                    button.style.width = "100px";
-                    button.style.fontSize = "20px";
-                    button.onclick = function () {
+                    var button = globalVar.jumpOptions.append("input")
+                        .attr("type", "button")
+                        .attr("value", jumps[k].destId)
+                        .attr("data-tuple", d3.select(this).attr("data-tuple"))
+                        .attr("data-jump-id", k)
+                        .attr("data-layer-id", layerId)
+                        .style("-webkit-appearance", "none")
+                        .style("margin", "10px")
+                        .style("height", "30px")
+                        .style("width", "100px")
+                        .style("font-size", "20px");
 
-                        var tuple = this.getAttribute("data-tuple").split(",");
-                        var jumpId = this.getAttribute("data-jump-id");
-                        var layerId = this.getAttribute("data-layer-id");
+                    button.on("click", function () {
+
+                        var tuple = d3.select(this).attr("data-tuple").split(",");
+                        var jumpId = d3.select(this).attr("data-jump-id");
+                        var layerId = d3.select(this).attr("data-layer-id");
                         globalVar.curCanvasId = jumps[jumpId].destId;
 
                         // calculate new predicates
@@ -63,9 +65,8 @@ function registerJumps(svg) {
                         else {
                             // viewport is fixed at a certain tuple
                             var postData = "canvasId=" + globalVar.curCanvasId;
-                            for (var i = 0; i < newViewportRet[1].length; i++) {
+                            for (var i = 0; i < newViewportRet[1].length; i++)
                                 postData += "&predicate" + i + "=" + newViewportRet[1][i];
-                            }
                             $.ajax({
                                 type: "POST",
                                 url: "viewport",
@@ -80,11 +81,9 @@ function registerJumps(svg) {
                                 async: false
                             });
                         }
-                    };
-                    globalVar.jumpOptions.node().appendChild(button);
+                    });
                 }
-            }
-        }
-    }
+            });
+        });
+    });
 };
-

@@ -65,10 +65,9 @@ function completeJump(tuple, newViewportX, newViewportY) {
                     d3.select("#oldSvg").remove();
 
                     // clear the jump option div
-                    globalVar.jumpOptions.node().innerHTML = '';
+                    globalVar.jumpOptions.html("");
                 });
         })
-
 
     function zoomAndFade(t, v) {
 
@@ -98,5 +97,4 @@ function completeJump(tuple, newViewportX, newViewportY) {
         // change viewBox
         d3.select("#mainSvg").attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
     };
-
 };
