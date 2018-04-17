@@ -28,7 +28,9 @@ globalVar.zoom = d3.zoom()
 
 // container svg
 globalVar.containerSvg = d3.select("body").append("svg")
-    .attr("id", "containerSvg");
+    .attr("id", "containerSvg")
+    .style("display", "block")
+    .style("margin", "auto");
 
 // div for jump options
 globalVar.jumpOptions = d3.select("body").append("div")
