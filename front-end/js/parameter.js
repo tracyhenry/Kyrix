@@ -22,3 +22,6 @@ param.enteringScaleFactor = 2.5;
 
 // threshold for t when fade starts
 param.fadeThreshold = 0.5;
+
+// tile entering animation duration
+param.tileEnteringDuration = 150;

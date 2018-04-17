@@ -42,6 +42,10 @@ function renderTile(tileSvg, x, y, renderFuncs, canvasId, predicates) {
         for (var i = renderFuncs.length - 1; i >= 0; i --)
             renderFuncs[i](tileSvg, renderData[i]);
 
+        tileSvg.transition()
+            .duration(param.tileEnteringDuration)
+            .style("opacity", 1.0);
+
         registerJumps(tileSvg);
     });
 };
@@ -82,6 +86,7 @@ function RefreshCanvas(viewportX, viewportY) {
         .attr("viewBox", function (d) {
             return d[0] + " " + d[1] + " " + tileW + " " + tileH;
         })
+        .style("opacity", 0)
         .each(function(d) {
             renderTile(this, d[0], d[1], renderFuncs, globalVar.curCanvasId, globalVar.predicates);
         });
