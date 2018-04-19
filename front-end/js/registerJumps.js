@@ -2,10 +2,9 @@
 function registerJumps(svg) {
     var jumps = globalVar.curJump;
     var gs = svg.selectAll("g");
-    gs.attr("data-num-layer", gs.size());
     gs.each(function(d, i) {
 
-        var layerId = d3.select(this).attr("data-num-layer") - i - 1;
+        var layerId = globalVar.curCanvas.layers.length - i - 1;
         var shapes = d3.select(this).selectAll("*")
             .attr("data-layer-id", layerId);
         shapes.each(function(p, j){
