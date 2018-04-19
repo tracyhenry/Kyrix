@@ -100,7 +100,7 @@ public class PlacementNaiveIndexer extends Indexer {
 					ArrayList<String> curRow = new ArrayList<>();
 					for (int j = 0; j < curRowObjects.size(); j ++)
 						curRow.add(curRowObjects.get(j).toString());
-//					System.out.println(curRow);
+
 					transformResults.add(curRow);
 				}
 

@@ -10,9 +10,6 @@ const d3 = require("d3");
 // construct a project
 var p = new Project("demo", "dbconfig.txt", 1000, 1000);
 
-
-
-// ================== Canvas 1 ===================
 var c1 = new Canvas("fullname", 5000, 5000);
 p.addCanvas(c1);
 
@@ -93,41 +90,6 @@ c1L1.addRenderingFunc(c1L1Rendering);
 
 
 
-// ******** Rectangle Layer (stu table) ********
-var c1L2 = new Layer("scalexy_stu");
-c1.addLayer(c1L2);
-
-// placement object, same as the circle layer
-c1L2.addPlacement(c1L1Placement);
-
-// rendering function
-var c1L2Rendering = function render(svg, data) {
-    g = svg.append("g");
-    g.selectAll("rect")
-        .data(data)
-        .enter()
-        .append("rect")
-        .attr("x", function(d) {return d[3] - 80;})
-        .attr("y", function(d) {return d[4] - 80;})
-        .attr("width", 160)
-        .attr("height", 160)
-        .style("fill", "pink")
-        .attr("data-tuple", function(d) {return d;});
-    g.selectAll("text")
-        .data(data)
-        .enter()
-        .append("text")
-        .text(function(d) {return d[1] + " " + d[2];})
-        .attr("x", function(d) {return d[3];})
-        .attr("y", function(d) {return d[4];})
-        .attr("dy", ".35em")
-        .attr("text-anchor", "middle")
-        .style("fill-opacity", 1)
-        .attr("data-tuple", function(d) {return d;});
-};
-c1L2.addRenderingFunc(c1L2Rendering);
-
-
 // ******** Background layer (no table) ********
 var c1L3 = new Layer("empty");
 c1.addLayer(c1L3);
@@ -153,112 +115,6 @@ var c1L3Rendering = function render(svg, data) {
 c1L3.addRenderingFunc(c1L3Rendering);
 
 
-
-
-// ================== Canvas 2 ===================
-var c2 = new Canvas("firstname", 1000, 1000);
-p.addCanvas(c2);
-
-
-// ******** Define Data transform for Canvas 2 ********
-var c2IDTransform = new Transform("identical",
-    "select * from pi;",
-    "wenbo",
-    function (row) {
-        return row;
-    },
-    ["id", "firstname", "lastname", "x", "y"],
-    true
-);
-c2.addTransform(c2IDTransform);
-
-// ******** Canvas2 only layer ********
-var c2L1 = new Layer("identical");
-c2.addLayer(c2L1);
-
-// constant placement object
-c2L1Placement = {};
-c2L1Placement.centroid_x = "con:500";
-c2L1Placement.centroid_y = "con:500";
-c2L1Placement.width = "con:200";
-c2L1Placement.height = "con:200";
-c2L1.addPlacement(c2L1Placement);
-
-c2L1Rendering = function render(svg, data) {
-    g = svg.append("g");
-    g.selectAll("text")
-        .data(data)
-        .enter()
-        .append("text")
-        .text(function(d) {return d[1];})
-        .attr("x", 500)
-        .attr("y", 500)
-        .attr("dy", ".35em")
-        .attr("font-size", 50)
-        .attr("text-anchor", "middle")
-        .style("fill-opacity", 1)
-        .attr("data-tuple", function(d) {return d;});
-};
-c2L1.addRenderingFunc(c2L1Rendering);
-
-
-
-
-// ================== Canvas 3 ===================
-var c3 = new Canvas("lastname", 1000, 1000);
-p.addCanvas(c3);
-
-// data transform for canvas 3
-var c3IDTransform = new Transform("identical",
-    "select * from stu;",
-    "wenbo",
-    function (row) {
-        return row;
-    },
-    ["id", "firstname", "lastname", "x", "y"],
-    true
-);
-
-c3.addTransform(c3IDTransform);
-
-// ******** canvas3 only layer ********
-var c3L1 = new Layer("identical");
-c3.addLayer(c3L1);
-
-// same placement as canvas 2 layer
-c3L1.addPlacement(c2L1Placement);
-
-// rendering function is different, as it renders last name
-c3L1Rendering = function render(svg, data) {
-    g = svg.append("g");
-    g.selectAll("text")
-        .data(data)
-        .enter()
-        .append("text")
-        .text(function(d) {return d[2];})
-        .attr("x", 500)
-        .attr("y", 500)
-        .attr("dy", ".35em")
-        .attr("font-size", 50)
-        .attr("text-anchor", "middle")
-        .style("fill-opacity", 1)
-        .attr("data-tuple", function(d) {return d;});
-};
-c3L1.addRenderingFunc(c3L1Rendering);
-
-p.initialCanvas("fullname", 500, 500, ["", "", ""]);
-
-
-
-// ================== fullname --> firstname, lastname ===================
-var newViewport = function (row) {
-    return [1, ["id=" + row[0]]];
-};
-var newPredicate = function (row) {
-    return ["id=" + row[0]];
-};
-
-p.addJump(new Jump("fullname", "firstname", [newViewport, "", ""], [newPredicate, "", ""]));
-p.addJump(new Jump("fullname", "lastname", ["", newViewport, ""], ["", newPredicate, ""]));
+p.initialCanvas("fullname", 500, 500, ["", ""]);
 
 p.saveToDb();
