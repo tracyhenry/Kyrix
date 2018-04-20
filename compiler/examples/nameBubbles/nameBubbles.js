@@ -11,7 +11,7 @@ const transforms = require("./transforms");
 const placements = require("./placements");
 
 // construct a project
-var p = new Project("demo", "../../dbconfig.txt", 1000, 1000);
+var p = new Project("namebubble", "../../dbconfig.txt", 1000, 1000);
 
 
 // ================== Canvas 1 ===================

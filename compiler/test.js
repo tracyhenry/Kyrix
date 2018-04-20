@@ -8,7 +8,7 @@ const d3 = require("d3");
 
 
 // construct a project
-var p = new Project("demo", "dbconfig.txt", 1000, 1000);
+var p = new Project("test", "dbconfig.txt", 1000, 1000);
 
 var c1 = new Canvas("fullname", 5000, 5000);
 p.addCanvas(c1);
@@ -19,13 +19,18 @@ var c1ScalexyPi = new Transform("scalexy_pi",
     "select * from pi;",
     "wenbo",
     function (row) {
-        row[3] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[3]);
-        row[4] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[4]);
-        return row;
+        var ret = [];
+        ret.push(row[0]);
+        ret.push(row[1]);
+        ret.push(row[2]);
+        ret.push(d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[3]));
+        ret.push(d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[4]));
+        return Java.to(ret ,"java.lang.String[]");
     },
     ["id", "firstname", "lastname", "x", "y"],
     true
 );
+
 c1.addTransform(c1ScalexyPi);
 
 // scale x and y from the stu table;
@@ -33,9 +38,13 @@ var c1ScalexyStu = new Transform("scalexy_stu",
     "select * from stu;",
     "wenbo",
     function (row) {
-        row[3] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[3]);
-        row[4] = d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[4]);
-        return row;
+        var ret = [];
+        ret.push(row[0]);
+        ret.push(row[1]);
+        ret.push(row[2]);
+        ret.push(d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[3]));
+        ret.push(d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[4]));
+        return Java.to(ret ,"java.lang.String[]");
     },
     ["id", "firstname", "lastname", "x", "y"],
     true
