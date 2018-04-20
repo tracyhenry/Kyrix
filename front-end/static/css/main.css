@@ -1,0 +1,17 @@
+#containerSvg {
+    display : block;
+    margin : auto;
+}
+
+#jumpOptions {
+    margin-bottom : 40px;
+    text-align : center;
+}
+
+.jumpButton {
+    -webkit-appearance : none;
+    margin : 10px;
+    height : 30px;
+    width : 100px;
+    font-size : 20px;
+}

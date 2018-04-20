@@ -35,11 +35,7 @@ function registerJumps(svg) {
                         .attr("data-tuple", d3.select(this).attr("data-tuple"))
                         .attr("data-jump-id", k)
                         .attr("data-layer-id", layerId)
-                        .style("-webkit-appearance", "none")
-                        .style("margin", "10px")
-                        .style("height", "30px")
-                        .style("width", "100px")
-                        .style("font-size", "20px");
+                        .classed("jumpButton", true);
 
                     button.on("click", function () {
 

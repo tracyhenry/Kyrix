@@ -28,15 +28,11 @@ globalVar.zoom = d3.zoom()
 
 // container svg
 globalVar.containerSvg = d3.select("body").append("svg")
-    .attr("id", "containerSvg")
-    .style("display", "block")
-    .style("margin", "auto");
+    .attr("id", "containerSvg");
 
 // div for jump options
 globalVar.jumpOptions = d3.select("body").append("div")
-    .style("margin-bottom", "40px")
-    .style("text-align", "center");
-
+    .attr("id", "jumpOptions");
 
 if (typeof String.prototype.parseFunction != 'function') {
     String.prototype.parseFunction = function () {
