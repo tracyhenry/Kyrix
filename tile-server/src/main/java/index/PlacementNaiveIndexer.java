@@ -95,11 +95,12 @@ public class PlacementNaiveIndexer extends Indexer {
 				// step 2(c): run the data transform function over the sql query result
 				ArrayList<ArrayList<String>> transformResults = new ArrayList<>();
 				for (int i = 0; i < sqlQueryResults.size(); i ++) {	//TODO: distinguish between separable and non-separable cases
-					ArrayList<Object> curRowObjects = (ArrayList<Object>) engine	// TODO: figure out why row.slice does not work. learn more about nashorn types
+
+					String[] curRowObjects = (String[]) engine	// TODO: figure out why row.slice does not work. learn more about nashorn types
 							.invokeFunction("trans", sqlQueryResults.get(i));
 					ArrayList<String> curRow = new ArrayList<>();
-					for (int j = 0; j < curRowObjects.size(); j ++)
-						curRow.add(curRowObjects.get(j).toString());
+					for (int j = 0; j < curRowObjects.length; j ++)
+						curRow.add(curRowObjects[j].toString());
 
 					transformResults.add(curRow);
 				}
