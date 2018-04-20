@@ -39,6 +39,7 @@ public class PlacementNaiveIndexer extends Indexer {
 			NoSuchMethodException {
 
 		System.out.println("Precomputing...");
+		String projectName = project.getName();
 		// for each canvas and for each layer
 		// step 0, create a table storing query result and bounding boxes
 		// Step 1, run whole query of the data transform
@@ -53,11 +54,11 @@ public class PlacementNaiveIndexer extends Indexer {
 				// step 0: create a table for storing bboxes
 				Transform trans = c.getTransformById(l.getTransformId());
 				// drop table if exists
-				String sql = "drop table if exists " + "bbox_" + c.getId() + "layer" + layer_id + ";";
+				String sql = "drop table if exists " + "bbox_" + projectName + "_" + c.getId() + "layer" + layer_id + ";";
 				kyrix_stmt.executeUpdate(sql);
 
 				// create table
-				sql = "create table bbox_" + c.getId() + "layer" + layer_id + " (";
+				sql = "create table bbox_" + projectName + "_" + c.getId() + "layer" + layer_id + " (";
 				for (int i = 0; i < trans.getColumnNames().size(); i ++)
 					sql += trans.getColumnNames().get(i) + " text, ";
 				sql += "cx double, cy double, minx double, miny double, maxx double, maxy double);";
@@ -176,7 +177,7 @@ public class PlacementNaiveIndexer extends Indexer {
 				// TODO: prepared statement here
 				// insert tuples
 				for (int i = 0; i < transformResults.size(); i ++) {
-					sql = "insert into bbox_" + c.getId() + "layer" + layer_id + " values (";
+					sql = "insert into bbox_" + projectName + "_" + c.getId() + "layer" + layer_id + " values (";
 					ArrayList<String> curRow = transformResults.get(i);
 					for (int j = 0; j < curRow.size(); j ++)
 						sql += "'" + curRow.get(j) + "', ";
@@ -192,7 +193,8 @@ public class PlacementNaiveIndexer extends Indexer {
 
 				// build index
 				try {
-					sql = "create index bbox_" + c.getId() + "layer" + layer_id + "_indx on bbox_" + c.getId()
+					sql = "create index bbox_" + projectName + "_" + c.getId() + "layer" + layer_id + "_indx on bbox_"
+							+ projectName + "_" + c.getId()
 							+ "(minx, miny, maxx, maxy);";
 					kyrix_stmt.executeUpdate(sql);
 				} catch (Exception e) {}

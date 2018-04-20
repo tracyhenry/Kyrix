@@ -117,7 +117,8 @@ public class TileRequestHandler implements HttpHandler {
 			ArrayList<ArrayList<String>> curData = new ArrayList<>();
 
 			// construct range query
-			String sql = "select * from bbox_" + curCanvas.getId() + "layer" + i + " where "
+			String sql = "select * from bbox_" + project.getName() + "_"
+					+ curCanvas.getId() + "layer" + i + " where "
 					+ "minx <= " + (minx + Config.tileW) + " and "
 					+ "maxx >= " + minx + " and "
 					+ "miny <= " + (miny + Config.tileH) + " and "
