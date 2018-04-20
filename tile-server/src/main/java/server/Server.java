@@ -36,6 +36,14 @@ public class Server {
 		httpExchange.close();
 	}
 
+	// send response with additional contentType information
+	public static void sendResponse(HttpExchange httpExchange, int responseCode, String response, String contentType) throws IOException {
+
+		// add content type to response header
+		httpExchange.getResponseHeaders().add("Content-Type", contentType);
+		sendResponse(httpExchange, responseCode, response);
+	}
+
 	// https://stackoverflow.com/questions/11640025/how-to-obtain-the-query-string-in-a-get-with-java-httpserver-httpexchange
 	public static Map<String, String> queryToMap(String query) {
 

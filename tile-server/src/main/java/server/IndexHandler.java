@@ -29,6 +29,7 @@ public class IndexHandler implements HttpHandler {
 		String path = httpExchange.getRequestURI().getPath();
 		if (path.equals("/"))
 			path = "/" + Config.indexFileName;
+
 		// read the frontend file and return
 		FileReader fr = new FileReader(Config.webRoot + path);
 		BufferedReader br = new BufferedReader(fr);
@@ -38,6 +39,9 @@ public class IndexHandler implements HttpHandler {
 			content.append(s + "\n");
 
 		// send back a ok response
-		Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content.toString());
+		if (path.contains(".svg"))	//todo: better file checking for the index handler
+			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content.toString(), "image/svg+xml");
+		else
+			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content.toString());
 	}
 }
