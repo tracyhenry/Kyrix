@@ -4,9 +4,12 @@
 // 3. call RefreshCanvas()
 function completeJump(tuple, newViewportX, newViewportY) {
 
+    // unbind zoom
+    globalVar.containerSvg.on(".zoom", null);
+
+    // change #mainSvg to #oldSvg
     var oldSvg = d3.select("#mainSvg").attr("id", "oldSvg");
 
-    // TODO : change all set/get attribute to d3 attr
     var curViewport = oldSvg.attr("viewBox").split(" ");
     for (var i = 0; i < curViewport.length; i ++)
         curViewport[i] = parseFloat(curViewport[i]);
@@ -33,11 +36,8 @@ function completeJump(tuple, newViewportX, newViewportY) {
         })
         .on("start", function () {
 
-            // get the canvas object for the destination canvas
-            getCurCanvas();
-
             // create a new svg
-            var newSvg = d3.select("#containerSvg")
+            var newSvg = globalVar.containerSvg
                 .append("svg")
                 .attr("id", "mainSvg")
                 .attr("width", globalVar.viewportWidth)
@@ -57,6 +57,15 @@ function completeJump(tuple, newViewportX, newViewportY) {
                     return function(t) {enterAndZoom(d3.easeExpOut(t));};
                 })
                 .on("start", function() {
+
+                    // set initial global var initialViewportX/Y
+                    globalVar.initialViewportX = newViewportX;
+                    globalVar.initialViewportY = newViewportY;
+
+                    // get the canvas object for the destination canvas
+                    getCurCanvas();
+
+                    // render
                     RefreshCanvas(newViewportX, newViewportY);
                 })
                 .on("end", function (){
@@ -71,10 +80,23 @@ function completeJump(tuple, newViewportX, newViewportY) {
                         + globalVar.viewportWidth + " "
                         + globalVar.viewportHeight);
 
+                    // set up zoom
+                    var zoom = d3.zoom()
+                        .scaleExtent([1, 1])
+                        .on("zoom", zoomed)
+                        .translateExtent(
+                            [[-globalVar.initialViewportX, -globalVar.initialViewportY],
+                                [globalVar.curCanvas.w - globalVar.initialViewportX,
+                                    globalVar.curCanvas.h - globalVar.initialViewportY]]
+                        );
+                    globalVar.containerSvg
+                        .call(zoom)
+                        .call(zoom.transform, d3.zoomIdentity);
+
                     // clear the jump option div
                     globalVar.jumpOptions.html("");
                 });
-        })
+        });
 
     function zoomAndFade(t, v) {
 
