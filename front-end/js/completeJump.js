@@ -12,12 +12,12 @@ function completeJump(tuple, newViewportX, newViewportY) {
 
     var curViewport = oldSvg.attr("viewBox").split(" ");
     for (var i = 0; i < curViewport.length; i ++)
-        curViewport[i] = parseFloat(curViewport[i]);
+        curViewport[i] = +curViewport[i];
     var tupleLen = tuple.length;
-    var tupleCX = parseFloat(tuple[tupleLen - param.cxOffset]);
-    var tupleCY = parseFloat(tuple[tupleLen - param.cyOffset]);
-    var tupleWidth = parseFloat(tuple[tupleLen - param.maxxOffset]) - parseFloat(tuple[tupleLen - param.minxOffset]);
-    var tupleHeight = parseFloat(tuple[tupleLen - param.maxyOffset]) - parseFloat(tuple[tupleLen - param.minyOffset]);
+    var tupleCX = +tuple[tupleLen - param.cxOffset];
+    var tupleCY = +tuple[tupleLen - param.cyOffset];
+    var tupleWidth = tuple[tupleLen - param.maxxOffset] - tuple[tupleLen - param.minxOffset];
+    var tupleHeight = tuple[tupleLen - param.maxyOffset] - tuple[tupleLen - param.minyOffset];
     var minx = Math.max(tupleCX - tupleWidth / 2.0, curViewport[0]);
     var maxx = Math.min(tupleCX + tupleWidth / 2.0, curViewport[0] + curViewport[2]);
     var miny = Math.max(tupleCY - tupleHeight / 2.0, curViewport[1]);
@@ -92,8 +92,8 @@ function completeJump(tuple, newViewportX, newViewportY) {
 
         var vWidth = v[2];
         var vHeight = globalVar.viewportHeight / globalVar.viewportWidth * vWidth;
-        var minx = curViewport[0] + parseFloat(v[0]) - vWidth / 2.0;
-        var miny = curViewport[1] + parseFloat(v[1]) - vHeight / 2.0;
+        var minx = curViewport[0] + v[0] - vWidth / 2.0;
+        var miny = curViewport[1] + v[1] - vHeight / 2.0;
 
         // change viewBox
         oldSvg.attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);

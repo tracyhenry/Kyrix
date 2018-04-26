@@ -25,7 +25,7 @@ function registerJumps(svg) {
                 for (var k = 0; k < jumps.length; k ++) {
 
                     // check if this jump is applied in this layer
-                    if (jumps[k].newViewports[layerId] == "")
+                    if (jumps[k].type != "semantic_zoom" || jumps[k].newViewports[layerId] == "")
                         continue;
 
                     // create a button and append it to jumpOptions
