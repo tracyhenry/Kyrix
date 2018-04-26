@@ -21,14 +21,14 @@ function pageOnLoad() {
     $.post("/first/", {}, function (data, status) {
         var response = JSON.parse(data);
         console.log(response);
-        globalVar.initialViewportX = parseFloat(response.initialViewportX);
-        globalVar.initialViewportY = parseFloat(response.initialViewportY);
+        globalVar.initialViewportX = +response.initialViewportX;
+        globalVar.initialViewportY = +response.initialViewportY;
         globalVar.predicates = response.initialPredicates;
-        globalVar.viewportWidth = parseFloat(response.viewportWidth);
-        globalVar.viewportHeight = parseFloat(response.viewportHeight);
+        globalVar.viewportWidth = +response.viewportWidth;
+        globalVar.viewportHeight = +response.viewportHeight;
         globalVar.curCanvasId = response.initialCanvasId;
-        globalVar.tileW = parseFloat(response.tileW);
-        globalVar.tileH = parseFloat(response.tileH);
+        globalVar.tileW = +response.tileW;
+        globalVar.tileH = +response.tileH;
 
         // set up global and main svgs
         globalVar.containerSvg
