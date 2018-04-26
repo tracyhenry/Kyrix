@@ -81,17 +81,7 @@ function completeJump(tuple, newViewportX, newViewportY) {
                         + globalVar.viewportHeight);
 
                     // set up zoom
-                    var zoom = d3.zoom()
-                        .scaleExtent([1, 1])
-                        .on("zoom", zoomed)
-                        .translateExtent(
-                            [[-globalVar.initialViewportX, -globalVar.initialViewportY],
-                                [globalVar.curCanvas.w - globalVar.initialViewportX,
-                                    globalVar.curCanvas.h - globalVar.initialViewportY]]
-                        );
-                    globalVar.containerSvg
-                        .call(zoom)
-                        .call(zoom.transform, d3.zoomIdentity);
+                    setupZoom();
 
                     // clear the jump option div
                     globalVar.jumpOptions.html("");

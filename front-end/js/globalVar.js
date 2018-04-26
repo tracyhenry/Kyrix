@@ -27,7 +27,8 @@ globalVar.containerSvg = d3.select("body").append("svg")
 
 // div for jump options
 globalVar.jumpOptions = d3.select("body").append("div")
-    .attr("id", "jumpOptions");
+    .attr("id", "jumpOptions")
+    .html("");
 
 if (typeof String.prototype.parseFunction != 'function') {
     String.prototype.parseFunction = function () {

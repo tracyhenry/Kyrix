@@ -30,36 +30,26 @@ function pageOnLoad() {
         globalVar.tileW = parseFloat(response.tileW);
         globalVar.tileH = parseFloat(response.tileH);
 
-        // get current canvas object
-        getCurCanvas();
-
-        // set up zoom
-        var zoom = d3.zoom()
-            .scaleExtent([1, 1])
-            .on("zoom", zoomed)
-            .translateExtent(
-            [[-globalVar.initialViewportX, -globalVar.initialViewportY],
-             [globalVar.curCanvas.w - globalVar.initialViewportX,
-                 globalVar.curCanvas.h - globalVar.initialViewportY]]
-        );
-
-        // set up container svg
+        // set up global and main svgs
         globalVar.containerSvg
             .attr("width", globalVar.viewportWidth)
             .attr("height", globalVar.viewportHeight)
-            .call(zoom)
             .append("svg")
             .attr("id", "mainSvg")
             .attr("width", globalVar.viewportWidth)
             .attr("height", globalVar.viewportHeight)
             .attr("x", 0)
             .attr("y", 0)
-            .attr("viewBox", "0 0 " + globalVar.viewportWidth
+            .attr("viewBox", globalVar.initialViewportX
+                + " " + globalVar.initialViewportY
+                + " " +  globalVar.viewportWidth
                 + " " + globalVar.viewportHeight);
-        globalVar.containerSvg.call(zoom.transform, d3.zoomIdentity);
 
-        // initialize jump options
-        globalVar.jumpOptions.html("");
+        // get current canvas object
+        getCurCanvas();
+
+        // set up zoom
+        setupZoom();
 
         // render
         RefreshCanvas(globalVar.initialViewportX,
