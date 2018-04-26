@@ -11,6 +11,7 @@ public class Jump {
 	private String destId;
 	private ArrayList<String> newViewports;
 	private ArrayList<String> newPredicates;
+	private String type;
 
 	public String getSourceId() {
 		return sourceId;
@@ -18,6 +19,10 @@ public class Jump {
 
 	public String getDestId() {
 		return destId;
+	}
+
+	public String getType() {
+		return type;
 	}
 
 	public ArrayList<String> getNewViewports() {
@@ -35,6 +40,7 @@ public class Jump {
 				", destId='" + destId + '\'' +
 				", newViewports=" + newViewports +
 				", newPredicates=" + newPredicates +
+				", type='" + type + '\'' +
 				'}';
 	}
 }

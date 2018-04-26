@@ -69,7 +69,6 @@ public class PlacementNaiveIndexer extends Indexer {
 					continue;
 
 				// step 1: getting all tuples,
-
 				ArrayList<ArrayList<String>> sqlQueryResults = new ArrayList<>();
 				Statement curStmt = DbConnector.getStmtByDbName(trans.getDb());
 				ResultSet rs = curStmt.executeQuery(trans.getQuery());
@@ -96,9 +95,8 @@ public class PlacementNaiveIndexer extends Indexer {
 				// step 2(c): run the data transform function over the sql query result
 				ArrayList<ArrayList<String>> transformResults = new ArrayList<>();
 				for (int i = 0; i < sqlQueryResults.size(); i ++) {	//TODO: distinguish between separable and non-separable cases
-
 					String[] curRowObjects = (String[]) engine	// TODO: figure out why row.slice does not work. learn more about nashorn types
-							.invokeFunction("trans", sqlQueryResults.get(i));
+							.invokeFunction("trans", sqlQueryResults.get(i), c.getW(), c.getH());
 					ArrayList<String> curRow = new ArrayList<>();
 					for (int j = 0; j < curRowObjects.length; j ++)
 						curRow.add(curRowObjects[j].toString());
