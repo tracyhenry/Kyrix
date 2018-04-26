@@ -19,6 +19,8 @@ function Canvas(id, w, h) {
     this.h = h;
     this.transforms = []; // an initially empty transform array
     this.layers = [];   // an initially empty layer array
+    this.zoomInFactor = 0;  // greater than 1 to be valid
+    this.zoomOutFactor = 100;   // smaller than 1 to be valid
 };
 
 // add layer to a canvas

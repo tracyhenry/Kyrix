@@ -4,10 +4,10 @@ function getTileArray(canvasId, viewportX, viewportY, w, h) {
     var tileW = globalVar.tileW;
     var tileH = globalVar.tileH;
     // calculate the tile range that the viewport spans
-    var xStart = Math.max(0, Math.floor(viewportX / tileW));
-    var yStart = Math.max(0, Math.floor(viewportY / tileH));
-    var xEnd = Math.min(Math.floor(w / tileW), Math.floor((viewportX + globalVar.viewportWidth) / tileW));
-    var yEnd = Math.min(Math.floor(h / tileH), Math.floor((viewportY + globalVar.viewportHeight) / tileH));
+    var xStart = Math.max(0, Math.floor(viewportX / tileW) - param.extraTiles);
+    var yStart = Math.max(0, Math.floor(viewportY / tileH) - param.extraTiles);
+    var xEnd = Math.min(Math.floor(w / tileW), Math.floor((viewportX + globalVar.viewportWidth) / tileW) + param.extraTiles);
+    var yEnd = Math.min(Math.floor(h / tileH), Math.floor((viewportY + globalVar.viewportHeight) / tileH) + param.extraTiles);
 
     var tileIds = [];
     for (var i = xStart; i <= xEnd; i ++)

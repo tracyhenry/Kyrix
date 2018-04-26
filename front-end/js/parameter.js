@@ -25,3 +25,6 @@ param.fadeThreshold = 0.5;
 
 // tile entering animation duration
 param.tileEnteringDuration = 150;
+
+// extra tiles per dimension
+param.extraTiles = 2;

@@ -5,13 +5,12 @@
 function setupZoom() {
 
     // check if this canvas has literal zooms
-    var maxScale = 1;
-    if (globalVar.curCanvas.zoomFactor > 1)
-        maxScale = globalVar.curCanvas.zoomFactor;
+    var minScale = Math.min(globalVar.curCanvas.zoomOutFactor, 1);
+    var maxScale = Math.max(globalVar.curCanvas.zoomInFactor, 1);
 
     // set up zoom
     var zoom = d3.zoom()
-        .scaleExtent([1, maxScale])
+        .scaleExtent([minScale, maxScale])
         .on("zoom", zoomed)
         .translateExtent(
             [[-globalVar.initialViewportX, -globalVar.initialViewportY],
@@ -24,14 +23,12 @@ function setupZoom() {
         .call(zoom.transform, d3.zoomIdentity);
 }
 
-function completeZoomIn() {
-
-    var oldZoomFactor = globalVar.curCanvas.zoomFactor;
+function completeZoom(zoomType, oldZoomFactor) {
 
     // get the id of the canvas to zoom into
     var jumps = globalVar.curJump;
     for (var i = 0; i < jumps.length; i ++)
-        if (jumps[i].type == "literal_zoom")
+        if (jumps[i].type == zoomType)
             globalVar.curCanvasId = jumps[i].destId;
 
     // get the canvas object
@@ -76,14 +73,19 @@ function zoomed() {
     curViewport[3] = globalVar.viewportHeight / transform.k;
     d3.select("#mainSvg")
         .attr("viewBox", curViewport[0]
-        + " " + curViewport[1]
-        + " " + curViewport[2]
-        + " " + curViewport[3]);
+            + " " + curViewport[1]
+            + " " + curViewport[2]
+            + " " + curViewport[3]);
 
     RefreshCanvas(viewportX, viewportY);
 
-    // check if zoom scale reaches zoomFactor
-    if (globalVar.curCanvas.zoomFactor > 1
-         && transform.k >= globalVar.curCanvas.zoomFactor - 1e-5)
-            completeZoomIn();
-};
+    // check if zoom scale reaches zoomInFactor
+    if (globalVar.curCanvas.zoomInFactor > 1
+        && transform.k >= globalVar.curCanvas.zoomInFactor - 1e-5)
+        completeZoom("literal_zoom_in", globalVar.curCanvas.zoomInFactor);
+
+    // check if zoom scale reaches zoomOutFactor
+    if (globalVar.curCanvas.zoomOutFactor < 1
+        && transform.k <= globalVar.curCanvas.zoomOutFactor + 1e-5)
+        completeZoom("literal_zoom_out", globalVar.curCanvas.zoomOutFactor);
+}

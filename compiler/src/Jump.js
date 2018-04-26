@@ -4,7 +4,7 @@
  * @param {string} destID - the id of the destination canvas
  * @param {array} newViewports - an array of javascript functions calculating the new viewport (see api doc for more details)
  * @param {array} newPredicates - an array of javascript functions calculating predicates for the new canvas
- * @param {string} type - a string indicating the type of this jump, could be one of "literal_zoom" or "semantic_zoom" (or maybe something else in the future)
+ * @param {string} type - a string indicating the type of this jump, could be one of "literal_zoom_in", "literal_zoom_out", or "semantic_zoom" (or maybe something else in the future)
  * @constructor
  */
 function Jump(sourceId, destId, newViewports, newPredicates, type) {

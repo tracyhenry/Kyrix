@@ -79,19 +79,22 @@ function addJump(jump) {
                 throw new Error ("Constructing Jump: wrong number of newViewport/newPredicates functions.");
 
     // deal with literal zooms
-    if (jump.type == "literal_zoom") {
+    if (jump.type == "literal_zoom_in" || jump.type == "literal_zoom_out") {
         // check duplicates
         for (var i = 0; i < this.jumps.length; i ++)
             if (this.jumps[i].sourceId == jump.sourceId
-                && this.jumps[i].type == "literal_zoom")
-                throw new Error("Constructing jump: there can be only one literal zoom for a canvas.");
+                && this.jumps[i].type == jump.type)
+                throw new Error("Constructing jump: there can be only one " + jump.type + " for a canvas.");
 
         // check whether zoom factor is the same for x & y
         if (destCanvas.w / sourceCanvas.w != destCanvas.h / sourceCanvas.h)
             throw new Error("Constructing jump: cannot infer literal zoom factor.");
 
         // assign zoom factor to the source canvas
-        sourceCanvas.zoomFactor = destCanvas.w / sourceCanvas.w;
+        if (jump.type == "literal_zoom_in")
+            sourceCanvas.zoomInFactor = destCanvas.w / sourceCanvas.w;
+        else
+            sourceCanvas.zoomOutFactor = destCanvas.w / sourceCanvas.w;
     }
 
     this.jumps.push(jump);
