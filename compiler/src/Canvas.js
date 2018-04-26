@@ -8,10 +8,10 @@
 function Canvas(id, w, h) {
 
     // type check
-    if (typeof w !== "number")
-        throw new Error("Constructing canvas: w must be an integer.");
-    if (typeof h !== "number")
-        throw new Error("Constructing canvas: h must be an integer.");
+    if (typeof w !== "number" || w <= 0)
+        throw new Error("Constructing canvas: w must be a positive integer.");
+    if (typeof h !== "number" || h <= 0)
+        throw new Error("Constructing canvas: h must be a positive integer.");
 
     // assign fields
     this.id = String(id);
@@ -27,7 +27,8 @@ function addLayer(layer) {
     var exist = false;
     for (var i = 0; i < this.transforms.length; i ++)
         if (this.transforms[i].id == layer.transformId)
-            exist=  true;
+            exist = true;
+
     if (! exist)
         throw new Error("Adding layer: transform ID " + layer.transformId + " does not exist.");
 

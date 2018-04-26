@@ -13,7 +13,6 @@ const placements = require("./placements");
 // construct a project
 var p = new Project("nba", "../../dbconfig.txt", 1200, 1600);
 
-
 // ================== Canvas 1 ===================
 var teamLogoCanvas = new Canvas("teamlogo", 1200, 1600);
 p.addCanvas(teamLogoCanvas);

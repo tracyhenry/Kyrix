@@ -56,20 +56,19 @@ function addCanvas(canvas) {
  */
 function addJump(jump) {
 
+    var sourceCanvas = null, destCanvas = null;
     // check whether sourceID exists
-    var exist = false;
     for (var i = 0; i < this.canvases.length; i ++)
         if (this.canvases[i].id === jump.sourceId)
-            exist = true;
-    if (! exist)
+            sourceCanvas = this.canvases[i];
+    if (sourceCanvas == null)
         throw new Error("Constructing Jump: canvas " + jump.sourceId + " does not exist.");
 
     // check whether destId exists
-    exist = false;
     for (var i = 0; i < this.canvases.length; i ++)
         if (this.canvases[i].id === jump.destId)
-            exist = true;
-    if (! exist)
+            destCanvas = this.canvases[i];
+    if (destCanvas == null)
         throw new Error("Constructing Jump: canvas " + jump.destId + " does not exist.");
 
     // check whether newViewports & newpredicates have the same number of elements as the # of layers in sourceId
@@ -78,6 +77,22 @@ function addJump(jump) {
             if (jump.newViewports.length != this.canvases[i].layers.length ||
                 jump.newPredicates.length != this.canvases[i].layers.length)
                 throw new Error ("Constructing Jump: wrong number of newViewport/newPredicates functions.");
+
+    // deal with literal zooms
+    if (jump.type == "literal_zoom") {
+        // check duplicates
+        for (var i = 0; i < this.jumps.length; i ++)
+            if (this.jumps[i].sourceId == jump.sourceId
+                && this.jumps[i].type == "literal_zoom")
+                throw new Error("Constructing jump: there can be only one literal zoom for a canvas.");
+
+        // check whether zoom factor is the same for x & y
+        if (destCanvas.w / sourceCanvas.w != destCanvas.h / sourceCanvas.h)
+            throw new Error("Constructing jump: cannot infer literal zoom factor.");
+
+        // assign zoom factor to the source canvas
+        sourceCanvas.zoomFactor = destCanvas.w / sourceCanvas.w;
+    }
 
     this.jumps.push(jump);
 }

@@ -85,7 +85,7 @@ var newPredicate = function (row) {
     return ["id=" + row[0]];
 };
 
-p.addJump(new Jump("fullname", "firstname", [newViewport, "", ""], [newPredicate, "", ""]));
-p.addJump(new Jump("fullname", "lastname", ["", newViewport, ""], ["", newPredicate, ""]));
+p.addJump(new Jump("fullname", "firstname", [newViewport, "", ""], [newPredicate, "", ""], "semantic_zoom"));
+p.addJump(new Jump("fullname", "lastname", ["", newViewport, ""], ["", newPredicate, ""], "semantic_zoom"));
 
 p.saveToDb();
