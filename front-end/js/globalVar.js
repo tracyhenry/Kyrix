@@ -22,9 +22,7 @@ globalVar.curCanvas = {};
 globalVar.curJump = {};
 
 // div for jump options
-globalVar.jumpOptions = d3.select("body").append("div")
-    .attr("id", "jumpOptions")
-    .html("");
+globalVar.jumpOptions = null;
 
 if (typeof String.prototype.parseFunction != 'function') {
     String.prototype.parseFunction = function () {

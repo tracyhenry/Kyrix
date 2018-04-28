@@ -57,12 +57,17 @@ function pageOnLoad() {
         // get current canvas object
         getCurCanvas();
 
-        // set up zoom
-        setupZoom();
-
         // render
         RefreshCanvas(globalVar.initialViewportX,
             globalVar.initialViewportY);
+
+        // set up zoom
+        setupZoom();
+
+        // set up jumpoption div
+        globalVar.jumpOptions = d3.select("body").append("div")
+            .attr("id", "jumpOptions")
+            .html("");
     });
 };
 
