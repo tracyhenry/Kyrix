@@ -31,9 +31,18 @@ function pageOnLoad() {
         globalVar.tileH = +response.tileH;
 
         // set up global and main svgs
-        globalVar.containerSvg
-            .attr("width", globalVar.viewportWidth)
-            .attr("height", globalVar.viewportHeight)
+        d3.select("body")
+            .append("svg")
+            .attr("id", "containerSvg")
+            .attr("width", globalVar.viewportWidth + param.containerPadding * 2)
+            .attr("height", globalVar.viewportHeight + param.containerPadding * 2)
+            .append("g")
+            .attr("id", "maing")
+            .attr("transform", "translate("
+                + param.containerPadding
+                + ","
+                + param.containerPadding
+                + ")")
             .append("svg")
             .attr("id", "mainSvg")
             .attr("width", globalVar.viewportWidth)

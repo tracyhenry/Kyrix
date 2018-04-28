@@ -10,16 +10,17 @@ function setupZoom() {
 
     // set up zoom
     var zoom = d3.zoom()
+        .extent([[0, 0], [globalVar.viewportWidth, globalVar.viewportHeight]])
         .scaleExtent([minScale, maxScale])
-        .on("zoom", zoomed)
         .translateExtent(
             [[-globalVar.initialViewportX, -globalVar.initialViewportY],
                 [globalVar.curCanvas.w - globalVar.initialViewportX,
                     globalVar.curCanvas.h - globalVar.initialViewportY]]
-        );
+        )
+        .on("zoom", zoomed);
 
     // set up zooms
-    globalVar.containerSvg.call(zoom)
+    d3.select("#maing").call(zoom)
         .call(zoom.transform, d3.zoomIdentity);
 }
 

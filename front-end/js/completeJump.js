@@ -5,7 +5,7 @@
 function completeJump(tuple, newViewportX, newViewportY) {
 
     // unbind zoom
-    globalVar.containerSvg.on(".zoom", null);
+    d3.select("#maing").on(".zoom", null);
 
     // change #mainSvg to #oldSvg
     var oldSvg = d3.select("#mainSvg").attr("id", "oldSvg");
@@ -37,7 +37,7 @@ function completeJump(tuple, newViewportX, newViewportY) {
         .on("start", function () {
 
             // create a new svg
-            var newSvg = globalVar.containerSvg
+            var newSvg = d3.select("#maing")
                 .append("svg")
                 .attr("id", "mainSvg")
                 .attr("width", globalVar.viewportWidth)

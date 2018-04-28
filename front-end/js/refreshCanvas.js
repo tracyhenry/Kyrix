@@ -64,7 +64,6 @@ function RefreshCanvas(viewportX, viewportY) {
     var tileIds = getTileArray(globalVar.curCanvasId, viewportX, viewportY,
         globalVar.curCanvas.w, globalVar.curCanvas.h);
 
-
     // set viewport, here we only change min-x and min-y of the viewport.
     // Size of the viewport is set either by pageOnLoad.js, completeJump.js or zoomed()
     // and should not be changed in this function

@@ -21,10 +21,6 @@ globalVar.curCanvasId = "";
 globalVar.curCanvas = {};
 globalVar.curJump = {};
 
-// container svg
-globalVar.containerSvg = d3.select("body").append("svg")
-    .attr("id", "containerSvg");
-
 // div for jump options
 globalVar.jumpOptions = d3.select("body").append("div")
     .attr("id", "jumpOptions")

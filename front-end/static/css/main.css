@@ -3,6 +3,10 @@
     margin : auto;
 }
 
+#maing {
+    pointer-events : bounding-box;
+}
+
 #jumpOptions {
     margin-bottom : 40px;
     text-align : center;

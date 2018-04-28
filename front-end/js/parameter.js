@@ -28,3 +28,6 @@ param.tileEnteringDuration = 150;
 
 // extra tiles per dimension
 param.extraTiles = 2;
+
+// padding for the container svg
+param.containerPadding = 25;
