@@ -1,9 +1,6 @@
-// complete the jump
-// 1. get current canvas object
-// 2. clear jump option div
-// 3. call RefreshCanvas()
 function completeJump(tuple, newViewportX, newViewportY) {
 
+    // TODO: remove axes group smoothly
     // unbind zoom
     d3.select("#maing").on(".zoom", null);
 
@@ -23,7 +20,6 @@ function completeJump(tuple, newViewportX, newViewportY) {
     var miny = Math.max(tupleCY - tupleHeight / 2.0, curViewport[1]);
     var maxy = Math.min(tupleCY + tupleHeight / 2.0, curViewport[1] + curViewport[3]);
 
-    //TODO: preloading boarder tiles should fix the problem when zooming boarder objects
     var zoomTransition = oldSvg.transition()
         .duration(param.zoomDuration)
         .tween("zoomTween", function() {
@@ -107,9 +103,9 @@ function completeJump(tuple, newViewportX, newViewportY) {
     function enterAndZoom(t) {
 
         var vWidth = globalVar.viewportWidth * param.enteringScaleFactor
-            / (1.0 + (param.enteringScaleFactor - 1.0) * t)
+            / (1.0 + (param.enteringScaleFactor - 1.0) * t);
         var vHeight = globalVar.viewportHeight * param.enteringScaleFactor
-            / (1.0 + (param.enteringScaleFactor - 1.0) * t)
+            / (1.0 + (param.enteringScaleFactor - 1.0) * t);
         var minx = newViewportX + globalVar.viewportWidth / 2.0 - vWidth / 2.0;
         var miny = newViewportY + globalVar.viewportHeight / 2.0 - vHeight / 2.0;
 

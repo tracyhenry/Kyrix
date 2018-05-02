@@ -21,6 +21,7 @@ function Canvas(id, w, h) {
     this.layers = [];   // an initially empty layer array
     this.zoomInFactor = 0;  // greater than 1 to be valid
     this.zoomOutFactor = 100;   // smaller than 1 to be valid
+    this.axes = "";
 };
 
 // add layer to a canvas
@@ -43,9 +44,15 @@ function addTransform(transform) {
     this.transforms.push(transform);
 };
 
-// add it to prototype
+// add an axis function
+function addAxes(axesFunc) {
+    this.axes = axesFunc;
+};
+
+// add functions to prototype
 Canvas.prototype.addLayer = addLayer;
 Canvas.prototype.addTransform = addTransform;
+Canvas.prototype.addAxes = addAxes;
 
 // exports
 module.exports = {

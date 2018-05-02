@@ -26,8 +26,8 @@ globalVar.jumpOptions = null;
 
 if (typeof String.prototype.parseFunction != 'function') {
     String.prototype.parseFunction = function () {
-        var funcReg = /function *[^()]*\(([^()]*)\)[ \n\t]*\{(.*)\}/gmi;
-        var match = funcReg.exec(this.replace(/\n/g, ' '));
+        var funcReg = /function *[^()]*\(([^()]*)\)[ \n\t]*\{([\s\S]*)\}/gmi;
+        var match = funcReg.exec(this);
         if(match)
             return new Function(match[1].split(','), match[2]);
         else

@@ -1,13 +1,60 @@
+// render axes
+function renderAxes(viewportX, viewportY, vWidth, vHeight) {
+
+    var axesg = d3.select("#axesg");
+    // Test emptiness. Empty when a jump is happening
+    if (axesg.empty())
+        return ;
+    axesg.selectAll("*").remove();
+
+    // run axes function
+    var axesFunc = globalVar.curCanvas.axes;
+    if (axesFunc == "")
+        return ;
+
+    var axes = axesFunc.parseFunction()(globalVar.curCanvas.w, globalVar.curCanvas.h);
+    for (var i = 0; i < axes.length; i ++) {
+        // create g element
+        var curg = axesg.append("g")
+            .classed("axis", true)
+            .attr("id", "axes" + i)
+            .attr("transform", "translate("
+                + axes[i].translate[0]
+                + ","
+                + axes[i].translate[1]
+                + ")");
+
+        // construct a scale function according to current viewport
+        var newScale = axes[i].scale.copy();
+        var newRange = [];
+        if (axes[i].dim == "x") {
+            newRange.push(viewportX), newRange.push(viewportX + vWidth);
+            newScale.range([0, globalVar.viewportWidth]);
+        }
+        else {
+            newRange.push(viewportY), newRange.push(viewportY + vHeight);
+            newScale.range([0, globalVar.viewportHeight]);
+        }
+        newScale.domain(newRange.map(axes[i].scale.invert));
+
+        // call axis function
+        curg.call(axes[i].axis.scale(newScale));
+    }
+};
+
 // get an array of tile ids based on the current viewport location
-function getTileArray(canvasId, viewportX, viewportY, w, h) {
+function getTileArray(canvasId, vX, vY, vWidth, vHeight) {
 
     var tileW = globalVar.tileW;
     var tileH = globalVar.tileH;
+    var w = globalVar.curCanvas.w;
+    var h = globalVar.curCanvas.h;
+
     // calculate the tile range that the viewport spans
-    var xStart = Math.max(0, Math.floor(viewportX / tileW) - param.extraTiles);
-    var yStart = Math.max(0, Math.floor(viewportY / tileH) - param.extraTiles);
-    var xEnd = Math.min(Math.floor(w / tileW), Math.floor((viewportX + globalVar.viewportWidth) / tileW) + param.extraTiles);
-    var yEnd = Math.min(Math.floor(h / tileH), Math.floor((viewportY + globalVar.viewportHeight) / tileH) + param.extraTiles);
+    var xStart = Math.max(0, Math.floor(vX / tileW) - param.extraTiles);
+    var yStart = Math.max(0, Math.floor(vY / tileH) - param.extraTiles);
+    var xEnd = Math.min(Math.floor(w / tileW), Math.floor((vX + vWidth) / tileW) + param.extraTiles);
+    var yEnd = Math.min(Math.floor(h / tileH), Math.floor((vY + vHeight) / tileH) + param.extraTiles);
 
     var tileIds = [];
     for (var i = xStart; i <= xEnd; i ++)
@@ -33,7 +80,6 @@ function renderTile(tileSvg, x, y, renderFuncs, canvasId, predicates) {
         var renderData = response.renderData;
         var x = response.minx;
         var y = response.miny;
-        //console.log(canvasId + " " + x + " " + y + " : " + renderData);
         var tileSvg = d3.select("#a" + x + y + canvasId);
         if (tileSvg == null) // it's possible when the tile data is delayed and this tile is already removed
             return ;
@@ -61,13 +107,16 @@ function RefreshCanvas(viewportX, viewportY) {
         renderFuncs.push(globalVar.curCanvas.layers[i].rendering.parseFunction());
 
     // get tile ids
-    var tileIds = getTileArray(globalVar.curCanvasId, viewportX, viewportY,
-        globalVar.curCanvas.w, globalVar.curCanvas.h);
+    var curViewport = d3.select("#mainSvg").attr("viewBox").split(" ");
+    var tileIds = getTileArray(globalVar.curCanvasId,
+        viewportX, viewportY, +curViewport[2], +curViewport[3]);
+
+    // render axes
+    renderAxes(viewportX, viewportY, +curViewport[2], +curViewport[3]);
 
     // set viewport, here we only change min-x and min-y of the viewport.
     // Size of the viewport is set either by pageOnLoad.js, completeJump.js or zoomed()
     // and should not be changed in this function
-    var curViewport = d3.select("#mainSvg").attr("viewBox").split(" ");
     var tiles = d3.select("#mainSvg")
         .attr("viewBox", viewportX + " " + viewportY + " "
             + curViewport[2]+ " " + curViewport[3])

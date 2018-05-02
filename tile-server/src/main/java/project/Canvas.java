@@ -13,6 +13,7 @@ public class Canvas {
 	private double zoomInFactor, zoomOutFactor;
 	private ArrayList<Transform> transforms;
 	private ArrayList<Layer> layers;
+	String axes;
 
 	public String getId() {
 		return id;
@@ -42,6 +43,10 @@ public class Canvas {
 		return layers;
 	}
 
+	public String getAxes() {
+		return axes;
+	}
+
 	public Transform getTransformById(String id) {
 
 		for (Transform t : transforms)
@@ -61,6 +66,7 @@ public class Canvas {
 				", zoomOutFactor=" + zoomOutFactor +
 				", transforms=" + transforms +
 				", layers=" + layers +
+				", axes='" + axes + '\'' +
 				'}';
 	}
 }

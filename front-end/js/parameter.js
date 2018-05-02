@@ -30,4 +30,4 @@ param.tileEnteringDuration = 150;
 param.extraTiles = 2;
 
 // padding for the container svg
-param.containerPadding = 25;
+param.containerPadding = 50;

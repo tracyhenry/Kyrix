@@ -54,6 +54,16 @@ function pageOnLoad() {
                 + " " +  globalVar.viewportWidth
                 + " " + globalVar.viewportHeight);
 
+        // set up axes group
+        d3.select("#containerSvg")
+            .append("g")
+            .attr("id", "axesg")
+            .attr("transform", "translate("
+                + param.containerPadding
+                + ","
+                + param.containerPadding
+                + ")");
+
         // get current canvas object
         getCurCanvas();
 

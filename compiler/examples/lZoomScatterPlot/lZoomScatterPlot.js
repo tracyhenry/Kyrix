@@ -33,6 +33,9 @@ for (var i = 0; i < numLevels; i ++) {
     // add data transforms
     curCanvas.addTransform(transforms.scales[i]);
 
+    // add axis
+    curCanvas.addAxes(renderers.scPlotAxes);
+
     // create one layer
     var curLayer = new Layer("scalexy");
     curCanvas.addLayer(curLayer);
