@@ -1,8 +1,12 @@
 function completeJump(tuple, newViewportX, newViewportY) {
 
-    // TODO: remove axes group smoothly
     // unbind zoom
     d3.select("#maing").on(".zoom", null);
+
+    // use transition to remove axes
+    d3.select("#axesg").transition()
+        .duration(param.axesOutDuration)
+        .style("opacity", 0);
 
     // change #mainSvg to #oldSvg
     var oldSvg = d3.select("#mainSvg").attr("id", "oldSvg");
@@ -75,6 +79,11 @@ function completeJump(tuple, newViewportX, newViewportY) {
                         + newViewportY + " "
                         + globalVar.viewportWidth + " "
                         + globalVar.viewportHeight);
+
+                    // display axes
+                    d3.select("#axesg").transition()
+                        .duration(param.axesInDuration)
+                        .style("opacity", 1);
 
                     // set up zoom
                     setupZoom();

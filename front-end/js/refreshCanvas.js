@@ -2,9 +2,6 @@
 function renderAxes(viewportX, viewportY, vWidth, vHeight) {
 
     var axesg = d3.select("#axesg");
-    // Test emptiness. Empty when a jump is happening
-    if (axesg.empty())
-        return ;
     axesg.selectAll("*").remove();
 
     // run axes function

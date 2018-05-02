@@ -22,6 +22,7 @@ p.addCanvas(c1);
 c1.addTransform(transforms.c1ScalexyPi);
 c1.addTransform(transforms.c1ScalexyStu);
 c1.addTransform(transforms.c1Empty);
+c1.addAxes(renderers.c1c2Axes);
 
 // circle layer pi
 var c1L1 = new Layer("scalexy_pi");
@@ -50,6 +51,7 @@ p.addCanvas(c2);
 
 // add data transform
 c2.addTransform(transforms.c2IDTransform);
+c2.addAxes(renderers.c1c2Axes);
 
 // ******** Canvas2 only layer ********
 var c2L1 = new Layer("identical");

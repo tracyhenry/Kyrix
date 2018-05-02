@@ -90,11 +90,33 @@ var c3L1Rendering = function render(svg, data) {
         .attr("data-tuple", function(d) {return d;});
 };
 
+var c1c2Axes = function (cWidth, cHeight) {
+
+    var axes = [];
+
+    // x
+    var x = d3.scaleLinear()
+        .domain([0, 100000])
+        .range([0, cWidth]);
+    var xAxis = d3.axisTop();
+    axes.push({"dim" : "x", "scale" : x, "axis" : xAxis, "translate" : [0, 0]});
+
+    //y
+    var y = d3.scaleLinear()
+        .domain([0, 100000])
+        .range([0, cHeight]);
+    var yAxis = d3.axisLeft();
+    axes.push({"dim" : "y", "scale" : y, "axis" : yAxis, "translate" : [0, 0]});
+
+    return axes;
+};
+
 // exports
 module.exports = {
     c1L1Rendering : c1L1Rendering,
     c1L2Rendering : c1L2Rendering,
     c1L3Rendering : c1L3Rendering,
     c2L1Rendering : c2L1Rendering,
-    c3L1Rendering : c3L1Rendering
+    c3L1Rendering : c3L1Rendering,
+    c1c2Axes : c1c2Axes
 };
