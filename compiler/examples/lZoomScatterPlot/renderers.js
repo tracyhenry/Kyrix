@@ -36,7 +36,19 @@ var scPlotAxes = function (cWidth, cHeight) {
     return axes;
 };
 
+var scPlotStaticTrim = function(g) {
+    g.append("text")
+        .text("Let's go Celtics!")
+        .attr("x", 400)
+        .attr("y", 400)
+        .attr("dy", ".35em")
+        .attr("font-size", 50)
+        .attr("text-anchor", "middle")
+        .style("fill-opacity", 1);
+};
+
 module.exports = {
     scPlotRendering : scPlotRendering,
-    scPlotAxes : scPlotAxes
+    scPlotAxes : scPlotAxes,
+    scPlotStaticTrim : scPlotStaticTrim
 };

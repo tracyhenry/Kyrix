@@ -22,6 +22,8 @@ function Canvas(id, w, h) {
     this.zoomInFactor = 0;  // greater than 1 to be valid
     this.zoomOutFactor = 100;   // smaller than 1 to be valid
     this.axes = "";
+    this.staticTrim = "";
+    this.staticTrimFirst = false;
 };
 
 // add layer to a canvas
@@ -46,13 +48,29 @@ function addTransform(transform) {
 
 // add an axis function
 function addAxes(axesFunc) {
+
     this.axes = axesFunc;
 };
+
+// add a static trim function
+function addStaticTrim(staticTrimFunc) {
+
+    this.staticTrim = staticTrimFunc;
+}
+
+// set whether static trim to be drawn first
+function setStaticTrimFirst(staticTrimFirst) {
+
+    this.staticTrimFirst = staticTrimFirst;
+}
+
 
 // add functions to prototype
 Canvas.prototype.addLayer = addLayer;
 Canvas.prototype.addTransform = addTransform;
 Canvas.prototype.addAxes = addAxes;
+Canvas.prototype.addStaticTrim = addStaticTrim;
+Canvas.prototype.setStaticTrimFirst = setStaticTrimFirst;
 
 // exports
 module.exports = {

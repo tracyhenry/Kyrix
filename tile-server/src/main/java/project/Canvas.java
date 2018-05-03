@@ -14,6 +14,8 @@ public class Canvas {
 	private ArrayList<Transform> transforms;
 	private ArrayList<Layer> layers;
 	String axes;
+	String staticTrim;
+	boolean staticTrimFirst;
 
 	public String getId() {
 		return id;
@@ -47,6 +49,14 @@ public class Canvas {
 		return axes;
 	}
 
+	public String getStaticTrim() {
+		return staticTrim;
+	}
+
+	public boolean isStaticTrimFirst() {
+		return staticTrimFirst;
+	}
+
 	public Transform getTransformById(String id) {
 
 		for (Transform t : transforms)
@@ -67,6 +77,8 @@ public class Canvas {
 				", transforms=" + transforms +
 				", layers=" + layers +
 				", axes='" + axes + '\'' +
+				", staticTrim='" + staticTrim + '\'' +
+				", staticTrimFirst=" + staticTrimFirst +
 				'}';
 	}
 }

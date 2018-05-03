@@ -111,6 +111,28 @@ var c1c2Axes = function (cWidth, cHeight) {
     return axes;
 };
 
+var c1StaticTrim = function(g) {
+    g.append("text")
+        .text("Let's go Celtics!")
+        .attr("x", 500)
+        .attr("y", 500)
+        .attr("dy", ".35em")
+        .attr("font-size", 50)
+        .attr("text-anchor", "middle")
+        .style("fill-opacity", 1);
+};
+
+var c3StaticTrim = function(g) {
+    g.append("text")
+        .text("Let's go Celtics!")
+        .attr("x", 500)
+        .attr("y", 200)
+        .attr("dy", ".35em")
+        .attr("font-size", 50)
+        .attr("text-anchor", "middle")
+        .style("fill-opacity", 1);
+};
+
 // exports
 module.exports = {
     c1L1Rendering : c1L1Rendering,
@@ -118,5 +140,7 @@ module.exports = {
     c1L3Rendering : c1L3Rendering,
     c2L1Rendering : c2L1Rendering,
     c3L1Rendering : c3L1Rendering,
-    c1c2Axes : c1c2Axes
+    c1c2Axes : c1c2Axes,
+    c1StaticTrim : c1StaticTrim,
+    c3StaticTrim : c3StaticTrim
 };

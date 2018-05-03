@@ -36,6 +36,11 @@ for (var i = 0; i < numLevels; i ++) {
     // add axis
     curCanvas.addAxes(renderers.scPlotAxes);
 
+    // add static trim
+    curCanvas.addStaticTrim(renderers.scPlotStaticTrim);
+    curCanvas.setStaticTrimFirst(true);
+
+
     // create one layer
     var curLayer = new Layer("scalexy");
     curCanvas.addLayer(curLayer);

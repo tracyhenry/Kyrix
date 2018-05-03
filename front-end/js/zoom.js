@@ -35,6 +35,9 @@ function completeZoom(zoomType, oldZoomFactor) {
     // get the canvas object
     getCurCanvas();
 
+    // render static trim
+    renderStaticTrim();
+
     // get new viewport coordinates
     var curViewport = d3.select("#mainSvg").attr("viewBox").split(" ");
     curViewport[0] = curViewport[0] * oldZoomFactor;

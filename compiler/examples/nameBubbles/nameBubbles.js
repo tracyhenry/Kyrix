@@ -22,7 +22,13 @@ p.addCanvas(c1);
 c1.addTransform(transforms.c1ScalexyPi);
 c1.addTransform(transforms.c1ScalexyStu);
 c1.addTransform(transforms.c1Empty);
+
+// add axes
 c1.addAxes(renderers.c1c2Axes);
+
+// static trim
+c1.addStaticTrim(renderers.c1StaticTrim);
+c1.setStaticTrimFirst(true);
 
 // circle layer pi
 var c1L1 = new Layer("scalexy_pi");
@@ -51,6 +57,8 @@ p.addCanvas(c2);
 
 // add data transform
 c2.addTransform(transforms.c2IDTransform);
+
+// add axes
 c2.addAxes(renderers.c1c2Axes);
 
 // ******** Canvas2 only layer ********
@@ -66,6 +74,10 @@ p.addCanvas(c3);
 
 // add data transform
 c3.addTransform(transforms.c3IDTransform);
+
+// static trim
+c3.addStaticTrim(renderers.c3StaticTrim);
+c3.setStaticTrimFirst(true);
 
 // ******** canvas3 only layer ********
 var c3L1 = new Layer("identical");

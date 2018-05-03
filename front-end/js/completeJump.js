@@ -3,14 +3,18 @@ function completeJump(tuple, newViewportX, newViewportY) {
     // unbind zoom
     d3.select("#maing").on(".zoom", null);
 
-    // use transition to remove axes
+    // use transition to remove axes & static trims
     d3.select("#axesg").transition()
         .duration(param.axesOutDuration)
+        .style("opacity", 0);
+    d3.select("#staticg").transition()
+        .duration(param.staticTrimOutDuration)
         .style("opacity", 0);
 
     // change #mainSvg to #oldSvg
     var oldSvg = d3.select("#mainSvg").attr("id", "oldSvg");
 
+    // viewport math
     var curViewport = oldSvg.attr("viewBox").split(" ");
     for (var i = 0; i < curViewport.length; i ++)
         curViewport[i] = +curViewport[i];
@@ -40,6 +44,11 @@ function completeJump(tuple, newViewportX, newViewportY) {
             var newSvg = d3.select("#maing")
                 .append("svg")
                 .attr("id", "mainSvg")
+                .attr("transform", "translate("
+                    + param.containerPadding
+                    + ","
+                    + param.containerPadding
+                    + ")")
                 .attr("width", globalVar.viewportWidth)
                 .attr("height", globalVar.viewportHeight)
                 .attr("x", 0)
@@ -85,6 +94,14 @@ function completeJump(tuple, newViewportX, newViewportY) {
                         .duration(param.axesInDuration)
                         .style("opacity", 1);
 
+                    // render & display static trim
+                    renderStaticTrim();
+                    d3.select("#staticg")
+                        .style("opacity", 0)
+                        .transition()
+                        .duration(param.staticTrimInDuration)
+                        .style("opacity", 1);
+
                     // set up zoom
                     setupZoom();
 
@@ -119,6 +136,7 @@ function completeJump(tuple, newViewportX, newViewportY) {
         var miny = newViewportY + globalVar.viewportHeight / 2.0 - vHeight / 2.0;
 
         // change viewBox
-        d3.select("#mainSvg").attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
+        d3.select("#mainSvg")
+            .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
     };
 };

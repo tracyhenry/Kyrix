@@ -53,7 +53,6 @@ function pageOnLoad() {
                 + " " + globalVar.initialViewportY
                 + " " +  globalVar.viewportWidth
                 + " " + globalVar.viewportHeight);
-
         // set up axes group
         d3.select("#containerSvg")
             .append("g")
@@ -66,6 +65,9 @@ function pageOnLoad() {
 
         // get current canvas object
         getCurCanvas();
+
+        // render static trims
+        renderStaticTrim();
 
         // render
         RefreshCanvas(globalVar.initialViewportX,
