@@ -32,14 +32,14 @@ function registerJumps(svg) {
                     var button = globalVar.jumpOptions.append("input")
                         .attr("type", "button")
                         .attr("value", jumps[k].destId)
-                        .attr("data-tuple", d3.select(this).attr("data-tuple"))
+                        .datum(d3.select(this).datum())
                         .attr("data-jump-id", k)
                         .attr("data-layer-id", layerId)
                         .classed("jumpButton", true);
 
                     button.on("click", function () {
 
-                        var tuple = d3.select(this).attr("data-tuple").split(",");
+                        var tuple = d3.select(this).datum();
                         var jumpId = d3.select(this).attr("data-jump-id");
                         var layerId = d3.select(this).attr("data-layer-id");
                         globalVar.curCanvasId = jumps[jumpId].destId;

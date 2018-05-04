@@ -11,8 +11,7 @@ var scPlotRendering = function render(svg, data) {
         .style("fill", function (d){
             var colors = ["orange", "red", "blue", "green", "purple"];
             return colors[d[3]];
-        })
-        .attr("data-tuple", function(d) {return d;});
+        });
 };
 
 var scPlotAxes = function (cWidth, cHeight) {

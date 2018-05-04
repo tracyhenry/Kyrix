@@ -7,8 +7,7 @@ var c1L1Rendering = function render(svg, data) {
         .attr("cx", function(d) {return d[3];})
         .attr("cy", function(d) {return d[4];})
         .attr("r", 80)
-        .style("fill", "orange")
-        .attr("data-tuple", function(d) {return d;});
+        .style("fill", "orange");
     g.selectAll("text")
         .data(data)
         .enter()
@@ -18,8 +17,7 @@ var c1L1Rendering = function render(svg, data) {
         .attr("y", function(d) {return d[4];})
         .attr("dy", ".35em")
         .attr("text-anchor", "middle")
-        .style("fill-opacity", 1)
-        .attr("data-tuple", function(d) {return d;});
+        .style("fill-opacity", 1);
 };
 
 var c1L2Rendering = function render(svg, data) {
@@ -32,8 +30,7 @@ var c1L2Rendering = function render(svg, data) {
         .attr("y", function(d) {return d[4] - 80;})
         .attr("width", 160)
         .attr("height", 160)
-        .style("fill", "pink")
-        .attr("data-tuple", function(d) {return d;});
+        .style("fill", "pink");
     g.selectAll("text")
         .data(data)
         .enter()
@@ -43,8 +40,7 @@ var c1L2Rendering = function render(svg, data) {
         .attr("y", function(d) {return d[4];})
         .attr("dy", ".35em")
         .attr("text-anchor", "middle")
-        .style("fill-opacity", 1)
-        .attr("data-tuple", function(d) {return d;});
+        .style("fill-opacity", 1);
 };
 
 // an empty g with a background color fill
@@ -70,8 +66,7 @@ var c2L1Rendering = function render(svg, data) {
         .attr("dy", ".35em")
         .attr("font-size", 50)
         .attr("text-anchor", "middle")
-        .style("fill-opacity", 1)
-        .attr("data-tuple", function(d) {return d;});
+        .style("fill-opacity", 1);
 };
 
 var c3L1Rendering = function render(svg, data) {
@@ -86,8 +81,7 @@ var c3L1Rendering = function render(svg, data) {
         .attr("dy", ".35em")
         .attr("font-size", 50)
         .attr("text-anchor", "middle")
-        .style("fill-opacity", 1)
-        .attr("data-tuple", function(d) {return d;});
+        .style("fill-opacity", 1);
 };
 
 var c1c2Axes = function (cWidth, cHeight) {

@@ -8,8 +8,7 @@ var teamLogoRendering = function render(svg, data) {
         .attr("y", function(d) {return d[2];})
         .attr("width", 130)
         .attr("height", 130)
-        .attr("xlink:href", function(d){return "/static/images/nba/team_logo/" + d[5] + ".svg";})
-        .attr("data-tuple", function(d) {return d;});
+        .attr("xlink:href", function(d){return "/static/images/nba/team_logo/" + d[5] + ".svg";});
 };
 
 module.exports = {
