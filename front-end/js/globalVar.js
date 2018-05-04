@@ -21,9 +21,6 @@ globalVar.curCanvasId = "";
 globalVar.curCanvas = {};
 globalVar.curJump = {};
 
-// div for jump options
-globalVar.jumpOptions = null;
-
 if (typeof String.prototype.parseFunction != 'function') {
     String.prototype.parseFunction = function () {
         var funcReg = /function *[^()]*\(([^()]*)\)[ \n\t]*\{([\s\S]*)\}/gmi;

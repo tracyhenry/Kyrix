@@ -75,11 +75,6 @@ function pageOnLoad() {
 
         // set up zoom
         setupZoom();
-
-        // set up jumpoption div
-        globalVar.jumpOptions = d3.select("body").append("div")
-            .attr("id", "jumpOptions")
-            .html("");
     });
 };
 

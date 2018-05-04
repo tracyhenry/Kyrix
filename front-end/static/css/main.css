@@ -7,15 +7,31 @@
     pointer-events : bounding-box;
 }
 
-#jumpOptions {
-    margin-bottom : 40px;
-    text-align : center;
+#jumppopover {
+    display : block;
+    opacity : 0.9;
 }
 
-.jumpButton {
-    -webkit-appearance : none;
-    margin : 10px;
-    height : 30px;
-    width : 100px;
-    font-size : 20px;
+#popoverarrow {
+    top : 50%;
+}
+
+#popoverclose {
+    position: relative;
+    bottom: 5px;
+    left : 6px;
+}
+
+#popovercontent {
+    margin : 0px;
+    padding : 0px;
+}
+
+#popovercontent > .list-group-item {
+    padding : 6px;
+    border : none;
+}
+
+#jumppopover > div {
+    text-align : center;
 }

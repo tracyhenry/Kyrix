@@ -58,14 +58,17 @@ function completeZoom(zoomType, oldZoomFactor) {
     // set up zoom
     setupZoom();
 
-    // clear the jump option div
-    globalVar.jumpOptions.html("");
+    // remove all popovers
+    removePopovers();
 }
 
 // zoomed function for detecting pan actions
 function zoomed() {
 
     var transform = d3.event.transform;
+
+    // remove all popovers
+    removePopovers();
 
     // get new viewport coordinates
     var viewportX = globalVar.initialViewportX - transform.x / transform.k;

@@ -3,13 +3,14 @@ function completeJump(tuple, newViewportX, newViewportY) {
     // unbind zoom
     d3.select("#maing").on(".zoom", null);
 
-    // use transition to remove axes & static trims
+    // use transition to remove axes, static trims & popovers
     d3.select("#axesg").transition()
         .duration(param.axesOutDuration)
         .style("opacity", 0);
     d3.select("#staticg").transition()
         .duration(param.staticTrimOutDuration)
         .style("opacity", 0);
+    removePopoversSmooth();
 
     // change #mainSvg to #oldSvg
     var oldSvg = d3.select("#mainSvg").attr("id", "oldSvg");
@@ -104,9 +105,6 @@ function completeJump(tuple, newViewportX, newViewportY) {
 
                     // set up zoom
                     setupZoom();
-
-                    // clear the jump option div
-                    globalVar.jumpOptions.html("");
                 });
         });
 

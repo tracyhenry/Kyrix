@@ -31,6 +31,7 @@ param.axesOutDuration = 500;
 param.axesInDuration = 500;
 param.staticTrimInDuration = 500;
 param.staticTrimOutDuration = 500;
+param.popoverOutDuration = 200;
 
 // extra tiles per dimension
 param.extraTiles = 2;
