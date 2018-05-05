@@ -30,7 +30,8 @@ Install MySQL: [Mac](https://gist.github.com/nrollr/3f57fc15ded7dddddcc4e82fe137
 
 ### TODOs
 
-- [ ] Literal zoom API
-- [ ] Jumping animation
-- [ ] Static Trim
+- [ ] Literal zoom sampling API
+- [ ] Semantic zoom out animation
+- [ ] Static Jumps
+- [ ] layer toggling
 - [ ] Pretty examples
