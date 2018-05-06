@@ -19,8 +19,10 @@ function Canvas(id, w, h) {
     this.h = h;
     this.transforms = []; // an initially empty transform array
     this.layers = [];   // an initially empty layer array
-    this.zoomInFactor = 0;  // greater than 1 to be valid
-    this.zoomOutFactor = 100;   // smaller than 1 to be valid
+    this.zoomInFactorX = 0;  // greater than 1 to be valid
+    this.zoomInFactorY = 0;  // greater than 1 to be valid
+    this.zoomOutFactorX = 100;   // smaller than 1 to be valid
+    this.zoomOutFactorY = 100;   // smaller than 1 to be valid
     this.axes = "";
     this.staticTrim = "";
     this.staticTrimFirst = false;

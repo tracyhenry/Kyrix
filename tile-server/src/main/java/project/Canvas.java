@@ -10,7 +10,8 @@ public class Canvas {
 	private String id;
 	private int w;
 	private int h;
-	private double zoomInFactor, zoomOutFactor;
+	private double zoomInFactorX, zoomInFactorY;
+	private double zoomOutFactorX, zoomOutFactorY;
 	private ArrayList<Transform> transforms;
 	private ArrayList<Layer> layers;
 	String axes;
@@ -29,12 +30,20 @@ public class Canvas {
 		return h;
 	}
 
-	public double getZoomInFactor() {
-		return zoomInFactor;
+	public double getZoomInFactorX() {
+		return zoomInFactorX;
 	}
 
-	public double getZoomOutFactor() {
-		return zoomOutFactor;
+	public double getZoomInFactorY() {
+		return zoomInFactorY;
+	}
+
+	public double getZoomOutFactorX() {
+		return zoomOutFactorX;
+	}
+
+	public double getZoomOutFactorY() {
+		return zoomOutFactorY;
 	}
 
 	public ArrayList<Transform> getTransforms() {
@@ -72,8 +81,10 @@ public class Canvas {
 				"id='" + id + '\'' +
 				", w=" + w +
 				", h=" + h +
-				", zoomInFactor=" + zoomInFactor +
-				", zoomOutFactor=" + zoomOutFactor +
+				", zoomInFactorX=" + zoomInFactorX +
+				", zoomInFactorY=" + zoomInFactorY +
+				", zoomOutFactorX=" + zoomOutFactorX +
+				", zoomOutFactorY=" + zoomOutFactorY +
 				", transforms=" + transforms +
 				", layers=" + layers +
 				", axes='" + axes + '\'' +

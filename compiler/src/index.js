@@ -87,14 +87,24 @@ function addJump(jump) {
                 throw new Error("Constructing jump: there can be only one " + jump.type + " for a canvas.");
 
         // check whether zoom factor is the same for x & y
-        if (destCanvas.w / sourceCanvas.w != destCanvas.h / sourceCanvas.h)
+        if (destCanvas.w != sourceCanvas.w &&
+            destCanvas.h != sourceCanvas.h &&
+            destCanvas.w / sourceCanvas.w != destCanvas.h / sourceCanvas.h)
             throw new Error("Constructing jump: cannot infer literal zoom factor.");
 
         // assign zoom factor to the source canvas
-        if (jump.type == "literal_zoom_in")
-            sourceCanvas.zoomInFactor = destCanvas.w / sourceCanvas.w;
-        else
-            sourceCanvas.zoomOutFactor = destCanvas.w / sourceCanvas.w;
+        if (jump.type == "literal_zoom_in") {
+            sourceCanvas.zoomInFactorX = destCanvas.w / sourceCanvas.w;
+            sourceCanvas.zoomInFactorY = destCanvas.h / sourceCanvas.h;
+            if (sourceCanvas.zoomInFactorX <= 1 && sourceCanvas.zoomInFactorY <= 1)
+                throw new Error("Constructing jump: zoom in factor should be greater than 1.");
+        }
+        else {
+            sourceCanvas.zoomOutFactorX = destCanvas.w / sourceCanvas.w;
+            sourceCanvas.zoomOutFactorY = destCanvas.h / sourceCanvas.h;
+            if (sourceCanvas.zoomOutFactorX >= 1 && sourceCanvas.zoomOutFactorY >= 1)
+                throw new Error("Constructing jump: zoom out factor shoulde be smaller than 1.");
+        }
     }
 
     this.jumps.push(jump);

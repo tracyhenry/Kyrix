@@ -4,27 +4,23 @@
 // called after every jump
 function setupZoom() {
 
-    // check if this canvas has literal zooms
-    var minScale = Math.min(globalVar.curCanvas.zoomOutFactor, 1);
-    var maxScale = Math.max(globalVar.curCanvas.zoomInFactor, 1);
+    // calculate minScale, maxScale
+    var minScale = Math.min(globalVar.curCanvas.zoomOutFactorX,
+        globalVar.curCanvas.zoomOutFactorY, 1);
+    var maxScale = Math.max(globalVar.curCanvas.zoomInFactorX,
+        globalVar.curCanvas.zoomInFactorY, 1);
 
     // set up zoom
     var zoom = d3.zoom()
-        .extent([[0, 0], [globalVar.viewportWidth, globalVar.viewportHeight]])
         .scaleExtent([minScale, maxScale])
-        .translateExtent(
-            [[-globalVar.initialViewportX, -globalVar.initialViewportY],
-                [globalVar.curCanvas.w - globalVar.initialViewportX,
-                    globalVar.curCanvas.h - globalVar.initialViewportY]]
-        )
         .on("zoom", zoomed);
 
     // set up zooms
     d3.select("#maing").call(zoom)
         .call(zoom.transform, d3.zoomIdentity);
-}
+};
 
-function completeZoom(zoomType, oldZoomFactor) {
+function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
 
     // get the id of the canvas to zoom into
     var jumps = globalVar.curJump;
@@ -40,8 +36,8 @@ function completeZoom(zoomType, oldZoomFactor) {
 
     // get new viewport coordinates
     var curViewport = d3.select("#mainSvg").attr("viewBox").split(" ");
-    curViewport[0] = curViewport[0] * oldZoomFactor;
-    curViewport[1] = curViewport[1] * oldZoomFactor;
+    curViewport[0] = curViewport[0] * oldZoomFactorX;
+    curViewport[1] = curViewport[1] * oldZoomFactorY;
     curViewport[2] = globalVar.viewportWidth;
     curViewport[3] = globalVar.viewportHeight;
     d3.select("#mainSvg")
@@ -60,39 +56,78 @@ function completeZoom(zoomType, oldZoomFactor) {
 
     // remove all popovers
     removePopovers();
-}
+};
 
-// zoomed function for detecting pan actions
+// zoomed function for detecting zoom actions
 function zoomed() {
 
+    // frequently accessed global variables
+    var cWidth = globalVar.curCanvas.w;
+    var cHeight = globalVar.curCanvas.h;
+    var vWidth = globalVar.viewportWidth;
+    var vHeight = globalVar.viewportHeight;
+    var iVX = globalVar.initialViewportX;
+    var iVY = globalVar.initialViewportY;
+    var zoomInFactorX = globalVar.curCanvas.zoomInFactorX;
+    var zoomOutFactorX = globalVar.curCanvas.zoomOutFactorX;
+    var zoomInFactorY = globalVar.curCanvas.zoomInFactorY;
+    var zoomOutFactorY = globalVar.curCanvas.zoomOutFactorY;
+
+    // get current zoom transform
     var transform = d3.event.transform;
 
     // remove all popovers
     removePopovers();
 
-    // get new viewport coordinates
-    var viewportX = globalVar.initialViewportX - transform.x / transform.k;
-    var viewportY = globalVar.initialViewportY - transform.y / transform.k;
+    // get scale x and y
+    var scaleX = transform.k;
+    var scaleY = transform.k;
+    if (zoomInFactorX <= 1 && zoomOutFactorX >= 1)
+        scaleX = 1;
+    if (zoomInFactorY <= 1 && zoomOutFactorY >= 1)
+        scaleY = 1;
 
-    // set viewBox size
+    // get new viewport coordinates
+    var viewportX = iVX - transform.x / scaleX;
+    var viewportY = iVY - transform.y / scaleY;
+
+    // restrict panning by modifying d3 event transform, which is a bit sketchy. However,
+    // d3-zoom is so under-documented that I could not use it to make single-axis literal zooms work
+    if (viewportX < 0) {
+        viewportX = 0;
+        d3.event.transform.x = iVX * scaleX;
+    }
+    if (viewportX > cWidth - vWidth / scaleX) {
+        viewportX = cWidth - vWidth / scaleX;
+        d3.event.transform.x = (iVX - viewportX) * scaleX;
+    }
+    if (viewportY < 0) {
+        viewportY = 0;
+        d3.event.transform.y = iVY * scaleY;
+    }
+    if (viewportY > cHeight - vHeight / scaleY) {
+        viewportY = cHeight - vHeight / scaleY;
+        d3.event.transform.y = (iVY - viewportY) * scaleY;
+    }
+
+    // set viewBox size && refresh canvas
     var curViewport = d3.select("#mainSvg").attr("viewBox").split(" ");
-    curViewport[2] = globalVar.viewportWidth / transform.k;
-    curViewport[3] = globalVar.viewportHeight / transform.k;
+    curViewport[2] = vWidth / scaleX;
+    curViewport[3] = vHeight/ scaleY;
     d3.select("#mainSvg")
         .attr("viewBox", curViewport[0]
             + " " + curViewport[1]
             + " " + curViewport[2]
             + " " + curViewport[3]);
-
     RefreshCanvas(viewportX, viewportY);
 
     // check if zoom scale reaches zoomInFactor
-    if (globalVar.curCanvas.zoomInFactor > 1
-        && transform.k >= globalVar.curCanvas.zoomInFactor - 1e-5)
-        completeZoom("literal_zoom_in", globalVar.curCanvas.zoomInFactor);
+    if ((zoomInFactorX > 1 && scaleX >= zoomInFactorX - 1e-5) ||
+        (zoomInFactorY > 1 && scaleY >= zoomInFactorY - 1e-5))
+        completeZoom("literal_zoom_in", zoomInFactorX, zoomInFactorY);
 
     // check if zoom scale reaches zoomOutFactor
-    if (globalVar.curCanvas.zoomOutFactor < 1
-        && transform.k <= globalVar.curCanvas.zoomOutFactor + 1e-5)
-        completeZoom("literal_zoom_out", globalVar.curCanvas.zoomOutFactor);
-}
+    if ((zoomOutFactorX < 1 && scaleX <= zoomOutFactorX + 1e-5) ||
+        (zoomOutFactorY < 1 && scaleY <= zoomOutFactorY + 1e-5))
+        completeZoom("literal_zoom_out", zoomOutFactorX, zoomOutFactorY);
+};
