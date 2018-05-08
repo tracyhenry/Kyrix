@@ -104,7 +104,7 @@ function completeJump(tuple, newViewportX, newViewportY) {
                         .style("opacity", 1);
 
                     // set up zoom
-                    setupZoom();
+                    setupZoom(1);
                 });
         });
 

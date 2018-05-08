@@ -47,6 +47,7 @@ function pageOnLoad() {
             .attr("id", "mainSvg")
             .attr("width", globalVar.viewportWidth)
             .attr("height", globalVar.viewportHeight)
+            .attr("preserveAspectRatio", "none")
             .attr("x", 0)
             .attr("y", 0)
             .attr("viewBox", globalVar.initialViewportX
@@ -74,7 +75,7 @@ function pageOnLoad() {
             globalVar.initialViewportY);
 
         // set up zoom
-        setupZoom();
+        setupZoom(1);
     });
 };
 

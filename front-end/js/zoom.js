@@ -1,12 +1,36 @@
+function zoomRescale() {
+
+    var bbox = this.getBBox();
+    var cx = bbox.x + (bbox.width / 2),
+        cy = bbox.y + (bbox.height / 2);   // finding center of element
+    var transform = d3.zoomTransform(d3.select("#maing").node());
+    var scaleX = 1 / transform.k;
+    var scaleY = 1 / transform.k;
+    if (globalVar.curCanvas.zoomInFactorX <= 1
+        && globalVar.curCanvas.zoomOutFactorX >= 1)
+        scaleX = 1;
+    if (globalVar.curCanvas.zoomInFactorY <= 1
+        && globalVar.curCanvas.zoomOutFactorY >= 1)
+        scaleY = 1;
+    var tx = -cx * (scaleX - 1);
+    var ty = -cy * (scaleY - 1);
+    var translatestr = tx + ',' + ty;
+    this.setAttribute("transform","translate("
+        + translatestr + ") scale("
+        + scaleX + ", " + scaleY + ")");
+};
+
 // set up zoom translate & scale extent
 // call zoom on container svg
 // reset zoom transform
 // called after every jump
-function setupZoom() {
+function setupZoom(initialScale) {
 
     // calculate minScale, maxScale
-    var minScale = Math.min(globalVar.curCanvas.zoomOutFactorX,
-        globalVar.curCanvas.zoomOutFactorY, 1);
+    var minScale = 1;
+    if (globalVar.curCanvas.zoomOutFactorX < 1 ||
+        globalVar.curCanvas.zoomOutFactorY < 1)
+        minScale = 0.99;
     var maxScale = Math.max(globalVar.curCanvas.zoomInFactorX,
         globalVar.curCanvas.zoomInFactorY, 1);
 
@@ -17,7 +41,7 @@ function setupZoom() {
 
     // set up zooms
     d3.select("#maing").call(zoom)
-        .call(zoom.transform, d3.zoomIdentity);
+        .call(zoom.transform, d3.zoomIdentity.scale(initialScale));
 };
 
 function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
@@ -36,23 +60,14 @@ function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
 
     // get new viewport coordinates
     var curViewport = d3.select("#mainSvg").attr("viewBox").split(" ");
-    curViewport[0] = curViewport[0] * oldZoomFactorX;
-    curViewport[1] = curViewport[1] * oldZoomFactorY;
-    curViewport[2] = globalVar.viewportWidth;
-    curViewport[3] = globalVar.viewportHeight;
-    d3.select("#mainSvg")
-        .attr("viewBox", curViewport[0]
-        + " " + curViewport[1]
-        + " " + curViewport[2]
-        + " " + curViewport[3]);
-    globalVar.initialViewportX = curViewport[0];
-    globalVar.initialViewportY = curViewport[1];
-
-    // refreshcanvas
-    RefreshCanvas(curViewport[0], curViewport[1]);
+    globalVar.initialViewportX = curViewport[0] * oldZoomFactorX;
+    globalVar.initialViewportY = curViewport[1] * oldZoomFactorY;
 
     // set up zoom
-    setupZoom();
+    if (zoomType == "literal_zoom_out")
+        setupZoom(1 / Math.min(oldZoomFactorX, oldZoomFactorY) - 1e-5);
+    else
+        setupZoom(1);
 
     // remove all popovers
     removePopovers();
@@ -113,7 +128,7 @@ function zoomed() {
     // set viewBox size && refresh canvas
     var curViewport = d3.select("#mainSvg").attr("viewBox").split(" ");
     curViewport[2] = vWidth / scaleX;
-    curViewport[3] = vHeight/ scaleY;
+    curViewport[3] = vHeight / scaleY;
     d3.select("#mainSvg")
         .attr("viewBox", curViewport[0]
             + " " + curViewport[1]
@@ -122,12 +137,12 @@ function zoomed() {
     RefreshCanvas(viewportX, viewportY);
 
     // check if zoom scale reaches zoomInFactor
-    if ((zoomInFactorX > 1 && scaleX >= zoomInFactorX - 1e-5) ||
-        (zoomInFactorY > 1 && scaleY >= zoomInFactorY - 1e-5))
+    if ((zoomInFactorX > 1 && scaleX >= zoomInFactorX) ||
+        (zoomInFactorY > 1 && scaleY >= zoomInFactorY))
         completeZoom("literal_zoom_in", zoomInFactorX, zoomInFactorY);
 
     // check if zoom scale reaches zoomOutFactor
-    if ((zoomOutFactorX < 1 && scaleX <= zoomOutFactorX + 1e-5) ||
-        (zoomOutFactorY < 1 && scaleY <= zoomOutFactorY + 1e-5))
+    if ((zoomOutFactorX < 1 && scaleX <= 0.99) ||
+        (zoomOutFactorY < 1 && scaleY <= 0.99))
         completeZoom("literal_zoom_out", zoomOutFactorX, zoomOutFactorY);
 };

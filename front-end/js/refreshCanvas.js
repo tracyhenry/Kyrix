@@ -89,7 +89,13 @@ function renderTile(tileSvg, x, y, renderFuncs, canvasId, predicates) {
             .duration(param.tileEnteringDuration)
             .style("opacity", 1.0);
 
+        // register jumps
         registerJumps(tileSvg);
+
+        // apply additional zoom transforms
+        tileSvg.selectAll("g")
+            .selectAll("*")
+            .each(zoomRescale);
     });
 };
 
@@ -135,4 +141,7 @@ function RefreshCanvas(viewportX, viewportY) {
         .each(function(d) {
             renderTile(this, d[0], d[1], renderFuncs, globalVar.curCanvasId, globalVar.predicates);
         });
+    tiles.selectAll("g")
+        .selectAll("*")
+        .each(zoomRescale);
 };
