@@ -12,6 +12,7 @@ public class Jump {
 	private ArrayList<String> newViewports;
 	private ArrayList<String> newPredicates;
 	private String type;
+	private String name;
 
 	public String getSourceId() {
 		return sourceId;
@@ -33,6 +34,10 @@ public class Jump {
 		return newPredicates;
 	}
 
+	public String getName() {
+		return name;
+	}
+
 	@Override
 	public String toString() {
 		return "Jump{" +
@@ -41,6 +46,7 @@ public class Jump {
 				", newViewports=" + newViewports +
 				", newPredicates=" + newPredicates +
 				", type='" + type + '\'' +
+				", name='" + name + '\'' +
 				'}';
 	}
 }
