@@ -79,6 +79,7 @@ public class PlacementNaiveIndexer extends Indexer {
 						curRow.add(rs.getString(i));
 					sqlQueryResults.add(curRow);
 				}
+				curStmt.close();
 
 				// step 2: run data transform
 				// step 2(a): setting up nashorn env
@@ -198,6 +199,7 @@ public class PlacementNaiveIndexer extends Indexer {
 				} catch (Exception e) {}
 			}
 
+		kyrix_stmt.close();
 		System.out.println("Done precomputing!");
 	}
 }

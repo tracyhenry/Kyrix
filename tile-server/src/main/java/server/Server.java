@@ -2,6 +2,7 @@ package server;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import main.Config;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -22,7 +23,7 @@ public class Server {
 		server.createContext("/tile", new TileRequestHandler());
 		server.createContext("/canvas", new CanvasRequestHandler());
 		server.createContext("/viewport", new ViewportRequestHandler());
-		server.setExecutor(null); // TODO: the default executor is not parallel
+		server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(Config.numThread));
 		server.start();
 	}
 

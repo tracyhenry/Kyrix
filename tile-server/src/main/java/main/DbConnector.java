@@ -12,20 +12,20 @@ import java.util.Map;
  */
 public class DbConnector {
 
-	private static Map<String, Statement> statements = new HashMap<>();
 	private static Map<String, Connection> connections = new HashMap<>();
 
 	public static Statement getStmtByDbName(String dbName) throws SQLException, ClassNotFoundException {
 
 		// create db conn and statement if not existed
+		Connection conn;
 		if (! connections.containsKey(dbName)) {
-			Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
-			Statement stmt = conn.createStatement();
+			conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
 			connections.put(dbName, conn);
-			statements.put(dbName, stmt);
 		}
+		else
+			conn = connections.get(dbName);
 
-		return statements.get(dbName);
+		return conn.createStatement();
 	}
 
 	private static Connection getDbConn(String dbServer, String dbName, String userName, String password) throws SQLException, ClassNotFoundException {

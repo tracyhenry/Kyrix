@@ -39,4 +39,7 @@ public class Config {
 
 	// tile size
 	public static int tileW = 256, tileH = 256;
+
+	// number of worker threads
+	public static int numThread = 8;
 }

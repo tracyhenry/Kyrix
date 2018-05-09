@@ -143,6 +143,7 @@ public class TileRequestHandler implements HttpHandler {
 			data.add(curData);
 		}
 
+		stmt.close();
 		return data;
 	}
 

@@ -72,5 +72,6 @@ public class Main {
 		ResultSet rs = stmt.executeQuery(sql);
 		while (rs.next())
 			projectJSON = rs.getString(Config.contentColumn);
+		stmt.close();
 	}
 }

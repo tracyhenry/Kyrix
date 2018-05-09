@@ -167,6 +167,7 @@ public class ViewportRequestHandler implements HttpHandler {
 			data.add(cy);
 		}
 
+		stmt.close();
 		return data;
 	}
 }
