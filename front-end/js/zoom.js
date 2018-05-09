@@ -6,6 +6,7 @@ function zoomRescale() {
     var transform = d3.zoomTransform(d3.select("#maing").node());
     var scaleX = 1 / transform.k;
     var scaleY = 1 / transform.k;
+
     if (globalVar.curCanvas.zoomInFactorX <= 1
         && globalVar.curCanvas.zoomOutFactorX >= 1)
         scaleX = 1;

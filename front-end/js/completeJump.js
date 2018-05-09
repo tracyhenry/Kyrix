@@ -45,11 +45,7 @@ function completeJump(tuple, newViewportX, newViewportY) {
             var newSvg = d3.select("#maing")
                 .append("svg")
                 .attr("id", "mainSvg")
-                .attr("transform", "translate("
-                    + param.containerPadding
-                    + ","
-                    + param.containerPadding
-                    + ")")
+                .attr("preserveAspectRatio", "none")
                 .attr("width", globalVar.viewportWidth)
                 .attr("height", globalVar.viewportHeight)
                 .attr("x", 0)

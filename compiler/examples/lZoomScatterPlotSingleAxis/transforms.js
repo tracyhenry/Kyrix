@@ -5,7 +5,6 @@ const numLevels = 5;
 
 var scales = [];
 for (var i = 0; i < numLevels; i ++) {
-    var levelId = numLevels - i;
     var curScale = new Transform("scalexy",
         "select * from scatterplot2 where tier<=" + i + ";",
         "wenbo",

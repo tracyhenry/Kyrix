@@ -22,8 +22,24 @@ function registerJumps(svg) {
         var layerId = globalVar.curCanvas.layers.length - i - 1;
         var shapes = d3.select(this).selectAll("*")
             .attr("data-layer-id", layerId);
-        shapes.each(function(p, j){
+        shapes.each(function(p, j) {
 
+            // check if this shape has jumps
+            var hasJump = false;
+            for (var k = 0; k < jumps.length; k ++)
+                if (jumps[k].type == "semantic_zoom"
+                    && jumps[k].newViewports[d3.select(this).attr("data-layer-id")] != "") {
+                    hasJump = true;
+                    break;
+                }
+            if (! hasJump)
+                return ;
+
+            // make cursor a hand when hovering over this shape
+            d3.select(this)
+                .style("cursor", "pointer");
+
+            // register onclick listener
             d3.select(this).on("click", function () {
 
                 var layerId = d3.select(this).attr("data-layer-id");
@@ -61,7 +77,7 @@ function registerJumps(svg) {
                     .attr("id", "popoverclose")
                     .html("&times;");
                 d3.select("#popoverclose")
-                    .on("click", removePopoversSmooth);
+                    .on("click", removePopovers);
                 d3.select("#jumppopover")
                     .append("div")
                     .classed("popover-content", true)
@@ -83,8 +99,10 @@ function registerJumps(svg) {
                         .datum(d3.select(this).datum())
                         .attr("data-jump-id", k)
                         .attr("data-layer-id", layerId)
-                        .html(jumps[k].destId);
+                        .html(jumps[k].name.parseFunction() == null ? jumps[k].name
+                            : jumps[k].name.parseFunction(d3.select(this).datum()));
 
+                    // on click
                     jumpOption.on("click", function () {
 
                         d3.event.preventDefault();

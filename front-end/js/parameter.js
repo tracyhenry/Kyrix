@@ -38,3 +38,6 @@ param.extraTiles = 2;
 
 // padding for the container svg
 param.containerPadding = 50;
+
+// whether retain size when literal zooming
+param.retainSizeZoom = false;

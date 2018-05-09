@@ -153,4 +153,5 @@ test.html
 zoomable.html
 favicon.ico
 flare.json
-compiler/examples/nba/python/
+compiler/examples/nba/preprocessing/
+front-end/static/images/

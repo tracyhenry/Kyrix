@@ -43,6 +43,14 @@ function pageOnLoad() {
                 + ","
                 + param.containerPadding
                 + ")")
+            .append("rect") // a transparent rect to receive pointer events
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", globalVar.viewportWidth)
+            .attr("height", globalVar.viewportHeight)
+            .style("opacity", 0);
+
+        d3.select("#maing")
             .append("svg")
             .attr("id", "mainSvg")
             .attr("width", globalVar.viewportWidth)
@@ -54,6 +62,7 @@ function pageOnLoad() {
                 + " " + globalVar.initialViewportY
                 + " " +  globalVar.viewportWidth
                 + " " + globalVar.viewportHeight);
+
         // set up axes group
         d3.select("#containerSvg")
             .append("g")

@@ -3,10 +3,6 @@
     margin : auto;
 }
 
-#maing {
-    pointer-events : bounding-box;
-}
-
 #jumppopover {
     display : block;
     opacity : 0.9;

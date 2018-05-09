@@ -93,9 +93,11 @@ function renderTile(tileSvg, x, y, renderFuncs, canvasId, predicates) {
         registerJumps(tileSvg);
 
         // apply additional zoom transforms
-        tileSvg.selectAll("g")
-            .selectAll("*")
-            .each(zoomRescale);
+        if (param.retainSizeZoom &&
+            d3.zoomTransform(d3.select("#maing").node()).k > 1)
+            tileSvg.selectAll("g")
+                .selectAll("*")
+                .each(zoomRescale);
     });
 };
 
@@ -141,7 +143,9 @@ function RefreshCanvas(viewportX, viewportY) {
         .each(function(d) {
             renderTile(this, d[0], d[1], renderFuncs, globalVar.curCanvasId, globalVar.predicates);
         });
-    tiles.selectAll("g")
-        .selectAll("*")
-        .each(zoomRescale);
+    if (param.retainSizeZoom &&
+        d3.zoomTransform(d3.select("#maing").node()).k > 1)
+        tiles.selectAll("g")
+            .selectAll("*")
+            .each(zoomRescale);
 };
