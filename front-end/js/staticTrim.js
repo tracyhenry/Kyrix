@@ -27,6 +27,8 @@ function renderStaticTrim() {
             + param.containerPadding
             + ")")
         .append("svg")
+        .attr("width", globalVar.viewportWidth)
+        .attr("height", globalVar.viewportHeight)
         .attr("id", "staticSvg");
 
     staticTrimFunc(d3.select("#staticSvg").append("g"), globalVar.staticTrimArguments);

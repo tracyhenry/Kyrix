@@ -73,30 +73,29 @@ function completeJump(tuple, newViewportX, newViewportY) {
 
                     // render
                     RefreshCanvas(newViewportX, newViewportY);
+
+                    // static trim
+                    renderStaticTrim();
                 })
                 .on("end", function (){
 
                     // remove the old svg after animation ends
                     d3.select("#oldSvg").remove();
 
-                    // set the viewBox of the new main svg
+                    // set the viewBox of the new main svg and static svg
                     // because d3 tween does not get t to 1.0
                     d3.select(this).attr("viewBox", newViewportX + " "
                         + newViewportY + " "
                         + globalVar.viewportWidth + " "
                         + globalVar.viewportHeight);
 
+                    d3.select("#staticSvg").attr("viewBox", "0 0 "
+                        + globalVar.viewportWidth + " "
+                        + globalVar.viewportHeight);
+
                     // display axes
                     d3.select("#axesg").transition()
                         .duration(param.axesInDuration)
-                        .style("opacity", 1);
-
-                    // render & display static trim
-                    renderStaticTrim();
-                    d3.select("#staticg")
-                        .style("opacity", 0)
-                        .transition()
-                        .duration(param.staticTrimInDuration)
                         .style("opacity", 1);
 
                     // set up zoom
@@ -129,8 +128,14 @@ function completeJump(tuple, newViewportX, newViewportY) {
         var minx = newViewportX + globalVar.viewportWidth / 2.0 - vWidth / 2.0;
         var miny = newViewportY + globalVar.viewportHeight / 2.0 - vHeight / 2.0;
 
-        // change viewBox
+        // change mainsvg viewBox
         d3.select("#mainSvg")
+            .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
+
+        // change static svg viewbox
+        minx = globalVar.viewportWidth / 2 - vWidth / 2;
+        miny = globalVar.viewportHeight / 2 - vHeight / 2;
+        d3.select("#staticSvg")
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
     };
 };
