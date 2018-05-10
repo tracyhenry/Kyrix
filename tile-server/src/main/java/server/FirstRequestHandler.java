@@ -44,6 +44,7 @@ public class FirstRequestHandler implements HttpHandler {
 		respMap.put("initialViewportX", project.getInitialViewportX());
 		respMap.put("initialViewportY", project.getInitialViewportY());
 		respMap.put("initialPredicates", project.getInitialPredicates());
+		respMap.put("initialStaticTrimArguments", project.getInitialStaticTrimArguments());
 		respMap.put("viewportWidth", project.getViewportWidth());
 		respMap.put("viewportHeight", project.getViewportHeight());
 		respMap.put("initialCanvasId", project.getInitialCanvasId());

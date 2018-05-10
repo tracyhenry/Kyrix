@@ -44,6 +44,10 @@ for (var i = 0; i < numLevels; i ++) {
     // add data transforms
     curCanvas.addTransform(transforms.teamTimelineTransforms[i]);
 
+    // static trim
+    curCanvas.addStaticTrim(renderers.teamTimelineStaticTrim);
+    curCanvas.setStaticTrimFirst(false);
+
     // create one layer
     var curLayer = new Layer("teamtimelinescale");
     curCanvas.addLayer(curLayer);
@@ -69,6 +73,10 @@ var jumpName = function (row) {
     return "2017~2018 Regular Season Games of\n" + row[4] + " " + row[5];
 };
 
-p.addJump(new Jump("teamlogo", "teamtimeline_level4", [newViewport], [newPredicate], "semantic_zoom", jumpName));
+var newStaticTrimArguments = function (row) {
+    return [row[4] + " " + row[5]];
+};
+
+p.addJump(new Jump("teamlogo", "teamtimeline_level4", [newViewport], [newPredicate], "semantic_zoom", jumpName, newStaticTrimArguments));
 
 p.saveToDb();

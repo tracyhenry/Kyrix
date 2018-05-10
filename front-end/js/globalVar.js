@@ -14,6 +14,9 @@ globalVar.viewportHeight = 0;
 // predicates of the current canvas, used to retrieve data from backend
 globalVar.predicates = [];
 
+// extra arguments passed to the static trim function
+globalVar.staticTrimArguments = [];
+
 // the id of the current canvas
 globalVar.curCanvasId = "";
 

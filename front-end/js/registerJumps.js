@@ -112,8 +112,13 @@ function registerJumps(svg) {
                         globalVar.curCanvasId = jumps[jumpId].destId;
 
                         // calculate new predicates
-                        var newPredicateFunc = jumps[jumpId].newPredicates[layerId].parseFunction();
-                        globalVar.predicates = newPredicateFunc(tuple);
+                        globalVar.predicates = jumps[jumpId].newPredicates[layerId].parseFunction()(tuple);
+
+                        // calculate new static trim arguments
+                        if (jumps[jumpId].newStaticTrimArguments == "")
+                            globalVar.staticTrimArguments = [];
+                        else
+                            globalVar.staticTrimArguments = jumps[jumpId].newStaticTrimArguments.parseFunction()(tuple);
 
                         // calculate new viewport
                         var newViewportFunc = jumps[jumpId].newViewports[layerId].parseFunction();

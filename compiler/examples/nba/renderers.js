@@ -117,7 +117,45 @@ var teamTimelineRendering = function render(svg, data) {
         .style("stroke-width", 3);
 };
 
+var teamTimelineStaticTrim = function (g, args) {
+
+    var team_string = args[0];
+
+    // text
+    var title = g.append("text")
+        .attr("text-anchor", "middle")
+        .attr("font-size", 40);
+    title.append("tspan")
+        .attr("x", 500)
+        .attr("y", 200)
+        .html("2017~2018 Regular Season Games");
+    title.append("tspan")
+        .attr("x", 500)
+        .attr("dy", 70).html(team_string);
+
+    // axis line
+    g.append("line")
+        .attr("x1", 0)
+        .attr("y1", 625)
+        .attr("x2", 1000)
+        .attr("y2", 625)
+        .style("stroke", "#CCC")
+        .style("stroke-width", 3);
+
+    // team logo background
+    var teamName = team_string.split(" ");
+    teamName = teamName[teamName.length - 1];
+    g.append("image")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 1000)
+        .attr("height", 1000)
+        .attr("xlink:href", function (d) {return "static/images/nba/team_logo/" + teamName + ".svg";})
+        .style("opacity", 0.07);
+};
+
 module.exports = {
     teamLogoRendering : teamLogoRendering,
-    teamTimelineRendering : teamTimelineRendering
+    teamTimelineRendering : teamTimelineRendering,
+    teamTimelineStaticTrim : teamTimelineStaticTrim
 };

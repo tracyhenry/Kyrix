@@ -29,5 +29,5 @@ function renderStaticTrim() {
         .append("svg")
         .attr("id", "staticSvg");
 
-    staticTrimFunc(d3.select("#staticSvg").append("g"));
+    staticTrimFunc(d3.select("#staticSvg").append("g"), globalVar.staticTrimArguments);
 };

@@ -26,6 +26,7 @@ public class Project {
 	private int initialViewportX;
 	private int initialViewportY;
 	private ArrayList<String> initialPredicates;
+	private ArrayList<String> initialStaticTrimArguments;
 	private ArrayList<Canvas> canvases;
 	private ArrayList<Jump> jumps;
 
@@ -55,6 +56,10 @@ public class Project {
 
 	public ArrayList<String> getInitialPredicates() {
 		return initialPredicates;
+	}
+
+	public ArrayList<String> getInitialStaticTrimArguments() {
+		return initialStaticTrimArguments;
 	}
 
 	public ArrayList<Canvas> getCanvases() {
@@ -122,6 +127,7 @@ public class Project {
 				", initialViewportX=" + initialViewportX +
 				", initialViewportY=" + initialViewportY +
 				", initialPredicates=" + initialPredicates +
+				", initialStaticTrimArguments=" + initialStaticTrimArguments +
 				", canvases=" + canvases +
 				", jumps=" + jumps +
 				'}';

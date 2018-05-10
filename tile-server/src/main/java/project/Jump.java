@@ -13,6 +13,7 @@ public class Jump {
 	private ArrayList<String> newPredicates;
 	private String type;
 	private String name;
+	private String newStaticTrimArguments;
 
 	public String getSourceId() {
 		return sourceId;
@@ -38,6 +39,10 @@ public class Jump {
 		return name;
 	}
 
+	public String getNewStaticTrimArguments() {
+		return newStaticTrimArguments;
+	}
+
 	@Override
 	public String toString() {
 		return "Jump{" +
@@ -47,6 +52,7 @@ public class Jump {
 				", newPredicates=" + newPredicates +
 				", type='" + type + '\'' +
 				", name='" + name + '\'' +
+				", newStaticTrimArguments='" + newStaticTrimArguments + '\'' +
 				'}';
 	}
 }

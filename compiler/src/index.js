@@ -116,8 +116,9 @@ function addJump(jump) {
  * @param {number} viewportX - x coordinate of the initial viewport (top left)
  * @param {number} viewportY - y coordinate of the initial viewport (top left)
  * @param {array} predicates - the initial predicates to be added to the sql query of data transforms
+ * @param {array} staticTrimArguments - arguments passed to the static trim function of the first canvas
  */
-function initialCanvas(id, viewportX, viewportY, predicates) {
+function initialCanvas(id, viewportX, viewportY, predicates, staticTrimArguments) {
 
     // check if this id exists
     var canvasId = -1;
@@ -134,14 +135,24 @@ function initialCanvas(id, viewportX, viewportY, predicates) {
         throw new Error("Initial canvas: viewportY out of range.");
 
     // check if the size of the predicates array equals the number of layers
+    if (predicates == null) {
+        predicates = [];
+        for (var i = 0; i < this.canvases[canvasId].layers.length; i ++)
+            predicates.push("");
+    }
     if (predicates.length != this.canvases[canvasId].layers.length)
         throw new Error("Initial canvas: # predicates does not equal # layers.");
+
+    // static trim
+    if (staticTrimArguments == null)
+        staticTrimArguments = [""];
 
     // assign fields
     this.initialCanvasId = id;
     this.initialViewportX = viewportX;
     this.initialViewportY = viewportY;
     this.initialPredicates = predicates;
+    this.initialStaticTrimArguments = staticTrimArguments;
 }
 
 // save the current to project to the database it's associated with
