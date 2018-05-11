@@ -8,7 +8,7 @@ var teamLogoRendering = function render(svg, data) {
         .attr("y", function (d) {return d[2] - 65;})
         .attr("width", 130)
         .attr("height", 130)
-        .attr("xlink:href", function (d) {return "/static/images/nba/team_logo/" + d[5].toLowerCase() + ".svg";});
+        .attr("xlink:href", function (d) {return "static/images/nba/team_logo_png/" + d[5].toLowerCase() + ".png";});
 };
 
 var teamTimelineRendering = function render(svg, data) {
@@ -50,7 +50,7 @@ var teamTimelineRendering = function render(svg, data) {
         .attr("y", function (d) {return d[2] - logoYDelta - logoSize;})
         .attr("width", logoSize)
         .attr("height", logoSize)
-        .attr("xlink:href", function (d) {return "/static/images/nba/team_logo/" + d[6].toLowerCase() + ".svg";});
+        .attr("xlink:href", function (d) {return "static/images/nba/team_logo_png/" + d[6].toLowerCase() + ".png";});
 
     // away logo
     g.selectAll(".awayimage")
@@ -61,7 +61,7 @@ var teamTimelineRendering = function render(svg, data) {
         .attr("y", function (d) {return +d[2] + logoYDelta;})
         .attr("width", logoSize)
         .attr("height", logoSize)
-        .attr("xlink:href", function (d) {return "/static/images/nba/team_logo/" + d[7].toLowerCase() + ".svg";});
+        .attr("xlink:href", function (d) {return "static/images/nba/team_logo_png/" + d[7].toLowerCase() + ".png";});
 
     // home score
     g.selectAll(".homescore")
@@ -150,7 +150,7 @@ var teamTimelineStaticTrim = function (g, args) {
         .attr("y", 0)
         .attr("width", 1000)
         .attr("height", 1000)
-        .attr("xlink:href", function (d) {return "static/images/nba/team_logo/" + teamName + ".svg";})
+        .attr("xlink:href", function (d) {return "static/images/nba/team_logo_png/" + teamName + ".png";})
         .style("opacity", 0.07);
 };
 

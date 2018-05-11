@@ -27,22 +27,28 @@ public class Server {
 		server.start();
 	}
 
-	public static void sendResponse(HttpExchange httpExchange, int responseCode, String response) throws IOException {
+	public static void sendResponse(HttpExchange httpExchange, int responseCode, byte[] response, int len) throws IOException {
 
 		// write response
-		httpExchange.sendResponseHeaders(responseCode, response.getBytes().length);
+		httpExchange.sendResponseHeaders(responseCode, len);
 		OutputStream os = httpExchange.getResponseBody();
-		os.write(response.getBytes());
+		os.write(response, 0, len);
 		os.close();
 		httpExchange.close();
 	}
 
 	// send response with additional contentType information
-	public static void sendResponse(HttpExchange httpExchange, int responseCode, String response, String contentType) throws IOException {
+	public static void sendResponse(HttpExchange httpExchange, int responseCode, byte[] response, int len, String contentType) throws IOException {
 
 		// add content type to response header
 		httpExchange.getResponseHeaders().add("Content-Type", contentType);
-		sendResponse(httpExchange, responseCode, response);
+		sendResponse(httpExchange, responseCode, response, len);
+	}
+
+	// send response using string
+	public static void sendResponse(HttpExchange httpExchange, int responseCode, String response) throws IOException {
+
+		sendResponse(httpExchange, responseCode, response.getBytes(), response.getBytes().length);
 	}
 
 	// https://stackoverflow.com/questions/11640025/how-to-obtain-the-query-string-in-a-get-with-java-httpserver-httpexchange

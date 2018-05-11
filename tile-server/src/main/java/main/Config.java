@@ -38,8 +38,8 @@ public class Config {
 	public static int contentColumn = 2;
 
 	// tile size
-	public static int tileW = 256, tileH = 256;
+	public static int tileW = 1024, tileH = 1024;
 
 	// number of worker threads
-	public static int numThread = 8;
+	public static int numThread = 4;
 }

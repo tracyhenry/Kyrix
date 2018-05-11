@@ -5,8 +5,7 @@ import com.sun.net.httpserver.HttpHandler;
 import main.Config;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 /**
@@ -31,17 +30,17 @@ public class IndexHandler implements HttpHandler {
 			path = "/" + Config.indexFileName;
 
 		// read the frontend file and return
-		FileReader fr = new FileReader(Config.webRoot + path);
-		BufferedReader br = new BufferedReader(fr);
-		StringBuilder content = new StringBuilder(1024);
-		String s;
-		while((s = br.readLine())!=null)
-			content.append(s + "\n");
+		FileInputStream fs = new FileInputStream(Config.webRoot + path);
+		final byte[] content = new byte[0x1000000];
+		int len = fs.read(content);
 
 		// send back a ok response
-		if (path.contains(".svg"))	//todo: better file checking for the index handler
-			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content.toString(), "image/svg+xml");
+		if (path.contains(".svg")) //todo: better file checking for the index handler
+			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/svg+xml");
+		else if (path.contains(".png")) {
+			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/png");
+		}
 		else
-			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content.toString());
+			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len);
 	}
 }
