@@ -21,8 +21,8 @@ globalVar.staticTrimArguments = [];
 globalVar.curCanvasId = "";
 
 // current canvas & jump object;
-globalVar.curCanvas = {};
-globalVar.curJump = {};
+globalVar.curCanvas = null;
+globalVar.curJump = null;
 
 if (typeof String.prototype.parseFunction != 'function') {
     String.prototype.parseFunction = function () {

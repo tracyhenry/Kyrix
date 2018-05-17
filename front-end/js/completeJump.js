@@ -12,6 +12,10 @@ function completeJump(tuple, newViewportX, newViewportY) {
         .style("opacity", 0);
     removePopoversSmooth();
 
+    // remove cursor pointers and onclick listeners
+    d3.selectAll("*").style("cursor", "auto");
+    d3.selectAll("*").on("click", null);
+
     // change #mainSvg to #oldSvg
     var oldSvg = d3.select("#mainSvg").attr("id", "oldSvg");
 

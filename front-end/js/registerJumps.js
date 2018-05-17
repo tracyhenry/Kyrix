@@ -37,10 +37,13 @@ function registerJumps(svg) {
 
             // make cursor a hand when hovering over this shape
             d3.select(this)
-                .style("cursor", "pointer");
+                .style("cursor", "zoom-in");
 
             // register onclick listener
             d3.select(this).on("click", function () {
+
+                // stop the click event from propagating up
+                d3.event.stopPropagation();
 
                 var layerId = d3.select(this).attr("data-layer-id");
                 // check if there is any jump related
@@ -70,7 +73,7 @@ function registerJumps(svg) {
                     .append("h2")
                     .classed("popover-title", true)
                     .attr("id", "popovertitle")
-                    .html("Jump to ")
+                    .html("Zoom into ")
                     .append("a")
                     .classed("close", true)
                     .attr("href", "#")

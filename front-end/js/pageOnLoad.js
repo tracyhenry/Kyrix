@@ -14,10 +14,10 @@ function getCurCanvas() {
     });
 }
 
-// get information about the first canvas to render
+// set up page
 function pageOnLoad() {
 
-    // send the first request to backend server
+    // get information about the first canvas to render
     $.post("/first/", {}, function (data, status) {
         var response = JSON.parse(data);
         console.log(response);
@@ -73,6 +73,14 @@ function pageOnLoad() {
                 + ","
                 + param.containerPadding
                 + ")");
+
+        // initiate zoom buttons, must before getCurCanvas is called
+        initiateZoomButtons();
+        d3.select(window).on("resize.zoombutton", initiateZoomButtons);
+
+        // remove jump option popovers when body is clicked or resized
+        d3.select(window).on("resize.popover", removePopovers);
+        d3.select(window).on("click", removePopovers);
 
         // get current canvas object
         getCurCanvas();

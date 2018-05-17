@@ -31,3 +31,11 @@
 #jumppopover > div {
     text-align : center;
 }
+
+#zoominbutton {
+    position : absolute;
+}
+
+#zoomoutbutton {
+    position : absolute;
+}
