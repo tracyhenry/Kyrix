@@ -26,40 +26,27 @@ teamLogoCanvas.addLayer(teamLogoLayer);
 teamLogoLayer.addPlacement(placements.teamLogoPlacement);
 teamLogoLayer.addRenderingFunc(renderers.teamLogoRendering);
 
-// initialize canvas
-p.initialCanvas("teamlogo", 0, 0, [""]);
-
 // ================== Canvas team timeline ===================
-var numLevels = 8;
-var zoomFactor = 2;
+var width = 1000 * 16;
+var height = 1000;
 
-for (var i = 0; i < numLevels; i ++) {
-    var width = 1000 * Math.pow(zoomFactor, i);
-    var height = 1000;
+// construct a new canvas
+var curCanvas = new Canvas("teamtimeline", width, height);
+p.addCanvas(curCanvas);
 
-    // construct a new canvas
-    var curCanvas = new Canvas("teamtimeline_level" + i, width, height);
-    p.addCanvas(curCanvas);
+// add data transforms
+curCanvas.addTransform(transforms.teamTimelineTransform);
 
-    // add data transforms
-    curCanvas.addTransform(transforms.teamTimelineTransforms[i]);
+// static trim
+curCanvas.addStaticTrim(renderers.teamTimelineStaticTrim);
+curCanvas.setStaticTrimFirst(false);
 
-    // static trim
-    curCanvas.addStaticTrim(renderers.teamTimelineStaticTrim);
-    curCanvas.setStaticTrimFirst(false);
+// create one layer
+var curLayer = new Layer("teamtimelinescale");
+curCanvas.addLayer(curLayer);
+curLayer.addPlacement(placements.teamTimelinePlacement);
+curLayer.addRenderingFunc(renderers.teamTimelineRendering);
 
-    // create one layer
-    var curLayer = new Layer("teamtimelinescale");
-    curCanvas.addLayer(curLayer);
-    curLayer.addPlacement(placements.teamTimelinePlacement);
-    curLayer.addRenderingFunc(renderers.teamTimelineRendering);
-}
-
-// add literal zooms
-for (var i = 0; i + 1 < numLevels; i ++) {
-//    p.addJump(new Jump("teamtimeline_level" + i, "teamtimeline_level" + (i + 1), [""], [""], "literal_zoom_in"));
-//    p.addJump(new Jump("teamtimeline_level" + (i + 1), "teamtimeline_level" + i, [""], [""], "literal_zoom_out"));
-}
 
 // ================== teamlogo -> teamtimeline_level0 ===================
 var newViewport = function (row) {
@@ -77,6 +64,11 @@ var newStaticTrimArguments = function (row) {
     return [row[4] + " " + row[5]];
 };
 
-p.addJump(new Jump("teamlogo", "teamtimeline_level4", [newViewport], [newPredicate], "semantic_zoom", jumpName, newStaticTrimArguments));
+p.addJump(new Jump("teamlogo", "teamtimeline", [newViewport], [newPredicate], "semantic_zoom", jumpName, newStaticTrimArguments));
 
+
+// initialize canvas
+p.initialCanvas("teamlogo", 0, 0, [""]);
+
+// save to db
 p.saveToDb();

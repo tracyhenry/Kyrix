@@ -21,13 +21,10 @@ var teamLogoTransform = new Transform("teamlogoID",
     ["id", "x", "y", "team_id", "city", "name"],
     true);
 
-var numLevels = 8;
-var teamTimelineTransforms = [];
-for (var i = 0; i < numLevels; i ++) {
-    var curTransform = new Transform("teamtimelinescale",
+var teamTimelineTransform = new Transform("teamtimelinescale",
         "select teamgamelogs.id, year, month, day, team1.name as home_team, team2.name as away_team, home_score, away_score, tier "
         + "from teamgamelogs, teams as team1, teams as team2 "
-        + "where teamgamelogs.home_team = team1.abbr and teamgamelogs.away_team = team2.abbr;",   // and tier <= " + (i + 1),
+        + "where teamgamelogs.home_team = team1.abbr and teamgamelogs.away_team = team2.abbr;",
         "nba",
         function (row, width) {
 
@@ -53,10 +50,8 @@ for (var i = 0; i < numLevels; i ++) {
         },
         ["id", "x", "y", "year", "month", "day", "home_team", "away_team", "home_score", "away_score", "tier"],
         true);
-    teamTimelineTransforms.push(curTransform)
-}
 
 module.exports = {
     teamLogoTransform : teamLogoTransform,
-    teamTimelineTransforms : teamTimelineTransforms
+    teamTimelineTransform : teamTimelineTransform
 };
