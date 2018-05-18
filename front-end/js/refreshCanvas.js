@@ -120,7 +120,7 @@ function RefreshCanvas(viewportX, viewportY) {
     renderAxes(viewportX, viewportY, +curViewport[2], +curViewport[3]);
 
     // set viewport, here we only change min-x and min-y of the viewport.
-    // Size of the viewport is set either by pageOnLoad.js, completeJump.js or zoomed()
+    // Size of the viewport is set either by pageOnLoad(), animateJump() or zoomed()
     // and should not be changed in this function
     var tiles = d3.select("#mainSvg")
         .attr("viewBox", viewportX + " " + viewportY + " "

@@ -32,6 +32,10 @@
     text-align : center;
 }
 
+#gobackbutton {
+    position : absolute;
+}
+
 #zoominbutton {
     position : absolute;
 }

@@ -75,8 +75,8 @@ function pageOnLoad() {
                 + ")");
 
         // initiate zoom buttons, must before getCurCanvas is called
-        initiateZoomButtons();
-        d3.select(window).on("resize.zoombutton", initiateZoomButtons);
+        drawZoomButtons();
+        d3.select(window).on("resize.zoombutton", drawZoomButtons);
 
         // remove jump option popovers when body is clicked or resized
         d3.select(window).on("resize.popover", removePopovers);
@@ -94,6 +94,9 @@ function pageOnLoad() {
 
         // set up zoom
         setupZoom(1);
+
+        // set button state
+        setButtonState();
     });
 };
 

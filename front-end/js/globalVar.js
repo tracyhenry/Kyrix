@@ -24,6 +24,9 @@ globalVar.curCanvasId = "";
 globalVar.curCanvas = null;
 globalVar.curJump = null;
 
+// history
+globalVar.history = [];
+
 if (typeof String.prototype.parseFunction != 'function') {
     String.prototype.parseFunction = function () {
         var funcReg = /function *[^()]*\(([^()]*)\)[ \n\t]*\{([\s\S]*)\}/gmi;

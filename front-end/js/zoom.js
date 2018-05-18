@@ -47,6 +47,12 @@ function setupZoom(initialScale) {
 
 function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
 
+    // save stuff
+    if (zoomType == "literal_zoom_in")
+        logHistory(zoomType);
+    else
+        globalVar.history.pop();
+
     // get the id of the canvas to zoom into
     var jumps = globalVar.curJump;
     for (var i = 0; i < jumps.length; i ++)
@@ -69,6 +75,9 @@ function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
         setupZoom(1 / Math.min(oldZoomFactorX, oldZoomFactorY) - 1e-5);
     else
         setupZoom(1);
+
+    // set up button states
+    setButtonState();
 
     // remove all popovers
     removePopovers();

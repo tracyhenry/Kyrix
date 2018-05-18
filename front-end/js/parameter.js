@@ -10,9 +10,9 @@ param.maxyOffset = 1;
 param.minyOffset = 3;
 
 // animation durations, delays
-param.zoomDuration = 2000;
+param.zoomDuration = 1800;
 param.enteringDelay = 925;
-param.enteringDuration = 1700;
+param.enteringDuration = 1300;
 
 // zoom scale factor
 param.zoomScaleFactor = 4;
@@ -27,8 +27,8 @@ param.fadeThreshold = 0.5;
 param.tileEnteringDuration = 150;
 
 // axes & static trim fading in/out duration
-param.axesOutDuration = 500;
-param.axesInDuration = 500;
+param.axesOutDuration = 400;
+param.axesInDuration = 400;
 param.staticTrimInDuration = 500;
 param.staticTrimOutDuration = 500;
 param.popoverOutDuration = 200;
