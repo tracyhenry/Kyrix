@@ -108,6 +108,8 @@ function animateJump(tuple, newViewportX, newViewportY) {
     globalVar.history[globalVar.history.length - 1].endView = endView;
 
     // set up zoom transitions
+    param.zoomDuration = d3.interpolateZoom(startView, endView).duration;
+    param.enteringDelay = Math.round(param.zoomDuration * param.enteringDelta);
     oldSvg.transition()
         .duration(param.zoomDuration)
         .tween("zoomInTween", function() {

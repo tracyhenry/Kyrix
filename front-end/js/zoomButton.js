@@ -157,9 +157,11 @@ function backspace() {
                     + " " + globalVar.viewportHeight);
 
             // schedule a zoom back transition
+            param.zoomDuration = d3.interpolateZoom(curHistory.endView, curHistory.startView).duration;
+            param.enteringDelay = Math.round(param.zoomDuration * param.enteringDelta);
             newSvg.transition()
-                .delay(param.enteringDelay + param.enteringDuration
-                    - param.zoomDuration)
+                .delay(Math.max(param.enteringDelay + param.enteringDuration
+                    - param.zoomDuration, param.axesOutDuration + 5))
                 .duration(param.zoomDuration)
                 .tween("zoomOutTween", function () {
 
