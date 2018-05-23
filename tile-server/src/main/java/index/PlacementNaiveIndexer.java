@@ -179,7 +179,7 @@ public class PlacementNaiveIndexer extends Indexer {
 					sql = "insert into bbox_" + projectName + "_" + c.getId() + "layer" + layer_id + " values (";
 					ArrayList<String> curRow = transformResults.get(i);
 					for (int j = 0; j < curRow.size(); j ++)
-						sql += "'" + curRow.get(j) + "', ";
+						sql += "'" + curRow.get(j).replaceAll("\'", "\\\\'") + "', ";
 					ArrayList<Double> curBbox = bboxes.get(i);
 					for (int j = 0; j < curBbox.size(); j ++) {
 						sql += String.valueOf(curBbox.get(j));
@@ -193,7 +193,7 @@ public class PlacementNaiveIndexer extends Indexer {
 				// build index
 				try {
 					sql = "create index bbox_" + projectName + "_" + c.getId() + "layer" + layer_id + "_indx on bbox_"
-							+ projectName + "_" + c.getId()
+							+ projectName + "_" + c.getId() + "layer" + layer_id
 							+ "(minx, miny, maxx, maxy);";
 					kyrix_stmt.executeUpdate(sql);
 				} catch (Exception e) {}
