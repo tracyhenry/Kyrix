@@ -117,7 +117,7 @@ function backspace() {
     }
 
     // disable and remove stuff
-    preAnimation(false);
+    preAnimation();
 
     // assign back global vars
     globalVar.curCanvasId = curHistory.canvasId;
@@ -131,11 +131,13 @@ function backspace() {
     // get current viewport
     var curViewport = d3.select("#mainSvg").attr("viewBox").split(" ");
 
-    // change #mainSvg to #oldSvg
-    var oldSvg = d3.select("#mainSvg").attr("id", "oldSvg");
+    // change #mainSvg to #oldMainSvg, and #staticSvg to #oldStaticSvg
+    var oldMainSvg = d3.select("#mainSvg").attr("id", "oldMainSvg");
+    d3.select("#staticSvg").attr("id", "oldStaticSvg");
+    d3.select("#staticg").attr("id", "oldStaticg");
 
     // start a exit & fade transition
-    oldSvg.transition()
+    oldMainSvg.transition()
         .duration(param.enteringDuration)
         .tween("fadeTween", function(){
 
@@ -172,16 +174,19 @@ function backspace() {
 
                     // render
                     RefreshCanvas(globalVar.initialViewportX, globalVar.initialViewportY);
+
+                    // static trim
+                    renderStaticTrim();
                 })
                 .on("end", function () {
 
-                    postAnimation(false);
+                    postAnimation();
                 });
         })
         .on("end", function () {
 
-            d3.select("#oldSvg").remove();
-            d3.select("#staticg").remove();
+            d3.select("#oldMainSvg").remove();
+            d3.select("#oldStaticg").remove();
         });
 
     function enterAndZoom(t, v) {
@@ -194,12 +199,19 @@ function backspace() {
         // change viewBox
         d3.select("#mainSvg")
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
+        minx = v[0] - vWidth / 2.0;
+        miny = v[1] - vHeight / 2.0;
+        d3.select("#staticSvg")
+            .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
 
         // change opacity
         var threshold = param.fadeThreshold;
-        if (1 - t >= threshold)
+        if (1 - t >= threshold) {
             d3.select("#mainSvg")
                 .style("opacity", 1.0 - (1 - t - threshold) / (1.0 - threshold));
+            d3.select("#staticSvg")
+                .style("opacity", 1.0 - (1 - t - threshold) / (1.0 - threshold));
+        }
     };
 
     function fadeAndExit(t) {
@@ -212,16 +224,16 @@ function backspace() {
         var miny = +curViewport[1] + globalVar.viewportHeight / 2.0 - vHeight / 2.0;
 
         // change mainsvg viewBox
-        d3.select("#oldSvg")
+        d3.select("#oldMainSvg")
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
         minx = globalVar.viewportWidth / 2 - vWidth / 2;
         miny = globalVar.viewportHeight / 2 - vHeight / 2;
-        d3.select("#staticSvg")
+        d3.select("#oldStaticSvg")
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
 
         // change opacity
-        d3.select("#oldSvg").style("opacity", t);
-        d3.select("#staticSvg").style("opacity", t);
+        d3.select("#oldMainSvg").style("opacity", t);
+        d3.select("#oldStaticSvg").style("opacity", t);
     };
 };
 

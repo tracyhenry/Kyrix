@@ -13,7 +13,7 @@ function removePopoversSmooth() {
 };
 
 // disable and remove stuff before animation
-function preAnimation(zoom_in) {
+function preAnimation() {
 
     // unbind zoom
     d3.select("#maing").on(".zoom", null);
@@ -22,10 +22,6 @@ function preAnimation(zoom_in) {
     d3.select("#axesg").transition()
         .duration(param.axesOutDuration)
         .style("opacity", 0);
-    if (zoom_in)
-        d3.select("#staticg").transition()
-            .duration(param.staticTrimOutDuration)
-            .style("opacity", 0);
     removePopoversSmooth();
 
     // remove cursor pointers and onclick listeners
@@ -38,31 +34,24 @@ function preAnimation(zoom_in) {
         .on("click", null);
 };
 
-function postAnimation(zoom_in) {
+function postAnimation() {
 
-    // remove the old svg after animation ends
-    if (zoom_in)
-        d3.select("#oldSvg").remove();
+    // remove the old svgs
+    d3.select("#oldMainSvg").remove();
+    d3.select("#oldStaticg").remove();
 
-    // set the viewBox of the new main svg and static svg
+    // set the viewBox & opacity of the new main svg and static svg
     // because d3 tween does not get t to 1.0
-    d3.select("#mainSvg").attr("viewBox", globalVar.initialViewportX + " "
+    d3.select("#mainSvg")
+        .attr("viewBox", globalVar.initialViewportX + " "
         + globalVar.initialViewportY + " "
         + globalVar.viewportWidth + " "
-        + globalVar.viewportHeight);
-
-    // static trims
-    if (zoom_in)
-        d3.select("#staticSvg").attr("viewBox", "0 0 "
-            + globalVar.viewportWidth + " "
-            + globalVar.viewportHeight);
-    else {
-        renderStaticTrim();
-        d3.select("#staticg").style("opacity", 0);
-        d3.select("#staticg").transition()
-            .duration(param.staticTrimOutDuration)
-            .style("opacity", 1);
-    }
+        + globalVar.viewportHeight)
+        .attr("opacity", 1);
+    d3.select("#staticSvg").attr("viewBox", "0 0 "
+        + globalVar.viewportWidth + " "
+        + globalVar.viewportHeight)
+        .attr("opacity", 1);
 
     // display axes
     d3.select("#axesg").transition()
@@ -80,13 +69,15 @@ function postAnimation(zoom_in) {
 function animateJump(tuple, newViewportX, newViewportY) {
 
     // disable stuff
-    preAnimation(true);
+    preAnimation();
 
-    // change #mainSvg to #oldSvg
-    var oldSvg = d3.select("#mainSvg").attr("id", "oldSvg");
+    // change #mainSvg to #oldMainSvg, and #staticSvg to oldStaticSvg
+    var oldMainSvg = d3.select("#mainSvg").attr("id", "oldMainSvg");
+    var oldStaticSvg = d3.select("#staticSvg").attr("id", "oldStaticSvg");
+    d3.select("#staticg").attr("id", "oldStaticg");
 
     // calculate tuple boundary
-    var curViewport = oldSvg.attr("viewBox").split(" ");
+    var curViewport = oldMainSvg.attr("viewBox").split(" ");
     for (var i = 0; i < curViewport.length; i ++)
         curViewport[i] = +curViewport[i];
     var tupleLen = tuple.length;
@@ -110,7 +101,7 @@ function animateJump(tuple, newViewportX, newViewportY) {
     // set up zoom transitions
     param.zoomDuration = d3.interpolateZoom(startView, endView).duration;
     param.enteringDelay = Math.round(param.zoomDuration * param.enteringDelta);
-    oldSvg.transition()
+    oldMainSvg.transition()
         .duration(param.zoomDuration)
         .tween("zoomInTween", function() {
 
@@ -157,7 +148,7 @@ function animateJump(tuple, newViewportX, newViewportY) {
                 })
                 .on("end", function () {
 
-                    postAnimation(true);
+                    postAnimation();
                 });
         });
 
@@ -169,12 +160,17 @@ function animateJump(tuple, newViewportX, newViewportY) {
         var miny = curViewport[1] + v[1] - vHeight / 2.0;
 
         // change viewBox
-        oldSvg.attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
+        oldMainSvg.attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
+        minx = v[0] - vWidth / 2.0;
+        miny = v[1] - vHeight / 2.0;
+        oldStaticSvg.attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
 
         // change opacity
         var threshold = param.fadeThreshold;
-        if (t >= threshold)
-            oldSvg.style("opacity", 1.0 - (t - threshold) / (1.0 - threshold));
+        if (t >= threshold) {
+            oldMainSvg.style("opacity", 1.0 - (t - threshold) / (1.0 - threshold));
+            oldStaticSvg.style("opacity", 1.0 - (t - threshold) / (1.0 - threshold));
+        }
     };
 
     function enterAndScale(t) {
@@ -199,7 +195,6 @@ function animateJump(tuple, newViewportX, newViewportY) {
         // change opacity
         d3.select("#mainSvg").style("opacity", t);
         d3.select("#staticSvg").style("opacity", t);
-
     };
 };
 
