@@ -231,9 +231,6 @@ function registerJumps(svg) {
                 // stop the click event from propagating up
                 d3.event.stopPropagation();
 
-                // log history
-                logHistory("semantic_zoom");
-
                 var layerId = d3.select(this).attr("data-layer-id");
                 // check if there is any jump related
                 var jumpCount = 0;
@@ -298,6 +295,10 @@ function registerJumps(svg) {
                     jumpOption.on("click", function () {
 
                         d3.event.preventDefault();
+
+                        // log history
+                        logHistory("semantic_zoom");
+
                         var tuple = d3.select(this).datum();
                         var jumpId = d3.select(this).attr("data-jump-id");
                         var layerId = d3.select(this).attr("data-layer-id");
