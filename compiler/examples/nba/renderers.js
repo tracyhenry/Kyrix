@@ -8,7 +8,7 @@ var teamLogoRendering = function render(svg, data) {
         .attr("y", function (d) {return d[2] - 65;})
         .attr("width", 130)
         .attr("height", 130)
-        .attr("xlink:href", function (d) {return "static/images/nba/team_logo/" + d[5].toLowerCase() + ".svg";});
+        .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + d[6] + ".svg";});
 };
 
 var teamTimelineRendering = function render(svg, data) {
@@ -17,7 +17,7 @@ var teamTimelineRendering = function render(svg, data) {
     var rectHeight = 100;
     var logoXDelta = 60;
     var logoYDelta = 6;
-    var logoSize = 32;
+    var logoSize = 35;
     var scoreFontSize = 20;
     var scoreXDelta = 60;
     var scoreYDelta = 24;
@@ -50,7 +50,7 @@ var teamTimelineRendering = function render(svg, data) {
         .attr("y", function (d) {return d[2] - logoYDelta - logoSize;})
         .attr("width", logoSize)
         .attr("height", logoSize)
-        .attr("xlink:href", function (d) {return "static/images/nba/team_logo/" + d[6].toLowerCase() + ".svg";});
+        .attr("xlink:href", function (d) {return "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + d[6] + ".svg";});
 
     // away logo
     g.selectAll(".awayimage")
@@ -61,7 +61,7 @@ var teamTimelineRendering = function render(svg, data) {
         .attr("y", function (d) {return +d[2] + logoYDelta;})
         .attr("width", logoSize)
         .attr("height", logoSize)
-        .attr("xlink:href", function (d) {return "static/images/nba/team_logo/" + d[7].toLowerCase() + ".svg";});
+        .attr("xlink:href", function (d) {return "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + d[7] + ".svg";});
 
     // home score
     g.selectAll(".homescore")
@@ -117,9 +117,241 @@ var teamTimelineRendering = function render(svg, data) {
         .style("stroke-width", 3);
 };
 
-var teamTimelineStaticTrim = function (g, args) {
+var playByPlayRendering = function render(svg, data) {
 
-    var team_string = args[0];
+    function wrap(text, width) {
+
+        text.each(function() {
+            var text = d3.select(this),
+                words = text.text().split(/\s+/).reverse(),
+                word,
+                line = [],
+                lineNumber = 0,
+                lineHeight = 1.3, // ems
+                x = text.attr("x"),
+                y = text.attr("y"),
+                dy = parseFloat(text.attr("dy")),
+                tspan = text.text(null).append("tspan").attr("x", x).attr("y", y);
+
+            while (word = words.pop()) {
+                line.push(word);
+                tspan.text(line.join(" "));
+                if (tspan.node().getComputedTextLength() > width) {
+                    line.pop();
+                    tspan.text(line.join(" "));
+                    line = [word];
+                    tspan = text.append("tspan").attr("x", x).attr("y", y).text(word);
+                }
+            }
+            var tspans = text.selectAll("tspan"), num_tspans = tspans.size();
+            var firstY;
+            if (num_tspans % 2 == 0)
+                firstY = - (num_tspans / 2 - 0.5) * lineHeight;
+            else
+                firstY = - Math.floor(num_tspans / 2) * lineHeight;
+            tspans.attr("dy", function (d, i) {
+                return (firstY + lineHeight * i) + 0.35 + "em";
+            });
+        });
+    };
+
+    var centerTextWidth = 100;
+    var centerTextHeight = 100;
+    var triangleHeight = 80;
+    var triangleWidth = 50;
+    var frameCircleR = 4;
+    var descBoxWidth = 320;
+    var radius = triangleHeight / 2;
+    var imageMargin = 5;
+    var imageOffset = 10;
+    var descFontSize = 17;
+    var descOffset = 20;
+    var qtrTextFontSize = 20;
+    var qtrTimeFontSize = 16;
+    var scoreFontSize = 18;
+    var qtrTextYDelta = 23;
+    var scoreYDelta = 23;
+    var qtr_text = ["1st qtr", "2nd qtr", "3rd qtr", "4th qtr",
+        "OT 1", "OT 2", "OT 3", "OT 4", "OT 5", "OT 6"];
+
+    var g = svg.append("g");
+
+    // extract home plays and away plays
+    var homePlays = [], awayPlays = [];
+    for (var i = 0; i < data.length; i ++) {
+        if (data[i][6] != "None")
+            homePlays.push(data[i]);
+        if (data[i][7] != "None")
+            awayPlays.push(data[i]);
+    }
+
+    // home event frame
+    g.selectAll(".homeframe")
+        .data(homePlays)
+        .enter()
+        .append("path")
+        .attr("d", function (d) {
+            var path = "M " + (500 - centerTextWidth / 2) + " " + d[1];
+            path += " l " + (-triangleWidth) + " " + (-radius);
+            path += " h " + (-descBoxWidth);
+            path += " a " + radius + " " + radius + " 0 0 0 " + "0 " + triangleHeight;
+            path += " h " + descBoxWidth;
+            path += " z";
+            return path;
+        })
+        .attr("fill", "white")
+        .style("stroke", "#CCC")
+        .style("stroke-width", 1.5);
+
+    // away event frame
+    g.selectAll(".awayframe")
+        .data(awayPlays)
+        .enter()
+        .append("path")
+        .attr("d", function (d) {
+            var path = "M " + (500 + centerTextWidth / 2) + " " + d[1];
+            path += " l " + triangleWidth + " " + (-radius);
+            path += " h " + descBoxWidth;
+            path += " a " + radius + " " + radius + " 0 0 1 " + "0 " + triangleHeight;
+            path += " h " + (-descBoxWidth);
+            path += " z";
+            return path;
+        })
+        .attr("fill", "white")
+        .style("stroke", "#CCC")
+        .style("stroke-width", 1.5);
+
+    // home event image
+    g.selectAll(".homeimage")
+        .data(homePlays)
+        .enter()
+        .append("image")
+        .classed("homeimage", true)
+        .attr("x", 500 - centerTextWidth / 2 - triangleWidth - descBoxWidth + imageOffset - (radius * 2 - imageMargin) / 2)
+        .attr("y", function (d) {return d[1] - (radius * 2 - imageMargin) / 2;})
+        .attr("width", radius * 2 - imageMargin)
+        .attr("height", radius * 2 - imageMargin)
+        .attr("xlink:href", function (d) {
+            if (d[10] == "None")
+                return "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + d[8] + ".svg";
+            return "http://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/" + d[10] + ".png";
+        });
+
+    // away event image
+    g.selectAll(".awayimage")
+        .data(awayPlays)
+        .enter()
+        .append("image")
+        .classed("awayimage", true)
+        .attr("x", 500 + centerTextWidth / 2 + triangleWidth + descBoxWidth -imageOffset - (radius * 2 - imageMargin) / 2)
+        .attr("y", function (d) {return d[1] - (radius * 2 - imageMargin) / 2;})
+        .attr("width", radius * 2 - imageMargin)
+        .attr("height", radius * 2 - imageMargin)
+        .attr("xlink:href", function (d) {
+            if (d[11] == "None")
+                return "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + d[9] + ".svg";
+            return "http://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/" + d[11] + ".png";
+        });
+
+    // home event description
+    g.selectAll(".homedesc")
+        .data(homePlays)
+        .enter()
+        .append("text")
+        .text(function (d) {return d[6];})
+        .attr("x", 500 - centerTextWidth / 2 - triangleWidth - descBoxWidth / 2 + descOffset)
+        .attr("y", function (d) {return d[1];})
+        .attr("font-size", descFontSize)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle")
+        .style("fill-opacity", 1)
+        .call(wrap, descBoxWidth - 100);
+
+    // away event description
+    g.selectAll(".awaydesc")
+        .data(awayPlays)
+        .enter()
+        .append("text")
+        .text(function (d) {return d[7];})
+        .attr("x", 500 + centerTextWidth / 2 + triangleWidth + descBoxWidth / 2 - descOffset)
+        .attr("y", function (d) {return d[1];})
+        .attr("font-size", descFontSize)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle")
+        .style("fill-opacity", 1)
+        .call(wrap, descBoxWidth - 100);
+
+    // center rectangle
+    g.selectAll(".centerrect")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("width", centerTextWidth)
+        .attr("height", centerTextHeight)
+        .attr("x", 500 - centerTextWidth / 2)
+        .attr("y", function (d) {return d[1] - centerTextHeight / 2;})
+        .attr("fill", "white");
+
+    // center text
+    g.selectAll(".qtrtext")
+        .data(data)
+        .enter()
+        .append("text")
+        .text(function (d) {return qtr_text[d[2] - 1];})
+        .attr("x", 500)
+        .attr("y", function (d) {return d[1] - qtrTextYDelta;})
+        .attr("font-size", qtrTextFontSize)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle")
+        .style("fill-opacity", 1)
+        .style("font-weight", "bolder");
+    g.selectAll(".qtrtime")
+        .data(data)
+        .enter()
+        .append("text")
+        .text(function (d) {return d[3];})
+        .attr("x", 500)
+        .attr("y", function (d) {return d[1];})
+        .attr("font-size", qtrTimeFontSize)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle")
+        .attr("fill", "#eac43c")
+        .style("fill-opacity", 1);
+    g.selectAll(".score")
+        .data(data)
+        .enter()
+        .append("text")
+        .text(function (d) {return d[4];})
+        .attr("x", 500)
+        .attr("y", function (d) {return +d[1] + scoreYDelta;})
+        .attr("font-size", scoreFontSize)
+        .attr("dy", ".35em")
+        .attr("text-anchor", "middle")
+        .attr("fill", "#4144e2")
+        .style("fill-opacity", 1);
+
+    // frame circles
+    g.selectAll(".homeframecircle")
+        .data(homePlays)
+        .enter()
+        .append("circle")
+        .attr("cx", 500 - centerTextWidth / 2)
+        .attr("cy", function (d) {return d[1];})
+        .attr("r", frameCircleR)
+        .style("fill", "#221f56");
+
+    g.selectAll(".awayframecircle")
+        .data(awayPlays)
+        .enter()
+        .append("circle")
+        .attr("cx", 500 + centerTextWidth / 2)
+        .attr("cy", function (d) {return d[1];})
+        .attr("r", frameCircleR)
+        .style("fill", "#221f56");
+
+};
+
+var teamTimelineStaticTrim = function (g, args) {
 
     // text
     var title = g.append("text")
@@ -131,31 +363,60 @@ var teamTimelineStaticTrim = function (g, args) {
         .html("2017~2018 Regular Season Games");
     title.append("tspan")
         .attr("x", 500)
-        .attr("dy", 70).html(team_string);
+        .attr("dy", 70).html(args[0]);
 
     // axis line
     g.append("line")
-        .attr("x1", 0)
+        .attr("x1", -1000)
         .attr("y1", 625)
-        .attr("x2", 1000)
+        .attr("x2", 2000)
         .attr("y2", 625)
         .style("stroke", "#CCC")
         .style("stroke-width", 3);
 
     // team logo background
-    var teamName = team_string.split(" ");
-    teamName = teamName[teamName.length - 1];
     g.append("image")
         .attr("x", 0)
         .attr("y", 0)
         .attr("width", 1000)
         .attr("height", 1000)
-        .attr("xlink:href", function (d) {return "static/images/nba/team_logo/" + teamName + ".svg";})
+        .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + args[1] + ".svg";})
         .style("opacity", 0.07);
 };
+
+var playByPlayStaticTrim = function (g, args) {
+
+    // axis line
+    g.append("line")
+        .attr("x1", 500)
+        .attr("y1", -1000)
+        .attr("x2", 500)
+        .attr("y2", 2000)
+        .style("stroke", "#CCC")
+        .style("stroke-width", 3);
+
+    // team logo background
+    g.append("image")
+        .attr("x", 50)
+        .attr("y", 300)
+        .attr("width", 400)
+        .attr("height", 400)
+        .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + args[0] + ".svg";})
+        .style("opacity", 0.07);
+    g.append("image")
+        .attr("x", 550)
+        .attr("y", 300)
+        .attr("width", 400)
+        .attr("height", 400)
+        .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + args[1] + ".svg";})
+        .style("opacity", 0.07);
+};
+
 
 module.exports = {
     teamLogoRendering : teamLogoRendering,
     teamTimelineRendering : teamTimelineRendering,
-    teamTimelineStaticTrim : teamTimelineStaticTrim
+    playByPlayRendering: playByPlayRendering,
+    teamTimelineStaticTrim : teamTimelineStaticTrim,
+    playByPlayStaticTrim : playByPlayStaticTrim
 };

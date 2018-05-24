@@ -31,29 +31,49 @@ var width = 1000 * 16;
 var height = 1000;
 
 // construct a new canvas
-var curCanvas = new Canvas("teamtimeline", width, height);
-p.addCanvas(curCanvas);
+var teamTimelineCanvas = new Canvas("teamtimeline", width, height);
+p.addCanvas(teamTimelineCanvas);
 
 // add data transforms
-curCanvas.addTransform(transforms.teamTimelineTransform);
+teamTimelineCanvas.addTransform(transforms.teamTimelineTransform);
 
 // static trim
-curCanvas.addStaticTrim(renderers.teamTimelineStaticTrim);
-curCanvas.setStaticTrimFirst(false);
+teamTimelineCanvas.addStaticTrim(renderers.teamTimelineStaticTrim);
+teamTimelineCanvas.setStaticTrimFirst(false);
 
 // create one layer
-var curLayer = new Layer("teamtimelinescale");
-curCanvas.addLayer(curLayer);
-curLayer.addPlacement(placements.teamTimelinePlacement);
-curLayer.addRenderingFunc(renderers.teamTimelineRendering);
+var timelineLayer = new Layer("teamtimelinescale");
+teamTimelineCanvas.addLayer(timelineLayer);
+timelineLayer.addPlacement(placements.teamTimelinePlacement);
+timelineLayer.addRenderingFunc(renderers.teamTimelineRendering);
 
+// ================== Canvas play by play ===================
+var width = 1000;
+var height = 70000;
 
-// ================== teamlogo -> teamtimeline_level0 ===================
+// construct a new canvas
+var playByPlayCanvas = new Canvas("playbyplay", width, height);
+p.addCanvas(playByPlayCanvas);
+
+// add data transforms
+playByPlayCanvas.addTransform(transforms.playByPlayTransform);
+
+// static trim
+playByPlayCanvas.addStaticTrim(renderers.playByPlayStaticTrim);
+playByPlayCanvas.setStaticTrimFirst(false);
+
+// create one layer
+var playByPlayLayer = new Layer("playbyplayscale");
+playByPlayCanvas.addLayer(playByPlayLayer);
+playByPlayLayer.addPlacement(placements.playByPlayPlacement);
+playByPlayLayer.addRenderingFunc(renderers.playByPlayRendering);
+
+// ================== teamlogo -> teamtimeline ===================
 var newViewport = function (row) {
     return [0, 0, 0]
 };
 var newPredicate = function (row) {
-    return ["(home_team=\"" + row[5] + "\" or " + "away_team=\"" + row[5] + "\")"];
+    return ["(home_team=\"" + row[6] + "\" or " + "away_team=\"" + row[6] + "\")"];
 };
 
 var jumpName = function (row) {
@@ -61,10 +81,28 @@ var jumpName = function (row) {
 };
 
 var newStaticTrimArguments = function (row) {
-    return [row[4] + " " + row[5]];
+    return [row[4] + " " + row[5], row[6]];
 };
 
 p.addJump(new Jump("teamlogo", "teamtimeline", [newViewport], [newPredicate], "semantic_zoom", jumpName, newStaticTrimArguments));
+
+// ================== teamtimeline -> playbyplay ===================
+var newViewport = function (row) {
+    return [0, 0, 0]
+};
+var newPredicate = function (row) {
+    return ["game_id = " + row[0]];
+};
+
+var jumpName = function (row) {
+    return "Scoring Plays";
+};
+
+var newStaticTrimArguments = function (row) {
+    return [row[6], row[7]];
+};
+
+p.addJump(new Jump("teamtimeline", "playbyplay", [newViewport], [newPredicate], "semantic_zoom", jumpName, newStaticTrimArguments));
 
 
 // initialize canvas

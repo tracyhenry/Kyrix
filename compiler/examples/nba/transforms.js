@@ -15,43 +15,78 @@ var teamLogoTransform = new Transform("teamlogoID",
         ret.push(row[1]);
         ret.push(row[2]);
         ret.push(row[3]);
+        ret.push(row[4]);
 
         return Java.to(ret ,"java.lang.String[]");
     },
-    ["id", "x", "y", "team_id", "city", "name"],
+    ["id", "x", "y", "team_id", "city", "name", "abbr"],
     true);
 
 var teamTimelineTransform = new Transform("teamtimelinescale",
-        "select teamgamelogs.id, year, month, day, team1.name as home_team, team2.name as away_team, home_score, away_score, tier "
-        + "from teamgamelogs, teams as team1, teams as team2 "
-        + "where teamgamelogs.home_team = team1.abbr and teamgamelogs.away_team = team2.abbr;",
+        "select game_id, year, month, day, team1.abbr as home_team, team2.abbr as away_team, home_score, away_score, tier "
+        + "from games, teams as team1, teams as team2 "
+        + "where games.home_team = team1.abbr and games.away_team = team2.abbr;",
         "nba",
         function (row, width) {
 
             var ret = [];
-            //id
+            // id
             ret.push(row[0]);
-            //x
+            // x
             var curDate = new Date(row[1], row[2] - 1, row[3]);
             ret.push(d3.scaleTime()
                 .domain([new Date(2017, 9, 17), new Date(2018, 3, 11)])
                 .range([82, width - 82])(curDate));
-            //y
+            // y
             var beginDate = new Date(2000, 0, 1);
             var oneDay = 24 * 60 * 60 * 1000;
             var daysPassed = Math.round(Math.abs((curDate.getTime() - beginDate.getTime())/(oneDay)));
             ret.push(daysPassed % 2 == 0 ? 495 : 725);
 
-            //rest of the attribtues
+            // rest of the attribtues
             for (var i = 1; i <= 8; i ++)
                 ret.push(row[i]);
 
             return Java.to(ret ,"java.lang.String[]");
         },
-        ["id", "x", "y", "year", "month", "day", "home_team", "away_team", "home_score", "away_score", "tier"],
+        ["game_id", "x", "y", "year", "month", "day", "home_team", "away_team", "home_score", "away_score", "tier"],
         true);
+
+var playByPlayTransform = new Transform("playbyplayscale",
+    "select games.game_id, period, qtr_time, score, margin, home_desc, away_desc, home_team, away_team, play_id, h_player_id, a_player_id"
+    + " from scoring_plays, games"
+    + " where scoring_plays.game_id = games.game_id;",
+    "nba",
+    function (row, height) {
+
+        var ret = [];
+        // game_id
+        ret.push(row[0]);
+
+        // y
+        ret.push((+row[9] + 1) * 160);
+
+        // period & qtr_time
+        ret.push(row[1]);
+        ret.push(row[2]);
+
+        // reverse score
+        var scores = row[3].split("-");
+        ret.push(scores[1].replace(/\s+/, "") + " - " + scores[0].replace(/\s+/, ""));
+
+        // rest of the attributes
+        for (var i = 4; i <= 8; i ++)
+            ret.push(row[i]);
+        ret.push(row[10]);
+        ret.push(row[11]);
+
+        return Java.to(ret ,"java.lang.String[]");
+    },
+    ["game_id", "y", "period", "qtr_time", "score", "margin", "home_desc", "away_desc", "home_team", "away_team", "h_player_id", "a_player_id"],
+    true);
 
 module.exports = {
     teamLogoTransform : teamLogoTransform,
-    teamTimelineTransform : teamTimelineTransform
+    teamTimelineTransform : teamTimelineTransform,
+    playByPlayTransform : playByPlayTransform
 };
