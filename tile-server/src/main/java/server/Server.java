@@ -23,7 +23,7 @@ public class Server {
 		server.createContext("/tile", new TileRequestHandler());
 		server.createContext("/canvas", new CanvasRequestHandler());
 		server.createContext("/viewport", new ViewportRequestHandler());
-		server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(Config.numThread));
+		server.setExecutor(null);//java.util.concurrent.Executors.newFixedThreadPool(Config.numThread));
 		server.start();
 	}
 

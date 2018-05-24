@@ -40,7 +40,7 @@ public class TileRequestHandler implements HttpHandler {
 	public void handle(HttpExchange httpExchange) throws IOException {
 
 		// TODO: this method should be thread safe, allowing concurrent requests
-		System.out.println("Serving /tile");
+		System.out.println("\nServing /tile");
 
 		// variable definitions;
 		String response;
@@ -63,8 +63,6 @@ public class TileRequestHandler implements HttpHandler {
 		// print
 		for (String s : queryMap.keySet())
 			System.out.println(s + " : " + queryMap.get(s));
-		System.out.println();
-
 
 		// check parameters, if not pass, send a bad request response
 		response = checkParameters(queryMap);
@@ -97,6 +95,7 @@ public class TileRequestHandler implements HttpHandler {
 
 		// send back response
 		Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
+		System.out.println();
 	}
 
 	// get a tile
