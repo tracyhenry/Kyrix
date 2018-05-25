@@ -1,11 +1,14 @@
 // get from backend the current canvas object assuming curCanvasId is already correctly set
 function getCurCanvas() {
 
+    var postData = "id=" + globalVar.curCanvasId;
+    for (var i = 0; i < globalVar.predicates.length; i ++)
+        postData += "&predicate" + i + "=" + globalVar.predicates[i];
     // TODO: client cache
     $.ajax({
         type : "POST",
         url : "canvas",
-        data : globalVar.curCanvasId,
+        data : postData,
         success : function (data, status) {
             globalVar.curCanvas = JSON.parse(data).canvas;
             globalVar.curJump = JSON.parse(data).jump;

@@ -8,15 +8,32 @@
 function Canvas(id, w, h) {
 
     // type check
-    if (typeof w !== "number" || w <= 0)
+    if (typeof w == "number" && w <= 0)
         throw new Error("Constructing canvas: w must be a positive integer.");
-    if (typeof h !== "number" || h <= 0)
+    if (typeof h == "number" && h <= 0)
         throw new Error("Constructing canvas: h must be a positive integer.");
+    if (typeof w != "number") {
+        this.w = 0;
+        w = processWidthHeightString(w);
+        this.wLayerId = w.split(":")[0];
+        this.wSql = w.substring(this.wLayerId.length + 1);
+    }
+    else {
+        this.w = w; this.wSql = ""; this.wLayerId = "";
+    }
+
+    if (typeof h != "number") {
+        this.h = 0;
+        h = processWidthHeightString(h);
+        this.hLayerId = h.split(":")[0];
+        this.hSql = h.substring(this.hLayerId.length + 1);
+    }
+    else {
+        this.h = h; this.hSql = ""; this.hLayerId = "";
+    }
 
     // assign fields
     this.id = String(id);
-    this.w = w;
-    this.h = h;
     this.transforms = []; // an initially empty transform array
     this.layers = [];   // an initially empty layer array
     this.zoomInFactorX = 0;  // greater than 1 to be valid
@@ -66,7 +83,15 @@ function setStaticTrimFirst(staticTrimFirst) {
     this.staticTrimFirst = staticTrimFirst;
 }
 
+function processWidthHeightString(s) {
 
+    s = s.toLowerCase();
+    while (s.slice(-1) == " " || s.slice(-1) == ";")
+        s = s.slice(0, -1);
+    if (s.indexOf("where") == -1)
+        s = s + " where 1 = 1";
+    return s;
+}
 // add functions to prototype
 Canvas.prototype.addLayer = addLayer;
 Canvas.prototype.addTransform = addTransform;

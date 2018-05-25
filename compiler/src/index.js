@@ -86,6 +86,11 @@ function addJump(jump) {
                 && this.jumps[i].type == jump.type)
                 throw new Error("Constructing jump: there can be only one " + jump.type + " for a canvas.");
 
+        // check if w and h is pre-decided
+        if (sourceCanvas.w <= 0 || sourceCanvas.h <= 0
+            || destCanvas.w <= 0 || destCanvas.h <= 0)
+            throw new Error("Constructing jump: canvases with literal zooms have to have pre-decided width and height.");
+
         // check whether zoom factor is the same for x & y
         if (destCanvas.w != sourceCanvas.w &&
             destCanvas.h != sourceCanvas.h &&

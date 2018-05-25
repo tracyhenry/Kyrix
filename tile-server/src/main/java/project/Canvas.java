@@ -10,6 +10,7 @@ public class Canvas {
 	private String id;
 	private int w;
 	private int h;
+	private String wSql, hSql, wLayerId, hLayerId;
 	private double zoomInFactorX, zoomInFactorY;
 	private double zoomOutFactorX, zoomOutFactorY;
 	private ArrayList<Transform> transforms;
@@ -17,6 +18,14 @@ public class Canvas {
 	String axes;
 	String staticTrim;
 	boolean staticTrimFirst;
+
+	public void setW(int w) {
+		this.w = w;
+	}
+
+	public void setH(int h) {
+		this.h = h;
+	}
 
 	public String getId() {
 		return id;
@@ -28,6 +37,22 @@ public class Canvas {
 
 	public int getH() {
 		return h;
+	}
+
+	public String getwSql() {
+		return wSql;
+	}
+
+	public String gethSql() {
+		return hSql;
+	}
+
+	public String getwLayerId() {
+		return wLayerId;
+	}
+
+	public String gethLayerId() {
+		return hLayerId;
 	}
 
 	public double getZoomInFactorX() {
@@ -75,12 +100,23 @@ public class Canvas {
 		return null;
 	}
 
+	public String getDbByLayerId(String layerId) {
+		String transformId = this.getLayers()
+				.get(Integer.valueOf(layerId))
+				.getTransformId();
+		return this.getTransformById(transformId).getDb();
+	}
+
 	@Override
 	public String toString() {
 		return "Canvas{" +
 				"id='" + id + '\'' +
 				", w=" + w +
 				", h=" + h +
+				", wSql='" + wSql + '\'' +
+				", hSql='" + hSql + '\'' +
+				", wLayerId='" + wLayerId + '\'' +
+				", hLayerId='" + hLayerId + '\'' +
 				", zoomInFactorX=" + zoomInFactorX +
 				", zoomInFactorY=" + zoomInFactorY +
 				", zoomOutFactorX=" + zoomOutFactorX +

@@ -49,7 +49,7 @@ timelineLayer.addRenderingFunc(renderers.teamTimelineRendering);
 
 // ================== Canvas play by play ===================
 var width = 1000;
-var height = 70000;
+var height = "0:select (max(play_id) + 2) * 160 from scoring_plays;"; // todo: the "where" clause is assumed to be at the end right now
 
 // construct a new canvas
 var playByPlayCanvas = new Canvas("playbyplay", width, height);
