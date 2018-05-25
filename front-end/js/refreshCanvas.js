@@ -90,7 +90,8 @@ function renderTile(tileSvg, x, y, renderFuncs, canvasId, predicates) {
             .style("opacity", 1.0);
 
         // register jumps
-        registerJumps(tileSvg);
+        if (! globalVar.animation)
+            registerJumps(tileSvg);
 
         // apply additional zoom transforms
         if (param.retainSizeZoom &&
@@ -140,6 +141,7 @@ function RefreshCanvas(viewportX, viewportY) {
             return d[0] + " " + d[1] + " " + tileW + " " + tileH;
         })
         .style("opacity", 0)
+        .classed("tileSvg", true)
         .each(function(d) {
             renderTile(this, d[0], d[1], renderFuncs, globalVar.curCanvasId, globalVar.predicates);
         });

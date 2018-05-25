@@ -27,6 +27,8 @@ globalVar.curJump = null;
 // history
 globalVar.history = [];
 
+// whether there is a zooming animation happening
+globalVar.animation = false;
 // cache
 globalVar.cachedCanvases = {};
 

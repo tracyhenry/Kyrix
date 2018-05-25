@@ -32,6 +32,7 @@ function preAnimation() {
         .attr("disabled", true);
     d3.selectAll("*")
         .on("click", null);
+    globalVar.animation = true;
 };
 
 function postAnimation() {
@@ -63,6 +64,14 @@ function postAnimation() {
 
     // set up button states
     setButtonState();
+
+    // register jumps here because during animation
+    // jumps are not allowed to be registered
+    globalVar.animation = false;
+    d3.selectAll(".tileSvg")
+        .each(function() {
+            registerJumps(d3.select(this));
+        });
 };
 
 // animate semantic zoom
