@@ -4,7 +4,15 @@ function getCurCanvas() {
     var postData = "id=" + globalVar.curCanvasId;
     for (var i = 0; i < globalVar.predicates.length; i ++)
         postData += "&predicate" + i + "=" + globalVar.predicates[i];
-    // TODO: client cache
+
+    // check if cache has it
+    if (postData in globalVar.cachedCanvases) {
+        globalVar.curCanvas = globalVar.cachedCanvases[postData].canvasObj;
+        globalVar.curJump = globalVar.cachedCanvases[postData].jumps;
+        return ;
+    }
+
+    // otherwise make a blocked http request to the server
     $.ajax({
         type : "POST",
         url : "canvas",
@@ -12,6 +20,13 @@ function getCurCanvas() {
         success : function (data, status) {
             globalVar.curCanvas = JSON.parse(data).canvas;
             globalVar.curJump = JSON.parse(data).jump;
+
+            // insert into cache
+            if (! (postData in globalVar.cachedCanvases)) {
+                globalVar.cachedCanvases[postData] = {};
+                globalVar.cachedCanvases[postData].canvasObj = globalVar.curCanvas;
+                globalVar.cachedCanvases[postData].jumps = globalVar.curJump;
+            }
         },
         async : false
     });

@@ -307,6 +307,26 @@ function registerJumps(svg) {
                         // calculate new predicates
                         globalVar.predicates = jumps[jumpId].newPredicates[layerId].parseFunction()(tuple);
 
+                        // prefetch canvas object by sending an async request to server
+                        if (! (postData in globalVar.cachedCanvases)) {
+                            var postData = "id=" + globalVar.curCanvasId;
+                            for (var i = 0; i < globalVar.predicates.length; i ++)
+                                postData += "&predicate" + i + "=" + globalVar.predicates[i];
+                            $.ajax({
+                                type : "POST",
+                                url : "canvas",
+                                data : postData,
+                                success : function (data, status) {
+                                    if (! (postData in globalVar.cachedCanvases)) {
+                                        globalVar.cachedCanvases[postData] = {};
+                                        globalVar.cachedCanvases[postData].canvasObj = JSON.parse(data).canvas;
+                                        globalVar.cachedCanvases[postData].jumps = JSON.parse(data).jump;
+                                    }
+                                },
+                                async : true
+                            });
+                        }
+
                         // calculate new static trim arguments
                         if (jumps[jumpId].newStaticTrimArguments == "")
                             globalVar.staticTrimArguments = [];
