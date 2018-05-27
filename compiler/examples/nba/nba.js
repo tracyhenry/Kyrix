@@ -95,7 +95,7 @@ var newPredicate = function (row) {
 };
 
 var jumpName = function (row) {
-    return "Scoring Plays";
+    return "Scoring Plays of " + row[7] + "@" + row[6];
 };
 
 var newStaticTrimArguments = function (row) {

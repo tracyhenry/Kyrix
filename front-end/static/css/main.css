@@ -30,6 +30,7 @@
 
 #jumppopover > div {
     text-align : center;
+    font-family: 'Source Serif Pro', sans-serif !important;
 }
 
 #gobackbutton {
@@ -42,4 +43,8 @@
 
 #zoomoutbutton {
     position : absolute;
+}
+
+body {
+    font-family: 'Source Serif Pro', sans-serif !important;
 }
