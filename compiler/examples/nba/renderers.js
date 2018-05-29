@@ -221,6 +221,18 @@ var playByPlayRendering = function render(svg, data) {
         .style("stroke", "#CCC")
         .style("stroke-width", 1.5);
 
+    // image mask
+    g.append("defs")
+        .append("mask")
+        .attr("id", "circlemask")
+        .attr("maskUnits", "objectBoundingBox")
+        .attr("maskContentUnits", "objectBoundingBox")
+        .append("circle")
+        .attr("cx", "0.5")
+        .attr("cy", "0.5")
+        .attr("r", "0.5")
+        .attr("fill", "white");
+
     // home event image
     g.selectAll(".homeimage")
         .data(homePlays)
@@ -235,7 +247,8 @@ var playByPlayRendering = function render(svg, data) {
             if (d[10] == "None")
                 return "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + d[8] + ".svg";
             return "http://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/" + d[10] + ".png";
-        });
+        })
+        .style("mask", "url(#circlemask)");
 
     // away event image
     g.selectAll(".awayimage")
@@ -251,7 +264,8 @@ var playByPlayRendering = function render(svg, data) {
             if (d[11] == "None")
                 return "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + d[9] + ".svg";
             return "http://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/" + d[11] + ".png";
-        });
+        })
+        .style("mask", "url(#circlemask)");
 
     // home event description
     g.selectAll(".homedesc")

@@ -5,28 +5,26 @@
  * @param {int} h - height of the canvas.
  * @constructor
  */
-function Canvas(id, w, h) {
+function Canvas(id, w, h, wString, hString) {
 
     // type check
-    if (typeof w == "number" && w <= 0)
+    if (typeof w != "number" || w < 0 || (w == 0 && wString == ""))
         throw new Error("Constructing canvas: w must be a positive integer.");
-    if (typeof h == "number" && h <= 0)
+    if (typeof h != "number" || h < 0 || (h == 0 && hString == ""))
         throw new Error("Constructing canvas: h must be a positive integer.");
-    if (typeof w != "number") {
-        this.w = 0;
-        w = processWidthHeightString(w);
-        this.wLayerId = w.split(":")[0];
-        this.wSql = w.substring(this.wLayerId.length + 1);
+    if (w == 0) {
+        wString = processWidthHeightString(wString);
+        this.wLayerId = wString.split(":")[0];
+        this.wSql = wString.substring(this.wLayerId.length + 1);
     }
     else {
         this.w = w; this.wSql = ""; this.wLayerId = "";
     }
 
-    if (typeof h != "number") {
-        this.h = 0;
-        h = processWidthHeightString(h);
-        this.hLayerId = h.split(":")[0];
-        this.hSql = h.substring(this.hLayerId.length + 1);
+    if (h == 0) {
+        hString = processWidthHeightString(hString);
+        this.hLayerId = hString.split(":")[0];
+        this.hSql = hString.substring(this.hLayerId.length + 1);
     }
     else {
         this.h = h; this.hSql = ""; this.hLayerId = "";
