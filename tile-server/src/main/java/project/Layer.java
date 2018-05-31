@@ -6,11 +6,16 @@ package project;
 public class Layer {
 
 	private String transformId;
-	Placement placement;
-	String rendering;
+	private boolean isStatic;
+	private Placement placement;
+	private String rendering;
 
 	public String getTransformId() {
 		return transformId;
+	}
+
+	public boolean isStatic() {
+		return isStatic;
 	}
 
 	public Placement getPlacement() {
@@ -25,6 +30,7 @@ public class Layer {
 	public String toString() {
 		return "Layer{" +
 				"transformId='" + transformId + '\'' +
+				", isStatic=" + isStatic +
 				", placement=" + placement +
 				", rendering='" + rendering + '\'' +
 				'}';

@@ -88,10 +88,10 @@ function logHistory(zoom_type) {
     curHistory.canvasId = globalVar.curCanvasId;
     curHistory.canvasObj = globalVar.curCanvas;
     curHistory.jumps = globalVar.curJump;
-    curHistory.staticTrimArguments = globalVar.staticTrimArguments;
+    curHistory.staticData = globalVar.curStaticData;
 
     // save current viewport
-    var curViewport = d3.select("#mainSvg").attr("viewBox").split(" ");
+    var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
     curHistory.viewportX = +curViewport[0];
     curHistory.viewportY = +curViewport[1];
     curHistory.viewportW = +curViewport[2];
@@ -106,7 +106,8 @@ function backspace() {
     // get and pop last history object
     var curHistory = globalVar.history.pop();
 
-    // check if this is literal zoom
+    // check if
+    // is literal zoom
     if (curHistory.zoomType == "literal_zoom_in") {
         literalZoomIn();
         return ;
@@ -122,22 +123,17 @@ function backspace() {
     // assign back global vars
     globalVar.curCanvasId = curHistory.canvasId;
     globalVar.curCanvas = curHistory.canvasObj;
-    globalVar.predicates = curHistory.predicates;
     globalVar.curJump = curHistory.jumps;
-    globalVar.staticTrimArguments = curHistory.staticTrimArguments;
+    globalVar.curStaticData = curHistory.staticData;
+    globalVar.predicates = curHistory.predicates;
     globalVar.initialViewportX = curHistory.viewportX;
     globalVar.initialViewportY = curHistory.viewportY;
 
     // get current viewport
-    var curViewport = d3.select("#mainSvg").attr("viewBox").split(" ");
-
-    // change #mainSvg to #oldMainSvg, and #staticSvg to #oldStaticSvg
-    var oldMainSvg = d3.select("#mainSvg").attr("id", "oldMainSvg");
-    d3.select("#staticSvg").attr("id", "oldStaticSvg");
-    d3.select("#staticg").attr("id", "oldStaticg");
+    var curViewport = d3.select(".oldmainsvg:not(.static)").attr("viewBox").split(" ");
 
     // start a exit & fade transition
-    oldMainSvg.transition()
+    d3.transition("fadeTween")
         .duration(param.enteringDuration)
         .tween("fadeTween", function(){
 
@@ -145,23 +141,10 @@ function backspace() {
         })
         .on("start", function () {
 
-            // create a new svg
-            var newSvg = d3.select("#maing")
-                .append("svg")
-                .attr("id", "mainSvg")
-                .attr("preserveAspectRatio", "none")
-                .attr("width", globalVar.viewportWidth)
-                .attr("height", globalVar.viewportHeight)
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("viewBox", "0 0"
-                    + " " + globalVar.viewportWidth
-                    + " " + globalVar.viewportHeight);
-
             // schedule a zoom back transition
             param.zoomDuration = d3.interpolateZoom(curHistory.endView, curHistory.startView).duration;
             param.enteringDelay = Math.round(param.zoomDuration * param.enteringDelta);
-            newSvg.transition()
+            d3.transition("zoomOutTween")
                 .delay(Math.max(param.enteringDelay + param.enteringDuration
                     - param.zoomDuration, param.axesOutDuration + 5))
                 .duration(param.zoomDuration)
@@ -172,21 +155,19 @@ function backspace() {
                 })
                 .on("start", function() {
 
-                    // render
-                    RefreshCanvas(globalVar.initialViewportX, globalVar.initialViewportY);
+                    // set up layer layouts
+                    setupLayerLayouts();
 
                     // static trim
-                    renderStaticTrim();
+                    renderStaticLayers();
+
+                    // render
+                    RefreshDynamicLayers(globalVar.initialViewportX, globalVar.initialViewportY);
                 })
                 .on("end", function () {
 
                     postAnimation();
                 });
-        })
-        .on("end", function () {
-
-            d3.select("#oldMainSvg").remove();
-            d3.select("#oldStaticg").remove();
         });
 
     function enterAndZoom(t, v) {
@@ -196,20 +177,20 @@ function backspace() {
         var minx = globalVar.initialViewportX + v[0] - vWidth / 2.0;
         var miny = globalVar.initialViewportY + v[1] - vHeight / 2.0;
 
-        // change viewBox
-        d3.select("#mainSvg")
+        // change viewBox of dynamic layers
+        d3.selectAll(".mainsvg:not(.static)")
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
+
+        // change viewBox of static layers
         minx = v[0] - vWidth / 2.0;
         miny = v[1] - vHeight / 2.0;
-        d3.select("#staticSvg")
+        d3.selectAll(".mainsvg.static")
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
 
         // change opacity
         var threshold = param.fadeThreshold;
         if (1 - t >= threshold) {
-            d3.select("#mainSvg")
-                .style("opacity", 1.0 - (1 - t - threshold) / (1.0 - threshold));
-            d3.select("#staticSvg")
+            d3.selectAll(".mainsvg")
                 .style("opacity", 1.0 - (1 - t - threshold) / (1.0 - threshold));
         }
     };
@@ -223,17 +204,18 @@ function backspace() {
         var minx = +curViewport[0] + globalVar.viewportWidth / 2.0 - vWidth / 2.0;
         var miny = +curViewport[1] + globalVar.viewportHeight / 2.0 - vHeight / 2.0;
 
-        // change mainsvg viewBox
-        d3.select("#oldMainSvg")
+        // change viewBox of old dynamic layers
+        d3.selectAll(".oldmainsvg:not(.static)")
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
+
+        // change viewBox of old static layers
         minx = globalVar.viewportWidth / 2 - vWidth / 2;
         miny = globalVar.viewportHeight / 2 - vHeight / 2;
-        d3.select("#oldStaticSvg")
+        d3.selectAll(".oldmainsvg.static")
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
 
         // change opacity
-        d3.select("#oldMainSvg").style("opacity", t);
-        d3.select("#oldStaticSvg").style("opacity", t);
+        d3.selectAll(".oldmainsvg").style("opacity", t);
     };
 };
 

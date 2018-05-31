@@ -68,20 +68,10 @@ public class PlacementNaiveIndexer extends Indexer {
 				if (trans.getDb().equals(""))
 					continue;
 
-				// step 1: getting all tuples,
-				ArrayList<ArrayList<String>> sqlQueryResults = new ArrayList<>();
-				Statement curStmt = DbConnector.getStmtByDbName(trans.getDb());
-				ResultSet rs = curStmt.executeQuery(trans.getQuery());
-				ResultSetMetaData metaData = rs.getMetaData();
-				while (rs.next()) {
-					ArrayList<String> curRow = new ArrayList<>();
-					for (int i = 1; i <= rs.getMetaData().getColumnCount(); i ++)
-						curRow.add(rs.getString(i));
-					sqlQueryResults.add(curRow);
-				}
-				curStmt.close();
+				// step 1: getting sql query result (raw data)
+				ArrayList<ArrayList<String>> sqlQueryResults = DbConnector.getQueryResult(trans.getDb(), trans.getQuery());
 
-				// step 2: run data transform
+				// step 2: run data transform on raw data
 				// step 2(a): setting up nashorn env
 				NashornScriptEngine engine = (NashornScriptEngine) new ScriptEngineManager()
 						.getEngineByName("nashorn");
@@ -111,63 +101,65 @@ public class PlacementNaiveIndexer extends Indexer {
 					colName2Id.put(trans.getColumnNames().get(i), i);
 
 				// step 3: calculating bounding boxes
-				Placement p = l.getPlacement();
-				String centroid_x = p.getCentroid_x();
-				String centroid_y = p.getCentroid_y();
-				String width_func = p.getWidth();
-				String height_func = p.getHeight();
 				ArrayList<ArrayList<Double>> bboxes = new ArrayList<>();
+				if (! l.isStatic())	{
+					Placement p = l.getPlacement();
+					String centroid_x = p.getCentroid_x();
+					String centroid_y = p.getCentroid_y();
+					String width_func = p.getWidth();
+					String height_func = p.getHeight();
 
-				for (int i = 0; i < transformResults.size(); i ++) {
+					for (int i = 0; i < transformResults.size(); i ++) {
 
-					double centroid_x_dbl, centroid_y_dbl;
-					double width_dbl, height_dbl;
-					ArrayList<String> curRow = transformResults.get(i);
+						double centroid_x_dbl, centroid_y_dbl;
+						double width_dbl, height_dbl;
+						ArrayList<String> curRow = transformResults.get(i);
 
-					// centroid_x
-					if (centroid_x.substring(0, 3).equals("con"))
-						centroid_x_dbl = Double.parseDouble(centroid_x.substring(4));
-					else {
-						String curColName = centroid_x.substring(4);
-						int curColId = colName2Id.get(curColName);
-						centroid_x_dbl = Double.parseDouble(curRow.get(curColId));
+						// centroid_x
+						if (centroid_x.substring(0, 3).equals("con"))
+							centroid_x_dbl = Double.parseDouble(centroid_x.substring(4));
+						else {
+							String curColName = centroid_x.substring(4);
+							int curColId = colName2Id.get(curColName);
+							centroid_x_dbl = Double.parseDouble(curRow.get(curColId));
+						}
+
+						// centroid_y
+						if (centroid_y.substring(0, 3).equals("con"))
+							centroid_y_dbl = Double.parseDouble(centroid_y.substring(4));
+						else {
+							String curColName = centroid_y.substring(4);
+							int curColId = colName2Id.get(curColName);
+							centroid_y_dbl = Double.parseDouble(curRow.get(curColId));
+						}
+
+						// width
+						if (width_func.substring(0, 3).equals("con"))
+							width_dbl = Double.parseDouble(width_func.substring(4));
+						else {
+							String curColName = width_func.substring(4);
+							int curColId = colName2Id.get(curColName);
+							width_dbl = Double.parseDouble(curRow.get(curColId));
+						}
+
+						// height
+						if (height_func.substring(0, 3).equals("con"))
+							height_dbl = Double.parseDouble(height_func.substring(4));
+						else {
+							String curColName = height_func.substring(4);
+							int curColId = colName2Id.get(curColName);
+							height_dbl = Double.parseDouble(curRow.get(curColId));
+						}
+
+						ArrayList<Double> curBbox = new ArrayList<>();
+						curBbox.add(centroid_x_dbl);	// cx
+						curBbox.add(centroid_y_dbl);	// cy
+						curBbox.add(centroid_x_dbl - width_dbl / 2.0);	// min x
+						curBbox.add(centroid_y_dbl - height_dbl / 2.0);	// min y
+						curBbox.add(centroid_x_dbl + width_dbl / 2.0);	// max x
+						curBbox.add(centroid_y_dbl + height_dbl / 2.0);	// max y
+						bboxes.add(curBbox);
 					}
-
-					// centroid_y
-					if (centroid_y.substring(0, 3).equals("con"))
-						centroid_y_dbl = Double.parseDouble(centroid_y.substring(4));
-					else {
-						String curColName = centroid_y.substring(4);
-						int curColId = colName2Id.get(curColName);
-						centroid_y_dbl = Double.parseDouble(curRow.get(curColId));
-					}
-
-					// width
-					if (width_func.substring(0, 3).equals("con"))
-						width_dbl = Double.parseDouble(width_func.substring(4));
-					else {
-						String curColName = width_func.substring(4);
-						int curColId = colName2Id.get(curColName);
-						width_dbl = Double.parseDouble(curRow.get(curColId));
-					}
-
-					// height
-					if (height_func.substring(0, 3).equals("con"))
-						height_dbl = Double.parseDouble(height_func.substring(4));
-					else {
-						String curColName = height_func.substring(4);
-						int curColId = colName2Id.get(curColName);
-						height_dbl = Double.parseDouble(curRow.get(curColId));
-					}
-
-					ArrayList<Double> curBbox = new ArrayList<>();
-					curBbox.add(centroid_x_dbl);	// cx
-					curBbox.add(centroid_y_dbl);	// cy
-					curBbox.add(centroid_x_dbl - width_dbl / 2.0);	// min x
-					curBbox.add(centroid_y_dbl - height_dbl / 2.0);	// min y
-					curBbox.add(centroid_x_dbl + width_dbl / 2.0);	// max x
-					curBbox.add(centroid_y_dbl + height_dbl / 2.0);	// max y
-					bboxes.add(curBbox);
 				}
 
 				// step 4: insert into the bbox table
@@ -180,10 +172,12 @@ public class PlacementNaiveIndexer extends Indexer {
 					ArrayList<String> curRow = transformResults.get(i);
 					for (int j = 0; j < curRow.size(); j ++)
 						sql += "'" + curRow.get(j).replaceAll("\'", "\\\\'") + "', ";
-					ArrayList<Double> curBbox = bboxes.get(i);
-					for (int j = 0; j < curBbox.size(); j ++) {
-						sql += String.valueOf(curBbox.get(j));
-						if (j < curBbox.size() - 1)
+					for (int j = 0; j < 6; j ++) {
+						if (l.isStatic())
+							sql += "0";
+						else
+							sql += String.valueOf(bboxes.get(i).get(j));
+						if (j < 5)
 							sql += ",";
 					}
 					sql += ");";

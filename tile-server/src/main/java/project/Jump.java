@@ -1,7 +1,5 @@
 package project;
 
-import java.util.ArrayList;
-
 /**
  * Created by wenbo on 1/4/18.
  */
@@ -9,11 +7,11 @@ public class Jump {
 
 	private String sourceId;
 	private String destId;
-	private ArrayList<String> newViewports;
-	private ArrayList<String> newPredicates;
+	private int layerId;
+	private String newViewports;
+	private String newPredicates;
 	private String type;
 	private String name;
-	private String newStaticTrimArguments;
 
 	public String getSourceId() {
 		return sourceId;
@@ -23,15 +21,19 @@ public class Jump {
 		return destId;
 	}
 
+	public int getLayerId() {
+		return layerId;
+	}
+
 	public String getType() {
 		return type;
 	}
 
-	public ArrayList<String> getNewViewports() {
+	public String getNewViewports() {
 		return newViewports;
 	}
 
-	public ArrayList<String> getNewPredicates() {
+	public String getNewPredicates() {
 		return newPredicates;
 	}
 
@@ -39,20 +41,16 @@ public class Jump {
 		return name;
 	}
 
-	public String getNewStaticTrimArguments() {
-		return newStaticTrimArguments;
-	}
-
 	@Override
 	public String toString() {
 		return "Jump{" +
 				"sourceId='" + sourceId + '\'' +
 				", destId='" + destId + '\'' +
-				", newViewports=" + newViewports +
-				", newPredicates=" + newPredicates +
+				", layerId=" + layerId +
+				", newViewports='" + newViewports + '\'' +
+				", newPredicates='" + newPredicates + '\'' +
 				", type='" + type + '\'' +
 				", name='" + name + '\'' +
-				", newStaticTrimArguments='" + newStaticTrimArguments + '\'' +
 				'}';
 	}
 }

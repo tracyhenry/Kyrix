@@ -42,7 +42,7 @@ public class TileRequestHandler implements HttpHandler {
 		// TODO: this method should be thread safe, allowing concurrent requests
 		System.out.println("\nServing /tile");
 
-		// variable definitions;
+		// variable definitions
 		String response;
 		String canvasId;
 		int minx, miny;
@@ -81,7 +81,7 @@ public class TileRequestHandler implements HttpHandler {
 			predicates.add(queryMap.get("predicate" + i));
 
 		try {
-			data = getData(canvasId, minx, miny, predicates);
+			data = getData(c, minx, miny, predicates);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -99,25 +99,25 @@ public class TileRequestHandler implements HttpHandler {
 	}
 
 	// get a tile
-	private ArrayList<ArrayList<ArrayList<String>>> getData(String canvasId, int minx, int miny, ArrayList<String> predicates)
+	private ArrayList<ArrayList<ArrayList<String>>> getData(Canvas c, int minx, int miny, ArrayList<String> predicates)
 			throws SQLException, ClassNotFoundException {
 
+		// container for data
 		ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
-
-		// get the current canvas
-		Canvas curCanvas = project.getCanvas(canvasId);
 
 		// get db connector
 		Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
 
 		// loop through each layer
-		for (int i = 0; i < curCanvas.getLayers().size(); i ++) {
+		for (int i = 0; i < c.getLayers().size(); i ++) {
 
-			ArrayList<ArrayList<String>> curData = new ArrayList<>();
-
+			if (c.getLayers().get(i).isStatic()) {
+				data.add(new ArrayList<ArrayList<String>>());
+				continue;
+			}
 			// construct range query
 			String sql = "select * from bbox_" + project.getName() + "_"
-					+ curCanvas.getId() + "layer" + i + " where "
+					+ c.getId() + "layer" + i + " where "
 					+ "minx <= " + (minx + Config.tileW) + " and "
 					+ "maxx >= " + minx + " and "
 					+ "miny <= " + (miny + Config.tileH) + " and "
@@ -128,18 +128,8 @@ public class TileRequestHandler implements HttpHandler {
 
 			System.out.println(minx + " " + miny + " : " + sql);
 
-			// run query
-			ResultSet rs = stmt.executeQuery(sql);
-			int numColumn = rs.getMetaData().getColumnCount();
-			while (rs.next()) {
-				ArrayList<String> curRow = new ArrayList<>();
-				for (int j = 1; j <= numColumn; j ++)
-					curRow.add(rs.getString(j));
-				curData.add(curRow);
-			}
-
 			// add to response
-			data.add(curData);
+			data.add(DbConnector.getQueryResult(stmt, sql));
 		}
 
 		stmt.close();

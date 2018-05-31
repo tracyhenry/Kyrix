@@ -9,6 +9,8 @@ function getCurCanvas() {
     if (postData in globalVar.cachedCanvases) {
         globalVar.curCanvas = globalVar.cachedCanvases[postData].canvasObj;
         globalVar.curJump = globalVar.cachedCanvases[postData].jumps;
+        globalVar.curStaticData = globalVar.cachedCanvases[postData].staticData;
+        setupLayerLayouts();
         return ;
     }
 
@@ -20,16 +22,54 @@ function getCurCanvas() {
         success : function (data, status) {
             globalVar.curCanvas = JSON.parse(data).canvas;
             globalVar.curJump = JSON.parse(data).jump;
+            globalVar.curStaticData = JSON.parse(data).staticData;
+            setupLayerLayouts();
 
             // insert into cache
             if (! (postData in globalVar.cachedCanvases)) {
                 globalVar.cachedCanvases[postData] = {};
                 globalVar.cachedCanvases[postData].canvasObj = globalVar.curCanvas;
                 globalVar.cachedCanvases[postData].jumps = globalVar.curJump;
+                globalVar.cachedCanvases[postData].staticData = globalVar.curStaticData;
             }
         },
         async : false
     });
+}
+
+// setup <g>s and <svg>s for each layer
+function setupLayerLayouts() {
+
+    // number of layers
+    var numLayers = globalVar.curCanvas.layers.length;
+
+    // remove existing layers
+    d3.selectAll(".layerg").remove();
+
+    for (var i = numLayers - 1; i >= 0; i --) {
+        var isStatic = globalVar.curCanvas.layers[i].isStatic;
+        // add new layers
+        d3.select("#maing")
+            .append("g")
+            .classed("layerg", true)
+            .classed("layer" + i, true)
+            .append("svg")
+            .classed("mainsvg", true)
+            .classed("static", isStatic)
+            .attr("width", globalVar.viewportWidth)
+            .attr("height", globalVar.viewportHeight)
+            .attr("preserveAspectRatio", "none")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("viewBox", (isStatic ? "0 0"
+                + " " + globalVar.viewportWidth
+                + " " + globalVar.viewportHeight
+                : globalVar.initialViewportX
+                + " " + globalVar.initialViewportY
+                + " " +  globalVar.viewportWidth
+                + " " + globalVar.viewportHeight));
+
+    }
 }
 
 // set up page
@@ -69,19 +109,6 @@ function pageOnLoad() {
             .attr("height", globalVar.viewportHeight)
             .style("opacity", 0);
 
-        d3.select("#maing")
-            .append("svg")
-            .attr("id", "mainSvg")
-            .attr("width", globalVar.viewportWidth)
-            .attr("height", globalVar.viewportHeight)
-            .attr("preserveAspectRatio", "none")
-            .attr("x", 0)
-            .attr("y", 0)
-            .attr("viewBox", globalVar.initialViewportX
-                + " " + globalVar.initialViewportY
-                + " " +  globalVar.viewportWidth
-                + " " + globalVar.viewportHeight);
-
         // set up axes group
         d3.select("#containerSvg")
             .append("g")
@@ -104,10 +131,10 @@ function pageOnLoad() {
         getCurCanvas();
 
         // render static trims
-        renderStaticTrim();
+        renderStaticLayers();
 
         // render
-        RefreshCanvas(globalVar.initialViewportX,
+        RefreshDynamicLayers(globalVar.initialViewportX,
             globalVar.initialViewportY);
 
         // set up zoom

@@ -26,9 +26,10 @@ c1.addTransform(transforms.c1Empty);
 // add axes
 c1.addAxes(renderers.c1c2Axes);
 
-// static trim
-c1.addStaticTrim(renderers.c1StaticTrim);
-c1.setStaticTrimFirst(true);
+// static trim layer
+var c1L0 = new Layer("empty", true);
+c1.addLayer(c1L0);
+c1L0.addRenderingFunc(renderers.c1StaticTrim);
 
 // circle layer pi
 var c1L1 = new Layer("scalexy_pi");
@@ -45,9 +46,8 @@ c1L2.addRenderingFunc(renderers.c1L2Rendering);
 
 
 // background layer
-var c1L3 = new Layer("empty");
+var c1L3 = new Layer("empty", true);
 c1.addLayer(c1L3);
-c1L3.addPlacement(placements.c1L3Placement);
 c1L3.addRenderingFunc(renderers.c1L3Rendering);
 
 
@@ -74,32 +74,41 @@ p.addCanvas(c3);
 
 // add data transform
 c3.addTransform(transforms.c3IDTransform);
+c3.addTransform(transforms.c1Empty);
 
-// static trim
-c3.addStaticTrim(renderers.c3StaticTrim);
-c3.setStaticTrimFirst(true);
-
-// ******** canvas3 only layer ********
+// ******** canvas3 dynamic layer ********
 var c3L1 = new Layer("identical");
 c3.addLayer(c3L1);
 c3L1.addPlacement(placements.c2L1Placement);
 c3L1.addRenderingFunc(renderers.c3L1Rendering);
 
+// ******** canvas3 static layer
+var c3L2 = new Layer("empty", true);
+c3.addLayer(c3L2);
+c3L2.addRenderingFunc(renderers.c3StaticTrim);
 
 // initialize canvas
-p.initialCanvas("fullname", 500, 500, ["", "", ""]);
+p.initialCanvas("fullname", 500, 500, ["", "", "", ""]);
 
 
 
 // ================== fullname --> firstname, lastname ===================
-var newViewport = function (row) {
+var newViewport1 = function (row) {
     return [1, ["id=" + row[0]]];
 };
-var newPredicate = function (row) {
+var newPredicate1 = function (row) {
     return ["id=" + row[0]];
 };
 
-p.addJump(new Jump("fullname", "firstname", [newViewport, "", ""], [newPredicate, "", ""], "semantic_zoom"));
-p.addJump(new Jump("fullname", "lastname", ["", newViewport, ""], ["", newPredicate, ""], "semantic_zoom"));
+var newViewport2 = function (row) {
+    return [1, ["id=" + row[0], ""]];
+};
+
+var newPredicate2 = function (row) {
+    return ["id=" + row[0], ""]
+};
+
+p.addJump(new Jump("fullname", "firstname", 1, newViewport1, newPredicate1, "semantic_zoom"));
+p.addJump(new Jump("fullname", "lastname", 2, newViewport2, newPredicate2, "semantic_zoom"));
 
 p.saveToDb();

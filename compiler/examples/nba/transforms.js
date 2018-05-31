@@ -4,7 +4,6 @@ var teamLogoTransform = new Transform("teamlogoID",
     "select * from teams;",
     "nba",
     function (row){
-
         var id = parseInt(row[0]);
         var y = Math.floor(id / 6);
         var x = id - y * 6;
@@ -28,7 +27,6 @@ var teamTimelineTransform = new Transform("teamtimelinescale",
         + "where games.home_team = team1.abbr and games.away_team = team2.abbr;",
         "nba",
         function (row, width) {
-
             var ret = [];
             // id
             ret.push(row[0]);
@@ -52,13 +50,24 @@ var teamTimelineTransform = new Transform("teamtimelinescale",
         ["game_id", "x", "y", "year", "month", "day", "home_team", "away_team", "home_score", "away_score", "tier"],
         true);
 
+var teamTimelineStaticTransform = new Transform("teamtimelinestatic",
+        "select city, name, abbr from teams;",
+        "nba",
+        function (row) {
+            var ret = [];
+            for (var i = 0; i < 3; i ++)
+                ret.push(row[i]);
+            return Java.to(ret ,"java.lang.String[]");
+        },
+        ["city", "name", "abbr"],
+        true);
+
 var playByPlayTransform = new Transform("playbyplayscale",
     "select games.game_id, period, qtr_time, score, margin, home_desc, away_desc, home_team, away_team, play_id, h_player_id, a_player_id"
     + " from scoring_plays, games"
     + " where scoring_plays.game_id = games.game_id;",
     "nba",
     function (row, height) {
-
         var ret = [];
         // game_id
         ret.push(row[0]);
@@ -85,8 +94,22 @@ var playByPlayTransform = new Transform("playbyplayscale",
     ["game_id", "y", "period", "qtr_time", "score", "margin", "home_desc", "away_desc", "home_team", "away_team", "h_player_id", "a_player_id"],
     true);
 
+var playByPlayStaticTransform = new Transform("playbyplaystatic",
+    "select team1.abbr, team2.abbr from teams as team1, teams as team2;",
+    "nba",
+    function (row) {
+        var ret = [];
+        ret.push(row[0]);
+        ret.push(row[1]);
+        return Java.to(ret ,"java.lang.String[]");
+    },
+    ["abbr1", "abbr2"],
+    true);
+
 module.exports = {
     teamLogoTransform : teamLogoTransform,
     teamTimelineTransform : teamTimelineTransform,
-    playByPlayTransform : playByPlayTransform
+    teamTimelineStaticTransform : teamTimelineStaticTransform,
+    playByPlayTransform : playByPlayTransform,
+    playByPlayStaticTransform : playByPlayStaticTransform
 };

@@ -1,9 +1,7 @@
 package main;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,7 +26,31 @@ public class DbConnector {
 		return conn.createStatement();
 	}
 
-	private static Connection getDbConn(String dbServer, String dbName, String userName, String password) throws SQLException, ClassNotFoundException {
+	public static ArrayList<ArrayList<String>> getQueryResult(Statement stmt, String sql)
+			throws SQLException, ClassNotFoundException {
+
+		ArrayList<ArrayList<String>> result = new ArrayList<>();
+		ResultSet rs = stmt.executeQuery(sql);
+		int numColumn = rs.getMetaData().getColumnCount();
+		while (rs.next()) {
+			ArrayList<String> curRow = new ArrayList<>();
+			for (int j = 1; j <= numColumn; j ++)
+				curRow.add(rs.getString(j));
+			result.add(curRow);
+		}
+
+		return result;
+	}
+
+	public static ArrayList<ArrayList<String>> getQueryResult(String dbName, String sql)
+			throws SQLException, ClassNotFoundException {
+
+		Statement stmt = DbConnector.getStmtByDbName(dbName);
+		return getQueryResult(stmt, sql);
+	}
+
+	private static Connection getDbConn(String dbServer, String dbName, String userName, String password)
+			throws SQLException, ClassNotFoundException {
 
 		Class.forName("com.mysql.jdbc.Driver");
 		Connection dbConn = DriverManager.getConnection("jdbc:mysql://" + dbServer +

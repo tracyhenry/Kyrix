@@ -71,13 +71,6 @@ function addJump(jump) {
     if (destCanvas == null)
         throw new Error("Constructing Jump: canvas " + jump.destId + " does not exist.");
 
-    // check whether newViewports & newpredicates have the same number of elements as the # of layers in sourceId
-    for (var i = 0; i < this.canvases.length; i ++)
-        if (this.canvases[i].id === jump.sourceId)
-            if (jump.newViewports.length != this.canvases[i].layers.length ||
-                jump.newPredicates.length != this.canvases[i].layers.length)
-                throw new Error ("Constructing Jump: wrong number of newViewport/newPredicates functions.");
-
     // deal with literal zooms
     if (jump.type == "literal_zoom_in" || jump.type == "literal_zoom_out") {
         // check duplicates
@@ -89,7 +82,7 @@ function addJump(jump) {
         // check if w and h is pre-decided
         if (sourceCanvas.w <= 0 || sourceCanvas.h <= 0
             || destCanvas.w <= 0 || destCanvas.h <= 0)
-            throw new Error("Constructing jump: canvases with literal zooms have to have pre-decided width and height.");
+            throw new Error("Constructing jump: canvases with literal zooms must have predetermined width and height.");
 
         // check whether zoom factor is the same for x & y
         if (destCanvas.w != sourceCanvas.w &&
@@ -121,9 +114,8 @@ function addJump(jump) {
  * @param {number} viewportX - x coordinate of the initial viewport (top left)
  * @param {number} viewportY - y coordinate of the initial viewport (top left)
  * @param {array} predicates - the initial predicates to be added to the sql query of data transforms
- * @param {array} staticTrimArguments - arguments passed to the static trim function of the first canvas
  */
-function initialCanvas(id, viewportX, viewportY, predicates, staticTrimArguments) {
+function initialCanvas(id, viewportX, viewportY, predicates) {
 
     // check if this id exists
     var canvasId = -1;
@@ -148,16 +140,11 @@ function initialCanvas(id, viewportX, viewportY, predicates, staticTrimArguments
     if (predicates.length != this.canvases[canvasId].layers.length)
         throw new Error("Initial canvas: # predicates does not equal # layers.");
 
-    // static trim
-    if (staticTrimArguments == null)
-        staticTrimArguments = [""];
-
     // assign fields
     this.initialCanvasId = id;
     this.initialViewportX = viewportX;
     this.initialViewportY = viewportY;
     this.initialPredicates = predicates;
-    this.initialStaticTrimArguments = staticTrimArguments;
 }
 
 // save the current to project to the database it's associated with

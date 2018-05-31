@@ -365,7 +365,7 @@ var playByPlayRendering = function render(svg, data) {
 
 };
 
-var teamTimelineStaticTrim = function (g, args) {
+var teamTimelineStaticBkg = function (g, data) {
 
     // text
     var title = g.append("text")
@@ -377,7 +377,7 @@ var teamTimelineStaticTrim = function (g, args) {
         .html("2017~2018 Regular Season Games");
     title.append("tspan")
         .attr("x", 500)
-        .attr("dy", 70).html(args[0]);
+        .attr("dy", 70).html(data[0][0] + " " + data[0][1]);
 
     // axis line
     g.append("line")
@@ -394,11 +394,11 @@ var teamTimelineStaticTrim = function (g, args) {
         .attr("y", 0)
         .attr("width", 1000)
         .attr("height", 1000)
-        .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + args[1] + ".svg";})
+        .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + data[0][2] + ".svg";})
         .style("opacity", 0.07);
 };
 
-var playByPlayStaticTrim = function (g, args) {
+var playByPlayStaticBkg = function (g, data) {
 
     // axis line
     g.append("line")
@@ -415,14 +415,14 @@ var playByPlayStaticTrim = function (g, args) {
         .attr("y", 300)
         .attr("width", 400)
         .attr("height", 400)
-        .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + args[0] + ".svg";})
+        .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + data[0][0] + ".svg";})
         .style("opacity", 0.07);
     g.append("image")
         .attr("x", 550)
         .attr("y", 300)
         .attr("width", 400)
         .attr("height", 400)
-        .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + args[1] + ".svg";})
+        .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + data[0][1] + ".svg";})
         .style("opacity", 0.07);
 };
 
@@ -430,7 +430,7 @@ var playByPlayStaticTrim = function (g, args) {
 module.exports = {
     teamLogoRendering : teamLogoRendering,
     teamTimelineRendering : teamTimelineRendering,
+    teamTimelineStaticBkg : teamTimelineStaticBkg,
     playByPlayRendering: playByPlayRendering,
-    teamTimelineStaticTrim : teamTimelineStaticTrim,
-    playByPlayStaticTrim : playByPlayStaticTrim
+    playByPlayStaticBkg : playByPlayStaticBkg
 };

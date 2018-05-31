@@ -32,13 +32,15 @@ for (var i = 0; i < numLevels; i ++) {
 
     // add data transforms
     curCanvas.addTransform(transforms.scales[i]);
+    curCanvas.addTransform(transforms.emptyTransform);
 
     // add axis
     curCanvas.addAxes(renderers.scPlotAxes);
 
-    // add static trim
-    curCanvas.addStaticTrim(renderers.scPlotStaticTrim);
-    curCanvas.setStaticTrimFirst(true);
+    // add a static layer
+    var staticLayer = new Layer("empty", true);
+    curCanvas.addLayer(staticLayer);
+    staticLayer.addRenderingFunc(renderers.scPlotStaticTrim);
 
     // create one layer
     var curLayer = new Layer("scalexy");
@@ -49,11 +51,11 @@ for (var i = 0; i < numLevels; i ++) {
 
 // add literal zooms
 for (var i = 0; i + 1 < numLevels; i ++) {
-    p.addJump(new Jump("level" + i, "level" + (i + 1), [""], [""], "literal_zoom_in"));
-    p.addJump(new Jump("level" + (i + 1), "level" + i, [""], [""], "literal_zoom_out"));
+    p.addJump(new Jump("level" + i, "level" + (i + 1), 1, "", "", "literal_zoom_in"));
+    p.addJump(new Jump("level" + (i + 1), "level" + i, 1, "", "", "literal_zoom_out"));
 }
 
 // initialize canvas
-p.initialCanvas("level0", 200, 200, [""]);
+p.initialCanvas("level0", 200, 200, ["", ""]);
 
 p.saveToDb();

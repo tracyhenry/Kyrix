@@ -20,8 +20,8 @@ p.addCanvas(teamLogoCanvas);
 // add data transforms
 teamLogoCanvas.addTransform(transforms.teamLogoTransform);
 
-// only one layer
-var teamLogoLayer = new Layer("teamlogoID");
+// logo layer
+var teamLogoLayer = new Layer("teamlogoID", false);
 teamLogoCanvas.addLayer(teamLogoLayer);
 teamLogoLayer.addPlacement(placements.teamLogoPlacement);
 teamLogoLayer.addRenderingFunc(renderers.teamLogoRendering);
@@ -36,16 +36,18 @@ p.addCanvas(teamTimelineCanvas);
 
 // add data transforms
 teamTimelineCanvas.addTransform(transforms.teamTimelineTransform);
+teamTimelineCanvas.addTransform(transforms.teamTimelineStaticTransform);
 
-// static trim
-teamTimelineCanvas.addStaticTrim(renderers.teamTimelineStaticTrim);
-teamTimelineCanvas.setStaticTrimFirst(false);
-
-// create one layer
-var timelineLayer = new Layer("teamtimelinescale");
+// pannable timeline layer
+var timelineLayer = new Layer("teamtimelinescale", false);
 teamTimelineCanvas.addLayer(timelineLayer);
 timelineLayer.addPlacement(placements.teamTimelinePlacement);
 timelineLayer.addRenderingFunc(renderers.teamTimelineRendering);
+
+// static background layer
+var timelineBkgLayer = new Layer("teamtimelinestatic", true);
+teamTimelineCanvas.addLayer(timelineBkgLayer);
+timelineBkgLayer.addRenderingFunc(renderers.teamTimelineStaticBkg);
 
 // ================== Canvas play by play ===================
 var width = 1000;
@@ -59,53 +61,48 @@ p.addCanvas(playByPlayCanvas);
 
 // add data transforms
 playByPlayCanvas.addTransform(transforms.playByPlayTransform);
+playByPlayCanvas.addTransform(transforms.playByPlayStaticTransform);
 
-// static trim
-playByPlayCanvas.addStaticTrim(renderers.playByPlayStaticTrim);
-playByPlayCanvas.setStaticTrimFirst(false);
-
-// create one layer
-var playByPlayLayer = new Layer("playbyplayscale");
+// pannable play by play layer
+var playByPlayLayer = new Layer("playbyplayscale", false);
 playByPlayCanvas.addLayer(playByPlayLayer);
 playByPlayLayer.addPlacement(placements.playByPlayPlacement);
 playByPlayLayer.addRenderingFunc(renderers.playByPlayRendering);
+
+// static background layer
+var playByPlayBkgLayer = new Layer("playbyplaystatic", true);
+playByPlayCanvas.addLayer(playByPlayBkgLayer);
+playByPlayBkgLayer.addRenderingFunc(renderers.playByPlayStaticBkg);
 
 // ================== teamlogo -> teamtimeline ===================
 var newViewport = function (row) {
     return [0, 0, 0]
 };
 var newPredicate = function (row) {
-    return ["(home_team=\"" + row[6] + "\" or " + "away_team=\"" + row[6] + "\")"];
+    return ["(home_team=\"" + row[6] + "\" or " + "away_team=\"" + row[6] + "\")",
+            "abbr=\"" + row[6] + "\""];
 };
 
 var jumpName = function (row) {
     return "2017~2018 Regular Season Games of\n" + row[4] + " " + row[5];
 };
 
-var newStaticTrimArguments = function (row) {
-    return [row[4] + " " + row[5], row[6]];
-};
-
-p.addJump(new Jump("teamlogo", "teamtimeline", [newViewport], [newPredicate], "semantic_zoom", jumpName, newStaticTrimArguments));
+p.addJump(new Jump("teamlogo", "teamtimeline", 0, newViewport, newPredicate, "semantic_zoom", jumpName));
 
 // ================== teamtimeline -> playbyplay ===================
 var newViewport = function (row) {
     return [0, 0, 0]
 };
 var newPredicate = function (row) {
-    return ["game_id = " + row[0]];
+    return ["game_id = " + row[0],
+            "abbr1=\"" + row[6] + "\" and abbr2=\"" + row[7] + "\""];
 };
 
 var jumpName = function (row) {
     return "Scoring Plays of " + row[7] + "@" + row[6];
 };
 
-var newStaticTrimArguments = function (row) {
-    return [row[6], row[7]];
-};
-
-p.addJump(new Jump("teamtimeline", "playbyplay", [newViewport], [newPredicate], "semantic_zoom", jumpName, newStaticTrimArguments));
-
+p.addJump(new Jump("teamtimeline", "playbyplay", 0, newViewport, newPredicate, "semantic_zoom", jumpName));
 
 // initialize canvas
 p.initialCanvas("teamlogo", 0, 0, [""]);

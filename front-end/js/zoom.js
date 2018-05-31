@@ -59,16 +59,16 @@ function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
         if (jumps[i].type == zoomType)
             globalVar.curCanvasId = jumps[i].destId;
 
+    // get new viewport coordinates
+    var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
+    globalVar.initialViewportX = curViewport[0] * oldZoomFactorX;
+    globalVar.initialViewportY = curViewport[1] * oldZoomFactorY;
+
     // get the canvas object
     getCurCanvas();
 
-    // render static trim
-    renderStaticTrim();
-
-    // get new viewport coordinates
-    var curViewport = d3.select("#mainSvg").attr("viewBox").split(" ");
-    globalVar.initialViewportX = curViewport[0] * oldZoomFactorX;
-    globalVar.initialViewportY = curViewport[1] * oldZoomFactorY;
+    // render static layers
+    renderStaticLayers();
 
     // set up zoom
     if (zoomType == "literal_zoom_out")
@@ -136,15 +136,15 @@ function zoomed() {
     }
 
     // set viewBox size && refresh canvas
-    var curViewport = d3.select("#mainSvg").attr("viewBox").split(" ");
+    var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
     curViewport[2] = vWidth / scaleX;
     curViewport[3] = vHeight / scaleY;
-    d3.select("#mainSvg")
+    d3.selectAll(".mainsvg:not(.static)")
         .attr("viewBox", curViewport[0]
             + " " + curViewport[1]
             + " " + curViewport[2]
             + " " + curViewport[3]);
-    RefreshCanvas(viewportX, viewportY);
+    RefreshDynamicLayers(viewportX, viewportY);
 
     // check if zoom scale reaches zoomInFactor
     if ((zoomInFactorX > 1 && scaleX >= zoomInFactorX) ||

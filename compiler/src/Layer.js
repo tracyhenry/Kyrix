@@ -3,10 +3,13 @@
  * @param transformId - the id of the data transform that this layer is using.
  * @constructor
  */
-function Layer(transformId) {
+function Layer(transformId, isStatic) {
     this.transformId = transformId;
+    if (isStatic == null)
+        this.isStatic = false;
+    else
+        this.isStatic = isStatic;
 };
-
 
 /**
  * add a placement object to a layer object

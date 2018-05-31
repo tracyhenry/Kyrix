@@ -22,8 +22,14 @@ for (var i = 0; i < numLevels; i ++) {
     scales.push(curScale);
 }
 
+var emptyTransform = new Transform("empty",
+    "",
+    "",
+    function (row) {}, [], true);
+
 module.exports = {
     scales : scales,
     numLevels : numLevels,
-    zoomFactor : zoomFactor
+    zoomFactor : zoomFactor,
+    emptyTransform : emptyTransform
 };
