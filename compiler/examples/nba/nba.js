@@ -12,6 +12,7 @@ const placements = require("./placements");
 
 // construct a project
 var p = new Project("nba", "../../dbconfig.txt", 1000, 1000);
+p.addRenderingParams(renderers.renderingParams);
 
 // ================== Canvas teamlogo ===================
 var teamLogoCanvas = new Canvas("teamlogo", 1000, 1000);
@@ -37,9 +38,6 @@ p.addCanvas(teamTimelineCanvas);
 // add data transforms
 teamTimelineCanvas.addTransform(transforms.teamTimelineTransform);
 teamTimelineCanvas.addTransform(transforms.teamTimelineStaticTransform);
-
-// add rendering global parameters
-teamTimelineCanvas.addRenderingParams(renderers.renderingParams);
 
 // pannable timeline layer
 var timelineLayer = new Layer("teamtimelinescale", false);
@@ -77,6 +75,28 @@ var playByPlayBkgLayer = new Layer("playbyplaystatic", true);
 playByPlayCanvas.addLayer(playByPlayBkgLayer);
 playByPlayBkgLayer.addRenderingFunc(renderers.playByPlayStaticBkg);
 
+// ================== Canvas boxscore ===================
+var width = 1750;
+var height = 1000;
+
+// construct a new canvas
+var boxscoreCanvas = new Canvas("boxscore", width, height);
+p.addCanvas(boxscoreCanvas);
+
+// add data transforms
+boxscoreCanvas.addTransform(transforms.boxscoreTransform);
+
+// static pk column layer
+var boxscorePkColumnLayer = new Layer("boxscoreall", true);
+boxscoreCanvas.addLayer(boxscorePkColumnLayer);
+boxscorePkColumnLayer.addRenderingFunc(renderers.boxscorePkRendering);
+
+// pannable stats layer
+var statsLayer = new Layer("boxscoreall", false);
+boxscoreCanvas.addLayer(statsLayer);
+statsLayer.addPlacement(placements.boxscorePlacement);
+statsLayer.addRenderingFunc(renderers.boxscoreStatsRendering);
+
 // ================== teamlogo -> teamtimeline ===================
 var newViewport = function (row) {
     return [0, 0, 0]
@@ -106,6 +126,31 @@ var jumpName = function (row) {
 };
 
 p.addJump(new Jump("teamtimeline", "playbyplay", 0, newViewport, newPredicate, "semantic_zoom", jumpName));
+
+// ================== teamtimeline -> boxscore ===================
+var newViewport = function (row) {
+    return [0, 0, 0]
+};
+var newPredicateHome = function (row) {
+    return ["game_id = " + row[0] + " and team_abbreviation = \"" + row[6] + "\"",
+        "game_id = " + row[0] + " and team_abbreviation = \"" + row[6] + "\""];
+};
+
+var newPredicateAway = function (row) {
+    return ["game_id = " + row[0] + " and team_abbreviation = \"" + row[7] + "\"",
+        "game_id = " + row[0] + " and team_abbreviation = \"" + row[7] + "\""];
+};
+
+var jumpNameHome = function (row) {
+    return "Box score of " + row[6];
+};
+
+var jumpNameAway = function (row) {
+    return "Box score of " + row[7];
+};
+
+p.addJump(new Jump("teamtimeline", "boxscore", 0, newViewport, newPredicateHome, "semantic_zoom", jumpNameHome));
+p.addJump(new Jump("teamtimeline", "boxscore", 0, newViewport, newPredicateAway, "semantic_zoom", jumpNameAway));
 
 // initialize canvas
 p.initialCanvas("teamlogo", 0, 0, [""]);

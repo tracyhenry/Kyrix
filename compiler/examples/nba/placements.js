@@ -16,8 +16,15 @@ playByPlayPlacement.centroid_y = "col:y";
 playByPlayPlacement.width = "con:1000";
 playByPlayPlacement.height = "con:100";
 
+var boxscorePlacement = {};
+boxscorePlacement.centroid_x = "con:1000";
+boxscorePlacement.centroid_y = "con:500";
+boxscorePlacement.width = "con:3000";
+boxscorePlacement.height = "con:100";
+
 module.exports = {
     teamLogoPlacement : teamLogoPlacement,
     teamTimelinePlacement : teamTimelinePlacement,
-    playByPlayPlacement : playByPlayPlacement
+    playByPlayPlacement : playByPlayPlacement,
+    boxscorePlacement : boxscorePlacement
 };

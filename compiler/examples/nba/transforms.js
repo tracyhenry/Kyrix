@@ -106,10 +106,23 @@ var playByPlayStaticTransform = new Transform("playbyplaystatic",
     ["abbr1", "abbr2"],
     true);
 
+var boxscoreTransform = new Transform("boxscoreall",
+    "select * from player_boxscore",
+    "nba",
+    function (row) {
+        var ret = [];
+        for (var i = 0; i < row.length; i ++)
+            ret.push(row[i]);
+        return Java.to(ret ,"java.lang.String[]");
+    },
+    ['id', 'GAME_ID', 'TEAM_ID', 'TEAM_ABBREVIATION', 'TEAM_CITY', 'PLAYER_ID', 'PLAYER_NAME', 'START_POSITION', 'MIN', 'PTS', 'FGM', 'FGA', 'FG_PCT', 'FG3M', 'FG3A', 'FG3_PCT', 'FTM', 'FTA', 'FT_PCT', 'OREB', 'DREB', 'REB', 'AST', 'STL', 'BLK', 'TUNROVER', 'PF', 'PLUS_MINUS'],
+    true);
+
 module.exports = {
     teamLogoTransform : teamLogoTransform,
     teamTimelineTransform : teamTimelineTransform,
     teamTimelineStaticTransform : teamTimelineStaticTransform,
     playByPlayTransform : playByPlayTransform,
-    playByPlayStaticTransform : playByPlayStaticTransform
+    playByPlayStaticTransform : playByPlayStaticTransform,
+    boxscoreTransform : boxscoreTransform
 };

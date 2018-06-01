@@ -1,6 +1,22 @@
 var renderingParams = {
     "timelineUpperY" : 495,
-    "timelineLowerY" : 725
+    "timelineLowerY" : 725,
+    "cellHeight" : 55,
+    "playerNameCellWidth" : 250,
+    "statsCellMaxWidth" : 200,
+    "headerHeight" : 50,
+    "headerbkgcolor" : "#444",
+    "oddrowcolor" : "#eaf0f7",
+    "evenrowcolor" : "#FFF",
+    "headerfontsize" : 18,
+    "headerfontcolor" : "#FFF",
+    "bodyfontsize" : 19,
+    "bodyfontcolor" : "#111",
+    "playerphotoleftmargin" : 20,
+    "playerphotoradius" : 24,
+    "teamlogoradius" : 24,
+    "avgcharwidth" : 20,
+    "shadowrectwidth" : 5
 };
 
 var teamLogoRendering = function (svg, data) {
@@ -122,10 +138,9 @@ var teamTimelineRendering = function (svg, data, width, height, params) {
         .style("stroke-width", 3);
 };
 
-var playByPlayRendering = function (svg, data) {
+var playByPlayRendering = function (svg, data, width, height, params) {
 
-    function wrap(text, width) {
-
+    function textwrap(text, width) {
         text.each(function() {
             var text = d3.select(this),
                 words = text.text().split(/\s+/).reverse(),
@@ -158,8 +173,7 @@ var playByPlayRendering = function (svg, data) {
                 return (firstY + lineHeight * i) + 0.35 + "em";
             });
         });
-    };
-
+    }
     var centerTextWidth = 100;
     var centerTextHeight = 100;
     var triangleHeight = 80;
@@ -284,7 +298,7 @@ var playByPlayRendering = function (svg, data) {
         .attr("dy", ".35em")
         .attr("text-anchor", "middle")
         .style("fill-opacity", 1)
-        .call(wrap, descBoxWidth - 100);
+        .call(textwrap, descBoxWidth - 100);
 
     // away event description
     g.selectAll(".awaydesc")
@@ -298,7 +312,7 @@ var playByPlayRendering = function (svg, data) {
         .attr("dy", ".35em")
         .attr("text-anchor", "middle")
         .style("fill-opacity", 1)
-        .call(wrap, descBoxWidth - 100);
+        .call(textwrap, descBoxWidth - 100);
 
     // center rectangle
     g.selectAll(".centerrect")
@@ -434,11 +448,289 @@ var playByPlayStaticBkg = function (svg, data) {
         .style("opacity", 0.07);
 };
 
+var boxscorePkRendering = function (svg, data, width, height, params) {
+
+    function textwrap(text, width) {
+        text.each(function() {
+            var text = d3.select(this),
+                words = text.text().split(/\s+/).reverse(),
+                word,
+                line = [],
+                lineNumber = 0,
+                lineHeight = 1.3, // ems
+                x = text.attr("x"),
+                y = text.attr("y"),
+                dy = parseFloat(text.attr("dy")),
+                tspan = text.text(null).append("tspan").attr("x", x).attr("y", y);
+
+            while (word = words.pop()) {
+                line.push(word);
+                tspan.text(line.join(" "));
+                if (tspan.node().getComputedTextLength() > width) {
+                    line.pop();
+                    tspan.text(line.join(" "));
+                    line = [word];
+                    tspan = text.append("tspan").attr("x", x).attr("y", y).text(word);
+                }
+            }
+            var tspans = text.selectAll("tspan"), num_tspans = tspans.size();
+            var firstY;
+            if (num_tspans % 2 == 0)
+                firstY = - (num_tspans / 2 - 0.5) * lineHeight;
+            else
+                firstY = - Math.floor(num_tspans / 2) * lineHeight;
+            tspans.attr("dy", function (d, i) {
+                return (firstY + lineHeight * i) + 0.35 + "em";
+            });
+        });
+    }
+
+    // create a new g
+    var g = svg.append("g");
+
+    // precompute some stuff
+    var headerStartHeight = height / 2 - ((data.length + 1) * params.cellHeight + params.headerHeight) / 2;
+    var firstRowHeight = headerStartHeight + params.headerHeight;
+
+    // shadow filter def
+    g.append("defs")
+        .append("filter")
+        .attr("id", "rectshadow")
+        .append("feDropShadow")
+        .attr("dx", 0)
+        .attr("dy", 10)
+        .attr("stdDeviation", 4);
+
+    // playername header bkg rect
+    g.append("rect")
+        .attr("width", params.playerNameCellWidth)
+        .attr("height", params.headerHeight)
+        .attr("x", 0)
+        .attr("y", headerStartHeight)
+        .style("fill", params.headerbkgcolor);
+
+    // playername header text
+    g.append("text")
+        .text("Players")
+        .attr("x", params.playerNameCellWidth / 2)
+        .attr("y", headerStartHeight + params.headerHeight / 2)
+        .attr("dy", ".35em")
+        .attr("font-size", params.headerfontsize)
+        .attr("text-anchor", "middle")
+        .style("fill-opacity", 1)
+        .style("fill", params.headerfontcolor);
+
+    // player name bkg rect
+    g.selectAll(".playernamerect")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("width", params.playerNameCellWidth)
+        .attr("height", params.cellHeight)
+        .attr("x", 0)
+        .attr("y", function (d, i) {
+            return firstRowHeight + i * params.cellHeight;
+        })
+        .style("fill", function (d, i) {
+            if (i % 2 == 0) return params.evenrowcolor;
+            return params.oddrowcolor;
+        })
+
+    // player photos
+    g.append("defs")
+        .append("mask")
+        .attr("id", "circlemask")
+        .attr("maskUnits", "objectBoundingBox")
+        .attr("maskContentUnits", "objectBoundingBox")
+        .append("circle")
+        .attr("cx", "0.5")
+        .attr("cy", "0.5")
+        .attr("r", "0.5")
+        .attr("fill", "white");
+    g.selectAll(".playerphoto")
+        .data(data)
+        .enter()
+        .append("image")
+        .attr("width", params.playerphotoradius * 2)
+        .attr("height", params.playerphotoradius * 2)
+        .attr("x", params.playerphotoleftmargin)
+        .attr("y", function (d, i) {
+            return firstRowHeight + (i + 0.5) * params.cellHeight - params.playerphotoradius;
+        })
+        .attr("xlink:href", function (d) {
+            if (d[5] == "None")
+                return "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + d[3] + ".svg";
+            return "http://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/" + d[5] + ".png";
+        })
+        .style("mask", "url(#circlemask)");
+
+    // playernames
+    g.selectAll(".playername")
+        .data(data)
+        .enter()
+        .append("text")
+        .text(function(d) {return d[6];})
+        .attr("x", function (){
+            var textLeft = params.playerphotoleftmargin + params.playerphotoradius * 2;
+            //return (params.playerNameCellWidth - textLeft) / 2 + textLeft;
+            return textLeft + 15;
+        })
+        .attr("y", function (d, i) {
+            return firstRowHeight + (i + 0.5) * params.cellHeight;
+        })
+        .attr("dy", ".35em")
+        .attr("font-size", params.bodyfontsize)
+        .attr("text-anchor", "left")
+        .style("fill-opacity", 1)
+        .style("fill", params.bodyfontcolor)
+        .call(textwrap, params.playerNameCellWidth - params.playerphotoradius * 2 - params.playerphotoleftmargin - 25);
+
+    // team logo
+    if (data.length > 0) {
+        var startHeight = height / 2
+            - ((data.length + 1) * params.cellHeight + params.headerHeight) / 2
+            + params.headerHeight + params.cellHeight * data.length;
+
+        // background rect
+        g.append("rect")
+            .attr("width", params.playerNameCellWidth)
+            .attr("height", params.cellHeight)
+            .attr("x", 0)
+            .attr("y", startHeight)
+            .style("fill", (data.length % 2 == 0 ? params.evenrowcolor : params.oddrowcolor));
+
+        // team logo
+        g.append("image")
+            .attr("x", params.playerNameCellWidth / 2 - params.teamlogoradius)
+            .attr("y", startHeight + params.cellHeight / 2 - params.teamlogoradius)
+            .attr("width", params.teamlogoradius * 2)
+            .attr("height", params.teamlogoradius * 2)
+            .attr("xlink:href", "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + data[0][3] + ".svg");
+    }
+
+    // shadow rect
+    g.append("rect")
+        .attr("width", params.shadowrectwidth )
+        .attr("height", params.headerHeight + (data.length + 1) * params.cellHeight)
+        .attr("x", params.playerNameCellWidth - params.shadowrectwidth)
+        .attr("y", headerStartHeight)
+        .style("fill", "white");
+};
+
+var boxscoreStatsRendering = function (svg, data, width, height, params) {
+
+    // create a new g
+    var g = svg.append("g");
+
+    // precompute some stuff
+    var headerStartHeight = height / 2 - ((data.length + 1) * params.cellHeight + params.headerHeight) / 2;
+    var firstRowHeight = headerStartHeight + params.headerHeight;
+    var avg_fields = ["FG_PCT", "FG3_PCT", "FT_PCT"];
+    var fields = ['id', 'GAME_ID', 'TEAM_ID', 'TEAM_ABBREVIATION', 'TEAM_CITY', 'PLAYER_ID', 'PLAYER_NAME', 'POS', 'MIN', 'PTS', 'FGM', 'FGA', 'FG_PCT', 'FG3M', 'FG3A', 'FG3_PCT', 'FTM', 'FTA', 'FT_PCT', 'OREB', 'DREB', 'REB', 'AST', 'STL', 'BLK', 'TO', 'PF', '+/-'];
+
+    // loop over stats
+    var curLeft = params.playerNameCellWidth;
+    for (var i = 7; i < fields.length; i ++) {
+        // get precision
+        var precision = 0;
+        if (avg_fields.indexOf(fields[i]) != -1)
+            precision = 2;
+
+        var curColumnWidth = Math.min(fields[i].length * params.avgcharwidth, params.statsCellMaxWidth);
+        // stats header bkg rect
+        g.append("rect")
+            .attr("width", curColumnWidth)
+            .attr("height", params.headerHeight)
+            .attr("x", curLeft)
+            .attr("y", headerStartHeight)
+            .style("fill", params.headerbkgcolor);
+
+        // stats header text
+        g.append("text")
+            .text(fields[i])
+            .attr("x", curLeft + curColumnWidth / 2)
+            .attr("y", headerStartHeight + params.headerHeight / 2)
+            .attr("dy", ".35em")
+            .attr("font-size", params.headerfontsize)
+            .attr("text-anchor", "middle")
+            .style("fill-opacity", 1)
+            .style("fill", params.headerfontcolor);
+
+        // player stats bkg rect
+        g.selectAll(".playerstatsrect")
+            .data(data)
+            .enter()
+            .append("rect")
+            .attr("width", curColumnWidth)
+            .attr("height", params.cellHeight)
+            .attr("x", curLeft)
+            .attr("y", function (d, i) {
+                return firstRowHeight + i * params.cellHeight;
+            })
+            .style("fill", function (d, i) {
+                if (i % 2 == 0) return params.evenrowcolor;
+                return params.oddrowcolor;
+            });
+
+        // player stats text
+        g.selectAll(".playerstatstext")
+            .data(data)
+            .enter()
+            .append("text")
+            .text(function (d) {
+                return (fields[i] == 'POS' ? d[i] : (+d[i]).toFixed(precision));
+            })
+            .attr("x", curLeft + curColumnWidth / 2)
+            .attr("y", function (d, i) {
+                return firstRowHeight + (i + 0.5) * params.cellHeight;
+            })
+            .attr("font-size", params.bodyfontsize)
+            .attr("text-anchor", "middle")
+            .attr("dy", ".35em")
+            .style("fill-opacity", 1)
+            .style("fill", params.bodyfontcolor);
+
+        // team stats bkg rect
+        var startHeight = height / 2
+            - ((data.length + 1) * params.cellHeight + params.headerHeight) / 2
+            + params.headerHeight + params.cellHeight * data.length;
+        g.append("rect")
+            .attr("width", curColumnWidth)
+            .attr("height", params.cellHeight)
+            .attr("x", curLeft)
+            .attr("y", startHeight)
+            .style("fill", (data.length % 2 == 0 ? params.evenrowcolor : params.oddrowcolor));
+
+        // team stats text
+        if (fields[i] != 'POS') {
+            var overall = 0;
+            for (var j = 0; j < data.length; j ++)
+                overall += +data[j][i];
+            if (avg_fields.indexOf(fields[i]) != -1)
+                overall = overall / data.length;
+            else if (fields[i] == "+/-")
+                overall = overall / 5;
+            g.append("text")
+                .text(overall.toFixed(precision))
+                .attr("x", curLeft + curColumnWidth / 2)
+                .attr("y", startHeight + params.cellHeight / 2)
+                .attr("font-size", params.bodyfontsize)
+                .attr("text-anchor", "middle")
+                .attr("dy", ".35em")
+                .style("fill-opacity", 1)
+                .style("fill", params.bodyfontcolor);
+        }
+        curLeft += curColumnWidth;
+    }
+};
+
 module.exports = {
     renderingParams : renderingParams,
     teamLogoRendering : teamLogoRendering,
     teamTimelineRendering : teamTimelineRendering,
     teamTimelineStaticBkg : teamTimelineStaticBkg,
     playByPlayRendering: playByPlayRendering,
-    playByPlayStaticBkg : playByPlayStaticBkg
+    playByPlayStaticBkg : playByPlayStaticBkg,
+    boxscorePkRendering : boxscorePkRendering,
+    boxscoreStatsRendering : boxscoreStatsRendering
 };
