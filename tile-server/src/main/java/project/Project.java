@@ -28,6 +28,7 @@ public class Project {
 	private ArrayList<String> initialPredicates;
 	private ArrayList<Canvas> canvases;
 	private ArrayList<Jump> jumps;
+	private String renderingParams;
 
 	public String getName() {
 		return name;
@@ -63,6 +64,10 @@ public class Project {
 
 	public ArrayList<Jump> getJumps() {
 		return jumps;
+	}
+
+	public String getRenderingParams() {
+		return renderingParams;
 	}
 
 	public Canvas getCanvas(String canvasId) {
@@ -124,6 +129,7 @@ public class Project {
 				", initialPredicates=" + initialPredicates +
 				", canvases=" + canvases +
 				", jumps=" + jumps +
+				", renderingParams='" + renderingParams + '\'' +
 				'}';
 	}
 }

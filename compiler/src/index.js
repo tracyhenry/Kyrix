@@ -31,10 +31,11 @@ function Project(name, dbFile, viewportWidth, viewportHeight) {
     // the set of jump transitions
     this.jumps = [];
 
-    // initial viewport, canvas
+    // initial viewport, canvas, rendering parameters
     this.initialCanvasId = "";
     this.initialViewportX = 0;
     this.initialViewportY = 0;
+    this.renderingParams = "{}";
 }
 
 /**
@@ -106,6 +107,16 @@ function addJump(jump) {
     }
 
     this.jumps.push(jump);
+}
+
+// add a rendering parameter object
+function addRenderingParams(renderingParams) {
+
+    this.renderingParams = JSON.stringify(renderingParams, function (key, value) {
+        if (typeof value === 'function')
+            return value.toString();
+        return value;
+    });
 }
 
 /**
@@ -211,7 +222,8 @@ Project.prototype = {
     addCanvas: addCanvas,
     addJump: addJump,
     initialCanvas: initialCanvas,
-    saveToDb: saveToDb
+    saveToDb: saveToDb,
+    addRenderingParams : addRenderingParams
 };
 
 // exports

@@ -49,6 +49,7 @@ public class FirstRequestHandler implements HttpHandler {
 		respMap.put("initialCanvasId", project.getInitialCanvasId());
 		respMap.put("tileH", Config.tileH);
 		respMap.put("tileW", Config.tileW);
+		respMap.put("renderingParams", project.getRenderingParams());
 
 		// convert the response to a json object and send it back
 		String response = gson.toJson(respMap);

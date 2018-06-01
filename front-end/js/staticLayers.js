@@ -20,7 +20,7 @@ function renderStaticLayers() {
         renderFunc(curSvg, globalVar.curStaticData[i],
             globalVar.curCanvas.w,
             globalVar.curCanvas.h,
-            JSON.parse(globalVar.curCanvas.renderingParams));
+            JSON.parse(globalVar.renderingParams));
 
         // register jump
         registerJumps(curSvg, i);

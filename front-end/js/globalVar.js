@@ -31,6 +31,9 @@ globalVar.animation = false;
 // cache
 globalVar.cachedCanvases = {};
 
+// global rendering params (specified by the developer)
+globalVar.renderingParams = null;
+
 if (typeof String.prototype.parseFunction != 'function') {
     String.prototype.parseFunction = function () {
         var funcReg = /function *[^()]*\(([^()]*)\)[ \n\t]*\{([\s\S]*)\}/gmi;

@@ -85,7 +85,7 @@ public class PlacementNaiveIndexer extends Indexer {
 				engine.eval(script);
 
 				// step 2(c): run the data transform function over the sql query result
-				engine.put("renderingParams", c.getRenderingParams());
+				engine.put("renderingParams", project.getRenderingParams());
 				JSObject renderingParamsObj = (JSObject) engine.eval("JSON.parse(renderingParams)");
 				ArrayList<ArrayList<String>> transformResults = new ArrayList<>();
 				for (int i = 0; i < sqlQueryResults.size(); i ++) {	//TODO: distinguish between separable and non-separable cases

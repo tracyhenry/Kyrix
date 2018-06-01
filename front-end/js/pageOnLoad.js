@@ -88,6 +88,7 @@ function pageOnLoad() {
         globalVar.curCanvasId = response.initialCanvasId;
         globalVar.tileW = +response.tileW;
         globalVar.tileH = +response.tileH;
+        globalVar.renderingParams = response.renderingParams;
 
         // set up global and main svgs
         d3.select("body")

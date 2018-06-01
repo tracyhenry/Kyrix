@@ -16,7 +16,6 @@ public class Canvas {
 	private ArrayList<Transform> transforms;
 	private ArrayList<Layer> layers;
 	private String axes;
-	private String renderingParams;
 
 	public void setW(int w) {
 		this.w = w;
@@ -82,10 +81,6 @@ public class Canvas {
 		return axes;
 	}
 
-	public String getRenderingParams() {
-		return renderingParams;
-	}
-
 	public Transform getTransformById(String id) {
 
 		for (Transform t : transforms)
@@ -119,7 +114,6 @@ public class Canvas {
 				", transforms=" + transforms +
 				", layers=" + layers +
 				", axes='" + axes + '\'' +
-				", renderingParams=" + renderingParams +
 				'}';
 	}
 }
