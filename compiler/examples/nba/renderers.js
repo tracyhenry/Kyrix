@@ -1,3 +1,8 @@
+var renderingParams = {
+    "timelineUpperY" : 495,
+    "timelineLowerY" : 725
+};
+
 var teamLogoRendering = function (svg, data) {
     g = svg.append("g");
     g.selectAll("image")
@@ -11,7 +16,7 @@ var teamLogoRendering = function (svg, data) {
         .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + d[6] + ".svg";});
 };
 
-var teamTimelineRendering = function (svg, data) {
+var teamTimelineRendering = function (svg, data, width, height, params) {
 
     var rectWidth = 160;
     var rectHeight = 100;
@@ -110,7 +115,7 @@ var teamTimelineRendering = function (svg, data) {
         .attr("x2", function (d) {return d[1];})
         .attr("y1", 625)
         .attr("y2", function (d) {
-            if (d[2] == 495) return +d[2] + rectHeight / 2 + dateHeight;
+            if (d[2] == params.timelineUpperY) return +d[2] + rectHeight / 2 + dateHeight;
             return d[2] - rectHeight / 2;
         })
         .style("stroke", "#CCC")
@@ -430,6 +435,7 @@ var playByPlayStaticBkg = function (svg, data) {
 };
 
 module.exports = {
+    renderingParams : renderingParams,
     teamLogoRendering : teamLogoRendering,
     teamTimelineRendering : teamTimelineRendering,
     teamTimelineStaticBkg : teamTimelineStaticBkg,

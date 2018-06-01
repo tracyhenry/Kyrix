@@ -38,6 +38,9 @@ p.addCanvas(teamTimelineCanvas);
 teamTimelineCanvas.addTransform(transforms.teamTimelineTransform);
 teamTimelineCanvas.addTransform(transforms.teamTimelineStaticTransform);
 
+// add rendering global parameters
+teamTimelineCanvas.addRenderingParams(renderers.renderingParams);
+
 // pannable timeline layer
 var timelineLayer = new Layer("teamtimelinescale", false);
 teamTimelineCanvas.addLayer(timelineLayer);

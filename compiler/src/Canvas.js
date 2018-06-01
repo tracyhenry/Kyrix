@@ -39,6 +39,7 @@ function Canvas(id, w, h, wString, hString) {
     this.zoomOutFactorX = 100;   // smaller than 1 to be valid
     this.zoomOutFactorY = 100;   // smaller than 1 to be valid
     this.axes = "";
+    this.renderingParams = "{}";
 };
 
 // add layer to a canvas
@@ -67,6 +68,17 @@ function addAxes(axesFunc) {
     this.axes = axesFunc;
 };
 
+// add a rendering parameter object
+function addRenderingParams(renderingParams) {
+
+    this.renderingParams = JSON.stringify(renderingParams, function (key, value) {
+        if (typeof value === 'function')
+            return value.toString();
+        return value;
+    });
+}
+
+// width/height string processing
 function processWidthHeightString(s) {
 
     s = s.toLowerCase();
@@ -81,6 +93,7 @@ function processWidthHeightString(s) {
 Canvas.prototype.addLayer = addLayer;
 Canvas.prototype.addTransform = addTransform;
 Canvas.prototype.addAxes = addAxes;
+Canvas.prototype.addRenderingParams = addRenderingParams;
 
 // exports
 module.exports = {

@@ -2,6 +2,7 @@ package index;
 
 import com.coveo.nashorn_modules.FilesystemFolder;
 import com.coveo.nashorn_modules.Require;
+import jdk.nashorn.api.scripting.JSObject;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import main.Config;
@@ -84,10 +85,12 @@ public class PlacementNaiveIndexer extends Indexer {
 				engine.eval(script);
 
 				// step 2(c): run the data transform function over the sql query result
+				engine.put("renderingParams", c.getRenderingParams());
+				JSObject renderingParamsObj = (JSObject) engine.eval("JSON.parse(renderingParams)");
 				ArrayList<ArrayList<String>> transformResults = new ArrayList<>();
 				for (int i = 0; i < sqlQueryResults.size(); i ++) {	//TODO: distinguish between separable and non-separable cases
 					String[] curRowObjects = (String[]) engine	// TODO: figure out why row.slice does not work. learn more about nashorn types
-							.invokeFunction("trans", sqlQueryResults.get(i), c.getW(), c.getH());
+							.invokeFunction("trans", sqlQueryResults.get(i), c.getW(), c.getH(), renderingParamsObj);
 					ArrayList<String> curRow = new ArrayList<>();
 					for (int j = 0; j < curRowObjects.length; j ++)
 						curRow.add(curRowObjects[j].toString());

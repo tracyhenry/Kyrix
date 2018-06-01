@@ -26,7 +26,7 @@ var teamTimelineTransform = new Transform("teamtimelinescale",
         + "from games, teams as team1, teams as team2 "
         + "where games.home_team = team1.abbr and games.away_team = team2.abbr;",
         "nba",
-        function (row, width) {
+        function (row, width, height, renderParams) {
             var ret = [];
             // id
             ret.push(row[0]);
@@ -39,9 +39,9 @@ var teamTimelineTransform = new Transform("teamtimelinescale",
             var beginDate = new Date(2000, 0, 1);
             var oneDay = 24 * 60 * 60 * 1000;
             var daysPassed = Math.round(Math.abs((curDate.getTime() - beginDate.getTime())/(oneDay)));
-            ret.push(daysPassed % 2 == 0 ? 495 : 725);
+            ret.push(daysPassed % 2 == 0 ? renderParams.timelineUpperY : renderParams.timelineLowerY);
 
-            // rest of the attribtues
+            // rest of the attributes
             for (var i = 1; i <= 8; i ++)
                 ret.push(row[i]);
 
@@ -101,7 +101,7 @@ var playByPlayStaticTransform = new Transform("playbyplaystatic",
         var ret = [];
         ret.push(row[0]);
         ret.push(row[1]);
-        return Java.to(ret ,"java.lang.String[]");
+        return Java.to(ret, "java.lang.String[]");
     },
     ["abbr1", "abbr2"],
     true);

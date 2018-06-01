@@ -161,7 +161,10 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                                 return;
 
                             // draw current layer
-                            curLayer.rendering.parseFunction()(tileSvg, renderData[i]);
+                            curLayer.rendering.parseFunction()(tileSvg, renderData[i],
+                                globalVar.curCanvas.w,
+                                globalVar.curCanvas.h,
+                                JSON.parse(globalVar.curCanvas.renderingParams));
 
                             tileSvg.transition()
                                 .duration(param.tileEnteringDuration)
