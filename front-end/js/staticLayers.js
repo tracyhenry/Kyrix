@@ -17,7 +17,7 @@ function renderStaticLayers() {
         var curSvg = d3.select(".layerg.layer" + i)
             .select("svg")
             .classed("lowestsvg", true);
-        renderFunc(curSvg.append("g"), globalVar.curStaticData[i]);
+        renderFunc(curSvg, globalVar.curStaticData[i]);
 
         // register jump
         registerJumps(curSvg, i);

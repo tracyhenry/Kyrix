@@ -1,4 +1,4 @@
-var c1L1Rendering = function render(svg, data) {
+var c1L1Rendering = function (svg, data) {
     g = svg.append("g");
     g.selectAll("circle")
         .data(data)
@@ -20,7 +20,7 @@ var c1L1Rendering = function render(svg, data) {
         .style("fill-opacity", 1);
 };
 
-var c1L2Rendering = function render(svg, data) {
+var c1L2Rendering = function (svg, data) {
     g = svg.append("g");
     g.selectAll("rect")
         .data(data)
@@ -44,7 +44,7 @@ var c1L2Rendering = function render(svg, data) {
 };
 
 // an empty g with a background color fill
-var c1L3Rendering = function render(svg, data) {
+var c1L3Rendering = function (svg, data) {
     g = svg.append("g")
         .append("rect")
         .attr("x", 0)
@@ -54,7 +54,7 @@ var c1L3Rendering = function render(svg, data) {
         .style("fill", "beige");
 };
 
-var c2L1Rendering = function render(svg, data) {
+var c2L1Rendering = function (svg, data) {
     g = svg.append("g");
     g.selectAll("text")
         .data(data)
@@ -69,7 +69,7 @@ var c2L1Rendering = function render(svg, data) {
         .style("fill-opacity", 1);
 };
 
-var c3L1Rendering = function render(svg, data) {
+var c3L1Rendering = function (svg, data) {
     g = svg.append("g");
     g.selectAll("text")
         .data(data)
@@ -105,7 +105,9 @@ var c1c2Axes = function (cWidth, cHeight) {
     return axes;
 };
 
-var c1StaticTrim = function(g) {
+var c1StaticTrim = function (svg) {
+
+    var g = svg.append("g");
     g.append("text")
         .text("Let's go Celtics!")
         .attr("x", 500)
@@ -116,7 +118,9 @@ var c1StaticTrim = function(g) {
         .style("fill-opacity", 1);
 };
 
-var c3StaticTrim = function(g) {
+var c3StaticTrim = function (svg) {
+
+    var g = svg.append("g");
     g.append("text")
         .text("Let's go Celtics!")
         .attr("x", 500)

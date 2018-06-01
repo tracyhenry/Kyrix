@@ -1,4 +1,4 @@
-var teamLogoRendering = function render(svg, data) {
+var teamLogoRendering = function (svg, data) {
     g = svg.append("g");
     g.selectAll("image")
         .data(data)
@@ -11,7 +11,7 @@ var teamLogoRendering = function render(svg, data) {
         .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + d[6] + ".svg";});
 };
 
-var teamTimelineRendering = function render(svg, data) {
+var teamTimelineRendering = function (svg, data) {
 
     var rectWidth = 160;
     var rectHeight = 100;
@@ -117,7 +117,7 @@ var teamTimelineRendering = function render(svg, data) {
         .style("stroke-width", 3);
 };
 
-var playByPlayRendering = function render(svg, data) {
+var playByPlayRendering = function (svg, data) {
 
     function wrap(text, width) {
 
@@ -365,7 +365,9 @@ var playByPlayRendering = function render(svg, data) {
 
 };
 
-var teamTimelineStaticBkg = function (g, data) {
+var teamTimelineStaticBkg = function (svg, data) {
+
+    var g = svg.append("g");
 
     // text
     var title = g.append("text")
@@ -398,8 +400,9 @@ var teamTimelineStaticBkg = function (g, data) {
         .style("opacity", 0.07);
 };
 
-var playByPlayStaticBkg = function (g, data) {
+var playByPlayStaticBkg = function (svg, data) {
 
+    var g = svg.append("g");
     // axis line
     g.append("line")
         .attr("x1", 500)
@@ -425,7 +428,6 @@ var playByPlayStaticBkg = function (g, data) {
         .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + data[0][1] + ".svg";})
         .style("opacity", 0.07);
 };
-
 
 module.exports = {
     teamLogoRendering : teamLogoRendering,

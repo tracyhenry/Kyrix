@@ -1,4 +1,4 @@
-var scPlotRendering = function render(svg, data) {
+var scPlotRendering = function (svg, data) {
     var g = svg.append("g");
     g.selectAll("circle")
         .data(data)
@@ -35,7 +35,9 @@ var scPlotAxes = function (cWidth, cHeight) {
     return axes;
 };
 
-var scPlotStaticTrim = function(g) {
+var scPlotStaticTrim = function (svg) {
+
+    var g = svg.append("g");
     g.append("text")
         .text("Let's go Celtics!")
         .attr("x", 400)
