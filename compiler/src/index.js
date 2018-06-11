@@ -166,7 +166,8 @@ function saveToDb()
     var dbConn = mysql.createConnection({
         host     : this.dbConfig.host,
         user     : this.dbConfig.user,
-        password : this.dbConfig.password
+        password : this.dbConfig.password,
+        insecureAuth : true
     });
     dbConn.connect(function(err) {
         if (err) {
