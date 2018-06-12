@@ -4,7 +4,7 @@ The backend dependecies are handled using maven. See `pom.xml` for the list of d
 
 ## Server Configuration
 To configure the server, rename `serverconfig.txt.example` to `serverconfig.txt`, which is added to `gitignore`. There should be six lines in the file:
-* the project name
+* the project name (should be `nba` as in the example file if you want to run the example spec)
 * port number
 * MySQL server name
 * MySQL user name
@@ -14,4 +14,7 @@ To configure the server, rename `serverconfig.txt.example` to `serverconfig.txt`
 More precisely, the directory on the last line should contain node_modules/d3-scale (i.e. you should have run `npm install d3` under this directory).
 
 ## Run the server
-Run `mvn compile` to build the backend server. Run `mvn exec:java -Dexec.mainClass="main.Main"` to start the server. Then open your browser and go to `http://localhost:port#` to see the initial canvas. 
+Make sure to get data needed to render the visualizations loaded into mysql.
+ 
+Then run `mvn compile` to build the backend server. Run `mvn exec:java -Dexec.mainClass="main.Main"` to start the server. Then open your browser and go to `http://localhost:port#` to see the 
+initial canvas. 
