@@ -9,11 +9,13 @@ See [development workflow](https://github.com/tracyhenry/Kyrix/wiki/Development-
 Install Node.js ([https://nodejs.org/en/](https://nodejs.org/en/)). The `node.js` libraries needed for using `kyrix` apis are listed in `compiler/package.json`. 
 
 ### MySQL
-Install MySQL: [Mac](https://gist.github.com/nrollr/3f57fc15ded7dddddcc4e82fe137b58e)/[Windows](https://dev.mysql.com/doc/refman/5.7/en/windows-installation.html)
+Install MySQL: [Mac](https://gist.github.com/nrollr/3f57fc15ded7dddddcc4e82fe137b58e)/[Windows](https://dev.mysql.com/doc/refman/5.7/en/windows-installation.html). Right now there is some issue with versions other than 5.7. So make sure you install 5.7 for development purposes. 
 
 
 ## How to Run Kyrix
 * Get a MySQL server running. 
+
+* Install dependencies for compiler. Go to `compiler/`, run `npm install`. 
 
 * Write visualization spec according to the spec api documentation (to be added). An example spec is in `compiler/examples/nba/nba.js`. This example spec requires a db config file containing the host, username and password of the MySQL server. Create this needed file by running `cp compiler/dbconfig.example compiler/dbconfig.txt`. Never check any db config file into the repo (`compiler/dbconfig.txt` is added to `.gitignore`). 
 
@@ -30,6 +32,7 @@ Install MySQL: [Mac](https://gist.github.com/nrollr/3f57fc15ded7dddddcc4e82fe137
 
 ### TODOs
 
+- [ ] Prediction algorithms. 
 - [ ] Literal zoom sampling API
 - [ ] Static Jumps
 - [ ] layer toggling
