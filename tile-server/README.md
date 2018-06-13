@@ -3,7 +3,7 @@
 The backend dependecies are handled using maven. See `pom.xml` for the list of dependencies. To download and install maven, see the instructions [here](https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html). You may want to use Intellij as IDE which has a nice [support](https://www.jetbrains.com/help/idea/maven.html) for maven. 
 
 ## Get Data for the Example App
-Download a small nba database from (https://www.dropbox.com/s/127lbntx0332dlb/nba_db.sql?dl=0). Load it into your MySQL as follows:
+Download a small nba database from (https://www.dropbox.com/s/3chn6r73vzxttr2/nba_db.sql?dl=0). Load it into your MySQL as follows:
 
     $ mysql -u username -p               # login to mysql
     $ Enter password:                    # enter password
