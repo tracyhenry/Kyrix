@@ -21,7 +21,8 @@ Install MySQL: [Mac](https://gist.github.com/nrollr/3f57fc15ded7dddddcc4e82fe137
 
 * Run the spec using node.js. To run the example spec, run
 
-      $ node compiler/examples/nba/nba.js
+      $ cd compiler/examples/nba
+      $ node nba.js
     
     Two things to expect after running the spec: 
     (1) a `Kyrix` MySQL database will be created (if not existed) and (2) a `project` table will be created (if not existed) to store the definition of the project. 
