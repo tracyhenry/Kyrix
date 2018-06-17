@@ -6,6 +6,7 @@ import index.Indexer;
 import index.PlacementNaiveIndexer;
 import project.Project;
 import server.Server;
+import cache.TileCache;
 
 import javax.script.ScriptException;
 import java.io.BufferedReader;
@@ -36,8 +37,11 @@ public class Main {
 		System.out.println(project);
 
 		// precompute
-		Indexer indexer = new PlacementNaiveIndexer();
-		indexer.precompute();
+		//Indexer indexer = new PlacementNaiveIndexer();
+		//indexer.precompute();
+
+		//cache
+		TileCache.create();
 
 		// start server
 		Server.startServer(Config.portNumber);

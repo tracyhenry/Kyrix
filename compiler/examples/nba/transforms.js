@@ -64,8 +64,8 @@ var teamTimelineStaticTransform = new Transform("teamtimelinestatic",
 
 var playByPlayTransform = new Transform("playbyplayscale",
     "select games.game_id, period, qtr_time, score, margin, home_desc, away_desc, home_team, away_team, play_id, h_player_id, a_player_id"
-    + " from scoring_plays, games"
-    + " where scoring_plays.game_id = games.game_id;",
+    + " from plays, games"
+    + " where plays.game_id = games.game_id;",
     "nba",
     function (row, height) {
         var ret = [];
@@ -80,8 +80,12 @@ var playByPlayTransform = new Transform("playbyplayscale",
         ret.push(row[2]);
 
         // reverse score
-        var scores = row[3].split("-");
-        ret.push(scores[1].replace(/\s+/, "") + " - " + scores[0].replace(/\s+/, ""));
+        if (row[3] == "None")
+            ret.push("")
+        else {
+            var scores = row[3].split("-");
+            ret.push(scores[1].replace(/\s+/, "") + " - " + scores[0].replace(/\s+/, ""));
+        }
 
         // rest of the attributes
         for (var i = 4; i <= 8; i ++)

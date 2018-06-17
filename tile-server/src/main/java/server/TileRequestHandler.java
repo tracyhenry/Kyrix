@@ -9,6 +9,7 @@ import main.DbConnector;
 import main.Main;
 import project.Canvas;
 import project.Project;
+import cache.TileCache;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -49,6 +50,7 @@ public class TileRequestHandler implements HttpHandler {
 		String predicate;
 		ArrayList<ArrayList<ArrayList<String>>> data = null;
 
+
 		// check if this is a POST request
 		if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
 			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
@@ -81,8 +83,15 @@ public class TileRequestHandler implements HttpHandler {
 			predicates.add(queryMap.get("predicate" + i));
 
 		try {
-			data = getData(c, minx, miny, predicates);
-		} catch (Exception e) {
+			if (TileCache.cacheHit(c, minx, miny, predicates)) {
+				System.out.println("cache hit!");
+				data = TileCache.getFromCache(c, minx, miny, predicates);
+			} else {
+				System.out.println("cache miss!");
+				data = getData(c, minx, miny, predicates);
+				TileCache.putIntoCache(c, minx, miny, data, predicates);
+			}
+		}catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -161,3 +170,4 @@ public class TileRequestHandler implements HttpHandler {
 		return "";
 	}
 }
+
