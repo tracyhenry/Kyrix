@@ -46,7 +46,6 @@ public class TileRequestHandler implements HttpHandler {
 		String predicate;
 		ArrayList<ArrayList<ArrayList<String>>> data = null;
 
-
 		// check if this is a POST request
 		if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
 			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");

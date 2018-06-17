@@ -33,7 +33,7 @@ public class TileCache {
         } else {
             System.out.println("cache miss!");
             try {
-                data = getFromDisk(c, minx, miny, predicates, project);
+                data = getTileFromDB(c, minx, miny, predicates, project);
             }catch (Exception e) {
                 e.printStackTrace();
             }
@@ -43,7 +43,7 @@ public class TileCache {
     }
 
     // get a tile from mysql
-    private static ArrayList<ArrayList<ArrayList<String>>> getFromDisk(Canvas c, int minx, int miny, ArrayList<String> predicates, Project project)
+    private static ArrayList<ArrayList<ArrayList<String>>> getTileFromDB(Canvas c, int minx, int miny, ArrayList<String> predicates, Project project)
             throws SQLException, ClassNotFoundException {
 
         // container for data
