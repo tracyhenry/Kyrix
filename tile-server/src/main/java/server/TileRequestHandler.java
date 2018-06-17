@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import main.Config;
-import main.DbConnector;
 import main.Main;
 import project.Canvas;
 import project.Project;
@@ -15,9 +14,6 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,18 +78,7 @@ public class TileRequestHandler implements HttpHandler {
 		for (int i = 0; i < c.getLayers().size(); i ++)
 			predicates.add(queryMap.get("predicate" + i));
 
-		try {
-			if (TileCache.cacheHit(c, minx, miny, predicates)) {
-				System.out.println("cache hit!");
-				data = TileCache.getFromCache(c, minx, miny, predicates);
-			} else {
-				System.out.println("cache miss!");
-				data = getData(c, minx, miny, predicates);
-				TileCache.putIntoCache(c, minx, miny, data, predicates);
-			}
-		}catch (Exception e) {
-			e.printStackTrace();
-		}
+		data = TileCache.getTile(c, minx, miny, predicates, project);
 
 		// construct response
 		Map<String, Object> respMap = new HashMap<>();
@@ -107,43 +92,6 @@ public class TileRequestHandler implements HttpHandler {
 		System.out.println();
 	}
 
-	// get a tile
-	private ArrayList<ArrayList<ArrayList<String>>> getData(Canvas c, int minx, int miny, ArrayList<String> predicates)
-			throws SQLException, ClassNotFoundException {
-
-		// container for data
-		ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
-
-		// get db connector
-		Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
-
-		// loop through each layer
-		for (int i = 0; i < c.getLayers().size(); i ++) {
-
-			if (c.getLayers().get(i).isStatic()) {
-				data.add(new ArrayList<ArrayList<String>>());
-				continue;
-			}
-			// construct range query
-			String sql = "select * from bbox_" + project.getName() + "_"
-					+ c.getId() + "layer" + i + " where "
-					+ "minx <= " + (minx + Config.tileW) + " and "
-					+ "maxx >= " + minx + " and "
-					+ "miny <= " + (miny + Config.tileH) + " and "
-					+ "maxy >= " + miny;
-			if (predicates.get(i).length() > 0)
-				sql += " and " + predicates.get(i);
-			sql += ";";
-
-			System.out.println(minx + " " + miny + " : " + sql);
-
-			// add to response
-			data.add(DbConnector.getQueryResult(stmt, sql));
-		}
-
-		stmt.close();
-		return data;
-	}
 
 	// check paramters
 	private String checkParameters(Map<String, String> queryMap) {

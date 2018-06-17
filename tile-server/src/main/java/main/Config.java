@@ -19,6 +19,7 @@ public class Config {
 	public static int userNameRow = 3;
 	public static int passwordRow = 4;
 	public static int d3DirRow = 5;
+	public static int cacheSize = 10;
 
 	// config varaibles, will be at runtime
 	public static String projectName;
