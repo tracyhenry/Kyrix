@@ -37,8 +37,8 @@ public class Main {
 		System.out.println(project);
 
 		// precompute
-		//Indexer indexer = new PlacementNaiveIndexer();
-		//indexer.precompute();
+		Indexer indexer = new PlacementNaiveIndexer();
+		indexer.precompute();
 
 		//cache
 		TileCache.create();

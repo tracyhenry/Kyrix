@@ -62,10 +62,6 @@ public class TileCache {
             // construct range query
             String sql = "select * from bbox_" + project.getName() + "_"
                     + c.getId() + "layer" + i + " where "
-            //        + "minx <= " + (minx + Config.tileW) + " and "
-            //        + "maxx >= " + minx + " and "
-            //        + "miny <= " + (miny + Config.tileH) + " and "
-            //        + "maxy >= " + miny;
                     + "MBRIntersects(GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny
                     + "," + (minx + Config.tileW) + " " + (miny + Config.tileH) + "," + minx + " " + (miny + Config.tileH)
                     + "," + minx + " " + miny;
