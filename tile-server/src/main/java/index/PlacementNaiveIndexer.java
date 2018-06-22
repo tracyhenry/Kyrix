@@ -62,7 +62,7 @@ public class PlacementNaiveIndexer extends Indexer {
 				sql = "create table bbox_" + projectName + "_" + c.getId() + "layer" + layer_id + " (";
 				for (int i = 0; i < trans.getColumnNames().size(); i ++)
 					sql += trans.getColumnNames().get(i) + " text, ";
-				sql += "cx double, cy double, minx double, miny double, maxx double, maxy double);";
+				sql += "cx double, cy double, minx double, miny double, maxx double, maxy double, geom polygon);";
 				kyrix_stmt.executeUpdate(sql);	// create table
 
 				// if this is an empty layer, continue
@@ -175,23 +175,39 @@ public class PlacementNaiveIndexer extends Indexer {
 					ArrayList<String> curRow = transformResults.get(i);
 					for (int j = 0; j < curRow.size(); j ++)
 						sql += "'" + curRow.get(j).replaceAll("\'", "\\\\'") + "', ";
+					double minx, miny, maxx, maxy;
 					for (int j = 0; j < 6; j ++) {
 						if (l.isStatic())
 							sql += "0";
 						else
 							sql += String.valueOf(bboxes.get(i).get(j));
-						if (j < 5)
-							sql += ",";
+
+						sql += ",";
 					}
-					sql += ");";
+					if (!l.isStatic()) {
+						minx = bboxes.get(i).get(2);
+						miny = bboxes.get(i).get(3);
+						maxx = bboxes.get(i).get(4);
+						maxy = bboxes.get(i).get(5);
+						sql += "GeomFromText('Polygon((";
+						sql += String.valueOf(minx) + " " + String.valueOf(miny) + "," + String.valueOf(maxx) + " " + String.valueOf(miny)
+								+ "," + String.valueOf(maxx) + " " + String.valueOf(maxy) + "," + String.valueOf(minx) + " "
+								+ String.valueOf(maxy) + "," + String.valueOf(minx) + " " + String.valueOf(miny);
+						sql += "))'));";
+					}
+					else
+						sql += "null);";
+				//	System.out.println(sql);
 					kyrix_stmt.executeUpdate(sql);
 				}
 
 				// build index
 				try {
-					sql = "create index bbox_" + projectName + "_" + c.getId() + "layer" + layer_id + "_indx on bbox_"
-							+ projectName + "_" + c.getId() + "layer" + layer_id
-							+ "(minx, miny, maxx, maxy);";
+					//sql = "create index bbox_" + projectName + "_" + c.getId() + "layer" + layer_id + "_indx on bbox_"
+					//		+ projectName + "_" + c.getId() + "layer" + layer_id
+					//		+ "(minx, miny, maxx, maxy);";
+					sql = "ALTER TABLE bbox_" + projectName + "_" + c.getId() + "layer" + layer_id
+							+ " ADD SPATIAL INDEX(geom);";
 					kyrix_stmt.executeUpdate(sql);
 				} catch (Exception e) {}
 			}
