@@ -12,6 +12,7 @@ var renderingParams = {
     "headerfontcolor" : "#FFF",
     "bodyfontsize" : 19,
     "bodyfontcolor" : "#111",
+    "playernamefontsize" : 18   ,
     "playerphotoleftmargin" : 20,
     "playerphotoradius" : 24,
     "teamlogoradius" : 24,
@@ -579,7 +580,7 @@ var boxscorePkRendering = function (svg, data, width, height, params) {
             return firstRowHeight + (i + 0.5) * params.cellHeight;
         })
         .attr("dy", ".35em")
-        .attr("font-size", params.bodyfontsize)
+        .attr("font-size", params.playernamefontsize)
         .attr("text-anchor", "left")
         .style("fill-opacity", 1)
         .style("fill", params.bodyfontcolor)

@@ -23,13 +23,14 @@ public class DbConnector {
 		else
 			conn = connections.get(dbName);
 
-		return conn.createStatement();
+		return conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 	}
 
 	public static ArrayList<ArrayList<String>> getQueryResult(Statement stmt, String sql)
 			throws SQLException, ClassNotFoundException {
 
 		ArrayList<ArrayList<String>> result = new ArrayList<>();
+		stmt.setFetchSize(Integer.MIN_VALUE);
 		ResultSet rs = stmt.executeQuery(sql);
 		int numColumn = rs.getMetaData().getColumnCount();
 		while (rs.next()) {
@@ -38,6 +39,7 @@ public class DbConnector {
 				curRow.add(rs.getString(j));
 			result.add(curRow);
 		}
+		rs.close();
 
 		return result;
 	}
@@ -54,7 +56,7 @@ public class DbConnector {
 
 		Class.forName("com.mysql.jdbc.Driver");
 		Connection dbConn = DriverManager.getConnection("jdbc:mysql://" + dbServer +
-						"/" + dbName + "?useUnicode=true&characterEncoding=gbk&jdbcCompliantTruncation=false",
+						"/" + dbName + "?sendStringParametersAsUnicode=false",
 				userName, password);
 
 		return dbConn;
