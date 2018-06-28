@@ -14,23 +14,18 @@ public class DbConnector {
 
 	public static Statement getStmtByDbName(String dbName) throws SQLException, ClassNotFoundException {
 
-		// create db conn and statement if not existed
-		Connection conn;
-		if (! connections.containsKey(dbName)) {
-			conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
-			connections.put(dbName, conn);
-		}
-		else
-			conn = connections.get(dbName);
+		Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
+		Statement retStmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		// NOTE: MySQL doesn't support fetch size very well. And MIN_VALUE isn't that bad.
+		retStmt.setFetchSize(Integer.MIN_VALUE);
 
-		return conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		return retStmt;
 	}
 
 	public static ArrayList<ArrayList<String>> getQueryResult(Statement stmt, String sql)
 			throws SQLException, ClassNotFoundException {
 
 		ArrayList<ArrayList<String>> result = new ArrayList<>();
-		stmt.setFetchSize(Integer.MIN_VALUE);
 		ResultSet rs = stmt.executeQuery(sql);
 		int numColumn = rs.getMetaData().getColumnCount();
 		while (rs.next()) {
@@ -51,13 +46,24 @@ public class DbConnector {
 		return getQueryResult(stmt, sql);
 	}
 
+	public static ResultSet getQueryResultIterator(String dbName, String sql)
+			throws SQLException, ClassNotFoundException {
+
+		Statement stmt = DbConnector.getStmtByDbName(dbName);
+		return stmt.executeQuery(sql);
+	}
+
 	private static Connection getDbConn(String dbServer, String dbName, String userName, String password)
 			throws SQLException, ClassNotFoundException {
+
+		if (connections.containsKey(dbName))
+			return connections.get(dbName);
 
 		Class.forName("com.mysql.jdbc.Driver");
 		Connection dbConn = DriverManager.getConnection("jdbc:mysql://" + dbServer +
 						"/" + dbName + "?sendStringParametersAsUnicode=false",
 				userName, password);
+		connections.put(dbName, dbConn);
 
 		return dbConn;
 	}

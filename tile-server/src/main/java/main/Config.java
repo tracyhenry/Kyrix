@@ -43,4 +43,7 @@ public class Config {
 
 	// number of worker threads
 	public static int numThread = 4;
+
+	// number of batch size when inserting bounding boxes records
+	public static int bboxBatchSize = 10000;
 }
