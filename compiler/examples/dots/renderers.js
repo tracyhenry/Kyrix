@@ -7,12 +7,7 @@ var dotsRendering = function (svg, data) {
         .attr("cx", function (d) {return d[1];})
         .attr("cy", function (d) {return d[2];})
         .attr("r", 1)
-        .attr("fill", function (d) {
-            if (d[3] == 0)
-                return "#145bce";
-            else
-                return "#0b9e2d";
-        });
+        .attr("fill", "#145bce");
 };
 
 module.exports = {
