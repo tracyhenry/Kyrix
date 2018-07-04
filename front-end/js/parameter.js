@@ -33,7 +33,7 @@ param.staticTrimOutDuration = 500;
 param.popoverOutDuration = 200;
 
 // extra tiles per dimension
-param.extraTiles = 2;
+param.extraTiles = 0;
 
 // padding for the container svg
 param.containerPadding = 50;

@@ -137,9 +137,9 @@ function initialCanvas(id, viewportX, viewportY, predicates) {
         throw new Error("Initial canvas: canvas " + id + " does not exist.");
 
     // check viewport range
-    if (viewportX < 0 || viewportX > this.viewportWidth)
+    if (viewportX < 0 || viewportX + this.viewportWidth > this.canvases[canvasId].w)
         throw new Error("Initial canvas: viewportX out of range.");
-    if (viewportY < 0 || viewportY > this.viewportHeight)
+    if (viewportY < 0 || viewportY + this.viewportHeight > this.canvases[canvasId].h)
         throw new Error("Initial canvas: viewportY out of range.");
 
     // check if the size of the predicates array equals the number of layers
