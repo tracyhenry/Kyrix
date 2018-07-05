@@ -48,9 +48,8 @@ public class Config {
 	public static int bboxBatchSize = 5000;
 	public static int tileBatchSize = 10000;
 
-	// data fetch granularity
-	// 1 - static tiles
-	// 2 - dynamic boxes
-	public enum FetchingScheme {STATIC_TILE, DYNAMIC_BOX}
-	public static FetchingScheme fetchingScheme = FetchingScheme.STATIC_TILE;
+	// tile indexing scheme
+	public enum TileIndexingScheme {TUPLE_MAPPING, SPATIAL_INDEX}
+	public static TileIndexingScheme fetchingScheme = TileIndexingScheme.TUPLE_MAPPING;
+
 }

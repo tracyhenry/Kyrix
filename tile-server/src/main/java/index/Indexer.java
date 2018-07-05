@@ -60,7 +60,7 @@ public class Indexer {
 				// drop table if exists
 				String sql = "drop table if exists " + bboxTableName + ";";
 				bboxStmt.executeUpdate(sql);
-				if (Config.fetchingScheme == Config.FetchingScheme.STATIC_TILE) {
+				if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING) {
 					sql = "drop table if exists " + tileTableName + ";";
 					tileStmt.executeUpdate(sql);
 				}
@@ -69,17 +69,17 @@ public class Indexer {
 				sql = "create table " + bboxTableName + " (";
 				for (int i = 0; i < trans.getColumnNames().size(); i ++)
 					sql += trans.getColumnNames().get(i) + " text, ";
-				if (Config.fetchingScheme == Config.FetchingScheme.STATIC_TILE)
+				if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING)
 					sql += "tuple_id int, ";
 				sql += "cx double, cy double, minx double, miny double, maxx double, maxy double, geom polygon not null";
-				if (Config.fetchingScheme == Config.FetchingScheme.STATIC_TILE)
+				if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING)
 					sql += ", index (tuple_id)";
 				sql += ", spatial index (geom)";
-//				sql += ") engine=myisam;";
+	//			sql += ") engine=myisam;";
 				sql += ");";
 				bboxStmt.executeUpdate(sql);
 				// create the tile table
-				if (Config.fetchingScheme == Config.FetchingScheme.STATIC_TILE) {
+				if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING) {
 					sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50), index (tile_id));";
 					tileStmt.executeUpdate(sql);
 				}
@@ -224,7 +224,7 @@ public class Indexer {
 					}
 
 					// insert into tile table
-					if (! l.isStatic() && Config.fetchingScheme == Config.FetchingScheme.STATIC_TILE) {
+					if (! l.isStatic() && Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING) {
 						int xStart = (int) Math.max(0, Math.floor(minx / Config.tileW));
 						int yStart = (int) Math.max(0, Math.floor(miny/ Config.tileH));
 						int xEnd = (int) Math.floor(maxx / Config.tileW);
@@ -259,11 +259,11 @@ public class Indexer {
 					tileStmt.executeUpdate(tileInsSqlBuilder.toString());
 				}
 
-/*				// build spatial index
-				try {
+				// build spatial index
+/*				try {
 					sql = "ALTER TABLE " + bboxTableName + " ADD SPATIAL INDEX(geom);";
 					bboxStmt.executeUpdate(sql);
-				} catch (Exception e) {}*/
+				} catch (Exception e) {} */
 			}
 
 		bboxStmt.close();
