@@ -87,7 +87,7 @@ public class BoxRequestHandler  implements HttpHandler {
 
         //get box data
         try {
-            data = boxGetter.getBox(c, cx, cy, viewportH, viewportW, predicates, project);
+            data = boxGetter.getBox(c, cx, cy, viewportH, viewportW, predicates);
         } catch (SQLException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
