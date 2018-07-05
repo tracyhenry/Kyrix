@@ -1,7 +1,5 @@
 package box;
 
-import box.Box;
-
 import java.util.ArrayList;
 
 public class BoxandData {
