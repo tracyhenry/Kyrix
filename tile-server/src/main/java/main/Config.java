@@ -44,6 +44,13 @@ public class Config {
 	// number of worker threads
 	public static int numThread = 4;
 
-	// number of batch size when inserting bounding boxes records
-	public static int bboxBatchSize = 10000;
+	// number of batch size when inserting records
+	public static int bboxBatchSize = 5000;
+	public static int tileBatchSize = 10000;
+
+	// data fetch granularity
+	// 1 - static tiles
+	// 2 - dynamic boxes
+	public enum FetchingScheme {STATIC_TILE, DYNAMIC_BOX}
+	public static FetchingScheme fetchingScheme = FetchingScheme.STATIC_TILE;
 }

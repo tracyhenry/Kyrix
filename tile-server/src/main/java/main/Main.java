@@ -3,7 +3,6 @@ package main;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import index.Indexer;
-import index.boundingBoxIndexer;
 import project.Project;
 import server.Server;
 import cache.TileCache;
@@ -37,7 +36,7 @@ public class Main {
 		System.out.println(project);
 
 		// precompute
-		Indexer indexer = new boundingBoxIndexer();
+		Indexer indexer = new Indexer();
 		indexer.precompute();
 
 		//cache
