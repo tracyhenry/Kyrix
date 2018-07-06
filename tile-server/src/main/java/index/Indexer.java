@@ -64,26 +64,33 @@ public class Indexer {
 					sql = "drop table if exists " + tileTableName + ";";
 					tileStmt.executeUpdate(sql);
 				}
-
+				if (Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING) {
+					sql = "drop table if exists " + tileTableName + ";";
+					tileStmt.executeUpdate(sql);
+					sql = "drop table if exists sorted_" + tileTableName + ";";
+					tileStmt.executeUpdate(sql);
+				}
 				// create the bbox table
 				sql = "create table " + bboxTableName + " (";
 				for (int i = 0; i < trans.getColumnNames().size(); i ++)
 					sql += trans.getColumnNames().get(i) + " text, ";
-				if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING)
+				if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING ||
+						Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING)
 					sql += "tuple_id int, ";
 				sql += "cx double, cy double, minx double, miny double, maxx double, maxy double, geom polygon not null";
-				if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING)
+				if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING ||
+						Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING)
 					sql += ", index (tuple_id)";
 				sql += ", spatial index (geom)";
 	//			sql += ") engine=myisam;";
 				sql += ");";
 				bboxStmt.executeUpdate(sql);
 				// create the tile table
-				if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING) {
+				if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING ||
+						Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING) {
 					sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50), index (tile_id));";
 					tileStmt.executeUpdate(sql);
 				}
-
 				// if this is an empty layer, continue
 				if (trans.getDb().equals(""))
 					continue;
@@ -224,7 +231,8 @@ public class Indexer {
 					}
 
 					// insert into tile table
-					if (! l.isStatic() && Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING) {
+					if (! l.isStatic() && Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING ||
+							Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING ) {
 						int xStart = (int) Math.max(0, Math.floor(minx / Config.tileW));
 						int yStart = (int) Math.max(0, Math.floor(miny/ Config.tileH));
 						int xEnd = (int) Math.floor(maxx / Config.tileW);
@@ -258,7 +266,14 @@ public class Indexer {
 					tileInsSqlBuilder.append(";");
 					tileStmt.executeUpdate(tileInsSqlBuilder.toString());
 				}
-
+				if (Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING){
+					sql = "create table sorted_" + tileTableName + " (tuple_id int, tile_id varchar(50));";
+					tileStmt.executeUpdate(sql);
+					sql = "insert into sorted_" + tileTableName + " select * from " + tileTableName + " order by tile_id;";
+					tileStmt.executeUpdate(sql);
+					sql = "alter table sorted_" + tileTableName + " add index(tile_id);";
+					tileStmt.executeUpdate(sql);
+				}
 				// build spatial index
 /*				try {
 					sql = "ALTER TABLE " + bboxTableName + " ADD SPATIAL INDEX(geom);";

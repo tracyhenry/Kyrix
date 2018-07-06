@@ -49,7 +49,7 @@ public class Config {
 	public static int tileBatchSize = 10000;
 
 	// tile indexing scheme
-	public enum TileIndexingScheme {TUPLE_MAPPING, SPATIAL_INDEX}
-	public static TileIndexingScheme fetchingScheme = TileIndexingScheme.TUPLE_MAPPING;
+	public enum TileIndexingScheme {TUPLE_MAPPING, SPATIAL_INDEX, SORTED_TUPLE_MAPPING}
+	public static TileIndexingScheme fetchingScheme = TileIndexingScheme.SORTED_TUPLE_MAPPING;
 
 }
