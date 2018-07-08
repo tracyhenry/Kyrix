@@ -1,7 +1,7 @@
 const Transform = require("../../src/index").Transform;
 
 var idTransform = new Transform("dotsID",
-    "select * from dots;",
+    "select * from dots_100m;",
     "wenbo",
     function (row){
         var ret = [];

@@ -60,7 +60,7 @@ public class TileCache {
     }
 
     // get a tile from mysql using tuple-tile mapping
-    private static ArrayList<ArrayList<ArrayList<String>>> getTileFromTupleMapping(Canvas c, int minx, int miny, ArrayList<String> predicates, Project project)
+    private static ArrayList<ArrayList<ArrayList<String>>> getTileFromSortedTupleMapping(Canvas c, int minx, int miny, ArrayList<String> predicates, Project project)
             throws SQLException, ClassNotFoundException {
 
         // container for data
@@ -95,7 +95,8 @@ public class TileCache {
         stmt.close();
         return data;
     }
-    private static ArrayList<ArrayList<ArrayList<String>>> getTileFromSortedTupleMapping(Canvas c, int minx, int miny, ArrayList<String> predicates, Project project)
+
+    private static ArrayList<ArrayList<ArrayList<String>>> getTileFromTupleMapping(Canvas c, int minx, int miny, ArrayList<String> predicates, Project project)
             throws SQLException, ClassNotFoundException {
 
         // container for data

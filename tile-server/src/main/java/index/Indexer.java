@@ -60,16 +60,11 @@ public class Indexer {
 				// drop table if exists
 				String sql = "drop table if exists " + bboxTableName + ";";
 				bboxStmt.executeUpdate(sql);
-				if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING) {
-					sql = "drop table if exists " + tileTableName + ";";
-					tileStmt.executeUpdate(sql);
-				}
-				if (Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING) {
-					sql = "drop table if exists " + tileTableName + ";";
-					tileStmt.executeUpdate(sql);
-					sql = "drop table if exists sorted_" + tileTableName + ";";
-					tileStmt.executeUpdate(sql);
-				}
+				sql = "drop table if exists " + tileTableName + ";";
+				tileStmt.executeUpdate(sql);
+				sql = "drop table if exists sorted_" + tileTableName + ";";
+				tileStmt.executeUpdate(sql);
+
 				// create the bbox table
 				sql = "create table " + bboxTableName + " (";
 				for (int i = 0; i < trans.getColumnNames().size(); i ++)
@@ -81,14 +76,15 @@ public class Indexer {
 				if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING ||
 						Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING)
 					sql += ", index (tuple_id)";
-				sql += ", spatial index (geom)";
-	//			sql += ") engine=myisam;";
-				sql += ");";
+				if (Config.fetchingScheme == Config.TileIndexingScheme.SPATIAL_INDEX)
+					sql += ", spatial index (geom)";
+				sql += ") engine=myisam;";
+//				sql += ");";
 				bboxStmt.executeUpdate(sql);
 				// create the tile table
 				if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING ||
 						Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING) {
-					sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50), index (tile_id));";
+					sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50), index (tile_id)) engine=myisam;";
 					tileStmt.executeUpdate(sql);
 				}
 				// if this is an empty layer, continue
@@ -134,6 +130,8 @@ public class Indexer {
 				while (rs.next()) {
 
 					rowCount ++;
+					if (rowCount % 1000000 == 0)
+						System.out.println(rowCount);
 
 					//get raw row
 					ArrayList<String> curRawRow = new ArrayList<>();
