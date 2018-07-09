@@ -30,11 +30,3 @@ Install MySQL: [Mac](https://gist.github.com/nrollr/3f57fc15ded7dddddcc4e82fe137
 * Get the tile server running (see documentation in `tile-server/`). 
 
 * Open the index page of the server in the browser and start browsing! 
-
-### TODOs
-
-- [ ] Prediction algorithms. 
-- [ ] Literal zoom sampling API
-- [ ] Static Jumps
-- [ ] layer toggling
-- [ ] Pretty examples
