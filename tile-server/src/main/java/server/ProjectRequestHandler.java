@@ -78,6 +78,9 @@ public class ProjectRequestHandler implements HttpHandler {
 
 	private boolean needsReIndex(Project oldProject, Project newProject) {
 
+		if (oldProject == null)
+			return true;
+
 		ArrayList<Canvas> oldCanvases = oldProject.getCanvases();
 		ArrayList<Canvas> newCanvases = newProject.getCanvases();
 		// if there's different number of canvases, re-index is for sure needed

@@ -55,7 +55,7 @@ public class Main {
 	public static Project getProject() {
 		return project;
 	}
-	
+
 	public static void setProject(Project newProject) {
 
 		project = newProject;

@@ -23,10 +23,10 @@ function Project(name, configFile, viewportWidth, viewportHeight) {
     // configurations
     var lines = fs.readFileSync(configFile).toString().split("\n");
     this.config = {};
-    this.config.serverPortNumber = lines[1];
-    this.config.serverName = lines[2];
-    this.config.userName = lines[3];
-    this.config.password = lines[4];
+    this.config.serverPortNumber = lines[1].replace('\r', '');
+    this.config.serverName = lines[2].replace('\r', '')
+    this.config.userName = lines[3].replace('\r', '');
+    this.config.password = lines[4].replace('\r', '');
 
     // viewport
     this.viewportWidth = viewportWidth;
