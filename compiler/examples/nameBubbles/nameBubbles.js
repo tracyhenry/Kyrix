@@ -11,7 +11,7 @@ const transforms = require("./transforms");
 const placements = require("./placements");
 
 // construct a project
-var p = new Project("namebubble", "../../dbconfig.txt", 1000, 1000);
+var p = new Project("namebubble", "../../../config.txt", 1000, 1000);
 
 
 // ================== Canvas 1 ===================
@@ -111,4 +111,4 @@ var newPredicate2 = function (row) {
 p.addJump(new Jump("fullname", "firstname", 1, newViewport1, newPredicate1, "semantic_zoom"));
 p.addJump(new Jump("fullname", "lastname", 2, newViewport2, newPredicate2, "semantic_zoom"));
 
-p.saveToDb();
+p.saveProject();

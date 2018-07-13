@@ -15,7 +15,7 @@ const numLevels = transforms.numLevels;
 const zoomFactor = transforms.zoomFactor;
 
 // construct a project
-var p = new Project("lzoomscatterplot", "../../dbconfig.txt", 800, 800);
+var p = new Project("lzoomscatterplot", "../../../config.txt", 800, 800);
 
 // construct canvases from top to bottom
 var topLevelWidth = 1000;
@@ -58,4 +58,4 @@ for (var i = 0; i + 1 < numLevels; i ++) {
 // initialize canvas
 p.initialCanvas("level0", 200, 200, ["", ""]);
 
-p.saveToDb();
+p.saveProject();

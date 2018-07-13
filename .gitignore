@@ -145,8 +145,7 @@ buildNumber.properties
 !/.mvn/wrapper/maven-wrapper.jar
 
 ################# Kyrix-specific #################
-dbconfig.txt
-serverconfig.txt
+config.txt
 tile-server/lib
 .DS_Store
 test.html
@@ -157,4 +156,3 @@ compiler/examples/nba/preprocessing/
 front-end/static/images/
 dots.txt
 dots_small.txt
-

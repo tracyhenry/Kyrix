@@ -10,7 +10,7 @@ public class Config {
 	public static String indexFileName = "index.html";
 
 	// config file name
-	public static String configFileName = "./serverconfig.txt";
+	public static String configFileName = "../config.txt";
 
 	// config file row numbers
 	public static int projectNameRow = 0;
@@ -34,9 +34,6 @@ public class Config {
 
 	// table name
 	public static String projectTableName = "project";
-
-	// project content column
-	public static int contentColumn = 2;
 
 	// tile size
 	public static int tileW = 1024, tileH = 1024;

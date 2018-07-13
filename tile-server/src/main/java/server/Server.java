@@ -15,16 +15,27 @@ import java.util.Map;
  */
 public class Server {
 
+	private static HttpServer server;
+
 	public static void startServer(int portNumber) throws IOException {
 
-		HttpServer server = HttpServer.create(new InetSocketAddress(portNumber), 0);
+		server = HttpServer.create(new InetSocketAddress(portNumber), 0);
 		server.createContext("/", new IndexHandler());
 		server.createContext("/first", new FirstRequestHandler());
 		server.createContext("/tile", new TileRequestHandler());
 		server.createContext("/canvas", new CanvasRequestHandler());
 		server.createContext("/viewport", new ViewportRequestHandler());
+		server.createContext("/project", new ProjectRequestHandler());
 		server.setExecutor(null);//java.util.concurrent.Executors.newFixedThreadPool(Config.numThread));
 		server.start();
+		System.out.println("Tile server started...");
+	}
+
+	public static void stopServer() {
+
+		if (server != null)
+			server.stop(0);
+		server = null;
 	}
 
 	public static void sendResponse(HttpExchange httpExchange, int responseCode, byte[] response, int len) throws IOException {

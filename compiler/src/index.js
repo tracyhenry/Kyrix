@@ -1,6 +1,7 @@
 // imports
 const fs = require("fs");
 const mysql = require("mysql");
+const http = require("http");
 const Canvas = require("./Canvas").Canvas;
 const Jump = require("./Jump").Jump;
 const Layer = require("./Layer").Layer;
@@ -9,17 +10,23 @@ const Transform = require("./Transform").Transform;
 /**
  *
  * @param {string} name - project name.
- * @param {string} dbFile - a configuration file for the database this project is associated with. This file contains a json blob specifying the host, user, and password of the database (see dbconfig.example for an example). NEVER check this file into the repo. 'dbconfig.txt' is added to gitignore, so it'll be convenient to name it as 'dbconfig.txt'. Note that if relative path is used, the path is relative to the directory the Kyrix spec is run in.
+ * @param {string} configFile - a configuration file for this project. This file contains six lines which are documented in README.md in the root folder. See dbconfig.example for an example. NEVER check this file into the repo. 'config.txt' is added to gitignore, so it'll be convenient to just name it as 'config.txt'. Note that if relative path is used, the path is relative to the directory the Kyrix spec is run in.
  * @param {number} viewportWidth - the width of the viewport, in pixels.
  * @param {number} viewportHeight - the height of the viewport, in pixels.
  * @constructor
  */
-function Project(name, dbFile, viewportWidth, viewportHeight) {
+function Project(name, configFile, viewportWidth, viewportHeight) {
+
     // name
     this.name = name;
 
-    // db configs
-    this.dbConfig = JSON.parse(fs.readFileSync(dbFile));
+    // configurations
+    var lines = fs.readFileSync(configFile).toString().split("\n");
+    this.config = {};
+    this.config.serverPortNumber = lines[1];
+    this.config.serverName = lines[2];
+    this.config.userName = lines[3];
+    this.config.password = lines[4];
 
     // viewport
     this.viewportWidth = viewportWidth;
@@ -158,15 +165,15 @@ function initialCanvas(id, viewportX, viewportY, predicates) {
     this.initialPredicates = predicates;
 }
 
-// save the current to project to the database it's associated with
-function saveToDb()
+// save the current project, and send it to backend server
+function saveProject()
 {
 
     // connecting with mysql
     var dbConn = mysql.createConnection({
-        host     : this.dbConfig.host,
-        user     : this.dbConfig.user,
-        password : this.dbConfig.password,
+        host     : this.config.serverName,
+        user     : this.config.userName,
+        password : this.config.password,
         insecureAuth : true
     });
     dbConn.connect(function(err) {
@@ -186,7 +193,7 @@ function saveToDb()
     });
 
     // create a table and ignore the error
-    var createTableQuery = "CREATE TABLE project (name VARCHAR(255), content TEXT" +
+    var createTableQuery = "CREATE TABLE project (name VARCHAR(255), content TEXT, dirty int" +
         ", CONSTRAINT PK_project PRIMARY KEY (name));";
     dbConn.query(createTableQuery, function (err) {});
 
@@ -201,21 +208,46 @@ function saveToDb()
             return value.toString();
         return value;
     }, 4);
-    console.log(logJSON);
+    //console.log(logJSON);
 
     // add escape character to projectJSON
-    projectJSON = (projectJSON + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
-//    console.log(projectJSON);
+    var projectJSONEscaped = (projectJSON + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+
 
     // insert the JSON blob into the project table
-    var insertQuery = "INSERT INTO project (name, content) VALUES (\'" +
-        this.name + "\', \'" + projectJSON + "\');"
+    var deleteQuery = "DELETE FROM project where name = \'" + this.name + "\'";
+    dbConn.query(deleteQuery, function (err) {});
+    var insertQuery = "INSERT INTO project (name, content, dirty) VALUES (\'" +
+        this.name + "\', \'" + projectJSONEscaped + "\', 1);";
     dbConn.query(insertQuery,
         function (err) {
             if (err) throw err;
         });
 
     dbConn.end();
+
+    // set up http post connections
+    var post_options = {
+        host: this.config.serverName,
+        port: this.config.serverPortNumber,
+        path: '/project',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'//,
+            //'Content-Length': Buffer.byteLength(projectJSON)
+        }
+    };
+    console.log(post_options);
+    var post_req = http.request(post_options, function(res) {
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+            console.log('Response: ' + chunk);
+        });
+    });
+
+    // send the project definition to tile server
+    post_req.write(projectJSON);
+    post_req.end();
 }
 
 // define prototype functions
@@ -223,7 +255,7 @@ Project.prototype = {
     addCanvas: addCanvas,
     addJump: addJump,
     initialCanvas: initialCanvas,
-    saveToDb: saveToDb,
+    saveProject: saveProject,
     addRenderingParams : addRenderingParams
 };
 

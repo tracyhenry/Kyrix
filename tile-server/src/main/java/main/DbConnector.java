@@ -53,6 +53,12 @@ public class DbConnector {
 		return stmt.executeQuery(sql);
 	}
 
+	public static void executeUpdate(String dbName, String sql) throws SQLException, ClassNotFoundException {
+
+		Statement stmt = DbConnector.getStmtByDbName(dbName);
+		stmt.executeUpdate(sql);
+	}
+
 	private static Connection getDbConn(String dbServer, String dbName, String userName, String password)
 			throws SQLException, ClassNotFoundException {
 

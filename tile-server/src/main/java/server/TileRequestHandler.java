@@ -7,7 +7,6 @@ import com.sun.net.httpserver.HttpHandler;
 import main.Config;
 import main.Main;
 import project.Canvas;
-import project.Project;
 import cache.TileCache;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -25,12 +24,10 @@ public class TileRequestHandler implements HttpHandler {
 
 	// gson builder
 	private final Gson gson;
-	private final Project project;
 
 	public TileRequestHandler() {
 
 		gson = new GsonBuilder().create();
-		project = Main.getProject();
 	}
 
 	@Override
@@ -72,12 +69,12 @@ public class TileRequestHandler implements HttpHandler {
 		canvasId = queryMap.get("id");
 		minx = Integer.valueOf(queryMap.get("x"));
 		miny = Integer.valueOf(queryMap.get("y"));
-		Canvas c = project.getCanvas(canvasId);
+		Canvas c = Main.getProject().getCanvas(canvasId);
 		ArrayList<String> predicates = new ArrayList<>();
 		for (int i = 0; i < c.getLayers().size(); i ++)
 			predicates.add(queryMap.get("predicate" + i));
 
-		data = TileCache.getTile(c, minx, miny, predicates, project);
+		data = TileCache.getTile(c, minx, miny, predicates, Main.getProject());
 
 		// construct response
 		Map<String, Object> respMap = new HashMap<>();
@@ -106,7 +103,7 @@ public class TileRequestHandler implements HttpHandler {
 		int miny = Integer.valueOf(queryMap.get("y"));
 
 		// check whether this canvas exists
-		if (project.getCanvas(canvasId) == null)
+		if (Main.getProject().getCanvas(canvasId) == null)
 			return "Canvas " + canvasId + " does not exist!";
 
 		// check whether x and y corresponds to the top-left corner of a tile

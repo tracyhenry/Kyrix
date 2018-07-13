@@ -96,7 +96,6 @@ public class boundingBoxIndexer extends Indexer {
 				String width_func = (l.isStatic() ? null : p.getWidth());
 				String height_func = (l.isStatic() ? null : p.getHeight());
 
-
 				// step 2: looping through query results
 				// TODO: distinguish between separable and non-separable cases
 				ResultSet rs = DbConnector.getQueryResultIterator(trans.getDb(), trans.getQuery());

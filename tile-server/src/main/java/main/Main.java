@@ -18,8 +18,8 @@ import java.util.List;
 
 public class Main {
 
-	private static Project project;
-	public static String projectJSON;
+	private static Project project = null;
+	public static String projectJSON = "";
 
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException,
@@ -31,14 +31,19 @@ public class Main {
 		readConfigFile();
 
 		// get project definition, create project object
-		getProjectJSON();
-		Gson gson = new GsonBuilder().create();
-		project = gson.fromJson(projectJSON, Project.class);
-		System.out.println(project);
+		getProjectObject();
 
-		// precompute
-		Indexer indexer = new boundingBoxIndexer();
-		indexer.precompute();
+		// if project object is not null and is dirty, precompute
+		if (project != null && isProjectDirty()) {
+			System.out.println("Main project definition has been changed since last session, re-calculating indexes...");
+			Indexer indexer = new boundingBoxIndexer();
+			indexer.precompute();
+			setProjectClean();
+		}
+		else if (project == null)
+			System.out.println("Main project definition does not exist yet... starting server, waiting for definition...");
+		else
+			System.out.println("Main project definition has not been changed since last session. Starting server right away...");
 
 		//cache
 		TileCache.create();
@@ -49,6 +54,24 @@ public class Main {
 
 	public static Project getProject() {
 		return project;
+	}
+	
+	public static void setProject(Project newProject) {
+
+		project = newProject;
+	}
+
+	public static boolean isProjectDirty() throws SQLException, ClassNotFoundException {
+
+		String sql = "select dirty from " + Config.projectTableName + " where name = \"" + Config.projectName + "\";";
+		ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(Config.databaseName, sql);
+		return (Integer.valueOf(ret.get(0).get(0)) == 1 ? true : false);
+	}
+
+	public static void setProjectClean() throws SQLException, ClassNotFoundException {
+
+		String sql = "update " + Config.projectTableName + " set dirty = " + 0 + " where name = \"" + Config.projectName + "\";";
+		DbConnector.executeUpdate(Config.databaseName, sql);
 	}
 
 	private static void readConfigFile() throws IOException {
@@ -66,16 +89,20 @@ public class Main {
 		Config.userName = inputStrings.get(Config.userNameRow);
 		Config.password = inputStrings.get(Config.passwordRow);
 		Config.d3Dir = inputStrings.get(Config.d3DirRow);
-
 	}
 
-	private static void getProjectJSON() throws SQLException, ClassNotFoundException {
+	private static void getProjectObject() throws ClassNotFoundException {
 
-		String sql = "SELECT * FROM " + Config.projectTableName + " WHERE name = \"" + Config.projectName + "\";";
-		Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
-		ResultSet rs = stmt.executeQuery(sql);
-		while (rs.next())
-			projectJSON = rs.getString(Config.contentColumn);
-		stmt.close();
+		String sql = "select content from " + Config.projectTableName + " where name = \"" + Config.projectName + "\";";
+		try {
+			ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(Config.databaseName, sql);
+			projectJSON = ret.get(0).get(0);
+			Gson gson = new GsonBuilder().create();
+			System.out.println(projectJSON);
+			project = gson.fromJson(projectJSON, Project.class);
+			//System.out.println(project);
+		} catch (Exception e) {
+			System.out.println("Cannot find definition of main project... waiting...");
+		}
 	}
 }
