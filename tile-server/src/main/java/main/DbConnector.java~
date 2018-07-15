@@ -71,7 +71,7 @@ public class DbConnector {
 		return dbConn;
 	}
 
-	public static void commitConnection(String dbName) throws SQLException, ClassNotFoundException{
+	public static void commitConnection(String dbName) {
 
 		Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
 		conn.commit();

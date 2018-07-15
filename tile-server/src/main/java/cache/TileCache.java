@@ -151,7 +151,7 @@ public class TileCache {
             // construct range query
             String sql = "select bbox.* from bbox_" + project.getName() + "_"
                     + c.getId() + "layer" + i + " where "
-                    + "MBRIntersects(GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny
+                    + "st_intersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny
                     + "," + (minx + Config.tileW) + " " + (miny + Config.tileH) + "," + minx + " " + (miny + Config.tileH)
                     + "," + minx + " " + miny;
             sql += "))'),geom)";

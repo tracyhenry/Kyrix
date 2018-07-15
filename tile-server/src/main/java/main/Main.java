@@ -39,11 +39,11 @@ public class Main {
 		Indexer indexer = new Indexer();
 		indexer.precompute();
 
-		//cache
+/*		//cache
 		TileCache.create();
 
 		// start server
-		Server.startServer(Config.portNumber);
+		Server.startServer(Config.portNumber);*/
 	}
 
 	public static Project getProject() {
@@ -70,7 +70,7 @@ public class Main {
 
 	private static void getProjectJSON() throws SQLException, ClassNotFoundException {
 
-		String sql = "SELECT * FROM " + Config.projectTableName + " WHERE name = \"" + Config.projectName + "\";";
+		String sql = "SELECT * FROM " + Config.projectTableName + " WHERE name = \'" + Config.projectName + "\';";
 		Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
 		ResultSet rs = stmt.executeQuery(sql);
 		while (rs.next())

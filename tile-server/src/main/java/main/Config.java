@@ -30,7 +30,7 @@ public class Config {
 	public static String d3Dir;
 
 	// db name
-	public static String databaseName = "Kyrix";
+	public static String databaseName = "test";
 
 	// table name
 	public static String projectTableName = "project";
@@ -50,6 +50,6 @@ public class Config {
 
 	// tile indexing scheme
 	public enum TileIndexingScheme {TUPLE_MAPPING, SPATIAL_INDEX, SORTED_TUPLE_MAPPING}
-	public static TileIndexingScheme fetchingScheme = TileIndexingScheme.SORTED_TUPLE_MAPPING;
+	public static TileIndexingScheme fetchingScheme = TileIndexingScheme.SPATIAL_INDEX;
 
 }

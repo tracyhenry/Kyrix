@@ -178,10 +178,10 @@ function saveToDb()
     });
 
     // create the database 'Kyrix' and ignore the error
-    dbConn.query("CREATE DATABASE Kyrix;", function (err) {});
+    dbConn.query("CREATE DATABASE test;", function (err) {});
 
     // use the database
-    dbConn.query("USE Kyrix;", function (err) {
+    dbConn.query("\c test;", function (err) {
         if (err) throw err;
     });
 
