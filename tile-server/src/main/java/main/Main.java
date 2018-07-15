@@ -40,9 +40,7 @@ public class Main {
 			indexer.precompute();
 			setProjectClean();
 		}
-		else if (project == null)
-			System.out.println("Main project definition does not exist yet... starting server, waiting for definition...");
-		else
+		if (project != null)
 			System.out.println("Main project definition has not been changed since last session. Starting server right away...");
 
 		//cache
@@ -98,7 +96,6 @@ public class Main {
 			ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(Config.databaseName, sql);
 			projectJSON = ret.get(0).get(0);
 			Gson gson = new GsonBuilder().create();
-			System.out.println(projectJSON);
 			project = gson.fromJson(projectJSON, Project.class);
 			//System.out.println(project);
 		} catch (Exception e) {

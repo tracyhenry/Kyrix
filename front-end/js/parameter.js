@@ -12,6 +12,7 @@ param.minyOffset = 4;
 // animation durations, delays
 param.enteringDelta = 0.5;
 param.enteringDuration = 1300;
+param.literalZoomDuration = 300;
 
 // zoom scale factor
 param.zoomScaleFactor = 4;

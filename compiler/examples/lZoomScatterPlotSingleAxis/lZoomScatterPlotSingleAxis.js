@@ -56,6 +56,6 @@ for (var i = 0; i + 1 < numLevels; i ++) {
 }
 
 // initialize canvas
-p.initialCanvas("level0", 200, 200, ["", ""]);
+p.initialCanvas("level0", 200, 0, ["", ""]);
 
 p.saveProject();
