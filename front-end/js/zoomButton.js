@@ -106,17 +106,6 @@ function backspace() {
     // get and pop last history object
     var curHistory = globalVar.history.pop();
 
-    // check if
-    // is literal zoom
-    if (curHistory.zoomType == "literal_zoom_in") {
-        literalZoomIn();
-        return ;
-    }
-    if (curHistory.zoomType == "literal_zoom_out") {
-        literalZoomOut();
-        return ;
-    }
-
     // disable and remove stuff
     preAnimation();
 
@@ -222,9 +211,14 @@ function backspace() {
 // handler for zoom in button
 function literalZoomIn() {
 
+    startLiteralZoomTransition([globalVar.viewportWidth / 2, globalVar.viewportHeight / 2],
+        globalVar.maxScale, globalVar.maxScale / 2 * param.literalZoomDuration);
 };
 
 // handler for zoom out button
 function literalZoomOut() {
+
+    startLiteralZoomTransition([globalVar.viewportWidth / 2, globalVar.viewportHeight / 2],
+        globalVar.minScale, 1 / globalVar.minScale/ 2 * param.literalZoomDuration);
 
 };

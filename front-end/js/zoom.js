@@ -34,37 +34,56 @@ function setupZoom(initialScale) {
         globalVar.curCanvas.zoomInFactorY, 1);
 
     // set up zoom
-    var zoom = d3.zoom()
+    globalVar.zoom = d3.zoom()
         .scaleExtent([globalVar.minScale, globalVar.maxScale])
         .on("zoom", zoomed);
 
     // set up zooms
-    d3.select("#maing").call(zoom)
+    d3.select("#maing").call(globalVar.zoom)
         .on("wheel.zoom", null)
         .on("dblclick.zoom", function () {
 
-            var initialZoomTransform = this.__zoom;
             var mousePos = d3.mouse(this);
             event.preventDefault();
             event.stopImmediatePropagation();
             var finalK = (event.shiftKey ? globalVar.minScale : globalVar.maxScale);
             var duration = (event.shiftKey ? 1 / finalK  / 2 : finalK / 2) * param.literalZoomDuration;
-            d3.select(this)
-                .transition()
-                .duration(duration)
-                .tween("literalTween", function() {
-                    var i = d3.interpolateNumber(1, finalK);
-                    return function (t) {
-                        var curK = i(t);
-                        var curTX = mousePos[0] + curK * (-mousePos[0] + initialZoomTransform.x);
-                        var curTY = mousePos[1] + curK * (-mousePos[1] + initialZoomTransform.y);
-                        var curZoomTransform = d3.zoomIdentity.translate(curTX, curTY).scale(curK);
-                        d3.select(this).call(zoom.transform, curZoomTransform);
-                    };
-                });
+            startLiteralZoomTransition(mousePos, finalK, duration);
         })
-        .call(zoom.transform, d3.zoomIdentity.scale(initialScale));
+        .call(globalVar.zoom.transform, d3.zoomIdentity.scale(initialScale));
 };
+
+function startLiteralZoomTransition(center, scale, duration) {
+
+    // remove popovers
+    removePopoversSmooth();
+
+    // disable cursor pointers, buttons and onclick listeners
+    d3.select("#containerSvg")
+        .selectAll("*")
+        .style("cursor", "auto");
+    d3.selectAll("button")
+        .attr("disabled", true);
+    d3.selectAll("*")
+        .on("click", null);
+    d3.select("#maing").on(".zoom", null);
+
+    var curSelection = d3.select("#maing");
+    var initialZoomTransform = d3.zoomTransform(curSelection.node());
+    curSelection
+        .transition()
+        .duration(duration)
+        .tween("literalTween", function() {
+            var i = d3.interpolateNumber(1, scale);
+            return function (t) {
+                var curK = i(t);
+                var curTX = center[0] + curK * (-center[0] + initialZoomTransform.x);
+                var curTY = center[1] + curK * (-center[1] + initialZoomTransform.y);
+                var curZoomTransform = d3.zoomIdentity.translate(curTX, curTY).scale(curK);
+                d3.select(this).call(globalVar.zoom.transform, curZoomTransform);
+            };
+        });
+}
 
 function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
 
@@ -95,7 +114,7 @@ function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
     removePopovers();
 };
 
-// zoomed function for detecting zoom actions
+// listener function for zoom actions
 function zoomed() {
 
     // frequently accessed global variables
