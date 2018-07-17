@@ -93,6 +93,14 @@ p.initialCanvas("fullname", 500, 500, ["", "", "", ""]);
 
 
 // ================== fullname --> firstname, lastname ===================
+var firstNameSelector = function (row, layerId) {
+    return (layerId == 1);
+};
+
+var lastNameSelector = function (row, layerId) {
+    return (layerId == 2);
+};
+
 var newViewport1 = function (row) {
     return [1, ["id=" + row[0]]];
 };
@@ -108,7 +116,7 @@ var newPredicate2 = function (row) {
     return ["id=" + row[0], ""]
 };
 
-p.addJump(new Jump("fullname", "firstname", 1, newViewport1, newPredicate1, "semantic_zoom"));
-p.addJump(new Jump("fullname", "lastname", 2, newViewport2, newPredicate2, "semantic_zoom"));
+p.addJump(new Jump("fullname", "firstname", firstNameSelector, newViewport1, newPredicate1, "semantic_zoom"));
+p.addJump(new Jump("fullname", "lastname", lastNameSelector, newViewport2, newPredicate2, "semantic_zoom"));
 
 p.saveProject();

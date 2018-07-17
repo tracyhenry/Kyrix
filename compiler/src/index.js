@@ -217,7 +217,6 @@ function saveProject()
     // add escape character to projectJSON
     var projectJSONEscaped = (projectJSON + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
 
-
     // insert the JSON blob into the project table
     var deleteQuery = "DELETE FROM project where name = \'" + this.name + "\'";
     dbConn.query(deleteQuery, function (err) {});

@@ -98,6 +98,10 @@ statsLayer.addPlacement(placements.boxscorePlacement);
 statsLayer.addRenderingFunc(renderers.boxscoreStatsRendering);
 
 // ================== teamlogo -> teamtimeline ===================
+var selector = function (row, layerId) {
+    return (layerId == 0);
+};
+
 var newViewport = function (row) {
     return [0, 0, 0]
 };
@@ -110,9 +114,13 @@ var jumpName = function (row) {
     return "2017~2018 Regular Season Games of\n" + row[4] + " " + row[5];
 };
 
-p.addJump(new Jump("teamlogo", "teamtimeline", 0, newViewport, newPredicate, "semantic_zoom", jumpName));
+p.addJump(new Jump("teamlogo", "teamtimeline", selector, newViewport, newPredicate, "semantic_zoom", jumpName));
 
 // ================== teamtimeline -> playbyplay ===================
+var selector = function (row, layerId) {
+    return (layerId == 0);
+};
+
 var newViewport = function (row) {
     return [0, 0, 0]
 };
@@ -125,10 +133,14 @@ var jumpName = function (row) {
     return "Scoring Plays of " + row[7] + "@" + row[6];
 };
 
-p.addJump(new Jump("teamtimeline", "playbyplay", 0, newViewport, newPredicate, "semantic_zoom", jumpName));
+p.addJump(new Jump("teamtimeline", "playbyplay", selector, newViewport, newPredicate, "semantic_zoom", jumpName));
 
 // ================== teamtimeline -> boxscore ===================
-var newViewport = function (row) {
+var selector = function (row, layerId) {
+    return (layerId == 0);
+};
+
+var newViewport = function () {
     return [0, 0, 0]
 };
 var newPredicateHome = function (row) {
@@ -149,8 +161,8 @@ var jumpNameAway = function (row) {
     return "Box score of " + row[7];
 };
 
-p.addJump(new Jump("teamtimeline", "boxscore", 0, newViewport, newPredicateHome, "semantic_zoom", jumpNameHome));
-p.addJump(new Jump("teamtimeline", "boxscore", 0, newViewport, newPredicateAway, "semantic_zoom", jumpNameAway));
+p.addJump(new Jump("teamtimeline", "boxscore", selector, newViewport, newPredicateHome, "semantic_zoom", jumpNameHome));
+p.addJump(new Jump("teamtimeline", "boxscore", selector, newViewport, newPredicateAway, "semantic_zoom", jumpNameAway));
 
 // initialize canvas
 p.initialCanvas("teamlogo", 0, 0, [""]);

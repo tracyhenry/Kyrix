@@ -90,7 +90,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
     renderAxes(viewportX, viewportY, +curViewport[2], +curViewport[3]);
 
     // set viewport, here we only change min-x and min-y of the viewport.
-    // Size of the viewport is set either by pageOnLoad(), animateJump() or zoomed()
+    // Size of the viewport is set either by pageOnLoad(), animateSemanticZoom() or zoomed()
     // and should not be changed in this function
     d3.selectAll(".mainsvg:not(.static)")
         .attr("viewBox", viewportX + " " + viewportY + " "

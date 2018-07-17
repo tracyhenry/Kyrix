@@ -92,7 +92,7 @@ function postAnimation() {
 };
 
 // animate semantic zoom
-function animateJump(tuple, newViewportX, newViewportY) {
+function animateSemanticZoom(tuple, newViewportX, newViewportY) {
 
     // disable stuff
     preAnimation();
@@ -215,13 +215,13 @@ function registerJumps(svg, layerId) {
 
     var jumps = globalVar.curJump;
     var shapes = svg.select("g").selectAll("*");
-    shapes.each(function(p, j) {
+    shapes.each(function(p) {
 
         // check if this shape has jumps
         var hasJump = false;
         for (var k = 0; k < jumps.length; k ++)
             if (jumps[k].type == "semantic_zoom"
-                && jumps[k].layerId == layerId) {
+                && jumps[k].selector.parseFunction()(p, layerId)) {
                 hasJump = true;
                 break;
             }
@@ -233,13 +233,18 @@ function registerJumps(svg, layerId) {
             .style("cursor", "zoom-in")
             .attr("data-layer-id", layerId);
 
+
         // register onclick listener
         d3.select(this).on("click", function () {
 
             // stop the click event from propagating up
             d3.event.stopPropagation();
 
+            // get layer id from the data-layer-id attribute
             var layerId = d3.select(this).attr("data-layer-id");
+
+            // data tuple associated with this shape
+            var tuple = d3.select(this).datum();
 
             // remove all popovers first
             removePopovers();
@@ -277,7 +282,7 @@ function registerJumps(svg, layerId) {
             for (var k = 0; k < jumps.length; k ++) {
 
                 // check if this jump is applied in this layer
-                if (jumps[k].type != "semantic_zoom" || jumps[k].layerId != layerId)
+                if (jumps[k].type != "semantic_zoom" || ! jumps[k].selector.parseFunction()(tuple, layerId))
                     continue;
 
                 // create table cell and append it to #popovercontent
@@ -285,11 +290,10 @@ function registerJumps(svg, layerId) {
                     .append("a")
                     .classed("list-group-item", true)
                     .attr("href", "#")
-                    .datum(d3.select(this).datum())
+                    .datum(tuple)
                     .attr("data-jump-id", k)
-                    .attr("data-layer-id", layerId)
                     .html(jumps[k].name.parseFunction() == null ? jumps[k].name
-                        : jumps[k].name.parseFunction(d3.select(this).datum()));
+                        : jumps[k].name.parseFunction()(tuple));
 
                 // on click
                 jumpOption.on("click", function () {
@@ -301,7 +305,6 @@ function registerJumps(svg, layerId) {
 
                     var tuple = d3.select(this).datum();
                     var jumpId = d3.select(this).attr("data-jump-id");
-                    var layerId = d3.select(this).attr("data-layer-id");
                     globalVar.curCanvasId = jumps[jumpId].destId;
 
                     // calculate new predicates
@@ -335,7 +338,7 @@ function registerJumps(svg, layerId) {
                         // constant viewport, no predicate
                         var newViewportX = newViewportRet[1];
                         var newViewportY = newViewportRet[2];
-                        animateJump(tuple, newViewportX, newViewportY);
+                        animateSemanticZoom(tuple, newViewportX, newViewportY);
                     }
                     else {
                         // viewport is fixed at a certain tuple
@@ -351,7 +354,7 @@ function registerJumps(svg, layerId) {
                                 var cy = JSON.parse(data).cy;
                                 var newViewportX = cx - globalVar.viewportWidth / 2;
                                 var newViewportY = cy - globalVar.viewportHeight / 2;
-                                animateJump(tuple, newViewportX, newViewportY);
+                                animateSemanticZoom(tuple, newViewportX, newViewportY);
                             },
                             async: false
                         });

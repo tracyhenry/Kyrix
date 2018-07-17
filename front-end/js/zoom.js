@@ -55,6 +55,9 @@ function setupZoom(initialScale) {
 
 function startLiteralZoomTransition(center, scale, duration) {
 
+    if (1 - 1e-6 <= scale && scale <= 1 + 1e-6)
+        return ;
+
     // remove popovers
     removePopoversSmooth();
 

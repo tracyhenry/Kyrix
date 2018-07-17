@@ -51,8 +51,8 @@ for (var i = 0; i < numLevels; i ++) {
 
 // add literal zooms
 for (var i = 0; i + 1 < numLevels; i ++) {
-    p.addJump(new Jump("level" + i, "level" + (i + 1), 1, "", "", "literal_zoom_in"));
-    p.addJump(new Jump("level" + (i + 1), "level" + i, 1, "", "", "literal_zoom_out"));
+    p.addJump(new Jump("level" + i, "level" + (i + 1), "", "", "", "literal_zoom_in"));
+    p.addJump(new Jump("level" + (i + 1), "level" + i, "", "", "", "literal_zoom_out"));
 }
 
 // initialize canvas

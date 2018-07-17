@@ -7,7 +7,7 @@ public class Jump {
 
 	private String sourceId;
 	private String destId;
-	private int layerId;
+	private String selector;
 	private String newViewports;
 	private String newPredicates;
 	private String type;
@@ -21,8 +21,8 @@ public class Jump {
 		return destId;
 	}
 
-	public int getLayerId() {
-		return layerId;
+	public String getSelector() {
+		return selector;
 	}
 
 	public String getType() {
@@ -46,7 +46,7 @@ public class Jump {
 		return "Jump{" +
 				"sourceId='" + sourceId + '\'' +
 				", destId='" + destId + '\'' +
-				", layerId=" + layerId +
+				", selector='" + selector + '\'' +
 				", newViewports='" + newViewports + '\'' +
 				", newPredicates='" + newPredicates + '\'' +
 				", type='" + type + '\'' +
