@@ -168,6 +168,10 @@ function initialCanvas(id, viewportX, viewportY, predicates) {
 // save the current project, and send it to backend server
 function saveProject()
 {
+    // final checks before saving
+    for (var i = 0; i < this.canvases.length; i ++)
+        if (this.canvases[i].layers.length == 0)
+            throw new Error("Canvas " + this.canvases[i].id + " has 0 layers.");
 
     // connecting with mysql
     var dbConn = mysql.createConnection({
@@ -228,7 +232,7 @@ function saveProject()
 
     // set up http post connections
     var post_options = {
-        host: this.config.serverName,
+        host: "localhost",
         port: this.config.serverPortNumber,
         path: '/project',
         method: 'POST',
