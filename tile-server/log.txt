@@ -241,7 +241,7 @@ OS name: "linux", version: "3.13.0-147-generic", arch: "amd64", family: "unix"
 
 [DEBUG]   (f) mainClass = main.Main
 [DEBUG]   (f) pluginDependencies = [org.codehaus.mojo:exec-maven-plugin:maven-plugin:1.6.0:, org.codehaus.plexus:plexus-interpolation:jar:1.11:compile, backport-util-concurrent:backport-util-concurrent:jar:3.1:compile, org.slf4j:slf4j-jdk14:jar:1.5.6:runtime, org.slf4j:slf4j-api:jar:1.5.6:runtime, org.slf4j:jcl-over-slf4j:jar:1.5.6:runtime, org.apache.maven.reporting:maven-reporting-api:jar:2.2.1:compile, org.apache.maven.doxia:doxia-sink-api:jar:1.1:compile, org.apache.maven.doxia:doxia-logging-api:jar:1.1:compile, commons-cli:commons-cli:jar:1.2:compile, org.codehaus.plexus:plexus-interactivity-api:jar:1.0-alpha-4:compile, org.sonatype.plexus:plexus-sec-dispatcher:jar:1.3:compile, org.sonatype.plexus:plexus-cipher:jar:1.4:compile, org.codehaus.plexus:plexus-utils:jar:3.0.20:compile, org.apache.commons:commons-exec:jar:1.3:compile]
-[DEBUG]   (f) project = MavenProject: MITDbG:tile-server:1.0-SNAPSHOT @ /home/ubuntu/Kyrix_noindex/tile-server/pom.xml
+[DEBUG]   (f) project = MavenProject: MITDbG:tile-server:1.0-SNAPSHOT @ /home/ubuntu/Kyrix/tile-server/pom.xml
 [DEBUG]   (f) remoteRepositories = [       id: central
       url: http://repo.maven.apache.org/maven2
    layout: default
@@ -255,8 +255,8 @@ snapshots: [enabled => false, update => daily]
 [DEBUG] Plugin Dependencies will be excluded.
 [DEBUG] Project Dependencies will be included.
 [DEBUG] Collected project artifacts [com.google.code.gson:gson:jar:2.8.2:compile, mysql:mysql-connector-java:jar:5.1.40:compile, org.postgresql:postgresql:jar:9.2-1002-jdbc4:compile, com.eclipsesource.j2v8:j2v8_macosx_x86_64:jar:2.2.1:compile, com.coveo:nashorn-commonjs-modules:jar:1.0.9:compile, commons-io:commons-io:jar:2.4:compile]
-[DEBUG] Collected project classpath [/home/ubuntu/Kyrix_noindex/tile-server/target/classes]
-[DEBUG] Adding to classpath : file:/home/ubuntu/Kyrix_noindex/tile-server/target/classes/
+[DEBUG] Collected project classpath [/home/ubuntu/Kyrix/tile-server/target/classes]
+[DEBUG] Adding to classpath : file:/home/ubuntu/Kyrix/tile-server/target/classes/
 [DEBUG] Adding project dependency artifact: gson to classpath
 [DEBUG] Adding project dependency artifact: mysql-connector-java to classpath
 [DEBUG] Adding project dependency artifact: postgresql to classpath
@@ -295,5 +295,3 @@ Precomputing...
 10000000
 11000000
 12000000
-13000000
-14000000
