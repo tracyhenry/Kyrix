@@ -36,14 +36,14 @@ public class Main {
 		System.out.println(project);
 
 		// precompute
-		Indexer indexer = new Indexer();
+/*		Indexer indexer = new Indexer();
 		indexer.precompute();
-
-/*		//cache
+*/
+		//cache
 		TileCache.create();
 
 		// start server
-		Server.startServer(Config.portNumber);*/
+		Server.startServer(Config.portNumber);
 	}
 
 	public static Project getProject() {

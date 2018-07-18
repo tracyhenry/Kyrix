@@ -60,14 +60,20 @@ public class DbConnector {
 
 		if (connections.containsKey(dbName))
 			return connections.get(dbName);
-
-		Class.forName("org.postgresql.Driver");
-//		DriverManager.register(new org.postgresql.Driver());
-		Connection dbConn = DriverManager.getConnection("jdbc:postgresql://" + dbServer +
-						"/" + dbName + "?sendStringParametersAsUnicode=false",
-				userName, password);
+		Connection dbConn = null;
+		if (Config.sqlSelector == Config.sqlOption.PSQL) {
+			Class.forName("org.postgresql.Driver");
+			dbConn = DriverManager.getConnection("jdbc:postgresql://" + dbServer +
+							"/" + dbName + "?sendStringParametersAsUnicode=false",
+					userName, password);
+		}
+		else if (Config.sqlSelector == Config.sqlOption.MYSQL){
+			Class.forName("com.mysql.jdbc.Driver");
+			dbConn = DriverManager.getConnection("jdbc:mysql://" + dbServer +
+							"/" + dbName + "?sendStringParametersAsUnicode=false",
+					userName, password);
+		}
 		connections.put(dbName, dbConn);
-
 		return dbConn;
 	}
 

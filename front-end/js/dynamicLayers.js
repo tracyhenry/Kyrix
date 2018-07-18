@@ -78,13 +78,14 @@ function renderTile(tileSvg, x, y, renderFuncs, canvasId, predicates) {
 
 function RefreshDynamicLayers(viewportX, viewportY) {
 
-    var tileW = globalVar.tileW;
-    var tileH = globalVar.tileH;
+    var vpW = globalVar.viewportWidth;
+    var vpH = globalVar.viewportHeight;
 
     // get tile ids
     var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
-    var tileIds = getTileArray(globalVar.curCanvasId,
-        viewportX, viewportY, +curViewport[2], +curViewport[3]);
+ //   var tileIds = getTileArray(globalVar.curCanvasId,
+ //      viewportX, viewportY, +curViewport[2], +curViewport[3]);
+    var dbox = [viewportX, viewportY, globalVar.curCanvasId];
 
     // render axes
     renderAxes(viewportX, viewportY, +curViewport[2], +curViewport[3]);
@@ -94,34 +95,35 @@ function RefreshDynamicLayers(viewportX, viewportY) {
     // and should not be changed in this function
     d3.selectAll(".mainsvg:not(.static)")
         .attr("viewBox", viewportX + " " + viewportY + " "
-            + curViewport[2]+ " " + curViewport[3])
-        .each(function () { // remove invisible tiles
+            + curViewport[2]+ " " + curViewport[3]);
+  /*      .each(function () { // remove invisible tiles
             var tiles = d3.select(this)
                 .selectAll("svg")
-                .data(tileIds, function (d){return d;});
+                .datum(dbox);
             tiles.exit().remove();
-        });
+        });*/
 
     // get new tiles
     d3.select(".mainsvg:not(.static)")
-        .each(function () {
+        .datum(dbox)
+        .each(function (d) {
 
-            d3.select(this).selectAll("svg")
+        /*    d3.select(this).selectAll("svg")
                 .data(tileIds, function (d) {return d;})
                 .enter()
-                .each(function (d) {
+                .each(function (d) {*/
                     // append tile svgs
                     d3.selectAll(".mainsvg:not(.static)")
-                        .append("svg")
-                        .attr("width", tileW)
-                        .attr("height", tileH)
+       //                 .append("svg")
+                        .attr("width", vpW)
+                        .attr("height", vpH)
                         .datum(d)
                         .attr("x", d[0])
                         .attr("y", d[1])
-                        .attr("viewBox", d[0] + " " + d[1] + " " + tileW + " " + tileH)
+                        .attr("viewBox", d[0] + " " + d[1] + " " + curViewport[2] + " " + curViewport[3])
                         .style("opacity", 0)
-                        .classed("a" + d[0] + d[1] + globalVar.curCanvasId, true)
-                        .classed("lowestsvg", true);
+       //                 .classed("a" + d[0] + d[1] + globalVar.curCanvasId, true)
+       //                 .classed("lowestsvg", true);
 
                     // send request to backend to get data
                     var postData = "id=" + globalVar.curCanvasId + "&"
@@ -129,7 +131,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                         + "y=" + d[1];
                     for (var i = 0; i < globalVar.predicates.length; i ++)
                         postData += "&predicate" + i + "=" + globalVar.predicates[i];
-                    $.post("/tile", postData, function (data, status) {
+                    $.post("/dbox", postData, function (data, status) {
 
                         // response data
                         var response = JSON.parse(data);

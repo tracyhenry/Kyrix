@@ -84,10 +84,14 @@ public class Indexer {
 				else if (Config.sqlSelector == Config.sqlOption.MYSQL){
 					if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING ||
 							Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING)
+						sql += "tuple_id int, ";
+					sql += "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom polygon not null";
+					if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING ||
+							Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING)
 						sql += ", index (tuple_id)";
 					if (Config.fetchingScheme == Config.TileIndexingScheme.SPATIAL_INDEX)
 						sql += ", spatial index (geom)";
-					sql += ") engine=myisam;";
+//					sql += ") engine=myisam;";
 				}
 				sql += ");";
 				bboxStmt.executeUpdate(sql);

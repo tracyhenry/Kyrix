@@ -21,6 +21,7 @@ public class Server {
 		server.createContext("/", new IndexHandler());
 		server.createContext("/first", new FirstRequestHandler());
 		server.createContext("/tile", new TileRequestHandler());
+		server.createContext("/dbox", new BoxRequestHandler());
 		server.createContext("/canvas", new CanvasRequestHandler());
 		server.createContext("/viewport", new ViewportRequestHandler());
 		server.setExecutor(null);//java.util.concurrent.Executors.newFixedThreadPool(Config.numThread));

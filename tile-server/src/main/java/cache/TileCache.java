@@ -149,21 +149,18 @@ public class TileCache {
                 continue;
             }
             // construct range query
-	    if (Config.sqlSelector == Config.sqlOption.PSQL){
-            String sql = "select bbox.* from bbox_" + project.getName() + "_"
-                    + c.getId() + "layer" + i + " where "
-                    + "st_intersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny
-                    + "," + (minx + Config.tileW) + " " + (miny + Config.tileH) + "," + minx + " " + (miny + Config.tileH)
-                    + "," + minx + " " + miny;
-	    }
-	    else if (Config.sqlSelector == Config.sqlOption.PSQL){
-            String sql = "select bbox.* from bbox_" + project.getName() + "_"
-                    + c.getId() + "layer" + i + " where "
-                    + "MBRIntersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny
-                    + "," + (minx + Config.tileW) + " " + (miny + Config.tileH) + "," + minx + " " + (miny + Config.tileH)
-                    + "," + minx + " " + miny;
-            }
-            sql += "))'),geom)";
+
+            String sql = "select * from bbox_" + project.getName() + "_"
+                    + c.getId() + "layer" + i + " where ";
+                if (Config.sqlSelector == Config.sqlOption.PSQL) {
+                    sql += "st_intersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
+                }
+                else if (Config.sqlSelector == Config.sqlOption.MYSQL) {
+                    sql += "MBRIntersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
+                }
+                sql += "," + (minx + Config.tileW) + " " + (miny + Config.tileH) + "," + minx + " " + (miny + Config.tileH)
+                    + "," + minx + " " + miny + "))'),geom)";
+
             if (predicates.get(i).length() > 0)
                 sql += " and " + predicates.get(i);
             sql += ";";
