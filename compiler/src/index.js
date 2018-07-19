@@ -169,9 +169,15 @@ function initialCanvas(id, viewportX, viewportY, predicates) {
 function saveProject()
 {
     // final checks before saving
-    for (var i = 0; i < this.canvases.length; i ++)
+    for (var i = 0; i < this.canvases.length; i ++) {
         if (this.canvases[i].layers.length == 0)
             throw new Error("Canvas " + this.canvases[i].id + " has 0 layers.");
+        for (var j = 0; j < this.canvases[i].layers.length; j ++)
+            if (this.canvases[i].layers[j].isStatic && this.canvases[i].layers[j].placement != null)
+                throw new Error("Canvas " + this.canvases[i] + " layer " + j + " is static and does not need a placement object.");
+            else if (! this.canvases[i].layers[j].isStatic && this.canvases[i].layers[j].placement == null)
+                throw new Error("Canvas " + this.canvases[i] + " layer " + j + " is dynamic and requires a placement object.");
+    }
 
     // connecting with mysql
     var dbConn = mysql.createConnection({
@@ -222,35 +228,35 @@ function saveProject()
     dbConn.query(deleteQuery, function (err) {});
     var insertQuery = "INSERT INTO project (name, content, dirty) VALUES (\'" +
         this.name + "\', \'" + projectJSONEscaped + "\', 1);";
+    var portNumber = this.config.serverPortNumber;
     dbConn.query(insertQuery,
         function (err) {
             if (err) throw err;
+            // set up http post connections
+            var post_options = {
+                host: "localhost",
+                port: portNumber,
+                path: '/project',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'//,
+                    //'Content-Length': Buffer.byteLength(projectJSON)
+                }
+            };
+            console.log(post_options);
+            var post_req = http.request(post_options, function(res) {
+                res.setEncoding('utf8');
+                res.on('data', function (chunk) {
+                    console.log('Response: ' + chunk);
+                });
+            });
+
+            // send the project definition to tile server
+            post_req.write(projectJSON);
+            post_req.end();
         });
 
     dbConn.end();
-
-    // set up http post connections
-    var post_options = {
-        host: "localhost",
-        port: this.config.serverPortNumber,
-        path: '/project',
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'//,
-            //'Content-Length': Buffer.byteLength(projectJSON)
-        }
-    };
-    console.log(post_options);
-    var post_req = http.request(post_options, function(res) {
-        res.setEncoding('utf8');
-        res.on('data', function (chunk) {
-            console.log('Response: ' + chunk);
-        });
-    });
-
-    // send the project definition to tile server
-    post_req.write(projectJSON);
-    post_req.end();
 }
 
 // define prototype functions

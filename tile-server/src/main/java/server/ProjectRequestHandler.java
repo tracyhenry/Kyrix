@@ -81,11 +81,18 @@ public class ProjectRequestHandler implements HttpHandler {
 		if (oldProject == null)
 			return true;
 
+		// if the rendering param has changed, re-index is needed
+		// because it might affect what the data transforms produce
+		if (! oldProject.getRenderingParams().equals(newProject.getRenderingParams()))
+			return true;
+
+		// compare canvases
 		ArrayList<Canvas> oldCanvases = oldProject.getCanvases();
 		ArrayList<Canvas> newCanvases = newProject.getCanvases();
 		// if there's different number of canvases, re-index is for sure needed
 		if (oldCanvases.size() != newCanvases.size())
 			return true;
+
 		// for every old canvas, find a match
 		for (Canvas oldCanvas : oldCanvases) {
 			boolean matchFound = false;
@@ -100,11 +107,19 @@ public class ProjectRequestHandler implements HttpHandler {
 						return true;
 					// loop through every layer
 					for (int i = 0; i < oldLayers.size(); i ++) {
-						// use toString ()to see if the same layer remains the same
-						if (! oldLayers.get(i).toString().equals(newLayers.get(i).toString()))
+
+						Layer oldLayer = oldLayers.get(i);
+						Layer newLayer = newLayers.get(i);
+						// see if the same layer remains the same
+						if (! oldLayer.getTransformId().equals(newLayer.getTransformId()))
 							return true;
+						if (! (oldLayer.isStatic() == newLayer.isStatic()))
+							return true;
+						if (! oldLayer.isStatic() && ! oldLayer.getPlacement().toString().equals(newLayer.getPlacement().toString()))
+							return true;
+
 						// the data transform has to remain the same too
-						String transformId = oldLayers.get(i).getTransformId();
+						String transformId = oldLayer.getTransformId();
 						Transform oldTransform = oldCanvas.getTransformById(transformId);
 						Transform newTransform = newCanvas.getTransformById(transformId);
 						if (! oldTransform.toString().equals(newTransform.toString()))

@@ -114,4 +114,3 @@ public class TileRequestHandler implements HttpHandler {
 		return "";
 	}
 }
-
