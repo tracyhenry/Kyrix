@@ -97,6 +97,10 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
     // disable stuff
     preAnimation();
 
+    // whether this semantic zoom is also geometric
+    var zoomType = globalVar.history[globalVar.history.length - 1].zoomType;
+    var enteringAnimation = (zoomType == param.semanticZoom ? true : false);
+
     // calculate tuple boundary
     var curViewport = d3.select(".oldmainsvg:not(.static)").attr("viewBox").split(" ");
     for (var i = 0; i < curViewport.length; i ++)
@@ -115,7 +119,8 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
     var startView = [curViewport[2] / 2.0, curViewport[3] / 2.0, curViewport[2]];
     var endView = [minx + (maxx - minx) / 2.0 - curViewport[0],
         miny + (maxy - miny) / 2.0 - curViewport[1],
-        tupleWidth / param.zoomScaleFactor];
+        tupleWidth / (enteringAnimation ? param.zoomScaleFactor : 1)];
+    console.log(endView);
     globalVar.history[globalVar.history.length - 1].startView = startView;
     globalVar.history[globalVar.history.length - 1].endView = endView;
 
@@ -131,35 +136,54 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
         })
         .on("start", function () {
 
+            // set initial global var initialViewportX/Y
+            globalVar.initialViewportX = newViewportX;
+            globalVar.initialViewportY = newViewportY;
+
             // schedule a new entering transition
-            d3.transition("enterTween")
-                .delay(param.enteringDelay)
-                .duration(param.enteringDuration)
-                .tween("enterTween", function() {
+            if (enteringAnimation)
+                d3.transition("enterTween")
+                    .delay(param.enteringDelay)
+                    .duration(param.enteringDuration)
+                    .tween("enterTween", function() {
 
-                    return function(t) {enterAndScale(d3.easeCircleOut(t));};
-                })
-                .on("start", function() {
+                        return function(t) {enterAndScale(d3.easeCircleOut(t));};
+                    })
+                    .on("start", function() {
 
-                    // set initial global var initialViewportX/Y
-                    globalVar.initialViewportX = newViewportX;
-                    globalVar.initialViewportY = newViewportY;
+                        // get the canvas object for the destination canvas
+                        getCurCanvas();
 
-                    // get the canvas object for the destination canvas
-                    getCurCanvas();
+                        // static trim
+                        renderStaticLayers();
 
-                    // static trim
-                    renderStaticLayers();
+                        // render
+                        RefreshDynamicLayers(newViewportX, newViewportY);
 
-                    // render
-                    RefreshDynamicLayers(newViewportX, newViewportY);
+                    })
+                    .on("end", function () {
 
-                })
-                .on("end", function () {
+                        postAnimation();
+                    });
+        })
+        .on("end", function () {
 
-                    postAnimation();
-                });
+            if (! enteringAnimation) {
+
+                // get the canvas object for the destination canvas
+                getCurCanvas();
+
+                // static trim
+                renderStaticLayers();
+
+                // render
+                RefreshDynamicLayers(newViewportX, newViewportY);
+
+                // clean up
+                postAnimation();
+            }
         });
+
 
     function zoomAndFade(t, v) {
 
@@ -179,10 +203,12 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
 
         // change opacity
-        var threshold = param.fadeThreshold;
-        if (t >= threshold) {
-            d3.selectAll(".oldmainsvg")
-                .style("opacity", 1.0 - (t - threshold) / (1.0 - threshold));
+        if (enteringAnimation) {
+            var threshold = param.fadeThreshold;
+            if (t >= threshold) {
+                d3.selectAll(".oldmainsvg")
+                    .style("opacity", 1.0 - (t - threshold) / (1.0 - threshold));
+            }
         }
     };
 
@@ -220,7 +246,7 @@ function registerJumps(svg, layerId) {
         // check if this shape has jumps
         var hasJump = false;
         for (var k = 0; k < jumps.length; k ++)
-            if (jumps[k].type == "semantic_zoom"
+            if ((jumps[k].type == param.semanticZoom || jumps[k].type == param.geometricSemanticZoom)
                 && jumps[k].selector.parseFunction()(p, layerId)) {
                 hasJump = true;
                 break;
@@ -232,7 +258,6 @@ function registerJumps(svg, layerId) {
         d3.select(this)
             .style("cursor", "zoom-in")
             .attr("data-layer-id", layerId);
-
 
         // register onclick listener
         d3.select(this).on("click", function () {
@@ -282,7 +307,8 @@ function registerJumps(svg, layerId) {
             for (var k = 0; k < jumps.length; k ++) {
 
                 // check if this jump is applied in this layer
-                if (jumps[k].type != "semantic_zoom" || ! jumps[k].selector.parseFunction()(tuple, layerId))
+                if ((jumps[k].type != param.semanticZoom && jumps[k].type != param.geometricSemanticZoom)
+                    || ! jumps[k].selector.parseFunction()(tuple, layerId))
                     continue;
 
                 // create table cell and append it to #popovercontent
@@ -300,11 +326,13 @@ function registerJumps(svg, layerId) {
 
                     d3.event.preventDefault();
 
-                    // log history
-                    logHistory("semantic_zoom");
-
                     var tuple = d3.select(this).datum();
                     var jumpId = d3.select(this).attr("data-jump-id");
+
+                    // log history
+                    logHistory(jumps[jumpId].type);
+
+                    // change canvas id
                     globalVar.curCanvasId = jumps[jumpId].destId;
 
                     // calculate new predicates
@@ -372,5 +400,4 @@ function registerJumps(svg, layerId) {
                 .style("top", (d3.event.pageY - popoverHeight / 2));
         });
     });
-
 };

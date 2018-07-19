@@ -54,7 +54,7 @@ timelineBkgLayer.addRenderingFunc(renderers.teamTimelineStaticBkg);
 var width = 1000;
 var height = 0;
 var wString = "";
-var hString = "0:select (max(play_id) + 2) * 160 from scoring_plays;"; // todo: the "where" clause is assumed to be at the end right now
+var hString = "0:select (max(play_id) + 2) * 160 from plays;"; // todo: the "where" clause is assumed to be at the end right now
 
 // construct a new canvas
 var playByPlayCanvas = new Canvas("playbyplay", width, height, wString, hString);
@@ -114,7 +114,7 @@ var jumpName = function (row) {
     return "2017~2018 Regular Season Games of\n" + row[4] + " " + row[5];
 };
 
-p.addJump(new Jump("teamlogo", "teamtimeline", selector, newViewport, newPredicate, "semantic_zoom", jumpName));
+p.addJump(new Jump("teamlogo", "teamtimeline", selector, newViewport, newPredicate, "geometric_semantic_zoom", jumpName));
 
 // ================== teamtimeline -> playbyplay ===================
 var selector = function (row, layerId) {
@@ -133,7 +133,7 @@ var jumpName = function (row) {
     return "Scoring Plays of " + row[7] + "@" + row[6];
 };
 
-p.addJump(new Jump("teamtimeline", "playbyplay", selector, newViewport, newPredicate, "semantic_zoom", jumpName));
+p.addJump(new Jump("teamtimeline", "playbyplay", selector, newViewport, newPredicate, "geometric_semantic_zoom", jumpName));
 
 // ================== teamtimeline -> boxscore ===================
 var selector = function (row, layerId) {
@@ -161,8 +161,8 @@ var jumpNameAway = function (row) {
     return "Box score of " + row[7];
 };
 
-p.addJump(new Jump("teamtimeline", "boxscore", selector, newViewport, newPredicateHome, "semantic_zoom", jumpNameHome));
-p.addJump(new Jump("teamtimeline", "boxscore", selector, newViewport, newPredicateAway, "semantic_zoom", jumpNameAway));
+p.addJump(new Jump("teamtimeline", "boxscore", selector, newViewport, newPredicateHome, "geometric_semantic_zoom", jumpNameHome));
+p.addJump(new Jump("teamtimeline", "boxscore", selector, newViewport, newPredicateAway, "geometric_semantic_zoom", jumpNameAway));
 
 // initialize canvas
 p.initialCanvas("teamlogo", 0, 0, [""]);

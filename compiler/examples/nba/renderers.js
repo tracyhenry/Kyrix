@@ -1,6 +1,6 @@
 var renderingParams = {
-    "timelineUpperY" : 495,
-    "timelineLowerY" : 725,
+    "timelineUpperY" : 510,
+    "timelineLowerY" : 740,
     "cellHeight" : 55,
     "playerNameCellWidth" : 250,
     "statsCellMaxWidth" : 200,
@@ -45,6 +45,7 @@ var teamTimelineRendering = function (svg, data, width, height, params) {
     var scoreYDelta = 24;
     var dateYDelta = 10;
     var dateHeight = 30;
+    var d2Delta = 15;
 
     g = svg.append("g");
 
@@ -54,7 +55,7 @@ var teamTimelineRendering = function (svg, data, width, height, params) {
         .enter()
         .append("rect")
         .attr("x", function (d) {return d[1] - rectWidth / 2;})
-        .attr("y", function (d) {return d[2] - rectHeight / 2;})
+        .attr("y", function (d) {return d[2] - d2Delta - rectHeight / 2;})
         .attr("rx", 10)
         .attr("ry", 10)
         .attr("width", rectWidth)
@@ -69,7 +70,7 @@ var teamTimelineRendering = function (svg, data, width, height, params) {
         .enter()
         .append("image")
         .attr("x", function (d) {return d[1] - logoXDelta;})
-        .attr("y", function (d) {return d[2] - logoYDelta - logoSize;})
+        .attr("y", function (d) {return d[2] - d2Delta - logoYDelta - logoSize;})
         .attr("width", logoSize)
         .attr("height", logoSize)
         .attr("xlink:href", function (d) {return "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + d[6] + ".svg";});
@@ -80,7 +81,7 @@ var teamTimelineRendering = function (svg, data, width, height, params) {
         .enter()
         .append("image")
         .attr("x", function (d) {return d[1] - logoXDelta;})
-        .attr("y", function (d) {return +d[2] + logoYDelta;})
+        .attr("y", function (d) {return d[2] - d2Delta + logoYDelta;})
         .attr("width", logoSize)
         .attr("height", logoSize)
         .attr("xlink:href", function (d) {return "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + d[7] + ".svg";});
@@ -92,7 +93,7 @@ var teamTimelineRendering = function (svg, data, width, height, params) {
         .append("text")
         .text(function(d) {return d[8]})
         .attr("x", function(d) {return +d[1] + scoreXDelta;})
-        .attr("y", function(d) {return d[2] - scoreYDelta;})
+        .attr("y", function(d) {return d[2] - d2Delta - scoreYDelta;})
         .attr("font-size", scoreFontSize)
         .attr("dy", ".35em")
         .attr("text-anchor", "end")
@@ -105,7 +106,7 @@ var teamTimelineRendering = function (svg, data, width, height, params) {
         .append("text")
         .text(function(d) {return d[9]})
         .attr("x", function(d) {return +d[1] + scoreXDelta;})
-        .attr("y", function(d) {return +d[2] + scoreYDelta;})
+        .attr("y", function(d) {return d[2] - d2Delta + scoreYDelta;})
         .attr("font-size", scoreFontSize)
         .attr("dy", ".35em")
         .attr("text-anchor", "end")
@@ -118,7 +119,7 @@ var teamTimelineRendering = function (svg, data, width, height, params) {
         .append("text")
         .text(function (d) {return d3.timeFormat("%B %d, %Y")(new Date(d[3], d[4] - 1, d[5]));})
         .attr("x", function (d) {return +d[1];})
-        .attr("y", function (d) {return +d[2] + rectHeight / 2 + dateYDelta;})
+        .attr("y", function (d) {return d[2] - d2Delta + rectHeight / 2 + dateYDelta;})
         .attr("dy", ".35em")
         .attr("text-anchor", "middle")
         .style("fill-opacity", 1);
@@ -132,8 +133,8 @@ var teamTimelineRendering = function (svg, data, width, height, params) {
         .attr("x2", function (d) {return d[1];})
         .attr("y1", 625)
         .attr("y2", function (d) {
-            if (d[2] == params.timelineUpperY) return +d[2] + rectHeight / 2 + dateHeight;
-            return d[2] - rectHeight / 2;
+            if (d[2] == params.timelineUpperY) return d[2] - d2Delta + rectHeight / 2 + dateHeight;
+            return d[2] - d2Delta - rectHeight / 2;
         })
         .style("stroke", "#CCC")
         .style("stroke-width", 3);

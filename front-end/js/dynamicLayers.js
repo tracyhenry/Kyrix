@@ -110,6 +110,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                 .data(tileIds, function (d) {return d;})
                 .enter()
                 .each(function (d) {
+
                     // append tile svgs
                     d3.selectAll(".mainsvg:not(.static)")
                         .append("svg")
