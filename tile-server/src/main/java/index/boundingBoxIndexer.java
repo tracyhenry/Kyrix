@@ -61,7 +61,7 @@ public class boundingBoxIndexer extends Indexer {
 				// create table
 				sql = "create table bbox_" + projectName + "_" + c.getId() + "layer" + layer_id + " (";
 				for (int i = 0; i < trans.getColumnNames().size(); i ++)
-					sql += trans.getColumnNames().get(i) + " text, ";
+					sql += trans.getColumnNames().get(i) + " mediumtext, ";
 				sql += "cx double, cy double, minx double, miny double, maxx double, maxy double, geom polygon not null) engine=myisam;";
 				kyrixStmt.executeUpdate(sql);	// create table
 

@@ -40,7 +40,7 @@ public class Main {
 			indexer.precompute();
 			setProjectClean();
 		}
-		if (project != null)
+		else if (project != null)
 			System.out.println("Main project definition has not been changed since last session. Starting server right away...");
 
 		//cache
