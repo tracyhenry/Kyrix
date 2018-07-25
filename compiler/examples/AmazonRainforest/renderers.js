@@ -68,25 +68,28 @@ var animalIconRendering = function (svg, data, width, height, params) {
             myPicXO.src = d[8];
             return d[6] - myPicXO.height;
         })
-        //.attr("width", function (d) {return params.blockwidth[d[3]-1];})
-        //.attr("height", function (d) {return params.blockheight[d[3]-1];})
+        /*
+        .attr("width", function (d) {
+            var myPicXO = new Image();
+            myPicXO.src = d[8];
+            return myPicXO.width;
+        })
+        .attr("height", function (d) {
+            var myPicXO = new Image();
+            myPicXO.src = d[8];
+            return myPicXO.height;
+        })
+        */
         .attr("xlink:href", function (d) {return d[8];});
     g.selectAll("text")
         .data(data)
         .enter()
         .append("text")
         .text(function(d) {return d[2];})
-        .attr("x", function(d) {
-            var myPicXO = new Image();
-            myPicXO.src = d[8];
-            return d[5] - myPicXO.width/2;
-        })
-        .attr("y", function(d) {
-            var myPicXO = new Image();
-            myPicXO.src = d[8];
-            return d[6] - myPicXO.height;
-        })
+        .attr("x", function(d) {return d[5];})
+        .attr("y", function(d) {return d[6];})
         .attr("font-size", "20px")
+        .attr("text-anchor", "middle")
         .attr("fill", "white");
 
 };
