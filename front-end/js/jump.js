@@ -46,7 +46,10 @@ function preAnimation() {
 function postAnimation() {
 
     // remove the old svgs
-    d3.selectAll(".oldlayerg").remove();
+    d3.selectAll(".oldlayerg")
+        .transition()
+        .delay(param.oldRemovalDelay)
+        .remove();
 
     // set the viewBox & opacity of the new .mainsvgs
     // because d3 tween does not get t to 1.0
@@ -110,17 +113,16 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
     var tupleCY = +tuple[tupleLen - param.cyOffset];
     var tupleWidth = tuple[tupleLen - param.maxxOffset] - tuple[tupleLen - param.minxOffset];
     var tupleHeight = tuple[tupleLen - param.maxyOffset] - tuple[tupleLen - param.minyOffset];
-    var minx = Math.max(tupleCX - tupleWidth / 2.0, curViewport[0]);
-    var maxx = Math.min(tupleCX + tupleWidth / 2.0, curViewport[0] + curViewport[2]);
-    var miny = Math.max(tupleCY - tupleHeight / 2.0, curViewport[1]);
-    var maxy = Math.min(tupleCY + tupleHeight / 2.0, curViewport[1] + curViewport[3]);
+    var minx = tupleCX - tupleWidth / 2.0;
+    var maxx = tupleCX + tupleWidth / 2.0;
+    var miny = tupleCY - tupleHeight / 2.0;
+    var maxy = tupleCY + tupleHeight / 2.0;
 
     // use tuple boundary to calculate start and end views, and log them to the last history object
     var startView = [curViewport[2] / 2.0, curViewport[3] / 2.0, curViewport[2]];
     var endView = [minx + (maxx - minx) / 2.0 - curViewport[0],
         miny + (maxy - miny) / 2.0 - curViewport[1],
         tupleWidth / (enteringAnimation ? param.zoomScaleFactor : 1)];
-    console.log(endView);
     globalVar.history[globalVar.history.length - 1].startView = startView;
     globalVar.history[globalVar.history.length - 1].endView = endView;
 

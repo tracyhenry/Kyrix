@@ -536,7 +536,7 @@ var boxscorePkRendering = function (svg, data, width, height, params) {
         .style("fill", function (d, i) {
             if (i % 2 == 0) return params.evenrowcolor;
             return params.oddrowcolor;
-        })
+        });
 
     // player photos
     g.append("defs")
