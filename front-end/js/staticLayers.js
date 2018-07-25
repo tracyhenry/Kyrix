@@ -18,8 +18,8 @@ function renderStaticLayers() {
             .select("svg")
             .classed("lowestsvg", true);
         renderFunc(curSvg, globalVar.curStaticData[i],
-            globalVar.curCanvas.w,
-            globalVar.curCanvas.h,
+            globalVar.viewportWidth,
+            globalVar.viewportHeight,
             JSON.parse(globalVar.renderingParams));
 
         // register jump

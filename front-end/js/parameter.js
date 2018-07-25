@@ -13,6 +13,7 @@ param.minyOffset = 4;
 param.enteringDelta = 0.5;
 param.enteringDuration = 1300;
 param.literalZoomDuration = 300;
+param.oldRemovalDelay = 100;
 
 // zoom scale factor
 param.zoomScaleFactor = 4;
