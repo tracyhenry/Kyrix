@@ -8,19 +8,19 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class BigSparseBoxGetter extends BoxGetter{
-    public BoxandData getBox(Canvas c, int cx, int cy, int viewportH, int viewportW, ArrayList<String> predicates)
+    public BoxandData getBox(Canvas c, int mx, int my, int viewportH, int viewportW, ArrayList<String> predicates)
             throws SQLException, ClassNotFoundException {
         ArrayList<ArrayList<ArrayList<String>>> data;
         double wrapLength = 0.5;
         int count = 0;
-        double minx = cx - (0.5 + wrapLength) * viewportW;
-        double miny = cy - (0.5 + wrapLength) * viewportH;
-        double maxx = cx + (0.5 + wrapLength) * viewportW;
-        double maxy = cy + (0.5 + wrapLength) * viewportH;
-        double deltaRight = 0.5 * viewportW;
-        double deltaLeft = 0.5 * viewportW;
-        double deltaUp = 0.5 * viewportH;
-        double deltaDown = 0.5 * viewportH;
+        int minx = (int)Math.max(0, mx - wrapLength * viewportW);
+        int miny = (int)Math.max(0, my - wrapLength * viewportH);
+        int maxx = (int)Math.min(c.getH(), minx + (1 + 2 * wrapLength) * viewportW);
+        int maxy = (int)Math.min(c.getW(), miny + (1 + 2 * wrapLength) * viewportH);
+        int deltaRight = (int)0.5 * viewportW;
+        int deltaLeft = (int)0.5 * viewportW;
+        int deltaUp = (int)0.5 * viewportH;
+        int deltaDown = (int)0.5 * viewportH;
 
         //check if regular size box contains dense area
         data = fetchData(c, minx, miny, maxx, maxy, predicates);

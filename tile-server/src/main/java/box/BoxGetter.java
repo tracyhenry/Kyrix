@@ -17,9 +17,9 @@ public abstract class BoxGetter {
         project = Main.getProject();
     }
 
-    public ArrayList<ArrayList<ArrayList<String>>> fetchData(Canvas c, double minx, double miny, double maxx, double maxy,ArrayList<String> predicates)
+    public ArrayList<ArrayList<ArrayList<String>>> fetchData(Canvas c, int minx, int miny, int maxx, int maxy,ArrayList<String> predicates)
             throws SQLException, ClassNotFoundException {
-        ArrayList<ArrayList<ArrayList<String>>> data = null;
+        ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
         Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
         try {
             // loop through each layer

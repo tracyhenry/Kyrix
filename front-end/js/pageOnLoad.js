@@ -135,8 +135,8 @@ function pageOnLoad() {
         renderStaticLayers();
 
         // render
-        RefreshDynamicLayers(globalVar.initialViewportX,
-            globalVar.initialViewportY);
+//        RefreshDynamicLayers(globalVar.initialViewportX,
+ //           globalVar.initialViewportY);
 
         // set up zoom
         setupZoom(1);

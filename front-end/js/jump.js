@@ -299,6 +299,9 @@ function registerJumps(svg, layerId) {
                     // log history
                     logHistory("semantic_zoom");
 
+                    // reset globalvar.boxx
+                    globalVar.boxX = -1000;
+
                     var tuple = d3.select(this).datum();
                     var jumpId = d3.select(this).attr("data-jump-id");
                     var layerId = d3.select(this).attr("data-layer-id");

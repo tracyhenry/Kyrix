@@ -5,6 +5,13 @@ var globalVar = {};
 globalVar.tileW = 0;
 globalVar.tileH = 0;
 
+//dynamic box coor and size
+globalVar.boxX = -1000;
+globalVar.boxY = -1000;
+globalVar.boxH = -1000;
+globalVar.boxW = -1000;
+globalVar.renderData = 0;
+
 // current viewport info
 globalVar.initialViewportX = 0;
 globalVar.initialViewportY = 0;
@@ -21,6 +28,9 @@ globalVar.curCanvasId = "";
 globalVar.curCanvas = null;
 globalVar.curJump = null;
 globalVar.curStaticData = null;
+
+// tiling or dynamic box
+globalVar.tiling = false;
 
 // history
 globalVar.history = [];

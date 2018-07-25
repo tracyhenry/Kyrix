@@ -112,6 +112,7 @@ public class TileCache {
                 data.add(new ArrayList<ArrayList<String>>());
                 continue;
             }
+
             // construct range query
             String sql = "select bbox.* from bbox_" + project.getName() + "_"
                     + c.getId() + "layer" + i + " bbox left join tile_"  + project.getName() + "_"

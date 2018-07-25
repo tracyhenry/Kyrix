@@ -46,8 +46,9 @@ public class BoxRequestHandler  implements HttpHandler {
         // variable definitions
         String response;
         String canvasId;
-        int cx, cy;
-        int viewportH, viewportW;
+        int minx, miny;
+        int viewportH = Main.getProject().getViewportHeight();
+        int viewportW = Main.getProject().getViewportWidth();
         String predicate;
         BoxandData data = null;
 
@@ -72,13 +73,10 @@ public class BoxRequestHandler  implements HttpHandler {
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, response);
             return;
         }
-
         // get parameters
         canvasId = queryMap.get("id");
-        cx = Integer.valueOf(queryMap.get("x"));
-        cy = Integer.valueOf(queryMap.get("y"));
-        viewportH = Integer.valueOf(queryMap.get("viewportH"));
-        viewportW = Integer.valueOf(queryMap.get("viewportW"));
+        minx = Integer.valueOf(queryMap.get("x"));
+        miny = Integer.valueOf(queryMap.get("y"));
         Canvas c = project.getCanvas(canvasId);
         ArrayList<String> predicates = new ArrayList<>();
 
@@ -87,18 +85,18 @@ public class BoxRequestHandler  implements HttpHandler {
 
         //get box data
         try {
-            data = boxGetter.getBox(c, cx, cy, viewportH, viewportW, predicates);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+            data = boxGetter.getBox(c, minx, miny, viewportH, viewportW, predicates);
+        } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
         }
 
         //send data and box back
         Map<String, Object> respMap = new HashMap<>();
-        respMap.put("renderData", data);
-    //    respMap.put("minx", minx);
-    //    respMap.put("miny", miny);
+        respMap.put("renderData", data.data);
+        respMap.put("minx", data.box.getMinx());
+        respMap.put("miny", data.box.getMiny());
+        respMap.put("boxH", data.box.getHight());
+        respMap.put("boxW", data.box.getWidth());
         response = gson.toJson(respMap);
 
         // send back response
@@ -120,10 +118,6 @@ public class BoxRequestHandler  implements HttpHandler {
         // check whether this canvas exists
         if (project.getCanvas(canvasId) == null)
             return "Canvas " + canvasId + " does not exist!";
-
-        // check whether x and y corresponds to the top-left corner of a tile
-        if (minx % Config.tileW != 0 || miny % Config.tileH != 0)
-            return "x and y must be a multiple of tile size!";
 
         // check passed
         return "";

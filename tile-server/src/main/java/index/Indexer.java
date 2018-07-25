@@ -299,15 +299,17 @@ public class Indexer {
 				}
 				if (Config.sqlSelector == Config.sqlOption.PSQL){
 					if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING){
-						sql = "cluster " + bboxTableName + "using tuple_idx;";
+						sql = "cluster " + bboxTableName + " using tuple_idx;";
 						tileStmt.executeUpdate(sql);
-						sql = "cluster " + tileTableName + "using tile_idx;";
+						sql = "cluster " + tileTableName + " using tile_idx;";
 						tileStmt.executeUpdate(sql);
 					}
- 	                               if (Config.fetchingScheme == Config.TileIndexingScheme.SPATIAL_INDEX){
-        	                                sql = "cluster " + bboxTableName + "using sp;";
-                	                        bboxStmt.executeUpdate(sql);
-                        	        }
+					if (Config.fetchingScheme == Config.TileIndexingScheme.SPATIAL_INDEX){
+						sql = "cluster " + bboxTableName + " using sp;";
+						bboxStmt.executeUpdate(sql);
+					}
+					DbConnector.commitConnection(Config.databaseName);
+
 				}
 				else if (Config.sqlSelector == Config.sqlOption.MYSQL){
 					if (Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING){

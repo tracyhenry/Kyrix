@@ -77,115 +77,193 @@ function renderTile(tileSvg, x, y, renderFuncs, canvasId, predicates) {
 };
 
 function RefreshDynamicLayers(viewportX, viewportY) {
+    if (globalVar.tiling) {
 
-    var vpW = globalVar.viewportWidth;
-    var vpH = globalVar.viewportHeight;
+        var tileW = globalVar.tileW;
+        var tileH = globalVar.tileH;
 
-    // get tile ids
-    var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
- //   var tileIds = getTileArray(globalVar.curCanvasId,
- //      viewportX, viewportY, +curViewport[2], +curViewport[3]);
-    var dbox = [viewportX, viewportY, globalVar.curCanvasId];
+        // get tile ids
+        var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
+        var tileIds = getTileArray(globalVar.curCanvasId,
+            viewportX, viewportY, +curViewport[2], +curViewport[3]);
 
-    // render axes
-    renderAxes(viewportX, viewportY, +curViewport[2], +curViewport[3]);
+        // render axes
+        renderAxes(viewportX, viewportY, +curViewport[2], +curViewport[3]);
 
-    // set viewport, here we only change min-x and min-y of the viewport.
-    // Size of the viewport is set either by pageOnLoad(), animateJump() or zoomed()
-    // and should not be changed in this function
-    d3.selectAll(".mainsvg:not(.static)")
-        .attr("viewBox", viewportX + " " + viewportY + " "
-            + curViewport[2]+ " " + curViewport[3]);
-  /*      .each(function () { // remove invisible tiles
-            var tiles = d3.select(this)
-                .selectAll("svg")
-                .datum(dbox);
-            tiles.exit().remove();
-        });*/
+        // set viewport, here we only change min-x and min-y of the viewport.
+        // Size of the viewport is set either by pageOnLoad(), animateSemanticZoom() or zoomed()
+        // and should not be changed in this function
+        d3.selectAll(".mainsvg:not(.static)")
+            .attr("viewBox", viewportX + " " + viewportY + " "
+                + curViewport[2]+ " " + curViewport[3])
+            .each(function () { // remove invisible tiles
+                var tiles = d3.select(this)
+                    .selectAll("svg")
+                    .data(tileIds, function (d){return d;});
+                tiles.exit().remove();
+            });
 
-    // get new tiles
-    d3.select(".mainsvg:not(.static)")
-        .datum(dbox)
-        .each(function (d) {
+        // get new tiles
+        d3.select(".mainsvg:not(.static)")
+            .each(function () {
 
-        /*    d3.select(this).selectAll("svg")
-                .data(tileIds, function (d) {return d;})
-                .enter()
-                .each(function (d) {*/
-                    // append tile svgs
-                    d3.selectAll(".mainsvg:not(.static)")
-       //                 .append("svg")
-                        .attr("width", vpW)
-                        .attr("height", vpH)
-                        .datum(d)
-                        .attr("x", d[0])
-                        .attr("y", d[1])
-                        .attr("viewBox", d[0] + " " + d[1] + " " + curViewport[2] + " " + curViewport[3])
-                        .style("opacity", 0)
-       //                 .classed("a" + d[0] + d[1] + globalVar.curCanvasId, true)
-       //                 .classed("lowestsvg", true);
+                d3.select(this).selectAll("svg")
+                    .data(tileIds, function (d) {return d;})
+                    .enter()
+                    .each(function (d) {
+                        // append tile svgs
+                        d3.selectAll(".mainsvg:not(.static)")
+                            .append("svg")
+                            .attr("width", tileW)
+                            .attr("height", tileH)
+                            .datum(d)
+                            .attr("x", d[0])
+                            .attr("y", d[1])
+                            .attr("viewBox", d[0] + " " + d[1] + " " + tileW + " " + tileH)
+                            .style("opacity", 0)
+                            .classed("a" + d[0] + d[1] + globalVar.curCanvasId, true)
+                            .classed("lowestsvg", true);
 
-                    // send request to backend to get data
-                    var postData = "id=" + globalVar.curCanvasId + "&"
-                        + "x=" + d[0] + "&"
-                        + "y=" + d[1];
-                    for (var i = 0; i < globalVar.predicates.length; i ++)
-                        postData += "&predicate" + i + "=" + globalVar.predicates[i];
-                    $.post("/dbox", postData, function (data, status) {
+                        // send request to backend to get data
+                        var postData = "id=" + globalVar.curCanvasId + "&"
+                            + "x=" + d[0] + "&"
+                            + "y=" + d[1];
+                        for (var i = 0; i < globalVar.predicates.length; i ++)
+                            postData += "&predicate" + i + "=" + globalVar.predicates[i];
+                        $.post("/tile", postData, function (data, status) {
 
-                        // response data
-                        var response = JSON.parse(data);
-                        var renderData = response.renderData;
-                        var x = response.minx;
-                        var y = response.miny;
+                            // response data
+                            var response = JSON.parse(data);
+                            var renderData = response.renderData;
+                            var x = response.minx;
+                            var y = response.miny;
 
-                        // number of layers
-                        var numLayers = globalVar.curCanvas.layers.length;
+                            // number of layers
+                            var numLayers = globalVar.curCanvas.layers.length;
 
-                        // loop over every layer
-                        for (var i = numLayers - 1; i >= 0; i--) {
+                            // loop over every layer
+                            for (var i = numLayers - 1; i >= 0; i--) {
 
-                            // current layer object
-                            var curLayer = globalVar.curCanvas.layers[i];
+                                // current layer object
+                                var curLayer = globalVar.curCanvas.layers[i];
 
-                            // if this layer is static, return
-                            if (curLayer.isStatic)
-                                continue;
+                                // if this layer is static, return
+                                if (curLayer.isStatic)
+                                    continue;
 
-                            // current tile svg
-                            var tileSvg = d3.select(".layerg.layer" + i)
-                                .select(".mainsvg")
-                                .select(".a" + x + y + globalVar.curCanvasId);
+                                // current tile svg
+                                var tileSvg = d3.select(".layerg.layer" + i)
+                                    .select(".mainsvg")
+                                    .select(".a" + x + y + globalVar.curCanvasId);
 
-                            // it's possible when the tile data is delayed
-                            // and this tile is already removed
-                            if (tileSvg == null)
-                                return;
+                                // it's possible when the tile data is delayed
+                                // and this tile is already removed
+                                if (tileSvg == null)
+                                    return;
 
-                            // draw current layer
-                            curLayer.rendering.parseFunction()(tileSvg, renderData[i],
-                                globalVar.curCanvas.w,
-                                globalVar.curCanvas.h,
-                                JSON.parse(globalVar.renderingParams));
+                                // draw current layer
+                                curLayer.rendering.parseFunction()(tileSvg, renderData[i],
+                                    globalVar.curCanvas.w,
+                                    globalVar.curCanvas.h,
+                                    JSON.parse(globalVar.renderingParams));
 
-                            tileSvg.transition()
-                                .duration(param.tileEnteringDuration)
-                                .style("opacity", 1.0);
+                                tileSvg.transition()
+                                    .duration(param.tileEnteringDuration)
+                                    .style("opacity", 1.0);
 
-                            // register jumps
-                            if (!globalVar.animation)
-                                registerJumps(tileSvg, +i);
+                                // register jumps
+                                if (!globalVar.animation)
+                                    registerJumps(tileSvg, +i);
 
-                            // apply additional zoom transforms
-                            if (param.retainSizeZoom &&
-                                d3.zoomTransform(d3.select("#maing").node()).k > 1)
-                                tileSvg.selectAll("g")
-                                    .selectAll("*")
-                                    .each(zoomRescale);
-                        }
+                                // apply additional zoom transforms
+                                if (param.retainSizeZoom &&
+                                    d3.zoomTransform(d3.select("#maing").node()).k > 1)
+                                    tileSvg.selectAll("g")
+                                        .selectAll("*")
+                                        .each(zoomRescale);
+                            }
+                        });
                     });
-                });
-        });
+            });
+
+    }
+    else{
+        var vpW = globalVar.viewportWidth;
+        var vpH = globalVar.viewportHeight;
+        // get tile ids
+        var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
+
+        // render axes
+        renderAxes(viewportX, viewportY, +curViewport[2], +curViewport[3]);
+
+        d3.selectAll(".mainsvg:not(.static)")
+            .attr("viewBox", viewportX + " " + viewportY + " " + vpW + " " + vpH);
+
+        // get new box
+        // send request to backend to get data
+        var postData = "id=" + globalVar.curCanvasId + "&"
+            + "x=" + (viewportX | 0) + "&"
+            + "y=" + (viewportY | 0);
+        for (var i = 0; i < globalVar.predicates.length; i ++)
+            postData += "&predicate" + i + "=" + globalVar.predicates[i];
+
+        if (globalVar.boxX == -1000 || (viewportX <= globalVar.boxX || (viewportX + vpW) >= (globalVar.boxX + globalVar.boxW)
+            || viewportY <= globalVar.boxY || (viewportY + vpH) >= (globalVar.boxY + globalVar.boxH))) {
+
+            $.post("/dbox", postData, function (data, status) {
+                console.log("fetch from backend!");
+                // response data
+                var response = JSON.parse(data);
+                var renderData = response.renderData;
+                var x = response.minx;
+                var y = response.miny;
+
+                globalVar.boxH = response.boxH;
+                globalVar.boxW = response.boxW;
+                globalVar.boxX = x;
+                globalVar.boxY = y;
+                globalVar.renderData = renderData;
+
+                var numLayers = globalVar.curCanvas.layers.length;
+                // loop over every layer
+                for (var i = numLayers - 1; i >= 0; i--) {
+
+                    // current layer object
+                    var curLayer = globalVar.curCanvas.layers[i];
+
+                    // if this layer is static, return
+                    if (curLayer.isStatic)
+                        continue;
+
+                    // current box svg
+                    var tileSvg = d3.select(".layerg.layer" + i)
+                        .select(".mainsvg");
+
+                    // draw current layer
+                    curLayer.rendering.parseFunction()(tileSvg, renderData[i],
+                        globalVar.curCanvas.w,
+                        globalVar.curCanvas.h,
+                        JSON.parse(globalVar.renderingParams));
+
+                    tileSvg.transition()
+                        .duration(param.tileEnteringDuration)
+                        .style("opacity", 1.0);
+
+                    // register jumps
+                    if (!globalVar.animation)
+                        registerJumps(tileSvg, +i);
+
+
+                    // apply additional zoom transforms
+                    if (param.retainSizeZoom &&
+                        d3.zoomTransform(d3.select("#maing").node()).k > 1)
+                        tileSvg.selectAll("g")
+                            .selectAll("*")
+                            .each(zoomRescale);
+                }
+            });
+        }
+    }
 
     if (param.retainSizeZoom &&
         d3.zoomTransform(d3.select("#maing").node()).k > 1)
