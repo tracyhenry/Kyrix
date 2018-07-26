@@ -27,12 +27,10 @@ import java.util.Map;
 public class CanvasRequestHandler implements HttpHandler {
 
 	private final Gson gson;
-	private final Project project;
 
 	public CanvasRequestHandler() {
 
 		gson = new GsonBuilder().create();
-		project = Main.getProject();
 	}
 
 	@Override
@@ -54,7 +52,7 @@ public class CanvasRequestHandler implements HttpHandler {
 		String canvasId = queryMap.get("id");
 
 		// get the current canvas
-		Canvas curCanvas = project.getCanvas(canvasId);
+		Canvas curCanvas = Main.getProject().getCanvas(canvasId);
 		if (curCanvas == null) {
 			// canvas id does not exist and send back a bad request response
 			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "canvas " + query + " does not exist.");
@@ -95,7 +93,7 @@ public class CanvasRequestHandler implements HttpHandler {
 		// construct the response object
 		Map<String, Object> respMap = new HashMap<>();
 		respMap.put("canvas", curCanvas);
-		respMap.put("jump", project.getJumps(canvasId));
+		respMap.put("jump", Main.getProject().getJumps(canvasId));
 		respMap.put("staticData", staticData);
 		String response = gson.toJson(respMap);
 
@@ -125,7 +123,7 @@ public class CanvasRequestHandler implements HttpHandler {
 				continue;
 			}
 			// construct range query
-			String sql = "select * from bbox_" + project.getName() + "_"
+			String sql = "select * from bbox_" + Config.projectName + "_"
 					+ c.getId() + "layer" + i;
 			if (predicates.get(i).length() > 0)
 				sql += " where " + predicates.get(i);

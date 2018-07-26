@@ -11,7 +11,7 @@ const transforms = require("./transforms");
 const placements = require("./placements");
 
 // construct a project
-var p = new Project("dots", "../../dbconfig.txt", 1000, 1000);
+var p = new Project("dots", "../../../config.txt", 1000, 1000);
 
 // ================== Canvas teamlogo ===================
 var dotsCanvas = new Canvas("dots", 1000000, 100000);
@@ -31,4 +31,4 @@ dotsLayer.addRenderingFunc(renderers.dotsRendering);
 p.initialCanvas("dots", 3000, 3000, [""]);
 
 // save to db
-p.saveToDb();
+p.saveProject();

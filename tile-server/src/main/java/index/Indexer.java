@@ -74,7 +74,7 @@ public class Indexer {
 				// create the bbox table
 				sql = "create table " + bboxTableName + " (";
 				for (int i = 0; i < trans.getColumnNames().size(); i ++)
-					sql += trans.getColumnNames().get(i) + " text, ";
+					sql += trans.getColumnNames().get(i) + " mediumtext, ";
 				if (Config.sqlSelector == Config.sqlOption.PSQL){
 					if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING ||
 							Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING)
@@ -148,7 +148,6 @@ public class Indexer {
 				String centroid_y = (l.isStatic() ? null : p.getCentroid_y());
 				String width_func = (l.isStatic() ? null : p.getWidth());
 				String height_func = (l.isStatic() ? null : p.getHeight());
-
 
 				// step 2: looping through query results
 				// TODO: distinguish between separable and non-separable cases

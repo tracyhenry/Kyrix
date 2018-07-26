@@ -28,30 +28,67 @@ function zoomRescale() {
 function setupZoom(initialScale) {
 
     // calculate minScale, maxScale
-    var minScale = 1;
-    if (globalVar.curCanvas.zoomOutFactorX < 1 ||
-        globalVar.curCanvas.zoomOutFactorY < 1)
-        minScale = 0.99;
-    var maxScale = Math.max(globalVar.curCanvas.zoomInFactorX,
+    globalVar.minScale = Math.min(globalVar.curCanvas.zoomOutFactorX,
+        globalVar.curCanvas.zoomOutFactorY, 1);
+    globalVar.maxScale = Math.max(globalVar.curCanvas.zoomInFactorX,
         globalVar.curCanvas.zoomInFactorY, 1);
 
     // set up zoom
-    var zoom = d3.zoom()
-        .scaleExtent([minScale, maxScale])
+    globalVar.zoom = d3.zoom()
+        .scaleExtent([globalVar.minScale, globalVar.maxScale])
         .on("zoom", zoomed);
 
     // set up zooms
-    d3.select("#maing").call(zoom)
-        .call(zoom.transform, d3.zoomIdentity.scale(initialScale));
+    d3.select("#maing").call(globalVar.zoom)
+        .on("wheel.zoom", null)
+        .on("dblclick.zoom", function () {
+
+            var mousePos = d3.mouse(this);
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            var finalK = (event.shiftKey ? globalVar.minScale : globalVar.maxScale);
+            var duration = (event.shiftKey ? 1 / finalK  / 2 : finalK / 2) * param.literalZoomDuration;
+            startLiteralZoomTransition(mousePos, finalK, duration);
+        })
+        .call(globalVar.zoom.transform, d3.zoomIdentity.scale(initialScale));
 };
 
-function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
+function startLiteralZoomTransition(center, scale, duration) {
 
-    // save stuff
-    if (zoomType == "literal_zoom_in")
-        logHistory(zoomType);
-    else
-        globalVar.history.pop();
+    if (1 - 1e-6 <= scale && scale <= 1 + 1e-6)
+        return ;
+
+    // remove popovers
+    removePopoversSmooth();
+
+    // disable cursor pointers, buttons and onclick listeners
+    d3.select("#containerSvg")
+        .selectAll("*")
+        .style("cursor", "auto");
+    d3.selectAll("button")
+        .attr("disabled", true);
+    d3.selectAll("*")
+        .on("click", null);
+    d3.select("#maing").on(".zoom", null);
+
+    var curSelection = d3.select("#maing");
+    var initialZoomTransform = d3.zoomTransform(curSelection.node());
+    curSelection
+        .transition()
+        .duration(duration)
+        .tween("literalTween", function() {
+            var i = d3.interpolateNumber(1, scale);
+            return function (t) {
+                var curK = i(t);
+                var curTX = center[0] + curK * (-center[0] + initialZoomTransform.x);
+                var curTY = center[1] + curK * (-center[1] + initialZoomTransform.y);
+                var curZoomTransform = d3.zoomIdentity.translate(curTX, curTY).scale(curK);
+                d3.select(this).call(globalVar.zoom.transform, curZoomTransform);
+            };
+        });
+}
+
+function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
 
     // get the id of the canvas to zoom into
     var jumps = globalVar.curJump;
@@ -71,10 +108,7 @@ function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
     renderStaticLayers();
 
     // set up zoom
-    if (zoomType == "literal_zoom_out")
-        setupZoom(1 / Math.min(oldZoomFactorX, oldZoomFactorY) - 1e-5);
-    else
-        setupZoom(1);
+    setupZoom(1);
 
     // set up button states
     setButtonState();
@@ -83,7 +117,7 @@ function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
     removePopovers();
 };
 
-// zoomed function for detecting zoom actions
+// listener function for zoom actions
 function zoomed() {
 
     // frequently accessed global variables
@@ -147,12 +181,12 @@ function zoomed() {
     RefreshDynamicLayers(viewportX, viewportY);
 
     // check if zoom scale reaches zoomInFactor
-    if ((zoomInFactorX > 1 && scaleX >= zoomInFactorX) ||
-        (zoomInFactorY > 1 && scaleY >= zoomInFactorY))
+    if ((zoomInFactorX > 1 && scaleX >= globalVar.maxScale) ||
+        (zoomInFactorY > 1 && scaleY >= globalVar.maxScale))
         completeZoom("literal_zoom_in", zoomInFactorX, zoomInFactorY);
 
     // check if zoom scale reaches zoomOutFactor
-    if ((zoomOutFactorX < 1 && scaleX <= 0.99) ||
-        (zoomOutFactorY < 1 && scaleY <= 0.99))
+    if ((zoomOutFactorX < 1 && scaleX <= globalVar.minScale) ||
+        (zoomOutFactorY < 1 && scaleY <= globalVar.minScale))
         completeZoom("literal_zoom_out", zoomOutFactorX, zoomOutFactorY);
 };

@@ -15,7 +15,7 @@ const numLevels = transforms.numLevels;
 const zoomFactor = transforms.zoomFactor;
 
 // construct a project
-var p = new Project("lzoomscatterplotsingleaxis", "../../dbconfig.txt", 800, 800);
+var p = new Project("lzoomscatterplotsingleaxis", "../../../config.txt", 800, 800);
 
 // construct canvases from top to bottom
 var topLevelWidth = 1000;
@@ -51,11 +51,11 @@ for (var i = 0; i < numLevels; i ++) {
 
 // add literal zooms
 for (var i = 0; i + 1 < numLevels; i ++) {
-    p.addJump(new Jump("level" + i, "level" + (i + 1), 1, "", "", "literal_zoom_in"));
-    p.addJump(new Jump("level" + (i + 1), "level" + i, 1, "", "", "literal_zoom_out"));
+    p.addJump(new Jump("level" + i, "level" + (i + 1), "", "", "", "literal_zoom_in"));
+    p.addJump(new Jump("level" + (i + 1), "level" + i, "", "", "", "literal_zoom_out"));
 }
 
 // initialize canvas
-p.initialCanvas("level0", 200, 200, ["", ""]);
+p.initialCanvas("level0", 200, 0, ["", ""]);
 
-p.saveToDb();
+p.saveProject();

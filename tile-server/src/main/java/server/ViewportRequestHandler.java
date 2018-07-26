@@ -27,12 +27,10 @@ import java.util.Map;
 public class ViewportRequestHandler implements HttpHandler {
 
 	private final Gson gson;
-	private final Project project;
 
 	public ViewportRequestHandler() {
 
 		gson = new GsonBuilder().create();
-		project = Main.getProject();
 	}
 
 	@Override
@@ -73,7 +71,7 @@ public class ViewportRequestHandler implements HttpHandler {
 
 		// get data
 		canvasId = queryMap.get("canvasId");
-		Canvas c = project.getCanvas(canvasId);
+		Canvas c = Main.getProject().getCanvas(canvasId);
 		for (int i = 0; i < c.getLayers().size(); i ++)
 			predicates.add(queryMap.get("predicate" + i));
 		try {
@@ -107,10 +105,10 @@ public class ViewportRequestHandler implements HttpHandler {
 		String canvasId = queryMap.get("canvasId");
 
 		// check whether this canvas exists
-		if (project.getCanvas(canvasId) == null)
+		if (Main.getProject().getCanvas(canvasId) == null)
 			return "Canvas " + canvasId + " does not exist!";
 
-		Canvas c = project.getCanvas(canvasId);
+		Canvas c = Main.getProject().getCanvas(canvasId);
 		for (int i = 0; i < c.getLayers().size(); i ++)
 			if (! queryMap.containsKey("predicate" + i))
 				return "predicate" + i + " missing.";
@@ -133,7 +131,7 @@ public class ViewportRequestHandler implements HttpHandler {
 		ArrayList<String> data = new ArrayList<>();
 
 		// get the current canvas
-		Canvas curCanvas = project.getCanvas(canvasId);
+		Canvas curCanvas = Main.getProject().getCanvas(canvasId);
 
 		// get db connector
 		Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
@@ -143,7 +141,7 @@ public class ViewportRequestHandler implements HttpHandler {
 			if (predicates.get(i).isEmpty())
 				continue;
 			// construct range query
-			String sql = "select cx, cy from bbox_" + project.getName() + "_"
+			String sql = "select cx, cy from bbox_" + Main.getProject().getName() + "_"
 					+ curCanvas.getId() + "layer" + i + " where "
 					+ predicates.get(i) + ";";
 

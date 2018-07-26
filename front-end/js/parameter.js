@@ -12,6 +12,8 @@ param.minyOffset = 4;
 // animation durations, delays
 param.enteringDelta = 0.5;
 param.enteringDuration = 1300;
+param.literalZoomDuration = 300;
+param.oldRemovalDelay = 100;
 
 // zoom scale factor
 param.zoomScaleFactor = 4;
@@ -40,3 +42,7 @@ param.containerPadding = 50;
 
 // whether retain size when literal zooming
 param.retainSizeZoom = false;
+
+// jump types
+param.semanticZoom = "semantic_zoom";
+param.geometricSemanticZoom = "geometric_semantic_zoom";

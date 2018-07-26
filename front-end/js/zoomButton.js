@@ -106,16 +106,9 @@ function backspace() {
     // get and pop last history object
     var curHistory = globalVar.history.pop();
 
-    // check if
-    // is literal zoom
-    if (curHistory.zoomType == "literal_zoom_in") {
-        literalZoomIn();
-        return ;
-    }
-    if (curHistory.zoomType == "literal_zoom_out") {
-        literalZoomOut();
-        return ;
-    }
+    // whether this semantic zoom is also geometric
+    var zoomType = curHistory.zoomType;
+    var fadingAnimation = (zoomType == param.semanticZoom ? true : false);
 
     // disable and remove stuff
     preAnimation();
@@ -133,42 +126,51 @@ function backspace() {
     var curViewport = d3.select(".oldmainsvg:not(.static)").attr("viewBox").split(" ");
 
     // start a exit & fade transition
-    d3.transition("fadeTween")
-        .duration(param.enteringDuration)
-        .tween("fadeTween", function(){
+    if (fadingAnimation)
+        d3.transition("fadeTween")
+            .duration(param.enteringDuration)
+            .tween("fadeTween", function(){
 
-            return function(t) {fadeAndExit(d3.easeCircleOut(1 - t));};
-        })
-        .on("start", function () {
+                return function(t) {fadeAndExit(d3.easeCircleOut(1 - t));};
+            })
+            .on("start", startZoomingBack);
+    else {
+        d3.selectAll(".oldlayerg").remove();
+        startZoomingBack();
+    }
 
-            // schedule a zoom back transition
-            param.zoomDuration = d3.interpolateZoom(curHistory.endView, curHistory.startView).duration;
-            param.enteringDelay = Math.round(param.zoomDuration * param.enteringDelta);
-            d3.transition("zoomOutTween")
-                .delay(Math.max(param.enteringDelay + param.enteringDuration
-                    - param.zoomDuration, param.axesOutDuration + 5))
-                .duration(param.zoomDuration)
-                .tween("zoomOutTween", function () {
+    function startZoomingBack() {
 
-                    var i = d3.interpolateZoom(curHistory.endView, curHistory.startView);
-                    return function (t) {enterAndZoom(t, i(t));};
-                })
-                .on("start", function() {
+        // schedule a zoom back transition
+        var zoomDuration = d3.interpolateZoom(curHistory.endView, curHistory.startView).duration;
+        var enteringDelay = Math.max(Math.round(zoomDuration * param.enteringDelta) + param.enteringDuration - zoomDuration,
+            param.axesOutDuration);
+        if (! fadingAnimation)
+            enteringDelay = 0;
+        d3.transition("zoomOutTween")
+            .delay(enteringDelay)
+            .duration(zoomDuration)
+            .tween("zoomOutTween", function () {
 
-                    // set up layer layouts
-                    setupLayerLayouts();
+                var i = d3.interpolateZoom(curHistory.endView, curHistory.startView);
+                return function (t) {enterAndZoom(t, i(t));};
+            })
+            .on("start", function() {
 
-                    // static trim
-                    renderStaticLayers();
+                // set up layer layouts
+                setupLayerLayouts();
 
-                    // render
-                    RefreshDynamicLayers(globalVar.initialViewportX, globalVar.initialViewportY);
-                })
-                .on("end", function () {
+                // static trim
+                renderStaticLayers();
 
-                    postAnimation();
-                });
-        });
+                // render
+                RefreshDynamicLayers(globalVar.initialViewportX, globalVar.initialViewportY);
+            })
+            .on("end", function () {
+
+                postAnimation();
+            });
+    }
 
     function enterAndZoom(t, v) {
 
@@ -188,10 +190,12 @@ function backspace() {
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
 
         // change opacity
-        var threshold = param.fadeThreshold;
-        if (1 - t >= threshold) {
-            d3.selectAll(".mainsvg")
-                .style("opacity", 1.0 - (1 - t - threshold) / (1.0 - threshold));
+        if (fadingAnimation) {
+            var threshold = param.fadeThreshold;
+            if (1 - t >= threshold) {
+                d3.selectAll(".mainsvg")
+                    .style("opacity", 1.0 - (1 - t - threshold) / (1.0 - threshold));
+            }
         }
     };
 
@@ -222,9 +226,14 @@ function backspace() {
 // handler for zoom in button
 function literalZoomIn() {
 
+    startLiteralZoomTransition([globalVar.viewportWidth / 2, globalVar.viewportHeight / 2],
+        globalVar.maxScale, globalVar.maxScale / 2 * param.literalZoomDuration);
 };
 
 // handler for zoom out button
 function literalZoomOut() {
+
+    startLiteralZoomTransition([globalVar.viewportWidth / 2, globalVar.viewportHeight / 2],
+        globalVar.minScale, 1 / globalVar.minScale/ 2 * param.literalZoomDuration);
 
 };
