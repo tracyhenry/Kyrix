@@ -35,8 +35,8 @@ public class Main {
 		// if project object is not null and is dirty, precompute
 		if (project != null && isProjectDirty()) {
 			System.out.println("Main project definition has been changed since last session, re-calculating indexes...");
-//			Indexer indexer = new boundingBoxIndexer();
-//			indexer.precompute();
+			Indexer indexer = new Indexer();
+			indexer.precompute();
 			setProjectClean();
 		}
 		else if (project != null)

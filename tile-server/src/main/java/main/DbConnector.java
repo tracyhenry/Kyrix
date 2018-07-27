@@ -67,13 +67,13 @@ public class DbConnector {
 		if (connections.containsKey(dbName))
 			return connections.get(dbName);
 		Connection dbConn = null;
-		if (Config.sqlSelector == Config.sqlOption.PSQL) {
+		if (Config.database == Config.Database.PSQL) {
 			Class.forName("org.postgresql.Driver");
 			dbConn = DriverManager.getConnection("jdbc:postgresql://" + dbServer +
 							"/" + dbName + "?sendStringParametersAsUnicode=false",
 					userName, password);
 		}
-		else if (Config.sqlSelector == Config.sqlOption.MYSQL){
+		else if (Config.database == Config.Database.MYSQL){
 			Class.forName("com.mysql.jdbc.Driver");
 			dbConn = DriverManager.getConnection("jdbc:mysql://" + dbServer +
 							"/" + dbName + "?sendStringParametersAsUnicode=false",

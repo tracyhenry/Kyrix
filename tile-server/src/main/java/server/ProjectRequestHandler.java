@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import index.Indexer;
-import index.boundingBoxIndexer;
 import main.Config;
 import main.Main;
 import project.Canvas;
@@ -62,7 +61,7 @@ public class ProjectRequestHandler implements HttpHandler {
 			if (needsReIndex(oldProject, newProject)) {
 				System.out.println("There is diff that requires recomputing indexes. Shutting down server and recomputing...");
 				Server.stopServer();
-				Indexer indexer = new boundingBoxIndexer();
+				Indexer indexer = new Indexer();
 				indexer.precompute();
 				System.out.println("Completed recomputing indexes. Server restarting...");
 				Server.startServer(Config.portNumber);

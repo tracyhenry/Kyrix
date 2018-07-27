@@ -46,10 +46,10 @@ public class Config {
 	public static int tileBatchSize = 10000;
 
 	// tile indexing scheme
-	public enum TileIndexingScheme {TUPLE_MAPPING, SPATIAL_INDEX, SORTED_TUPLE_MAPPING}
-	public static TileIndexingScheme fetchingScheme = TileIndexingScheme.SPATIAL_INDEX;
+	public enum IndexingScheme {TUPLE_MAPPING, SPATIAL_INDEX, SORTED_TUPLE_MAPPING};
+	public static IndexingScheme indexingScheme = IndexingScheme.SPATIAL_INDEX;
 
-	public enum sqlOption {MYSQL, PSQL}
-	public static sqlOption sqlSelector = sqlOption.MYSQL;
+	public enum Database {MYSQL, PSQL}
+	public static Database database = Database.MYSQL;
 
 }

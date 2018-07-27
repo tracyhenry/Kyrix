@@ -198,7 +198,7 @@ function saveProject()
     dbConn.query("CREATE DATABASE Kyrix;", function (err) {});
 
     // use the database
-    dbConn.query("use Kyrix;", function (err) {
+    dbConn.query("USE Kyrix;", function (err) {
         if (err) throw err;
     });
 

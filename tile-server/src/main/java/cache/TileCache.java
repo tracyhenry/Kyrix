@@ -33,21 +33,21 @@ public class TileCache {
         } else {
             System.out.println("cache miss!");
             //check fetching scheme for the missed tile
-            if (Config.fetchingScheme == Config.TileIndexingScheme.TUPLE_MAPPING) {
+            if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING) {
                 try {
                     data = getTileFromTupleMapping(c, minx, miny, predicates, project);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-            else if (Config.fetchingScheme == Config.TileIndexingScheme.SPATIAL_INDEX) {
+            else if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX) {
                 try {
                     data = getTileFromSpatialIndex(c, minx, miny, predicates, project);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-            else if (Config.fetchingScheme == Config.TileIndexingScheme.SORTED_TUPLE_MAPPING){
+            else if (Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING){
                 try {
                     data = getTileFromSortedTupleMapping(c, minx, miny, predicates, project);
                 } catch (Exception e) {
@@ -153,10 +153,10 @@ public class TileCache {
 
             String sql = "select * from bbox_" + project.getName() + "_"
                     + c.getId() + "layer" + i + " where ";
-                if (Config.sqlSelector == Config.sqlOption.PSQL) {
+                if (Config.database == Config.Database.PSQL) {
                     sql += "st_intersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
                 }
-                else if (Config.sqlSelector == Config.sqlOption.MYSQL) {
+                else if (Config.database == Config.Database.MYSQL) {
                     sql += "MBRIntersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
                 }
                 sql += "," + (minx + Config.tileW) + " " + (miny + Config.tileH) + "," + minx + " " + (miny + Config.tileH)
