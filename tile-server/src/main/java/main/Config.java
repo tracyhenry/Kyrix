@@ -49,7 +49,10 @@ public class Config {
 	public enum IndexingScheme {TUPLE_MAPPING, SPATIAL_INDEX, SORTED_TUPLE_MAPPING};
 	public static IndexingScheme indexingScheme = IndexingScheme.SPATIAL_INDEX;
 
+	// underlying database
 	public enum Database {MYSQL, PSQL}
 	public static Database database = Database.MYSQL;
 
+	// database iterator fetch size
+	public static int iteratorfetchSize = 1000;
 }

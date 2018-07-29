@@ -14,12 +14,26 @@ public class DbConnector {
 
 	public static Statement getStmtByDbName(String dbName) throws SQLException, ClassNotFoundException {
 
+		// get connection
 		Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
-		conn.setAutoCommit(false);
-		//Statement retStmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-		Statement retStmt = conn.createStatement();
+
+		// set autocommit
+		if (Config.database == Config.Database.PSQL)
+			conn.setAutoCommit(false);
+
+		// get statement
+		Statement retStmt = null;
+		if (Config.database == Config.Database.PSQL)
+			retStmt = conn.createStatement();
+		else if (Config.database == Config.Database.MYSQL)
+			retStmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+
+		// set fetch size
 		// NOTE: MySQL doesn't support fetch size very well. And MIN_VALUE isn't that bad.
-		retStmt.setFetchSize(1000);
+		if (Config.database == Config.Database.MYSQL)
+			retStmt.setFetchSize(Integer.MIN_VALUE);
+		else
+			retStmt.setFetchSize(Config.iteratorfetchSize);
 
 		return retStmt;
 	}
@@ -84,6 +98,10 @@ public class DbConnector {
 	}
 
 	public static void commitConnection(String dbName) throws SQLException, ClassNotFoundException{
+
+		// mysql uses autocommit
+		if (Config.database == Config.Database.MYSQL)
+			return ;
 
 		Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
 		conn.commit();

@@ -29,9 +29,6 @@ globalVar.curCanvas = null;
 globalVar.curJump = null;
 globalVar.curStaticData = null;
 
-// tiling or dynamic box
-globalVar.tiling = false;
-
 // history
 globalVar.history = [];
 

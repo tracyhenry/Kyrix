@@ -77,7 +77,8 @@ function renderTile(tileSvg, x, y, renderFuncs, canvasId, predicates) {
 };
 
 function RefreshDynamicLayers(viewportX, viewportY) {
-    if (globalVar.tiling) {
+
+    if (param.indexing == "tiling") {
 
         var tileW = globalVar.tileW;
         var tileH = globalVar.tileH;
@@ -187,10 +188,11 @@ function RefreshDynamicLayers(viewportX, viewportY) {
             });
 
     }
-    else{
+    else {
         var vpW = globalVar.viewportWidth;
         var vpH = globalVar.viewportHeight;
-        // get tile ids
+
+        // get current viewport
         var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
 
         // render axes
