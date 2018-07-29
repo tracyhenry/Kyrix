@@ -186,7 +186,6 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                         });
                     });
             });
-
     }
     else {
         var vpW = globalVar.viewportWidth;

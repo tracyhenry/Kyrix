@@ -60,14 +60,14 @@ public class Main {
 
 	public static boolean isProjectDirty() throws SQLException, ClassNotFoundException {
 
-		String sql = "select dirty from " + Config.projectTableName + " where name = \"" + Config.projectName + "\";";
+		String sql = "select dirty from " + Config.projectTableName + " where name = \'" + Config.projectName + "\';";
 		ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(Config.databaseName, sql);
 		return (Integer.valueOf(ret.get(0).get(0)) == 1 ? true : false);
 	}
 
 	public static void setProjectClean() throws SQLException, ClassNotFoundException {
 
-		String sql = "update " + Config.projectTableName + " set dirty = " + 0 + " where name = \"" + Config.projectName + "\";";
+		String sql = "update " + Config.projectTableName + " set dirty = " + 0 + " where name = \'" + Config.projectName + "\';";
 		DbConnector.executeUpdate(Config.databaseName, sql);
 	}
 
@@ -90,14 +90,14 @@ public class Main {
 
 	private static void getProjectObject() throws ClassNotFoundException {
 
-		String sql = "select content from " + Config.projectTableName + " where name = \"" + Config.projectName + "\";";
+		String sql = "select content from " + Config.projectTableName + " where name = \'" + Config.projectName + "\';";
 		try {
 			ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(Config.databaseName, sql);
 			projectJSON = ret.get(0).get(0);
 			Gson gson = new GsonBuilder().create();
 			project = gson.fromJson(projectJSON, Project.class);
-			//System.out.println(project);
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.out.println("Cannot find definition of main project... waiting...");
 		}
 	}

@@ -74,7 +74,11 @@ public class Indexer {
 				// create the bbox table
 				sql = "create table " + bboxTableName + " (";
 				for (int i = 0; i < trans.getColumnNames().size(); i ++)
-					sql += trans.getColumnNames().get(i) + " mediumtext, ";
+					if (Config.database == Config.Database.MYSQL)
+						sql += trans.getColumnNames().get(i) + " mediumtext, ";
+					else if (Config.database == Config.Database.PSQL)
+						sql += trans.getColumnNames().get(i) + " text, ";
+
 				if (Config.database == Config.Database.PSQL){
 					if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
 							Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING)
@@ -94,29 +98,17 @@ public class Indexer {
 				}
 				sql += ");";
 				bboxStmt.executeUpdate(sql);
-				if (Config.database == Config.Database.PSQL) {
-					if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
-							Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING){
-						sql = "create index tuple_idx on " + bboxTableName + " (tuple_id);";
-						bboxStmt.executeUpdate(sql);
+
+				// create tile table
+				if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
+						Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING) {
+					if (Config.database == Config.Database.PSQL)
 						sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50));";
-						tileStmt.executeUpdate(sql);
-						sql = "create index tile_idx on " + tileTableName + " (tile_id);";
-						tileStmt.executeUpdate(sql);
-					}
-					if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX){
-						sql = "create index sp on " + bboxTableName + " using gist (geom);";
-						bboxStmt.executeUpdate(sql);
-					}
-				}
-				else if (Config.database == Config.Database.MYSQL) {
-					// create the tile table
-					if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
-							Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING) {
+					else if (Config.database == Config.Database.MYSQL)
 						sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50), index (tile_id));";
-						tileStmt.executeUpdate(sql);
-					}
+					tileStmt.executeUpdate(sql);
 				}
+
 				// if this is an empty layer, continue
 				if (trans.getDb().equals(""))
 					continue;
@@ -232,7 +224,11 @@ public class Indexer {
 					else
 						bboxInsSqlBuilder.append(" (");
 					for (int i = 0; i < transformedRow.size(); i ++)
-						bboxInsSqlBuilder.append("'" + transformedRow.get(i).replaceAll("\'", "\\\\'") + "', ");
+						if (Config.database == Config.Database.PSQL)
+							bboxInsSqlBuilder.append("'" + transformedRow.get(i).replaceAll("\'", "\'\'") + "', ");
+						else if (Config.database == Config.Database.MYSQL)
+							bboxInsSqlBuilder.append("'" + transformedRow.get(i).replaceAll("\'", "\\\\'") + "', ");
+
 					if (Config.indexingScheme !=  Config.IndexingScheme.SPATIAL_INDEX)
 						bboxInsSqlBuilder.append(String.valueOf(rowCount) + ", ");
 					for (int i = 0; i < 6; i ++)
@@ -295,22 +291,30 @@ public class Indexer {
 					tileStmt.executeUpdate(tileInsSqlBuilder.toString());
 					DbConnector.commitConnection(Config.databaseName);
 				}
-				if (Config.database == Config.Database.PSQL){
-					if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING){
+				if (Config.database == Config.Database.PSQL) {
+					if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
+							Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING) {
+						sql = "create index tuple_idx on " + bboxTableName + " (tuple_id);";
+						bboxStmt.executeUpdate(sql);
+						sql = "create index tile_idx on " + tileTableName + " (tile_id);";
+						tileStmt.executeUpdate(sql);
+					}
+					if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX) {
+						sql = "create index sp_" + bboxTableName + " on " + bboxTableName + " using gist (geom);";
+						bboxStmt.executeUpdate(sql);
+						sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
+						bboxStmt.executeUpdate(sql);
+					}
+					if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING) {
 						sql = "cluster " + bboxTableName + " using tuple_idx;";
 						tileStmt.executeUpdate(sql);
 						sql = "cluster " + tileTableName + " using tile_idx;";
 						tileStmt.executeUpdate(sql);
 					}
-					if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX){
-						sql = "cluster " + bboxTableName + " using sp;";
-						bboxStmt.executeUpdate(sql);
-					}
 					DbConnector.commitConnection(Config.databaseName);
-
 				}
-				else if (Config.database == Config.Database.MYSQL){
-					if (Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING){
+				else if (Config.database == Config.Database.MYSQL) {
+					if (Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING) {
 						sql = "create table sorted_" + tileTableName + " (tuple_id int, tile_id varchar(50));";
 						tileStmt.executeUpdate(sql);
 						sql = "insert into sorted_" + tileTableName + " select * from " + tileTableName + " order by tile_id;";
