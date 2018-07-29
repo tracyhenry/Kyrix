@@ -43,21 +43,45 @@ function preAnimation() {
     globalVar.animation = true;
 };
 
-function postAnimation() {
+function postAnimation(zoomType) {
 
-    // remove the old svgs
-    d3.selectAll(".oldlayerg")
-        .transition()
-        .delay(param.oldRemovalDelay)
-        .remove();
+    function postOldLayerRemoval() {
+
+        // set up zoom
+        setupZoom(1);
+
+        // set up button states
+        setButtonState();
+
+        // register jumps here because during animation
+        // jumps are not allowed to be registered
+        globalVar.animation = false;
+        for (var i = 0; i < globalVar.curCanvas.layers.length; i ++) {
+            var curLayer = globalVar.curCanvas.layers[i];
+            if (! curLayer.isStatic)
+                d3.select(".layerg.layer" + i)
+                    .select("svg")
+                    .selectAll(".lowestsvg")
+                    .each(function() {
+                        registerJumps(d3.select(this), i);
+                    });
+            else
+                d3.select(".layer.layer" + i)
+                    .select("svg")
+                    .call(registerJumps, d3.select(this), i);
+        }
+    }
+
+    if (zoomType == null)
+        zoomType = param.semanticZoom;
 
     // set the viewBox & opacity of the new .mainsvgs
     // because d3 tween does not get t to 1.0
     d3.selectAll(".mainsvg:not(.static)")
         .attr("viewBox", globalVar.initialViewportX + " "
-        + globalVar.initialViewportY + " "
-        + globalVar.viewportWidth + " "
-        + globalVar.viewportHeight)
+            + globalVar.initialViewportY + " "
+            + globalVar.viewportWidth + " "
+            + globalVar.viewportHeight)
         .style("opacity", 1);
     d3.select(".mainsvg.static").attr("viewBox", "0 0 "
         + globalVar.viewportWidth + " "
@@ -69,29 +93,18 @@ function postAnimation() {
         .duration(param.axesInDuration)
         .style("opacity", 1);
 
-    // set up zoom
-    setupZoom(1);
-
-    // set up button states
-    setButtonState();
-
-    // register jumps here because during animation
-    // jumps are not allowed to be registered
-    globalVar.animation = false;
-    for (var i = 0; i < globalVar.curCanvas.layers.length; i ++) {
-        var curLayer = globalVar.curCanvas.layers[i];
-        if (! curLayer.isStatic)
-            d3.select(".layerg.layer" + i)
-                .select("svg")
-                .selectAll(".lowestsvg")
-                .each(function() {
-                    registerJumps(d3.select(this), i);
-                });
-        else
-            d3.select(".layer.layer" + i)
-                .select("svg")
-                .call(registerJumps, d3.select(this), i);
-    }
+    // use a d3 transition to remove things based on zoom type
+    var removalDelay = 0;
+    if (zoomType == param.geometricSemanticZoom)
+        removalDelay = param.oldRemovalDelay;
+    var numOldLayer = d3.selectAll(".oldlayerg").size();
+    d3.selectAll(".oldlayerg")
+        .transition()
+        .delay(removalDelay)
+        .remove()
+        .on("end", postOldLayerRemoval);
+    if (numOldLayer == 0)
+        postOldLayerRemoval();
 };
 
 // animate semantic zoom
@@ -165,7 +178,7 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
                     })
                     .on("end", function () {
 
-                        postAnimation();
+                        postAnimation(zoomType);
                     });
         })
         .on("end", function () {
@@ -182,10 +195,9 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
                 RefreshDynamicLayers(newViewportX, newViewportY);
 
                 // clean up
-                postAnimation();
+                postAnimation(zoomType);
             }
         });
-
 
     function zoomAndFade(t, v) {
 
