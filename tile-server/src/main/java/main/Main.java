@@ -69,6 +69,7 @@ public class Main {
 
 		String sql = "update " + Config.projectTableName + " set dirty = " + 0 + " where name = \'" + Config.projectName + "\';";
 		DbConnector.executeUpdate(Config.databaseName, sql);
+		DbConnector.commitConnection(Config.databaseName);
 	}
 
 	private static void readConfigFile() throws IOException {
