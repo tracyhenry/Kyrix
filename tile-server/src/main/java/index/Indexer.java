@@ -120,7 +120,7 @@ public class Indexer {
 				Require.enable(engine, rootFolder);
 
 				// step 1(a): register the data transform function with nashorn
-				String script = "var d3 = require('d3-scale');\n"; // TODO: let users specify all required d3 libraries.
+				String script = "var d3 = require('d3');\n"; // TODO: let users specify all required d3 libraries.
 				script += "var trans = " + trans.getTransformFunc() + ";\n";
 				engine.eval(script);
 

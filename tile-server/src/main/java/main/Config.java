@@ -15,10 +15,11 @@ public class Config {
 	// config file row numbers
 	public static int projectNameRow = 0;
 	public static int portNumberRow = 1;
-	public static int dbServerRow = 2;
-	public static int userNameRow = 3;
-	public static int passwordRow = 4;
-	public static int d3DirRow = 5;
+	public static int dbRow = 2;
+	public static int dbServerRow = 3;
+	public static int userNameRow = 4;
+	public static int passwordRow = 5;
+	public static int d3DirRow = 6;
 	public static int cacheSize = 10;
 
 	// config varaibles, will be at runtime
@@ -50,8 +51,8 @@ public class Config {
 	public static IndexingScheme indexingScheme = IndexingScheme.SPATIAL_INDEX;
 
 	// underlying database
-	public enum Database {MYSQL, PSQL}
-	public static Database database = Database.MYSQL;
+	public enum Database {MYSQL, PSQL};
+	public static Database database;
 
 	// database iterator fetch size
 	public static int iteratorfetchSize = 1000;
