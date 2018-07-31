@@ -24,7 +24,7 @@ public class Main {
 			ClassNotFoundException,
 			SQLException,
 			ScriptException,
-			NoSuchMethodException {
+			NoSuchMethodException, InterruptedException {
 
 		// read config file
 		readConfigFile();

@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import index.Indexer;
 import main.Config;
 import main.Main;
 import project.Canvas;
@@ -60,12 +59,7 @@ public class ProjectRequestHandler implements HttpHandler {
 		try {
 			if (needsReIndex(oldProject, newProject)) {
 				System.out.println("There is diff that requires recomputing indexes. Shutting down server and recomputing...");
-				Server.stopServer();
-				Indexer indexer = new Indexer();
-				indexer.precompute();
-				System.out.println("Completed recomputing indexes. Server restarting...");
-				Server.startServer(Config.portNumber);
-				System.out.println("Server restarted, refresh your web page!");
+				Server.terminate();
 			}
 			else
 				System.out.println("The diff does not require recompute. Refresh your web page now!");
