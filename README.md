@@ -49,7 +49,7 @@ The backend dependecies are handled using maven. See `tile-server/pom.xml` for t
       $ > exit                                   # log out
       $ mysql -u root -p nba < nba_db_mysql.sql  # import 
    
-   For PostgreSQL, download the nba database from (https://www.dropbox.com/s/35d2t330qov2x3w/nba_db_psql.sql?dl=0). Load it into your PostgreSQL as follows:
+   For PostgreSQL, download the nba database from (https://www.dropbox.com/s/baqb01thxvfthk5/nba_db_psql.sql?dl=0). Load it into your PostgreSQL as follows:
    
       $ psql postgres               # login as postgres
       $ Enter password:             # enter password if necessary

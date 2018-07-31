@@ -216,13 +216,12 @@ function saveProject()
         return value;
     }, 4);
     //console.log(logJSON);
+
     // add escape character to projectJSON
     var projectJSONEscapedMySQL = (projectJSON + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
     var projectJSONEscapedPSQL = projectJSON.replace(/\'/g, '\'\'');
 
     // construct queries
-    var createDbQuery = "CREATE DATABASE Kyrix";
-    var useDbQuery = "USE Kyrix;";
     var createTableQuery = "CREATE TABLE project (name VARCHAR(255), content TEXT, dirty int" +
         ", CONSTRAINT PK_project PRIMARY KEY (name));";
     var deleteProjQuery = "DELETE FROM project where name = \'" + this.name + "\'";
@@ -234,6 +233,9 @@ function saveProject()
     // connect to databases
     var config = this.config;
     if (config.database == "mysql") {
+
+        var createDbQuery = "CREATE DATABASE Kyrix";
+        var useDbQuery = "USE Kyrix;";
 
         var dbConn = mysql.createConnection({
             host: config.serverName,
@@ -264,6 +266,9 @@ function saveProject()
         dbConn.end();
     }
     else if (config.database == "psql") {
+
+        var createDbQuery = "CREATE DATABASE \"Kyrix\"";
+        var useDbQuery = "USE \"Kyrix\";";
 
         // construct a connection to the postgres db to create Kyrix db
         var postgresConn = new psql.Client({host : config.serverName,
