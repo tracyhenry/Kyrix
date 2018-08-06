@@ -49,7 +49,6 @@ public class BoxRequestHandler  implements HttpHandler {
         int minx, miny;
         int viewportH = Main.getProject().getViewportHeight();
         int viewportW = Main.getProject().getViewportWidth();
-        String predicate;
         BoxandData data = null;
 
         // check if this is a POST request
@@ -97,12 +96,14 @@ public class BoxRequestHandler  implements HttpHandler {
         respMap.put("miny", data.box.getMiny());
         respMap.put("boxH", data.box.getHight());
         respMap.put("boxW", data.box.getWidth());
+        respMap.put("canvasId", canvasId);
         response = gson.toJson(respMap);
 
         // send back response
         Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
         System.out.println();
     }
+
     private String checkParameters(Map<String, String> queryMap) {
 
         // check fields
@@ -112,8 +113,6 @@ public class BoxRequestHandler  implements HttpHandler {
             return "x or y missing.";
 
         String canvasId = queryMap.get("id");
-        int minx = Integer.valueOf(queryMap.get("x"));
-        int miny = Integer.valueOf(queryMap.get("y"));
 
         // check whether this canvas exists
         if (project.getCanvas(canvasId) == null)

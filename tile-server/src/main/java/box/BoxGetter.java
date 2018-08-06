@@ -17,7 +17,7 @@ public abstract class BoxGetter {
         project = Main.getProject();
     }
 
-    public ArrayList<ArrayList<ArrayList<String>>> fetchData(Canvas c, int minx, int miny, int maxx, int maxy,ArrayList<String> predicates)
+    public ArrayList<ArrayList<ArrayList<String>>> fetchData(Canvas c, int minx, int miny, int maxx, int maxy, ArrayList<String> predicates)
             throws SQLException, ClassNotFoundException {
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
         Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
@@ -26,13 +26,16 @@ public abstract class BoxGetter {
             for (int i = 0; i < c.getLayers().size(); i++) {
 
                 if (c.getLayers().get(i).isStatic()) {
-                    data.add(new ArrayList<ArrayList<String>>());
+                    data.add(new ArrayList<>());
                     continue;
                 }
                 // construct range query
                 String sql = "select * from bbox_" + project.getName() + "_"
-                        + c.getId() + "layer" + i + " where "
-                        + "MBRIntersects(GeomFromText('Polygon((" + minx + " " + miny + "," + maxx + " " + miny
+                        + c.getId() + "layer" + i + " where ";
+                sql += (Config.database == Config.Database.MYSQL ? "MBRIntersects(GeomFromText" :
+                        "st_Intersects(st_GeomFromText") +
+                        "('Polygon(("
+                        + minx + " " + miny + "," + maxx + " " + miny
                         + "," + maxx + " " + maxy + "," + minx + " " + maxy
                         + "," + minx + " " + miny;
                 sql += "))'),geom)";

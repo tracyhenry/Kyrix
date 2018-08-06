@@ -47,5 +47,5 @@ param.retainSizeZoom = false;
 param.semanticZoom = "semantic_zoom";
 param.geometricSemanticZoom = "geometric_semantic_zoom";
 
-// indexing scheme
-param.indexing = "tiling";
+// fetching scheme -- either tiling or dbox
+param.fetchingScheme = "dbox";
