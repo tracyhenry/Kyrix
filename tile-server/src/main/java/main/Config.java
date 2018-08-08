@@ -19,7 +19,8 @@ public class Config {
 	public static int dbServerRow = 3;
 	public static int userNameRow = 4;
 	public static int passwordRow = 5;
-	public static int d3DirRow = 6;
+	public static int kyrixDbNameRow = 6;
+	public static int d3DirRow = 7;
 	public static int cacheSize = 10;
 
 	// config varaibles, will be at runtime
@@ -31,7 +32,7 @@ public class Config {
 	public static String d3Dir;
 
 	// db name
-	public static String databaseName = "Kyrix";
+	public static String databaseName;
 
 	// table name
 	public static String projectTableName = "project";

@@ -29,6 +29,7 @@ function Project(name, configFile, viewportWidth, viewportHeight) {
     this.config.serverName = lines[3].replace('\r', '');
     this.config.userName = lines[4].replace('\r', '');
     this.config.password = lines[5].replace('\r', '');
+    this.config.kyrixDbName = lines[6].replace('\r', '');
 
     // viewport
     this.viewportWidth = viewportWidth;
@@ -234,8 +235,8 @@ function saveProject()
     var config = this.config;
     if (config.database == "mysql") {
 
-        var createDbQuery = "CREATE DATABASE Kyrix";
-        var useDbQuery = "USE Kyrix;";
+        var createDbQuery = "CREATE DATABASE " + config.kyrixDbName;
+        var useDbQuery = "USE " + config.kyrixDbName + ";";
 
         var dbConn = mysql.createConnection({
             host: config.serverName,
@@ -267,8 +268,8 @@ function saveProject()
     }
     else if (config.database == "psql") {
 
-        var createDbQuery = "CREATE DATABASE \"Kyrix\"";
-        var useDbQuery = "USE \"Kyrix\";";
+        var createDbQuery = "CREATE DATABASE \"" + config.kyrixDbName + "\"";
+        var useDbQuery = "USE \"" + config.kyrixDbName + "\";";
 
         // construct a connection to the postgres db to create Kyrix db
         var postgresConn = new psql.Client({host : config.serverName,
@@ -283,7 +284,7 @@ function saveProject()
                 var dbConn = new psql.Client({host : config.serverName,
                     user : config.userName,
                     password : config.password,
-                    database : "Kyrix"});
+                    database : config.kyrixDbName});
 
                 // connect and pose queries
                 dbConn.connect(function(err) {
