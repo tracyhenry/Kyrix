@@ -46,3 +46,6 @@ param.retainSizeZoom = false;
 // jump types
 param.semanticZoom = "semantic_zoom";
 param.geometricSemanticZoom = "geometric_semantic_zoom";
+
+// fetching scheme -- either tiling or dbox
+param.fetchingScheme = "dbox";

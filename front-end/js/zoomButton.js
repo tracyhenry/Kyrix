@@ -129,7 +129,7 @@ function backspace() {
     if (fadingAnimation)
         d3.transition("fadeTween")
             .duration(param.enteringDuration)
-            .tween("fadeTween", function(){
+            .tween("fadeTween", function() {
 
                 return function(t) {fadeAndExit(d3.easeCircleOut(1 - t));};
             })

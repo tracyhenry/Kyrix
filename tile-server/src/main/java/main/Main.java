@@ -3,7 +3,6 @@ package main;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import index.Indexer;
-import index.boundingBoxIndexer;
 import project.Project;
 import server.Server;
 import cache.TileCache;
@@ -25,7 +24,7 @@ public class Main {
 			ClassNotFoundException,
 			SQLException,
 			ScriptException,
-			NoSuchMethodException {
+			NoSuchMethodException, InterruptedException {
 
 		// read config file
 		readConfigFile();
@@ -36,7 +35,7 @@ public class Main {
 		// if project object is not null and is dirty, precompute
 		if (project != null && isProjectDirty()) {
 			System.out.println("Main project definition has been changed since last session, re-calculating indexes...");
-			Indexer indexer = new boundingBoxIndexer();
+			Indexer indexer = new Indexer();
 			indexer.precompute();
 			setProjectClean();
 		}
@@ -61,15 +60,16 @@ public class Main {
 
 	public static boolean isProjectDirty() throws SQLException, ClassNotFoundException {
 
-		String sql = "select dirty from " + Config.projectTableName + " where name = \"" + Config.projectName + "\";";
+		String sql = "select dirty from " + Config.projectTableName + " where name = \'" + Config.projectName + "\';";
 		ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(Config.databaseName, sql);
 		return (Integer.valueOf(ret.get(0).get(0)) == 1 ? true : false);
 	}
 
 	public static void setProjectClean() throws SQLException, ClassNotFoundException {
 
-		String sql = "update " + Config.projectTableName + " set dirty = " + 0 + " where name = \"" + Config.projectName + "\";";
+		String sql = "update " + Config.projectTableName + " set dirty = " + 0 + " where name = \'" + Config.projectName + "\';";
 		DbConnector.executeUpdate(Config.databaseName, sql);
+		DbConnector.commitConnection(Config.databaseName);
 	}
 
 	private static void readConfigFile() throws IOException {
@@ -83,21 +83,23 @@ public class Main {
 
 		Config.projectName = inputStrings.get(Config.projectNameRow);
 		Config.portNumber = Integer.valueOf(inputStrings.get(Config.portNumberRow));
+		Config.database = (inputStrings.get(Config.dbRow).toLowerCase().equals("mysql") ?
+				Config.Database.MYSQL : Config.Database.PSQL);
 		Config.dbServer = inputStrings.get(Config.dbServerRow);
 		Config.userName = inputStrings.get(Config.userNameRow);
 		Config.password = inputStrings.get(Config.passwordRow);
+		Config.databaseName = inputStrings.get(Config.kyrixDbNameRow);
 		Config.d3Dir = inputStrings.get(Config.d3DirRow);
 	}
 
 	private static void getProjectObject() throws ClassNotFoundException {
 
-		String sql = "select content from " + Config.projectTableName + " where name = \"" + Config.projectName + "\";";
+		String sql = "select content from " + Config.projectTableName + " where name = \'" + Config.projectName + "\';";
 		try {
 			ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(Config.databaseName, sql);
 			projectJSON = ret.get(0).get(0);
 			Gson gson = new GsonBuilder().create();
 			project = gson.fromJson(projectJSON, Project.class);
-			//System.out.println(project);
 		} catch (Exception e) {
 			System.out.println("Cannot find definition of main project... waiting...");
 		}

@@ -102,18 +102,19 @@ var lastNameSelector = function (row, layerId) {
 };
 
 var newViewport1 = function (row) {
-    return [1, ["id=" + row[0]]];
+    return [1, ["id=\'" + row[0] + "\'"]];
 };
+
 var newPredicate1 = function (row) {
-    return ["id=" + row[0]];
+    return ["id=\'" + row[0] + "\'"];
 };
 
 var newViewport2 = function (row) {
-    return [1, ["id=" + row[0], ""]];
+    return [1, ["id=\'" + row[0] + "\'", ""]];
 };
 
 var newPredicate2 = function (row) {
-    return ["id=" + row[0], ""]
+    return ["id=\'" + row[0] + "\'", ""]
 };
 
 p.addJump(new Jump("fullname", "firstname", firstNameSelector, newViewport1, newPredicate1, "semantic_zoom"));

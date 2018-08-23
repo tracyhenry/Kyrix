@@ -58,7 +58,7 @@ function postAnimation(zoomType) {
         globalVar.animation = false;
         for (var i = 0; i < globalVar.curCanvas.layers.length; i ++) {
             var curLayer = globalVar.curCanvas.layers[i];
-            if (! curLayer.isStatic)
+            if (! curLayer.isStatic && param.fetchingScheme == "tiling")
                 d3.select(".layerg.layer" + i)
                     .select("svg")
                     .selectAll(".lowestsvg")
@@ -66,11 +66,9 @@ function postAnimation(zoomType) {
                         registerJumps(d3.select(this), i);
                     });
             else
-                d3.select(".layer.layer" + i)
-                    .select("svg")
-                    .call(registerJumps, d3.select(this), i);
+                registerJumps(d3.select(".layerg.layer" + i).select("svg"), i);
         }
-    }
+    };
 
     if (zoomType == null)
         zoomType = param.semanticZoom;
@@ -255,6 +253,7 @@ function registerJumps(svg, layerId) {
 
     var jumps = globalVar.curJump;
     var shapes = svg.select("g").selectAll("*");
+
     shapes.each(function(p) {
 
         // check if this shape has jumps
@@ -345,6 +344,9 @@ function registerJumps(svg, layerId) {
 
                     // log history
                     logHistory(jumps[jumpId].type);
+
+                    // reset globalvar.boxx
+                    globalVar.boxX = -1000;
 
                     // change canvas id
                     globalVar.curCanvasId = jumps[jumpId].destId;

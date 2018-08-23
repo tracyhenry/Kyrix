@@ -23,6 +23,7 @@
   "devDependencies": {},
   "dependencies": {
     "d3": "^4.12.2",
-    "mysql": "^2.15.0"
+    "mysql": "^2.15.0",
+    "pg": "^7.4.3"
   }
 }
