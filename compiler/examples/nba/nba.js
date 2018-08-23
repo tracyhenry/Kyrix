@@ -106,8 +106,8 @@ var newViewport = function (row) {
     return [0, 0, 0]
 };
 var newPredicate = function (row) {
-    return ["(home_team=\"" + row[6] + "\" or " + "away_team=\"" + row[6] + "\")",
-            "abbr=\"" + row[6] + "\""];
+    return ["(home_team=\'" + row[6] + "\' or " + "away_team=\'" + row[6] + "\')",
+            "abbr=\'" + row[6] + "\'"];
 };
 
 var jumpName = function (row) {
@@ -125,8 +125,8 @@ var newViewport = function (row) {
     return [0, 0, 0]
 };
 var newPredicate = function (row) {
-    return ["game_id = " + row[0],
-            "abbr1=\"" + row[6] + "\" and abbr2=\"" + row[7] + "\""];
+    return ["game_id = \'" + row[0] + "\'",
+            "abbr1=\'" + row[6] + "\' and abbr2=\'" + row[7] + "\'"];
 };
 
 var jumpName = function (row) {
@@ -143,14 +143,15 @@ var selector = function (row, layerId) {
 var newViewport = function () {
     return [0, 0, 0]
 };
+
 var newPredicateHome = function (row) {
-    return ["game_id = " + row[0] + " and team_abbreviation = \"" + row[6] + "\"",
-        "game_id = " + row[0] + " and team_abbreviation = \"" + row[6] + "\""];
+    return ["game_id = \'" + row[0] + "\' and team_abbreviation = \'" + row[6] + "\'",
+        "game_id = \'" + row[0] + "\' and team_abbreviation = \'" + row[6] + "\'"];
 };
 
 var newPredicateAway = function (row) {
-    return ["game_id = " + row[0] + " and team_abbreviation = \"" + row[7] + "\"",
-        "game_id = " + row[0] + " and team_abbreviation = \"" + row[7] + "\""];
+    return ["game_id = \'" + row[0] + "\' and team_abbreviation = \'" + row[7] + "\'",
+        "game_id = \'" + row[0] + "\' and team_abbreviation = \'" + row[7] + "\'"];
 };
 
 var jumpNameHome = function (row) {

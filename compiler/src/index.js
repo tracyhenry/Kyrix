@@ -1,6 +1,7 @@
 // imports
 const fs = require("fs");
 const mysql = require("mysql");
+const psql = require("pg");
 const http = require("http");
 const Canvas = require("./Canvas").Canvas;
 const Jump = require("./Jump").Jump;
@@ -24,9 +25,11 @@ function Project(name, configFile, viewportWidth, viewportHeight) {
     var lines = fs.readFileSync(configFile).toString().split("\n");
     this.config = {};
     this.config.serverPortNumber = lines[1].replace('\r', '');
-    this.config.serverName = lines[2].replace('\r', '');
-    this.config.userName = lines[3].replace('\r', '');
-    this.config.password = lines[4].replace('\r', '');
+    this.config.database = lines[2].replace('\r', '').toLowerCase();
+    this.config.serverName = lines[3].replace('\r', '');
+    this.config.userName = lines[4].replace('\r', '');
+    this.config.password = lines[5].replace('\r', '');
+    this.config.kyrixDbName = lines[6].replace('\r', '');
 
     // viewport
     this.viewportWidth = viewportWidth;
@@ -165,6 +168,29 @@ function initialCanvas(id, viewportX, viewportY, predicates) {
     this.initialPredicates = predicates;
 }
 
+function sendProjectRequestToBackend(portNumber, projectJSON) {
+
+    // set up http post connections
+    var post_options = {
+        host: "localhost",
+        port: portNumber,
+        path: '/project',
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    };
+    console.log(post_options);
+    var post_req = http.request(post_options, function(res) {
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+            console.log('Response: ' + chunk);
+        });
+    });
+
+    // send the project definition to tile server
+    post_req.write(projectJSON);
+    post_req.end();
+}
+
 // save the current project, and send it to backend server
 function saveProject()
 {
@@ -179,35 +205,7 @@ function saveProject()
                 throw new Error("Canvas " + this.canvases[i] + " layer " + j + " is dynamic and requires a placement object.");
     }
 
-    // connecting with mysql
-    var dbConn = mysql.createConnection({
-        host     : this.config.serverName,
-        user     : this.config.userName,
-        password : this.config.password,
-        insecureAuth : true
-    });
-    dbConn.connect(function(err) {
-        if (err) {
-            console.error('error connecting: ' + err.stack);
-            return;
-        }
-        console.log('connected as id ' + dbConn.threadId);
-    });
-
-    // create the database 'Kyrix' and ignore the error
-    dbConn.query("CREATE DATABASE Kyrix;", function (err) {});
-
-    // use the database
-    dbConn.query("USE Kyrix;", function (err) {
-        if (err) throw err;
-    });
-
-    // create a table and ignore the error
-    var createTableQuery = "CREATE TABLE project (name VARCHAR(255), content TEXT, dirty int" +
-        ", CONSTRAINT PK_project PRIMARY KEY (name));";
-    dbConn.query(createTableQuery, function (err) {});
-
-    // turn the current project into a json blob
+    // prepare project definition JSON strings
     var projectJSON = JSON.stringify(this, function (key, value) {
         if (typeof value === 'function')
             return value.toString();
@@ -221,42 +219,104 @@ function saveProject()
     //console.log(logJSON);
 
     // add escape character to projectJSON
-    var projectJSONEscaped = (projectJSON + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+    var projectJSONEscapedMySQL = (projectJSON + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
+    var projectJSONEscapedPSQL = projectJSON.replace(/\'/g, '\'\'');
 
-    // insert the JSON blob into the project table
-    var deleteQuery = "DELETE FROM project where name = \'" + this.name + "\'";
-    dbConn.query(deleteQuery, function (err) {});
-    var insertQuery = "INSERT INTO project (name, content, dirty) VALUES (\'" +
-        this.name + "\', \'" + projectJSONEscaped + "\', 1);";
-    var portNumber = this.config.serverPortNumber;
-    dbConn.query(insertQuery,
-        function (err) {
-            if (err) throw err;
-            // set up http post connections
-            var post_options = {
-                host: "localhost",
-                port: portNumber,
-                path: '/project',
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'//,
-                    //'Content-Length': Buffer.byteLength(projectJSON)
-                }
-            };
-            console.log(post_options);
-            var post_req = http.request(post_options, function(res) {
-                res.setEncoding('utf8');
-                res.on('data', function (chunk) {
-                    console.log('Response: ' + chunk);
-                });
-            });
+    // construct queries
+    var createTableQuery = "CREATE TABLE project (name VARCHAR(255), content TEXT, dirty int" +
+        ", CONSTRAINT PK_project PRIMARY KEY (name));";
+    var deleteProjQuery = "DELETE FROM project where name = \'" + this.name + "\'";
+    var insertProjQueryMySQL = "INSERT INTO project (name, content, dirty) VALUES (\'" +
+        this.name + "\', \'" + projectJSONEscapedMySQL + "\', 1);";
+    var insertProjQueryPSQL = "INSERT INTO project (name, content, dirty) VALUES (\'" +
+        this.name + "\', \'" + projectJSONEscapedPSQL + "\', 1);";
 
-            // send the project definition to tile server
-            post_req.write(projectJSON);
-            post_req.end();
+    // connect to databases
+    var config = this.config;
+    if (config.database == "mysql") {
+
+        var createDbQuery = "CREATE DATABASE " + config.kyrixDbName;
+        var useDbQuery = "USE " + config.kyrixDbName + ";";
+
+        var dbConn = mysql.createConnection({
+            host: config.serverName,
+            user: config.userName,
+            password: config.password,
+            insecureAuth: true
         });
 
-    dbConn.end();
+        // create the database 'Kyrix' and ignore the error
+        dbConn.query(createDbQuery, function (err) {});
+
+        // use db
+        dbConn.query(useDbQuery, function (err) {if (err) throw err;});
+
+        // create a table and ignore the error
+        dbConn.query(createTableQuery, function (err) {});
+
+        // delete the project definition and ignore the error
+        dbConn.query(deleteProjQuery, function (err) {});
+
+        // insert the project definition
+        dbConn.query(insertProjQueryMySQL, function (err) {
+            if (err) throw err;
+            sendProjectRequestToBackend(config.serverPortNumber, projectJSON);
+        });
+
+        // end connection
+        dbConn.end();
+    }
+    else if (config.database == "psql") {
+
+        var createDbQuery = "CREATE DATABASE \"" + config.kyrixDbName + "\"";
+        var useDbQuery = "USE \"" + config.kyrixDbName + "\";";
+
+        // construct a connection to the postgres db to create Kyrix db
+        var postgresConn = new psql.Client({host : config.serverName,
+            user : config.userName,
+            password : config.password,
+            database : "postgres"});
+
+        // create Kyrix DB and ignore error
+        postgresConn.connect(function (err) {
+            postgresConn.query(createDbQuery, function (err) {
+
+                var dbConn = new psql.Client({host : config.serverName,
+                    user : config.userName,
+                    password : config.password,
+                    database : config.kyrixDbName});
+
+                // connect and pose queries
+                dbConn.connect(function(err) {
+
+                    // log to console
+                    if (err)
+                        console.error('connection error', err.stack);
+                    else
+                        console.log('connected');
+
+                    if (err) throw err;
+
+                    // create a table and ignore the error
+                    dbConn.query(createTableQuery, function (err) {
+
+                        // delete the project if exists
+                        dbConn.query(deleteProjQuery, function (err) {
+
+                            // insert the JSON blob into the project table
+                            dbConn.query(insertProjQueryPSQL,
+                                function (err) {
+                                    if (err) throw err;
+                                    sendProjectRequestToBackend(config.serverPortNumber, projectJSON);
+                                    dbConn.end();
+                                    postgresConn.end();
+                                });
+                        });
+                    });
+                });
+            });
+        });
+    }
 }
 
 // define prototype functions

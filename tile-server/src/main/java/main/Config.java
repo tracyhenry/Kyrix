@@ -15,10 +15,12 @@ public class Config {
 	// config file row numbers
 	public static int projectNameRow = 0;
 	public static int portNumberRow = 1;
-	public static int dbServerRow = 2;
-	public static int userNameRow = 3;
-	public static int passwordRow = 4;
-	public static int d3DirRow = 5;
+	public static int dbRow = 2;
+	public static int dbServerRow = 3;
+	public static int userNameRow = 4;
+	public static int passwordRow = 5;
+	public static int kyrixDbNameRow = 6;
+	public static int d3DirRow = 7;
 	public static int cacheSize = 10;
 
 	// config varaibles, will be at runtime
@@ -30,7 +32,7 @@ public class Config {
 	public static String d3Dir;
 
 	// db name
-	public static String databaseName = "Kyrix";
+	public static String databaseName;
 
 	// table name
 	public static String projectTableName = "project";
@@ -41,6 +43,18 @@ public class Config {
 	// number of worker threads
 	public static int numThread = 4;
 
-	// number of batch size when inserting bounding boxes records
-	public static int bboxBatchSize = 10000;
+	// number of batch size when inserting records
+	public static int bboxBatchSize = 5000;
+	public static int tileBatchSize = 10000;
+
+	// tile indexing scheme
+	public enum IndexingScheme {TUPLE_MAPPING, SPATIAL_INDEX, SORTED_TUPLE_MAPPING};
+	public static IndexingScheme indexingScheme = IndexingScheme.SPATIAL_INDEX;
+
+	// underlying database
+	public enum Database {MYSQL, PSQL};
+	public static Database database;
+
+	// database iterator fetch size
+	public static int iteratorfetchSize = 1000;
 }

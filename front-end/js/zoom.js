@@ -178,6 +178,8 @@ function zoomed() {
             + " " + curViewport[1]
             + " " + curViewport[2]
             + " " + curViewport[3]);
+
+    // get data
     RefreshDynamicLayers(viewportX, viewportY);
 
     // check if zoom scale reaches zoomInFactor

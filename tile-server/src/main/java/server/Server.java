@@ -2,11 +2,14 @@ package server;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import index.Indexer;
 import main.Config;
 
+import javax.script.ScriptException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,19 +19,40 @@ import java.util.Map;
 public class Server {
 
 	private static HttpServer server;
+	private static boolean terminated;
+	private static Object terminationLock = new Object();
 
-	public static void startServer(int portNumber) throws IOException {
+	public static void startServer(int portNumber) throws IOException, InterruptedException, ClassNotFoundException, SQLException, NoSuchMethodException, ScriptException {
 
 		server = HttpServer.create(new InetSocketAddress(portNumber), 0);
 		server.createContext("/", new IndexHandler());
 		server.createContext("/first", new FirstRequestHandler());
 		server.createContext("/tile", new TileRequestHandler());
+		server.createContext("/dbox", new BoxRequestHandler());
 		server.createContext("/canvas", new CanvasRequestHandler());
 		server.createContext("/viewport", new ViewportRequestHandler());
 		server.createContext("/project", new ProjectRequestHandler());
 		server.setExecutor(null);//java.util.concurrent.Executors.newFixedThreadPool(Config.numThread));
+		terminated = false;
 		server.start();
 		System.out.println("Tile server started...");
+		synchronized (terminationLock) {
+			while (!terminated)
+				terminationLock.wait();
+		}
+		Server.stopServer();
+		Indexer indexer = new Indexer();
+		indexer.precompute();
+		System.out.println("Completed recomputing indexes. Server restarting...");
+		Server.startServer(Config.portNumber);
+	}
+
+	public static void terminate() {
+
+		terminated = true;
+		synchronized (terminationLock) {
+			terminationLock.notify();
+		}
 	}
 
 	public static void stopServer() {

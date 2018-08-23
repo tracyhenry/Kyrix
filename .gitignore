@@ -153,6 +153,8 @@ zoomable.html
 favicon.ico
 flare.json
 compiler/examples/nba/preprocessing/
+compiler/examples/USMap/preprocessing/
 front-end/static/images/
 dots.txt
 dots_small.txt
+log.txt

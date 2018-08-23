@@ -23,6 +23,7 @@ function renderStaticLayers() {
             JSON.parse(globalVar.renderingParams));
 
         // register jump
-        registerJumps(curSvg, i);
+        if (! globalVar.animation)
+            registerJumps(curSvg, i);
     }
 };

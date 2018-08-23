@@ -46,9 +46,13 @@ function setupLayerLayouts() {
     // remove existing layers
     d3.selectAll(".layerg").remove();
 
+    // set box flag
+    if (param.fetchingScheme == "dbox")
+        globalVar.hasBox = false;
+
     for (var i = numLayers - 1; i >= 0; i --) {
         var isStatic = globalVar.curCanvas.layers[i].isStatic;
-        // add new layers
+        // add new <g>
         d3.select("#maing")
             .append("g")
             .classed("layerg", true)
@@ -68,7 +72,6 @@ function setupLayerLayouts() {
                 + " " + globalVar.initialViewportY
                 + " " +  globalVar.viewportWidth
                 + " " + globalVar.viewportHeight));
-
     }
 }
 
@@ -120,7 +123,7 @@ function pageOnLoad() {
                 + param.containerPadding
                 + ")");
 
-        // initiate zoom buttons, must before getCurCanvas is called
+        // initialize zoom buttons, must before getCurCanvas is called
         drawZoomButtons();
         d3.select(window).on("resize.zoombutton", drawZoomButtons);
 
@@ -135,8 +138,8 @@ function pageOnLoad() {
         renderStaticLayers();
 
         // render
-        RefreshDynamicLayers(globalVar.initialViewportX,
-            globalVar.initialViewportY);
+//        RefreshDynamicLayers(globalVar.initialViewportX,
+ //           globalVar.initialViewportY);
 
         // set up zoom
         setupZoom(1);
