@@ -124,16 +124,36 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
     var tupleCY = +tuple[tupleLen - param.cyOffset];
     var tupleWidth = tuple[tupleLen - param.maxxOffset] - tuple[tupleLen - param.minxOffset];
     var tupleHeight = tuple[tupleLen - param.maxyOffset] - tuple[tupleLen - param.minyOffset];
-    var minx = tupleCX - tupleWidth / 2.0;
-    var maxx = tupleCX + tupleWidth / 2.0;
-    var miny = tupleCY - tupleHeight / 2.0;
-    var maxy = tupleCY + tupleHeight / 2.0;
+    var minx, maxx, miny, maxy;
+    if (tupleWidth == 0 || tupleHeight == 0) {  // check when placement func is not specified
+        minx = globalVar.curCanvas.w;
+        miny = globalVar.curCanvas.h;
+        maxx = maxy = 0;
+        d3.select("#containerSvg")
+            .selectAll("*")
+            .filter(function (d){
+                return d == tuple;
+            })
+            .each(function () {
+                var bbox = this.getBBox();
+                minx = Math.min(minx, bbox.x);
+                miny = Math.min(miny, bbox.y);
+                maxx = Math.max(maxx, bbox.x + bbox.width);
+                maxy = Math.max(maxy, bbox.y + bbox.height);
+            });
+    }
+    else {
+        minx = tupleCX - tupleWidth / 2.0;
+        maxx = tupleCX + tupleWidth / 2.0;
+        miny = tupleCY - tupleHeight / 2.0;
+        maxy = tupleCY + tupleHeight / 2.0;
+    }
 
     // use tuple boundary to calculate start and end views, and log them to the last history object
     var startView = [curViewport[2] / 2.0, curViewport[3] / 2.0, curViewport[2]];
     var endView = [minx + (maxx - minx) / 2.0 - curViewport[0],
         miny + (maxy - miny) / 2.0 - curViewport[1],
-        tupleWidth / (enteringAnimation ? param.zoomScaleFactor : 1)];
+        (maxx - minx) / (enteringAnimation ? param.zoomScaleFactor : 1)];
     globalVar.history[globalVar.history.length - 1].startView = startView;
     globalVar.history[globalVar.history.length - 1].endView = endView;
 

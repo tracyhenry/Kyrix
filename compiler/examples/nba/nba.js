@@ -24,7 +24,6 @@ teamLogoCanvas.addTransform(transforms.teamLogoTransform);
 // logo layer
 var teamLogoLayer = new Layer("teamlogoID", false);
 teamLogoCanvas.addLayer(teamLogoLayer);
-teamLogoLayer.addPlacement(placements.teamLogoPlacement);
 teamLogoLayer.addRenderingFunc(renderers.teamLogoRendering);
 
 // ================== Canvas team timeline ===================
