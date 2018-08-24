@@ -246,6 +246,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                         .select(".mainsvg");
 
                     dboxSvg.selectAll("*").remove();
+
                     // draw current layer
                     curLayer.rendering.parseFunction()(dboxSvg, renderData[i],
                         globalVar.curCanvas.w,
