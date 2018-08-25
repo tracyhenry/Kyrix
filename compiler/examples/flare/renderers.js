@@ -1,6 +1,48 @@
-var renderingParams = {};
+var renderingParams = {"textwrap" : function textwrap(text, width) {
+        text.each(function() {
+            var text = d3.select(this),
+                words = text.text().split(/(?=[A-Z])/).reverse(),
+                word,
+                line = [],
+                lineNumber = 0,
+                lineHeight = 1.3, // ems
+                x = text.attr("x"),
+                y = text.attr("y"),
+                dy = parseFloat(text.attr("dy")),
+                tspan = null;
 
-var flarePackRendering = function (svg, data) {
+            text.text(null);
+            while (word = words.pop()) {
+
+                if (line.length == 0)
+                    tspan = text.append("tspan").attr("x", x).attr("y", y);
+                line.push(word);
+                tspan.text(line.join(""));
+                if (tspan.node().getComputedTextLength() > width) {
+                    var popped = false;
+                    if (line.length > 1) {line.pop(); popped = true;}
+                    tspan.text(line.join(""));
+                    if (popped) {
+                        line = [word];
+                        tspan = text.append("tspan").attr("x", x).attr("y", y).text(word);
+                    }
+                    else line = [];
+                }
+            }
+            var tspans = text.selectAll("tspan"), num_tspans = tspans.size();
+            var firstY;
+            if (num_tspans % 2 == 0)
+                firstY = - (num_tspans / 2 - 0.5) * lineHeight;
+            else
+                firstY = - Math.floor(num_tspans / 2) * lineHeight;
+            tspans.attr("dy", function (d, i) {
+                return (firstY + lineHeight * i) + 0.3 + "em";
+            });
+        });
+    }
+};
+
+var flarePackRendering = function (svg, data, width, height, params) {
 
     var g = svg.append("g");
 
@@ -54,9 +96,6 @@ var flarePackRendering = function (svg, data) {
         .attr("cy", function (d) {return dict[d[0]].y;})
         .style("fill-opacity", .25)
         .attr("fill", "honeydew")
-        .attr("opacity", function (d) {
-            return d[4] / 5 + 0.2;
-        })
         .attr("stroke", "#ADADAD")
         .style("stroke-width", "1px");
     g.selectAll("text")
@@ -67,18 +106,16 @@ var flarePackRendering = function (svg, data) {
             return ! dict[d[0]].children;
         })
         .attr("dy", "0.3em")
-        .text(function (d) {
-            return d[1].substring(0, dict[d[0]].r / 5);
-        })
+        .text(function (d) {return d[1];})
+        .attr("font-size", function (d) {return dict[d[0]].r / 1000 * 300;})
         .attr("x", function(d) {return dict[d[0]].x;})
         .attr("y", function(d) {return dict[d[0]].y;})
-        .attr("font-size", 25)
         .attr("dy", ".35em")
         .attr("text-anchor", "middle")
         .style("fill-opacity", 1)
         .style("fill", "navy")
-        .attr("opacity", function (d) {
-            return d[4] / 5 + 0.2;
+        .each(function (d) {
+            params.textwrap(d3.select(this), dict[d[0]].r * 1.5);
         });
 };
 
