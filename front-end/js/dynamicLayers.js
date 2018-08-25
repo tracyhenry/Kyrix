@@ -151,7 +151,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                                 curLayer.rendering.parseFunction()(tileSvg, renderData[i],
                                     globalVar.curCanvas.w,
                                     globalVar.curCanvas.h,
-                                    JSON.parse(globalVar.renderingParams));
+                                    globalVar.renderingParams);
 
                                 tileSvg.transition()
                                     .duration(param.tileEnteringDuration)
@@ -251,7 +251,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                     curLayer.rendering.parseFunction()(dboxSvg, renderData[i],
                         globalVar.curCanvas.w,
                         globalVar.curCanvas.h,
-                        JSON.parse(globalVar.renderingParams));
+                        globalVar.renderingParams);
 
                     // register jumps
                     if (!globalVar.animation)

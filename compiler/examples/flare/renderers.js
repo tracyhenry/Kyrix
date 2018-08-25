@@ -52,9 +52,7 @@ var flarePackRendering = function (svg, data) {
         .attr("r", function (d) {return dict[d[0]].r;})
         .attr("cx", function (d) {return dict[d[0]].x;})
         .attr("cy", function (d) {return dict[d[0]].y;})
-//        .attr("fill", "rgb(174, 237, 242)")//"rgb(181, 204, 242)")//"rgb(31, 119, 180)")
         .style("fill-opacity", .25)
-//        .style("stroke", "rgb(31, 119, 180)")
         .attr("fill", "honeydew")
         .attr("opacity", function (d) {
             return d[4] / 5 + 0.2;

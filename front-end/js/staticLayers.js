@@ -20,7 +20,7 @@ function renderStaticLayers() {
         renderFunc(curSvg, globalVar.curStaticData[i],
             globalVar.viewportWidth,
             globalVar.viewportHeight,
-            JSON.parse(globalVar.renderingParams));
+            globalVar.renderingParams);
 
         // register jump
         if (! globalVar.animation)

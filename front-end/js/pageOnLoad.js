@@ -75,6 +75,16 @@ function setupLayerLayouts() {
     }
 }
 
+// loop over rendering parameters, convert them to function if needed
+function processRenderingParams() {
+
+    for (var key in globalVar.renderingParams) {
+        var curValue = globalVar.renderingParams[key];
+        if (typeof curValue == "string" && curValue.parseFunction() != null)
+            globalVar.renderingParams[key] = curValue.parseFunction();
+    }
+}
+
 // set up page
 function pageOnLoad() {
 
@@ -91,7 +101,7 @@ function pageOnLoad() {
         globalVar.curCanvasId = response.initialCanvasId;
         globalVar.tileW = +response.tileW;
         globalVar.tileH = +response.tileH;
-        globalVar.renderingParams = response.renderingParams;
+        globalVar.renderingParams = JSON.parse(response.renderingParams);
 
         // set up global and main svgs
         d3.select("body")
@@ -131,15 +141,14 @@ function pageOnLoad() {
         d3.select(window).on("resize.popover", removePopovers);
         d3.select(window).on("click", removePopovers);
 
+        // process rendering params
+        processRenderingParams();
+
         // get current canvas object
         getCurCanvas();
 
         // render static trims
         renderStaticLayers();
-
-        // render
-//        RefreshDynamicLayers(globalVar.initialViewportX,
- //           globalVar.initialViewportY);
 
         // set up zoom
         setupZoom(1);
@@ -147,6 +156,6 @@ function pageOnLoad() {
         // set button state
         setButtonState();
     });
-};
+}
 
 $(document).ready(pageOnLoad);
