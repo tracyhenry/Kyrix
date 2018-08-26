@@ -21,7 +21,7 @@ p.addCanvas(flareCanvas);
 flareCanvas.addTransform(transforms.flareTransform);
 
 // logo layer
-var flarePackLayer = new Layer("flareTrans", false);
+var flarePackLayer = new Layer("flareTrans", true);
 flareCanvas.addLayer(flarePackLayer);
 flarePackLayer.addRenderingFunc(renderers.flarePackRendering);
 

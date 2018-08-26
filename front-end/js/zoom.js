@@ -120,6 +120,10 @@ function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
 // listener function for zoom actions
 function zoomed() {
 
+    // no dynamic layers? return
+    if (d3.select(".mainsvg:not(.static)").size() == 0)
+        return ;
+
     // frequently accessed global variables
     var cWidth = globalVar.curCanvas.w;
     var cHeight = globalVar.curCanvas.h;

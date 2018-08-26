@@ -91,7 +91,9 @@ function logHistory(zoom_type) {
     curHistory.staticData = globalVar.curStaticData;
 
     // save current viewport
-    var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
+    var curViewport = [0, 0, globalVar.viewportWidth, globalVar.viewportHeight];
+    if (d3.select(".mainsvg:not(.static)").size())
+        curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
     curHistory.viewportX = +curViewport[0];
     curHistory.viewportY = +curViewport[1];
     curHistory.viewportW = +curViewport[2];
@@ -123,7 +125,9 @@ function backspace() {
     globalVar.initialViewportY = curHistory.viewportY;
 
     // get current viewport
-    var curViewport = d3.select(".oldmainsvg:not(.static)").attr("viewBox").split(" ");
+    var curViewport = [0, 0, globalVar.viewportWidth, globalVar.viewportHeight];
+    if (d3.select(".oldmainsvg:not(.static)").size())
+        curViewport = d3.select(".oldmainsvg:not(.static)").attr("viewBox").split(" ");
 
     // start a exit & fade transition
     if (fadingAnimation)

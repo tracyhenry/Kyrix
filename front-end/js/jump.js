@@ -116,7 +116,9 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
     var enteringAnimation = (zoomType == param.semanticZoom ? true : false);
 
     // calculate tuple boundary
-    var curViewport = d3.select(".oldmainsvg:not(.static)").attr("viewBox").split(" ");
+    var curViewport = [0, 0, globalVar.viewportWidth, globalVar.viewportHeight];
+    if (d3.select(".oldmainsvg:not(.static)").size())
+        curViewport = d3.select(".oldmainsvg:not(.static)").attr("viewBox").split(" ");
     for (var i = 0; i < curViewport.length; i ++)
         curViewport[i] = +curViewport[i];
     var tupleLen = tuple.length;
@@ -125,7 +127,7 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
     var tupleWidth = tuple[tupleLen - param.maxxOffset] - tuple[tupleLen - param.minxOffset];
     var tupleHeight = tuple[tupleLen - param.maxyOffset] - tuple[tupleLen - param.minyOffset];
     var minx, maxx, miny, maxy;
-    if (tupleWidth == 0 || tupleHeight == 0) {  // check when placement func is not specified
+    if (tupleWidth == 0 || tupleHeight == 0) {  // check when placement func does not exist
         minx = globalVar.curCanvas.w;
         miny = globalVar.curCanvas.h;
         maxx = maxy = 0;

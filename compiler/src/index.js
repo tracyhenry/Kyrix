@@ -201,6 +201,8 @@ function saveProject()
         for (var j = 0; j < this.canvases[i].layers.length; j ++)
             if (this.canvases[i].layers[j].isStatic && this.canvases[i].layers[j].placement != null)
                 throw new Error("Canvas " + this.canvases[i] + " layer " + j + " is static and does not need a placement object.");
+            else if (! this.canvases[i].layers[j].isStatic && this.canvases[i].layers[j].placement == null)
+                throw new Error("Canvas " + this.canvases[i] + " layer " + j + " is dynamic and requires a placement object.");
     }
 
     // prepare project definition JSON strings

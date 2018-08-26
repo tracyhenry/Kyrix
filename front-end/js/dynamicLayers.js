@@ -63,6 +63,10 @@ function getTileArray(canvasId, vX, vY, vWidth, vHeight) {
 
 function RefreshDynamicLayers(viewportX, viewportY) {
 
+    // no dynamic layers? return
+    if (d3.select(".mainsvg:not(.static)").size() == 0)
+        return ;
+
     if (param.fetchingScheme == "tiling") {
 
         var tileW = globalVar.tileW;

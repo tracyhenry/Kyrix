@@ -22,7 +22,7 @@ p.addCanvas(teamLogoCanvas);
 teamLogoCanvas.addTransform(transforms.teamLogoTransform);
 
 // logo layer
-var teamLogoLayer = new Layer("teamlogoID", false);
+var teamLogoLayer = new Layer("teamlogoID", true);
 teamLogoCanvas.addLayer(teamLogoLayer);
 teamLogoLayer.addRenderingFunc(renderers.teamLogoRendering);
 

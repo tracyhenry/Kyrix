@@ -135,10 +135,10 @@ public class Indexer {
 
 				// step 1(d): extract placement stuff
 				Placement p = (l.isStatic() ? null : l.getPlacement());
-				String centroid_x = (p == null ? null : p.getCentroid_x());
-				String centroid_y = (p == null ? null : p.getCentroid_y());
-				String width_func = (p == null ? null : p.getWidth());
-				String height_func = (p == null ? null : p.getHeight());
+				String centroid_x = (l.isStatic() ? null : p.getCentroid_x());
+				String centroid_y = (l.isStatic() ? null : p.getCentroid_y());
+				String width_func = (l.isStatic() ? null : p.getWidth());
+				String height_func = (l.isStatic() ? null : p.getHeight());
 
 				// step 2: looping through query results
 				// TODO: distinguish between separable and non-separable cases
@@ -166,7 +166,7 @@ public class Indexer {
 
 					// step 4: calculate bounding boxes
 					ArrayList<Double> curBbox = new ArrayList<>();
-					if (p != null) {
+					if (! l.isStatic()) {
 						double centroid_x_dbl, centroid_y_dbl;
 						double width_dbl, height_dbl;
 
