@@ -1,16 +1,19 @@
 const Transform = require("../../src/index").Transform;
 
+var dbName = "wenbo";
+
 // scale x and y from the pi table
-var c1ScalexyPi = new Transform("scalexy_pi",
+var fullNameCircleTransform = new Transform("scalexy_pi",
     "select * from pi;",
-    "wenbo",
-    function (row) {
+    dbName,
+    function (row, width, height) {
         var ret = [];
         ret.push(row[0]);
         ret.push(row[1]);
         ret.push(row[2]);
-        ret.push(d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[3]));
-        ret.push(d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[4]));
+        ret.push(d3.scaleLinear().domain([0, 5000000]).range([0, width])(row[3]));
+        ret.push(d3.scaleLinear().domain([0, 5000000]).range([0, height])(row[4]));
+
         return Java.to(ret ,"java.lang.String[]");
     },
     ["id", "firstname", "lastname", "x", "y"],
@@ -18,16 +21,16 @@ var c1ScalexyPi = new Transform("scalexy_pi",
 );
 
 // scale x and y from the stu table;
-var c1ScalexyStu = new Transform("scalexy_stu",
+var fullNameRectangleTransform = new Transform("scalexy_stu",
     "select * from stu;",
-    "wenbo",
-    function (row) {
+    dbName,
+    function (row, width, height) {
         var ret = [];
         ret.push(row[0]);
         ret.push(row[1]);
         ret.push(row[2]);
-        ret.push(d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[3]));
-        ret.push(d3.scaleLinear().domain([0, 5000000]).range([0, 5000])(row[4]));
+        ret.push(d3.scaleLinear().domain([0, 5000000]).range([0, width])(row[3]));
+        ret.push(d3.scaleLinear().domain([0, 5000000]).range([0, height])(row[4]));
         return Java.to(ret ,"java.lang.String[]");
     },
     ["id", "firstname", "lastname", "x", "y"],
@@ -35,15 +38,15 @@ var c1ScalexyStu = new Transform("scalexy_stu",
 );
 
 // empty transform
-var c1Empty = new Transform("empty",
+var emptyTransform = new Transform("empty",
     "",
     "",
     function (row) {}, [], true);
 
-// canvas 2 identity transform
-var c2IDTransform = new Transform("identical",
+// first name identity transform
+var firstNameTransform = new Transform("identical",
     "select * from pi;",
-    "wenbo",
+    dbName,
     function (row) {
         var ret = [];
         for (var i = 0; i < 5; i ++)
@@ -55,9 +58,9 @@ var c2IDTransform = new Transform("identical",
 );
 
 // canvas 3 identity transform
-var c3IDTransform = new Transform("identical",
+var lastNameTransform = new Transform("identical",
     "select * from stu;",
-    "wenbo",
+    dbName,
     function (row) {
         var ret = [];
         for (var i = 0; i < 5; i ++)
@@ -69,9 +72,9 @@ var c3IDTransform = new Transform("identical",
 );
 
 module.exports = {
-    c1ScalexyPi : c1ScalexyPi,
-    c1ScalexyStu : c1ScalexyStu,
-    c1Empty : c1Empty,
-    c2IDTransform : c2IDTransform,
-    c3IDTransform : c3IDTransform
+    fullNameCircleTransform : fullNameCircleTransform,
+    fullNameRectangleTransform : fullNameRectangleTransform,
+    emptyTransform : emptyTransform,
+    firstNameTransform : firstNameTransform,
+    lastNameTransform : lastNameTransform
 };

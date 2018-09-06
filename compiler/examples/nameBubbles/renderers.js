@@ -1,4 +1,4 @@
-var c1L1Rendering = function (svg, data) {
+var fullNameCircleRendering = function (svg, data) {
     g = svg.append("g");
     g.selectAll("circle")
         .data(data)
@@ -20,7 +20,7 @@ var c1L1Rendering = function (svg, data) {
         .style("fill-opacity", 1);
 };
 
-var c1L2Rendering = function (svg, data) {
+var fullNameRectangleRendering = function (svg, data) {
     g = svg.append("g");
     g.selectAll("rect")
         .data(data)
@@ -44,7 +44,7 @@ var c1L2Rendering = function (svg, data) {
 };
 
 // an empty g with a background color fill
-var c1L3Rendering = function (svg, data) {
+var fullNameBkgRendering = function (svg, data) {
     g = svg.append("g")
         .append("rect")
         .attr("x", 0)
@@ -54,8 +54,14 @@ var c1L3Rendering = function (svg, data) {
         .style("fill", "beige");
 };
 
-var c2L1Rendering = function (svg, data) {
+var firstNameRendering = function (svg, data) {
     g = svg.append("g");
+    g.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 1000)
+        .attr("height", 1000)
+        .style("fill", "beige");
     g.selectAll("text")
         .data(data)
         .enter()
@@ -69,7 +75,7 @@ var c2L1Rendering = function (svg, data) {
         .style("fill-opacity", 1);
 };
 
-var c3L1Rendering = function (svg, data) {
+var lastNameRendering = function (svg, data) {
     g = svg.append("g");
     g.selectAll("text")
         .data(data)
@@ -84,32 +90,11 @@ var c3L1Rendering = function (svg, data) {
         .style("fill-opacity", 1);
 };
 
-var c1c2Axes = function (cWidth, cHeight) {
-
-    var axes = [];
-
-    // x
-    var x = d3.scaleLinear()
-        .domain([0, 100000])
-        .range([0, cWidth]);
-    var xAxis = d3.axisTop();
-    axes.push({"dim" : "x", "scale" : x, "axis" : xAxis, "translate" : [0, 0]});
-
-    //y
-    var y = d3.scaleLinear()
-        .domain([0, 100000])
-        .range([0, cHeight]);
-    var yAxis = d3.axisLeft();
-    axes.push({"dim" : "y", "scale" : y, "axis" : yAxis, "translate" : [0, 0]});
-
-    return axes;
-};
-
-var c1StaticTrim = function (svg) {
+var fullNameStaticRendering = function (svg) {
 
     var g = svg.append("g");
     g.append("text")
-        .text("Let's go Celtics!")
+        .text("Let's go Kyrix!")
         .attr("x", 500)
         .attr("y", 500)
         .attr("dy", ".35em")
@@ -118,27 +103,24 @@ var c1StaticTrim = function (svg) {
         .style("fill-opacity", 1);
 };
 
-var c3StaticTrim = function (svg) {
+var lastNameStaticRendering = function (svg) {
 
     var g = svg.append("g");
-    g.append("text")
-        .text("Let's go Celtics!")
-        .attr("x", 500)
-        .attr("y", 200)
-        .attr("dy", ".35em")
-        .attr("font-size", 50)
-        .attr("text-anchor", "middle")
-        .style("fill-opacity", 1);
+    g.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", 1000)
+        .attr("height", 1000)
+        .style("fill", "beige");
 };
 
 // exports
 module.exports = {
-    c1L1Rendering : c1L1Rendering,
-    c1L2Rendering : c1L2Rendering,
-    c1L3Rendering : c1L3Rendering,
-    c2L1Rendering : c2L1Rendering,
-    c3L1Rendering : c3L1Rendering,
-    c1c2Axes : c1c2Axes,
-    c1StaticTrim : c1StaticTrim,
-    c3StaticTrim : c3StaticTrim
+    fullNameCircleRendering : fullNameCircleRendering,
+    fullNameRectangleRendering : fullNameRectangleRendering,
+    fullNameBkgRendering : fullNameBkgRendering,
+    firstNameRendering : firstNameRendering,
+    lastNameRendering : lastNameRendering,
+    fullNameStaticRendering : fullNameStaticRendering,
+    lastNameStaticRendering : lastNameStaticRendering
 };
