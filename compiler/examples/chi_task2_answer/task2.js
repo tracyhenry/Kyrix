@@ -38,65 +38,35 @@ p.addCanvas(teamTimelineCanvas);
 teamTimelineCanvas.addTransform(transforms.teamTimelineTransform);
 teamTimelineCanvas.addTransform(transforms.teamTimelineStaticTransform);
 
-// **** complete the definition of pannable timeline layer
+// pannable timeline layer
+var timelineLayer = new Layer("teamtimelinescale", false);
+teamTimelineCanvas.addLayer(timelineLayer);
+timelineLayer.addPlacement(placements.teamTimelinePlacement);
+timelineLayer.addRenderingFunc(renderers.teamTimelineRendering);
 
+// static background layer
+var timelineBkgLayer = new Layer("teamtimelinestatic", true);
+teamTimelineCanvas.addLayer(timelineBkgLayer);
+timelineBkgLayer.addRenderingFunc(renderers.teamTimelineStaticBkg);
 
-// **** complete the definition of static background layer
-
-
-
-
-
-
-// **** complete the definition of the functions that customize teamlogo -> teamtimeline
-
-/**
- * A function selecting whether a given geometry can trigger a zoom, return a boolean
- * @param row - the data row bound to the zooming geometry
- * @param layerId - id of the layer the zooming geometry belongs to
- */
+// ================== teamlogo -> teamtimeline ===================
 var selector = function (row, layerId) {
-
+    return (layerId == 0);
 };
 
-/**
- * calculating a new viewport location based on the zooming geometry.
- * This function is ready, and does not need to be changed.
- */
 var newViewport = function (row) {
-    return [0, 0, 0];
+    return [0, 0, 0]
 };
-
-/**
- * This function should return an SQL predicate for every layer on the destination canvas.
- * These predicates should select data relevant to the selected team, which would
- * require a "join" between the zooming geometry and the data transform result of the
- * destination canvas. To perform the join, attributes that can be joined are 'abbr' in
- * teamLogoTransform, 'home_team' and 'away_team' in teamTimelineTransform, and 'abbr' in
- * teamTimelineStaticTransform.
- * @param row - the data row bound to the zooming geometry
- * @returns an array of strings (predicates). Size of the this array should equal to the
- * number of layers on the destination canvas.
- */
 var newPredicate = function (row) {
-
+    return ["(home_team=\'" + row[6] + "\' or " + "away_team=\'" + row[6] + "\')",
+            "abbr=\'" + row[6] + "\'"];
 };
 
-
-/**
- * This function specifies what to show on the zoom menu.
- * In this zoom, this should show '2017~2018 Regular season games of XXX'
- * XXX is the name of the team. It's the concatenation of 'city' and 'name'
- * in teamLogoTransform.
- * @param row - the data row bound to the zooming geometry
- */
 var jumpName = function (row) {
-
+    return "2017~2018 Regular Season Games of\n" + row[4] + " " + row[5];
 };
-
 
 p.addJump(new Jump("teamlogo", "teamtimeline", selector, newViewport, newPredicate, "semantic_zoom", jumpName));
-
 
 // initialize canvas
 p.initialCanvas("teamlogo", 0, 0, [""]);
