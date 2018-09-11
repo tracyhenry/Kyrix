@@ -12,39 +12,36 @@ const placements = require("./placements");
 
 
 // construct a project
-var p = new Project("chi_task1", "../../../config.txt", 1000, 1000);
+var p = new Project("task1", "../../../config.txt", 1000, 1000);
 
 // construct canvases from top to bottom
+var canvases = [];
 for (var i = 0; i <= 1; i ++) {
 
     var width = 100000 * Math.pow(2, i);
     var height = 100000 * Math.pow(2, i);
 
     // construct a new canvas
-    var curCanvas = new Canvas("level" + i, width, height);
-    p.addCanvas(curCanvas);
-
-    // add data transforms
-    curCanvas.addTransform(transforms.scPlotTransform);
-    curCanvas.addTransform(transforms.emptyTransform);
+    canvases[i] = new Canvas("level" + i, width, height);
+    p.addCanvas(canvases[i]);
 
     // add a static layer
-    var staticLayer = new Layer("empty", true);
-    curCanvas.addLayer(staticLayer);
+    var staticLayer = new Layer(transforms.emptyTransform, true);
+    canvases[i].addLayer(staticLayer);
     staticLayer.addRenderingFunc(renderers.scPlotStaticTrim);
 
     // create one layer
-    var curLayer = new Layer("scalexy", false);
-    curCanvas.addLayer(curLayer);
+    var curLayer = new Layer(transforms.scPlotTransform, false);
+    canvases[i].addLayer(curLayer);
     curLayer.addPlacement(placements.scPlotPlacement);
     curLayer.addRenderingFunc(renderers.scPlotRendering);
 }
 
 // add literal zooms
-p.addJump(new Jump("level0", "level1", "", "", "", "literal_zoom_in"));
-p.addJump(new Jump("level1", "level0", "", "", "", "literal_zoom_out"));
+p.addJump(new Jump(canvases[0], canvases[1], "", "", "", "literal_zoom_in"));
+p.addJump(new Jump(canvases[1], canvases[0], "", "", "", "literal_zoom_out"));
 
 // initialize canvas
-p.initialCanvas("level0", 1000, 1000, ["", ""]);
+p.initialCanvas(canvases[0], 1000, 1000, ["", ""]);
 
 p.saveProject();

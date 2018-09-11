@@ -19,33 +19,27 @@ var width = 5000, height = 5000;
 var fullNameCanvas = new Canvas("fullname", width, height);
 p.addCanvas(fullNameCanvas);
 
-// add data transforms
-fullNameCanvas.addTransform(transforms.fullNameCircleTransform);
-fullNameCanvas.addTransform(transforms.fullNameRectangleTransform);
-fullNameCanvas.addTransform(transforms.emptyTransform);
-
 // kyrix text (layerId = 0)
-var fullNameStaticLayer = new Layer("empty", true);
+var fullNameStaticLayer = new Layer(transforms.emptyTransform, true);
 fullNameCanvas.addLayer(fullNameStaticLayer);
 fullNameStaticLayer.addRenderingFunc(renderers.fullNameStaticRendering);
 
 // circle layer pi (layerId = 1)
-var fullNameCircleLayer = new Layer("scalexy_pi", false);
+var fullNameCircleLayer = new Layer(transforms.fullNameCircleTransform, false);
 fullNameCanvas.addLayer(fullNameCircleLayer);
 fullNameCircleLayer.addPlacement(placements.fullNamePlacement);
 fullNameCircleLayer.addRenderingFunc(renderers.fullNameCircleRendering);
 
 // rectangle layer student (layerId = 2)
-var fullNameRectangleLayer = new Layer("scalexy_stu", false);
+var fullNameRectangleLayer = new Layer(transforms.fullNameRectangleTransform, false);
 fullNameCanvas.addLayer(fullNameRectangleLayer);
 fullNameRectangleLayer.addPlacement(placements.fullNamePlacement);
 fullNameRectangleLayer.addRenderingFunc(renderers.fullNameRectangleRendering);
 
 // background layer (layerId = 3)
-var fullNameBkgLayer = new Layer("empty", true);
+var fullNameBkgLayer = new Layer(transforms.emptyTransform, true);
 fullNameCanvas.addLayer(fullNameBkgLayer);
 fullNameBkgLayer.addRenderingFunc(renderers.fullNameBkgRendering);
-
 
 
 
@@ -56,23 +50,25 @@ fullNameBkgLayer.addRenderingFunc(renderers.fullNameBkgRendering);
 
 
 
-// last name canvas
 
+
+
+
+
+
+// last name canvas
 var width = 1000, height = 1000;
 var lastNameCanvas = new Canvas("lastname", width, height);
 p.addCanvas(lastNameCanvas);
 
-// add data transforms
-lastNameCanvas.addTransform(transforms.lastNameTransform);
-
 // kyrix text (layerId = 0)
-var lastnameLayer = new Layer("identical", true);
-lastNameCanvas.addLayer(lastnameLayer);
-lastnameLayer.addRenderingFunc(renderers.lastNameRendering);
+var lastNameLayer = new Layer(transforms.lastNameTransform, true);
+lastNameCanvas.addLayer(lastNameLayer);
+lastNameLayer.addRenderingFunc(renderers.lastNameRendering);
 
 
 // initialize canvas
-p.initialCanvas("fullname", 500, 500, ["", "", "", ""]);
+p.initialCanvas(fullNameCanvas, 500, 500, ["", "", "", ""]);
 
 
 
@@ -104,14 +100,17 @@ var newPredicate = function (row) {
 };
 
 
-//**** complete a jump from full name to firstname
+//**** complete a zoom from full name to firstname
 
 
 
 
 
-// this is a jump from full name to last name
-p.addJump(new Jump("fullname", "lastname", lastNameSelector, newViewport, newPredicate, "semantic_zoom"));
+
+
+
+// this is a zoom from full name to last name
+p.addJump(new Jump(fullNameCanvas, lastNameCanvas, lastNameSelector, newViewport, newPredicate, "semantic_zoom"));
 
 // saveProject() must be at the very end of this file
 p.saveProject();

@@ -11,18 +11,15 @@ const transforms = require("./transforms");
 const placements = require("./placements");
 
 // construct a project
-var p = new Project("chi_task2", "../../../config.txt", 1000, 1000);
+var p = new Project("task2", "../../../config.txt", 1000, 1000);
 p.addRenderingParams(renderers.renderingParams);
 
 // ================== Canvas teamlogo ===================
 var teamLogoCanvas = new Canvas("teamlogo", 1000, 1000);
 p.addCanvas(teamLogoCanvas);
 
-// add data transforms
-teamLogoCanvas.addTransform(transforms.teamLogoTransform);
-
 // logo layer
-var teamLogoLayer = new Layer("teamlogoID", true);
+var teamLogoLayer = new Layer(transforms.teamLogoTransform, true);
 teamLogoCanvas.addLayer(teamLogoLayer);
 teamLogoLayer.addRenderingFunc(renderers.teamLogoRendering);
 
@@ -34,18 +31,14 @@ var height = 1000;
 var teamTimelineCanvas = new Canvas("teamtimeline", width, height);
 p.addCanvas(teamTimelineCanvas);
 
-// add data transforms
-teamTimelineCanvas.addTransform(transforms.teamTimelineTransform);
-teamTimelineCanvas.addTransform(transforms.teamTimelineStaticTransform);
-
 // pannable timeline layer
-var timelineLayer = new Layer("teamtimelinescale", false);
+var timelineLayer = new Layer(transforms.teamTimelineTransform, false);
 teamTimelineCanvas.addLayer(timelineLayer);
 timelineLayer.addPlacement(placements.teamTimelinePlacement);
 timelineLayer.addRenderingFunc(renderers.teamTimelineRendering);
 
 // static background layer
-var timelineBkgLayer = new Layer("teamtimelinestatic", true);
+var timelineBkgLayer = new Layer(transforms.teamTimelineStaticTransform, true);
 teamTimelineCanvas.addLayer(timelineBkgLayer);
 timelineBkgLayer.addRenderingFunc(renderers.teamTimelineStaticBkg);
 
@@ -66,10 +59,10 @@ var jumpName = function (row) {
     return "2017~2018 Regular Season Games of\n" + row[4] + " " + row[5];
 };
 
-p.addJump(new Jump("teamlogo", "teamtimeline", selector, newViewport, newPredicate, "semantic_zoom", jumpName));
+p.addJump(new Jump(teamLogoCanvas, teamTimelineCanvas, selector, newViewport, newPredicate, "semantic_zoom", jumpName));
 
 // initialize canvas
-p.initialCanvas("teamlogo", 0, 0, [""]);
+p.initialCanvas(teamLogoCanvas, 0, 0, [""]);
 
 // save to db
 p.saveProject();

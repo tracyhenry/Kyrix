@@ -11,12 +11,10 @@ const transforms = require("./transforms");
 const placements = require("./placements");
 
 // construct a project
-var p = new Project("chi_task1", "../../../config.txt", 1000, 1000);
+var p = new Project("task1", "../../../config.txt", 1000, 1000);
 
 // **** construct canvases, possibly by modifying the code of the warm up exercise
-
-
-
+var topCanvas, bottomCanvas;
 
 
 
@@ -32,7 +30,7 @@ var p = new Project("chi_task1", "../../../config.txt", 1000, 1000);
 
 
 // initialize canvas
-p.initialCanvas("level0", 1000, 1000, ["", ""]);
+p.initialCanvas(topCanvas, 1000, 1000, ["", ""]);
 
 // this line should be at the very end of this file
 p.saveProject();

@@ -39,7 +39,7 @@ var newPredicate = function (row) {
 };
 
 var jumpName = function (row) {
-    return "Zoom into " + row[1];
+    return "Jump into " + row[1];
 };
 
 p.addJump(new Jump("flare", "flare", selector, newViewport, newPredicate, "semantic_zoom", jumpName));

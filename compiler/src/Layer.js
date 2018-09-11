@@ -3,8 +3,13 @@
  * @param transformId - the id of the data transform that this layer is using.
  * @constructor
  */
-function Layer(transformId, isStatic) {
-    this.transformId = transformId;
+function Layer(transform, isStatic) {
+
+    if (transform.id == null)
+        throw new Error("Constructing Layer: unidentified transform object.");
+
+    this.transform = transform;
+    this.transformId = transform.id;
     if (isStatic == null)
         this.isStatic = false;
     else

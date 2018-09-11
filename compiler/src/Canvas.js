@@ -48,10 +48,10 @@ function addLayer(layer) {
     for (var i = 0; i < this.transforms.length; i ++)
         if (this.transforms[i].id == layer.transformId)
             exist = true;
-
     if (! exist)
-        throw new Error("Adding layer: transform ID " + layer.transformId + " does not exist.");
+        this.addTransform(layer.transform);
 
+    delete layer.transform;
     this.layers.push(layer);
 };
 

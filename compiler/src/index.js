@@ -131,20 +131,24 @@ function addRenderingParams(renderingParams) {
 
 /**
  * Set the initial canvas and viewport for a project
- * @param {string} id - the id of the canvas
+ * @param {object} canvasObj - a canvas object representing the initial canvas
  * @param {number} viewportX - x coordinate of the initial viewport (top left)
  * @param {number} viewportY - y coordinate of the initial viewport (top left)
  * @param {array} predicates - the initial predicates to be added to the sql query of data transforms
  */
-function initialCanvas(id, viewportX, viewportY, predicates) {
+function initialCanvas(canvasObj, viewportX, viewportY, predicates) {
+
+    // check if there is an id associated with canvasObj
+    if (canvasObj.id == null)
+        throw new Error("Initial canvas: unidentified canvasObj.");
 
     // check if this id exists
     var canvasId = -1;
     for (var i = 0; i < this.canvases.length; i ++)
-        if (this.canvases[i].id === id)
+        if (this.canvases[i].id === canvasObj.id)
             canvasId = i;
     if (canvasId == -1)
-        throw new Error("Initial canvas: canvas " + id + " does not exist.");
+        throw new Error("Initial canvas: unidentified canvasObj");
 
     // check viewport range
     if (viewportX < 0 || viewportX + this.viewportWidth > this.canvases[canvasId].w)
@@ -162,7 +166,7 @@ function initialCanvas(id, viewportX, viewportY, predicates) {
         throw new Error("Initial canvas: # predicates does not equal # layers.");
 
     // assign fields
-    this.initialCanvasId = id;
+    this.initialCanvasId = canvasObj.id;
     this.initialViewportX = viewportX;
     this.initialViewportY = viewportY;
     this.initialPredicates = predicates;
@@ -216,7 +220,6 @@ function saveProject()
             return value.toString();
         return value;
     }, 4);
-    //console.log(logJSON);
 
     // add escape character to projectJSON
     var projectJSONEscapedMySQL = (projectJSON + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
