@@ -20,7 +20,7 @@ var topCanvas, bottomCanvas;
 
 
 // **** add geometric zooms, when specifying the jump object
-// **** leave everything an empty string except canvas IDs and zoom type
+// **** leave everything an empty string except canvas objects and zoom type
 // **** you need to specify two jump objects, one with type literal_zoom_in
 // **** the other with type literal_zoom_out
 

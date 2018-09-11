@@ -51,7 +51,7 @@ function addLayer(layer) {
     if (! exist)
         this.addTransform(layer.transform);
 
-    delete layer.transform;
+//    delete layer.transform;
     this.layers.push(layer);
 };
 
