@@ -30,6 +30,7 @@ The backend dependecies are handled using maven. See `tile-server/pom.xml` for t
     * database server name
     * database user name
     * password
+    * The db name used to store metadata
     * **absolute** path to a directory containing a `node_modules` folder that contains every d3 library (e.g. `d3-scale`, `d3-zoom`). 
 
   Normally if you have installed dependencies for compiler, you can directly specify the last line as the absolute path to the compiler folder (but this is not always the case -- on some platform, `compiler/node_modules` does not have d3 libraries as direct sub-directories. Instead, d3 libraries are in `compiler/node_modules/d3/node_modules`. So double check). 
