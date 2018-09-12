@@ -67,6 +67,7 @@ var newViewport = function (row) {
  * destination canvas. To perform the join, attributes that can be joined are 'abbr' in
  * teamLogoTransform, 'home_team' and 'away_team' in teamTimelineTransform, and 'abbr' in
  * teamTimelineStaticTransform.
+ *
  * @param row - the data row bound to the zooming geometry
  * @returns an array of strings (predicates). Size of the this array should equal to the
  * number of layers on the destination canvas.

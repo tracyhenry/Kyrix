@@ -61,7 +61,6 @@ var width = 1000, height = 1000;
 var lastNameCanvas = new Canvas("lastname", width, height);
 p.addCanvas(lastNameCanvas);
 
-// kyrix text (layerId = 0)
 var lastNameLayer = new Layer(transforms.lastNameTransform, true);
 lastNameCanvas.addLayer(lastNameLayer);
 lastNameLayer.addRenderingFunc(renderers.lastNameRendering);
