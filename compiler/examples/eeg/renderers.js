@@ -43,20 +43,28 @@ var mainRendering = function (svg, data) {
 */
 
 };
-/*
-var yaxisRendering = function (svg, data) {
-    var yscale = d3.scaleLinear().domain([0,21]).range([0, height]);
+
+var yaxisRendering = function (svg, data, width, height) {
+
+    var dataset = [];
+    var channelName = [];
+    for (var i = 0; i < 21; i++)
+        dataset.push([]);
+    for (var i = 0; i < data.length; i ++)
+        dataset[+data[i][4] - 1].push(data[i]);
+    for (var i=0; i< 21 ;i++) {
+        console.log(dataset[i]);
+        channelName.push(dataset[i]);
+    }
+    var yscale = d3.scaleBand().domain(["adsfa","adf"]).range([0, height]);
+
     g = svg.append("g");
     g.append('g')
         .attr('class','axis')
         .call(d3.axisLeft(yscale))
-        .ticks(21)
-        .tickFormat(function(d){
-            return d[4];
-        }
         .append("text")
         .text("channel");
-};*/
+};
 module.exports = {
     mainRendering : mainRendering,
     yaxisRendering : yaxisRendering

@@ -19,7 +19,7 @@ const Transform = require("../../src/index").Transform;
         true);
 //
 var realTransform = new Transform("realdata",
-    "select * from real;",
+    "select * from sampled;",
     "temp",
     function (row, width, height) {
         var ret = [];
@@ -35,7 +35,14 @@ var realTransform = new Transform("realdata",
     ["id", "x", "y", "channel_name", "channel_id"],
     true);
 
+// empty transform
+var Empty = new Transform("empty",
+    "",
+    "",
+    function (row) {}, [], true);
+
 module.exports = {
     mainTransform : mainTransform,
-    realTransform : realTransform
+    realTransform : realTransform,
+    Empty : Empty
 };
