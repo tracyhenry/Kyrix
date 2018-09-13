@@ -216,7 +216,7 @@ function saveProject()
             return value.toString();
         return value;
     }, 4);
-    //console.log(logJSON);
+    console.log(logJSON);
 
     // add escape character to projectJSON
     var projectJSONEscapedMySQL = (projectJSON + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');

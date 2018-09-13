@@ -7,7 +7,7 @@ var mainRendering = function (svg, data) {
         return 0;
     });
     g = svg.append("g");
-
+    console.log(data);
     var line = d3.line()
         .x(function (d) {
             return d[1]
@@ -32,39 +32,25 @@ var mainRendering = function (svg, data) {
             .attr('stroke', 'black');
     }
 
-/*
-    xscale = d3.scaleLinear().domain([0,d3.max(dataset[0], function(d){return d[1]})]).range([0,width]);
-
-    g.append('g')
-        .attr('class', 'axis')
-        .call(d3.axisBottom(xscale))
-        .append("text")
-        .text("time");
-*/
-
 };
 
-var yaxisRendering = function (svg, data, width, height) {
-
-    var dataset = [];
-    var channelName = [];
-    for (var i = 0; i < 21; i++)
-        dataset.push([]);
-    for (var i = 0; i < data.length; i ++)
-        dataset[+data[i][4] - 1].push(data[i]);
-    for (var i=0; i< 21 ;i++) {
-        console.log(dataset[i]);
-        channelName.push(dataset[i]);
-    }
-    var yscale = d3.scaleBand().domain(["adsfa","adf"]).range([0, height]);
+var yaxisRendering = function (svg, data) {
+    var channel_name = [];
+    for (var i = 0; i< data.length; i++)
+        channel_name.push(data[i][0]);
 
     g = svg.append("g");
-    g.append('g')
-        .attr('class','axis')
-        .call(d3.axisLeft(yscale))
+
+    g.selectAll("g")
+        .data(channel_name)
+        .enter()
         .append("text")
-        .text("channel");
+        .attr("font-size", "30px")
+        .attr("x", 0)
+        .attr("y", function(d,i){return 50+i*100;})
+        .text(function(d){return d;});
 };
+
 module.exports = {
     mainRendering : mainRendering,
     yaxisRendering : yaxisRendering
