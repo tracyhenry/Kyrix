@@ -34,6 +34,18 @@ var mainRendering = function (svg, data) {
 
 };
 
+// x axis render
+var xAxes = function (cWidth, cHeight) {
+
+    var axes = [];
+    var x = d3.scaleLinear()
+        .domain([0, 500000])
+        .range([0, cWidth]);
+    var xAxis = d3.axisTop();
+    axes.push({"dim": "x", "scale": x, "axis": xAxis, "translate": [0, 0]});
+
+    return axes;
+}
 var yaxisRendering = function (svg, data) {
     var channel_name = [];
     for (var i = 0; i< data.length; i++)
@@ -53,5 +65,6 @@ var yaxisRendering = function (svg, data) {
 
 module.exports = {
     mainRendering : mainRendering,
-    yaxisRendering : yaxisRendering
+    yaxisRendering : yaxisRendering,
+    xAxes : xAxes
 };

@@ -36,6 +36,9 @@ var yaxisLayer = new Layer("yaxis", true);
 sampledCanvas.addLayer(yaxisLayer);
 yaxisLayer.addRenderingFunc(renderers.yaxisRendering);
 
+// x axis layer render
+sampledCanvas.addAxes(renderers.xAxes);
+
 // ================== Canvas original data ===================
 
 var realw = width * 3;
@@ -45,6 +48,9 @@ p.addCanvas(realCanvas);
 
 realCanvas.addTransform(transforms.realTransform);
 realCanvas.addTransform(transforms.yaxisTransform);
+
+// x axis layer render
+realCanvas.addAxes(renderers.xAxes);
 
 // y axis layer
 var realYaxisLayer = new Layer("yaxis", true);
