@@ -28,7 +28,7 @@ var mainRendering = function (svg, data) {
             .attr('class', 'line')
             .attr('d', line(dataset[i]))
             .attr('fill', 'none')
-            .attr('stroke-width', 1)
+            .attr('stroke-width', 3)
             .attr('stroke', 'black');
     }
 
@@ -38,10 +38,10 @@ var mainRendering = function (svg, data) {
 var xAxes = function (cWidth, cHeight) {
 
     var axes = [];
-    var x = d3.scaleLinear()
-        .domain([0, 500000])
+    var x = d3.scaleTime()
+        .domain([new Date(2017, 0, 0, 1), new Date(2017, 0, 0, 3)])
         .range([0, cWidth]);
-    var xAxis = d3.axisTop();
+    var xAxis = d3.axisTop().tickSize(-cHeight).ticks(6);
     axes.push({"dim": "x", "scale": x, "axis": xAxis, "translate": [0, 0]});
 
     return axes;

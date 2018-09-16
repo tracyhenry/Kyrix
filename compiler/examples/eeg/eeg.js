@@ -12,7 +12,7 @@ const placements = require("./placements");
 
 // construct a project
 var layerHeight = 100;
-var p = new Project("eeg", "../../../config.txt", 1000, 21 * layerHeight);
+var p = new Project("eeg", "../../../config.txt", 1300, 21 * layerHeight);
 p.addRenderingParams({});
 
 // ================== Canvas sampled ===================
