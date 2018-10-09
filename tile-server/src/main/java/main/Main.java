@@ -1,8 +1,11 @@
 package main;
 
+import com.google.cloud.bigtable.hbase.BigtableConfiguration;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import index.Indexer;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.Connection;
 import project.Project;
 import server.Server;
 import cache.TileCache;
@@ -15,6 +18,9 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.util.Bytes;
+
 public class Main {
 
 	private static Project project = null;
@@ -26,6 +32,42 @@ public class Main {
 			ScriptException,
 			NoSuchMethodException, InterruptedException {
 
+		String projectId = "mgh-neurology-poc-01";  // my-gcp-project-id
+		String instanceId = "eeg-table"; // my-bigtable-instance-id
+		String tableId = "eegTable";    // my-bigtable-table-id
+
+		try (Connection connection = BigtableConfiguration.connect(projectId, instanceId)) {
+
+			// Create a connection to the table that already exists
+			// Use try-with-resources to make sure the connection to the table is closed correctly
+			try (Table table = connection.getTable(TableName.valueOf(tableId))) {
+
+				// start/end rows
+				String startRowKey = "abn10000_20140117_093552_000008";
+				String endRowKey = "abn10000_20140117_093552_000028";
+
+				long st = System.currentTimeMillis();
+				// new scan object
+				Scan curScan = new Scan();
+				curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
+
+				// Retrieve the result
+				ResultScanner resultScanner = table.getScanner(curScan);
+				for (Result row : resultScanner) {
+					String rowValue = Bytes.toString(row.value());
+//					System.out.printf("Row : %s\n", rowValue);
+				}
+				System.out.println(System.currentTimeMillis() - st);
+
+			}  catch (IOException e) {
+				// handle exception while connecting to a table
+				throw e;
+			}
+		} catch (IOException e) {
+			System.err.println("Exception while running quickstart: " + e.getMessage());
+			e.printStackTrace();
+		}
+/*
 		// read config file
 		readConfigFile();
 
@@ -46,7 +88,7 @@ public class Main {
 		TileCache.create();
 
 		// start server
-		Server.startServer(Config.portNumber);
+		Server.startServer(Config.portNumber); */
 	}
 
 	public static Project getProject() {

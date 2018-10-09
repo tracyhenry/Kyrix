@@ -52,5 +52,11 @@
             <artifactId>nashorn-commonjs-modules</artifactId>
             <version>1.0.9</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.google.cloud.bigtable</groupId>
+            <artifactId>bigtable-hbase-1.x</artifactId>
+            <version>1.5.0</version>
+        </dependency>
     </dependencies>
 </project>
