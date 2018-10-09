@@ -17,11 +17,8 @@ p.addRenderingParams(renderers.renderingParams);
 var flareCanvas = new Canvas("flare", 1000, 1000);
 p.addCanvas(flareCanvas);
 
-// add data transforms
-flareCanvas.addTransform(transforms.flareTransform);
-
 // logo layer
-var flarePackLayer = new Layer("flareTrans", true);
+var flarePackLayer = new Layer(transforms.flareTransform, true);
 flareCanvas.addLayer(flarePackLayer);
 flarePackLayer.addRenderingFunc(renderers.flarePackRendering);
 
@@ -42,10 +39,10 @@ var jumpName = function (row) {
     return "Zoom into " + row[1];
 };
 
-p.addJump(new Jump("flare", "flare", selector, newViewport, newPredicate, "semantic_zoom", jumpName));
+p.addJump(new Jump(flareCanvas, flareCanvas, selector, newViewport, newPredicate, "semantic_zoom", jumpName));
 
 // initialize canvas
-p.initialCanvas("flare", 0, 0, ["(id = \'1\' or parent_id = \'1\')"]);
+p.setInitialStates(flareCanvas, 0, 0, ["(id = \'1\' or parent_id = \'1\')"]);
 
 // save to db
 p.saveProject();

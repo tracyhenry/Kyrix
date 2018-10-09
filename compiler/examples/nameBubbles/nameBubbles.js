@@ -18,35 +18,29 @@ var p = new Project("namebubble", "../../../config.txt", 1000, 1000);
 var c1 = new Canvas("fullname", 5000, 5000);
 p.addCanvas(c1);
 
-// add data transforms
-c1.addTransform(transforms.c1ScalexyPi);
-c1.addTransform(transforms.c1ScalexyStu);
-c1.addTransform(transforms.c1Empty);
-
 // add axes
 c1.addAxes(renderers.c1c2Axes);
 
 // static trim layer
-var c1L0 = new Layer("empty", true);
+var c1L0 = new Layer(transforms.c1Empty, true);
 c1.addLayer(c1L0);
 c1L0.addRenderingFunc(renderers.c1StaticTrim);
 
 // circle layer pi
-var c1L1 = new Layer("scalexy_pi");
+var c1L1 = new Layer(transforms.c1ScalexyPi);
 c1.addLayer(c1L1);
 c1L1.addPlacement(placements.c1L1Placement);
 c1L1.addRenderingFunc(renderers.c1L1Rendering);
 
-
 // rectangle layer student
-var c1L2 = new Layer("scalexy_stu");
+var c1L2 = new Layer(transforms.c1ScalexyStu);
 c1.addLayer(c1L2);
 c1L2.addPlacement(placements.c1L1Placement);
 c1L2.addRenderingFunc(renderers.c1L2Rendering);
 
 
 // background layer
-var c1L3 = new Layer("empty", true);
+var c1L3 = new Layer(transforms.c1Empty, true);
 c1.addLayer(c1L3);
 c1L3.addRenderingFunc(renderers.c1L3Rendering);
 
@@ -55,14 +49,11 @@ c1L3.addRenderingFunc(renderers.c1L3Rendering);
 var c2 = new Canvas("firstname", 1000, 1000);
 p.addCanvas(c2);
 
-// add data transform
-c2.addTransform(transforms.c2IDTransform);
-
 // add axes
 c2.addAxes(renderers.c1c2Axes);
 
 // ******** Canvas2 only layer ********
-var c2L1 = new Layer("identical");
+var c2L1 = new Layer(transforms.c2IDTransform);
 c2.addLayer(c2L1);
 c2L1.addPlacement(placements.c2L1Placement);
 c2L1.addRenderingFunc(renderers.c2L1Rendering);
@@ -72,23 +63,19 @@ c2L1.addRenderingFunc(renderers.c2L1Rendering);
 var c3 = new Canvas("lastname", 1000, 1000);
 p.addCanvas(c3);
 
-// add data transform
-c3.addTransform(transforms.c3IDTransform);
-c3.addTransform(transforms.c1Empty);
-
 // ******** canvas3 dynamic layer ********
-var c3L1 = new Layer("identical");
+var c3L1 = new Layer(transforms.c3IDTransform);
 c3.addLayer(c3L1);
 c3L1.addPlacement(placements.c2L1Placement);
 c3L1.addRenderingFunc(renderers.c3L1Rendering);
 
 // ******** canvas3 static layer
-var c3L2 = new Layer("empty", true);
+var c3L2 = new Layer(transforms.c1Empty, true);
 c3.addLayer(c3L2);
 c3L2.addRenderingFunc(renderers.c3StaticTrim);
 
 // initialize canvas
-p.initialCanvas("fullname", 500, 500, ["", "", "", ""]);
+p.setInitialStates(c1, 500, 500, ["", "", "", ""]);
 
 
 
@@ -117,7 +104,7 @@ var newPredicate2 = function (row) {
     return ["id=\'" + row[0] + "\'", ""]
 };
 
-p.addJump(new Jump("fullname", "firstname", firstNameSelector, newViewport1, newPredicate1, "semantic_zoom"));
-p.addJump(new Jump("fullname", "lastname", lastNameSelector, newViewport2, newPredicate2, "semantic_zoom"));
+p.addJump(new Jump(c1, c2, firstNameSelector, newViewport1, newPredicate1, "semantic_zoom"));
+p.addJump(new Jump(c1, c3, lastNameSelector, newViewport2, newPredicate2, "semantic_zoom"));
 
 p.saveProject();

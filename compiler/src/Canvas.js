@@ -50,7 +50,7 @@ function addLayer(layer) {
             exist = true;
 
     if (! exist)
-        throw new Error("Adding layer: transform ID " + layer.transformId + " does not exist.");
+        this.addTransform(layer.transform);
 
     this.layers.push(layer);
 };

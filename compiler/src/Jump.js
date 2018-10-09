@@ -1,7 +1,7 @@
 /**
  * Construct jump transition between two canvases
- * @param {string} sourceID - the id of the source canvas
- * @param {string} destID - the id of the destination canvas
+ * @param {object} sourceCanvas - the source canvas object
+ * @param {object} destCanvas - the destination canvas object
  * @param {function} selector - a javascript function deciding whether a tuple should trigger this jump
  * @param {function} newViewports - a javascript function calculating the new viewport (see api doc for more details)
  * @param {function} newPredicates - a javascript function calculating predicates for the new canvas
@@ -9,10 +9,14 @@
  * @param {string}/{function} name - the name of this jump, could be a string, or a function taking the jumping entity as input and returning the name.
  * @constructor
  */
-function Jump(sourceId, destId, selector, newViewports, newPredicates, type, name) {
+function Jump(sourceCanvas, destCanvas, selector, newViewports, newPredicates, type, name) {
 
-    this.sourceId = sourceId;
-    this.destId = destId;
+    // check canvas objects have ids
+    if (sourceCanvas.id == null || destCanvas.id == null)
+        throw new Error("Constructing Jump: unidentified source or destination canvas.");
+
+    this.sourceId = sourceCanvas.id;
+    this.destId = destCanvas.id;
     this.selector = selector;
     this.newViewports = newViewports;
     this.newPredicates = newPredicates;
@@ -20,7 +24,7 @@ function Jump(sourceId, destId, selector, newViewports, newPredicates, type, nam
     if (name != null)
         this.name = name;
     else
-        this.name = destId;
+        this.name = destCanvas.id;
 };
 
 // exports

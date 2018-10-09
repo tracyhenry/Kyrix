@@ -18,11 +18,8 @@ p.addRenderingParams(renderers.renderingParams);
 var teamLogoCanvas = new Canvas("teamlogo", 1000, 1000);
 p.addCanvas(teamLogoCanvas);
 
-// add data transforms
-teamLogoCanvas.addTransform(transforms.teamLogoTransform);
-
 // logo layer
-var teamLogoLayer = new Layer("teamlogoID", true);
+var teamLogoLayer = new Layer(transforms.teamLogoTransform, true);
 teamLogoCanvas.addLayer(teamLogoLayer);
 teamLogoLayer.addRenderingFunc(renderers.teamLogoRendering);
 
@@ -34,18 +31,14 @@ var height = 1000;
 var teamTimelineCanvas = new Canvas("teamtimeline", width, height);
 p.addCanvas(teamTimelineCanvas);
 
-// add data transforms
-teamTimelineCanvas.addTransform(transforms.teamTimelineTransform);
-teamTimelineCanvas.addTransform(transforms.teamTimelineStaticTransform);
-
 // pannable timeline layer
-var timelineLayer = new Layer("teamtimelinescale", false);
+var timelineLayer = new Layer(transforms.teamTimelineTransform, false);
 teamTimelineCanvas.addLayer(timelineLayer);
 timelineLayer.addPlacement(placements.teamTimelinePlacement);
 timelineLayer.addRenderingFunc(renderers.teamTimelineRendering);
 
 // static background layer
-var timelineBkgLayer = new Layer("teamtimelinestatic", true);
+var timelineBkgLayer = new Layer(transforms.teamTimelineStaticTransform, true);
 teamTimelineCanvas.addLayer(timelineBkgLayer);
 timelineBkgLayer.addRenderingFunc(renderers.teamTimelineStaticBkg);
 
@@ -59,18 +52,14 @@ var hString = "0:select (max(play_id) + 2) * 160 from plays;"; // todo: the "whe
 var playByPlayCanvas = new Canvas("playbyplay", width, height, wString, hString);
 p.addCanvas(playByPlayCanvas);
 
-// add data transforms
-playByPlayCanvas.addTransform(transforms.playByPlayTransform);
-playByPlayCanvas.addTransform(transforms.playByPlayStaticTransform);
-
 // pannable play by play layer
-var playByPlayLayer = new Layer("playbyplayscale", false);
+var playByPlayLayer = new Layer(transforms.playByPlayTransform, false);
 playByPlayCanvas.addLayer(playByPlayLayer);
 playByPlayLayer.addPlacement(placements.playByPlayPlacement);
 playByPlayLayer.addRenderingFunc(renderers.playByPlayRendering);
 
 // static background layer
-var playByPlayBkgLayer = new Layer("playbyplaystatic", true);
+var playByPlayBkgLayer = new Layer(transforms.playByPlayStaticTransform, true);
 playByPlayCanvas.addLayer(playByPlayBkgLayer);
 playByPlayBkgLayer.addRenderingFunc(renderers.playByPlayStaticBkg);
 
@@ -82,16 +71,13 @@ var height = 1000;
 var boxscoreCanvas = new Canvas("boxscore", width, height);
 p.addCanvas(boxscoreCanvas);
 
-// add data transforms
-boxscoreCanvas.addTransform(transforms.boxscoreTransform);
-
 // static pk column layer
-var boxscorePkColumnLayer = new Layer("boxscoreall", true);
+var boxscorePkColumnLayer = new Layer(transforms.boxscoreTransform, true);
 boxscoreCanvas.addLayer(boxscorePkColumnLayer);
 boxscorePkColumnLayer.addRenderingFunc(renderers.boxscorePkRendering);
 
 // pannable stats layer
-var statsLayer = new Layer("boxscoreall", false);
+var statsLayer = new Layer(transforms.boxscoreTransform, false);
 boxscoreCanvas.addLayer(statsLayer);
 statsLayer.addPlacement(placements.boxscorePlacement);
 statsLayer.addRenderingFunc(renderers.boxscoreStatsRendering);
@@ -113,7 +99,7 @@ var jumpName = function (row) {
     return "2017~2018 Regular Season Games of\n" + row[4] + " " + row[5];
 };
 
-p.addJump(new Jump("teamlogo", "teamtimeline", selector, newViewport, newPredicate, "semantic_zoom", jumpName));
+p.addJump(new Jump(teamLogoCanvas, teamTimelineCanvas, selector, newViewport, newPredicate, "semantic_zoom", jumpName));
 
 // ================== teamtimeline -> playbyplay ===================
 var selector = function (row, layerId) {
@@ -123,6 +109,7 @@ var selector = function (row, layerId) {
 var newViewport = function (row) {
     return [0, 0, 0]
 };
+
 var newPredicate = function (row) {
     return ["game_id = \'" + row[0] + "\'",
             "abbr1=\'" + row[6] + "\' and abbr2=\'" + row[7] + "\'"];
@@ -132,7 +119,7 @@ var jumpName = function (row) {
     return "Scoring Plays of " + row[7] + "@" + row[6];
 };
 
-p.addJump(new Jump("teamtimeline", "playbyplay", selector, newViewport, newPredicate, "semantic_zoom", jumpName));
+p.addJump(new Jump(teamTimelineCanvas, playByPlayCanvas, selector, newViewport, newPredicate, "semantic_zoom", jumpName));
 
 // ================== teamtimeline -> boxscore ===================
 var selector = function (row, layerId) {
@@ -161,11 +148,11 @@ var jumpNameAway = function (row) {
     return "Box score of " + row[7];
 };
 
-p.addJump(new Jump("teamtimeline", "boxscore", selector, newViewport, newPredicateHome, "semantic_zoom", jumpNameHome));
-p.addJump(new Jump("teamtimeline", "boxscore", selector, newViewport, newPredicateAway, "semantic_zoom", jumpNameAway));
+p.addJump(new Jump(teamTimelineCanvas, boxscoreCanvas, selector, newViewport, newPredicateHome, "semantic_zoom", jumpNameHome));
+p.addJump(new Jump(teamTimelineCanvas, boxscoreCanvas, selector, newViewport, newPredicateAway, "semantic_zoom", jumpNameAway));
 
-// initialize canvas
-p.initialCanvas("teamlogo", 0, 0, [""]);
+// setting up initial states
+p.setInitialStates(teamLogoCanvas, 0, 0, [""]);
 
 // save to db
 p.saveProject();

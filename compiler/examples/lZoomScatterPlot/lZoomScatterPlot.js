@@ -20,6 +20,7 @@ var p = new Project("lzoomscatterplot", "../../../config.txt", 800, 800);
 // construct canvases from top to bottom
 var topLevelWidth = 1000;
 var topLevelHeight = 1000;
+var canvases = [];
 
 // create canvases
 for (var i = 0; i < numLevels; i ++) {
@@ -28,22 +29,19 @@ for (var i = 0; i < numLevels; i ++) {
 
     // construct a new canvas
     var curCanvas = new Canvas("level" + i, width, height);
+    canvases.push(curCanvas);
     p.addCanvas(curCanvas);
-
-    // add data transforms
-    curCanvas.addTransform(transforms.scales[i]);
-    curCanvas.addTransform(transforms.emptyTransform);
 
     // add axis
     curCanvas.addAxes(renderers.scPlotAxes);
 
     // add a static layer
-    var staticLayer = new Layer("empty", true);
+    var staticLayer = new Layer(transforms.emptyTransform, true);
     curCanvas.addLayer(staticLayer);
     staticLayer.addRenderingFunc(renderers.scPlotStaticTrim);
 
     // create one layer
-    var curLayer = new Layer("scalexy");
+    var curLayer = new Layer(transforms.scales[i]);
     curCanvas.addLayer(curLayer);
     curLayer.addPlacement(placements.scPlotPlacement);
     curLayer.addRenderingFunc(renderers.scPlotRendering);
@@ -51,11 +49,11 @@ for (var i = 0; i < numLevels; i ++) {
 
 // add literal zooms
 for (var i = 0; i + 1 < numLevels; i ++) {
-    p.addJump(new Jump("level" + i, "level" + (i + 1), "", "", "", "literal_zoom_in"));
-    p.addJump(new Jump("level" + (i + 1), "level" + i, "", "", "", "literal_zoom_out"));
+    p.addJump(new Jump(canvases[i], canvases[i + 1], "", "", "", "literal_zoom_in"));
+    p.addJump(new Jump(canvases[i + 1], canvases[i], "", "", "", "literal_zoom_out"));
 }
 
 // initialize canvas
-p.initialCanvas("level0", 200, 200, ["", ""]);
+p.setInitialStates(canvases[0], 200, 200, ["", ""]);
 
 p.saveProject();

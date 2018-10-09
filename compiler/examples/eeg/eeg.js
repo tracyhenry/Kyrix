@@ -21,18 +21,14 @@ var height = 21 * layerHeight;
 var sampledCanvas = new Canvas("sampledCanvas", width, height);
 p.addCanvas(sampledCanvas);
 
-// add data transforms
-sampledCanvas.addTransform(transforms.mainTransform);
-sampledCanvas.addTransform(transforms.yaxisTransform);
-
 // channel layer
-var channelLayer = new Layer("sampleddata", false);
+var channelLayer = new Layer(transforms.mainTransform, false);
 sampledCanvas.addLayer(channelLayer);
 channelLayer.addRenderingFunc(renderers.mainRendering);
 channelLayer.addPlacement(placements.eegPlacement);
 
 // y axis layer
-var yaxisLayer = new Layer("yaxis", true);
+var yaxisLayer = new Layer(transforms.yaxisTransform, true);
 sampledCanvas.addLayer(yaxisLayer);
 yaxisLayer.addRenderingFunc(renderers.yaxisRendering);
 
@@ -46,29 +42,25 @@ var realh = 21 * layerHeight;
 var realCanvas = new Canvas("realCanvas", realw, realh);
 p.addCanvas(realCanvas);
 
-realCanvas.addTransform(transforms.realTransform);
-realCanvas.addTransform(transforms.yaxisTransform);
-
 // x axis layer render
 realCanvas.addAxes(renderers.xAxes);
 
 // y axis layer
-var realYaxisLayer = new Layer("yaxis", true);
+var realYaxisLayer = new Layer(transforms.yaxisTransform, true);
 realCanvas.addLayer(realYaxisLayer);
 realYaxisLayer.addRenderingFunc(renderers.yaxisRendering);
 
-var realLayer = new Layer("realdata", false);
+var realLayer = new Layer(transforms.realTransform, false);
 realCanvas.addLayer(realLayer);
 realLayer.addRenderingFunc(renderers.mainRendering);
 realLayer.addPlacement(placements.eegPlacement);
 
 
-
-p.addJump(new Jump("sampledCanvas", "realCanvas", 0, "", "", "literal_zoom_in"));
-p.addJump(new Jump("realCanvas", "sampledCanvas", 0, "", "", "literal_zoom_out"));
+p.addJump(new Jump(sampledCanvas, realCanvas, 0, "", "", "literal_zoom_in"));
+p.addJump(new Jump(realCanvas, sampledCanvas, 0, "", "", "literal_zoom_out"));
 
 // initialize canvas
-p.initialCanvas("sampledCanvas", 17300*4, 0, ["",""]);
+p.setInitialStates(sampledCanvas, 17300*4, 0, ["",""]);
 
 // save to db
 p.saveProject();
