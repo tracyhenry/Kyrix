@@ -44,9 +44,19 @@ public class Main {
 
 				// start/end rows
 				String startRowKey = "abn10000_20140117_093552_000008";
-				String endRowKey = "abn10000_20140117_093552_000028";
+				String endRowKey = "abn10000_20140117_093552_000018";
 
 				long st = System.currentTimeMillis();
+				Result result = table.get(new Get(Bytes.toBytes("abn10000_20140117_093552_000008")));
+				System.out.println(Bytes.toString(result.value()));
+				System.out.println(System.currentTimeMillis() - st);
+
+				st = System.currentTimeMillis();
+				result = table.get(new Get(Bytes.toBytes("abn999_20140711_151337_000029")));
+				System.out.println(Bytes.toString(result.value()));
+				System.out.println(System.currentTimeMillis() - st);
+
+				st = System.currentTimeMillis();
 				// new scan object
 				Scan curScan = new Scan();
 				curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
@@ -54,10 +64,23 @@ public class Main {
 				// Retrieve the result
 				ResultScanner resultScanner = table.getScanner(curScan);
 				for (Result row : resultScanner) {
-					String rowValue = Bytes.toString(row.value());
+//					System.out.println(Bytes.toString(row.getRow()));
 //					System.out.printf("Row : %s\n", rowValue);
 				}
 				System.out.println(System.currentTimeMillis() - st);
+
+				// new scan object
+				curScan = new Scan();
+				startRowKey = "abn999_20140711_151337_000009";
+				endRowKey = "abn999_20140711_151337_000109";
+ 				curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
+				// Retrieve the result
+				resultScanner = table.getScanner(curScan);
+				for (Result row : resultScanner){
+				//	System.out.println(Bytes.toString(row.getRow()));
+				}
+				System.out.println(System.currentTimeMillis() - st);
+
 
 			}  catch (IOException e) {
 				// handle exception while connecting to a table
