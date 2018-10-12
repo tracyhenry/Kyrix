@@ -46,6 +46,7 @@ var xAxes = function (cWidth, cHeight) {
 
     return axes;
 }
+
 var yaxisRendering = function (svg, data) {
     var channel_name = [];
     for (var i = 0; i< data.length; i++)

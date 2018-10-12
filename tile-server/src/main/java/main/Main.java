@@ -1,9 +1,12 @@
 package main;
 
+import box.MikeBoxGetter;
 import com.google.cloud.bigtable.hbase.BigtableConfiguration;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import index.Indexer;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.client.Connection;
 import project.Project;
@@ -24,7 +27,10 @@ import org.apache.hadoop.hbase.util.Bytes;
 public class Main {
 
 	private static Project project = null;
-	public static String projectJSON = "";
+	private static String projectJSON = "";
+	// for big table
+	private static Connection bigTableConn = null;
+	private static Table eegTable = null;
 
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException,
@@ -32,65 +38,10 @@ public class Main {
 			ScriptException,
 			NoSuchMethodException, InterruptedException {
 
-		String projectId = "mgh-neurology-poc-01";  // my-gcp-project-id
-		String instanceId = "eeg-table"; // my-bigtable-instance-id
-		String tableId = "eegTable";    // my-bigtable-table-id
+		// connnect to big table
+		connectBigTable();
+		testBigTable();
 
-		try (Connection connection = BigtableConfiguration.connect(projectId, instanceId)) {
-
-			// Create a connection to the table that already exists
-			// Use try-with-resources to make sure the connection to the table is closed correctly
-			try (Table table = connection.getTable(TableName.valueOf(tableId))) {
-
-				// start/end rows
-				String startRowKey = "abn10000_20140117_093552_000008";
-				String endRowKey = "abn10000_20140117_093552_000018";
-
-				long st = System.currentTimeMillis();
-				Result result = table.get(new Get(Bytes.toBytes("abn10000_20140117_093552_000008")));
-				System.out.println(Bytes.toString(result.value()));
-				System.out.println(System.currentTimeMillis() - st);
-
-				st = System.currentTimeMillis();
-				result = table.get(new Get(Bytes.toBytes("abn999_20140711_151337_000029")));
-				System.out.println(Bytes.toString(result.value()));
-				System.out.println(System.currentTimeMillis() - st);
-
-				st = System.currentTimeMillis();
-				// new scan object
-				Scan curScan = new Scan();
-				curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
-
-				// Retrieve the result
-				ResultScanner resultScanner = table.getScanner(curScan);
-				for (Result row : resultScanner) {
-//					System.out.println(Bytes.toString(row.getRow()));
-//					System.out.printf("Row : %s\n", rowValue);
-				}
-				System.out.println(System.currentTimeMillis() - st);
-
-				// new scan object
-				curScan = new Scan();
-				startRowKey = "abn999_20140711_151337_000009";
-				endRowKey = "abn999_20140711_151337_000109";
- 				curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
-				// Retrieve the result
-				resultScanner = table.getScanner(curScan);
-				for (Result row : resultScanner){
-				//	System.out.println(Bytes.toString(row.getRow()));
-				}
-				System.out.println(System.currentTimeMillis() - st);
-
-
-			}  catch (IOException e) {
-				// handle exception while connecting to a table
-				throw e;
-			}
-		} catch (IOException e) {
-			System.err.println("Exception while running quickstart: " + e.getMessage());
-			e.printStackTrace();
-		}
-/*
 		// read config file
 		readConfigFile();
 
@@ -111,7 +62,7 @@ public class Main {
 		TileCache.create();
 
 		// start server
-		Server.startServer(Config.portNumber); */
+		Server.startServer(Config.portNumber);
 	}
 
 	public static Project getProject() {
@@ -168,5 +119,62 @@ public class Main {
 		} catch (Exception e) {
 			System.out.println("Cannot find definition of main project... waiting...");
 		}
+	}
+
+	// stuff for bigtable
+	public static Table getEEGTable() {
+		return eegTable;
+	}
+
+	private static void connectBigTable() throws IOException {
+
+		String projectId = "mgh-neurology-poc-01";  // my-gcp-project-id
+		String instanceId = "eeg-table"; // my-bigtable-instance-id
+		String tableId = "eegTable";    // my-bigtable-table-id
+
+		bigTableConn = BigtableConfiguration.connect(projectId, instanceId);
+		eegTable = bigTableConn.getTable(TableName.valueOf(tableId));
+	}
+
+	private static void testBigTable() throws IOException, SQLException, ClassNotFoundException {
+
+		// start/end rows
+		String startRowKey = "abn10000_20140117_093552_000008";
+		String endRowKey = "abn10000_20140117_093552_000018";
+
+		long st = System.currentTimeMillis();
+		Result result = eegTable.get(new Get(Bytes.toBytes("abn10000_20140117_093552_000008")));
+		System.out.println(System.currentTimeMillis() - st);
+
+		st = System.currentTimeMillis();
+		result = eegTable.get(new Get(Bytes.toBytes("abn999_20140711_151337_000029")));
+		System.out.println(System.currentTimeMillis() - st);
+
+		st = System.currentTimeMillis();
+		// new scan object
+		Scan curScan = new Scan();
+		curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
+
+		// Retrieve the result
+		ResultScanner resultScanner = eegTable.getScanner(curScan);
+		for (Result row : resultScanner)
+			System.out.println(Bytes.toString(row.getRow()));
+		System.out.println(System.currentTimeMillis() - st);
+
+		// new scan object
+		curScan = new Scan();
+		startRowKey = "abn999_20140711_151337_000009";
+		endRowKey = "abn999_20140711_151337_000109";
+		curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
+		// Retrieve the result
+		resultScanner = eegTable.getScanner(curScan);
+		System.out.println(System.currentTimeMillis() - st);
+
+		// test fetchEEGData
+		MikeBoxGetter testBoxGetter = new MikeBoxGetter();
+		ArrayList<String> predicates = new ArrayList<>();
+		predicates.add("");
+		predicates.add("abn10000_20140117_093552");
+		ArrayList<ArrayList<ArrayList<String>>> testResult = testBoxGetter.fetchEEGData(0, 599, predicates);
 	}
 }
