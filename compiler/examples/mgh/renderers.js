@@ -1,5 +1,21 @@
 var renderingParams = {};
 
+var clusterRendering = function (svg, data) {
+   var g = svg.append("g");
+   g.selectAll("circle")
+       .data(data)
+       .enter()
+       .append("circle")
+       .attr("cx", function(d) {return d[1];})
+       .attr("cy", function(d) {return d[2];})
+       .attr("r", 12)
+       .style("stroke", "#CCC")
+       .style("fill", function (d){
+           var colors = {"LPD":"orange", "GPD":"red", "GRDA":"blue", "Other":"green", "LRDA":"purple", "Seizure":"black"};
+           return colors[d[3]];
+       });
+};
+
 var eegRendering = function (svg, data, width, height) {
 
     var channum = 20;
