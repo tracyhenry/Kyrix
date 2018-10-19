@@ -64,6 +64,8 @@ public abstract class BoxGetter {
     public ArrayList<ArrayList<ArrayList<String>>> fetchEEGData(int minx, int maxx, ArrayList<String> predicates)
             throws SQLException, ClassNotFoundException, IOException {
 
+        System.out.println("minx, maxx : " + minx + " " + maxx);
+
         // construct a data object and add a dummy array object for the label layer
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
         data.add(new ArrayList<>());
@@ -75,8 +77,8 @@ public abstract class BoxGetter {
                 "fp2", "fz", "o1", "o2", "p3", "p4", "pz", "t3", "t4", "t5", "t6"};
 
         // calculate start & end key rows
-        int startSegId = (int) Math.floor(minx / 200);
-        int endSegId = (int) Math.floor(maxx / 200);
+        int startSegId = (int) Math.floor(minx / 400);
+        int endSegId = (int) Math.floor(maxx / 400);
         String startRowKey = predicates.get(1) + "_" + String.format("%06d", startSegId);
         String endRowKey = predicates.get(1) + "_" + String.format("%06d", endSegId + 1);
         System.out.println(startRowKey + " " + endRowKey);

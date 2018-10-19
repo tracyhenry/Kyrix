@@ -8,8 +8,7 @@ var clusterRendering = function (svg, data) {
        .append("circle")
        .attr("cx", function(d) {return d[1];})
        .attr("cy", function(d) {return d[2];})
-       .attr("r", 12)
-       .style("stroke", "#CCC")
+       .attr("r", 5)
        .style("fill", function (d){
            var colors = {"LPD":"orange", "GPD":"red", "GRDA":"blue", "Other":"green", "LRDA":"purple", "Seizure":"black"};
            return colors[d[3]];
@@ -22,9 +21,9 @@ var eegRendering = function (svg, data, width, height) {
     // create a new g
     var g = svg.append("g");
 
-    var pixelPerSeg = 200;
+    var pixelPerSeg = 400;
     var numPoints = 400;
-    var minV = -40000, maxV = 40000;
+    var minV = -300, maxV = 300;
     var dataset = [];
     for (var k = 0; k < channum; k++) {
         var coordinates = [];
@@ -32,6 +31,8 @@ var eegRendering = function (svg, data, width, height) {
         for (var i = 0; i < data.length; i++) {
             var tofloat = data[i][k+4].split(",");
             for (var j = 0; j < tofloat.length; j++) {
+                if (tofloat[j] > maxV || tofloat[j] < minV)
+                    tofloat[j] = 0;
                 coordinates.push({"x": pixelPerSeg * (+data[i][3]) + j * pixelPerSeg / numPoints ,
                     "y": d3.scaleLinear().domain([minV, maxV]).range([0, height / channum])(+tofloat[j]) + startingY});
             }
@@ -77,5 +78,6 @@ var eegLabelRendering = function (svg, data, width, height) {
 module.exports = {
     renderingParams : renderingParams,
     eegRendering : eegRendering,
-    eegLabelRendering : eegLabelRendering
+    eegLabelRendering : eegLabelRendering,
+    clusterRendering : clusterRendering
 };

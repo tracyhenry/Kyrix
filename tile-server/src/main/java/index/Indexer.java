@@ -37,9 +37,10 @@ public class Indexer {
 			ScriptException,
 			NoSuchMethodException {
 
+		if (true) return ;
 		System.out.println("Precomputing...");
 		String projectName = project.getName();
-		if (Config.database == Config.Database.PSQL){
+		if (Config.database == Config.Database.PSQL) {
 			String psql = "CREATE EXTENSION if not exists postgis;";
 			bboxStmt.executeUpdate(psql);
 			psql = "CREATE EXTENSION if not exists postgis_topology;";
