@@ -11,7 +11,7 @@ const transforms = require("./transforms");
 const placements = require("./placements");
 
 // construct a project
-var viewportWidth = 1600;
+var viewportWidth = 1200;
 var viewportHeight = 1600;
 var p = new Project("mgh", "../../../config.txt", viewportWidth, viewportHeight);
 p.addRenderingParams(renderers.renderingParams);
@@ -47,7 +47,7 @@ for (var i = 0; i + 1 < numLevels; i ++) {
 }
 
 // ================== EEG canvas ===================
-var maxSegNum = 100000;
+var maxSegNum = 43200;
 var pixelPerSeg = 400;
 var layerHeight = 80;
 var numChannel = 20;
@@ -65,6 +65,8 @@ eegCanvas.addLayer(eegLayer);
 eegLayer.addRenderingFunc(renderers.eegRendering);
 eegLayer.addPlacement(placements.dummyEEGPlacement);
 
+// x axis
+eegCanvas.addAxes(renderers.eegXAxes);
 
 // ================== jump from cluster to eeg ================
 var selector = function () {
@@ -90,8 +92,8 @@ p.addJump(new Jump(clusterCanvases[numLevels - 1], eegCanvas, selector, newViewp
 
 // setting up initial states
 // abn999_20140711_151337
-//p.setInitialStates(eegCanvas, 200000, 0, ["", "sid1016_20170416_111752"]);
-p.setInitialStates(clusterCanvases[0], 0, 0, [""]);
+p.setInitialStates(eegCanvas, 0, 0, ["", "sid54_20150529_112817"]);
+//p.setInitialStates(clusterCanvases[0], 0, 0, [""]);
 
 // save to db
 p.saveProject();
