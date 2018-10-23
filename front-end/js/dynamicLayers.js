@@ -9,7 +9,7 @@ function renderAxes(viewportX, viewportY, vWidth, vHeight) {
     if (axesFunc == "")
         return ;
 
-    var axes = axesFunc.parseFunction()(globalVar.curCanvas.w, globalVar.curCanvas.h);
+    var axes = axesFunc.parseFunction()(globalVar.curCanvas.w, globalVar.curCanvas.h, globalVar.predicates);
     for (var i = 0; i < axes.length; i ++) {
         // create g element
         var curg = axesg.append("g")

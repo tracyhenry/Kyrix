@@ -23,7 +23,7 @@ var eegRendering = function (svg, data, width, height) {
 
     var pixelPerSeg = 400;
     var numPoints = 400;
-    var minV = -300, maxV = 300;
+    var minV = -500, maxV = 500;
     var dataset = [];
     for (var k = 0; k < channum; k++) {
         var coordinates = [];
@@ -72,6 +72,27 @@ var eegLabelRendering = function (svg, data, width, height) {
         .attr("x", 0)
         .attr("y", function(d, i) {return layerHeight / 2 + i * layerHeight;})
         .text(function(d) {return d;});
+};
+
+var eegXAxes = function (cWidth, cHeight, predicates) {
+
+    // get starting date according to data
+    var tokens = predicates[1].split("_");
+    var startDate = new Date(d3.timeParse("%Y%m%d%H%M%S")(tokens[1] + tokens[2]));
+    var endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+
+    var axes = [];
+    var x = d3.scaleTime()
+        .domain([startDate, endDate])
+        .range([0, cWidth]);
+    var xAxis = d3.axisTop()
+        .tickSize(-cHeight)
+        .ticks(d3.timeSecond.filter(function (d) {return (d.getSeconds() - startDate.getSeconds()) % 2 == 0;}))
+        .tickFormat(d3.timeFormat("%Y-%m-%d %H:%M:%S"));
+    axes.push({"dim": "x", "scale": x, "axis": xAxis, "translate": [0, 0]});
+
+    return axes;
 };
 
 var spectrumRendering = function (svg, data) {
@@ -128,13 +149,14 @@ var spectrumRendering = function (svg, data) {
 
 var spectrumLabelRendering = function (svg, data) {
     var g = svg.append("g");
-
 };
+
 
 module.exports = {
     renderingParams : renderingParams,
     eegRendering : eegRendering,
     eegLabelRendering : eegLabelRendering,
+    eegXAxes : eegXAxes,
     clusterRendering : clusterRendering,
     spectrumRendering : spectrumRendering,
     spectrumLabelRendering : spectrumLabelRendering
