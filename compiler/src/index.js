@@ -58,6 +58,12 @@ function addCanvas(canvas) {
         if (this.canvases[i].id == canvas.id)
             throw new Error("Constructing canvas: id " + canvas.id + " already existed.");
 
+    // check whether canvas size is smaller than viewport size
+    if (canvas.wSql == '' && canvas.w < this.viewportWidth)
+        throw new Error("Constructing canvas: " + canvas.id + " cannot have width smaller than viewport width.");
+    if (canvas.hSql == '' && canvas.h < this.viewportHeight)
+        throw new Error("Constructing canvas: " + canvas.id + " cannot have height smaller than viewport height.");
+
     // add this canvas to the canvas array
     this.canvases.push(canvas);
 }
