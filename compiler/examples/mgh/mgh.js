@@ -48,7 +48,7 @@ for (var i = 0; i + 1 < numLevels; i ++) {
 
 // ================== EEG canvas ===================
 var maxSegNum = 43200;
-var pixelPerSeg = 400;
+var pixelPerSeg = 200;
 var layerHeight = 80;
 var numChannel = 20;
 var eegCanvas = new Canvas("eeg", maxSegNum * pixelPerSeg, layerHeight * numChannel);
@@ -75,7 +75,7 @@ var selector = function () {
 
 var newViewport = function (row) {
     var tokens = row[0].split("_");
-    xStart = Math.max(tokens[3] * 400 + 200 - 1200 / 2, 0);
+    xStart = Math.max(tokens[3] * 200 + 100 - 1200 / 2, 0);
     return [0, xStart, 0];
 };
 
@@ -92,8 +92,8 @@ p.addJump(new Jump(clusterCanvases[numLevels - 1], eegCanvas, selector, newViewp
 
 // setting up initial states
 // abn999_20140711_151337
-p.setInitialStates(eegCanvas, 0, 0, ["", "sid54_20150529_112817"]);
-//p.setInitialStates(clusterCanvases[0], 0, 0, [""]);
+//p.setInitialStates(eegCanvas, 0, 0, ["", "sid54_20150529_112817"]);
+p.setInitialStates(clusterCanvases[0], 0, 0, [""]);
 
 // save to db
 p.saveProject();

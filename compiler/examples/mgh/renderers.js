@@ -17,13 +17,13 @@ var clusterRendering = function (svg, data) {
 
 var eegRendering = function (svg, data, width, height) {
 
-    var channum = 20;
+    var channum = 18;
     // create a new g
     var g = svg.append("g");
 
-    var pixelPerSeg = 400;
+    var pixelPerSeg = 200;
     var numPoints = 400;
-    var minV = -500, maxV = 500;
+    var minV = -100, maxV = 100;
     var dataset = [];
     for (var k = 0; k < channum; k++) {
         var coordinates = [];
@@ -59,11 +59,10 @@ var eegRendering = function (svg, data, width, height) {
 var eegLabelRendering = function (svg, data, width, height) {
 
     g = svg.append("g");
+    var channel_name = ["f7", "t3", "t5", "o1", "f8", "t4", "t6", "o2", "f3",
+        "c3", "p3", "o1", "f4", "c4", "p4", "o2", "cz", "pz"];
 
-    var channel_name = ["c3", "c4", "cz", "ekg", "f3", "f4", "f7", "f8", "fp1",
-        "fp2", "fz", "o1", "o2", "p3", "p4", "pz", "t3", "t4", "t5", "t6"];
-
-    var layerHeight = height / 20;
+    var layerHeight = height / 18;
     g.selectAll("g")
         .data(channel_name)
         .enter()
@@ -89,7 +88,8 @@ var eegXAxes = function (cWidth, cHeight, predicates) {
     var xAxis = d3.axisTop()
         .tickSize(-cHeight)
         .ticks(d3.timeSecond.filter(function (d) {return (d.getSeconds() - startDate.getSeconds()) % 2 == 0;}))
-        .tickFormat(d3.timeFormat("%Y-%m-%d %H:%M:%S"));
+        //.tickFormat(d3.timeFormat("%Y-%m-%d %H:%M:%S"));
+        .tickFormat(d3.timeFormat("%H:%M:%S"));
     axes.push({"dim": "x", "scale": x, "axis": xAxis, "translate": [0, 0]});
 
     return axes;

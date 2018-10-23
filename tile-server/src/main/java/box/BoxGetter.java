@@ -73,12 +73,12 @@ public abstract class BoxGetter {
 
         // get bigtable instance
         Table eegTable = Main.getEEGTable();
-        String[] columnNames = {"c3", "c4", "cz", "ekg", "f3", "f4", "f7", "f8", "fp1",
-                "fp2", "fz", "o1", "o2", "p3", "p4", "pz", "t3", "t4", "t5", "t6"};
+        String[] columnNames = {"f7", "t3", "t5", "o1", "f8", "t4", "t6", "o2", "f3",
+                "c3", "p3", "o1", "f4", "c4", "p4", "o2", "cz", "pz"};
 
         // calculate start & end key rows
-        int startSegId = (int) Math.floor(minx / 400);
-        int endSegId = (int) Math.floor(maxx / 400);
+        int startSegId = (int) Math.floor(minx / 200);
+        int endSegId = (int) Math.floor(maxx / 200);
         String startRowKey = predicates.get(1) + "_" + String.format("%06d", startSegId);
         String endRowKey = predicates.get(1) + "_" + String.format("%06d", endSegId + 1);
         System.out.println(startRowKey + " " + endRowKey);
