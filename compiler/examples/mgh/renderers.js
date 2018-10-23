@@ -25,7 +25,7 @@ var eegRendering = function (svg, data, width, height) {
     var numPoints = 400;
     var minV = -100, maxV = 100;
     var dataset = [];
-    for (var k = 0; k < channum; k++) {
+    for (var k = 0; k < channum; k ++) {
         var coordinates = [];
         var startingY = k * height / channum;
         for (var i = 0; i < data.length; i++) {
@@ -125,12 +125,11 @@ var spectrumRendering = function (svg, data) {
         val.push(temp);
     }
 
+    var g = svg.append("g");
     //val[[[ll of sid1],[ll of sid2],[ll]],[[lp of sid1],[]]]
     for (var k = 0; k < 4; k++) {
-
         for (var j = 0; j < data.length; j++) {
-            var g = svg.append("g");
-            g.selectAll('rect')
+            g.selectAll('.seg' + k.toString() + '_' + j.toString())
                 .data(val[k][j])
                 .enter()
                 .append("rect")

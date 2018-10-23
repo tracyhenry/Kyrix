@@ -11,7 +11,7 @@ const transforms = require("./transforms");
 const placements = require("./placements");
 
 // construct a project
-var viewportWidth = 1200;
+var viewportWidth = 1600;
 var viewportHeight = 1600;
 var p = new Project("mgh", "../../../config.txt", viewportWidth, viewportHeight);
 p.addRenderingParams(renderers.renderingParams);
@@ -103,13 +103,12 @@ var newEEGPredicate = function (row) {
 };
 
 var jumpNameEEG = function (row) {
-    return "Jump to eeg segment: " + row[0];
+    return "Jump to EEG: " + row[0];
 };
 
 p.addJump(new Jump(clusterCanvases[numLevels - 1], eegCanvas, selector, newEEGViewport, newEEGPredicate, "semantic_zoom", jumpNameEEG));
 
 // ================== jump from cluster to spectrum ================
-
 var newSpectrumViewport = function (row) {
     var tokens = row[0].split("_");
     xStart = Math.max(tokens[3] - 1600 / 2, 0);
@@ -121,7 +120,7 @@ var newSpectrumPredicate = function (row) {
 };
 
 var jumpNameSpectrum = function (row) {
-    return "Jump to spectrum segment: " + row[0];
+    return "Jump to Spectrogram: " + row[0];
 };
 
 p.addJump(new Jump(clusterCanvases[numLevels - 1], spectrumCanvas, selector, newSpectrumViewport, newSpectrumPredicate, "semantic_zoom", jumpNameSpectrum));
