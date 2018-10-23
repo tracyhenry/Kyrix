@@ -29,9 +29,17 @@ var dummyEEGTransform = new Transform("eegdummy",
     [],
     true);
 
+var dummySpectrumTransform = new Transform("spectrumdummy",
+    "",
+    "",
+    function (){
+    },
+    [],
+    true);
 
 module.exports = {
     dummyEEGTransform : dummyEEGTransform,
+    dummySpectrumTransform : dummySpectrumTransform,
     scales : scales,
     numLevels : numLevels,
     zoomFactor : zoomFactor

@@ -24,6 +24,8 @@ public class MikeBoxGetter extends BoxGetter {
 
         if (Main.getProject().getName().equals("mgh") && c.getId().equals("eeg"))
             data = fetchEEGData(minx, maxx, predicates);
+        else if (Main.getProject().getName().equals("mgh") && c.getId().equals("spectrum"))
+            data = fetchSpectrumData(minx, maxx, predicates);
         else
             data = fetchData(c, minx, miny, maxx, maxy, predicates);
 

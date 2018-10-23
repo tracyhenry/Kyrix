@@ -68,32 +68,68 @@ eegLayer.addPlacement(placements.dummyEEGPlacement);
 // x axis
 eegCanvas.addAxes(renderers.eegXAxes);
 
+// ================== Spectrum canvas ===================
+var spectrumWidth = 30000;
+var spectrumHeight = viewportHeight;
+var spectrumCanvas = new Canvas("spectrum", spectrumWidth, spectrumHeight);
+p.addCanvas(spectrumCanvas);
+
+/*
+// label layer
+var freqlabelLayer = new Layer(transforms.dummySpectrumTransform, true);
+spectrumCanvas.addLayer(freqlabelLayer);
+freqlabelLayer.addRenderingFunc(renderers.spectrumLabelRendering);
+*/
+
+var freqLayer = new Layer(transforms.dummySpectrumTransform, false);
+spectrumCanvas.addLayer(freqLayer);
+freqLayer.addRenderingFunc(renderers.spectrumRendering);
+freqLayer.addPlacement(placements.spectrumPlacement);
+
 // ================== jump from cluster to eeg ================
 var selector = function () {
     return true;
 };
 
-var newViewport = function (row) {
+var newEEGViewport = function (row) {
     var tokens = row[0].split("_");
     xStart = Math.max(tokens[3] * 200 + 100 - 1200 / 2, 0);
     return [0, xStart, 0];
 };
 
-var newPredicate = function (row) {
+var newEEGPredicate = function (row) {
     var tokens = row[0].split("_");
     return ["", tokens[0] + "_" + tokens[1] + "_" + tokens[2]];
 };
 
-var jumpName = function (row) {
-    return "Jump to segment: " + row[0];
+var jumpNameEEG = function (row) {
+    return "Jump to eeg segment: " + row[0];
 };
 
-p.addJump(new Jump(clusterCanvases[numLevels - 1], eegCanvas, selector, newViewport, newPredicate, "semantic_zoom", jumpName));
+p.addJump(new Jump(clusterCanvases[numLevels - 1], eegCanvas, selector, newEEGViewport, newEEGPredicate, "semantic_zoom", jumpNameEEG));
+
+// ================== jump from cluster to spectrum ================
+
+var newSpectrumViewport = function (row) {
+    var tokens = row[0].split("_");
+    xStart = Math.max(tokens[3] - 1600 / 2, 0);
+    return [0, xStart, 0];
+};
+
+var newSpectrumPredicate = function (row) {
+    return [row[0]];
+};
+
+var jumpNameSpectrum = function (row) {
+    return "Jump to spectrum segment: " + row[0];
+};
+
+p.addJump(new Jump(clusterCanvases[numLevels - 1], spectrumCanvas, selector, newSpectrumViewport, newSpectrumPredicate, "semantic_zoom", jumpNameSpectrum));
 
 // setting up initial states
 // abn999_20140711_151337
 //p.setInitialStates(eegCanvas, 0, 0, ["", "sid54_20150529_112817"]);
-p.setInitialStates(clusterCanvases[0], 0, 0, [""]);
+p.setInitialStates(clusterCanvases[numLevels - 1], 0, 0, [""]);
 
 // save to db
 p.saveProject();
