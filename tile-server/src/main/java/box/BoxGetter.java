@@ -113,5 +113,54 @@ public abstract class BoxGetter {
         return data;
     }
 
+    public ArrayList<ArrayList<ArrayList<String>>> fetchSpectrumData(int minx, int maxx, ArrayList<String> predicates)
+            throws SQLException, ClassNotFoundException, IOException {
+
+        System.out.println("minx, maxx : " + minx + " " + maxx);
+
+        // construct a data object and add a dummy array object for the label layer
+        ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
+        //data.add(new ArrayList<>());
+        ArrayList<ArrayList<String>> spectrumData = new ArrayList<>();
+
+        // get bigtable instance
+        Table spectrumTable = Main.getSpectrumTable();
+        String[] columnNames = {"LL","LP","RL","RP"};
+
+        // calculate start & end key rows
+        String startRowKey = predicates.get(0);
+        String[] topredicates = predicates.get(0).split("_");
+        String endRowKey = topredicates[0] + "_" + topredicates[1] + "_" + topredicates[2] + "_" + String.format("%06d", maxx + 1);
+        System.out.println(startRowKey + " " + endRowKey);
+
+        // construct range query scanner
+        Scan curScan = new Scan();
+        curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
+        ResultScanner resultScanner = spectrumTable.getScanner(curScan);
+
+        // iterate through results
+        for (Result row : resultScanner) {
+            String key = Bytes.toString(row.getRow());
+            ArrayList<String> curData = new ArrayList<>();
+
+            // key fields
+            String[] keys = key.split("_");
+            for (int i = 0; i < keys.length; i ++)
+                curData.add(keys[i]);
+
+            // channel data
+            for (int i = 0; i < columnNames.length; i ++) {
+                byte[] valueBytes = row.getValue(Bytes.toBytes("freq"), Bytes.toBytes(columnNames[i]));
+                String s = new String(valueBytes);
+                curData.add(s);
+            }
+
+            //TODO: add bounding box data
+            spectrumData.add(curData);
+        }
+
+        data.add(spectrumData);
+        return data;
+    }
     public abstract BoxandData getBox(Canvas c, int cx, int cy, int viewportH, int viewportW, ArrayList<String> predicates) throws SQLException, ClassNotFoundException, IOException;
 }

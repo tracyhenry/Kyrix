@@ -5,8 +5,6 @@ import com.google.cloud.bigtable.hbase.BigtableConfiguration;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import index.Indexer;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.client.Connection;
 import project.Project;
@@ -29,8 +27,10 @@ public class Main {
 	private static Project project = null;
 	private static String projectJSON = "";
 	// for big table
-	private static Connection bigTableConn = null;
+	private static Connection eegBigtableConn = null;
+	private static Connection spectrumBigtableConn = null;
 	private static Table eegTable = null;
+	private static Table spectrumTable = null;
 
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException,
@@ -39,8 +39,8 @@ public class Main {
 			NoSuchMethodException, InterruptedException {
 
 		// connnect to big table
-		connectBigTable();
-		testBigTable();
+		connectBigtable();
+		testBigtable();
 
 		// read config file
 		readConfigFile();
@@ -126,18 +126,28 @@ public class Main {
 		return eegTable;
 	}
 
-	private static void connectBigTable() throws IOException {
-
-		String projectId = "mgh-neurology-poc-01";  // my-gcp-project-id
-		String instanceId = "eeg-table"; // my-bigtable-instance-id
-		String tableId = "eegTable";    // my-bigtable-table-id
-
-		bigTableConn = BigtableConfiguration.connect(projectId, instanceId);
-		eegTable = bigTableConn.getTable(TableName.valueOf(tableId));
+	public static Table getSpectrumTable() {
+		return spectrumTable;
 	}
 
-	private static void testBigTable() throws IOException, SQLException, ClassNotFoundException {
+	private static void connectBigtable() throws IOException {
 
+		String projectId = "mgh-neurology-poc-01";  // my-gcp-project-id
+		String eegInstanceId = "eeg-table"; // my-bigtable-instance-id
+		String eegTableId = "eegTable";    // my-bigtable-table-id
+		String spectrumInstanceId = "spectrogram";
+		String spectrumTableId = "spectrogram";
+
+		eegBigtableConn = BigtableConfiguration.connect(projectId, eegInstanceId);
+		eegTable = eegBigtableConn.getTable(TableName.valueOf(eegTableId));
+
+		spectrumBigtableConn = BigtableConfiguration.connect(projectId, spectrumInstanceId);
+		spectrumTable = spectrumBigtableConn.getTable(TableName.valueOf(spectrumTableId));
+	}
+
+	private static void testBigtable() throws IOException, SQLException, ClassNotFoundException {
+
+		// test for eeg
 		// start/end rows
 		String startRowKey = "abn10000_20140117_093552_000008";
 		String endRowKey = "abn10000_20140117_093552_000018";
@@ -176,5 +186,26 @@ public class Main {
 		predicates.add("");
 		predicates.add("abn10000_20140117_093552");
 		ArrayList<ArrayList<ArrayList<String>>> testResult = testBoxGetter.fetchEEGData(0, 599, predicates);
+
+
+		//test for spectrum
+		startRowKey = "abn10000_20140117_093552_000000";
+		endRowKey = "abn10000_20140117_093552_000005";
+
+		st = System.currentTimeMillis();
+		result = spectrumTable.get(new Get(Bytes.toBytes("abn10000_20140117_093552_000008")));
+		System.out.println(System.currentTimeMillis() - st);
+
+		st = System.currentTimeMillis();
+		// new scan object
+		curScan = new Scan();
+		curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
+
+		// Retrieve the result
+		resultScanner = spectrumTable.getScanner(curScan);
+		for (Result row : resultScanner)
+			System.out.println(Bytes.toString(row.getRow()));
+		System.out.println(System.currentTimeMillis() - st);
+
 	}
 }
