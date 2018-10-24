@@ -44,3 +44,22 @@
 #zoomoutbutton {
     position : absolute;
 }
+
+#editor {
+    position: absolute;
+    display: flex;
+    background-color: lightblue;
+    padding: 100px;
+    margin: auto auto;
+    border-radius: 10px;
+    flex-direction: column;
+    width: 300px;
+    left: 0px;
+    right: 0px;
+    margin-top: 100px;
+    opacity: .9;
+}
+
+    #editor > * {
+        margin: 10px;
+    }
