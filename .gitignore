@@ -146,6 +146,7 @@ buildNumber.properties
 
 ################# Kyrix-specific #################
 config.txt
+mgh_config.txt
 tile-server/lib
 .DS_Store
 test.html
