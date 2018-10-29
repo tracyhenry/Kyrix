@@ -18,6 +18,7 @@ var clusterRendering = function (svg, data) {
 var eegRendering = function (svg, data, width, height) {
 
     var channum = 18;
+
     // create a new g
     var g = svg.append("g");
 
@@ -30,7 +31,7 @@ var eegRendering = function (svg, data, width, height) {
         var startingY = k * height / channum;
         for (var i = 0; i < data.length; i++) {
             var tofloat = data[i][k+4].split(",");
-            for (var j = 0; j < tofloat.length; j++) {
+            for (var j = 0; j < tofloat.length; j ++) {
                 if (tofloat[j] > maxV || tofloat[j] < minV)
                     tofloat[j] = 0;
                 coordinates.push({"x": pixelPerSeg * (+data[i][3]) + j * pixelPerSeg / numPoints ,
@@ -39,6 +40,18 @@ var eegRendering = function (svg, data, width, height) {
         }
         dataset.push(coordinates);
     }
+
+    // insert background rectangles
+    g.selectAll('.eegrect')
+        .data(data)
+        .enter()
+        .append('rect')
+        .attr('x', function (d) {return pixelPerSeg * (+d[3]);})
+        .attr('y', 0)
+        .attr('width', pixelPerSeg)
+        .attr('height', height)
+        .style('opacity', 0)
+        .classed('eegrect', true);
 
     // d3 line object
     var line = d3.line()
@@ -149,7 +162,6 @@ var spectrumRendering = function (svg, data) {
 var spectrumLabelRendering = function (svg, data) {
     var g = svg.append("g");
 };
-
 
 module.exports = {
     renderingParams : renderingParams,

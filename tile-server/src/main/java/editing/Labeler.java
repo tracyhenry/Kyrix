@@ -29,12 +29,9 @@ public class Labeler {
      * @throws SQLException 
      */
     public Boolean label(String table, String labeler, String label, String item) throws ClassNotFoundException, SQLException {
+
         // get db connector for reuse among layers
         Statement stmt = DbConnector.getStmtByDbName(DATABASE_NAME);
-
-        item = "sid782_20131102_082732_022048";
-        labeler = "mbw";
-        
         String sql = String.format("UPDATE %s SET %s=\'%s\' WHERE recordid=\'%s\';", table, labeler, label, item);
 
         // run query, add to response

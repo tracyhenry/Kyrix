@@ -273,6 +273,15 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
 // register jump info for a tile
 function registerJumps(svg, layerId) {
 
+    // hard-coding: attach edit listener
+    d3.selectAll(".eegrect")
+        .on("click", function(d) {
+            globalVar.edit(d);
+        });
+    d3.select('#editButton')
+        .attr('disabled', null);
+
+    // register jump stuff
     var jumps = globalVar.curJump;
     var shapes = svg.select("g").selectAll("*");
 

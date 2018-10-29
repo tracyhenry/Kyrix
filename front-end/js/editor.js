@@ -1,24 +1,23 @@
-var Editor = function () {
-	var isEditing = false;
-	labels = {
-		"Seizure":"Seizure",
-		"LPD": "LPD",
-		"GPD": "GPD",
-		"LRDA": "LRDA",
-		"GRDA": "GRDA",
-		"Other": "Other"
-	};
+var editor = function() {
+
+	var labels = {
+			"Seizure": "Seizure",
+			"LPD": "LPD",
+			"GPD": "GPD",
+			"LRDA": "LRDA",
+			"GRDA": "GRDA",
+			"Other": "Other"
+		};
 	var row = [];
 	var editBox = null;
 	var selectBox = null;
-	var selectedRow = null;
-	var getIdFromRow = function() {
-		return row[0];
-	}
+	var getIdFromRow = function () {
+		return row[0] + "_" + row[1] + "_" + row[2] + "_" + row[3];
+	};
 	var hideEditor = function () {
 		editBox.hide();
 	};
-	var submitEdit = function (button) {
+	var submitEdit = function () {
 		if (selectBox[0].selectedOptions.length > 0) {
 			var selectedId = selectBox[0].selectedOptions[0].id;
 			$.ajax({
@@ -46,25 +45,22 @@ var Editor = function () {
 			option.attr("id", key);
 			selectBox.append(option);
 		}
+		$('#editIdBox').text(getIdFromRow())
 		editBox.show();
 	};
 	var startEditor = function () {
 		editBox = $("<div id='editor'>");
 		selectBox = $("<select>");
-		var submitButton = $("<button>").text("Submit");
+		var submitButton = $("<button id='editButton'>").text("Submit");
+		var idBox = $("<div id='editIdBox'>");
 		submitButton.click(submitEdit);
+		editBox.append(idBox);
 		editBox.append(selectBox);
 		editBox.append(submitButton);
 		$("body").append(editBox);
 		editBox.hide();
 	};
 	startEditor();
-	return {
-		edit: function (row) {
-			displayEditor(row);
-		},
-		deselect: function () {
-			isEditing = false;
-		}
-	};
-}();
+
+	return displayEditor;
+};

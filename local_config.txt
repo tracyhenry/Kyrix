@@ -1,0 +1,8 @@
+task1
+8000
+psql
+localhost
+wenbo
+
+Kyrix
+/users/wenbo/Documents/wenbo/git/Kyrix/compiler
