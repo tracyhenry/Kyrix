@@ -124,6 +124,9 @@ function zoomed() {
     if (d3.select(".mainsvg:not(.static)").size() == 0)
         return ;
 
+    // hardcoding - mark the median segment
+    markMedianSegment();
+
     // frequently accessed global variables
     var cWidth = globalVar.curCanvas.w;
     var cHeight = globalVar.curCanvas.h;
@@ -196,3 +199,28 @@ function zoomed() {
         (zoomOutFactorY < 1 && scaleY <= globalVar.minScale))
         completeZoom("literal_zoom_out", zoomOutFactorX, zoomOutFactorY);
 };
+
+// Hardcoding: mark median segment
+function markMedianSegment() {
+
+    var curViewport = d3.select(".mainsvg:not(.static)")
+        .attr("viewBox").split(" ");
+    var containsMiddleLine = function(d) {
+        var vpMiddleLine = +curViewport[0] + 800;
+        return (d[3] * 200 <= vpMiddleLine)
+            && (vpMiddleLine <= (+d[3] + 1) * 200);
+    };
+    d3.selectAll(".eegrect")
+        .filter(function (d) {
+            return containsMiddleLine(d);
+        })
+        .style("opacity", 1)
+        .attr("fill", "white")
+        .style("stroke", "pink")
+        .style("stroke-width", 8);
+    d3.selectAll(".eegrect")
+        .filter(function (d) {
+            return ! containsMiddleLine(d);
+        })
+        .style("opacity", 0);
+}

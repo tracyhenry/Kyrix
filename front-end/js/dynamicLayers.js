@@ -259,6 +259,9 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                         globalVar.curCanvas.h,
                         globalVar.renderingParams);
 
+                    // hardcoding: mark median segment
+                    markMedianSegment();
+
                     // register jumps
                     if (!globalVar.animation)
                         registerJumps(dboxSvg, +i);

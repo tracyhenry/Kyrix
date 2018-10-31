@@ -45,7 +45,7 @@ var editor = function() {
 			option.attr("id", key);
 			selectBox.append(option);
 		}
-		$('#editIdBox').text(getIdFromRow())
+		$('#editIdBox').text(getIdFromRow());
 		editBox.show();
 	};
 	var startEditor = function () {
