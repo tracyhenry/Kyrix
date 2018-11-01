@@ -70,6 +70,7 @@ function startLiteralZoomTransition(center, scale, duration) {
     d3.selectAll("*")
         .on("click", null);
     d3.select("#maing").on(".zoom", null);
+    d3.select("body").on("keydown", null);
 
     var curSelection = d3.select("#maing");
     var initialZoomTransform = d3.zoomTransform(curSelection.node());
@@ -208,7 +209,7 @@ function markMedianSegment() {
     var containsMiddleLine = function(d) {
         var vpMiddleLine = +curViewport[0] + 800;
         return (d[3] * 200 <= vpMiddleLine)
-            && (vpMiddleLine <= (+d[3] + 1) * 200);
+            && (vpMiddleLine < (+d[3] + 1) * 200);
     };
     d3.selectAll(".eegrect")
         .filter(function (d) {

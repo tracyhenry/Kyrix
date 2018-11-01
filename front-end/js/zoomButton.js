@@ -75,6 +75,36 @@ function setButtonState() {
             d3.select("#zoomoutbutton")
                 .attr("disabled", null)
                 .on("click", literalZoomOut);
+
+    // hardcoding: keyboard events
+    if (globalVar.curCanvas.id == "eeg")
+        d3.select("body")
+            .on("keydown", function () {
+                if (event.key == "ArrowLeft" || event.key == "ArrowRight") {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    // calculate new transform
+                    var delta = (event.key == "ArrowRight" ? -1 : 1);
+                    var pixelPerSeg = 200;
+                    var numPannedSeg = 10;
+                    var transform = d3.zoomTransform(d3.select("#maing").node())
+                        .translate(delta * pixelPerSeg * numPannedSeg, 0);
+                    d3.transition()
+                        .duration(1000)
+                        .tween("panTween", function() {
+                            var i = d3.interpolateNumber(1, pixelPerSeg * numPannedSeg);
+                            var initialTransform = d3.zoomTransform(d3.select("#maing").node());
+                            return function (t) {
+                                var curDelta = i(t) * delta;
+                                d3.select("#maing").call(globalVar.zoom.transform,
+                                    initialTransform.translate(curDelta, 0));
+                            };
+                        });
+                }
+            });
+    else
+        d3.select("body")
+            .on("keydown", null);
 };
 
 // called in completeZoom() and RegisterJump()

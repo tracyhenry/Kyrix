@@ -36,8 +36,8 @@ function renderAxes(viewportX, viewportY, vWidth, vHeight) {
 
         // call axis function
         curg.call(axes[i].axis.scale(newScale));
-	curg.selectAll(".tick line").attr("stroke", "#777").attr("stroke-dasharray", "3,10");
-	curg.style("font", "25px arial")
+        curg.selectAll(".tick line").attr("stroke", "#777").attr("stroke-dasharray", "3,10");
+        curg.style("font", "25px arial")
     }
 };
 

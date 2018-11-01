@@ -40,6 +40,9 @@ function preAnimation() {
         .attr("disabled", true);
     d3.selectAll("*")
         .on("click", null);
+    d3.select("body")
+        .on("keydown", null);
+
     globalVar.animation = true;
 };
 
