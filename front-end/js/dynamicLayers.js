@@ -253,11 +253,12 @@ function RefreshDynamicLayers(viewportX, viewportY) {
 
                     dboxSvg.selectAll("*").remove();
 
-                    // draw current layer
+                    // draw current layer - hardcoding : adding scale for eeg
                     curLayer.rendering.parseFunction()(dboxSvg, renderData[i],
                         globalVar.curCanvas.w,
                         globalVar.curCanvas.h,
-                        globalVar.renderingParams);
+                        globalVar.renderingParams,
+                        globalVar.eegMagnitude);
 
                     // hardcoding: mark median segment
                     markMedianSegment();

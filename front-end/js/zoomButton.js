@@ -77,7 +77,8 @@ function setButtonState() {
                 .on("click", literalZoomOut);
 
     // hardcoding: keyboard events
-    if (globalVar.curCanvas.id == "eeg")
+    if (globalVar.curCanvas.id == "eeg") {
+        globalVar.eegMagnitude = 1;
         d3.select("body")
             .on("keydown", function () {
                 if (event.key == "ArrowLeft" || event.key == "ArrowRight") {
@@ -87,11 +88,9 @@ function setButtonState() {
                     var delta = (event.key == "ArrowRight" ? -1 : 1);
                     var pixelPerSeg = 200;
                     var numPannedSeg = 10;
-                    var transform = d3.zoomTransform(d3.select("#maing").node())
-                        .translate(delta * pixelPerSeg * numPannedSeg, 0);
                     d3.transition()
                         .duration(1000)
-                        .tween("panTween", function() {
+                        .tween("panTween", function () {
                             var i = d3.interpolateNumber(1, pixelPerSeg * numPannedSeg);
                             var initialTransform = d3.zoomTransform(d3.select("#maing").node());
                             return function (t) {
@@ -101,7 +100,28 @@ function setButtonState() {
                             };
                         });
                 }
+                else if (event.key == "ArrowUp" || event.key == "ArrowDown") {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    if (event.key == "ArrowUp")
+                        globalVar.eegMagnitude += 0.1;
+                    else
+                        globalVar.eegMagnitude -= 0.1;
+                    var dboxSvg = d3.select(".layerg.layer" + 1)
+                        .select(".mainsvg");
+                    dboxSvg.selectAll("*").remove();
+                    globalVar.curCanvas.layers[1].rendering.parseFunction()(
+                        dboxSvg,
+                        globalVar.renderData[1],
+                        globalVar.curCanvas.w,
+                        globalVar.curCanvas.h,
+                        globalVar.renderingParams,
+                        globalVar.eegMagnitude
+                    );
+                    markMedianSegment();
+                }
             });
+    }
     else
         d3.select("body")
             .on("keydown", null);

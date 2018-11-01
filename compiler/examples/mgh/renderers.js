@@ -15,9 +15,11 @@ var clusterRendering = function (svg, data) {
        });
 };
 
-var eegRendering = function (svg, data, width, height) {
+var eegRendering = function (svg, data, width, height, params, magnitude) {
 
-    var channum = 18;
+    if (typeof magnitude != "number")
+        magnitude = 1;
+    var channum = 20;
 
     // create a new g
     var g = svg.append("g");
@@ -34,6 +36,7 @@ var eegRendering = function (svg, data, width, height) {
             for (var j = 0; j < tofloat.length; j ++) {
                 if (tofloat[j] > maxV || tofloat[j] < minV)
                     tofloat[j] = 0;
+                tofloat[j] *= magnitude;
                 coordinates.push({"x": pixelPerSeg * (+data[i][3]) + j * pixelPerSeg / numPoints ,
                     "y": d3.scaleLinear().domain([minV, maxV]).range([0, height / channum])(+tofloat[j]) + startingY});
             }
@@ -41,7 +44,7 @@ var eegRendering = function (svg, data, width, height) {
         dataset.push(coordinates);
     }
 
-    // insert background rectangles
+    // insert background rectangles (for being highlighted)
     g.selectAll('.eegrect')
         .data(data)
         .enter()
@@ -72,10 +75,10 @@ var eegRendering = function (svg, data, width, height) {
 var eegLabelRendering = function (svg, data, width, height) {
 
     g = svg.append("g");
-    var channel_name = ["f7", "t3", "t5", "o1", "f8", "t4", "t6", "o2", "f3",
-        "c3", "p3", "o1", "f4", "c4", "p4", "o2", "cz", "pz"];
+    var channel_name = ["C3", "C4", "CZ", "EKG", "F3", "F4", "F7", "F8", "FP1",
+        "FP2", "FZ", "O1", "O2", "P3", "P4", "PZ", "T3", "T4", "T5", "T6"];
 
-    var layerHeight = height / 18;
+    var layerHeight = height / 20;
     g.selectAll("g")
         .data(channel_name)
         .enter()
