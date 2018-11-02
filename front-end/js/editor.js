@@ -1,6 +1,7 @@
-var editor = function() {
+$(function () {
+	globalVar.Editor = function () {
 
-	var labels = {
+		var labels = {
 			"Seizure": "Seizure",
 			"LPD": "LPD",
 			"GPD": "GPD",
@@ -8,59 +9,75 @@ var editor = function() {
 			"GRDA": "GRDA",
 			"Other": "Other"
 		};
-	var row = [];
-	var editBox = null;
-	var selectBox = null;
-	var getIdFromRow = function () {
-		return row[0] + "_" + row[1] + "_" + row[2] + "_" + row[3];
-	};
-	var hideEditor = function () {
-		editBox.hide();
-	};
-	var submitEdit = function () {
-		if (selectBox[0].selectedOptions.length > 0) {
-			var selectedId = selectBox[0].selectedOptions[0].id;
+		var row = [];
+		var floatBox = null;
+		var editBox = null;
+		var idBox = null;
+		var buttonsBox = null;
+		var getIdFromRow = function () {
+			return row[0] + "_" + row[1] + "_" + row[2] + "_" + row[3];
+		};
+		var submitEdit = function () {
+			var label = $("input[name=label]:checked").val();
 			$.ajax({
 				type: "POST",
 				url: "edit",
 				data: {
 					"item": getIdFromRow(),
 					"labeler": "mbw",
-					"label": labels[selectedId]
+					"label": labels[label]
 				},
 				success: function (data, status) {
-					hideEditor();
 				},
 				error: function (data, status) {
-
+					console.log("Label Failed");
 				}
 			});
-		}
-	};
-	var displayEditor = function (data) {
-		row = data;
-		selectBox.html("");
-		for (var key in labels) {
-			var option = $("<option>").html(labels[key]);
-			option.attr("id", key);
-			selectBox.append(option);
-		}
-		$('#editIdBox').text(getIdFromRow());
-		editBox.show();
-	};
-	var startEditor = function () {
-		editBox = $("<div id='editor'>");
-		selectBox = $("<select>");
-		var submitButton = $("<button id='editButton'>").text("Submit");
-		var idBox = $("<div id='editIdBox'>");
-		submitButton.click(submitEdit);
-		editBox.append(idBox);
-		editBox.append(selectBox);
-		editBox.append(submitButton);
-		$("body").append(editBox);
-		editBox.hide();
-	};
-	startEditor();
+		};
+		var selectRow = function (data) {
+			floatBox.insertAfter($("#containerSvg"));
+			if (data != row) {
+				editBox.show();
+				row = data;
+				editBox.html("");
+				idBox.text(getIdFromRow());
+				editBox.append(idBox);
+				for (var key in labels) {
+					var labelOptionDiv = $("<div>");
+					var option = $("<input name='label' type='radio'>");
+					option.val(key);
+					option.attr('id', key);
+					option.on('change', submitEdit);
+					labelOptionDiv.append(option);
+					var optionLabel = $("<label>");
+					optionLabel.attr("for", key);
+					optionLabel.text(labels[key]);
+					labelOptionDiv.append(optionLabel);
+					editBox.append(labelOptionDiv);
+				}
+			}
+		};
 
-	return displayEditor;
-};
+		var startEditor = function () {
+			floatBox = $("<div id='sidebar'>");
+			editBox = $("<div id='editor'>");
+			editBox.append($("<div id='editIdBox'>"));
+			editBox.append($("<div id='buttons'>"));
+			floatBox.append(editBox);
+			$("body").append(floatBox);
+			buttonsBox = $("#buttons");
+			idBox = $("#editIdBox");
+			editBox = $("#editor");
+		};
+		startEditor();
+
+		return {
+			hide: function () {
+				editBox.hide();
+			},
+			selectRow: function (row) {
+				selectRow(row);
+			}
+		};
+	}();
+});

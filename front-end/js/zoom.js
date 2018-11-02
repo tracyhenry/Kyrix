@@ -125,8 +125,8 @@ function zoomed() {
     if (d3.select(".mainsvg:not(.static)").size() == 0)
         return ;
 
-    // hardcoding - mark the median segment
-    markMedianSegment();
+	// hardcoding - mark the median segment
+	markMedianSegment();
 
     // frequently accessed global variables
     var cWidth = globalVar.curCanvas.w;
@@ -204,6 +204,9 @@ function zoomed() {
 // Hardcoding: mark median segment
 function markMedianSegment() {
 
+	if (globalVar.curCanvas.id != "eeg")
+		return;
+
     var curViewport = d3.select(".mainsvg:not(.static)")
         .attr("viewBox").split(" ");
     var containsMiddleLine = function(d) {
@@ -211,14 +214,20 @@ function markMedianSegment() {
         return (d[3] * 200 <= vpMiddleLine)
             && (vpMiddleLine < (+d[3] + 1) * 200);
     };
-    d3.selectAll(".eegrect")
-        .filter(function (d) {
-            return containsMiddleLine(d);
-        })
-        .style("opacity", 1)
-        .attr("fill", "white")
-        .style("stroke", "pink")
-        .style("stroke-width", 8);
+	d3.selectAll(".eegrect")
+		.filter(function (d) {
+			return containsMiddleLine(d);
+		})
+		.style("opacity", 1)
+		.attr("fill", "white")
+		.style("stroke", "pink")
+		.style("stroke-width", 8)
+		.call(function (middleRect) {
+			if (!middleRect.empty()) {
+				globalVar.Editor.selectRow(middleRect.datum());
+			}
+		});
+
     d3.selectAll(".eegrect")
         .filter(function (d) {
             return ! containsMiddleLine(d);
