@@ -1,5 +1,6 @@
 package server;
 
+import box.History;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import main.Config;
@@ -24,10 +25,13 @@ public class IndexHandler implements HttpHandler {
 			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
 			return;
 		}
-
 		String path = httpExchange.getRequestURI().getPath();
-		if (path.equals("/"))
+		if (path.equals("/")) {
 			path = "/" + Config.indexFileName;
+			// reset dynamic box history once every new session starts
+			// (should be changed when doing multi-user)
+			History.reset();
+		}
 
 		// read the frontend file and return
 		FileInputStream fs = new FileInputStream(Config.webRoot + path);

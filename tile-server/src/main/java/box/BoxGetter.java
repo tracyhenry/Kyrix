@@ -10,6 +10,8 @@ import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 import project.Canvas;
 import project.Project;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.io.*;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -24,44 +26,60 @@ public abstract class BoxGetter {
     }
 
     public ArrayList<ArrayList<ArrayList<String>>> fetchData(Canvas c, int minx, int miny, int maxx, int maxy, ArrayList<String> predicates)
-            throws SQLException, ClassNotFoundException {
+            throws SQLException, ClassNotFoundException, ParseException {
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
         Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
-        try {
-            // loop through each layer
-            for (int i = 0; i < c.getLayers().size(); i++) {
 
-                if (c.getLayers().get(i).isStatic()) {
-                    data.add(new ArrayList<>());
-                    continue;
-                }
-                // construct range query
-                String sql = "select * from bbox_" + project.getName() + "_"
-                        + c.getId() + "layer" + i + " where ";
-                sql += (Config.database == Config.Database.MYSQL ? "MBRIntersects(GeomFromText" :
-                        "st_Intersects(st_GeomFromText") +
-                        "('Polygon(("
-                        + minx + " " + miny + "," + maxx + " " + miny
-                        + "," + maxx + " " + maxy + "," + minx + " " + maxy
-                        + "," + minx + " " + miny;
-                sql += "))'),geom)";
-                if (predicates.get(i).length() > 0)
-                    sql += " and " + predicates.get(i);
-                sql += ";";
-
-                System.out.println(minx + " " + miny + " : " + sql);
-
-                // add to response
-                data.add(DbConnector.getQueryResult(stmt, sql));
-            }
-            stmt.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        int oldMinx, oldMiny, oldMaxx, oldMaxy;
+        if (History.getCanvas() == null || ! History.getCanvas().getId().equals(c.getId())) {
+            oldMinx = oldMaxx = oldMiny = oldMaxy = Integer.MIN_VALUE;
+            History.reset();
+        } else {
+            oldMinx = History.box.getMinx();
+            oldMiny = History.box.getMiny();
+            oldMaxx = History.box.getMaxx();
+            oldMaxy = History.box.getMaxy();
         }
+        // loop through each layer
+        for (int i = 0; i < c.getLayers().size(); i++) {
+
+            if (c.getLayers().get(i).isStatic()) {
+                data.add(new ArrayList<>());
+                continue;
+            }
+            GeometryFactory fact = new GeometryFactory();
+            WKTReader wktRdr = new WKTReader(fact);
+            String wktNew = "POLYGON((" + minx + " " + miny + "," +minx + " " + maxy + ","
+                    + maxx + " " + maxy + "," + maxx + " " + miny + "," + minx + " " + miny + "))";
+            String wktOld = "POLYGON((" + oldMinx + " " + oldMiny + "," +oldMinx + " " + oldMaxy + ","
+                    + oldMaxx + " " + oldMaxy + "," + oldMaxx + " " + oldMiny + "," + oldMinx + " " + oldMiny + "))";
+            Geometry newBoxGeom = wktRdr.read(wktNew);
+            Geometry oldBoxGeom = wktRdr.read(wktOld);
+            Geometry deltaGeom = newBoxGeom.difference(oldBoxGeom);
+            WKTWriter wktWtr = new WKTWriter();
+            String deltaWkt = wktWtr.write(deltaGeom);
+
+            // construct range query
+            String sql = "select * from bbox_" + project.getName() + "_"
+                    + c.getId() + "layer" + i + " where ";
+            sql += (Config.database == Config.Database.MYSQL ? "MBRIntersects(GeomFromText" :
+                    "st_Intersects(st_GeomFromText");
+            sql += "('" + deltaWkt + "'),geom)";
+            if (predicates.get(i).length() > 0)
+                sql += " and " + predicates.get(i);
+            sql += ";";
+            System.out.println(minx + " " + miny + " : " + sql);
+
+            // add to response
+            data.add(DbConnector.getQueryResult(stmt, sql));
+        }
+        History.updateHistory(c, new Box(minx, miny, maxx, maxy), 0);
+        stmt.close();
+
         return data;
     }
 
-    public ArrayList<ArrayList<ArrayList<String>>> fetchEEGData(int minx, int maxx, ArrayList<String> predicates)
+    public ArrayList<ArrayList<ArrayList<String>>> fetchEEGData(Canvas c, int minx, int maxx, ArrayList<String> predicates)
             throws SQLException, ClassNotFoundException, IOException {
 
         System.out.println("minx, maxx : " + minx + " " + maxx);
@@ -76,9 +94,25 @@ public abstract class BoxGetter {
         String[] columnNames = {"c3", "c4", "cz", "ekg", "f3", "f4", "f7", "f8", "fp1",
                 "fp2", "fz", "o1", "o2", "p3", "p4", "pz", "t3", "t4", "t5", "t6"};
 
+        int oldStart, oldEnd;
         // calculate start & end key rows
+        if (History.getCanvas() == null || ! History.getCanvas().getId().equals(c.getId())) {
+            oldStart = oldEnd = Integer.MIN_VALUE;
+            History.reset();
+        } else {
+            oldStart = History.box.getMinx();
+            oldEnd = History.box.getMaxx();
+        }
+
         int startSegId = (int) Math.floor(minx / 200);
         int endSegId = (int) Math.floor(maxx / 200);
+        History.updateHistory(c, new Box(startSegId, 0, endSegId, 0), 0);
+        if (oldEnd > startSegId && oldEnd < endSegId)
+            startSegId = oldEnd + 1;
+        else if (oldStart > startSegId && oldStart < endSegId)
+            endSegId = oldStart - 1;
+
+        System.out.println(startSegId + " " + endSegId);
         String startRowKey = predicates.get(1) + "_" + String.format("%06d", startSegId);
         String endRowKey = predicates.get(1) + "_" + String.format("%06d", endSegId + 1);
         System.out.println(startRowKey + " " + endRowKey);
@@ -162,5 +196,5 @@ public abstract class BoxGetter {
         data.add(spectrumData);
         return data;
     }
-    public abstract BoxandData getBox(Canvas c, int cx, int cy, int viewportH, int viewportW, ArrayList<String> predicates) throws SQLException, ClassNotFoundException, IOException;
+    public abstract BoxandData getBox(Canvas c, int cx, int cy, int viewportH, int viewportW, ArrayList<String> predicates) throws SQLException, ClassNotFoundException, IOException, ParseException;
 }

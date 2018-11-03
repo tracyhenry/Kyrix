@@ -1,22 +1,23 @@
 package box;
 
-import box.Box;
 import project.Canvas;
 
 public class History {
     static Canvas canvas;
-    static int history;
     static Box box;
+    static int pointCount;
 
-    public static void resetHistory(Canvas c) {
-        history = 0;
-        canvas = c;
+    public static void reset() {
+
+        canvas = null;
         box = null;
+        pointCount = 0;
     }
-    public static void updateHistory(int count, Box b, Canvas c){
-        history = count;
+    public static void updateHistory(Canvas c, Box b, int count){
+
         box = b;
         canvas = c;
+        pointCount = count;
     }
 
     public static Canvas getCanvas(){
@@ -24,7 +25,6 @@ public class History {
     }
 
     public static int getCount(Canvas c){
-        return history;
+        return pointCount;
     }
-
 }

@@ -185,7 +185,6 @@ public class Main {
 		ArrayList<String> predicates = new ArrayList<>();
 		predicates.add("");
 		predicates.add("abn10000_20140117_093552");
-		ArrayList<ArrayList<ArrayList<String>>> testResult = testBoxGetter.fetchEEGData(0, 599, predicates);
 
 
 		//test for spectrum

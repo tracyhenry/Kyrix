@@ -69,7 +69,7 @@ eegLayer.addPlacement(placements.dummyEEGPlacement);
 eegCanvas.addAxes(renderers.eegXAxes);
 
 // ================== Spectrum canvas ===================
-var spectrumWidth = 30000;
+var spectrumWidth = 50000;
 var spectrumHeight = viewportHeight;
 var spectrumCanvas = new Canvas("spectrum", spectrumWidth, spectrumHeight);
 p.addCanvas(spectrumCanvas);
@@ -93,7 +93,7 @@ var selector = function () {
 
 var newEEGViewport = function (row) {
     var tokens = row[0].split("_");
-    xStart = Math.max(tokens[3] * 200 + 100 - 1200 / 2, 0);
+    xStart = Math.max(tokens[3] * 200 + 100 - 1600 / 2, 0);
     return [0, xStart, 0];
 };
 

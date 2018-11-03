@@ -28,20 +28,22 @@ var eegRendering = function (svg, data, width, height, params, magnitude) {
     var numPoints = 400;
     var minV = -100, maxV = 100;
     var dataset = [];
+    var segNum = data.length;
     for (var k = 0; k < channum; k ++) {
-        var coordinates = [];
         var startingY = k * height / channum;
-        for (var i = 0; i < data.length; i++) {
-            var tofloat = data[i][k+4].split(",");
-            for (var j = 0; j < tofloat.length; j ++) {
+        for (var i = 0; i < segNum; i++) {
+            var oneSeg = [];
+            var tofloat = data[i][k + 4].split(",");
+            for (var j = 0; j < tofloat.length; j++) {
                 if (tofloat[j] > maxV || tofloat[j] < minV)
                     tofloat[j] = 0;
                 tofloat[j] *= magnitude;
-                coordinates.push({"x": pixelPerSeg * (+data[i][3]) + j * pixelPerSeg / numPoints ,
+                oneSeg.push({
+                    "x": pixelPerSeg * (+data[i][3]) + j * pixelPerSeg / numPoints,
                     "y": d3.scaleLinear().domain([minV, maxV]).range([0, height / channum])(+tofloat[j]) + startingY});
             }
+            dataset.push(oneSeg);
         }
-        dataset.push(coordinates);
     }
 
     // insert background rectangles (for being highlighted)
@@ -49,7 +51,7 @@ var eegRendering = function (svg, data, width, height, params, magnitude) {
         .data(data)
         .enter()
         .append('rect')
-        .attr('x', function (d) {return pixelPerSeg * (+d[3]);})
+        .attr('x', function (d) {return pixelPerSeg * (d[3]);})
         .attr('y', 0)
         .attr('width', pixelPerSeg)
         .attr('height', height)
@@ -63,12 +65,15 @@ var eegRendering = function (svg, data, width, height, params, magnitude) {
 
     // create
     for (var i = 0; i < channum; i ++) {
-        g.append('path')
-            .attr('class', 'line')
-            .attr('d', line(dataset[i]))
-            .attr('fill', 'none')
-            .attr('stroke-width', 1)
-            .attr('stroke', 'black');
+        for (var j = 0; j < segNum; j++) {
+            g.append('path')
+                .attr('class', 'line')
+                .attr('d', line(dataset[j + i * segNum]))
+                .attr('fill', 'none')
+                .attr('stroke-width', 1)
+                .attr('stroke', 'black')
+                .node().__data__ = data[j];
+        }
     }
 };
 
@@ -149,9 +154,9 @@ var spectrumRendering = function (svg, data) {
                 .data(val[k][j])
                 .enter()
                 .append("rect")
-                .attr("x", data[j][3] * pxPerSeg)
+                .attr("x", data[j][3])
                 .attr("y", function (d, i) {
-                    return y[i] * heightPerpx + k * 300;
+                    return y[i] * heightPerpx + k * 250;
                 })
                 .attr("width", pxPerSeg)
                 .attr("height", heightPerpx)

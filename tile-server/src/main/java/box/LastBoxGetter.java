@@ -1,7 +1,7 @@
 package box;
 
+import org.locationtech.jts.io.ParseException;
 import project.Canvas;
-import project.Project;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -10,7 +10,7 @@ public class LastBoxGetter extends BoxGetter {
 
     @Override
     public BoxandData getBox(Canvas c, int mx, int my, int viewportH, int viewportW, ArrayList<String> predicates)
-            throws SQLException, ClassNotFoundException {
+            throws SQLException, ClassNotFoundException, ParseException {
         ArrayList<ArrayList<ArrayList<String>>> data;
         double wrapLength = 0.5;
         //scale is the modification ratio
@@ -22,7 +22,7 @@ public class LastBoxGetter extends BoxGetter {
              miny = (int)Math.max(0, my - wrapLength * viewportH);
              maxx = (int)Math.min(c.getH(), minx + (1 + 2 * wrapLength) * viewportW);
              maxy = (int)Math.min(c.getW(), miny + (1 + 2 * wrapLength) * viewportH);
-            History.resetHistory(c);
+            History.reset();
         } else {
             minx = History.box.getMinx();
             miny = History.box.getMiny();
@@ -49,7 +49,7 @@ public class LastBoxGetter extends BoxGetter {
             maxy += deltay * scale / 2;
         }
 
-        History.updateHistory(count, new Box(minx, miny, maxx, maxy), c);
+        History.updateHistory(c, new Box(minx, miny, maxx, maxy), count);
 
         Box box = new Box(minx, miny, maxx, maxy);
         return new BoxandData(box, data);

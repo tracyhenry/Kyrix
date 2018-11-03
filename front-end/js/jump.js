@@ -278,7 +278,7 @@ function registerJumps(svg, layerId) {
 
     // register jump stuff
     var jumps = globalVar.curJump;
-    var shapes = svg.select("g").selectAll("*");
+    var shapes = svg.select("g:last-of-type").selectAll("*");
 
     shapes.each(function(p) {
 

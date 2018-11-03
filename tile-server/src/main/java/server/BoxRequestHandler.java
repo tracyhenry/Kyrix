@@ -9,6 +9,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import main.Config;
 import main.Main;
+import org.locationtech.jts.io.ParseException;
 import project.Canvas;
 import project.Project;
 
@@ -36,6 +37,7 @@ public class BoxRequestHandler  implements HttpHandler {
         boxGetter = new MikeBoxGetter();
 
     }
+
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
 
@@ -83,13 +85,13 @@ public class BoxRequestHandler  implements HttpHandler {
             predicates.add(queryMap.get("predicate" + i));
 
         //get box data
-	long st = System.currentTimeMillis();
+        long st = System.currentTimeMillis();
         try {
             data = boxGetter.getBox(c, minx, miny, viewportH, viewportW, predicates);
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-	System.out.println("Fetch data time: " + (System.currentTimeMillis() - st) + "ms.");
+        System.out.println("Fetch data time: " + (System.currentTimeMillis() - st) + "ms.");
 
         //send data and box back
         Map<String, Object> respMap = new HashMap<>();
@@ -102,9 +104,9 @@ public class BoxRequestHandler  implements HttpHandler {
         response = gson.toJson(respMap);
 
         // send back response
-	st = System.currentTimeMillis();
+        st = System.currentTimeMillis();
         Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
-	System.out.println("Send response time: " + (System.currentTimeMillis() - st) + "ms.");
+        System.out.println("Send response time: " + (System.currentTimeMillis() - st) + "ms.");
         System.out.println();
     }
 

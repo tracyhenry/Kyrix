@@ -229,14 +229,16 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                     return ;
                 }
 
-                // modify global var
-                globalVar.boxH = response.boxH;
-                globalVar.boxW = response.boxW;
-                globalVar.boxX = x;
-                globalVar.boxY = y;
-                globalVar.renderData = renderData;
-
+                // deep copy renderData to globalVar.renderData
+                // renderData will later used by renderer to render the delta part
+                globalVar.renderData = [];
                 var numLayers = globalVar.curCanvas.layers.length;
+                for (var i = 0; i < numLayers; i ++) {
+                    globalVar.renderData.push([]);
+                    for (var j = 0; j < renderData[i].length; j ++)
+                        globalVar.renderData[i].push(renderData[i][j]);
+                }
+
                 // loop over every layer to render
                 for (var i = numLayers - 1; i >= 0; i --) {
 
@@ -251,7 +253,38 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                     var dboxSvg = d3.select(".layerg.layer" + i)
                         .select(".mainsvg");
 
-                    dboxSvg.selectAll("*").remove();
+                    // remove stale data
+                    dboxSvg.selectAll("g")
+                        .selectAll("*")
+                        .filter(function(d) {
+                            if (globalVar.curCanvas.id == "eeg") {
+                                if ((+d[3] + 1) * 200 < x || d[3] * 200 > (x + response.boxW))
+                                    return true;
+                                else {
+                                    globalVar.renderData[i].push(d);
+                                    return false;
+                                }
+                            }
+                            else {
+                                if (d[d.length - param.maxxOffset] < x ||
+                                    d[d.length - param.minxOffset] > (x + response.boxW) ||
+                                    d[d.length - param.maxyOffset] < y ||
+                                    d[d.length - param.minyOffset] > (y + response.boxH))
+                                    return true;
+                                else {
+                                    globalVar.renderData[i].push(d);
+                                    return false;
+                                }
+                            }
+                        })
+                        .remove();
+
+                    // remove empty <g>s.
+                    dboxSvg.selectAll("g")
+                        .filter(function() {
+                            return d3.select(this).select("*").empty();
+                        })
+                        .remove();
 
                     // draw current layer - hardcoding : adding scale for eeg
                     curLayer.rendering.parseFunction()(dboxSvg, renderData[i],
@@ -274,6 +307,12 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                             .selectAll("*")
                             .each(zoomRescale);
                 }
+
+                // modify global var
+                globalVar.boxH = response.boxH;
+                globalVar.boxW = response.boxW;
+                globalVar.boxX = x;
+                globalVar.boxY = y;
                 globalVar.pendingBoxRequest = false;
             });
         }
