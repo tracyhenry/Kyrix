@@ -7,6 +7,7 @@ package editing;
 
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import main.Config;
 import main.DbConnector;
@@ -32,7 +33,9 @@ public class Labeler {
 
         // get db connector for reuse among layers
         Statement stmt = DbConnector.getStmtByDbName(DATABASE_NAME);
-        String sql = String.format("UPDATE %s SET %s=\'%s\' WHERE recordid=\'%s\';", table, labeler, label, item);
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
+        String sql = String.format("INSERT INTO %s VALUES (\'%s\', \'%s\', \'%s\', \'%s\');", table, item, labeler, label, timestamp);
 
         // run query, add to response
         int updates = stmt.executeUpdate(sql);

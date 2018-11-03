@@ -155,9 +155,6 @@ function pageOnLoad() {
 
         // set button state
         setButtonState();
-
-        // set up editor
-        globalVar.edit = editor();
     });
 }
 

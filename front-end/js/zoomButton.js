@@ -76,6 +76,10 @@ function setButtonState() {
                 .attr("disabled", null)
                 .on("click", literalZoomOut);
 
+	// hardcoding: editor box
+	if (globalVar.curCanvas.id != "eeg") 
+		globalVar.Editor.hide();
+
     // hardcoding: keyboard events
     if (globalVar.curCanvas.id == "eeg") {
         globalVar.eegMagnitude = 1;

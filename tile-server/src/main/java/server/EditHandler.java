@@ -67,7 +67,7 @@ public class EditHandler  implements HttpHandler {
 
         //execute query
         try {
-            response = labeler.label("eeglabels", user, label, item).toString();
+            response = labeler.label("neweeglabels", user, label, item).toString();
         }
         catch(Exception e) {
             Server.sendResponse(httpExchange, 500, e.getMessage());
