@@ -40,8 +40,11 @@ function preAnimation() {
         .attr("disabled", true);
     d3.selectAll("*")
         .on("click", null);
+
+    // hardcoding: remove keydown listeners & edit box
     d3.select("body")
         .on("keydown", null);
+    globalVar.Editor.hide();
 
     globalVar.animation = true;
 };
