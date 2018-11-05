@@ -91,7 +91,7 @@ function setButtonState() {
                     // calculate new transform
                     var delta = (event.key == "ArrowRight" ? -1 : 1);
                     var pixelPerSeg = 200;
-                    var numPannedSeg = 10;
+                    var numPannedSeg = 5;
                     d3.transition()
                         .duration(1000)
                         .tween("panTween", function () {

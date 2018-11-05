@@ -22,7 +22,6 @@ public class MikeBoxGetter extends BoxGetter {
         int maxy = (int)Math.min(c.getH() + 10, miny + (1 + 2 * wrapLength) * viewportH);
 
 //        int minx = mx, miny = my, maxx = minx + 1024, maxy = miny + 1024;
-
         if (Main.getProject().getName().equals("mgh") && c.getId().equals("eeg"))
             data = fetchEEGData(c, minx, maxx, predicates);
         else if (Main.getProject().getName().equals("mgh") && c.getId().equals("spectrum"))

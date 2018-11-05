@@ -94,8 +94,8 @@ public abstract class BoxGetter {
         String[] columnNames = {"c3", "c4", "cz", "ekg", "f3", "f4", "f7", "f8", "fp1",
                 "fp2", "fz", "o1", "o2", "p3", "p4", "pz", "t3", "t4", "t5", "t6"};
 
-        int oldStart, oldEnd;
         // calculate start & end key rows
+        int oldStart, oldEnd, newStart = minx, newEnd = maxx;
         if (History.getCanvas() == null || ! History.getCanvas().getId().equals(c.getId())) {
             oldStart = oldEnd = Integer.MIN_VALUE;
             History.reset();
@@ -103,46 +103,50 @@ public abstract class BoxGetter {
             oldStart = History.box.getMinx();
             oldEnd = History.box.getMaxx();
         }
+        History.updateHistory(c, new Box(newStart, 0, newEnd, 0), 0);
 
-        int startSegId = (int) Math.floor(minx / 200);
-        int endSegId = (int) Math.floor(maxx / 200);
-        History.updateHistory(c, new Box(startSegId, 0, endSegId, 0), 0);
-        if (oldEnd > startSegId && oldEnd < endSegId)
-            startSegId = oldEnd + 1;
-        else if (oldStart > startSegId && oldStart < endSegId)
-            endSegId = oldStart - 1;
+        oldStart = (int) Math.floor(oldStart / 200);
+        oldEnd = (int) Math.floor(oldEnd / 200);
+        newStart = (int) Math.floor(newStart / 200);
+        newEnd = (int) Math.floor(newEnd / 200);
 
-        System.out.println(startSegId + " " + endSegId);
-        String startRowKey = predicates.get(1) + "_" + String.format("%06d", startSegId);
-        String endRowKey = predicates.get(1) + "_" + String.format("%06d", endSegId + 1);
-        System.out.println(startRowKey + " " + endRowKey);
+        if (! (newStart == oldStart && newEnd == oldEnd)) {
 
-        // construct range query scanner
-        Scan curScan = new Scan();
-        curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
-        ResultScanner resultScanner = eegTable.getScanner(curScan);
+            if (oldEnd > newStart && oldEnd < newEnd)
+                newStart = oldEnd + 1;
+            else if (oldStart > newStart && oldStart < newEnd)
+                newEnd = oldStart - 1;
+            System.out.println("Fetching: " + newStart + " " + newEnd);
+            String startRowKey = predicates.get(1) + "_" + String.format("%06d", newStart);
+            String endRowKey = predicates.get(1) + "_" + String.format("%06d", newEnd + 1);
+            System.out.println(startRowKey + " " + endRowKey);
 
-        // iterate through results
-        for (Result row : resultScanner) {
-            String key = Bytes.toString(row.getRow());
-            ArrayList<String> curData = new ArrayList<>();
+            // construct range query scanner
+            Scan curScan = new Scan();
+            curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
+            ResultScanner resultScanner = eegTable.getScanner(curScan);
 
-            // key fields
-            String[] keys = key.split("_");
-            for (int i = 0; i < keys.length; i ++)
-                curData.add(keys[i]);
+            // iterate through results
+            for (Result row : resultScanner) {
+                String key = Bytes.toString(row.getRow());
+                ArrayList<String> curData = new ArrayList<>();
 
-            // channel data
-            for (int i = 0; i < columnNames.length; i ++) {
-                byte[] valueBytes = row.getValue(Bytes.toBytes("eeg"), Bytes.toBytes(columnNames[i]));
-                String s = new String(valueBytes);
-                curData.add(s);
+                // key fields
+                String[] keys = key.split("_");
+                for (int i = 0; i < keys.length; i ++)
+                    curData.add(keys[i]);
+
+                // channel data
+                for (int i = 0; i < columnNames.length; i ++) {
+                    byte[] valueBytes = row.getValue(Bytes.toBytes("eeg"), Bytes.toBytes(columnNames[i]));
+                    String s = new String(valueBytes);
+                    curData.add(s);
+                }
+
+                //TODO: add bounding box data
+                eegData.add(curData);
             }
-
-            //TODO: add bounding box data
-            eegData.add(curData);
         }
-
         data.add(eegData);
         return data;
     }
@@ -192,7 +196,6 @@ public abstract class BoxGetter {
             //TODO: add bounding box data
             spectrumData.add(curData);
         }
-
         data.add(spectrumData);
         return data;
     }

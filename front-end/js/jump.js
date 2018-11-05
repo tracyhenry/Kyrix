@@ -279,9 +279,155 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
 // register jump info for a tile
 function registerJumps(svg, layerId) {
 
+    // hardcoding: no register jump for eeg
+    if (globalVar.curCanvas.id == "eeg")
+        return ;
+
     // register jump stuff
     var jumps = globalVar.curJump;
     var shapes = svg.select("g:last-of-type").selectAll("*");
+    var jumpListener = function () {
+
+        // stop the click event from propagating up
+        d3.event.stopPropagation();
+
+        // get layer id from the data-layer-id attribute
+        var layerId = d3.select(this).attr("data-layer-id");
+
+        // data tuple associated with this shape
+        var tuple = d3.select(this).datum();
+
+        // remove all popovers first
+        removePopovers();
+
+        // create a jumpoption popover using bootstrap
+        d3.select("body").append("div")
+            .classed("popover", true)
+            .classed("fade", true)
+            .classed("right", true)
+            .classed("in", true)
+            .attr("role", "tooltip")
+            .attr("id", "jumppopover")
+            .append("div")
+            .classed("arrow", true)
+            .attr("id", "popoverarrow");
+        d3.select("#jumppopover")
+            .append("h2")
+            .classed("popover-title", true)
+            .attr("id", "popovertitle")
+            .html("Zoom into ")
+            .append("a")
+            .classed("close", true)
+            .attr("href", "#")
+            .attr("id", "popoverclose")
+            .html("&times;");
+        d3.select("#popoverclose")
+            .on("click", removePopovers);
+        d3.select("#jumppopover")
+            .append("div")
+            .classed("popover-content", true)
+            .classed("list-group", true)
+            .attr("id", "popovercontent");
+
+        // add jump options
+        for (var k = 0; k < jumps.length; k ++) {
+
+            // check if this jump is applied in this layer
+            if ((jumps[k].type != param.semanticZoom && jumps[k].type != param.geometricSemanticZoom)
+                || ! jumps[k].selector.parseFunction()(tuple, layerId))
+                continue;
+
+            // create table cell and append it to #popovercontent
+            var jumpOption = d3.select("#popovercontent")
+                .append("a")
+                .classed("list-group-item", true)
+                .attr("href", "#")
+                .datum(tuple)
+                .attr("data-jump-id", k)
+                .html(jumps[k].name.parseFunction() == null ? jumps[k].name
+                    : jumps[k].name.parseFunction()(tuple));
+
+            // on click
+            jumpOption.on("click", function () {
+
+                d3.event.preventDefault();
+
+                var tuple = d3.select(this).datum();
+                var jumpId = d3.select(this).attr("data-jump-id");
+
+                // log history
+                logHistory(jumps[jumpId].type);
+
+                // reset globalvar.boxx
+                globalVar.boxX = -1000;
+
+                // change canvas id
+                globalVar.curCanvasId = jumps[jumpId].destId;
+
+                // calculate new predicates
+                globalVar.predicates = jumps[jumpId].newPredicates.parseFunction()(tuple);
+
+                // prefetch canvas object by sending an async request to server
+                if (! (postData in globalVar.cachedCanvases)) {
+                    var postData = "id=" + globalVar.curCanvasId;
+                    for (var i = 0; i < globalVar.predicates.length; i ++)
+                        postData += "&predicate" + i + "=" + globalVar.predicates[i];
+                    $.ajax({
+                        type : "POST",
+                        url : "canvas",
+                        data : postData,
+                        success : function (data, status) {
+                            if (! (postData in globalVar.cachedCanvases)) {
+                                globalVar.cachedCanvases[postData] = {};
+                                globalVar.cachedCanvases[postData].canvasObj = JSON.parse(data).canvas;
+                                globalVar.cachedCanvases[postData].jumps = JSON.parse(data).jump;
+                                globalVar.cachedCanvases[postData].staticData = JSON.parse(data).staticData;
+                            }
+                        },
+                        async : true
+                    });
+                }
+
+                // calculate new viewport
+                var newViewportFunc = jumps[jumpId].newViewports.parseFunction();
+                var newViewportRet = newViewportFunc(tuple);
+                if (newViewportRet[0] == 0) {
+                    // constant viewport, no predicate
+                    var newViewportX = newViewportRet[1];
+                    var newViewportY = newViewportRet[2];
+                    animateSemanticZoom(tuple, newViewportX, newViewportY);
+                }
+                else {
+                    // viewport is fixed at a certain tuple
+                    var postData = "canvasId=" + globalVar.curCanvasId;
+                    for (var i = 0; i < newViewportRet[1].length; i++)
+                        postData += "&predicate" + i + "=" + newViewportRet[1][i];
+                    $.ajax({
+                        type: "POST",
+                        url: "viewport",
+                        data: postData,
+                        success: function (data, status) {
+                            var cx = JSON.parse(data).cx;
+                            var cy = JSON.parse(data).cy;
+                            var newViewportX = cx - globalVar.viewportWidth / 2;
+                            var newViewportY = cy - globalVar.viewportHeight / 2;
+                            animateSemanticZoom(tuple, newViewportX, newViewportY);
+                        },
+                        async: false
+                    });
+                }
+            });
+        }
+
+        // position jump popover according to event x/y and its width/height
+        var popoverHeight = d3.select("#jumppopover")
+            .node()
+            .getBoundingClientRect()
+            .height;
+        d3.select("#jumppopover")
+            .style("left", d3.event.pageX)
+            .style("top", (d3.event.pageY - popoverHeight / 2));
+    };
 
     shapes.each(function(p) {
 
@@ -302,147 +448,6 @@ function registerJumps(svg, layerId) {
             .attr("data-layer-id", layerId);
 
         // register onclick listener
-        d3.select(this).on("click", function () {
-
-            // stop the click event from propagating up
-            d3.event.stopPropagation();
-
-            // get layer id from the data-layer-id attribute
-            var layerId = d3.select(this).attr("data-layer-id");
-
-            // data tuple associated with this shape
-            var tuple = d3.select(this).datum();
-
-            // remove all popovers first
-            removePopovers();
-
-            // create a jumpoption popover using bootstrap
-            d3.select("body").append("div")
-                .classed("popover", true)
-                .classed("fade", true)
-                .classed("right", true)
-                .classed("in", true)
-                .attr("role", "tooltip")
-                .attr("id", "jumppopover")
-                .append("div")
-                .classed("arrow", true)
-                .attr("id", "popoverarrow");
-            d3.select("#jumppopover")
-                .append("h2")
-                .classed("popover-title", true)
-                .attr("id", "popovertitle")
-                .html("Zoom into ")
-                .append("a")
-                .classed("close", true)
-                .attr("href", "#")
-                .attr("id", "popoverclose")
-                .html("&times;");
-            d3.select("#popoverclose")
-                .on("click", removePopovers);
-            d3.select("#jumppopover")
-                .append("div")
-                .classed("popover-content", true)
-                .classed("list-group", true)
-                .attr("id", "popovercontent");
-
-            // add jump options
-            for (var k = 0; k < jumps.length; k ++) {
-
-                // check if this jump is applied in this layer
-                if ((jumps[k].type != param.semanticZoom && jumps[k].type != param.geometricSemanticZoom)
-                    || ! jumps[k].selector.parseFunction()(tuple, layerId))
-                    continue;
-
-                // create table cell and append it to #popovercontent
-                var jumpOption = d3.select("#popovercontent")
-                    .append("a")
-                    .classed("list-group-item", true)
-                    .attr("href", "#")
-                    .datum(tuple)
-                    .attr("data-jump-id", k)
-                    .html(jumps[k].name.parseFunction() == null ? jumps[k].name
-                        : jumps[k].name.parseFunction()(tuple));
-
-                // on click
-                jumpOption.on("click", function () {
-
-                    d3.event.preventDefault();
-
-                    var tuple = d3.select(this).datum();
-                    var jumpId = d3.select(this).attr("data-jump-id");
-
-                    // log history
-                    logHistory(jumps[jumpId].type);
-
-                    // reset globalvar.boxx
-                    globalVar.boxX = -1000;
-
-                    // change canvas id
-                    globalVar.curCanvasId = jumps[jumpId].destId;
-
-                    // calculate new predicates
-                    globalVar.predicates = jumps[jumpId].newPredicates.parseFunction()(tuple);
-
-                    // prefetch canvas object by sending an async request to server
-                    if (! (postData in globalVar.cachedCanvases)) {
-                        var postData = "id=" + globalVar.curCanvasId;
-                        for (var i = 0; i < globalVar.predicates.length; i ++)
-                            postData += "&predicate" + i + "=" + globalVar.predicates[i];
-                        $.ajax({
-                            type : "POST",
-                            url : "canvas",
-                            data : postData,
-                            success : function (data, status) {
-                                if (! (postData in globalVar.cachedCanvases)) {
-                                    globalVar.cachedCanvases[postData] = {};
-                                    globalVar.cachedCanvases[postData].canvasObj = JSON.parse(data).canvas;
-                                    globalVar.cachedCanvases[postData].jumps = JSON.parse(data).jump;
-                                    globalVar.cachedCanvases[postData].staticData = JSON.parse(data).staticData;
-                                }
-                            },
-                            async : true
-                        });
-                    }
-
-                    // calculate new viewport
-                    var newViewportFunc = jumps[jumpId].newViewports.parseFunction();
-                    var newViewportRet = newViewportFunc(tuple);
-                    if (newViewportRet[0] == 0) {
-                        // constant viewport, no predicate
-                        var newViewportX = newViewportRet[1];
-                        var newViewportY = newViewportRet[2];
-                        animateSemanticZoom(tuple, newViewportX, newViewportY);
-                    }
-                    else {
-                        // viewport is fixed at a certain tuple
-                        var postData = "canvasId=" + globalVar.curCanvasId;
-                        for (var i = 0; i < newViewportRet[1].length; i++)
-                            postData += "&predicate" + i + "=" + newViewportRet[1][i];
-                        $.ajax({
-                            type: "POST",
-                            url: "viewport",
-                            data: postData,
-                            success: function (data, status) {
-                                var cx = JSON.parse(data).cx;
-                                var cy = JSON.parse(data).cy;
-                                var newViewportX = cx - globalVar.viewportWidth / 2;
-                                var newViewportY = cy - globalVar.viewportHeight / 2;
-                                animateSemanticZoom(tuple, newViewportX, newViewportY);
-                            },
-                            async: false
-                        });
-                    }
-                });
-            }
-
-            // position jump popover according to event x/y and its width/height
-            var popoverHeight = d3.select("#jumppopover")
-                .node()
-                .getBoundingClientRect()
-                .height;
-            d3.select("#jumppopover")
-                .style("left", d3.event.pageX)
-                .style("top", (d3.event.pageY - popoverHeight / 2));
-        });
+        d3.select(this).on("click", jumpListener);
     });
 };
