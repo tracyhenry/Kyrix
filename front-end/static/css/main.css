@@ -1,5 +1,5 @@
 body {
-	text-align: center;
+    text-align: center;
 }
 
 #containerSvg {
@@ -49,22 +49,47 @@ body {
 }
 
 #sidebar {
-	position: relative;
-	display: inline-block;
-	vertical-align: top;
-	width: 0px;
-	top: 50px;
+    position: relative;
+    display: inline-block;
+    vertical-align: top;
+    width: 0px;
+    top: 50px;
 }
 
 #editor {
-	width: 400px;
-	padding: 10px;
-	display: flex;
-	flex-direction: column;
-	border: 3px pink dashed;
-	background-color: #FFEEEE;
+    width: 450px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    border: 3px pink dashed;
+    background-color: #FFEEEE;
 }
 
-    #editor > * {
-        margin: 10px;
-    }
+#editIdBox {
+    font-size : 23px;
+    font-weight : bold;
+}
+
+label {
+    font-size : 20px;
+    font-weight : normal;
+}
+
+input[type="radio"] {
+    display: none;
+}
+
+input[type="radio"] {
+    height: 20px;
+    width: 20px;
+    display: inline-block;
+    cursor: pointer;
+    vertical-align: middle;
+    background: #FFF;
+    border: 1px solid #d2d2d2;
+    border-radius: 100%;
+}
+
+#editor > * {
+    margin: 10px;
+}

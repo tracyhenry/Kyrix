@@ -49,6 +49,7 @@ $(function () {
 					option.attr('id', key);
 					option.on('change', submitEdit);
 					labelOptionDiv.append(option);
+//					labelOptionDiv.append($("<br>"));
 					var optionLabel = $("<label>");
 					optionLabel.attr("for", key);
 					optionLabel.text(labels[key]);

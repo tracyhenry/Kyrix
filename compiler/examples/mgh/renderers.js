@@ -15,6 +15,27 @@ var clusterRendering = function (svg, data) {
        });
 };
 
+var clusterAxes = function (cWidth, cHeight) {
+
+    var axes = [];
+
+    // x
+    var x = d3.scaleLinear()
+        .domain([0, 1000])
+        .range([0, cWidth]);
+    var xAxis = d3.axisTop();
+    axes.push({"dim" : "x", "scale" : x, "axis" : xAxis, "translate" : [0, 0]});
+
+    //y
+    var y = d3.scaleLinear()
+        .domain([0, 1000])
+        .range([0, cHeight]);
+    var yAxis = d3.axisLeft();
+    axes.push({"dim" : "y", "scale" : y, "axis" : yAxis, "translate" : [0, 0]});
+
+    return axes;
+};
+
 var eegRendering = function (svg, data, width, height, params, magnitude) {
 
     if (typeof magnitude != "number")
@@ -109,7 +130,6 @@ var eegXAxes = function (cWidth, cHeight, predicates) {
     var xAxis = d3.axisTop()
         .tickSize(-cHeight)
         .ticks(d3.timeSecond.filter(function (d) {return (d.getSeconds() - startDate.getSeconds()) % 2 == 0;}))
-        //.tickFormat(d3.timeFormat("%Y-%m-%d %H:%M:%S"));
         .tickFormat(d3.timeFormat("%H:%M:%S"));
     axes.push({"dim": "x", "scale": x, "axis": xAxis, "translate": [0, 0]});
 
@@ -173,10 +193,11 @@ var spectrumLabelRendering = function (svg, data) {
 
 module.exports = {
     renderingParams : renderingParams,
+    clusterRendering : clusterRendering,
+    clusterAxes : clusterAxes,
     eegRendering : eegRendering,
     eegLabelRendering : eegLabelRendering,
     eegXAxes : eegXAxes,
-    clusterRendering : clusterRendering,
     spectrumRendering : spectrumRendering,
     spectrumLabelRendering : spectrumLabelRendering
 };
