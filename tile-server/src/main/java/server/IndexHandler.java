@@ -25,6 +25,7 @@ public class IndexHandler implements HttpHandler {
 			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
 			return;
 		}
+
 		String path = httpExchange.getRequestURI().getPath();
 		if (path.equals("/")) {
 			path = "/" + Config.indexFileName;
@@ -41,9 +42,10 @@ public class IndexHandler implements HttpHandler {
 		// send back a ok response
 		if (path.contains(".svg")) //todo: better file checking for the index handler
 			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/svg+xml");
-		else if (path.contains(".png")) {
+		else if (path.contains(".png"))
 			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/png");
-		}
+		else if (path.contains(".jpg"))
+			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/jpg");
 		else
 			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len);
 	}

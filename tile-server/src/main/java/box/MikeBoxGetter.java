@@ -3,7 +3,6 @@ package box;
 import main.Main;
 import org.locationtech.jts.io.ParseException;
 import project.Canvas;
-import project.Project;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -21,16 +20,14 @@ public class MikeBoxGetter extends BoxGetter {
         int maxx = (int)Math.min(c.getW() + 10, minx + (1 + 2 * wrapLength) * viewportW);
         int maxy = (int)Math.min(c.getH() + 10, miny + (1 + 2 * wrapLength) * viewportH);
 
-//        int minx = mx, miny = my, maxx = minx + 1024, maxy = miny + 1024;
         if (Main.getProject().getName().equals("mgh") && c.getId().equals("eeg"))
             data = fetchEEGData(c, minx, maxx, predicates);
-        else if (Main.getProject().getName().equals("mgh") && c.getId().equals("spectrum"))
-            data = fetchSpectrumData(minx, maxx, predicates);
+        else if (Main.getProject().getName().equals("mgh") && c.getId().equals("spectrogram"))
+            data = fetchSpectrogramData(minx, maxx, predicates);
         else
             data = fetchData(c, minx, miny, maxx, maxy, predicates);
 
         Box box = new Box(minx, miny, maxx, maxy);
         return new BoxandData(box, data);
     }
-
 }

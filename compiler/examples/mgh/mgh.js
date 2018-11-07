@@ -44,11 +44,6 @@ for (var i = 0; i < numLevels; i ++) {
     curCanvas.addAxes(renderers.clusterAxes);
 }
 
-for (var i = 0; i + 1 < numLevels; i ++) {
-    p.addJump(new Jump(clusterCanvases[i], clusterCanvases[i + 1], "", "", "", "literal_zoom_in"));
-    p.addJump(new Jump(clusterCanvases[i + 1], clusterCanvases[i], "", "", "", "literal_zoom_out"));
-}
-
 // ================== EEG canvas ===================
 var maxSegNum = 43200;
 var pixelPerSeg = 200;
@@ -71,23 +66,23 @@ eegLayer.addPlacement(placements.dummyEEGPlacement);
 // x axis
 eegCanvas.addAxes(renderers.eegXAxes);
 
-// ================== Spectrum canvas ===================
-var spectrumWidth = 50000;
-var spectrumHeight = viewportHeight;
-var spectrumCanvas = new Canvas("spectrum", spectrumWidth, spectrumHeight);
-p.addCanvas(spectrumCanvas);
+// ================== Spectrogram canvas (15-min images) ===================
+var spectrogramWidth = 86400 / 15 / 60 * 450;
+var spectrogramHeight = viewportHeight;
+var spectrogramCanvas = new Canvas("spectrogram", spectrogramWidth, spectrogramHeight);
+p.addCanvas(spectrogramCanvas);
 
-/*
-// label layer
-var freqlabelLayer = new Layer(transforms.dummySpectrumTransform, true);
-spectrumCanvas.addLayer(freqlabelLayer);
-freqlabelLayer.addRenderingFunc(renderers.spectrumLabelRendering);
-*/
+var freqLayer = new Layer(transforms.dummySpectrogramTransform, false);
+spectrogramCanvas.addLayer(freqLayer);
+freqLayer.addRenderingFunc(renderers.spectrogramRendering);
+freqLayer.addPlacement(placements.dummySpectrogramPlacement);
 
-var freqLayer = new Layer(transforms.dummySpectrumTransform, false);
-spectrumCanvas.addLayer(freqLayer);
-freqLayer.addRenderingFunc(renderers.spectrumRendering);
-freqLayer.addPlacement(placements.spectrumPlacement);
+
+// ================== jumps between cluster canvases ================
+for (var i = 0; i + 1 < numLevels; i ++) {
+    p.addJump(new Jump(clusterCanvases[i], clusterCanvases[i + 1], "", "", "", "literal_zoom_in"));
+    p.addJump(new Jump(clusterCanvases[i + 1], clusterCanvases[i], "", "", "", "literal_zoom_out"));
+}
 
 // ================== jump from cluster to eeg ================
 var selector = function () {
@@ -112,22 +107,23 @@ var jumpNameEEG = function (row) {
 for (var i = 0; i < numLevels; i ++)
     p.addJump(new Jump(clusterCanvases[i], eegCanvas, selector, newEEGViewport, newEEGPredicate, "semantic_zoom", jumpNameEEG));
 
-// ================== jump from cluster to spectrum ================
-var newSpectrumViewport = function (row) {
+// ================== jump from cluster to spectrogram ================
+var newSpectrogramViewport = function (row) {
     var tokens = row[0].split("_");
     xStart = Math.max(tokens[3] - 1600 / 2, 0);
     return [0, xStart, 0];
 };
 
-var newSpectrumPredicate = function (row) {
-    return [row[0]];
+var newSpectrogramPredicate = function (row) {
+    var tokens = row[0].split("_");
+    return [tokens[0] + "_" + tokens[1] + "_" + tokens[2]];
 };
 
-var jumpNameSpectrum = function (row) {
+var jumpNameSpectrogram = function (row) {
     return "Jump to Spectrogram: " + row[0];
 };
 
-//p.addJump(new Jump(clusterCanvases[numLevels - 1], spectrumCanvas, selector, newSpectrumViewport, newSpectrumPredicate, "semantic_zoom", jumpNameSpectrum));
+p.addJump(new Jump(clusterCanvases[numLevels - 1], spectrogramCanvas, selector, newSpectrogramViewport, newSpectrogramPredicate, "semantic_zoom", jumpNameSpectrogram));
 
 // setting up initial states
 // abn999_20140711_151337

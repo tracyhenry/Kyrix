@@ -28,9 +28,7 @@ public class Main {
 	private static String projectJSON = "";
 	// for big table
 	private static Connection eegBigtableConn = null;
-	private static Connection spectrumBigtableConn = null;
 	private static Table eegTable = null;
-	private static Table spectrumTable = null;
 
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException,
@@ -126,23 +124,13 @@ public class Main {
 		return eegTable;
 	}
 
-	public static Table getSpectrumTable() {
-		return spectrumTable;
-	}
-
 	private static void connectBigtable() throws IOException {
 
 		String projectId = "mgh-neurology-poc-01";  // my-gcp-project-id
 		String eegInstanceId = "eeg-table"; // my-bigtable-instance-id
 		String eegTableId = "eegTable";    // my-bigtable-table-id
-		String spectrumInstanceId = "spectrogram";
-		String spectrumTableId = "spectrogram";
-
 		eegBigtableConn = BigtableConfiguration.connect(projectId, eegInstanceId);
 		eegTable = eegBigtableConn.getTable(TableName.valueOf(eegTableId));
-
-		spectrumBigtableConn = BigtableConfiguration.connect(projectId, spectrumInstanceId);
-		spectrumTable = spectrumBigtableConn.getTable(TableName.valueOf(spectrumTableId));
 	}
 
 	private static void testBigtable() throws IOException, SQLException, ClassNotFoundException {
@@ -179,32 +167,5 @@ public class Main {
 		// Retrieve the result
 		resultScanner = eegTable.getScanner(curScan);
 		System.out.println(System.currentTimeMillis() - st);
-
-		// test fetchEEGData
-		MikeBoxGetter testBoxGetter = new MikeBoxGetter();
-		ArrayList<String> predicates = new ArrayList<>();
-		predicates.add("");
-		predicates.add("abn10000_20140117_093552");
-
-
-		//test for spectrum
-		startRowKey = "abn10000_20140117_093552_000000";
-		endRowKey = "abn10000_20140117_093552_000005";
-
-		st = System.currentTimeMillis();
-		result = spectrumTable.get(new Get(Bytes.toBytes("abn10000_20140117_093552_000008")));
-		System.out.println(System.currentTimeMillis() - st);
-
-		st = System.currentTimeMillis();
-		// new scan object
-		curScan = new Scan();
-		curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
-
-		// Retrieve the result
-		resultScanner = spectrumTable.getScanner(curScan);
-		for (Result row : resultScanner)
-			System.out.println(Bytes.toString(row.getRow()));
-		System.out.println(System.currentTimeMillis() - st);
-
 	}
 }

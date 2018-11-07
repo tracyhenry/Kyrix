@@ -1,5 +1,9 @@
 package box;
 
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import main.Config;
 import main.DbConnector;
 import main.Main;
@@ -13,7 +17,10 @@ import project.Project;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.io.*;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -151,52 +158,48 @@ public abstract class BoxGetter {
         return data;
     }
 
-    public ArrayList<ArrayList<ArrayList<String>>> fetchSpectrumData(int minx, int maxx, ArrayList<String> predicates)
+    public ArrayList<ArrayList<ArrayList<String>>> fetchSpectrogramData(int minx, int maxx, ArrayList<String> predicates)
             throws SQLException, ClassNotFoundException, IOException {
 
         System.out.println("minx, maxx : " + minx + " " + maxx);
 
-        // construct a data object and add a dummy array object for the label layer
+        // construct a data object (one layer for now)
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
-        //data.add(new ArrayList<>());
-        ArrayList<ArrayList<String>> spectrumData = new ArrayList<>();
+        ArrayList<ArrayList<String>> spectrogramData = new ArrayList<>();
 
-        // get bigtable instance
-        Table spectrumTable = Main.getSpectrumTable();
-        String[] columnNames = {"LL","LP","RL","RP"};
+        // fetch images
+        int imageWidth = 450;
+        int startId = minx / imageWidth;
+        int endId = maxx / imageWidth;
+        for (int i = startId; i <= endId; i ++) {
+            // The name of the bucket to access
+            String bucketName = "spectrogram-images";
 
-        // calculate start & end key rows
-        String startRowKey = predicates.get(0);
-        String[] topredicates = predicates.get(0).split("_");
-        String endRowKey = topredicates[0] + "_" + topredicates[1] + "_" + topredicates[2] + "_" + String.format("%06d", maxx + 1);
-        System.out.println(startRowKey + " " + endRowKey);
+            // The name of the remote image to download
+            String srcFilename = predicates.get(0) + "/15min/" + predicates.get(0) + "_15min_" + String.valueOf(i);
+            String fileSuffix = ".jpg";
 
-        // construct range query scanner
-        Scan curScan = new Scan();
-        curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
-        ResultScanner resultScanner = spectrumTable.getScanner(curScan);
+            // Instantiate a Google Cloud Storage client
+            Storage storage = StorageOptions.getDefaultInstance().getService();
 
-        // iterate through results
-        for (Result row : resultScanner) {
-            String key = Bytes.toString(row.getRow());
-            ArrayList<String> curData = new ArrayList<>();
+            // Get specific file from specified bucket
+            Blob blob = storage.get(BlobId.of(bucketName, srcFilename + fileSuffix));
+            if (blob != null) {
+                // Download file to specified path
+                File tempFile = File.createTempFile(srcFilename.replace("/", "_"), fileSuffix, new File(Config.webRoot + "/static/images/"));
+                tempFile.deleteOnExit();
+                Path destFilePath = Paths.get(tempFile.getAbsolutePath());
+                blob.downloadTo(destFilePath);
 
-            // key fields
-            String[] keys = key.split("_");
-            for (int i = 0; i < keys.length; i ++)
-                curData.add(keys[i]);
-
-            // channel data
-            for (int i = 0; i < columnNames.length; i ++) {
-                byte[] valueBytes = row.getValue(Bytes.toBytes("freq"), Bytes.toBytes(columnNames[i]));
-                String s = new String(valueBytes);
-                curData.add(s);
+                // add a data row
+                ArrayList<String> curRow = new ArrayList<>();
+                curRow.add(String.valueOf(i));
+                curRow.add(tempFile.getName());
+                spectrogramData.add(curRow);
             }
-
-            //TODO: add bounding box data
-            spectrumData.add(curData);
         }
-        data.add(spectrumData);
+
+        data.add(spectrogramData);
         return data;
     }
     public abstract BoxandData getBox(Canvas c, int cx, int cy, int viewportH, int viewportW, ArrayList<String> predicates) throws SQLException, ClassNotFoundException, IOException, ParseException;

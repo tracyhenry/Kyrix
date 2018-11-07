@@ -6,14 +6,10 @@ clusterPlacement.centroid_y = "col:y";
 clusterPlacement.width = "con:10";
 clusterPlacement.height = "con:10";
 
-var spectrumPlacement = {};
-spectrumPlacement.centroid_x = "col:x";
-spectrumPlacement.centroid_y = "col:y";
-spectrumPlacement.width = "con:2";
-spectrumPlacement.height = "con:2";
+var dummySpectrogramPlacement = {'centroid_x' : '', 'centroid_y' : '', 'width' : '', 'height' : ''};
 
 module.exports = {
     dummyEEGPlacement : dummyEEGPlacement,
     clusterPlacement : clusterPlacement,
-    spectrumPlacement : spectrumPlacement
+    dummySpectrogramPlacement : dummySpectrogramPlacement
 };
