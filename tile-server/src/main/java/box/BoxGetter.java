@@ -136,71 +136,120 @@ public abstract class BoxGetter {
             // iterate through results
             for (Result row : resultScanner) {
                 String key = Bytes.toString(row.getRow());
-                ArrayList<String> curData = new ArrayList<>();
+                ArrayList<String> curRow = new ArrayList<>();
 
                 // key fields
                 String[] keys = key.split("_");
                 for (int i = 0; i < keys.length; i ++)
-                    curData.add(keys[i]);
+                    curRow.add(keys[i]);
 
                 // channel data
                 for (int i = 0; i < columnNames.length; i ++) {
                     byte[] valueBytes = row.getValue(Bytes.toBytes("eeg"), Bytes.toBytes(columnNames[i]));
                     String s = new String(valueBytes);
-                    curData.add(s);
+                    curRow.add(s);
                 }
 
-                //TODO: add bounding box data
-                eegData.add(curData);
+                // add bounding box data
+                int bboxMinx = Integer.valueOf(keys[3]) * 200;
+                int bboxMaxx = bboxMinx + 200;
+                curRow.add(String.valueOf((bboxMinx + bboxMaxx) / 2));
+                curRow.add("800");
+                curRow.add(String.valueOf(bboxMinx));
+                curRow.add("0");
+                curRow.add(String.valueOf(bboxMaxx));
+                curRow.add("1600");
+                curRow.add("");
+
+                // add this row to layer data
+                eegData.add(curRow);
             }
         }
+
+        // add data to response data
         data.add(eegData);
         return data;
     }
 
-    public ArrayList<ArrayList<ArrayList<String>>> fetchSpectrogramData(int minx, int maxx, ArrayList<String> predicates)
+    public ArrayList<ArrayList<ArrayList<String>>> fetchSpectrogramData(Canvas c, int minx, int maxx, ArrayList<String> predicates)
             throws SQLException, ClassNotFoundException, IOException {
 
         System.out.println("minx, maxx : " + minx + " " + maxx);
+        int imageWidth = 450;
 
         // construct a data object (one layer for now)
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
         ArrayList<ArrayList<String>> spectrogramData = new ArrayList<>();
 
-        // fetch images
-        int imageWidth = 450;
-        int startId = minx / imageWidth;
-        int endId = maxx / imageWidth;
-        for (int i = startId; i <= endId; i ++) {
-            // The name of the bucket to access
-            String bucketName = "spectrogram-images";
+        // calculate start & end key rows
+        int oldStart, oldEnd, newStart = minx, newEnd = maxx;
+        if (History.getCanvas() == null || ! History.getCanvas().getId().equals(c.getId())) {
+            oldStart = oldEnd = Integer.MIN_VALUE;
+            History.reset();
+        } else {
+            oldStart = History.box.getMinx();
+            oldEnd = History.box.getMaxx();
+        }
+        History.updateHistory(c, new Box(newStart, 0, newEnd, 0), 0);
+        oldStart = (int) Math.floor(oldStart / imageWidth);
+        oldEnd = (int) Math.floor(oldEnd / imageWidth);
+        newStart = (int) Math.floor(newStart / imageWidth);
+        newEnd = (int) Math.floor(newEnd / imageWidth);
 
-            // The name of the remote image to download
-            String srcFilename = predicates.get(0) + "/15min/" + predicates.get(0) + "_15min_" + String.valueOf(i);
-            String fileSuffix = ".jpg";
+        if (! (newStart == oldStart && newEnd == oldEnd)) {
 
-            // Instantiate a Google Cloud Storage client
-            Storage storage = StorageOptions.getDefaultInstance().getService();
+            if (oldEnd > newStart && oldEnd < newEnd)
+                newStart = oldEnd + 1;
+            else if (oldStart > newStart && oldStart < newEnd)
+                newEnd = oldStart - 1;
+            System.out.println("Fetching: " + newStart + " " + newEnd);
 
-            // Get specific file from specified bucket
-            Blob blob = storage.get(BlobId.of(bucketName, srcFilename + fileSuffix));
-            if (blob != null) {
-                // Download file to specified path
-                File tempFile = File.createTempFile(srcFilename.replace("/", "_"), fileSuffix, new File(Config.webRoot + "/static/images/"));
-                tempFile.deleteOnExit();
-                Path destFilePath = Paths.get(tempFile.getAbsolutePath());
-                blob.downloadTo(destFilePath);
+            // fetch images
+            for (int i = newStart; i <= newEnd; i ++) {
+                // The name of the bucket to access
+                String bucketName = "spectrogram-images";
 
-                // add a data row
-                ArrayList<String> curRow = new ArrayList<>();
-                curRow.add(String.valueOf(i));
-                curRow.add(tempFile.getName());
-                spectrogramData.add(curRow);
+                // The name of the remote image to download
+                String srcFilename = predicates.get(0) + "/15min/" + predicates.get(0) + "_15min_" + String.valueOf(i);
+                String fileSuffix = ".jpg";
+
+                // Instantiate a Google Cloud Storage client
+                Storage storage = StorageOptions.getDefaultInstance().getService();
+
+                // Get specific file from specified bucket
+                Blob blob = storage.get(BlobId.of(bucketName, srcFilename + fileSuffix));
+                if (blob != null) {
+                    // Download file to specified path
+                    File tempFile = File.createTempFile(srcFilename.replace("/", "_"), fileSuffix, new File(Config.webRoot + "/static/images/"));
+                    tempFile.deleteOnExit();
+                    Path destFilePath = Paths.get(tempFile.getAbsolutePath());
+                    blob.downloadTo(destFilePath);
+
+                    // add a data row
+                    ArrayList<String> curRow = new ArrayList<>();
+                    curRow.add(String.valueOf(i));
+                    curRow.add(tempFile.getName());
+
+                    // add bounding box data
+                    int bboxMinx = i * imageWidth;
+                    int bboxMaxx = bboxMinx + imageWidth;
+                    curRow.add(String.valueOf((bboxMinx + bboxMaxx) / 2));
+                    curRow.add("800");
+                    curRow.add(String.valueOf(bboxMinx));
+                    curRow.add("0");
+                    curRow.add(String.valueOf(bboxMaxx));
+                    curRow.add("1600");
+                    curRow.add("");
+
+                    // add data to layer data
+                    spectrogramData.add(curRow);
+                }
             }
         }
-
+        // add data to response data
         data.add(spectrogramData);
         return data;
     }
+
     public abstract BoxandData getBox(Canvas c, int cx, int cy, int viewportH, int viewportW, ArrayList<String> predicates) throws SQLException, ClassNotFoundException, IOException, ParseException;
 }

@@ -251,21 +251,13 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                     dboxSvg.selectAll("g")
                         .selectAll("*")
                         .filter(function(d) {
-                            if (globalVar.curCanvas.id == "eeg") {
-                                if ((+d[3] + 1) * 200 < x || d[3] * 200 > (x + response.boxW))
-                                    return true;
-                                else
-                                    return false;
-                            }
-                            else {
-                                if (d[d.length - param.maxxOffset] < x ||
-                                    d[d.length - param.minxOffset] > (x + response.boxW) ||
-                                    d[d.length - param.maxyOffset] < y ||
-                                    d[d.length - param.minyOffset] > (y + response.boxH))
-                                    return true;
-                                else
-                                    return false;
-                            }
+                            if (d[d.length - param.maxxOffset] < x ||
+                                d[d.length - param.minxOffset] > (x + response.boxW) ||
+                                d[d.length - param.maxyOffset] < y ||
+                                d[d.length - param.minyOffset] > (y + response.boxH))
+                                return true;
+                            else
+                                return false;
                         })
                         .remove();
 
@@ -275,17 +267,11 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                     var newLayerData = [];
                     for (var j = 0; j < globalVar.renderData[i].length; j ++) {
                         var d = globalVar.renderData[i][j];
-                        if (globalVar.curCanvas.id == "eeg") {
-                            if (! ((+d[3] + 1) * 200 < x || d[3] * 200 > (x + response.boxW)))
-                                newLayerData.push(d);
-                        }
-                        else {
-                            if (! (d[d.length - param.maxxOffset] < x ||
-                                d[d.length - param.minxOffset] > (x + response.boxW) ||
-                                d[d.length - param.maxyOffset] < y ||
-                                d[d.length - param.minyOffset] > (y + response.boxH)))
-                                newLayerData.push(d);
-                        }
+                        if (! (d[d.length - param.maxxOffset] < x ||
+                            d[d.length - param.minxOffset] > (x + response.boxW) ||
+                            d[d.length - param.maxyOffset] < y ||
+                            d[d.length - param.minyOffset] > (y + response.boxH)))
+                            newLayerData.push(d);
                     }
                     for (var j = 0; j < renderData[i].length; j ++)
                         newLayerData.push(renderData[i][j]);
