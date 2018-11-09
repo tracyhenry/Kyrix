@@ -1,6 +1,11 @@
 // get from backend the current canvas object assuming curCanvasId is already correctly set
 function getCurCanvas() {
 
+    // otherwise make a blocked http request to the server
+    var postData = "id=" + globalVar.curCanvasId;
+    for (var i = 0; i < globalVar.predicates.length; i ++)
+        postData += "&predicate" + i + "=" + globalVar.predicates[i];
+
     // check if cache has it
     if (postData in globalVar.cachedCanvases) {
         globalVar.curCanvas = globalVar.cachedCanvases[postData].canvasObj;
@@ -9,11 +14,6 @@ function getCurCanvas() {
         setupLayerLayouts();
         return ;
     }
-
-    // otherwise make a blocked http request to the server
-    var postData = "id=" + globalVar.curCanvasId;
-    for (var i = 0; i < globalVar.predicates.length; i ++)
-        postData += "&predicate" + i + "=" + globalVar.predicates[i];
 
     $.ajax({
         type : "POST",

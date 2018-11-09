@@ -219,16 +219,11 @@ public abstract class BoxGetter {
                 // Get specific file from specified bucket
                 Blob blob = storage.get(BlobId.of(bucketName, srcFilename + fileSuffix));
                 if (blob != null) {
-                    // Download file to specified path
-                    File tempFile = File.createTempFile(srcFilename.replace("/", "_"), fileSuffix, new File(Config.webRoot + "/static/images/"));
-                    tempFile.deleteOnExit();
-                    Path destFilePath = Paths.get(tempFile.getAbsolutePath());
-                    blob.downloadTo(destFilePath);
-
                     // add a data row
                     ArrayList<String> curRow = new ArrayList<>();
                     curRow.add(String.valueOf(i));
-                    curRow.add(tempFile.getName());
+                    curRow.add("https://storage.googleapis.com/spectrogram-images/" +
+                            srcFilename + fileSuffix);
 
                     // add bounding box data
                     int bboxMinx = i * imageWidth;

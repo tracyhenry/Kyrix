@@ -149,7 +149,7 @@ var spectrogramRendering = function (svg, data) {
         .attr("y", 800 - 225)
         .attr("width", 450)
         .attr("height", 450)
-        .attr("xlink:href", function (d){return "/static/images/" + d[1];});
+        .attr("xlink:href", function (d){return d[1];});
 };
 
 module.exports = {
