@@ -95,7 +95,6 @@ function pageOnLoad() {
         globalVar.initialViewportX = +response.initialViewportX;
         globalVar.initialViewportY = +response.initialViewportY;
         globalVar.predicates = response.initialPredicates;
-        globalVar.staticTrimArguments = response.initialStaticTrimArguments;
         globalVar.viewportWidth = +response.viewportWidth;
         globalVar.viewportHeight = +response.viewportHeight;
         globalVar.curCanvasId = response.initialCanvasId;

@@ -7,113 +7,113 @@ import java.util.ArrayList;
  */
 public class Canvas {
 
-	private String id;
-	private int w;
-	private int h;
-	private String wSql, hSql, wLayerId, hLayerId;
-	private double zoomInFactorX, zoomInFactorY;
-	private double zoomOutFactorX, zoomOutFactorY;
-	private ArrayList<Transform> transforms;
-	private ArrayList<Layer> layers;
-	private String axes;
+    private String id;
+    private int w;
+    private int h;
+    private String wSql, hSql, wLayerId, hLayerId;
+    private double zoomInFactorX, zoomInFactorY;
+    private double zoomOutFactorX, zoomOutFactorY;
+    private ArrayList<Transform> transforms;
+    private ArrayList<Layer> layers;
+    private String axes;
 
-	public void setW(int w) {
-		this.w = w;
-	}
+    public void setW(int w) {
+        this.w = w;
+    }
 
-	public void setH(int h) {
-		this.h = h;
-	}
+    public void setH(int h) {
+        this.h = h;
+    }
 
-	public String getId() {
-		return id;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public int getW() {
-		return w;
-	}
+    public int getW() {
+        return w;
+    }
 
-	public int getH() {
-		return h;
-	}
+    public int getH() {
+        return h;
+    }
 
-	public String getwSql() {
-		return wSql;
-	}
+    public String getwSql() {
+        return wSql;
+    }
 
-	public String gethSql() {
-		return hSql;
-	}
+    public String gethSql() {
+        return hSql;
+    }
 
-	public String getwLayerId() {
-		return wLayerId;
-	}
+    public String getwLayerId() {
+        return wLayerId;
+    }
 
-	public String gethLayerId() {
-		return hLayerId;
-	}
+    public String gethLayerId() {
+        return hLayerId;
+    }
 
-	public double getZoomInFactorX() {
-		return zoomInFactorX;
-	}
+    public double getZoomInFactorX() {
+        return zoomInFactorX;
+    }
 
-	public double getZoomInFactorY() {
-		return zoomInFactorY;
-	}
+    public double getZoomInFactorY() {
+        return zoomInFactorY;
+    }
 
-	public double getZoomOutFactorX() {
-		return zoomOutFactorX;
-	}
+    public double getZoomOutFactorX() {
+        return zoomOutFactorX;
+    }
 
-	public double getZoomOutFactorY() {
-		return zoomOutFactorY;
-	}
+    public double getZoomOutFactorY() {
+        return zoomOutFactorY;
+    }
 
-	public ArrayList<Transform> getTransforms() {
-		return transforms;
-	}
+    public ArrayList<Transform> getTransforms() {
+        return transforms;
+    }
 
-	public ArrayList<Layer> getLayers() {
-		return layers;
-	}
+    public ArrayList<Layer> getLayers() {
+        return layers;
+    }
 
-	public String getAxes() {
-		return axes;
-	}
+    public String getAxes() {
+        return axes;
+    }
 
-	public Transform getTransformById(String id) {
+    public Transform getTransformById(String id) {
 
-		for (Transform t : transforms)
-			if (t.getId().equals(id))
-				return t;
+        for (Transform t : transforms)
+            if (t.getId().equals(id))
+                return t;
 
-		return null;
-	}
+        return null;
+    }
 
-	public String getDbByLayerId(String layerId) {
-		String transformId = this.getLayers()
-				.get(Integer.valueOf(layerId))
-				.getTransformId();
-		return this.getTransformById(transformId).getDb();
-	}
+    public String getDbByLayerId(String layerId) {
+        String transformId = this.getLayers()
+                .get(Integer.valueOf(layerId))
+                .getTransformId();
+        return this.getTransformById(transformId).getDb();
+    }
 
-	@Override
-	public String toString() {
-		return "Canvas{" +
-				"id='" + id + '\'' +
-				", w=" + w +
-				", h=" + h +
-				", wSql='" + wSql + '\'' +
-				", hSql='" + hSql + '\'' +
-				", wLayerId='" + wLayerId + '\'' +
-				", hLayerId='" + hLayerId + '\'' +
-				", zoomInFactorX=" + zoomInFactorX +
-				", zoomInFactorY=" + zoomInFactorY +
-				", zoomOutFactorX=" + zoomOutFactorX +
-				", zoomOutFactorY=" + zoomOutFactorY +
-				", transforms=" + transforms +
-				", layers=" + layers +
-				", axes='" + axes + '\'' +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "Canvas{" +
+                "id='" + id + '\'' +
+                ", w=" + w +
+                ", h=" + h +
+                ", wSql='" + wSql + '\'' +
+                ", hSql='" + hSql + '\'' +
+                ", wLayerId='" + wLayerId + '\'' +
+                ", hLayerId='" + hLayerId + '\'' +
+                ", zoomInFactorX=" + zoomInFactorX +
+                ", zoomInFactorY=" + zoomInFactorY +
+                ", zoomOutFactorX=" + zoomOutFactorX +
+                ", zoomOutFactorY=" + zoomOutFactorY +
+                ", transforms=" + transforms +
+                ", layers=" + layers +
+                ", axes='" + axes + '\'' +
+                '}';
+    }
 }

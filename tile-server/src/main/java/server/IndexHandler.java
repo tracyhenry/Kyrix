@@ -13,34 +13,34 @@ import java.io.IOException;
  */
 public class IndexHandler implements HttpHandler {
 
-	@Override
-	public void handle(HttpExchange httpExchange) throws IOException {
+    @Override
+    public void handle(HttpExchange httpExchange) throws IOException {
 
-		System.out.println("Serving /");
-		System.out.println(httpExchange.getRequestURI().getPath());
+        System.out.println("Serving /");
+        System.out.println(httpExchange.getRequestURI().getPath());
 
-		// check if it is GET request
-		if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
-			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
-			return;
-		}
+        // check if it is GET request
+        if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
+            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
+            return;
+        }
 
-		String path = httpExchange.getRequestURI().getPath();
-		if (path.equals("/"))
-			path = "/" + Config.indexFileName;
+        String path = httpExchange.getRequestURI().getPath();
+        if (path.equals("/"))
+            path = "/" + Config.indexFileName;
 
-		// read the frontend file and return
-		FileInputStream fs = new FileInputStream(Config.webRoot + path);
-		final byte[] content = new byte[0x1000000];
-		int len = fs.read(content);
+        // read the frontend file and return
+        FileInputStream fs = new FileInputStream(Config.webRoot + path);
+        final byte[] content = new byte[0x1000000];
+        int len = fs.read(content);
 
-		// send back a ok response
-		if (path.contains(".svg")) //todo: better file checking for the index handler
-			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/svg+xml");
-		else if (path.contains(".png")) {
-			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/png");
-		}
-		else
-			Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len);
-	}
+        // send back a ok response
+        if (path.contains(".svg")) //todo: better file checking for the index handler
+            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/svg+xml");
+        else if (path.contains(".png")) {
+            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/png");
+        }
+        else
+            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len);
+    }
 }

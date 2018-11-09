@@ -7,46 +7,46 @@ import java.util.ArrayList;
  */
 public class Transform {
 
-	private String id;
-	private String query;
-	private String db;
-	private String transformFunc;
-	private ArrayList<String> columnNames;
-	private boolean separable;
+    private String id;
+    private String query;
+    private String db;
+    private String transformFunc;
+    private ArrayList<String> columnNames;
+    private boolean separable;
 
-	public String getId() {
-		return id;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public String getQuery() {
-		return query;
-	}
+    public String getQuery() {
+        return query;
+    }
 
-	public String getDb() {
-		return db;
-	}
+    public String getDb() {
+        return db;
+    }
 
-	public String getTransformFunc() {
-		return transformFunc;
-	}
+    public String getTransformFunc() {
+        return transformFunc;
+    }
 
-	public ArrayList<String> getColumnNames() {
-		return columnNames;
-	}
+    public ArrayList<String> getColumnNames() {
+        return columnNames;
+    }
 
-	public boolean isSeparable() {
-		return separable;
-	}
+    public boolean isSeparable() {
+        return separable;
+    }
 
-	@Override
-	public String toString() {
-		return "Transform{" +
-				"id='" + id + '\'' +
-				", query='" + query + '\'' +
-				", db='" + db + '\'' +
-				", transformFunc='" + transformFunc + '\'' +
-				", columnNames=" + columnNames +
-				", separable=" + separable +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "Transform{" +
+                "id='" + id + '\'' +
+                ", query='" + query + '\'' +
+                ", db='" + db + '\'' +
+                ", transformFunc='" + transformFunc + '\'' +
+                ", columnNames=" + columnNames +
+                ", separable=" + separable +
+                '}';
+    }
 }

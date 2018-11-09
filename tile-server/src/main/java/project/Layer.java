@@ -5,34 +5,34 @@ package project;
  */
 public class Layer {
 
-	private String transformId;
-	private boolean isStatic;
-	private Placement placement;
-	private String rendering;
+    private String transformId;
+    private boolean isStatic;
+    private Placement placement;
+    private String rendering;
 
-	public String getTransformId() {
-		return transformId;
-	}
+    public String getTransformId() {
+        return transformId;
+    }
 
-	public boolean isStatic() {
-		return isStatic;
-	}
+    public boolean isStatic() {
+        return isStatic;
+    }
 
-	public Placement getPlacement() {
-		return placement;
-	}
+    public Placement getPlacement() {
+        return placement;
+    }
 
-	public String getRendering() {
-		return rendering;
-	}
+    public String getRendering() {
+        return rendering;
+    }
 
-	@Override
-	public String toString() {
-		return "Layer{" +
-				"transformId='" + transformId + '\'' +
-				", isStatic=" + isStatic +
-				", placement=" + placement +
-				", rendering='" + rendering + '\'' +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "Layer{" +
+                "transformId='" + transformId + '\'' +
+                ", isStatic=" + isStatic +
+                ", placement=" + placement +
+                ", rendering='" + rendering + '\'' +
+                '}';
+    }
 }
