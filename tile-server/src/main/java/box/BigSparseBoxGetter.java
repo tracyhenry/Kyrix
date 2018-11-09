@@ -1,6 +1,7 @@
 package box;
 
 import main.Main;
+import org.locationtech.jts.io.ParseException;
 import project.Canvas;
 import project.Project;
 
@@ -9,7 +10,8 @@ import java.util.ArrayList;
 
 public class BigSparseBoxGetter extends BoxGetter{
     public BoxandData getBox(Canvas c, int mx, int my, int viewportH, int viewportW, ArrayList<String> predicates)
-            throws SQLException, ClassNotFoundException {
+            throws SQLException, ClassNotFoundException, ParseException {
+
         ArrayList<ArrayList<ArrayList<String>>> data;
         double wrapLength = 0.5;
         int count = 0;

@@ -52,5 +52,11 @@
             <artifactId>nashorn-commonjs-modules</artifactId>
             <version>1.0.9</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.locationtech.jts</groupId>
+            <artifactId>jts-core</artifactId>
+            <version>1.16.0</version>
+        </dependency>
     </dependencies>
 </project>

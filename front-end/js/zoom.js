@@ -71,6 +71,8 @@ function startLiteralZoomTransition(center, scale, duration) {
         .on("click", null);
     d3.select("#maing").on(".zoom", null);
 
+    // start transition
+    globalVar.animation = true;
     var curSelection = d3.select("#maing");
     var initialZoomTransform = d3.zoomTransform(curSelection.node());
     curSelection
@@ -85,6 +87,9 @@ function startLiteralZoomTransition(center, scale, duration) {
                 var curZoomTransform = d3.zoomIdentity.translate(curTX, curTY).scale(curK);
                 d3.select(this).call(globalVar.zoom.transform, curZoomTransform);
             };
+        })
+        .on("end", function () {
+            globalVar.animation = false;
         });
 }
 

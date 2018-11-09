@@ -274,7 +274,7 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
 function registerJumps(svg, layerId) {
 
     var jumps = globalVar.curJump;
-    var shapes = svg.select("g").selectAll("*");
+    var shapes = svg.select("g:last-of-type").selectAll("*");
 
     shapes.each(function(p) {
 

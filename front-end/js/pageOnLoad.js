@@ -50,6 +50,11 @@ function setupLayerLayouts() {
     if (param.fetchingScheme == "dbox")
         globalVar.hasBox = false;
 
+    // set render data
+    globalVar.renderData = [];
+    for (var i = numLayers - 1; i >= 0; i --)
+        globalVar.renderData.push([]);
+
     for (var i = numLayers - 1; i >= 0; i --) {
         var isStatic = globalVar.curCanvas.layers[i].isStatic;
         // add new <g>

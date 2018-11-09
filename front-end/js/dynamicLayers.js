@@ -67,6 +67,8 @@ function RefreshDynamicLayers(viewportX, viewportY) {
     if (d3.select(".mainsvg:not(.static)").size() == 0)
         return ;
 
+    viewportX = +viewportX;
+    viewportY = +viewportY;
     if (param.fetchingScheme == "tiling") {
 
         var tileW = globalVar.tileW;
@@ -206,9 +208,10 @@ function RefreshDynamicLayers(viewportX, viewportY) {
         for (var i = 0; i < globalVar.predicates.length; i ++)
             postData += "&predicate" + i + "=" + globalVar.predicates[i];
 
-        if (! globalVar.hasBox || (viewportX <= globalVar.boxX || (viewportX + vpW) >= (globalVar.boxX + globalVar.boxW)
-            || viewportY <= globalVar.boxY || (viewportY + vpH) >= (globalVar.boxY + globalVar.boxH))) {
-
+        if (! globalVar.hasBox || (viewportX <= globalVar.boxX + vpW / 3 && globalVar.boxX >= 0)
+            || ((viewportX + vpW) >= (globalVar.boxX + globalVar.boxW) - vpW / 3 && globalVar.boxX + globalVar.boxW <= globalVar.curCanvas.w)
+            || (viewportY <= globalVar.boxY + vpH / 3 && globalVar.boxY >= 0)
+            || ((viewportY + vpH) >= (globalVar.boxY + globalVar.boxH) - vpH / 3 && globalVar.boxY + globalVar.boxH <= globalVar.curCanvas.h)) {
 
             globalVar.hasBox = true;
             globalVar.pendingBoxRequest = true;
@@ -227,15 +230,8 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                     return ;
                 }
 
-                // modify global var
-                globalVar.boxH = response.boxH;
-                globalVar.boxW = response.boxW;
-                globalVar.boxX = x;
-                globalVar.boxY = y;
-                globalVar.renderData = renderData;
-
-                var numLayers = globalVar.curCanvas.layers.length;
                 // loop over every layer to render
+                var numLayers = globalVar.curCanvas.layers.length;
                 for (var i = numLayers - 1; i >= 0; i --) {
 
                     // current layer object
@@ -249,7 +245,43 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                     var dboxSvg = d3.select(".layerg.layer" + i)
                         .select(".mainsvg");
 
-                    dboxSvg.selectAll("*").remove();
+                    // remove stale geometries
+                    dboxSvg.selectAll("g")
+                        .selectAll("*")
+                        .filter(function(d) {
+                            if (d == null) return false; // requiring all non-def stuff to be bound to data
+                            if (d[d.length - param.maxxOffset] < x ||
+                                d[d.length - param.minxOffset] > (x + response.boxW) ||
+                                d[d.length - param.maxyOffset] < y ||
+                                d[d.length - param.minyOffset] > (y + response.boxH))
+                                return true;
+                            else
+                                return false;
+                        })
+                        .remove();
+
+                    // remove empty <g>s.
+                    dboxSvg.selectAll("g")
+                        .filter(function() {
+                            return d3.select(this).select("*").empty();
+                        })
+                        .remove();
+
+                    // construct new globalVar.renderData
+                    // 1) add data from intersection
+                    // 2) add data from response.renderData
+                    var newLayerData = [];
+                    for (var j = 0; j < globalVar.renderData[i].length; j ++) {
+                        var d = globalVar.renderData[i][j];
+                        if (! (d[d.length - param.maxxOffset] < x ||
+                                d[d.length - param.minxOffset] > (x + response.boxW) ||
+                                d[d.length - param.maxyOffset] < y ||
+                                d[d.length - param.minyOffset] > (y + response.boxH)))
+                            newLayerData.push(d);
+                    }
+                    for (var j = 0; j < renderData[i].length; j ++)
+                        newLayerData.push(renderData[i][j]);
+                    globalVar.renderData[i] = newLayerData;
 
                     // draw current layer
                     curLayer.rendering.parseFunction()(dboxSvg, renderData[i],
@@ -268,7 +300,20 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                             .selectAll("*")
                             .each(zoomRescale);
                 }
+
+                // modify global var
+                globalVar.boxH = response.boxH;
+                globalVar.boxW = response.boxW;
+                globalVar.boxX = x;
+                globalVar.boxY = y;
+                globalVar.renderData = renderData;
                 globalVar.pendingBoxRequest = false;
+
+                // refresh dynamic layers again while panning (#37)
+                if (! globalVar.animation) {
+                    var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
+                    RefreshDynamicLayers(curViewport[0], curViewport[1]);
+                }
             });
         }
     }
