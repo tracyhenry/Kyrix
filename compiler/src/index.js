@@ -233,7 +233,7 @@ function saveProject()
     var projectJSONEscapedPSQL = projectJSON.replace(/\'/g, '\'\'');
 
     // construct queries
-    var createTableQuery = "CREATE TABLE project (name VARCHAR(255), content TEXT, dirty int" +
+    var createTableQuery = "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int" +
         ", CONSTRAINT PK_project PRIMARY KEY (name));";
     var deleteProjQuery = "DELETE FROM project where name = \'" + this.name + "\'";
     var insertProjQueryMySQL = "INSERT INTO project (name, content, dirty) VALUES (\'" +
