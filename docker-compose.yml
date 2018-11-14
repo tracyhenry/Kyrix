@@ -25,7 +25,7 @@ services:
   kyrix:
     build:
       context: .
-      dockerfile: Dockerfile-kyrix
+      dockerfile: Dockerfile-kyrix-alpine
     ports:
      - "8000:8000"
     depends_on:

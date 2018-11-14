@@ -1,10 +1,8 @@
-FROM ubuntu:16.04
+# start with alpine and node
+FROM mhart/alpine-node:8
 
-RUN echo "*** updating Ubuntu and adding basic packages..."
-ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get -qq -y update > apt-update.out && apt-get -qq -y upgrade > apt-upgrade.out
-RUN apt-get -qq -y install npm postgresql-client maven openjdk-8-jdk git curl wget > apt-get.out
-RUN curl -sL https://deb.nodesource.com/setup_8.x | bash > nodejs.out && apt-get -qq -y install nodejs > apt-install-node.out
+# coreutils provides stdbuf; --update nodejs required to get npm
+RUN apk add --no-cache --virtual .build-dependencies -q --update nodejs nodejs-npm postgresql-client maven curl wget git openjdk8 coreutils
 
 #RUN echo "*** copying kyrix source, then working in /root..."
 RUN mkdir -p /kyrix/compiler /kyrix/tile-server
@@ -23,7 +21,8 @@ RUN ls /kyrix/compiler
 WORKDIR /kyrix/compiler
 RUN npm install
 RUN ls /kyrix
-RUN sed -i 's/\(.\+\equest\)/\/\/\1/' node_modules/d3/build/d3.node.js
+# alpine sh requires different escapification
+RUN sed -i 's/\(.\+equest\)/\/\/\1/g' node_modules/d3/build/d3.node.js
 
 RUN echo "*** creating config file..."
 WORKDIR /kyrix
