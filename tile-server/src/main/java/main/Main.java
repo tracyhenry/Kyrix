@@ -92,7 +92,7 @@ public class Main {
         Config.d3Dir = inputStrings.get(Config.d3DirRow);
     }
 
-    private static void getProjectObject() throws ClassNotFoundException {
+    private static void getProjectObject() throws ClassNotFoundException, SQLException {
 
         String sql = "select content from " + Config.projectTableName + " where name = \'" + Config.projectName + "\';";
         try {
@@ -103,5 +103,6 @@ public class Main {
         } catch (Exception e) {
             System.out.println("Cannot find definition of main project... waiting...");
         }
+        DbConnector.commitConnection(Config.databaseName);
     }
 }
