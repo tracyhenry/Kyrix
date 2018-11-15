@@ -17,10 +17,11 @@ services:
      - "5432:5432"   
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-no_really_change_me}
-    volumes:
-     - /etc/postgresql:/etc/postgresql
-     - /var/log/postgresql:/var/log/postgresql
-     - /var/lib/postgresql:/var/lib/postgresql
+#    # for backup - requires special config on MacOS host OSs
+#    volumes:
+#     - /etc/postgresql:/etc/postgresql
+#     - /var/log/postgresql:/var/log/postgresql
+#     - /var/lib/postgresql:/var/lib/postgresql
 
   kyrix:
     build:
