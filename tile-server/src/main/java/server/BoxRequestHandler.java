@@ -49,6 +49,7 @@ public class BoxRequestHandler  implements HttpHandler {
         String response;
         String canvasId;
         int minx, miny;
+        boolean hasBox;
         int viewportH = Main.getProject().getViewportHeight();
         int viewportW = Main.getProject().getViewportWidth();
         BoxandData data = null;
@@ -78,6 +79,7 @@ public class BoxRequestHandler  implements HttpHandler {
         canvasId = queryMap.get("id");
         minx = Integer.valueOf(queryMap.get("x"));
         miny = Integer.valueOf(queryMap.get("y"));
+        hasBox = Boolean.valueOf(queryMap.get("hasbox"));
         Canvas c = project.getCanvas(canvasId);
         ArrayList<String> predicates = new ArrayList<>();
 
@@ -87,7 +89,7 @@ public class BoxRequestHandler  implements HttpHandler {
         //get box data
         long st = System.currentTimeMillis();
         try {
-            data = boxGetter.getBox(c, minx, miny, viewportH, viewportW, predicates);
+            data = boxGetter.getBox(c, minx, miny, viewportH, viewportW, predicates, hasBox);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -146,9 +146,10 @@ var spectrogramRendering = function (svg, data) {
         .enter()
         .append("image")
         .attr("x", function (d){return d[0] * 450;})
-        .attr("y", 800 - 225)
+        .attr("y", 0)
         .attr("width", 450)
-        .attr("height", 450)
+        .attr("height", 150)
+        .attr("transform", "scale(1 3)")
         .attr("xlink:href", function (d){return d[1];});
 };
 

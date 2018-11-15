@@ -1,51 +1,49 @@
 // setting up global variables
 var globalVar = {};
 
-// tile width and tile height
-globalVar.tileW = 0;
-globalVar.tileH = 0;
-
-//dynamic box coor and size
-globalVar.boxX = 0;
-globalVar.boxY = 0;
-globalVar.boxH = 0;
-globalVar.boxW = 0;
-globalVar.renderData = null;
-
-// whether there is a pending box request
-globalVar.pendingBoxRequest = false;
-
-// whether there is already a box request sent for the current canvas
-globalVar.hasBox = false;
-
-// current viewport info
-globalVar.initialViewportX = 0;
-globalVar.initialViewportY = 0;
-globalVar.viewportWidth = 0;
-globalVar.viewportHeight = 0;
-
-// predicates of the current canvas, used to retrieve data from backend
-globalVar.predicates = [];
-
-// the id of the current canvas
-globalVar.curCanvasId = "";
-
-// current canvas & jump object;
-globalVar.curCanvas = null;
-globalVar.curJump = null;
-globalVar.curStaticData = null;
-
-// history
-globalVar.history = [];
-
-// whether there is a zooming animation happening
-globalVar.animation = false;
-
 // cache
 globalVar.cachedCanvases = {};
 
-// global rendering params (specified by the developer)
-globalVar.renderingParams = null;
+// number of views
+globalVar.numViews = 3;
+
+// view array
+globalVar.views = [];
+for (var i = 0; i < globalVar.numViews; i ++) {
+
+    globalVar.views.push({});
+    var globalVarDict = globalVar.views[i];
+
+    // dynamic box coor and size
+    globalVarDict.boxX = 0;
+    globalVarDict.boxY = 0;
+    globalVarDict.boxH = 0;
+    globalVarDict.boxW = 0;
+    globalVarDict.renderData = null;
+
+    // whether there is a pending box request
+    globalVarDict.pendingBoxRequest = false;
+
+    // whether there is already a box request sent for the current canvas
+    globalVarDict.hasBox = false;
+
+    // current viewport info
+    globalVarDict.initialViewportX = 0;
+    globalVarDict.initialViewportY = 0;
+    globalVarDict.viewportWidth = 0;
+    globalVarDict.viewportHeight = 0;
+
+    // predicates of the current canvas, used to retrieve data from backend
+    globalVarDict.predicates = [];
+
+    // the id of the current canvas
+    globalVarDict.curCanvasId = "";
+
+    // current canvas & jump object;
+    globalVarDict.curCanvas = null;
+    globalVarDict.curJump = null;
+    globalVarDict.curStaticData = null;
+}
 
 if (typeof String.prototype.parseFunction != 'function') {
     String.prototype.parseFunction = function () {

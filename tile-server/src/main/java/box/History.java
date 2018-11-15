@@ -2,29 +2,50 @@ package box;
 
 import project.Canvas;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+
 public class History {
-    static Canvas canvas;
-    static Box box;
-    static int pointCount;
 
-    public static void reset() {
+    // hardcode for mgh app, three views
+    private static ArrayList<Canvas> canvases;
+    private static ArrayList<Box> boxes;
+    private static ArrayList<Integer> pointCounts;
 
-        canvas = null;
-        box = null;
-        pointCount = 0;
+    public static void reset(int viewId) {
+
+        if (viewId == -1) {
+            canvases = new ArrayList<>(Collections.nCopies(3, null));
+            boxes = new ArrayList<>(Collections.nCopies(3, null));
+            pointCounts = new ArrayList<>(Collections.nCopies(3, 0));
+        }
+        else {
+            canvases.set(viewId, null);
+            boxes.set(viewId, null);
+            pointCounts.set(viewId, null);
+        }
     }
-    public static void updateHistory(Canvas c, Box b, int count){
 
-        box = b;
-        canvas = c;
-        pointCount = count;
+    public static void updateHistory(int viewId, Canvas c, Box b, int count){
+
+        boxes.set(viewId, b);
+        canvases.set(viewId, c);
+        pointCounts.set(viewId, count);
     }
 
-    public static Canvas getCanvas(){
-        return canvas;
+    public static Canvas getCanvas(int viewId){
+
+        return canvases.get(viewId);
     }
 
-    public static int getCount(Canvas c){
-        return pointCount;
+    public static Box getBox(int viewId) {
+
+        return boxes.get(viewId);
+    }
+
+    public static int getCount(int viewId){
+
+        return pointCounts.get(viewId);
     }
 }

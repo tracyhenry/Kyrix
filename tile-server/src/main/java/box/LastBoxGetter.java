@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public class LastBoxGetter extends BoxGetter {
 
     @Override
-    public BoxandData getBox(Canvas c, int mx, int my, int viewportH, int viewportW, ArrayList<String> predicates)
+    public BoxandData getBox(Canvas c, int mx, int my, int viewportH, int viewportW, ArrayList<String> predicates, boolean hasBox)
             throws SQLException, ClassNotFoundException, ParseException {
         ArrayList<ArrayList<ArrayList<String>>> data;
         double wrapLength = 0.5;
@@ -17,22 +17,21 @@ public class LastBoxGetter extends BoxGetter {
         double scale = 0.4;
         int count = 0;
         int minx, miny, maxx, maxy;
-        if (History.getCanvas() != c) {
+        if (History.getCanvas(0) != c) {
              minx = (int)Math.max(0, mx - wrapLength * viewportW);
              miny = (int)Math.max(0, my - wrapLength * viewportH);
              maxx = (int)Math.min(c.getH(), minx + (1 + 2 * wrapLength) * viewportW);
              maxy = (int)Math.min(c.getW(), miny + (1 + 2 * wrapLength) * viewportH);
-            History.reset();
+            History.reset(0);
         } else {
-            minx = History.box.getMinx();
-            miny = History.box.getMiny();
-            maxx = History.box.getMaxx();
-            maxy = History.box.getMaxy();
+            minx = History.getBox(0).getMinx();
+            miny = History.getBox(0).getMiny();
+            maxx = History.getBox(0).getMaxx();
+            maxy = History.getBox(0).getMaxy();
         }
 
-        data = fetchData(c, minx, miny, maxx, maxy, predicates);
-
-        for (int i = 0; i < data.get(0).size(); i++)
+        data = fetchData(c, minx, miny, maxx, maxy, predicates, hasBox);
+        for (int i = 0; i < data.get(0).size(); i ++)
             count += data.get(i).size();
 
         double deltax = maxx - minx;
@@ -49,7 +48,7 @@ public class LastBoxGetter extends BoxGetter {
             maxy += deltay * scale / 2;
         }
 
-        History.updateHistory(c, new Box(minx, miny, maxx, maxy), count);
+        History.updateHistory(0, c, new Box(minx, miny, maxx, maxy), count);
 
         Box box = new Box(minx, miny, maxx, maxy);
         return new BoxandData(box, data);

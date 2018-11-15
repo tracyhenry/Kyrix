@@ -8,6 +8,7 @@ import main.Config;
 import javax.script.ScriptException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -84,7 +85,7 @@ public class Server {
 	// send response using string
 	public static void sendResponse(HttpExchange httpExchange, int responseCode, String response) throws IOException {
 
-		sendResponse(httpExchange, responseCode, response.getBytes(), response.getBytes().length);
+		sendResponse(httpExchange, responseCode, response.getBytes("UTF-8"), response.getBytes("UTF-8").length);
 	}
 
 	// https://stackoverflow.com/questions/11640025/how-to-obtain-the-query-string-in-a-get-with-java-httpserver-httpexchange

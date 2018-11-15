@@ -31,7 +31,7 @@ public class IndexHandler implements HttpHandler {
 			path = "/" + Config.indexFileName;
 			// reset dynamic box history once every new session starts
 			// (should be changed when doing multi-user)
-			History.reset();
+			History.reset(-1);
 		}
 
 		// read the frontend file and return

@@ -37,8 +37,8 @@ param.popoverOutDuration = 200;
 // extra tiles per dimension
 param.extraTiles = 0;
 
-// padding for the container svg
-param.containerPadding = 50;
+// padding for the view svg
+param.viewPadding = 50;
 
 // whether retain size when literal zooming
 param.retainSizeZoom = false;
@@ -46,6 +46,3 @@ param.retainSizeZoom = false;
 // jump types
 param.semanticZoom = "semantic_zoom";
 param.geometricSemanticZoom = "geometric_semantic_zoom";
-
-// fetching scheme -- either tiling or dbox
-param.fetchingScheme = "dbox";

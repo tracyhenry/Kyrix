@@ -68,7 +68,7 @@ eegCanvas.addAxes(renderers.eegXAxes);
 
 // ================== Spectrogram canvas (15-min images) ===================
 var spectrogramWidth = 86400 / 15 / 60 * 450;
-var spectrogramHeight = viewportHeight;
+var spectrogramHeight = 500; // spectrogram viewport width is 500 in coordinated views
 var spectrogramCanvas = new Canvas("spectrogram", spectrogramWidth, spectrogramHeight);
 p.addCanvas(spectrogramCanvas);
 
@@ -110,7 +110,7 @@ for (var i = 0; i < numLevels; i ++)
 // ================== jump from cluster to spectrogram ================
 var newSpectrogramViewport = function (row) {
     var tokens = row[0].split("_");
-    xStart = Math.max(tokens[3] - 1600 / 2, 0);
+    xStart = Math.max(tokens[3] - 500 / 2, 0); // spectrogram viewport width is 500 in coordinated views
     return [0, xStart, 0];
 };
 
@@ -123,7 +123,8 @@ var jumpNameSpectrogram = function (row) {
     return "Jump to Spectrogram: " + row[0];
 };
 
-p.addJump(new Jump(clusterCanvases[numLevels - 1], spectrogramCanvas, selector, newSpectrogramViewport, newSpectrogramPredicate, "semantic_zoom", jumpNameSpectrogram));
+for (var i = 0; i < numLevels; i ++)
+    p.addJump(new Jump(clusterCanvases[i], spectrogramCanvas, selector, newSpectrogramViewport, newSpectrogramPredicate, "semantic_zoom", jumpNameSpectrogram));
 
 // setting up initial states
 // abn999_20140711_151337
