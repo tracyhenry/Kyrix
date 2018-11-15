@@ -3,6 +3,11 @@
 #  - kyrix frontend will be available on port 8000
 #  - postgres backend will be available on port 5432 (for debugging)
 #
+
+# notes for newbies to docker/docker-compose:
+# - Dockerfiles can't refer to files in parent directories (e.g. tile-server and compiler),
+#   hence the Dockerfiles in the parent, outside of docker-scripts/
+
 version: '3.1'
 
 # TODO: set config.txt (incl 'kyrix' db password) from here or env vars
@@ -11,7 +16,9 @@ version: '3.1'
 services:
 
   db:
-    build: ./docker-postgis
+    build:
+      context: .
+      dockerfile: Dockerfile-postgis-alpine
     restart: always
     ports: # comment-out for extra security or to avoid conflicts with host OS
      - "5432:5432"   

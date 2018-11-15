@@ -1,5 +1,14 @@
-FROM ubuntu:16.04
+#
+# Dockerfile with Ubuntu as the container OS
+#
+# This is intended for non-prodution experimentation, where Ubuntu is helpful
+# because nearly all packages/libraries work "out of the box". Not recommended
+# for production due to large package size and downloads - instead consider
+# Dockerfile-kyrix-alpine
+#
+
 #FROM ubuntu:18.04  # works too, but is larger
+FROM ubuntu:16.04
 
 RUN echo "*** updating Ubuntu and adding basic packages..."
 ENV DEBIAN_FRONTEND noninteractive
