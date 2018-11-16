@@ -144,6 +144,10 @@ buildNumber.properties
 # Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
 !/.mvn/wrapper/maven-wrapper.jar
 
+################# emacs #################
+*~
+[#]*
+
 ################# Kyrix-specific #################
 config.txt
 mgh_config.txt
@@ -160,3 +164,4 @@ front-end/static/images/
 dots.txt
 dots_small.txt
 log.txt
+

@@ -1,0 +1,49 @@
+#
+# to start up, simply run docker-compose up:
+#  - kyrix frontend will be available on port 8000
+#  - postgres backend will be available on port 5432 (for debugging)
+#
+
+# notes for newbies to docker/docker-compose:
+# - Dockerfiles can't refer to files in parent directories (e.g. tile-server and compiler),
+#   hence the Dockerfiles in the parent, outside of docker-scripts/
+
+version: '3.1'
+
+# TODO: set config.txt (incl 'kyrix' db password) from here or env vars
+# note: config.txt could be moved from Dockerfile-kyrix to start-kyrix.sh
+
+services:
+
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile-postgis-alpine
+    restart: always
+    ports: # comment-out for extra security or to avoid conflicts with host OS
+     - "5432:5432"   
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-no_really_change_me}
+#    # for backup - requires special config on MacOS host OSs
+#    volumes:
+#     - /etc/postgresql:/etc/postgresql
+#     - /var/log/postgresql:/var/log/postgresql
+#     - /var/lib/postgresql:/var/lib/postgresql
+
+  kyrix:
+    build:
+      context: .
+      dockerfile: Dockerfile-kyrix-alpine
+    ports:
+     - "8000:8000"
+    depends_on:
+     - db
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-no_really_change_me}
+    entrypoint: sh -c 'sleep 5; /wait-for-postgres db:5432 -t 60 -- /start-kyrix.sh'
+
+#  adminer:
+#    image: adminer
+#    restart: always
+#    ports:
+#      - "8081:8080"

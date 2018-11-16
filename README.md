@@ -1,77 +1,58 @@
+
 # Kyrix - Generalized Interactive Panning/Zooming Interfaces
+
+## Installation instructions for the impatient
+
+Just install [docker CE](https://docs.docker.com/install/) for your laptop or server,
+install [docker-compose](https://docs.docker.com/compose/install/) and then run `docker-compose up`.
+Depending on CPU and network speed, after 10-20mins a Kyrix server will be up and you can point a
+browser at http://<computer>:8000/ and see a bunch of NBA team logos, which are part of the
+[NBA example](https://github.com/tracyhenry/Kyrix/tree/master/compiler/examples/nba).
+
+Depending on your network and CPU, please allow 10-20 minutes for fresh installs to startup.
+This docker config works great on cloud instances, e.g. AWS, Google Cloud, Azure, etc.
+We recommend 2-4+ CPUs and 4+ GB RAM, though it might be possible to run smaller configurations
+e.g. for automated testing.
+
+The older, manual installation instructions are still available [here](INSTALL.md).
+
+
 ## How to Contribute
 See [development workflow](https://github.com/tracyhenry/Kyrix/wiki/Development-Workflow).
 
-## Dependencies
-### Node.js
-Install Node.js ([https://nodejs.org/en/](https://nodejs.org/en/)). The `node.js` libraries needed for using `kyrix` apis are listed in `compiler/package.json`. 
 
-### Underlying Database
-`Kyrix` supports MySQL and PostgreSQL. 
 
-Install MySQL: [Mac](https://dev.mysql.com/doc/refman/5.7/en/osx-installation-pkg.html)/[Windows](https://dev.mysql.com/doc/refman/5.7/en/windows-installation.html). Right now there is some issue with versions other than 5.7. So make sure you install 5.7 for now. 
+## Docker config details
 
-Install [Postgres](https://www.postgresql.org/download/) and [PostGIS](https://postgis.net/install/). If you use macOS, it'll be very convenient to use `homebrew`: just run `brew install postgresql` and `brew install postgis`.  
+tl;dr: docker-compose brings up two VMs that talk with each other and expose port 8000 for
+web browsers i.e. end users, and port 5432 for developers using postgres tools like
+[psql](https://www.postgresql.org/docs/current/app-psql.html).
 
-### Compiler
-Go to `compiler/`, run `npm install`. 
+The easiest way to run Kyrix is to use our docker-compose config, which creates two docker virtual
+machines ("containers") on your local computer - one which runs the kyrix frontend and tile-server
+and one which runs the postgres backend.  The Kyrix container exposes port 8000 to the host OS,
+i.e. open a terminal and point a browser at localhost:8000 on the host OS. Strictly for
+debugging/developments, the postgres container exposes port 5432 so you can connect (e.g. psql)
+directly to postgres from the host OS. Again, this is totally optional - the Kyrix container
+talks directly to the postgres container, thanks to the magic of docker-compose.
 
-### Tile (Backend) Server
-The backend dependecies are handled using maven. See `tile-server/pom.xml` for the list of dependencies. To download and install maven, see the instructions [here](https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html). 
+To learn more, read [docker-compose.yml](docker-compose.yml). We rely on docker-compose v3 features,
+so please upgrade if you're using an older version.
 
-## Setup Kyrix
-* Get a Database server running (either MySQL or PostgreSQL). 
 
-* Create a config file (`config.txt`) which contains the following six lines (`config.txt.example` is an example. You can run `cp config.txt.example config.txt` to create the config file. Never check any `config.txt` into the repo (`config.txt` is added to `.gitignore`)): 
+## FAQ: what is Docker and Docker Compose? How does it work?
 
-    * the app name (should be `nba` if you want to run the example app)
-    * port number for backend server
-    * database being used (either `mysql` or `psql`, case insensitive)
-    * database server name
-    * database user name
-    * password
-    * The db name used to store metadata
-    * **absolute** path to a directory containing a `node_modules` folder that contains every d3 library (e.g. `d3-scale`, `d3-zoom`). 
+tl;dr: Docker makes developers' lives much much easier because everybody has the exact same everything.
 
-  Normally if you have installed dependencies for compiler, you can directly specify the last line as the absolute path to the compiler folder (but this is not always the case -- on some platform, `compiler/node_modules` does not have d3 libraries as direct sub-directories. Instead, d3 libraries are in `compiler/node_modules/d3/node_modules`. So double check). 
-  
-  Furthermore, to avoid a current issue ([#16](/../../issues/16)), you need to do the following as a workaround:
-  
-  * go to the directory you specified in the last line of the config file. 
-  * open `node_modules/d3/build/d3.node.js` (same on every platform).
-  * comment out every line containing `d3-request`. 
-    
+Docker works by creating fully isolated virtual machines ("containers") on your computer, making it much
+easier to achieve correct installations every time ([learn more](https://opensource.com/resources/what-docker)).
+Notably, docker works the same way regardless of the host OS, so developers running MacOS and servers running
+Ubuntu, all have the *exact* same OS, libraries, code, data, everything. Under the hood, Docker uses a
+complete "container OS" inside the container, and yes this can get "heavy" in terms of storage, networking,
+etc which is why we use Alpine Linux by default (but provide Ubuntu for developers as well).
 
-* Get data for the example app. For MySQL, download a small nba database from (https://www.dropbox.com/s/3chn6r73vzxttr2/nba_db_mysql.sql?dl=0). Load it into your MySQL as follows:
-
-      $ mysql -u username -p                     # login to mysql
-      $ Enter password:                          # enter password if necessary
-      $ > create database nba                    # create a database 'nba'
-      $ > exit                                   # log out
-      $ mysql -u root -p nba < nba_db_mysql.sql  # import 
-   
-   For PostgreSQL, download the nba database from (https://www.dropbox.com/s/baqb01thxvfthk5/nba_db_psql.sql?dl=0). Load it into your PostgreSQL as follows:
-   
-      $ psql postgres               # login as postgres
-      $ Enter password:             # enter password if necessary
-      $ > create database nba       # create a database 'nba'
-      $ > \q                        # log out
-      $ psql nba < nba_db_psql.sql  # import    
-
-* Go to `tile-server/`. Run `mvn compile` to build the server. Run `mvn exec:java -Dexec.mainClass="main.Main"` to start the server. After the server starts, it will prompt that it did not find the spec of the app and is waiting for it. 
-
-* Write spec according to the spec language documentation (to be added). The spec for the example app is in `compiler/examples/nba/nba.js`. 
-
-* Run the spec using node.js. To run the example spec, run
-
-      $ cd compiler/examples/nba
-      $ node nba.js
-    
-    Three things to expect after running the spec: 
-    (1) a `Kyrix` database will be created (if not existed), (2) a `project` table will be created (if not existed) to store the specs of the apps and (3) the compiler will notify the tile server that a new spec is ready. The tile server will then start building some indexes. 
-
-* Open your browser and go to `http://localhost:port#` to see the initial canvas. 
-
-* You can debug by modifying the spec and running it again. The tile server will be notified of the changes every time you run a spec, and will recalculate the indexes accordingly. 
+Docker-compose is a tool which scripts the process of starting multiple containers in the proper order,
+arrange that the containers can talk (network) to each other, etc. Think of docker-compose as the master
+boot script for a cluster of virtual computers.
 
 

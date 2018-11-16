@@ -1,0 +1,60 @@
+#
+# Dockerfile with Alpine Linux as the container OS
+#
+# This is intended for prodution and network/storage sensitive environments,
+# and saves 700+MB per instance. For example, in CI/CD alpine downloads,
+# installs and boots much faster than Ubuntu.  Alpine is not great for
+# development or experimentation and is missing many helpful debugging tools
+# (which you can manually install via "docker exec ...")
+#
+
+# start with alpine and node
+FROM mhart/alpine-node:8
+
+# coreutils provides stdbuf; --update nodejs required to get npm
+RUN apk add --no-cache --virtual .build-dependencies -q --update nodejs nodejs-npm postgresql-client maven curl wget git openjdk8 coreutils
+
+#RUN echo "*** copying kyrix source, then working in /root..."
+RUN mkdir -p /kyrix/compiler /kyrix/tile-server /kyrix/front-end
+ADD ./front-end /kyrix/front-end/
+ADD ./compiler /kyrix/compiler/
+ADD ./tile-server /kyrix/tile-server/
+RUN ls /kyrix/
+
+# if instead you want to get from git...
+#RUN echo "*** fetching kyrix source, then working in /root..."
+#RUN git clone https://github.com/tracyhenry/kyrix > git-clone.out
+
+RUN echo "*** setting up Kyrix compiler..."
+RUN ls /kyrix
+RUN ls /kyrix/compiler
+WORKDIR /kyrix/compiler
+RUN npm install
+RUN ls /kyrix
+# alpine sh requires different escapification
+RUN sed -i 's/\(.\+equest\)/\/\/\1/g' node_modules/d3/build/d3.node.js
+
+RUN echo "*** creating config file..."
+WORKDIR /kyrix
+RUN echo "nba" > config.txt
+RUN echo "8000" >> config.txt
+RUN echo "psql" >> config.txt
+RUN echo "db" >> config.txt
+RUN echo "kyrix" >> config.txt
+RUN echo "kyrix_password" >> config.txt
+RUN echo "kyrix" >> config.txt
+RUN echo "/kyrix/compiler" >> config.txt
+
+COPY docker-scripts/wait-for-postgres /wait-for-postgres
+RUN chmod 755 /wait-for-postgres
+COPY docker-scripts/start-kyrix.sh /start-kyrix.sh
+RUN chmod 755 /start-kyrix.sh
+
+EXPOSE 8000
+
+RUN echo "*** setting up tile server..."
+WORKDIR /kyrix/tile-server
+RUN mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out
+
+RUN echo "*** downloading NBA example..."
+RUN wget -q -O nba_db_psql.sql 'https://www.dropbox.com/s/baqb01thxvfthk5/nba_db_psql.sql?dl=1'
