@@ -14,7 +14,7 @@ This docker config works great on cloud instances, e.g. AWS, Google Cloud, Azure
 We recommend 2-4+ CPUs and 4+ GB RAM, though it might be possible to run smaller configurations
 e.g. for automated testing.
 
-The older, manual installation instructions are still available (here)[INSTALL.md].
+The older, manual installation instructions are still available [here](INSTALL.md).
 
 
 ## How to Contribute

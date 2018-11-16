@@ -10,8 +10,8 @@ psql postgresql://kyrix:kyrix_password@db/kyrix -c "CREATE EXTENSION postgis;CRE
 psql postgresql://kyrix:kyrix_password@db/nba -c "CREATE EXTENSION postgis;CREATE EXTENSION postgis_topology;CREATE EXTENSION fuzzystrmatch;CREATE EXTENSION postgis_tiger_geocoder;" || true
 
 # workaround this issue: https://github.com/tracyhenry/Kyrix/issues/42
-psql postgresql://kyrix:kyrix_password@db/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
-psql postgresql://kyrix:kyrix_password@db/nba -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
+#psql postgresql://kyrix:kyrix_password@db/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
+#psql postgresql://kyrix:kyrix_password@db/nba -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
 
 echo "*** restoring NBA data to database..."
 cat nba_db_psql.sql | grep -v idle_in_transaction_session_timeout | psql postgresql://kyrix:kyrix_password@db/nba | egrep -i 'error' || true
