@@ -17,9 +17,36 @@ e.g. for automated testing.
 The older, manual installation instructions are still available [here](INSTALL.md).
 
 
-## How to Contribute
-See [development workflow](https://github.com/tracyhenry/Kyrix/wiki/Development-Workflow).
+## Usage: adding/changing the dataset
 
+<!-- TODO: this is more of a placeholder until we can be more specific, e.g. how to know if "out of sync" -->
+
+If the underlying data changes and the view is out of sync, run `docker exec -w /kyrix/compiler/examples/nba -it kyrix_kyrix_1 sh -c "psql postgresql://kyrix:kyrix_password@db/kyrix -c \"delete from project where name = 'nba'\"; node nba.js;"`
+(where 'nba' is the name of the kyrix dataset and nba.js is the kyrix spec).
+
+TODO: script this and don't hardcode the kyrix db password.
+
+
+## Kyrix Development: spec compiler changes
+
+If you change package.json, then run `npm install` i.e. `docker exec -w /kyrix/compiler -it kyrix_kyrix_1 npm install`
+
+Otherwise, if you change the compiler code (Node.JS JavaScript), simply re-run the spec compiler on your dataset(s) with `docker exec -w /kyrix/compiler/examples/nba -it kyrix_kyrix_1 node nba.js` (where nba.js is your spec)
+
+
+## Kyrix Development: tile server changes
+
+If you change the tile server code (Java), then run `mvn compile` and restart the server with `mvn  exec:java -Dexec.mainClass="main.Main"`. From outside docker: `docker exec -w /kyrix/tile-server -it kyrix_kyrix_1 mvn compile` and `docker exec -w /kyrix/tile-server -it kyrix_kyrix_1 sh -c "killall /usr/bin/java; mvn  exec:java -Dexec.mainClass=\"main.Main\""`
+
+
+## Kyrix Development: frontend static HTML/CSS/JS changes
+
+Just reload your browser, i.e. web static content isn't cached.
+
+
+## Contributing code/patches/etc.
+
+See [development workflow](https://github.com/tracyhenry/Kyrix/wiki/Development-Workflow).
 
 
 ## Docker config details
