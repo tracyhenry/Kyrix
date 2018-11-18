@@ -13,8 +13,13 @@ psql postgresql://kyrix:kyrix_password@db/nba -c "CREATE EXTENSION postgis;CREAT
 #psql postgresql://kyrix:kyrix_password@db/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
 #psql postgresql://kyrix:kyrix_password@db/nba -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
 
-echo "*** restoring NBA data to database..."
-cat nba_db_psql.sql | grep -v idle_in_transaction_session_timeout | psql postgresql://kyrix:kyrix_password@db/nba | egrep -i 'error' || true
+plays=$(psql postgresql://kyrix:kyrix_password@db/nba -X -P t -P format=unaligned -c "select count(*)>500000 from plays;")
+if [ "$plays" = "f" ]; then
+    echo "NBA data not found - loading..."
+    cat nba_db_psql.sql | grep -v idle_in_transaction_session_timeout | psql postgresql://kyrix:kyrix_password@db/nba | egrep -i 'error' || true
+else
+    echo "NBA data found - skipping reload to avoid duplicate records."
+fi
 
 echo "*** starting tile server..."
 cd /kyrix/tile-server
