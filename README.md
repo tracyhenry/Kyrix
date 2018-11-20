@@ -1,6 +1,8 @@
 
 # Kyrix - Generalized Interactive Panning/Zooming Interfaces
 
+![Build status](https://travis-ci.org/tracyhenry/Kyrix.svg?branch=master)
+
 ## Installation instructions for the impatient
 
 Just install [docker CE](https://docs.docker.com/install/) for your laptop or server,
