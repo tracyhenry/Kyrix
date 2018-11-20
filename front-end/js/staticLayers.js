@@ -22,6 +22,7 @@ function renderStaticLayers(viewId) {
             .classed("lowestsvg", true);
         renderFunc(curSvg, globalVarDict.curStaticData[i],
             globalVarDict.viewportWidth,
-            globalVarDict.viewportHeight);
+            globalVarDict.viewportHeight,
+            globalVarDict.montage);
     }
 };

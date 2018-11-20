@@ -170,7 +170,6 @@ function zoomed(viewId) {
     // hardcoding - mark the median segment & trigger pan in spectrogram
     if (viewId == 2) {
         markMedianSegment();
-        console.log(deltaX);
         var deltaX = (curViewport[0] - viewportX) / 200;
         var curSelection = d3.select(".view1.maing");
         var zoomTransform = d3.zoomTransform(curSelection.node());

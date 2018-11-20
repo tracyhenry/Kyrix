@@ -23,47 +23,79 @@ var clusterAxes = function (cWidth, cHeight) {
     var x = d3.scaleLinear()
         .domain([0, 1000])
         .range([0, cWidth]);
-    var xAxis = d3.axisTop();
+    var xAxis = d3.axisTop().ticks(5);
     axes.push({"dim" : "x", "scale" : x, "axis" : xAxis, "translate" : [0, 0]});
 
     //y
     var y = d3.scaleLinear()
         .domain([0, 1000])
         .range([0, cHeight]);
-    var yAxis = d3.axisLeft();
+    var yAxis = d3.axisLeft().ticks(5);
     axes.push({"dim" : "y", "scale" : y, "axis" : yAxis, "translate" : [0, 0]});
 
     return axes;
 };
 
-var eegRendering = function (svg, data, width, height, params, magnitude) {
+var eegRendering = function (svg, data, width, height, params, magnitude, montage) {
 
     if (typeof magnitude != "number")
         magnitude = 1;
-    var channum = 20;
 
     // create a new g
     var g = svg.append("g");
 
-    var pixelPerSeg = 200;
-    var numPoints = 400;
-    var minV = -100, maxV = 100;
-    var dataset = [];
+    // prepare raw data
     var segNum = data.length;
-    for (var k = 0; k < channum; k ++) {
-        var startingY = k * height / channum;
-        for (var i = 0; i < segNum; i++) {
-            var oneSeg = [];
-            var tofloat = data[i][k + 4].split(",");
-            for (var j = 0; j < tofloat.length; j++) {
-                if (tofloat[j] > maxV || tofloat[j] < minV)
-                    tofloat[j] = 0;
-                tofloat[j] *= magnitude;
-                oneSeg.push({
-                    "x": pixelPerSeg * (+data[i][3]) + j * pixelPerSeg / numPoints,
-                    "y": d3.scaleLinear().domain([minV, maxV]).range([0, height / channum])(+tofloat[j]) + startingY});
+    var numPoints = 400;
+    var numChannels = (montage == 1 ? 20 : 22);
+    var m2First = [8, 6, 16, 18, -1, 9, 7, 17, 19, -1, 8, 4, 0, 13, -1, 9, 5, 1, 14, -1, 10, 2];
+    var m2Second = [6, 16, 18, 11, -1, 7, 17, 19, 12, -1, 4, 0, 13, 11, -1, 5, 1, 14, 12, -1, 2, 15];
+    var raw = [];
+    for (var i = 0; i < segNum; i ++) {
+        var curSeg = [];
+        for (var k = 0; k < numChannels; k ++) {
+            var curSegChn = [];
+            if (montage == 1)
+                curSegChn = data[i][k + 4].split(",");
+            else if (montage == 2 && m2First[k] < 0)
+                curSegChn = Array.apply(null, Array(numPoints)).map(Number.prototype.valueOf, 0);
+            else if (montage == 2 && m2First[k] >= 0) {
+                var firstArray = data[i][m2First[k] + 4].split(",");
+                var secondArray = data[i][m2Second[k] + 4].split(",");
+                for (var p = 0; p < numPoints; p ++)
+                    curSegChn.push(firstArray[p] - secondArray[p])
             }
-            dataset.push(oneSeg);
+            curSeg.push(curSegChn);
+        }
+        raw.push(curSeg);
+    };
+
+    // cook data
+    var pixelPerSeg = 200;
+    var channelHeight = height / numChannels;
+    var channelMargin = 5;
+    var minV = -500, maxV = 500;
+    var dataset = [];
+    for (var k = 0; k < numChannels; k ++) {
+        var startingY = k * channelHeight;
+        for (var i = 0; i < segNum; i ++) {
+            var curSeg = [];
+            var curSegChn = [];
+            for (var j = 0; j < numPoints; j ++)
+                curSegChn.push(+raw[i][k][j]);
+            for (var j = 0; j < numPoints; j ++) {
+                if (curSegChn[j] > maxV)
+                    curSegChn[j] = maxV;
+                else if (curSegChn[j] < minV)
+                    curSegChn[j] = minV;
+                curSegChn[j] *= magnitude;
+                curSeg.push({
+                    "x": pixelPerSeg * (+data[i][3]) + j * pixelPerSeg / numPoints,
+                    "y": d3.scaleLinear().domain([minV, maxV])
+                        .range([0, channelHeight - channelMargin])(curSegChn[j]) + startingY
+                });
+            }
+            dataset.push(curSeg);
         }
     }
 
@@ -85,7 +117,9 @@ var eegRendering = function (svg, data, width, height, params, magnitude) {
         .y(function (d) {return d.y;});
 
     // create
-    for (var i = 0; i < channum; i ++) {
+    for (var i = 0; i < numChannels; i ++) {
+        if (montage == 2 && m2First[i] < 0)
+            continue;
         for (var j = 0; j < segNum; j++) {
             g.append('path')
                 .attr('class', 'line')
@@ -98,13 +132,20 @@ var eegRendering = function (svg, data, width, height, params, magnitude) {
     }
 };
 
-var eegLabelRendering = function (svg, data, width, height) {
+var eegLabelRendering = function (svg, data, width, height, montage) {
 
     g = svg.append("g");
-    var channel_name = ["C3", "C4", "CZ", "EKG", "F3", "F4", "F7", "F8", "FP1",
-        "FP2", "FZ", "O1", "O2", "P3", "P4", "PZ", "T3", "T4", "T5", "T6"];
 
-    var layerHeight = height / 20;
+    var channel_name;
+    var numChannels = (montage == 1 ? 20 : 22);
+    if (montage == 1)
+        channel_name = ["C3", "C4", "CZ", "EKG", "F3", "F4", "F7", "F8", "FP1",
+        "FP2", "FZ", "O1", "O2", "P3", "P4", "PZ", "T3", "T4", "T5", "T6"];
+    else
+        channel_name = ["Fp1-F7", "F7-T3", "T3-T5", "T5-O1", "", "Fp2-F8", "F8-T4", "T4-T6", "T6-O2", "", "Fp1-F3", "F3-C3", "C3-P3", "P3-O1", "", "Fp2-F4", "F4-C4", "C4-P4", "P4-O2", "", "Fz-Cz", "Cz-Pz"];
+
+
+    var layerHeight = (height) / numChannels;
     g.selectAll("g")
         .data(channel_name)
         .enter()

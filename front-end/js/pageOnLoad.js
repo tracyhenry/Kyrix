@@ -62,8 +62,10 @@ function setupLayerLayouts(viewId) {
     // hardcoding: keyboard events
     if (globalVarDict.curCanvas.id == "eeg") {
         globalVarDict.eegMagnitude = 1;
+        globalVarDict.montage = 1;
         d3.select("body")
             .on("keydown", function () {
+
                 if (event.key == "ArrowLeft" || event.key == "ArrowRight") {
                     event.preventDefault();
                     event.stopImmediatePropagation();
@@ -92,6 +94,7 @@ function setupLayerLayouts(viewId) {
                         globalVarDict.eegMagnitude -= 0.1;
                     var dboxSvg = d3.select(".layerg.layer1.view2")
                         .select(".mainsvg");
+
                     dboxSvg.selectAll("*").remove();
                     globalVarDict.curCanvas.layers[1].rendering.parseFunction()(
                         dboxSvg,
@@ -99,7 +102,34 @@ function setupLayerLayouts(viewId) {
                         globalVarDict.curCanvas.w,
                         globalVarDict.curCanvas.h,
                         globalVarDict.renderingParams,
-                        globalVarDict.eegMagnitude
+                        globalVarDict.eegMagnitude,
+                        globalVarDict.montage
+                    );
+                    markMedianSegment();
+                }
+                else if (event.key == "m") {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    globalVarDict.montage = 3 - globalVarDict.montage;
+                    var dboxSvg = d3.select(".layerg.layer0.view2")
+                        .select(".mainsvg");
+                    dboxSvg.selectAll("*").remove();
+                    globalVarDict.curCanvas.layers[0].rendering.parseFunction()(
+                        dboxSvg, globalVarDict.curStaticData[i],
+                        globalVarDict.viewportWidth,
+                        globalVarDict.viewportHeight,
+                        globalVarDict.montage);
+                    var dboxSvg = d3.select(".layerg.layer1.view2")
+                        .select(".mainsvg");
+                    dboxSvg.selectAll("*").remove();
+                    globalVarDict.curCanvas.layers[1].rendering.parseFunction()(
+                        dboxSvg,
+                        globalVarDict.renderData[1],
+                        globalVarDict.curCanvas.w,
+                        globalVarDict.curCanvas.h,
+                        globalVarDict.renderingParams,
+                        globalVarDict.eegMagnitude,
+                        globalVarDict.montage
                     );
                     markMedianSegment();
                 }
@@ -137,8 +167,8 @@ function pageOnLoad() {
     d3.select("body")
         .append("svg")
         .attr("id", "containerSvg")
-        .attr("width", 2200)
-        .attr("height", 1600);
+        .attr("width", 2300)
+        .attr("height", 1700);
 
     // hardcoded view info - should get from /first
     var viewportWidths = [500, 500, 1600];

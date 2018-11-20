@@ -16,8 +16,8 @@ body {
 }
 
 #popoverclose {
-    position: relative;
-    bottom: 5px;
+    position : relative;
+    bottom : 5px;
     left : 6px;
 }
 
@@ -48,26 +48,33 @@ body {
     position : absolute;
 }
 
+#editor > * {
+    margin: 10px;
+}
+
 #sidebar {
-    position: relative;
-    display: inline-block;
-    vertical-align: top;
-    width: 0px;
-    top: 50px;
+    position : relative;
+    display : inline-block;
+    vertical-align : top;
+    top : 50px;
+    margin-left : 50px;
+    width : 200px;
 }
 
 #editor {
-    width: 450px;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    border: 3px pink dashed;
-    background-color: #FFEEEE;
+    padding : 10px;
+    display : flex;
+    flex-direction : column;
+    border : 3px pink dashed;
+    background-color : #FFEEEE;
 }
 
 #editIdBox {
     font-size : 23px;
     font-weight : bold;
+    width : 170px;
+    overflow-wrap : break-word;
+    margin : auto;
 }
 
 label {
@@ -76,20 +83,16 @@ label {
 }
 
 input[type="radio"] {
-    display: none;
+    display : none;
 }
 
 input[type="radio"] {
-    height: 20px;
-    width: 20px;
-    display: inline-block;
-    cursor: pointer;
-    vertical-align: middle;
-    background: #FFF;
-    border: 1px solid #d2d2d2;
-    border-radius: 100%;
-}
-
-#editor > * {
-    margin: 10px;
+    height : 20px;
+    width : 20px;
+    display : inline-block;
+    cursor : pointer;
+    vertical-align : middle;
+    background : #FFF;
+    border : 1px solid #d2d2d2;
+    border-radius : 100%;
 }

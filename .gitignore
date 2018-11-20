@@ -159,3 +159,5 @@ front-end/static/images/
 dots.txt
 dots_small.txt
 log.txt
+local_config.txt
+mgh_config.txt

@@ -177,7 +177,8 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
                         globalVarDict.curCanvas.w,
                         globalVarDict.curCanvas.h,
                         globalVarDict.renderingParams,
-                        globalVarDict.eegMagnitude);
+                        globalVarDict.eegMagnitude,
+                        globalVarDict.montage);
 
                     // hardcoding: mark median segment
                     if (viewId == 2)
