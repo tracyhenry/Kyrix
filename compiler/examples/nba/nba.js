@@ -19,7 +19,7 @@ var teamLogoCanvas = new Canvas("teamlogo", 1000, 1000);
 p.addCanvas(teamLogoCanvas);
 
 // logo layer
-var teamLogoLayer = new Layer(transforms.teamLogoTransform, true);
+var teamLogoLayer = new Layer(transforms.teamLogoTransform, true, true);
 teamLogoCanvas.addLayer(teamLogoLayer);
 teamLogoLayer.addRenderingFunc(renderers.teamLogoRendering);
 
@@ -32,7 +32,7 @@ var teamTimelineCanvas = new Canvas("teamtimeline", width, height);
 p.addCanvas(teamTimelineCanvas);
 
 // pannable timeline layer
-var timelineLayer = new Layer(transforms.teamTimelineTransform, false);
+var timelineLayer = new Layer(transforms.teamTimelineTransform, false, true);
 teamTimelineCanvas.addLayer(timelineLayer);
 timelineLayer.addPlacement(placements.teamTimelinePlacement);
 timelineLayer.addRenderingFunc(renderers.teamTimelineRendering);

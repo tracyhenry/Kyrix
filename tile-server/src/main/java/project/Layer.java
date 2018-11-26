@@ -7,6 +7,7 @@ public class Layer {
 
 	private String transformId;
 	private boolean isStatic;
+	private boolean fisheye;
 	private Placement placement;
 	private String rendering;
 
@@ -16,6 +17,10 @@ public class Layer {
 
 	public boolean isStatic() {
 		return isStatic;
+	}
+
+	public boolean fisheye() {
+		return fisheye;
 	}
 
 	public Placement getPlacement() {
@@ -31,6 +36,7 @@ public class Layer {
 		return "Layer{" +
 				"transformId='" + transformId + '\'' +
 				", isStatic=" + isStatic +
+				", fisheye=" + fisheye +
 				", placement=" + placement +
 				", rendering='" + rendering + '\'' +
 				'}';

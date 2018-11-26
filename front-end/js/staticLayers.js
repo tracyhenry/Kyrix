@@ -9,7 +9,7 @@ function renderStaticLayers() {
          var curLayer = globalVar.curCanvas.layers[i];
 
         // if this layer is not static, return
-        if (! curLayer.isStatic)
+        if (!curLayer.isStatic)
             continue;
 
         // render
@@ -23,7 +23,8 @@ function renderStaticLayers() {
             globalVar.renderingParams);
 
         // add fisheye
-        d3.fisheye.circular()(curSvg);
+        if (curLayer.fisheye)
+            d3.fisheye.circular()(curSvg);
 
         // register jump
         if (! globalVar.animation)

@@ -108,6 +108,8 @@ public class ProjectRequestHandler implements HttpHandler {
 							return true;
 						if (! (oldLayer.isStatic() == newLayer.isStatic()))
 							return true;
+						if (! (oldLayer.fisheye() == newLayer.fisheye()))
+							return true;
 						if (! oldLayer.isStatic() && ! oldLayer.getPlacement().toString().equals(newLayer.getPlacement().toString()))
 							return true;
 

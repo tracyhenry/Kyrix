@@ -3,7 +3,7 @@
  * @param transform - the data transform object that this layer is using.
  * @constructor
  */
-function Layer(transform, isStatic) {
+function Layer(transform, isStatic, fisheye) {
 
     if (transform.id == null)
         throw new Error("Constructing Layer: unidentified transform object.");
@@ -14,6 +14,11 @@ function Layer(transform, isStatic) {
         this.isStatic = false;
     else
         this.isStatic = isStatic;
+
+    if (fisheye == null)
+        this.fisheye = false;
+    else
+        this.fisheye = fisheye;
 };
 
 /**

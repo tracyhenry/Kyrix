@@ -14,7 +14,9 @@
                 newtextxy = [],
                 newxy = [],
                 line = [],
-                newline = [];
+                newline = [],
+                circle = [],
+                newcircle = [];
 
             function newcoor(d) {
                 var dx = d.x - focus[0],
@@ -34,6 +36,13 @@
                     .exit()
                     .each(function(d){imagerect.push({x:this.getBBox().x,y:this.getBBox().y,
                     w: this.getBBox().width, h: this.getBBox().height});});
+                // create cx cy for circle
+                svg.select("g")
+                    .selectAll("circle")
+                    .data(circle)
+                    .exit()
+                    .each(function(d){imagerect.push({x:d3.select(this).attr("cx"),y:d3.select(this).attr("cy"),
+                        r: d3.select(this).attr("r")})});
                 //create x y for texts
                 svg.select("g")
                     .selectAll("text")
@@ -59,6 +68,13 @@
                         .attr("height", function(d,i) { return imagerect[i].h * newxy[i].z; });
 
                     svg.select("g")
+                        .selectAll("circle")
+                        .each(function(d,i){ newcircle[i] = newcoor(circle[i]);})
+                        .attr("cx", function(d,i) { return newcircle[i].x; })
+                        .attr("cy", function(d,i) { return newcircle[i].y; })
+                        .attr("r", function(d,i) { return circle[i].r * newcircle[i].z; });
+
+                    svg.select("g")
                         .selectAll("text")
                         .each(function(d,i){ newtextxy[i] = newcoor(text[i]);})
                         .attr("x", function(d,i) { return newtextxy[i].x; })
@@ -67,8 +83,8 @@
                     svg.select("g")
                         .selectAll("line")
                         .each(function(d,i){ newline[i*2] = newcoor(line[i*2]);newline[i*2+1] = newcoor(line[i*2+1]);})
-                        .attr("x1", function(d,i) { return newline[i * 2].x; })
-                        .attr("y1", function(d,i) { return newline[i * 2].y; })
+                 //       .attr("x1", function(d,i) { return newline[i * 2].x; })
+                  //      .attr("y1", function(d,i) { return newline[i * 2].y; })
                         .attr("x2", function (d,i) { return newline[i * 2 + 1].x;})
                         .attr("y2", function (d,i) { return newline[i * 2 + 1].y;});
                 });
