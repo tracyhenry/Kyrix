@@ -65,6 +65,8 @@ var teamLogoRendering = function (svg, data) {
         .attr("width", 130)
         .attr("height", 130)
         .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + d[6] + ".svg";});
+
+    d3.fisheye.circular()(svg);
 };
 
 var teamTimelineRendering = function (svg, data, width, height, params) {
