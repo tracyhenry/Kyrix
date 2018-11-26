@@ -9,6 +9,12 @@
                 k0,
                 k1,
                 focus = [0, 0];
+            var imagerect = [],
+                text = [],
+                newtextxy = [],
+                newxy = [],
+                line = [],
+                newline = [];
 
             function newcoor(d) {
                 var dx = d.x - focus[0],
@@ -20,25 +26,53 @@
                 return {x: focus[0] + dx * k, y: focus[1] + dy * k, z: z};
             }
 
-            function oldcoor(ele) {
-                return {x:d3.select(ele).attr("x"), y: d3.select(ele).attr("y"),
-                    w: d3.select(ele).attr("width"), h: d3.select(ele).attr("height") }
-            }
             function fisheye(svg) {
+                // create x y w h for images and rects
                 svg.select("g")
-                    .selectAll("*")
-                    .each(function(d){d.old = oldcoor(this);});
+                    .selectAll("image,rect")
+                    .data(imagerect)
+                    .exit()
+                    .each(function(d){imagerect.push({x:this.getBBox().x,y:this.getBBox().y,
+                    w: this.getBBox().width, h: this.getBBox().height});});
+                //create x y for texts
+                svg.select("g")
+                    .selectAll("text")
+                    .data(text)
+                    .exit()
+                    .each(function(d){text.push({x:d3.select(this).attr("x"),y:d3.select(this).attr("y")});});
+                // create x1, y1, x2, y2 for line
+                svg.select("g")
+                    .selectAll("line")
+                    .data(line)
+                    .exit()
+                    .each(function(d){line.push({x:d3.select(this).attr("x1"),y:d3.select(this).attr("y1")});
+                                    line.push({x:d3.select(this).attr("x2"), y:d3.select(this).attr("y2")})});
 
                 svg.on("mousemove", function() {
                     newcoor.focus(d3.mouse(this));
                     svg.select("g")
-                        .selectAll("*")
-                        .each(function(d){d.fisheye = newcoor(d.old);})
-                        .attr("x", function(d) { return d.fisheye.x; })
-                        .attr("y", function(d) { return d.fisheye.y; })
-                        .attr("width", function(d) { return d.old.w * d.fisheye.z; })
-                        .attr("height", function(d) { return d.old.h * d.fisheye.z; });
+                        .selectAll("image,rect")
+                        .each(function(d,i){ newxy[i] = newcoor(imagerect[i]);})
+                        .attr("x", function(d,i) { return newxy[i].x; })
+                        .attr("y", function(d,i) { return newxy[i].y; })
+                        .attr("width", function(d,i) { return imagerect[i].w * newxy[i].z; })
+                        .attr("height", function(d,i) { return imagerect[i].h * newxy[i].z; });
+
+                    svg.select("g")
+                        .selectAll("text")
+                        .each(function(d,i){ newtextxy[i] = newcoor(text[i]);})
+                        .attr("x", function(d,i) { return newtextxy[i].x; })
+                        .attr("y", function(d,i) { return newtextxy[i].y; });
+
+                    svg.select("g")
+                        .selectAll("line")
+                        .each(function(d,i){ newline[i*2] = newcoor(line[i*2]);newline[i*2+1] = newcoor(line[i*2+1]);})
+                        .attr("x1", function(d,i) { return newline[i * 2].x; })
+                        .attr("y1", function(d,i) { return newline[i * 2].y; })
+                        .attr("x2", function (d,i) { return newline[i * 2 + 1].x;})
+                        .attr("y2", function (d,i) { return newline[i * 2 + 1].y;});
                 });
+
             }
             function rescale() {
                 k0 = Math.exp(distortion);

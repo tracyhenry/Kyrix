@@ -256,7 +256,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                         globalVar.curCanvas.w,
                         globalVar.curCanvas.h,
                         globalVar.renderingParams);
-
+                    d3.fisheye.circular()(dboxSvg);
                     // register jumps
                     if (!globalVar.animation)
                         registerJumps(dboxSvg, +i);

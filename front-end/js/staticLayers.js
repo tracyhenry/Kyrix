@@ -22,6 +22,9 @@ function renderStaticLayers() {
             globalVar.viewportHeight,
             globalVar.renderingParams);
 
+        // add fisheye
+        d3.fisheye.circular()(curSvg);
+
         // register jump
         if (! globalVar.animation)
             registerJumps(curSvg, i);
