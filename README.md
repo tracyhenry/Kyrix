@@ -3,6 +3,9 @@
 
 ![Build status](https://travis-ci.org/tracyhenry/Kyrix.svg?branch=master)
 
+![screenshot](compiler/examples/kyrix-screenshot.png)
+
+
 ## Installation instructions for the impatient
 
 Just install [docker CE](https://docs.docker.com/install/) for your laptop or server,
