@@ -17,8 +17,8 @@ var p = new Project("mgh", "../../../config.txt", viewportWidth, viewportHeight)
 p.addRenderingParams(renderers.renderingParams);
 
 // ================== cluster canvases ===============
-var topLevelWidth = viewportWidth;
-var topLevelHeight = viewportHeight;
+var topLevelWidth = 100000;
+var topLevelHeight = 100000;
 var clusterCanvases = [];
 
 // cluster parameters

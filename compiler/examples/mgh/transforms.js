@@ -1,11 +1,11 @@
 const Transform = require("../../src/index").Transform;
-const zoomFactor = 3;
-const numLevels = 5;
+const zoomFactor = 4;
+const numLevels = 7;
 
 var scales = [];
 for (var i = 0; i < numLevels; i ++) {
     var curScale = new Transform("scalexy",
-        "select * from eegmap_small where level<=" + i + ";",
+        "select * from segmap_new where level<=" + i + ";",
         "mghdata",
         function (row, width, height) {
             var ret = [];

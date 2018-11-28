@@ -13,6 +13,8 @@ public class MikeBoxGetter extends BoxGetter {
     //get box with fixed size which is two times larger than the viewport
     public BoxandData getBox(Canvas c, int mx, int my, int viewportH, int viewportW, ArrayList<String> predicates, boolean hasBox)
             throws SQLException, ClassNotFoundException, IOException, ParseException {
+        
+
         ArrayList<ArrayList<ArrayList<String>>> data;
         double wrapLength = 0.5;
         int minx = (int) Math.max(-10, mx - wrapLength * viewportW);

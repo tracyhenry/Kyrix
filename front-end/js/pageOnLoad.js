@@ -173,7 +173,7 @@ function pageOnLoad() {
     // hardcoded view info - should get from /first
     var viewportWidths = [500, 500, 1600];
     var viewportHeights = [1000, 500, 1600];
-    var canvasIds = ["clusterlevel4", "", ""];
+    var canvasIds = ["clusterlevel0", "", ""];
     var predicates = [[""], [], []];
     var viewSvgX = [0, 0, 600];
     var viewSvgY = [0, 1100, 0];
@@ -186,8 +186,8 @@ function pageOnLoad() {
         var globalVarDict = globalVar.views[i];
 
         // initialize global variables
-        globalVarDict.initialViewportX = 0;
-        globalVarDict.initialViewportY = 0;
+        globalVarDict.initialViewportX = 100000 * 0.685;
+        globalVarDict.initialViewportY = 100000 * 0.642;
         globalVarDict.viewportWidth = viewportWidths[i];
         globalVarDict.viewportHeight = viewportHeights[i];
         globalVarDict.predicates = predicates[i];
