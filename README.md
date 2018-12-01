@@ -3,7 +3,13 @@
 
 ![Build status](https://travis-ci.org/tracyhenry/Kyrix.svg?branch=master)
 
-![screenshot](compiler/examples/kyrix-screenshot.png)
+
+<p float="left">
+  <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/usmap_demo.gif" width="400" />
+  <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/forest_demo.gif" width="400" height="220"/>
+    <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/nba_demo.gif" width="400" />
+  <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/flare_demo.gif" width="400"/>
+</p>
 
 
 ## Installation instructions for the impatient
