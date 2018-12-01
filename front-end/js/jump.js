@@ -377,10 +377,10 @@ function registerJumps(svg, layerId) {
                     globalVar.predicates = jumps[jumpId].newPredicates.parseFunction()(tuple);
 
                     // prefetch canvas object by sending an async request to server
+                    var postData = "id=" + globalVar.curCanvasId;
+                    for (var i = 0; i < globalVar.predicates.length; i ++)
+                        postData += "&predicate" + i + "=" + globalVar.predicates[i];
                     if (! (postData in globalVar.cachedCanvases)) {
-                        var postData = "id=" + globalVar.curCanvasId;
-                        for (var i = 0; i < globalVar.predicates.length; i ++)
-                            postData += "&predicate" + i + "=" + globalVar.predicates[i];
                         $.ajax({
                             type : "POST",
                             url : "canvas",
