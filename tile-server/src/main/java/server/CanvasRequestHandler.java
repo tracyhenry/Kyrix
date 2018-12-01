@@ -115,11 +115,10 @@ public class CanvasRequestHandler implements HttpHandler {
         // get db connector for reuse among layers
         Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
 
-        // loop through each layer
         for (int i = 0; i < c.getLayers().size(); i ++) {
 
             if (! c.getLayers().get(i).isStatic()) {
-                data.add(new ArrayList<ArrayList<String>>());
+                data.add(new ArrayList<>());
                 continue;
             }
             // construct range query

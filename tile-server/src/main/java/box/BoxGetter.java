@@ -23,7 +23,7 @@ public abstract class BoxGetter {
         project = Main.getProject();
     }
 
-    public ArrayList<ArrayList<ArrayList<String>>> fetchData(Canvas c, int minx, int miny, int maxx, int maxy, ArrayList<String> predicates)
+    public ArrayList<ArrayList<ArrayList<String>>> fetchData(Canvas c, int minx, int miny, int maxx, int maxy, ArrayList<String> predicates, boolean hasBox)
             throws SQLException, ClassNotFoundException, ParseException {
 
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
@@ -31,7 +31,7 @@ public abstract class BoxGetter {
 
         // get the last box
         int oldMinx, oldMiny, oldMaxx, oldMaxy;
-        if (! History.lastBoxExist(c, predicates)) {
+        if (! hasBox) {
             oldMinx = oldMaxx = oldMiny = oldMaxy = Integer.MIN_VALUE;
             History.reset();
         } else {
@@ -43,24 +43,25 @@ public abstract class BoxGetter {
         }
         History.updateHistory(c, new Box(minx, miny, maxx, maxy), predicates, 0);
 
+        // calculate delta area
+        GeometryFactory fact = new GeometryFactory();
+        WKTReader wktRdr = new WKTReader(fact);
+        String wktNew = "POLYGON((" + minx + " " + miny + "," +minx + " " + maxy + ","
+                + maxx + " " + maxy + "," + maxx + " " + miny + "," + minx + " " + miny + "))";
+        String wktOld = "POLYGON((" + oldMinx + " " + oldMiny + "," +oldMinx + " " + oldMaxy + ","
+                + oldMaxx + " " + oldMaxy + "," + oldMaxx + " " + oldMiny + "," + oldMinx + " " + oldMiny + "))";
+        Geometry newBoxGeom = wktRdr.read(wktNew);
+        Geometry oldBoxGeom = wktRdr.read(wktOld);
+        Geometry deltaGeom = newBoxGeom.difference(oldBoxGeom);
+        WKTWriter wktWtr = new WKTWriter();
+        String deltaWkt = wktWtr.write(deltaGeom);
+
         // loop through each layer
         for (int i = 0; i < c.getLayers().size(); i++) {
             if (c.getLayers().get(i).isStatic()) {
                 data.add(new ArrayList<>());
                 continue;
             }
-            GeometryFactory fact = new GeometryFactory();
-            WKTReader wktRdr = new WKTReader(fact);
-            String wktNew = "POLYGON((" + minx + " " + miny + "," +minx + " " + maxy + ","
-                    + maxx + " " + maxy + "," + maxx + " " + miny + "," + minx + " " + miny + "))";
-            String wktOld = "POLYGON((" + oldMinx + " " + oldMiny + "," +oldMinx + " " + oldMaxy + ","
-                    + oldMaxx + " " + oldMaxy + "," + oldMaxx + " " + oldMiny + "," + oldMinx + " " + oldMiny + "))";
-            Geometry newBoxGeom = wktRdr.read(wktNew);
-            Geometry oldBoxGeom = wktRdr.read(wktOld);
-            Geometry deltaGeom = newBoxGeom.difference(oldBoxGeom);
-            WKTWriter wktWtr = new WKTWriter();
-            String deltaWkt = wktWtr.write(deltaGeom);
-
             // construct range query
             String sql = "select * from bbox_" + project.getName() + "_"
                     + c.getId() + "layer" + i + " where ";
@@ -79,5 +80,6 @@ public abstract class BoxGetter {
         return data;
     }
 
-    public abstract BoxandData getBox(Canvas c, int cx, int cy, int viewportH, int viewportW, ArrayList<String> predicates) throws SQLException, ClassNotFoundException, ParseException;
+    public abstract BoxandData getBox(Canvas c, int cx, int cy, int viewportH, int viewportW, ArrayList<String> predicates, boolean hasBox)
+            throws SQLException, ClassNotFoundException, ParseException;
 }

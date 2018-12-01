@@ -30,18 +30,4 @@ public class History {
 
         return box;
     }
-
-    public static boolean lastBoxExist(Canvas c, ArrayList<String> p) {
-
-        if (canvas == null)
-            return false;
-        if (! canvas.getId().equals(c.getId()))
-            return false;
-        if (predicates.size() != p.size())
-            return false;
-        for (int i = 0; i < predicates.size(); i ++)
-            if (! predicates.get(i).equals(p.get(i)))
-                return false;
-        return true;
-    }
 }

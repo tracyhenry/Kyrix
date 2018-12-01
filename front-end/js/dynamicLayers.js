@@ -204,7 +204,8 @@ function RefreshDynamicLayers(viewportX, viewportY) {
         // send request to backend to get data
         var postData = "id=" + globalVar.curCanvasId + "&"
             + "x=" + (viewportX | 0) + "&"
-            + "y=" + (viewportY | 0);
+            + "y=" + (viewportY | 0) + "&"
+            + "hasbox=" + globalVar.hasBox;
         for (var i = 0; i < globalVar.predicates.length; i ++)
             postData += "&predicate" + i + "=" + globalVar.predicates[i];
 
