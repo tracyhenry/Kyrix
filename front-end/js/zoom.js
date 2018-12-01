@@ -62,6 +62,7 @@ function startLiteralZoomTransition(center, scale, duration) {
     removePopoversSmooth();
 
     // disable cursor pointers, buttons and onclick listeners
+    var curSelection = d3.select("#maing");
     d3.select("#containerSvg")
         .selectAll("*")
         .style("cursor", "auto");
@@ -69,14 +70,12 @@ function startLiteralZoomTransition(center, scale, duration) {
         .attr("disabled", true);
     d3.selectAll("*")
         .on("click", null);
-    d3.select("#maing").on(".zoom", null);
+    curSelection.on(".zoom", null);
 
     // start transition
     globalVar.animation = true;
-    var curSelection = d3.select("#maing");
     var initialZoomTransform = d3.zoomTransform(curSelection.node());
-    curSelection
-        .transition()
+    d3.transition()
         .duration(duration)
         .tween("literalTween", function() {
             var i = d3.interpolateNumber(1, scale);
@@ -85,7 +84,7 @@ function startLiteralZoomTransition(center, scale, duration) {
                 var curTX = center[0] + curK * (-center[0] + initialZoomTransform.x);
                 var curTY = center[1] + curK * (-center[1] + initialZoomTransform.y);
                 var curZoomTransform = d3.zoomIdentity.translate(curTX, curTY).scale(curK);
-                d3.select(this).call(globalVar.zoom.transform, curZoomTransform);
+                curSelection.call(globalVar.zoom.transform, curZoomTransform);
             };
         })
         .on("end", function () {
