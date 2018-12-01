@@ -28,6 +28,9 @@ function addPlacement(placement) {
         ! ('height' in placement))
         throw new Error("Constructing Layer: malformed placement object.");
 
+    if (placement.centroid_x == "full" || placement.centroid_y == "full"
+        || placement.width == "full" || placement.height == "full")
+        placement.centroid_x = placement.centroid_y = placement.width = placement.height = "full";
     this.placement = placement;
 };
 

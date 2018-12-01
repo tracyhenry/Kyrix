@@ -171,7 +171,9 @@ public class Indexer {
                         double width_dbl, height_dbl;
 
                         // centroid_x
-                        if (centroid_x.substring(0, 3).equals("con"))
+                        if (centroid_x.substring(0, 4).equals("full"))
+                            centroid_x_dbl = c.getW() / 2;
+                        else if (centroid_x.substring(0, 3).equals("con"))
                             centroid_x_dbl = Double.parseDouble(centroid_x.substring(4));
                         else {
                             String curColName = centroid_x.substring(4);
@@ -180,7 +182,9 @@ public class Indexer {
                         }
 
                         // centroid_y
-                        if (centroid_y.substring(0, 3).equals("con"))
+                        if (centroid_y.substring(0, 4).equals("full"))
+                            centroid_y_dbl = c.getH() / 2;
+                        else if (centroid_y.substring(0, 3).equals("con"))
                             centroid_y_dbl = Double.parseDouble(centroid_y.substring(4));
                         else {
                             String curColName = centroid_y.substring(4);
@@ -189,7 +193,9 @@ public class Indexer {
                         }
 
                         // width
-                        if (width_func.substring(0, 3).equals("con"))
+                        if (width_func.substring(0, 4).equals("full"))
+                            width_dbl = c.getW();
+                        else if (width_func.substring(0, 3).equals("con"))
                             width_dbl = Double.parseDouble(width_func.substring(4));
                         else {
                             String curColName = width_func.substring(4);
@@ -198,7 +204,9 @@ public class Indexer {
                         }
 
                         // height
-                        if (height_func.substring(0, 3).equals("con"))
+                        if (height_func.substring(0, 4).equals("full"))
+                            height_dbl = c.getH();
+                        else if (height_func.substring(0, 3).equals("con"))
                             height_dbl = Double.parseDouble(height_func.substring(4));
                         else {
                             String curColName = height_func.substring(4);

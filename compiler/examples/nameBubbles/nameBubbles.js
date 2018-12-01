@@ -38,7 +38,6 @@ c1.addLayer(c1L2);
 c1L2.addPlacement(placements.c1L1Placement);
 c1L2.addRenderingFunc(renderers.c1L2Rendering);
 
-
 // background layer
 var c1L3 = new Layer(transforms.c1Empty, true);
 c1.addLayer(c1L3);
@@ -53,9 +52,8 @@ p.addCanvas(c2);
 c2.addAxes(renderers.c1c2Axes);
 
 // ******** Canvas2 only layer ********
-var c2L1 = new Layer(transforms.c2IDTransform);
+var c2L1 = new Layer(transforms.c2IDTransform, true);
 c2.addLayer(c2L1);
-c2L1.addPlacement(placements.c2L1Placement);
 c2L1.addRenderingFunc(renderers.c2L1Rendering);
 
 
@@ -63,13 +61,12 @@ c2L1.addRenderingFunc(renderers.c2L1Rendering);
 var c3 = new Canvas("lastname", 1000, 1000);
 p.addCanvas(c3);
 
-// ******** canvas3 dynamic layer ********
-var c3L1 = new Layer(transforms.c3IDTransform);
+// ******** canvas3 name layer ********
+var c3L1 = new Layer(transforms.c3IDTransform, true);
 c3.addLayer(c3L1);
-c3L1.addPlacement(placements.c2L1Placement);
 c3L1.addRenderingFunc(renderers.c3L1Rendering);
 
-// ******** canvas3 static layer
+// ******** canvas3 text layer
 var c3L2 = new Layer(transforms.c1Empty, true);
 c3.addLayer(c3L2);
 c3L2.addRenderingFunc(renderers.c3StaticTrim);
