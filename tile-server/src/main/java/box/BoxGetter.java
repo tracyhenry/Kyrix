@@ -57,13 +57,19 @@ public abstract class BoxGetter {
         String deltaWkt = wktWtr.write(deltaGeom);
 
         // loop through each layer
-        for (int i = 0; i < c.getLayers().size(); i++) {
+        for (int i = 0; i < c.getLayers().size(); i ++) {
+
+            // if this layer is static, add an empty placeholder
             if (c.getLayers().get(i).isStatic()) {
                 data.add(new ArrayList<>());
                 continue;
             }
+
+            // get column list string
+            String colListStr = c.getTransformById(c.getLayers().get(i).getTransformId()).getColStr("");
+
             // construct range query
-            String sql = "select * from bbox_" + project.getName() + "_"
+            String sql = "select " + colListStr + " from bbox_" + project.getName() + "_"
                     + c.getId() + "layer" + i + " where ";
             sql += (Config.database == Config.Database.MYSQL ? "MBRIntersects(GeomFromText" :
                     "st_Intersects(st_GeomFromText");
@@ -72,6 +78,7 @@ public abstract class BoxGetter {
                 sql += " and " + predicates.get(i);
             sql += ";";
             System.out.println(minx + " " + miny + " : " + sql);
+
             // add to response
             data.add(DbConnector.getQueryResult(stmt, sql));
         }

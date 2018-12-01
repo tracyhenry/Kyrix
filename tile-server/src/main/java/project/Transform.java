@@ -34,6 +34,15 @@ public class Transform {
         return columnNames;
     }
 
+    public String getColStr(String tableName) {
+
+        String colListStr = "";
+        for (String col : columnNames)
+            colListStr += (tableName.isEmpty() ? "" : tableName + ".") + col + ", ";
+        colListStr += "cx, cy, minx, miny, maxx, maxy";
+        return colListStr;
+    }
+
     public boolean isSeparable() {
         return separable;
     }

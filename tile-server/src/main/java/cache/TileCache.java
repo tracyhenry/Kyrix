@@ -71,13 +71,18 @@ public class TileCache {
         // loop through each layer
         for (int i = 0; i < c.getLayers().size(); i ++) {
 
+            // add an empty placeholder for static layers
             if (c.getLayers().get(i).isStatic()) {
-                data.add(new ArrayList<ArrayList<String>>());
+                data.add(new ArrayList<>());
                 continue;
             }
+
+            // get column list string
+            String colListStr = c.getTransformById(c.getLayers().get(i).getTransformId()).getColStr("bbox");
+
             // construct range query
-            String sql = "select bbox.* from bbox_" + project.getName() + "_"
-                    + c.getId() + "layer" + i + " bbox left join sorted_tile_"  + project.getName() + "_"
+            String sql = "select " + colListStr + " from bbox_" + project.getName() + "_"
+                    + c.getId() + "layer" + i + " bbox left join tile_"  + project.getName() + "_"
                     + c.getId() + "layer" + i + " tile on bbox.tuple_id = tile.tuple_id";
             sql += " where tile.tile_id = " + "'" + minx + "_" + miny + "'";
 
@@ -107,13 +112,17 @@ public class TileCache {
         // loop through each layer
         for (int i = 0; i < c.getLayers().size(); i ++) {
 
+            // add an empty placeholder for static layers
             if (c.getLayers().get(i).isStatic()) {
-                data.add(new ArrayList<ArrayList<String>>());
+                data.add(new ArrayList<>());
                 continue;
             }
 
+            // get column list string
+            String colListStr = c.getTransformById(c.getLayers().get(i).getTransformId()).getColStr("bbox");
+
             // construct range query
-            String sql = "select bbox.* from bbox_" + project.getName() + "_"
+            String sql = "select " + colListStr + " from bbox_" + project.getName() + "_"
                     + c.getId() + "layer" + i + " bbox left join tile_"  + project.getName() + "_"
                     + c.getId() + "layer" + i + " tile on bbox.tuple_id = tile.tuple_id";
             sql += " where tile.tile_id = " + "'" + minx + "_" + miny + "'";
@@ -144,13 +153,17 @@ public class TileCache {
         // loop through each layer
         for (int i = 0; i < c.getLayers().size(); i ++) {
 
+            // add an empty placeholder for static layers
             if (c.getLayers().get(i).isStatic()) {
-                data.add(new ArrayList<ArrayList<String>>());
+                data.add(new ArrayList<>());
                 continue;
             }
-            // construct range query
 
-            String sql = "select * from bbox_" + project.getName() + "_"
+            // get column list string
+            String colListStr = c.getTransformById(c.getLayers().get(i).getTransformId()).getColStr("");
+
+            // construct range query
+            String sql = "select " + colListStr + " from bbox_" + project.getName() + "_"
                     + c.getId() + "layer" + i + " where ";
                 if (Config.database == Config.Database.PSQL) {
                     sql += "st_intersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;

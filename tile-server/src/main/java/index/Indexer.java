@@ -302,9 +302,9 @@ public class Indexer {
                 if (Config.database == Config.Database.PSQL) {
                     if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
                             Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING) {
-                        sql = "create index tuple_idx on " + bboxTableName + " (tuple_id);";
+                        sql = "create index tuple_idx_" + bboxTableName + " on " + bboxTableName + " (tuple_id);";
                         bboxStmt.executeUpdate(sql);
-                        sql = "create index tile_idx on " + tileTableName + " (tile_id);";
+                        sql = "create index tile_idx_" + tileTableName + " on " + tileTableName + " (tile_id);";
                         tileStmt.executeUpdate(sql);
                     }
                     if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX) {
@@ -314,9 +314,9 @@ public class Indexer {
                         bboxStmt.executeUpdate(sql);
                     }
                     if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING) {
-                        sql = "cluster " + bboxTableName + " using tuple_idx;";
+                        sql = "cluster " + bboxTableName + " using tuple_idx_" + bboxTableName + ";";
                         tileStmt.executeUpdate(sql);
-                        sql = "cluster " + tileTableName + " using tile_idx;";
+                        sql = "cluster " + tileTableName + " using tile_idx_" + tileTableName + ";";
                         tileStmt.executeUpdate(sql);
                     }
                     DbConnector.commitConnection(Config.databaseName);

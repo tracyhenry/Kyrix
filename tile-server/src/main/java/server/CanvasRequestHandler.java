@@ -117,12 +117,17 @@ public class CanvasRequestHandler implements HttpHandler {
 
         for (int i = 0; i < c.getLayers().size(); i ++) {
 
+            // add an empty placeholder for static layers
             if (! c.getLayers().get(i).isStatic()) {
                 data.add(new ArrayList<>());
                 continue;
             }
+
+            // get column list string
+            String colListStr = c.getTransformById(c.getLayers().get(i).getTransformId()).getColStr("");
+
             // construct range query
-            String sql = "select * from bbox_" + Config.projectName + "_"
+            String sql = "select " + colListStr + " from bbox_" + Config.projectName + "_"
                     + c.getId() + "layer" + i;
             if (predicates.get(i).length() > 0)
                 sql += " where " + predicates.get(i);
