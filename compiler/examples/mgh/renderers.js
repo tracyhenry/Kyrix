@@ -10,7 +10,7 @@ var clusterRendering = function (svg, data) {
        .attr("cy", function(d) {return d[2];})
        .attr("r", 10)
        .style("fill", function (d){
-           var colors = {"LPD":"orange", "GPD":"red", "GRDA":"blue", "Other":"green", "LRDA":"purple", "Seizure":"black"};
+           var colors = {"LPD":"orange", "GPD":"red", "GRDA":"blue", "Others":"green", "LRDA":"purple", "Seizure":"black"};
            return colors[d[3]];
        });
 };
@@ -23,14 +23,14 @@ var clusterAxes = function (cWidth, cHeight) {
     var x = d3.scaleLinear()
         .domain([0, 1000])
         .range([0, cWidth]);
-    var xAxis = d3.axisTop().ticks(5);
+    var xAxis = d3.axisTop().ticks(3);
     axes.push({"dim" : "x", "scale" : x, "axis" : xAxis, "translate" : [0, 0]});
 
     //y
     var y = d3.scaleLinear()
         .domain([0, 1000])
         .range([0, cHeight]);
-    var yAxis = d3.axisLeft().ticks(5);
+    var yAxis = d3.axisLeft().ticks(3);
     axes.push({"dim" : "y", "scale" : y, "axis" : yAxis, "translate" : [0, 0]});
 
     return axes;
