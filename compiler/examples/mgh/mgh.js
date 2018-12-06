@@ -17,17 +17,15 @@ var p = new Project("mgh", "../../../config.txt", viewportWidth, viewportHeight)
 p.addRenderingParams(renderers.renderingParams);
 
 // ================== cluster canvases ===============
-var topLevelWidth = 100000;
-var topLevelHeight = 100000;
+var width = 500;
+var height = 1000;
 var clusterCanvases = [];
 
 // cluster parameters
-const numLevels = transforms.numLevels;
-const zoomFactor = transforms.zoomFactor;
+var numLevels = transforms.numLevels;
+var zoomFactor;
 
 for (var i = 0; i < numLevels; i ++) {
-    var width = topLevelWidth * Math.pow(zoomFactor, i);
-    var height = topLevelHeight * Math.pow(zoomFactor, i);
 
     // construct a new canvas
     var curCanvas = new Canvas("clusterlevel" + i, width, height);
@@ -42,6 +40,14 @@ for (var i = 0; i < numLevels; i ++) {
 
     // add axis
     curCanvas.addAxes(renderers.clusterAxes);
+
+    // calculate width & height for the next level
+    if (i <= 1)
+        zoomFactor = 8;
+    else
+        zoomFactor = 3;
+    var width = width * zoomFactor;
+    var height = height * zoomFactor;
 }
 
 // ================== EEG canvas ===================

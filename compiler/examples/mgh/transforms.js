@@ -1,17 +1,17 @@
 const Transform = require("../../src/index").Transform;
 const zoomFactor = 4;
-const numLevels = 4;
+const numLevels = 7;
 
 var scales = [];
 for (var i = 0; i < numLevels; i ++) {
     var curScale = new Transform("scalexy",
-        "select * from segmap_new where level<=" + (i * 2) + ";",
+        "select * from segmap_new where level<=" + i + ";",
         "mghdata",
         function (row, width, height) {
             var ret = [];
             ret.push(row[0]);
-            ret.push(d3.scaleLinear().domain([0, 1000]).range([0, width])(row[1]));
-            ret.push(d3.scaleLinear().domain([0, 1000]).range([0, height])(row[2]));
+            ret.push(d3.scaleLinear().domain([679, 698]).range([0, width])(row[1]));
+            ret.push(d3.scaleLinear().domain([632, 665]).range([0, height])(row[2]));
             ret.push(row[3]);
             return Java.to(ret, "java.lang.String[]");
         },

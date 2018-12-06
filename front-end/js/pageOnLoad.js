@@ -186,8 +186,8 @@ function pageOnLoad() {
         var globalVarDict = globalVar.views[i];
 
         // initialize global variables
-        globalVarDict.initialViewportX = 100000 * 0.685;
-        globalVarDict.initialViewportY = 100000 * 0.642;
+        globalVarDict.initialViewportX = 0;
+        globalVarDict.initialViewportY = 0;
         globalVarDict.viewportWidth = viewportWidths[i];
         globalVarDict.viewportHeight = viewportHeights[i];
         globalVarDict.predicates = predicates[i];
