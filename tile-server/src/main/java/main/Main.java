@@ -12,9 +12,7 @@ import server.Server;
 import cache.TileCache;
 
 import javax.script.ScriptException;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +34,10 @@ public class Main {
 			ScriptException,
 			NoSuchMethodException, InterruptedException {
 
+
 		// connnect to big table
 		connectBigtable();
+		generateClusterData();
 		testBigtable();
 
 		// read config file
@@ -164,8 +164,47 @@ public class Main {
 		startRowKey = "abn999_20140711_151337_000009";
 		endRowKey = "abn999_20140711_151337_000109";
 		curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
+
 		// Retrieve the result
 		resultScanner = eegTable.getScanner(curScan);
 		System.out.println(System.currentTimeMillis() - st);
+	}
+
+	private static void generateClusterData() throws IOException {
+
+		String startRowKey = "sid1776_20121226_095929_000000";
+		String endRowKey = "sid1776_20121226_095929_012500";
+		Scan curScan = new Scan();
+		curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
+		ResultScanner resultScanner = eegTable.getScanner(curScan);
+
+		String[] columnNames = {"c3", "c4", "cz", "ekg", "f3", "f4", "f7", "f8", "fp1",
+				"fp2", "fz", "o1", "o2", "p3", "p4", "pz", "t3", "t4", "t5", "t6"};
+
+		BufferedWriter writer = new BufferedWriter(new FileWriter("../cluster.txt"));
+
+		// iterate through results
+		int count = 0;
+		for (Result row : resultScanner) {
+			if (count % 500 == 0)
+				System.out.println(count);
+			count ++;
+			String key = Bytes.toString(row.getRow());
+
+			// key fields
+			String[] keys = key.split("_");
+			writer.write(keys[0]);
+			for (int i = 1; i < keys.length; i ++)
+				writer.write("|" + keys[i]);
+
+			// channel data
+			for (int i = 0; i < columnNames.length; i ++) {
+				byte[] valueBytes = row.getValue(Bytes.toBytes("eeg"), Bytes.toBytes(columnNames[i]));
+				String s = new String(valueBytes);
+				writer.write("|" + s);
+			}
+			writer.write("\n");
+		}
+		writer.close();
 	}
 }
