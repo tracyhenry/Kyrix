@@ -183,27 +183,38 @@ public class Main {
 
 		BufferedWriter writer = new BufferedWriter(new FileWriter("../cluster.txt"));
 
+		// some constants for data transformation
+		int pixelPerSeg = 200;
+		int numPoints = 400;
+		int maxV = 500;
+		int minV = -500;
+
 		// iterate through results
 		int count = 0;
 		for (Result row : resultScanner) {
-			if (count % 500 == 0)
-				System.out.println(count);
-			count ++;
+
 			String key = Bytes.toString(row.getRow());
 
 			// key fields
 			String[] keys = key.split("_");
-			writer.write(keys[0]);
-			for (int i = 1; i < keys.length; i ++)
-				writer.write("|" + keys[i]);
 
 			// channel data
 			for (int i = 0; i < columnNames.length; i ++) {
 				byte[] valueBytes = row.getValue(Bytes.toBytes("eeg"), Bytes.toBytes(columnNames[i]));
 				String s = new String(valueBytes);
-				writer.write("|" + s);
+				String[] values = s.split(",");
+				for (int j = 0; j < numPoints; j ++) {
+					count ++;
+					if (count % 1000000 == 0)
+						System.out.println(count);
+					double curV = Double.valueOf(values[j]);
+					if (curV > maxV) curV = maxV;
+					if (curV < minV) curV = minV;
+					double x = pixelPerSeg * Double.valueOf(keys[3]) + (double) j / numPoints * pixelPerSeg;
+					double y = curV;
+					writer.write(count + "|" + x + "|" + y + "|" + i + "\n");
+				}
 			}
-			writer.write("\n");
 		}
 		writer.close();
 	}
