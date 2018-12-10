@@ -49,6 +49,10 @@ Otherwise, if you change the compiler code (Node.JS JavaScript), simply re-run t
 
 If you change the tile server code (Java), then run `mvn compile` and restart the server with `mvn  exec:java -Dexec.mainClass="main.Main"`. From outside docker: `docker exec -w /kyrix/tile-server -it kyrix_kyrix_1 mvn compile` and `docker exec -w /kyrix/tile-server -it kyrix_kyrix_1 sh -c "killall /usr/bin/java; mvn  exec:java -Dexec.mainClass=\"main.Main\""`
 
+If you change any indexing-related parameters in [Config.java](https://github.com/tracyhenry/Kyrix/blob/master/tile-server/src/main/java/main/Config.java), namely `tileW,tileH` or `indexingScheme`, you should re-run the spec compiler: `docker exec -w /kyrix/compiler/examples/nba -it kyrix_kyrix_1 node nba.js` (where nba.js is your spec) with the server shutdown 
+
+TODO: should enable an easy way to trigger recomputation
+
 
 ## Kyrix Development: frontend static HTML/CSS/JS changes
 
