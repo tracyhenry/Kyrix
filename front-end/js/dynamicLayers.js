@@ -307,7 +307,6 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                 globalVar.boxW = response.boxW;
                 globalVar.boxX = x;
                 globalVar.boxY = y;
-                globalVar.renderData = renderData;
                 globalVar.pendingBoxRequest = false;
 
                 // refresh dynamic layers again while panning (#37)
