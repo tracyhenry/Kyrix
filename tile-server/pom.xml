@@ -16,8 +16,8 @@
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
-		<!-- https://stackoverflow.com/questions/4123044/maven-3-warnings-about-build-plugins-plugin-version -->
-		<version>3.2</version>
+                <!-- https://stackoverflow.com/questions/4123044/maven-3-warnings-about-build-plugins-plugin-version -->
+                <version>3.2</version>
             </plugin>
         </plugins>
     </build>
@@ -41,6 +41,17 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>9.2-1002-jdbc4</version>
+        </dependency>
+        <!--
+        Vertica JDBC client driver. To install locally, download  the driver from
+         https://my.vertica.com/download/vertica/client-drivers/ and run
+         mvn install:install-file -Dfile={/path_to/vertica-jdbc-9.0.1-0.jar}
+         -DgroupId=com.vertica -DartifactId=vjdbc9 -Dversion=9.0.1 -Dpackaging=jar
+	    -->
+        <dependency>
+            <groupId>com.vertica</groupId>
+            <artifactId>vjdbc9</artifactId>
+            <version>9.0.1</version>
         </dependency>
 
         <dependency>
