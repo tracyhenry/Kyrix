@@ -45,6 +45,7 @@ public class Config {
 
     // number of batch size when inserting records
     public static int bboxBatchSize = 5000;
+    // public static int bboxBatchSize = 1500; //vsql
     public static int tileBatchSize = 10000;
 
     // tile indexing scheme
@@ -52,8 +53,11 @@ public class Config {
     public static IndexingScheme indexingScheme = IndexingScheme.SPATIAL_INDEX;
 
     // underlying database
-    public enum Database {MYSQL, PSQL};
+    public enum Database {MYSQL, PSQL, VSQL};
     public static Database database;
+
+    //VSQL ResultsBufferSize
+    public static int vsqlBufferSize = 10240000;
 
     // database iterator fetch size
     public static int iteratorfetchSize = 1000;

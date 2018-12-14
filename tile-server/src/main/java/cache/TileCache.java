@@ -167,15 +167,17 @@ public class TileCache {
                     + c.getId() + "layer" + i + " where ";
                 if (Config.database == Config.Database.PSQL) {
                     sql += "st_intersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
-                }
-                else if (Config.database == Config.Database.MYSQL) {
+                } else if (Config.database == Config.Database.PSQL) {
+                    sql += "st_intersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
+                } else if (Config.database == Config.Database.MYSQL) {
                     sql += "MBRIntersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
                 }
                 sql += "," + (minx + Config.tileW) + " " + (miny + Config.tileH) + "," + minx + " " + (miny + Config.tileH)
                     + "," + minx + " " + miny + "))'),geom)";
 
-            if (predicates.get(i).length() > 0)
+            if (predicates.get(i).length() > 0) {
                 sql += " and " + predicates.get(i);
+            }
             sql += ";";
 
             System.out.println(minx + " " + miny + " : " + sql);
@@ -187,4 +189,5 @@ public class TileCache {
         stmt.close();
         return data;
     }
+
 }
