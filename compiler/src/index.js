@@ -2,6 +2,7 @@
 const fs = require("fs");
 const mysql = require("mysql");
 const psql = require("pg");
+const vsql = require("vertica");
 const http = require("http");
 const Canvas = require("./Canvas").Canvas;
 const Jump = require("./Jump").Jump;
@@ -232,14 +233,26 @@ function saveProject()
     var projectJSONEscapedMySQL = (projectJSON + '').replace(/[\\"']/g, '\\$&').replace(/\u0000/g, '\\0');
     var projectJSONEscapedPSQL = projectJSON.replace(/\'/g, '\'\'');
 
+
+
+
     // construct queries
     var createTableQuery = "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int" +
         ", CONSTRAINT PK_project PRIMARY KEY (name));";
+
+    //vsql doesn't have TEXT data type
+    var createTableQueryVSQL = "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content VARCHAR(65000), dirty INT" +
+        ", CONSTRAINT PK_project PRIMARY KEY (name));";
+
+
     var deleteProjQuery = "DELETE FROM project where name = \'" + this.name + "\'";
     var insertProjQueryMySQL = "INSERT INTO project (name, content, dirty) VALUES (\'" +
         this.name + "\', \'" + projectJSONEscapedMySQL + "\', 1);";
     var insertProjQueryPSQL = "INSERT INTO project (name, content, dirty) VALUES (\'" +
         this.name + "\', \'" + projectJSONEscapedPSQL + "\', 1);";
+    var insertProjQueryVSQL = insertProjQueryPSQL;
+
+
 
     // connect to databases
     var config = this.config;
@@ -326,6 +339,34 @@ function saveProject()
                 });
             });
         });
+
+
+    } else if (config.database == "vsql") {
+
+        var dbConn = vsql.connect({
+            host: config.serverName,
+            user: config.userName,
+            password: config.password,
+            database: config.kyrixDbName
+        }, (err) => {
+            // log to console
+            if (err) {
+                console.error('connection error', err.message);
+                throw err;
+            } else {
+                console.log('connected');
+            }
+        });
+
+        dbConn.query(createTableQueryVSQL);
+        dbConn.query(deleteProjQuery);
+        dbConn.query(insertProjQueryVSQL, (err) => {
+            if (err) throw err;
+            sendProjectRequestToBackend(config.serverPortNumber, projectJSON);
+            dbConn.disconnect();
+        });
+
+
     }
 }
 

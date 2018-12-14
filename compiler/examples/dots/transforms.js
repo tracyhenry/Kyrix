@@ -1,8 +1,11 @@
 const Transform = require("../../src/index").Transform;
 
+var tableName = "dots_100m"; 
+var sqlQuery = "select * from " + tableName + ";";
+var dbName = "wenbo"; 
 var idTransform = new Transform("dotsID",
-    "select * from dots_100m;",
-    "wenbo",
+    sqlQuery,
+    dbName,
     function (row){
         var ret = [];
         for (var i = 0; i < 4; i ++)
