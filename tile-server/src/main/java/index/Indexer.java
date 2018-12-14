@@ -23,10 +23,10 @@ import java.util.Map;
 public class Indexer {
 
     private Project project;
-    private Statement bboxStmt, tileStmt;
+    private Statement bboxStmt;
+    private Statement tileStmt;
 
     public Indexer() throws SQLException, ClassNotFoundException, ScriptException, NoSuchMethodException {
-
         project = Main.getProject();
         bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
         tileStmt = DbConnector.getStmtByDbName(Config.databaseName);
@@ -37,14 +37,34 @@ public class Indexer {
             ScriptException,
             NoSuchMethodException {
 
+        // if (true) return;
+
         System.out.println("Precomputing...");
+
         String projectName = project.getName();
+
+        System.out.println("Project name:"+projectName);
+        System.out.println("BBox batch size:"+Config.bboxBatchSize);
+        System.out.println("Tile batch size:"+Config.tileBatchSize);
+
+
         if (Config.database == Config.Database.PSQL){
+
             String psql = "CREATE EXTENSION if not exists postgis;";
             bboxStmt.executeUpdate(psql);
             psql = "CREATE EXTENSION if not exists postgis_topology;";
             bboxStmt.executeUpdate(psql);
+
+        } else if (Config.database == Config.Database.VSQL){
+
+            //
+            // seems Vertica supports spatial index (a secondary index) creation  out of box
+            //
+            System.out.println("Vertica supports spatial indexes natively...");
+            System.out.println("No extension is needed!");
+
         }
+
         // for each canvas and for each layer
         // Step 0, create a bbox table and tile table
         // Step 1, set up nashorn environment
@@ -73,19 +93,35 @@ public class Indexer {
 
                 // create the bbox table
                 sql = "create table " + bboxTableName + " (";
+
+                // move the geom column to be the first column of the table?
+
                 for (int i = 0; i < trans.getColumnNames().size(); i ++)
-                    if (Config.database == Config.Database.MYSQL)
-                        sql += trans.getColumnNames().get(i) + " mediumtext, ";
-                    else if (Config.database == Config.Database.PSQL)
+                    if (Config.database == Config.Database.PSQL)
                         sql += trans.getColumnNames().get(i) + " text, ";
+                    else if (Config.database == Config.Database.VSQL)
+                        sql += trans.getColumnNames().get(i) + " varchar, ";
+                    else if (Config.database == Config.Database.MYSQL)
+                        sql += trans.getColumnNames().get(i) + " mediumtext, ";
+
 
                 if (Config.database == Config.Database.PSQL){
                     if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
                             Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING)
                         sql += "tuple_id int, ";
                     sql += "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom geometry(polygon)";
-                }
-                else if (Config.database == Config.Database.MYSQL) {
+
+                } else if(Config.database == Config.Database.VSQL){
+
+                    //if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
+                    //   Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING)
+                    //sql+= "tuple_id int";
+
+                    // vertica needs a geometry id to create spatial indexes
+                    sql += "tuple_id int, ";
+                    sql += "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom geometry(160)";
+
+                } else if (Config.database == Config.Database.MYSQL) {
                     if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
                             Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING)
                         sql += "tuple_id int, ";
@@ -103,6 +139,8 @@ public class Indexer {
                 if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
                         Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING) {
                     if (Config.database == Config.Database.PSQL)
+                        sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50));";
+                    else if (Config.database == Config.Database.VSQL)
                         sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50));";
                     else if (Config.database == Config.Database.MYSQL)
                         sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50), index (tile_id));";
@@ -130,8 +168,10 @@ public class Indexer {
 
                 // step 1(c): construct a column name to column index mapping table
                 Map<String, Integer> colName2Id = new HashMap<>();
-                for (int i = 0; i < trans.getColumnNames().size(); i ++)
+                for (int i = 0; i < trans.getColumnNames().size(); i++){
+                    //System.out.println(trans.getColumnNames().get(i));
                     colName2Id.put(trans.getColumnNames().get(i), i);
+                }
 
                 // step 1(d): extract placement stuff
                 Placement p = (l.isStatic() ? null : l.getPlacement());
@@ -140,18 +180,64 @@ public class Indexer {
                 String width_func = (l.isStatic() ? null : p.getWidth());
                 String height_func = (l.isStatic() ? null : p.getHeight());
 
+                //
                 // step 2: looping through query results
                 // TODO: distinguish between separable and non-separable cases
-                ResultSet rs = DbConnector.getQueryResultIterator(trans.getDb(), trans.getQuery());
+                //
+                System.out.println("get query: "+trans.getQuery());
+
+                String key;
+                ResultSet rs;
+
+                if(Config.database == Config.Database.VSQL){
+                    key = Config.databaseName+"_reader";
+                    rs = DbConnector.getQueryResultIteratorByKey(key,
+                            Config.databaseName,
+                            trans.getQuery());
+                }else{
+                    rs = DbConnector.getQueryResultIterator(trans.getDb(), trans.getQuery());
+                }
+
                 int numColumn = rs.getMetaData().getColumnCount();
                 int rowCount = 0, mappingCount = 0;
-                StringBuilder bboxInsSqlBuilder = new StringBuilder("insert into " + bboxTableName + " values");
-                StringBuilder tileInsSqlBuilder = new StringBuilder("insert into " + tileTableName + " values");
+
+                String headerPrefix;
+                String headerSuffix;
+                String rowPrefix;
+                String rowSuffix;
+                String firstRowPrefix;
+                String lastRowSuffix;
+
+                if (Config.database == Config.Database.VSQL){
+
+                    headerPrefix = "insert /*+direct*/ into ";
+                    headerSuffix = "";
+                    //'union all' instead of 'union' avoids the overhead for duplicate removal
+                    rowPrefix = " union all select ";
+                    rowSuffix = " ";
+                    firstRowPrefix = " select ";
+                    lastRowSuffix = "";
+
+                } else {
+
+                    headerPrefix = "insert into ";
+                    headerSuffix = " values";
+                    rowPrefix = ",(";
+                    rowSuffix = ")";
+                    firstRowPrefix ="(";
+                    lastRowSuffix = ")";
+
+                }
+
+
+                StringBuilder bboxInsSqlBuilder = new StringBuilder(headerPrefix + bboxTableName + headerSuffix);
+                StringBuilder tileInsSqlBuilder = new StringBuilder(headerPrefix + tileTableName + headerSuffix);
+
                 while (rs.next()) {
 
                     rowCount ++;
-                    if (rowCount % 1000000 == 0)
-                        System.out.println(rowCount);
+                    if (rowCount % 1000000 == 0) System.out.println(rowCount);
+
                     //get raw row
                     ArrayList<String> curRawRow = new ArrayList<>();
                     for (int i = 1; i <= numColumn; i ++)
@@ -161,7 +247,7 @@ public class Indexer {
                     String[] transformedStrArray = (String[]) engine	// TODO: figure out why row.slice does not work. learn more about nashorn types
                             .invokeFunction("trans", curRawRow, c.getW(), c.getH(), renderingParamsObj);
                     ArrayList<String> transformedRow = new ArrayList<>();
-                    for (int i = 0; i < transformedStrArray.length; i ++)
+                    for (int i = 0; i < transformedStrArray.length; i++)
                         transformedRow.add(transformedStrArray[i].toString());
 
                     // step 4: calculate bounding boxes
@@ -171,9 +257,7 @@ public class Indexer {
                         double width_dbl, height_dbl;
 
                         // centroid_x
-                        if (centroid_x.substring(0, 4).equals("full"))
-                            centroid_x_dbl = c.getW() / 2;
-                        else if (centroid_x.substring(0, 3).equals("con"))
+                        if (centroid_x.substring(0, 3).equals("con"))
                             centroid_x_dbl = Double.parseDouble(centroid_x.substring(4));
                         else {
                             String curColName = centroid_x.substring(4);
@@ -182,9 +266,7 @@ public class Indexer {
                         }
 
                         // centroid_y
-                        if (centroid_y.substring(0, 4).equals("full"))
-                            centroid_y_dbl = c.getH() / 2;
-                        else if (centroid_y.substring(0, 3).equals("con"))
+                        if (centroid_y.substring(0, 3).equals("con"))
                             centroid_y_dbl = Double.parseDouble(centroid_y.substring(4));
                         else {
                             String curColName = centroid_y.substring(4);
@@ -193,9 +275,7 @@ public class Indexer {
                         }
 
                         // width
-                        if (width_func.substring(0, 4).equals("full"))
-                            width_dbl = c.getW();
-                        else if (width_func.substring(0, 3).equals("con"))
+                        if (width_func.substring(0, 3).equals("con"))
                             width_dbl = Double.parseDouble(width_func.substring(4));
                         else {
                             String curColName = width_func.substring(4);
@@ -204,9 +284,7 @@ public class Indexer {
                         }
 
                         // height
-                        if (height_func.substring(0, 4).equals("full"))
-                            height_dbl = c.getH();
-                        else if (height_func.substring(0, 3).equals("con"))
+                        if (height_func.substring(0, 3).equals("con"))
                             height_dbl = Double.parseDouble(height_func.substring(4));
                         else {
                             String curColName = height_func.substring(4);
@@ -227,18 +305,32 @@ public class Indexer {
                             curBbox.add(0.0);
 
                     // insert into bbox table
-                    if (bboxInsSqlBuilder.charAt(bboxInsSqlBuilder.length() - 1) == ')')
-                        bboxInsSqlBuilder.append(",(");
+		 /*if (bboxInsSqlBuilder.charAt(bboxInsSqlBuilder.length() - 1) == ')')
+		   bboxInsSqlBuilder.append(",(");
+		   else
+		   bboxInsSqlBuilder.append(" (");
+		   */
+                    if (rowCount % Config.bboxBatchSize ==  1)
+                        bboxInsSqlBuilder.append(firstRowPrefix);
                     else
-                        bboxInsSqlBuilder.append(" (");
+                        bboxInsSqlBuilder.append(rowPrefix);
+
+
+                    //System.out.println(bboxInsSqlBuilder.toString());
+
                     for (int i = 0; i < transformedRow.size(); i ++)
+
                         if (Config.database == Config.Database.PSQL)
+                            bboxInsSqlBuilder.append("'" + transformedRow.get(i).replaceAll("\'", "\'\'") + "', ");
+                        else if (Config.database == Config.Database.VSQL)
                             bboxInsSqlBuilder.append("'" + transformedRow.get(i).replaceAll("\'", "\'\'") + "', ");
                         else if (Config.database == Config.Database.MYSQL)
                             bboxInsSqlBuilder.append("'" + transformedRow.get(i).replaceAll("\'", "\\\\'") + "', ");
 
-                    if (Config.indexingScheme !=  Config.IndexingScheme.SPATIAL_INDEX)
+                    if (Config.database == Config.Database.VSQL ||
+                            Config.indexingScheme !=  Config.IndexingScheme.SPATIAL_INDEX)
                         bboxInsSqlBuilder.append(String.valueOf(rowCount) + ", ");
+
                     for (int i = 0; i < 6; i ++)
                         bboxInsSqlBuilder.append(String.valueOf(curBbox.get(i)) + ", ");
 
@@ -248,21 +340,72 @@ public class Indexer {
                     maxx = curBbox.get(4);
                     maxy = curBbox.get(5);
                     bboxInsSqlBuilder.append("ST_GeomFromText('Polygon((");
-                    bboxInsSqlBuilder.append(String.valueOf(minx) + " " + String.valueOf(miny) + "," + String.valueOf(maxx) + " " + String.valueOf(miny)
-                            + "," + String.valueOf(maxx) + " " + String.valueOf(maxy) + "," + String.valueOf(minx) + " "
-                            + String.valueOf(maxy) + "," + String.valueOf(minx) + " " + String.valueOf(miny));
-                    bboxInsSqlBuilder.append("))'))");
+                    bboxInsSqlBuilder.append(String.valueOf(minx) + " " +
+                            String.valueOf(miny) + "," + String.valueOf(maxx) + " " +
+                            String.valueOf(miny) + "," + String.valueOf(maxx) + " " +
+                            String.valueOf(maxy) + "," + String.valueOf(minx) + " " +
+                            String.valueOf(maxy) + "," + String.valueOf(minx) + " " +
+                            String.valueOf(miny));
+
+                    //bboxInsSqlBuilder.append("))'))");
+                    bboxInsSqlBuilder.append("))')");
 
                     if (rowCount % Config.bboxBatchSize == 0) {
-                        bboxInsSqlBuilder.append(";");
-                        bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
-                        DbConnector.commitConnection(Config.databaseName);
-                        bboxInsSqlBuilder = new StringBuilder("insert into " + bboxTableName + " values");
+
+
+                        bboxInsSqlBuilder.append(lastRowSuffix + ";");
+
+
+                        System.out.print("+");
+
+
+
+                        BufferedWriter bw = null;
+                        FileWriter fw = null;
+                        try {
+                            fw = new FileWriter("./x.txt");
+                            bw  = new BufferedWriter(fw);
+                            bw.write(bboxInsSqlBuilder.append(" commit;").toString());
+                            bw.flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } finally {
+                            try {
+                                if (bw != null) bw.close();
+                                if (fw != null) fw.close();
+                            } catch (IOException ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+
+
+                        String vsql  = "/opt/vertica/bin/vsql -d skew_tile_256 -f ./x.txt -U cagatay";
+                        Process pr = null;
+                        try{
+                            pr  = Runtime.getRuntime().exec(new String[]{"bash","-c",vsql});
+                            pr.waitFor();
+
+                        }catch(IOException  e){
+
+                        }catch(InterruptedException e){
+                        }
+
+
+                  /*
+		   bboxInsSqlBuilder.append(lastRowSuffix + ";");
+		   bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
+		   DbConnector.commitConnection(Config.databaseName);
+		   */
+
+                        //bboxInsSqlBuilder = new StringBuilder("insert into " + bboxTableName + " values");
+                        bboxInsSqlBuilder = new StringBuilder(headerPrefix + bboxTableName + headerSuffix);
                     }
 
                     // insert into tile table
-                    if (! l.isStatic() && Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
+                    if (! l.isStatic() &&
+                            Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
                             Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING ) {
+
                         int xStart = (int) Math.max(0, Math.floor(minx / Config.tileW));
                         int yStart = (int) Math.max(0, Math.floor(miny/ Config.tileH));
                         int xEnd = (int) Math.floor(maxx / Config.tileW);
@@ -270,75 +413,203 @@ public class Indexer {
 
                         for (int i = xStart; i <= xEnd; i ++)
                             for (int j = yStart; j <= yEnd; j ++) {
-                                mappingCount ++;
+
+                                mappingCount++;
+
                                 String tileId = (i * Config.tileW) + "_" + (j * Config.tileH);
-                                if (tileInsSqlBuilder.charAt(tileInsSqlBuilder.length() - 1) == ')')
-                                    tileInsSqlBuilder.append(",(");
+
+                                //if (tileInsSqlBuilder.charAt(tileInsSqlBuilder.length() - 1) == ')')
+                                if (mappingCount == 1 )
+                                    //tileInsSqlBuilder.append(",(");
+                                    tileInsSqlBuilder.append(firstRowPrefix);
                                 else
-                                    tileInsSqlBuilder.append(" (");
-                                tileInsSqlBuilder.append(rowCount + ", " + "'" + tileId + "')");
+                                    //tileInsSqlBuilder.append(" (");
+                                    tileInsSqlBuilder.append(rowPrefix);
+
+                                //tileInsSqlBuilder.append(rowCount + ", " + "'" + tileId + "')");
+
+                                tileInsSqlBuilder.append(rowCount + ", " + "'" + tileId + "'");
+
                                 if (mappingCount % Config.tileBatchSize== 0) {
-                                    tileInsSqlBuilder.append(";");
+
+                                    //tileInsSqlBuilder.append(";");
+                                    tileInsSqlBuilder.append(lastRowSuffix+";");
                                     tileStmt.executeUpdate(tileInsSqlBuilder.toString());
                                     DbConnector.commitConnection(Config.databaseName);
-                                    tileInsSqlBuilder = new StringBuilder("insert into " + tileTableName + " values");
+
+                                    //tileInsSqlBuilder = new StringBuilder("insert into " + tileTableName + " values");
+                                    tileInsSqlBuilder = new StringBuilder(headerPrefix + tileTableName + headerSuffix);
                                 }
+
+                                //tileInsSqlBuilder.append(rowSuffix);
+
                             }
                     }
+
+                    //bboxInsSqlBuilder.append(rowSuffix);
+
                 }
+
+
                 rs.close();
 
                 // insert tail stuff
                 if (rowCount % Config.bboxBatchSize != 0) {
-                    bboxInsSqlBuilder.append(";");
-                    bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
-                    DbConnector.commitConnection(Config.databaseName);
+
+                    System.out.println("Commiting the final batch...");
+                    //bboxInsSqlBuilder.append(";");
+
+                    bboxInsSqlBuilder.append(lastRowSuffix + ";");
+
+                    //System.out.println(bboxInsSqlBuilder.toString());
+
+                    BufferedWriter bw = null;
+                    FileWriter fw = null;
+
+                    try {
+                        fw = new FileWriter("./x.txt");
+                        bw  = new BufferedWriter(fw);
+                        bw.write(bboxInsSqlBuilder.append(" commit;").toString());
+                        bw.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        try {
+                            if (bw != null) bw.close();
+                            if (fw != null) fw.close();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                    String vsql  = "/opt/vertica/bin/vsql -d skew_tile_256 -f ./x.txt -U cagatay";
+                    Process pr = null;
+
+                    try{
+                        pr  = Runtime.getRuntime().exec(new String[]{"bash","-c",vsql});
+                        pr.waitFor();
+
+                    }catch(IOException  e){
+
+                    }catch(InterruptedException e){
+                    }
+
+                    //bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
+                    //DbConnector.commitConnection(Config.databaseName);
+
                 }
+
+
                 if (mappingCount % Config.tileBatchSize != 0) {
-                    tileInsSqlBuilder.append(";");
+                    //tileInsSqlBuilder.append(";");
+
+                    tileInsSqlBuilder.append(lastRowSuffix+";");
+
+                    //System.out.println(tileInsSqlBuilder.toString());
+
                     tileStmt.executeUpdate(tileInsSqlBuilder.toString());
                     DbConnector.commitConnection(Config.databaseName);
+
                 }
+
                 if (Config.database == Config.Database.PSQL) {
+
                     if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
                             Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING) {
-                        sql = "create index tuple_idx_" + bboxTableName + " on " + bboxTableName + " (tuple_id);";
+                        sql = "create index tuple_idx on " + bboxTableName + " (tuple_id);";
                         bboxStmt.executeUpdate(sql);
-                        sql = "create index tile_idx_" + tileTableName + " on " + tileTableName + " (tile_id);";
+                        sql = "create index tile_idx on "  + tileTableName + " (tile_id);";
                         tileStmt.executeUpdate(sql);
                     }
+
                     if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX) {
                         sql = "create index sp_" + bboxTableName + " on " + bboxTableName + " using gist (geom);";
                         bboxStmt.executeUpdate(sql);
                         sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
                         bboxStmt.executeUpdate(sql);
-                    }
-                    if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING) {
-                        sql = "cluster " + bboxTableName + " using tuple_idx_" + bboxTableName + ";";
+                    } if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING) {
+
+                        sql = "cluster " + bboxTableName + " using tuple_idx;";
                         tileStmt.executeUpdate(sql);
-                        sql = "cluster " + tileTableName + " using tile_idx_" + tileTableName + ";";
+                        sql = "cluster " + tileTableName + " using tile_idx;";
                         tileStmt.executeUpdate(sql);
+
                     }
-                    DbConnector.commitConnection(Config.databaseName);
-                }
-                else if (Config.database == Config.Database.MYSQL) {
+
+                    //DbConnector.commitConnection(Config.databaseName);
+                } else if (Config.database == Config.Database.VSQL) {
+
+                    //sql += "CREATE PROJECTION IF NOT EXISTS tuple_prj on  (tuple_id) AS SELECT tuple_idfrom " + bboxTableName + ";";
+
+                    if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
+                            Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING) {
+
+                        System.out.println("Not creating indexes for tuple mapping");
+                        //
+                        // create projections ?
+                        //
+                        // sql = "create index tuple_idx on " + bboxTableName + " (tuple_id);";
+                        // bboxStmt.executeUpdate(sql);
+                        // sql = "create index tile_idx on " + tileTableName + " (tile_id);";
+                        // tileStmt.executeUpdate(sql);
+                    }
+
+                    if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX) {
+
+                        System.out.println("creating spatial indexes for bounding boxes");
+
+                        String indexName = "sp_"+bboxTableName;
+
+                        sql = "select STV_Create_Index(tuple_id, geom USING PARAMETERS index=\'"+indexName+"\', overwrite=\'true') OVER() from "+bboxTableName+";";
+
+                        System.out.println(sql);
+
+                        //bboxStmt.executeUpdate(sql);
+                        bboxStmt.executeQuery(sql);
+
+                        System.out.println("Index "  + indexName + " has been created!");
+
+                        //
+                        // projections are like clustered indexes?
+                        // sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
+                        //  bboxStmt.executeUpdate(sql);
+                        //
+                    }
+		 /* if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING) {
+		    sql = "cluster " + bboxTableName + " using tuple_idx;";
+		    tileStmt.executeUpdate(sql);
+		    sql = "cluster " + tileTableName + " using tile_idx;";
+		    tileStmt.executeUpdate(sql);
+		    } */
+
+
+                    //
+                    // DbConnector.commitConnection(Config.databaseName);
+                    //
+
+                } else if (Config.database == Config.Database.MYSQL) {
+
                     if (Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING) {
+
                         sql = "create table sorted_" + tileTableName + " (tuple_id int, tile_id varchar(50));";
                         tileStmt.executeUpdate(sql);
                         sql = "insert into sorted_" + tileTableName + " select * from " + tileTableName + " order by tile_id;";
                         tileStmt.executeUpdate(sql);
                         sql = "alter table sorted_" + tileTableName + " add index(tile_id);";
                         tileStmt.executeUpdate(sql);
-                        DbConnector.commitConnection(Config.databaseName);
+                        //
+                        // DbConnector.commitConnection(Config.databaseName);
+                        //
                     }
                 }
-                // build spatial index
-/*				try {
-                    sql = "ALTER TABLE " + bboxTableName + " ADD SPATIAL INDEX(geom);";
-                    bboxStmt.executeUpdate(sql);
-                } catch (Exception e) {} */
-            }
 
+                DbConnector.commitConnection(Config.databaseName);
+
+                // build spatial index
+	       /* try {
+		  sql = "ALTER TABLE " + bboxTableName + " ADD SPATIAL INDEX(geom);";
+		  bboxStmt.executeUpdate(sql);
+		  } catch (Exception e) {} */
+            }
         bboxStmt.close();
         tileStmt.close();
         System.out.println("Done precomputing!");
