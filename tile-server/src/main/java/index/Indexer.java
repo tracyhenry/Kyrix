@@ -27,11 +27,17 @@ public class Indexer {
 	private Statement bboxStmt;
 	private Statement tileStmt;
 
-	public Indexer() throws SQLException, ClassNotFoundException, ScriptException, NoSuchMethodException {
+	public Indexer() throws SQLException, 
+	       ClassNotFoundException, 
+	       ScriptException, 
+	       NoSuchMethodException {
+
 		project = Main.getProject();
 		bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 		tileStmt = DbConnector.getStmtByDbName(Config.databaseName);
+
 	}
+
 
 	public void precompute() throws SQLException,
 			ClassNotFoundException,
@@ -89,8 +95,6 @@ public class Indexer {
 
 				// create the bbox table
 				sql = "create table " + bboxTableName + " (";
-
-				// move the geom column to be the first column of the table?
 
 				for (int i = 0; i < trans.getColumnNames().size(); i ++)
 					if (Config.database == Config.Database.PSQL)
