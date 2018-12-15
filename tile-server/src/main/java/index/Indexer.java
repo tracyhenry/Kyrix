@@ -218,7 +218,6 @@ public class Indexer {
 				String rowPrefix;
 				String rowSuffix;
 				String firstRowPrefix;
-				String lastRowSuffix;
 
 				if (Config.database == Config.Database.VSQL){
 
@@ -228,17 +227,14 @@ public class Indexer {
 					rowPrefix = " union all select ";
 					rowSuffix = " ";
 					firstRowPrefix = " select ";
-					lastRowSuffix = "";
 
 				} else { // psql
 
 					headerPrefix = "insert into ";
-					headerSuffix = " values";
+					headerSuffix = " values ";
 					rowPrefix = ",(";
 					rowSuffix = ")";
 					firstRowPrefix ="(";
-					lastRowSuffix = ")";
-
 				}
 
 				StringBuilder bboxInsSqlBuilder = new StringBuilder(headerPrefix +
@@ -367,11 +363,11 @@ public class Indexer {
 							String.valueOf(maxy) + "," + String.valueOf(minx) + " " +
 							String.valueOf(miny));
 
-					bboxInsSqlBuilder.append("))')");
+					bboxInsSqlBuilder.append("))')" + rowSuffix);
 
 					if (rowCount % Config.bboxBatchSize == 0) {
 
-						bboxInsSqlBuilder.append(lastRowSuffix + ";");
+						bboxInsSqlBuilder.append(";");
 						bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
 						DbConnector.commitConnection(Config.databaseName);
 						bboxInsSqlBuilder = new StringBuilder(headerPrefix + bboxTableName + headerSuffix);
@@ -404,7 +400,7 @@ public class Indexer {
 
 								if (mappingCount % Config.tileBatchSize == 0) {
 
-									tileInsSqlBuilder.append(lastRowSuffix + ";");
+									tileInsSqlBuilder.append(";");
 									tileStmt.executeUpdate(tileInsSqlBuilder.toString());
 									DbConnector.commitConnection(Config.databaseName);
 									tileInsSqlBuilder = new StringBuilder(headerPrefix + tileTableName + headerSuffix);
@@ -423,7 +419,7 @@ public class Indexer {
 				// insert tail stuff
 				if (rowCount % Config.bboxBatchSize != 0) {
 
-					bboxInsSqlBuilder.append(lastRowSuffix + ";");
+					bboxInsSqlBuilder.append(";");
 					bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
 					DbConnector.commitConnection(Config.databaseName);
 
@@ -433,7 +429,7 @@ public class Indexer {
 
 				if (mappingCount % Config.tileBatchSize != 0) {
 
-					tileInsSqlBuilder.append(lastRowSuffix+";");
+					tileInsSqlBuilder.append(";");
 					tileStmt.executeUpdate(tileInsSqlBuilder.toString());
 					DbConnector.commitConnection(Config.databaseName);
 
