@@ -1,14 +1,13 @@
 const Transform = require("../../src/index").Transform;
 
-var tableName = "dots_100m"; 
-var sqlQuery = "select * from " + tableName + ";";
-var dbName = "wenbo"; 
+var dataset = {uniform:"dots", skew:"skew"}; 
+
 var idTransform = new Transform("dotsID",
-    sqlQuery,
-    dbName,
+    "select * from dot;",
+    dataset.skew,
     function (row){
-        var ret = [];
-        for (var i = 0; i < 4; i ++)
+        var ret = [], numCols = 4; 
+        for (var i = 0; i < numCols; i ++)
             ret.push(row[i]);
 
         return Java.to(ret ,"java.lang.String[]");
