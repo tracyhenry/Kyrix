@@ -170,22 +170,14 @@ public class TileCache {
                 if (Config.database == Config.Database.PSQL) {
                     sql += "st_intersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
                 } else if (Config.database == Config.Database.VSQL) {
-		    // st_instersects-> stv_instersect(polyg using parameters index = <indx_name>) is not null
-                    sql += "stv_intersect(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
+                   //stv_intersect, which has a spatial index support,  is too slow; we use st_instersects instead 
+                   sql += "st_intersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
+
                 } else if (Config.database == Config.Database.MYSQL) {
                     sql += "MBRIntersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
                 }
                 sql += "," + (minx + Config.tileW) + " " + (miny + Config.tileH) + "," + minx + " " + (miny + Config.tileH) + "," + minx + " " + miny + "))')"; 
-		
-		if( Config.database == Config.Database.VSQL ){ 
-		  
-		  sql +=  " using parameters index = \'" + indexName + "\') is not null";   
-
-		} else { 
-
 		  sql += ",geom)";
-
-		}
 
             if (predicates.get(i).length() > 0) {
                 sql += " and " + predicates.get(i);
@@ -197,7 +189,6 @@ public class TileCache {
             // add to response
             data.add(DbConnector.getQueryResult(stmt, sql));
         }
-
         stmt.close();
         return data;
     }
