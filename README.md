@@ -6,11 +6,10 @@
 
 <p float="left">
   <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/usmap_demo.gif" width="400" />
-  <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/forest_demo.gif" width="400" height="220"/>
-    <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/nba_demo.gif" width="400" />
+  <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/forest_demo.gif" width="400" height="209.33"/>
+  <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/nba_demo.gif" width="400" height="309.33" />
   <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/flare_demo.gif" width="400"/>
 </p>
-
 
 ## Installation instructions for the impatient
 
@@ -26,7 +25,6 @@ We recommend 2-4+ CPUs and 4+ GB RAM, though it might be possible to run smaller
 e.g. for automated testing.
 
 The older, manual installation instructions are still available [here](INSTALL.md).
-
 
 ## Usage: adding/changing the dataset
 
