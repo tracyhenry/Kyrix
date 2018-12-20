@@ -5,10 +5,10 @@
 
 
 <p float="left">
-  <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/usmap_demo.gif" width="400" />
-  <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/forest_demo.gif" width="400" height="209.33"/>
-  <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/nba_demo.gif" width="400" height="309.33" />
-  <img src="https://github.com/tracyhenry/Kyrix/blob/master/compiler/examples/flare_demo.gif" width="400"/>
+  <img src="https://github.com/tracyhenry/Kyrix/blob/master/img/usmap_demo.gif" width="400" />
+  <img src="https://github.com/tracyhenry/Kyrix/blob/master/img/forest_demo.gif" width="400" height="209.33"/>
+  <img src="https://github.com/tracyhenry/Kyrix/blob/master/img/nba_demo.gif" width="400" height="309.33" />
+  <img src="https://github.com/tracyhenry/Kyrix/blob/master/img/flare_demo.gif" width="400"/>
 </p>
 
 ## Installation instructions for the impatient
