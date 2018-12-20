@@ -37,7 +37,6 @@ public class Main {
 
 		// connnect to big table
 		connectBigtable();
-		generateClusterData();
 		testBigtable();
 
 		// read config file
@@ -168,54 +167,5 @@ public class Main {
 		// Retrieve the result
 		resultScanner = eegTable.getScanner(curScan);
 		System.out.println(System.currentTimeMillis() - st);
-	}
-
-	private static void generateClusterData() throws IOException {
-
-		String startRowKey = "sid1776_20121226_095929_000000";
-		String endRowKey = "sid1776_20121226_095929_012500";
-		Scan curScan = new Scan();
-		curScan.withStartRow(Bytes.toBytes(startRowKey)).withStopRow(Bytes.toBytes(endRowKey));
-		ResultScanner resultScanner = eegTable.getScanner(curScan);
-
-		String[] columnNames = {"c3", "c4", "cz", "ekg", "f3", "f4", "f7", "f8", "fp1",
-				"fp2", "fz", "o1", "o2", "p3", "p4", "pz", "t3", "t4", "t5", "t6"};
-
-		BufferedWriter writer = new BufferedWriter(new FileWriter("../cluster.txt"));
-
-		// some constants for data transformation
-		int pixelPerSeg = 200;
-		int numPoints = 400;
-		int maxV = 500;
-		int minV = -500;
-
-		// iterate through results
-		int count = 0;
-		for (Result row : resultScanner) {
-
-			String key = Bytes.toString(row.getRow());
-
-			// key fields
-			String[] keys = key.split("_");
-
-			// channel data
-			for (int i = 0; i < columnNames.length; i ++) {
-				byte[] valueBytes = row.getValue(Bytes.toBytes("eeg"), Bytes.toBytes(columnNames[i]));
-				String s = new String(valueBytes);
-				String[] values = s.split(",");
-				for (int j = 0; j < numPoints; j ++) {
-					count ++;
-					if (count % 1000000 == 0)
-						System.out.println(count);
-					double curV = Double.valueOf(values[j]);
-					if (curV > maxV) curV = maxV;
-					if (curV < minV) curV = minV;
-					double x = pixelPerSeg * Double.valueOf(keys[3]) + (double) j / numPoints * pixelPerSeg;
-					double y = curV;
-					writer.write(count + "|" + x + "|" + y + "|" + i + "\n");
-				}
-			}
-		}
-		writer.close();
 	}
 }
