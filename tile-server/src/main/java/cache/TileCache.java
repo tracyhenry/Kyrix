@@ -165,24 +165,37 @@ public class TileCache {
 	    
             // construct range query
 	    String tableName = "bbox_" + project.getName() + "_" + c.getId() + "layer" + i; 
-	    String indexName = "sp_" + tableName;  
+	    //String indexName = "sp_" + tableName;  
             String sql = "select " + colListStr + " from " + tableName + " where ";
                 if (Config.database == Config.Database.PSQL) {
                     sql += "st_intersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
                 } else if (Config.database == Config.Database.VSQL) {
-                   //stv_intersect, which has a spatial index support,  is too slow; we use st_instersects instead 
-                   sql += "st_intersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
+                   //stv_intersect is buggy 
+		   //st_intersects is slower  
+                   sql += "NOT (" + minx + " > maxx OR " 
+		       + miny + " > maxy OR " 
+		       + (minx + Config.tileW) + " < minx OR "
+		       + (miny + Config.tileH) + " < miny )"; 
 
                 } else if (Config.database == Config.Database.MYSQL) {
                     sql += "MBRIntersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
                 }
-                sql += "," + (minx + Config.tileW) + " " + (miny + Config.tileH) + "," + minx + " " + (miny + Config.tileH) + "," + minx + " " + miny + "))')"; 
-		  sql += ",geom)";
 
-            if (predicates.get(i).length() > 0) {
+          if (Config.database != Config.Database.VSQL){
+
+                sql += "," + (minx + Config.tileW) + 
+		  " " + (miny + Config.tileH) + 
+		  "," + minx + 
+		  " " + (miny + Config.tileH) + 
+		  "," + minx + 
+		  " " + miny + "))'), geom)"; 
+	  }
+
+          if (predicates.get(i).length() > 0) {
                 sql += " and " + predicates.get(i);
-            }
-            sql += ";";
+           }
+
+           sql += ";";
 
             System.out.println(minx + " " + miny + " : " + sql);
 
