@@ -477,9 +477,20 @@ public class Indexer {
 
 					if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX) {
 
+					  // NO SPATIAL INDEX COMPUTATION 
+					  // 
+					  // The spatial index implementation in Vertica 9.1.x is buggy and cannot 
+					  // be used. Even this is fixed, Vertica's intersection function 
+					  // STV_Intersect() that uses indexes isn't exactly what Kyrix 
+					  // intersection operations need. We'll rely on manual intersection testing
+					  // on the table sorted by the geom column.     
+					  //
+					  /*
 						String indexName = "sp_"+bboxTableName;
 						sql = "select STV_Create_Index(tuple_id, geom USING PARAMETERS index=\'"+indexName+"\', overwrite=\'true') OVER() from "+bboxTableName+";";
 						bboxStmt.executeQuery(sql);
+
+					  */
 
 					}
 
