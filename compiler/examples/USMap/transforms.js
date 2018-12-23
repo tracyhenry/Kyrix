@@ -1,13 +1,6 @@
 const Transform = require("../../src/index").Transform;
 
-// empty transform
-var emptyTransform = new Transform("empty",
-    "",
-    "",
-    function (row) {}, [], true);
-
-var stateMapTransform = new Transform("stateMapTrans",
-    "select state.state_id, state.name, stateCrimeRate.crimeRate, state.geomstr from (select state_id, avg(crimeRate) as crimeRate from county group by state_id) as stateCrimeRate, state where state.state_id = stateCrimeRate.state_id;",
+var stateMapTransform = new Transform("select state.state_id, state.name, stateCrimeRate.crimeRate, state.geomstr from (select state_id, avg(crimeRate) as crimeRate from county group by state_id) as stateCrimeRate, state where state.state_id = stateCrimeRate.state_id;",
     "usmap",
     function (row, width, height, param){
 
@@ -33,8 +26,7 @@ var stateMapTransform = new Transform("stateMapTrans",
     ["id", "bbox_x", "bbox_y", "name", "crimerate", "geomstr"],
     true);
 
-var countyMapStateBoundaryTransform = new Transform("countyMapStateTrans",
-    "select geomstr from state",
+var countyMapStateBoundaryTransform = new Transform("select geomstr from state",
     "usmap",
     function (row, width, height, param) {
 
@@ -61,8 +53,7 @@ var countyMapStateBoundaryTransform = new Transform("countyMapStateTrans",
     true
     );
 
-var countyMapTransform = new Transform("countyMapTrans",
-    "select * from county",
+var countyMapTransform = new Transform("select * from county",
     "usmap",
     function (row, width, height, param){
 
@@ -91,7 +82,6 @@ var countyMapTransform = new Transform("countyMapTrans",
     true);
 
 module.exports = {
-    emptyTransform : emptyTransform,
     stateMapTransform : stateMapTransform,
     countyMapTransform : countyMapTransform,
     countyMapStateBoundaryTransform : countyMapStateBoundaryTransform

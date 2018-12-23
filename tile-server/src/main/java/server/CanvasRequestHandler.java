@@ -124,7 +124,7 @@ public class CanvasRequestHandler implements HttpHandler {
             }
 
             // get column list string
-            String colListStr = c.getTransformById(c.getLayers().get(i).getTransformId()).getColStr("");
+            String colListStr = c.getLayers().get(i).getTransform().getColStr("");
 
             // construct range query
             String sql = "select " + colListStr + " from bbox_" + Config.projectName + "_"

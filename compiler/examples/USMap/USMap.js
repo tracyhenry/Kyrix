@@ -19,7 +19,7 @@ var stateMapCanvas = new Canvas("statemap", 2000, 1000);
 p.addCanvas(stateMapCanvas);
 
 // static legends layer
-var stateMapLegendLayer = new Layer(transforms.emptyTransform, true);
+var stateMapLegendLayer = new Layer(null, true);
 stateMapCanvas.addLayer(stateMapLegendLayer);
 stateMapLegendLayer.addRenderingFunc(renderers.stateMapLegendRendering);
 
@@ -34,7 +34,7 @@ var countyMapCanvas = new Canvas("countymap", 2000 * 5, 1000 * 5);
 p.addCanvas(countyMapCanvas);
 
 // static legends layer
-var countyMapLegendLayer = new Layer(transforms.emptyTransform, true);
+var countyMapLegendLayer = new Layer(null, true);
 countyMapCanvas.addLayer(countyMapLegendLayer);
 countyMapLegendLayer.addRenderingFunc(renderers.countyMapLegendRendering);
 

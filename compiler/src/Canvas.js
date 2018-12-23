@@ -32,7 +32,6 @@ function Canvas(id, w, h, wString, hString) {
 
     // assign fields
     this.id = String(id);
-    this.transforms = []; // an initially empty transform array
     this.layers = [];   // an initially empty layer array
     this.zoomInFactorX = 0;  // greater than 1 to be valid
     this.zoomInFactorY = 0;  // greater than 1 to be valid
@@ -44,21 +43,7 @@ function Canvas(id, w, h, wString, hString) {
 // add layer to a canvas
 function addLayer(layer) {
 
-    var exist = false;
-    for (var i = 0; i < this.transforms.length; i ++)
-        if (this.transforms[i].id == layer.transformId)
-            exist = true;
-
-    if (! exist)
-        this.addTransform(layer.transform);
-
     this.layers.push(layer);
-};
-
-// add a transform object
-function addTransform(transform) {
-
-    this.transforms.push(transform);
 };
 
 // add an axis function
@@ -80,7 +65,6 @@ function processWidthHeightString(s) {
 
 // add functions to prototype
 Canvas.prototype.addLayer = addLayer;
-Canvas.prototype.addTransform = addTransform;
 Canvas.prototype.addAxes = addAxes;
 
 // exports

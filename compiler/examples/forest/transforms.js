@@ -1,7 +1,6 @@
 const Transform = require("../../src/index").Transform;
 
-var c1BackgroundTransform = new Transform("c1background",
-    "select * from canvas_bg where canvas_id = 1;",
+var c1BackgroundTransform = new Transform("select * from canvas_bg where canvas_id = 1;",
     "forest",
     function (row, width, height, params){
         var x = ((row[0]-1) % params.colnumber[row[1]-1]) * params.blockwidth[row[1]-1] + params.blockwidth[row[1]-1]/2;
@@ -19,8 +18,7 @@ var c1BackgroundTransform = new Transform("c1background",
     ["id", "x", "y", "canvas_id", "farm_id", "url"],
     true);
 
-var c2BackgroundTransform = new Transform("c2background",
-    "select * from canvas_bg where canvas_id = 2;",
+var c2BackgroundTransform = new Transform("select * from canvas_bg where canvas_id = 2;",
     "forest",
     function (row, width, height, params){
         var x = ((row[0]-1) % params.colnumber[row[1]-1]) * params.blockwidth[row[1]-1] + params.blockwidth[row[1]-1]/2;
@@ -38,8 +36,7 @@ var c2BackgroundTransform = new Transform("c2background",
     ["id", "x", "y", "canvas_id", "farm_id", "url"],
     true);
 
-var c3BackgroundTransform = new Transform("c3background",
-    "select * from canvas_bg where canvas_id = 3;",
+var c3BackgroundTransform = new Transform("select * from canvas_bg where canvas_id = 3;",
     "forest",
     function (row, width, height, params){
         var x = ((row[0]-1) % params.colnumber[row[1]-1]) * params.blockwidth[row[1]-1] + params.blockwidth[row[1]-1]/2;
@@ -57,8 +54,7 @@ var c3BackgroundTransform = new Transform("c3background",
     ["id", "x", "y", "canvas_id", "farm_id", "url"],
     true);
 
-var svgBackgroundTransform = new Transform("svgbackground",
-    "select * from svg;",
+var svgBackgroundTransform = new Transform("select * from svg;",
     "svg",
     function (row, width, height, params){
         var x = parseInt(row[4]) + 585;
@@ -76,8 +72,7 @@ var svgBackgroundTransform = new Transform("svgbackground",
     ["id", "path", "stroke", "fill", "x", "y"],
     true);
 
-var c1AnimalTransform = new Transform("c1animal",
-    "select * from animal;",
+var c1AnimalTransform = new Transform("select * from animal;",
     "forest",
     function (row, width, height, params){
         var x = (parseInt(row[8])/params.canvaswidth[1])*params.canvaswidth[0];
@@ -97,8 +92,7 @@ var c1AnimalTransform = new Transform("c1animal",
     ["kind", "name", "species", "family", "habitat", "x", "y", "r"],
     true);
 
-var c2AnimalTransform = new Transform("c2animal",
-    "select * from animal;",
+var c2AnimalTransform = new Transform("select * from animal;",
     "forest",
     function (row){
         var x = parseInt(row[8]);
@@ -118,8 +112,7 @@ var c2AnimalTransform = new Transform("c2animal",
     ["kind", "name", "species", "family", "habitat", "x", "y", "r"],
     true);
 
-var c3AnimalTransform = new Transform("c3animal",
-    "select * from animal;",
+var c3AnimalTransform = new Transform("select * from animal;",
     "forest",
     function (row, width, height, params){
         var x = (parseInt(row[8])/params.canvaswidth[1])*params.canvaswidth[2];

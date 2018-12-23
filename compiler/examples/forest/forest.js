@@ -63,12 +63,10 @@ c3BackgroundLayer.addPlacement(placements.c3BackgroundPlacement);
 c3BackgroundLayer.addRenderingFunc(renderers.backgroundRendering);
 
 // ================== Canvas 1 <-> Canvas 2 ===================
-
 p.addJump(new Jump(c1BackgroundCanvas, c2BackgroundCanvas, 0, "", "", "literal_zoom_in"));
 p.addJump(new Jump(c2BackgroundCanvas, c1BackgroundCanvas, 0, "", "", "literal_zoom_out"));
 
 // ================== Canvas 2 <-> Canvas 3 ===================
-
 p.addJump(new Jump(c2BackgroundCanvas, c3BackgroundCanvas, 0, "", "", "literal_zoom_in"));
 p.addJump(new Jump(c3BackgroundCanvas, c2BackgroundCanvas, 0, "", "", "literal_zoom_out"));
 

@@ -13,7 +13,6 @@ const placements = require("./placements");
 // construct a project
 var p = new Project("namebubble", "../../../config.txt", 1000, 1000);
 
-
 // ================== Canvas 1 ===================
 var c1 = new Canvas("fullname", 5000, 5000);
 p.addCanvas(c1);
@@ -22,7 +21,7 @@ p.addCanvas(c1);
 c1.addAxes(renderers.c1c2Axes);
 
 // static trim layer
-var c1L0 = new Layer(transforms.c1Empty, true);
+var c1L0 = new Layer(null, true);
 c1.addLayer(c1L0);
 c1L0.addRenderingFunc(renderers.c1StaticTrim);
 
@@ -39,7 +38,7 @@ c1L2.addPlacement(placements.c1L1Placement);
 c1L2.addRenderingFunc(renderers.c1L2Rendering);
 
 // background layer
-var c1L3 = new Layer(transforms.c1Empty, true);
+var c1L3 = new Layer(null, true);
 c1.addLayer(c1L3);
 c1L3.addRenderingFunc(renderers.c1L3Rendering);
 
@@ -67,7 +66,7 @@ c3.addLayer(c3L1);
 c3L1.addRenderingFunc(renderers.c3L1Rendering);
 
 // ******** canvas3 text layer
-var c3L2 = new Layer(transforms.c1Empty, true);
+var c3L2 = new Layer(null, true);
 c3.addLayer(c3L2);
 c3L2.addRenderingFunc(renderers.c3StaticTrim);
 

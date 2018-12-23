@@ -36,7 +36,7 @@ for (var i = 0; i < numLevels; i ++) {
     curCanvas.addAxes(renderers.scPlotAxes);
 
     // add a static layer
-    var staticLayer = new Layer(transforms.emptyTransform, true);
+    var staticLayer = new Layer(null, true);
     curCanvas.addLayer(staticLayer);
     staticLayer.addRenderingFunc(renderers.scPlotStaticTrim);
 

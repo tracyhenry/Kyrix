@@ -5,8 +5,7 @@ const numLevels = 5;
 
 var scales = [];
 for (var i = 0; i < numLevels; i ++) {
-    var curScale = new Transform("scalexy",
-        "select * from scatterplot2 where tier<=" + i + ";",
+    var curScale = new Transform("select * from scatterplot2 where tier<=" + i + ";",
         "wenbo",
         function (row, width, height) {
             var ret = [];
@@ -22,14 +21,8 @@ for (var i = 0; i < numLevels; i ++) {
     scales.push(curScale);
 }
 
-var emptyTransform = new Transform("empty",
-    "",
-    "",
-    function (row) {}, [], true);
-
 module.exports = {
     scales : scales,
-    emptyTransform : emptyTransform,
     numLevels : numLevels,
     zoomFactor : zoomFactor
 };

@@ -13,7 +13,6 @@ public class Canvas {
     private String wSql, hSql, wLayerId, hLayerId;
     private double zoomInFactorX, zoomInFactorY;
     private double zoomOutFactorX, zoomOutFactorY;
-    private ArrayList<Transform> transforms;
     private ArrayList<Layer> layers;
     private String axes;
 
@@ -69,10 +68,6 @@ public class Canvas {
         return zoomOutFactorY;
     }
 
-    public ArrayList<Transform> getTransforms() {
-        return transforms;
-    }
-
     public ArrayList<Layer> getLayers() {
         return layers;
     }
@@ -81,20 +76,12 @@ public class Canvas {
         return axes;
     }
 
-    public Transform getTransformById(String id) {
-
-        for (Transform t : transforms)
-            if (t.getId().equals(id))
-                return t;
-
-        return null;
-    }
-
     public String getDbByLayerId(String layerId) {
-        String transformId = this.getLayers()
+
+        return this.getLayers()
                 .get(Integer.valueOf(layerId))
-                .getTransformId();
-        return this.getTransformById(transformId).getDb();
+                .getTransform()
+                .getDb();
     }
 
     @Override
@@ -111,7 +98,6 @@ public class Canvas {
                 ", zoomInFactorY=" + zoomInFactorY +
                 ", zoomOutFactorX=" + zoomOutFactorX +
                 ", zoomOutFactorY=" + zoomOutFactorY +
-                ", transforms=" + transforms +
                 ", layers=" + layers +
                 ", axes='" + axes + '\'' +
                 '}';

@@ -66,7 +66,7 @@ public abstract class BoxGetter {
             }
 
             // get column list string
-            String colListStr = c.getTransformById(c.getLayers().get(i).getTransformId()).getColStr("");
+            String colListStr = c.getLayers().get(i).getTransform().getColStr("");
 
             // construct range query
             String sql = "select " + colListStr + " from bbox_" + project.getName() + "_"

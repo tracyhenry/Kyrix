@@ -1,15 +1,8 @@
 const Transform = require("../../src/index").Transform;
 
-var idTransform = new Transform("dotsID",
-    "select * from dots_100m;",
+var idTransform = new Transform("select * from dots;",
     "wenbo",
-    function (row){
-        var ret = [];
-        for (var i = 0; i < 4; i ++)
-            ret.push(row[i]);
-
-        return Java.to(ret ,"java.lang.String[]");
-    },
+    "",
     ["id", "x", "y", "type"],
     true);
 

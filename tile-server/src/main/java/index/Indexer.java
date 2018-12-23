@@ -57,7 +57,7 @@ public class Indexer {
             for (int layer_id = 0; layer_id < c.getLayers().size(); layer_id ++) {
 
                 Layer l = c.getLayers().get(layer_id);
-                Transform trans = c.getTransformById(l.getTransformId());
+                Transform trans = l.getTransform();
 
                 // step 0: create tables for storing bboxes and tiles
                 String bboxTableName = "bbox_" + projectName + "_" + c.getId() + "layer" + layer_id;
@@ -120,9 +120,11 @@ public class Indexer {
                 Require.enable(engine, rootFolder);
 
                 // step 1(a): register the data transform function with nashorn
-                String script = "var d3 = require('d3');\n"; // TODO: let users specify all required d3 libraries.
-                script += "var trans = " + trans.getTransformFunc() + ";\n";
-                engine.eval(script);
+                if (! trans.getTransformFunc().equals("")) {
+                    String script = "var d3 = require('d3');\n"; // TODO: let users specify all required d3 libraries.
+                    script += "var trans = " + trans.getTransformFunc() + ";\n";
+                    engine.eval(script);
+                }
 
                 // step 1(b): get rendering parameters
                 engine.put("renderingParams", project.getRenderingParams());
@@ -149,20 +151,27 @@ public class Indexer {
                 StringBuilder tileInsSqlBuilder = new StringBuilder("insert into " + tileTableName + " values");
                 while (rs.next()) {
 
+                    // count log
                     rowCount ++;
                     if (rowCount % 1000000 == 0)
                         System.out.println(rowCount);
+
                     //get raw row
                     ArrayList<String> curRawRow = new ArrayList<>();
                     for (int i = 1; i <= numColumn; i ++)
                         curRawRow.add(rs.getString(i));
 
                     // step 3: run transform function on this tuple
-                    String[] transformedStrArray = (String[]) engine	// TODO: figure out why row.slice does not work. learn more about nashorn types
-                            .invokeFunction("trans", curRawRow, c.getW(), c.getH(), renderingParamsObj);
-                    ArrayList<String> transformedRow = new ArrayList<>();
-                    for (int i = 0; i < transformedStrArray.length; i ++)
-                        transformedRow.add(transformedStrArray[i].toString());
+                    ArrayList<String> transformedRow;
+                    if (! trans.getTransformFunc().equals("")) {
+                        String[] transformedStrArray = (String[]) engine    // TODO: figure out why row.slice does not work. learn more about nashorn types
+                                .invokeFunction("trans", curRawRow, c.getW(), c.getH(), renderingParamsObj);
+                        transformedRow = new ArrayList<>();
+                        for (int i = 0; i < transformedStrArray.length; i++)
+                            transformedRow.add(transformedStrArray[i].toString());
+                    }
+                    else
+                        transformedRow = curRawRow;
 
                     // step 4: calculate bounding boxes
                     ArrayList<Double> curBbox = new ArrayList<>();

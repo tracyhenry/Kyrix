@@ -1,3 +1,5 @@
+const emptyTransform = require("./Transform").defaultEmptyTransform;
+
 /**
  * Constructor for a layer object.
  * @param transform - the data transform object that this layer is using.
@@ -5,11 +7,14 @@
  */
 function Layer(transform, isStatic) {
 
-    if (transform.id == null)
-        throw new Error("Constructing Layer: unidentified transform object.");
+    // get a default empty transform if transform is null
+    if (transform == null) {
+        if (! isStatic)
+            throw new Error("Constructing Layer: a dynamic layer must have a non-null data transform.");
+        transform = emptyTransform;
+    }
 
     this.transform = transform;
-    this.transformId = transform.id;
     if (isStatic == null)
         this.isStatic = false;
     else

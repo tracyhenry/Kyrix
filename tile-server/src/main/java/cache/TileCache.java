@@ -78,7 +78,7 @@ public class TileCache {
             }
 
             // get column list string
-            String colListStr = c.getTransformById(c.getLayers().get(i).getTransformId()).getColStr("bbox");
+            String colListStr = c.getLayers().get(i).getTransform().getColStr("bbox");
 
             // construct range query
             String sql = "select " + colListStr + " from bbox_" + project.getName() + "_"
@@ -119,7 +119,7 @@ public class TileCache {
             }
 
             // get column list string
-            String colListStr = c.getTransformById(c.getLayers().get(i).getTransformId()).getColStr("bbox");
+            String colListStr = c.getLayers().get(i).getTransform().getColStr("bbox");
 
             // construct range query
             String sql = "select " + colListStr + " from bbox_" + project.getName() + "_"
@@ -160,7 +160,7 @@ public class TileCache {
             }
 
             // get column list string
-            String colListStr = c.getTransformById(c.getLayers().get(i).getTransformId()).getColStr("");
+            String colListStr = c.getLayers().get(i).getTransform().getColStr("");
 
             // construct range query
             String sql = "select " + colListStr + " from bbox_" + project.getName() + "_"

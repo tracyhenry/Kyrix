@@ -5,13 +5,13 @@ package project;
  */
 public class Layer {
 
-    private String transformId;
+    private Transform transform;
     private boolean isStatic;
     private Placement placement;
     private String rendering;
 
-    public String getTransformId() {
-        return transformId;
+    public Transform getTransform() {
+        return transform;
     }
 
     public boolean isStatic() {
@@ -29,7 +29,7 @@ public class Layer {
     @Override
     public String toString() {
         return "Layer{" +
-                "transformId='" + transformId + '\'' +
+                "transform='" + transform + '\'' +
                 ", isStatic=" + isStatic +
                 ", placement=" + placement +
                 ", rendering='" + rendering + '\'' +

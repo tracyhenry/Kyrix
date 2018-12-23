@@ -112,17 +112,14 @@ public class ProjectRequestHandler implements HttpHandler {
                         Layer oldLayer = oldLayers.get(i);
                         Layer newLayer = newLayers.get(i);
                         // see if the same layer remains the same
-                        if (! oldLayer.getTransformId().equals(newLayer.getTransformId()))
-                            return true;
                         if (! (oldLayer.isStatic() == newLayer.isStatic()))
                             return true;
                         if (! oldLayer.isStatic() && ! oldLayer.getPlacement().toString().equals(newLayer.getPlacement().toString()))
                             return true;
 
                         // the data transform has to remain the same too
-                        String transformId = oldLayer.getTransformId();
-                        Transform oldTransform = oldCanvas.getTransformById(transformId);
-                        Transform newTransform = newCanvas.getTransformById(transformId);
+                        Transform oldTransform = oldLayer.getTransform();
+                        Transform newTransform = newLayer.getTransform();
                         if (! oldTransform.toString().equals(newTransform.toString()))
                             return true;
                     }
