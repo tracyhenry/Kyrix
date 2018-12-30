@@ -23,16 +23,16 @@ public abstract class BoxGetter {
         project = Main.getProject();
     }
 
-    public ArrayList<ArrayList<ArrayList<String>>> fetchData(Canvas c, int minx, int miny, int maxx, int maxy, ArrayList<String> predicates, boolean hasBox)
+    public ArrayList<ArrayList<ArrayList<String>>> fetchData(Canvas c, double minx, double miny, double maxx, double maxy, ArrayList<String> predicates, boolean hasBox)
             throws SQLException, ClassNotFoundException, ParseException {
 
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
         Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
 
         // get the last box
-        int oldMinx, oldMiny, oldMaxx, oldMaxy;
+        double oldMinx, oldMiny, oldMaxx, oldMaxy;
         if (! hasBox) {
-            oldMinx = oldMaxx = oldMiny = oldMaxy = Integer.MIN_VALUE;
+            oldMinx = oldMaxx = oldMiny = oldMaxy = Double.MIN_VALUE;
             History.reset();
         } else {
             Box curBox = History.getBox();
@@ -87,6 +87,6 @@ public abstract class BoxGetter {
         return data;
     }
 
-    public abstract BoxandData getBox(Canvas c, int cx, int cy, int viewportH, int viewportW, ArrayList<String> predicates, boolean hasBox)
+    public abstract BoxandData getBox(Canvas c, double mx, double my, int viewportH, int viewportW, ArrayList<String> predicates, boolean hasBox)
             throws SQLException, ClassNotFoundException, ParseException;
 }

@@ -75,7 +75,7 @@ public class DbConnector {
         stmt.executeUpdate(sql);
     }
 
-    private static Connection getDbConn(String dbServer, String dbName, String userName, String password)
+    public static Connection getDbConn(String dbServer, String dbName, String userName, String password)
             throws SQLException, ClassNotFoundException {
 
         if (connections.containsKey(dbName))

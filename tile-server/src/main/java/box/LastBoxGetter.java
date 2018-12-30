@@ -10,7 +10,7 @@ import java.util.ArrayList;
 public class LastBoxGetter extends BoxGetter {
 
     @Override
-    public BoxandData getBox(Canvas c, int mx, int my, int viewportH, int viewportW, ArrayList<String> predicates, boolean hasBox)
+    public BoxandData getBox(Canvas c, double mx, double my, int viewportH, int viewportW, ArrayList<String> predicates, boolean hasBox)
             throws SQLException, ClassNotFoundException, ParseException {
 
         ArrayList<ArrayList<ArrayList<String>>> data;
@@ -18,12 +18,12 @@ public class LastBoxGetter extends BoxGetter {
         //scale is the modification ratio
         double scale = 0.4;
         int count = 0;
-        int minx, miny, maxx, maxy;
+        double minx, miny, maxx, maxy;
         if (! hasBox) {
-             minx = (int) Math.max(0, mx - wrapLength * viewportW);
-             miny = (int) Math.max(0, my - wrapLength * viewportH);
-             maxx = (int) Math.min(c.getH(), minx + (1 + 2 * wrapLength) * viewportW);
-             maxy = (int) Math.min(c.getW(), miny + (1 + 2 * wrapLength) * viewportH);
+             minx = Math.max(0, mx - wrapLength * viewportW);
+             miny = Math.max(0, my - wrapLength * viewportH);
+             maxx = Math.min(c.getH(), minx + (1 + 2 * wrapLength) * viewportW);
+             maxy = Math.min(c.getW(), miny + (1 + 2 * wrapLength) * viewportH);
             History.reset();
         } else {
             Box curBox = History.getBox();

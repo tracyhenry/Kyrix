@@ -9,16 +9,16 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class BigSparseBoxGetter extends BoxGetter {
-    public BoxandData getBox(Canvas c, int mx, int my, int viewportH, int viewportW, ArrayList<String> predicates, boolean hasBox)
+    public BoxandData getBox(Canvas c, double mx, double my, int viewportH, int viewportW, ArrayList<String> predicates, boolean hasBox)
             throws SQLException, ClassNotFoundException, ParseException {
 
         ArrayList<ArrayList<ArrayList<String>>> data;
         double wrapLength = 0.5;
         int count = 0;
-        int minx = (int)Math.max(0, mx - wrapLength * viewportW);
-        int miny = (int)Math.max(0, my - wrapLength * viewportH);
-        int maxx = (int)Math.min(c.getH(), minx + (1 + 2 * wrapLength) * viewportW);
-        int maxy = (int)Math.min(c.getW(), miny + (1 + 2 * wrapLength) * viewportH);
+        double minx = Math.max(0, mx - wrapLength * viewportW);
+        double miny = Math.max(0, my - wrapLength * viewportH);
+        double maxx = Math.min(c.getH(), minx + (1 + 2 * wrapLength) * viewportW);
+        double maxy = Math.min(c.getW(), miny + (1 + 2 * wrapLength) * viewportH);
         int deltaRight = (int) 0.5 * viewportW;
         int deltaLeft = (int) 0.5 * viewportW;
         int deltaUp = (int) 0.5 * viewportH;

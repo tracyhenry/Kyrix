@@ -1,39 +1,37 @@
 package box;
 
-import java.util.ArrayList;
-
 public class Box {
-    private int minx, miny, maxx, maxy;
+    private double minx, miny, maxx, maxy;
 
     // a fixed size box which is two times larger than the viewport
-    public Box(int minx, int miny, int maxx, int maxy) {
+    public Box(double minx, double miny, double maxx, double maxy) {
         this.minx = minx;
         this.maxx = maxx;
         this.miny = miny;
         this.maxy = maxy;
     }
 
-    public int getWidth() {
+    public double getWidth() {
         return maxx - minx;
     }
 
-    public int getHight() {
+    public double getHight() {
         return maxy - miny;
     }
 
-    public int getMaxx(){
+    public double getMaxx(){
         return maxx;
     }
 
-    public int getMaxy(){
+    public double getMaxy(){
         return maxy;
     }
 
-    public int getMinx() {
+    public double getMinx() {
         return minx;
     }
 
-    public int getMiny() {
+    public double getMiny() {
         return miny;
     }
 }

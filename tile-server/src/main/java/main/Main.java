@@ -3,6 +3,7 @@ package main;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import index.Indexer;
+import index.PsqlSpatialIndexer;
 import project.Project;
 import server.Server;
 import cache.TileCache;
@@ -35,7 +36,11 @@ public class Main {
         // if project object is not null and is dirty, precompute
         if (project != null && isProjectDirty()) {
             System.out.println("Main project definition has been changed since last session, re-calculating indexes...");
-            Indexer indexer = new Indexer();
+            Indexer indexer;
+            if (Config.database == Config.Database.PSQL && Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
+                indexer = new PsqlSpatialIndexer();
+            else
+                indexer = new Indexer();
             indexer.precompute();
             setProjectClean();
         }
@@ -62,7 +67,7 @@ public class Main {
 
         String sql = "select dirty from " + Config.projectTableName + " where name = \'" + Config.projectName + "\';";
         ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(Config.databaseName, sql);
-        return (Integer.valueOf(ret.get(0).get(0)) == 1 ? true : false);
+        return (Integer.valueOf(ret.get(0).get(0)) == 1);
     }
 
     public static void setProjectClean() throws SQLException, ClassNotFoundException {
