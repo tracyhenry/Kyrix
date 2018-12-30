@@ -125,6 +125,7 @@ public class PsqlSpatialIndexer extends Indexer {
                     }
                 }
                 rs.close();
+                DbConnector.closeConnection(trans.getDb());
 
                 // insert tail stuff
                 if (rowCount % Config.bboxBatchSize != 0) {

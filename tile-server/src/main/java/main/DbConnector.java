@@ -106,4 +106,12 @@ public class DbConnector {
         Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
         conn.commit();
     }
+
+    public static void closeConnection(String dbName) throws SQLException {
+
+        if (connections.containsKey(dbName)) {
+            connections.get(dbName).close();
+            connections.remove(dbName);
+        }
+    }
 }
