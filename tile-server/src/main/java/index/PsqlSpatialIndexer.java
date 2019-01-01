@@ -72,7 +72,8 @@ public class PsqlSpatialIndexer extends Indexer {
 
         // step 2: looping through query results
         // TODO: distinguish between separable and non-separable cases
-        ResultSet rs = DbConnector.getQueryResultIterator(trans.getDb(), trans.getQuery());
+        Statement rawDBStmt = DbConnector.getStmtByDbName(trans.getDb());
+        ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery());
         int numColumn = rs.getMetaData().getColumnCount();
         int rowCount = 0;
         String insertSql = "insert into " + bboxTableName + " values (";
@@ -123,6 +124,7 @@ public class PsqlSpatialIndexer extends Indexer {
             }
         }
         rs.close();
+        rawDBStmt.close();
         DbConnector.closeConnection(trans.getDb());
 
         // insert tail stuff
@@ -143,51 +145,41 @@ public class PsqlSpatialIndexer extends Indexer {
 
     @Override
     public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate)
-			throws Exception {
+            throws Exception {
 
-		// metadatabase statement
-		Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
+        // get column list string
+        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
 
-		// get column list string
-		String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
-
-		// construct range query
-		String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
-				+ c.getId() + "layer" + layerId + " where ST_Intersects(st_GeomFromText";
-		sql += "('" + regionWKT + "'), geom)";
-		if (predicate.length() > 0)
-			sql += " and " + predicate + ";";
-		System.out.println(sql);
+        // construct range query
+        String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
+                + c.getId() + "layer" + layerId + " where ST_Intersects(st_GeomFromText";
+        sql += "('" + regionWKT + "'), geom)";
+        if (predicate.length() > 0)
+            sql += " and " + predicate + ";";
+        System.out.println(sql);
 
         // return
-        ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(stmt, sql);
-        stmt.close();
-        return ret;
+        return DbConnector.getQueryResult(Config.databaseName, sql);
     }
 
     @Override
     public ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate)
-			throws Exception {
+            throws Exception {
 
-		// get db connector
-		Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
+        // get column list string
+        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
 
-		// get column list string
-		String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
-
-		// construct range query
-		String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
-				+ c.getId() + "layer" + layerId + " where ";
+        // construct range query
+        String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
+                + c.getId() + "layer" + layerId + " where ";
         sql += "st_intersects(st_GeomFromText('Polygon((" + minx + " " + miny + "," + (minx + Config.tileW) + " " + miny;
-		sql += "," + (minx + Config.tileW) + " " + (miny + Config.tileH) + "," + minx + " " + (miny + Config.tileH)
-				+ "," + minx + " " + miny + "))'),geom)";
-		if (predicate.length() > 0)
-			sql += " and " + predicate + ";";
-		System.out.println(minx + " " + miny + " : " + sql);
+        sql += "," + (minx + Config.tileW) + " " + (miny + Config.tileH) + "," + minx + " " + (miny + Config.tileH)
+                + "," + minx + " " + miny + "))'),geom)";
+        if (predicate.length() > 0)
+            sql += " and " + predicate + ";";
+        System.out.println(minx + " " + miny + " : " + sql);
 
-		// return
-		ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(stmt, sql);
-        stmt.close();
-        return ret;
-	}
+        // return
+        return DbConnector.getQueryResult(Config.databaseName, sql);
+    }
 }

@@ -34,9 +34,7 @@ public class MysqlSpatialIndexer extends Indexer {
     public void createMV(Canvas c, int layerId) throws Exception {
 
         // TODO: switch to prepared statements
-        Statement bboxStmt, tileStmt;
-        bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
-        tileStmt = DbConnector.getStmtByDbName(Config.databaseName);
+        Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
@@ -67,7 +65,8 @@ public class MysqlSpatialIndexer extends Indexer {
 
         // step 2: looping through query results
         // TODO: distinguish between separable and non-separable cases
-        ResultSet rs = DbConnector.getQueryResultIterator(trans.getDb(), trans.getQuery());
+        Statement rawDBStmt = DbConnector.getStmtByDbName(trans.getDb());
+        ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery());
         int numColumn = rs.getMetaData().getColumnCount();
         int rowCount = 0, mappingCount = 0;
         StringBuilder bboxInsSqlBuilder = new StringBuilder("insert into " + bboxTableName + " values");
@@ -120,6 +119,7 @@ public class MysqlSpatialIndexer extends Indexer {
             }
         }
         rs.close();
+        rawDBStmt.close();
         DbConnector.closeConnection(trans.getDb());
 
         // insert tail stuff
@@ -131,14 +131,10 @@ public class MysqlSpatialIndexer extends Indexer {
 
         // close db connections
         bboxStmt.close();
-        tileStmt.close();
     }
 
     @Override
     public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception {
-
-        // metadatabase statement
-        Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
 
         // get column list string
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
@@ -152,16 +148,11 @@ public class MysqlSpatialIndexer extends Indexer {
         System.out.println(sql);
 
         // return
-        ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(stmt, sql);
-        stmt.close();
-        return ret;
+        return DbConnector.getQueryResult(Config.databaseName, sql);
     }
 
     @Override
     public ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate) throws Exception {
-
-        // get db connector
-        Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
 
         // get column list string
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
@@ -177,8 +168,6 @@ public class MysqlSpatialIndexer extends Indexer {
         System.out.println(minx + " " + miny + " : " + sql);
 
         // return
-        ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(stmt, sql);
-        stmt.close();
-        return ret;
+        return DbConnector.getQueryResult(Config.databaseName, sql);
     }
 }

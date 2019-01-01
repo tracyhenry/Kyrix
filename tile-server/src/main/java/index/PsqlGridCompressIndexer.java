@@ -87,7 +87,8 @@ public class PsqlGridCompressIndexer extends Indexer {
         HashMap<String, Box> boxes = new HashMap<>();
 
         // fetch query result
-        ResultSet rs = DbConnector.getQueryResultIterator(trans.getDb(), trans.getQuery());
+        Statement rawDBStmt = DbConnector.getStmtByDbName(trans.getDb());
+        ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery());
         int rowCount = 0, insCount;
         int numColumn = rs.getMetaData().getColumnCount();
         long st = System.currentTimeMillis();
@@ -185,6 +186,7 @@ public class PsqlGridCompressIndexer extends Indexer {
             }
         }
         rs.close();
+        rawDBStmt.close();
         DbConnector.closeConnection(trans.getDb());
         insPrepStmt.close();
         System.out.println("Constructing ungrouped table: " + (System.currentTimeMillis() - st) / 1000.0 + "s.");
@@ -210,7 +212,7 @@ public class PsqlGridCompressIndexer extends Indexer {
 
         // read from upgrouped table and construct the grouped table
         sql = "select * from " + ungroupedTableName + " order by grid_x asc, grid_y asc;";
-        rs = DbConnector.getQueryResultIterator(Config.databaseName, sql);
+        rs = DbConnector.getQueryResultIterator(bboxStmt, sql);
         rowCount = insCount = 0;
         System.out.println("\nConstructing grouped table...");
         while (rs.next()) {
@@ -265,9 +267,6 @@ public class PsqlGridCompressIndexer extends Indexer {
     @Override
     public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception {
 
-        // metadatabase statement
-        Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
-
         // construct range query
         String sql = "select compressed_blob from bbox_" + Main.getProject().getName() + "_"
                 + c.getId() + "layer" + layerId + " where ST_Intersects(st_GeomFromText";
@@ -277,7 +276,7 @@ public class PsqlGridCompressIndexer extends Indexer {
         System.out.println(sql);
 
         // get compressed tuples
-        ArrayList<ArrayList<String>> compressedTuples = DbConnector.getQueryResult(stmt, sql);
+        ArrayList<ArrayList<String>> compressedTuples = DbConnector.getQueryResult(Config.databaseName, sql);
         ArrayList<ArrayList<String>> ret = new ArrayList<>();
         for (int i = 0; i < compressedTuples.size(); i ++) {
             String tupleBlob = compressedTuples.get(i).get(0);
@@ -286,7 +285,6 @@ public class PsqlGridCompressIndexer extends Indexer {
                 ret.add(new ArrayList<>(Arrays.asList(tupleStr.split("&&"))));
         }
 
-        stmt.close();
         return ret;
     }
 

@@ -38,7 +38,7 @@ public class DbConnector {
         return retStmt;
     }
 
-    public static ArrayList<ArrayList<String>> getQueryResult(Statement stmt, String sql)
+    private static ArrayList<ArrayList<String>> getQueryResult(Statement stmt, String sql)
             throws SQLException, ClassNotFoundException {
 
         ArrayList<ArrayList<String>> result = new ArrayList<>();
@@ -59,13 +59,14 @@ public class DbConnector {
             throws SQLException, ClassNotFoundException {
 
         Statement stmt = DbConnector.getStmtByDbName(dbName);
-        return getQueryResult(stmt, sql);
+        ArrayList<ArrayList<String>> ret = getQueryResult(stmt, sql);
+        stmt.close();
+        return ret;
     }
 
-    public static ResultSet getQueryResultIterator(String dbName, String sql)
+    public static ResultSet getQueryResultIterator(Statement stmt, String sql)
             throws SQLException, ClassNotFoundException {
 
-        Statement stmt = DbConnector.getStmtByDbName(dbName);
         return stmt.executeQuery(sql);
     }
 
@@ -73,6 +74,7 @@ public class DbConnector {
 
         Statement stmt = DbConnector.getStmtByDbName(dbName);
         stmt.executeUpdate(sql);
+        stmt.close();
     }
 
     public static Connection getDbConn(String dbServer, String dbName, String userName, String password)

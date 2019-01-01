@@ -110,9 +110,7 @@ public class CanvasRequestHandler implements HttpHandler {
         // container for data
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
 
-        // get db connector for reuse among layers
-        Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
-
+        // loop over layers
         for (int i = 0; i < c.getLayers().size(); i ++) {
 
             // add an empty placeholder for static layers
@@ -132,10 +130,9 @@ public class CanvasRequestHandler implements HttpHandler {
             sql += ";";
 
             // run query, add to response
-            data.add(DbConnector.getQueryResult(stmt, sql));
+            data.add(DbConnector.getQueryResult(Config.databaseName, sql));
         }
 
-        stmt.close();
         return data;
     }
 }

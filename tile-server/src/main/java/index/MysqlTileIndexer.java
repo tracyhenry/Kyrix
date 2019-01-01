@@ -78,7 +78,8 @@ public class MysqlTileIndexer extends Indexer {
 
         // step 2: looping through query results
         // TODO: distinguish between separable and non-separable cases
-        ResultSet rs = DbConnector.getQueryResultIterator(trans.getDb(), trans.getQuery());
+        Statement rawDBStmt = DbConnector.getStmtByDbName(trans.getDb());
+        ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery());
         int numColumn = rs.getMetaData().getColumnCount();
         int rowCount = 0, mappingCount = 0;
         StringBuilder bboxInsSqlBuilder = new StringBuilder("insert into " + bboxTableName + " values");
@@ -154,6 +155,7 @@ public class MysqlTileIndexer extends Indexer {
             }
         }
         rs.close();
+        rawDBStmt.close();
         DbConnector.closeConnection(trans.getDb());
 
         // insert tail stuff
@@ -190,9 +192,6 @@ public class MysqlTileIndexer extends Indexer {
     @Override
     public ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate) throws Exception {
 
-        // get db connector
-        Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
-
         // get column list string
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("bbox");
 
@@ -205,8 +204,6 @@ public class MysqlTileIndexer extends Indexer {
             sql += " and " + predicate + ";";
         System.out.println(minx + " " + miny + " : " + sql);
 
-        ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(stmt, sql);
-        stmt.close();
-        return ret;
+        return DbConnector.getQueryResult(Config.databaseName, sql);
     }
 }
