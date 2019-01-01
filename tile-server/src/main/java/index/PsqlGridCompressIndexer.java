@@ -23,10 +23,10 @@ import java.util.HashMap;
 public class PsqlGridCompressIndexer extends Indexer {
 
     private static PsqlGridCompressIndexer instance = null;
-    private final int gridW = 10000;
-    private final int gridH = 10000;
+    private final int gridW = 1000;
+    private final int gridH = 1000;
     private final int batchSize = 10000000;
-    private final int updBatchSize = 1000;
+    private final int updBatchSize = 5000;
 
     // singleton pattern to ensure only one instance existed
     private PsqlGridCompressIndexer() {}
@@ -240,8 +240,8 @@ public class PsqlGridCompressIndexer extends Indexer {
                 curBlob.append(rs.getString(3));
                 curMinX = Math.min(curMinX, rs.getDouble(4));
                 curMinY = Math.min(curMinY, rs.getDouble(5));
-                curMaxX = Math.min(curMaxX, rs.getDouble(6));
-                curMaxY = Math.min(curMaxY, rs.getDouble(7));
+                curMaxX = Math.max(curMaxX, rs.getDouble(6));
+                curMaxY = Math.max(curMaxY, rs.getDouble(7));
             }
         }
         rs.close();
