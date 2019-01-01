@@ -11,6 +11,7 @@ import project.Transform;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -118,11 +119,8 @@ public class PsqlGridCompressIndexer extends Indexer {
                     insPrepStmt.setDouble(6, curBbox.getMaxx()); insPrepStmt.setDouble(7, curBbox.getMaxy());
                     insPrepStmt.addBatch();
                     insCount ++;
-                    if (insCount % updBatchSize == 0) {
-//                            long insSt = System.currentTimeMillis();
+                    if (insCount % updBatchSize == 0)
                         insPrepStmt.executeBatch();
-//                            System.out.println("Insert: " + (System.currentTimeMillis() - insSt) / 1000.0 + ".s");
-                    }
                 }
                 System.out.println("Insertion count: " + insCount);
                 insPrepStmt.executeBatch();
@@ -167,9 +165,9 @@ public class PsqlGridCompressIndexer extends Indexer {
                 curBlob.append("__");
             curBlob.append(transformedRow.get(0));
             for (int i = 1; i < transformedRow.size(); i ++)
-                curBlob.append("**" + transformedRow.get(i));
+                curBlob.append("&&" + transformedRow.get(i));
             for (int i = 0; i < bbox.size(); i ++)
-                curBlob.append("**" + String.valueOf(bbox.get(i)));
+                curBlob.append("&&" + String.valueOf(bbox.get(i)));
 
             // update bounding box
             if (! boxes.containsKey(gridKey))
@@ -195,13 +193,11 @@ public class PsqlGridCompressIndexer extends Indexer {
         sql = "drop table if exists " + groupedTableName + ";";
         bboxStmt.executeUpdate(sql);
         // create the bbox table
-        sql = "create table " + groupedTableName + " (grid_x int, grid_y int, compressed_blob text, "
-                + "minx double precision, miny double precision, "
-                + "maxx double precision, maxy double precision, geom geometry(polygon));";
+        sql = "create table " + groupedTableName + " (compressed_blob text, geom geometry(polygon));";
         bboxStmt.executeUpdate(sql);
 
         // prepared statements
-        insertSql = "insert into " + groupedTableName + " values (?, ?, ?, ?, ?, ?, ?, ST_GeomFromText(?));";
+        insertSql = "insert into " + groupedTableName + " values (?, ST_GeomFromText(?));";
         insPrepStmt = dbConn.prepareStatement(insertSql);
 
         // info of current group
@@ -223,12 +219,8 @@ public class PsqlGridCompressIndexer extends Indexer {
             if (gridX != curGridX || gridY != curGridY) {
                 // insert the last one
                 if (curGridX != -1) {
-                    insPrepStmt.setInt(1, curGridX);
-                    insPrepStmt.setInt(2, curGridY);
-                    insPrepStmt.setString(3, curBlob.toString());
-                    insPrepStmt.setDouble(4, curMinX); insPrepStmt.setDouble(5, curMinY);
-                    insPrepStmt.setDouble(6, curMaxX); insPrepStmt.setDouble(7, curMaxY);
-                    insPrepStmt.setString(8, getPolygonText(curMinX, curMinY, curMaxX, curMaxY));
+                    insPrepStmt.setString(1, curBlob.toString());
+                    insPrepStmt.setString(2, getPolygonText(curMinX, curMinY, curMaxX, curMaxY));
                     insPrepStmt.addBatch();
                     insCount ++;
                     if (insCount % updBatchSize == 0)
@@ -241,7 +233,7 @@ public class PsqlGridCompressIndexer extends Indexer {
             }
             else {
                 // merge
-                curBlob.append("_");
+                curBlob.append("__");
                 curBlob.append(rs.getString(3));
                 curMinX = Math.min(curMinX, rs.getDouble(4));
                 curMinY = Math.min(curMinY, rs.getDouble(5));
@@ -269,7 +261,30 @@ public class PsqlGridCompressIndexer extends Indexer {
 
     @Override
     public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception {
-        return null;
+
+        // metadatabase statement
+        Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
+
+        // construct range query
+        String sql = "select compressed_blob from bbox_" + Main.getProject().getName() + "_"
+                + c.getId() + "layer" + layerId + " where ST_Intersects(st_GeomFromText";
+        sql += "('" + regionWKT + "'), geom)";
+        if (predicate.length() > 0)
+            sql += " and " + predicate + ";";
+        System.out.println(sql);
+
+        // get compressed tuples
+        ArrayList<ArrayList<String>> compressedTuples = DbConnector.getQueryResult(stmt, sql);
+        ArrayList<ArrayList<String>> ret = new ArrayList<>();
+        for (int i = 0; i < compressedTuples.size(); i ++) {
+            String tupleBlob = compressedTuples.get(i).get(0);
+            String[] tupleStrs = tupleBlob.split("__");
+            for (String tupleStr : tupleStrs)
+                ret.add(new ArrayList<>(Arrays.asList(tupleStr.split("&&"))));
+        }
+
+        stmt.close();
+        return ret;
     }
 
     @Override

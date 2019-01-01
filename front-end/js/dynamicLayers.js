@@ -126,12 +126,23 @@ function RefreshDynamicLayers(viewportX, viewportY) {
 
                             // response data
                             var response = JSON.parse(data);
-                            var renderData = response.renderData;
                             var x = response.minx;
                             var y = response.miny;
 
-                            // number of layers
+                            // remove those tuple who is outside the viewport
+                            // doing this because some backend indexers use compression
+                            // and may return tuples outside viewport
+                            // doing this in the backend is not efficient, so we do it here
+                            var renderData = response.renderData;
                             var numLayers = globalVar.curCanvas.layers.length;
+                            for (var i = 0; i < numLayers; i ++)
+                                renderData[i] = renderData[i].filter(function (d) {
+                                        if (d[d.length - param.maxxOffset] < x ||
+                                            d[d.length - param.minxOffset] > (x + globalVar.tileW) ||
+                                            d[d.length - param.maxyOffset] < y ||
+                                            d[d.length - param.minyOffset] > (y + globalVar.tileH))
+                                            return false;
+                                        return true;});
 
                             // loop over every layer
                             for (var i = numLayers - 1; i >= 0; i--) {
@@ -220,10 +231,31 @@ function RefreshDynamicLayers(viewportX, viewportY) {
 
                 // response data
                 var response = JSON.parse(data);
-                var renderData = response.renderData;
                 var x = response.minx;
                 var y = response.miny;
                 var canvasId = response.canvasId;
+                // remove those tuple who is outside the viewport
+                // doing this because some backend indexers use compression
+                // and may return tuples outside viewport
+                // doing this in the backend is not efficient, so we do it here
+                // also dedup
+                var renderData = response.renderData;
+                var numLayers = globalVar.curCanvas.layers.length;
+                for (var i = 0; i < numLayers; i ++) {
+                    var mp = {};
+                    globalVar.renderData[i].forEach(function (d) {
+                        mp[JSON.stringify(d)] = true;
+                    });
+                    renderData[i] = renderData[i].filter(function (d) {
+                        if (+d[d.length - param.maxxOffset] < x ||
+                            +d[d.length - param.minxOffset] > (x + response.boxW) ||
+                            +d[d.length - param.maxyOffset] < y ||
+                            +d[d.length - param.minyOffset] > (y + response.boxH))
+                            return false;
+                        if (mp.hasOwnProperty(JSON.stringify(d)))
+                            return false;
+                        return true;});
+                }
 
                 // check if this response is already outdated
                 if (canvasId != globalVar.curCanvasId) {
@@ -232,7 +264,6 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                 }
 
                 // loop over every layer to render
-                var numLayers = globalVar.curCanvas.layers.length;
                 for (var i = numLayers - 1; i >= 0; i --) {
 
                     // current layer object

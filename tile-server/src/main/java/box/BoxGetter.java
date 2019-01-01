@@ -49,11 +49,9 @@ public abstract class BoxGetter {
             // if this layer is static, add an empty placeholder
             if (curLayer.isStatic())
                 data.add(new ArrayList<>());
-            else {
+            else
                 data.add(curLayer.getIndexer().getDataFromRegion(c, i, deltaWkt, predicates.get(i)));
-            }
         }
-
         return data;
     }
 
