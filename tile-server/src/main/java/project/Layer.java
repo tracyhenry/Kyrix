@@ -1,5 +1,7 @@
 package project;
 
+import index.Indexer;
+
 /**
  * Created by wenbo on 4/3/18.
  */
@@ -9,6 +11,7 @@ public class Layer {
     private boolean isStatic;
     private Placement placement;
     private String rendering;
+    private Indexer indexer;
 
     public Transform getTransform() {
         return transform;
@@ -24,6 +27,14 @@ public class Layer {
 
     public String getRendering() {
         return rendering;
+    }
+
+    public void setIndexer(Indexer idxer) {
+        indexer = idxer;
+    }
+
+    public Indexer getIndexer() {
+        return indexer;
     }
 
     @Override

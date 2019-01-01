@@ -1,17 +1,14 @@
 package box;
 
-import org.locationtech.jts.io.ParseException;
 import project.Canvas;
-import project.Project;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class MikeBoxGetter extends BoxGetter {
     @Override
     //get box with fixed size which is two times larger than the viewport
     public BoxandData getBox(Canvas c, double mx, double my, int viewportH, int viewportW, ArrayList<String> predicates, boolean hasBox)
-            throws SQLException, ClassNotFoundException, ParseException {
+            throws Exception {
 
         ArrayList<ArrayList<ArrayList<String>>> data;
         double wrapLength = 0.5;

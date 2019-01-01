@@ -22,7 +22,7 @@ public class Server {
     private static boolean terminated;
     private static Object terminationLock = new Object();
 
-    public static void startServer(int portNumber) throws IOException, InterruptedException, ClassNotFoundException, SQLException, NoSuchMethodException, ScriptException {
+    public static void startServer(int portNumber) throws Exception {
 
         server = HttpServer.create(new InetSocketAddress(portNumber), 0);
         server.createContext("/", new IndexHandler());
@@ -41,8 +41,7 @@ public class Server {
                 terminationLock.wait();
         }
         Server.stopServer();
-        Indexer indexer = new Indexer();
-        indexer.precompute();
+        Indexer.precompute();
         System.out.println("Completed recomputing indexes. Server restarting...");
         Server.startServer(Config.portNumber);
     }

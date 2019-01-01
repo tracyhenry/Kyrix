@@ -3,12 +3,10 @@ package main;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import index.Indexer;
-import index.PsqlSpatialIndexer;
 import project.Project;
 import server.Server;
 import cache.TileCache;
 
-import javax.script.ScriptException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -21,11 +19,7 @@ public class Main {
     private static Project project = null;
     public static String projectJSON = "";
 
-    public static void main(String[] args) throws IOException,
-            ClassNotFoundException,
-            SQLException,
-            ScriptException,
-            NoSuchMethodException, InterruptedException {
+    public static void main(String[] args) throws Exception {
 
         // read config file
         readConfigFile();
@@ -36,16 +30,14 @@ public class Main {
         // if project object is not null and is dirty, precompute
         if (project != null && isProjectDirty()) {
             System.out.println("Main project definition has been changed since last session, re-calculating indexes...");
-            Indexer indexer;
-            if (Config.database == Config.Database.PSQL && Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
-                indexer = new PsqlSpatialIndexer();
-            else
-                indexer = new Indexer();
-            indexer.precompute();
+            Indexer.precompute();
             setProjectClean();
         }
-        else if (project != null)
+        else if (project != null) {
+            Indexer.associateIndexer();
             System.out.println("Main project definition has not been changed since last session. Starting server right away...");
+        }
+
 
         //cache
         TileCache.create();

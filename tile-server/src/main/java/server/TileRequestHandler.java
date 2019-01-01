@@ -40,7 +40,6 @@ public class TileRequestHandler implements HttpHandler {
         String response;
         String canvasId;
         int minx, miny;
-        String predicate;
         ArrayList<ArrayList<ArrayList<String>>> data = null;
 
         // check if this is a POST request
@@ -74,7 +73,11 @@ public class TileRequestHandler implements HttpHandler {
         for (int i = 0; i < c.getLayers().size(); i ++)
             predicates.add(queryMap.get("predicate" + i));
 
-        data = TileCache.getTile(c, minx, miny, predicates, Main.getProject());
+        try {
+            data = TileCache.getTile(c, minx, miny, predicates);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // construct response
         Map<String, Object> respMap = new HashMap<>();
@@ -87,7 +90,6 @@ public class TileRequestHandler implements HttpHandler {
         Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
         System.out.println();
     }
-
 
     // check paramters
     private String checkParameters(Map<String, String> queryMap) {

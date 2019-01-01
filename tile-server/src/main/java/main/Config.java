@@ -48,7 +48,7 @@ public class Config {
     public static int tileBatchSize = 10000;
 
     // tile indexing scheme
-    public enum IndexingScheme {TUPLE_MAPPING, SPATIAL_INDEX, SORTED_TUPLE_MAPPING};
+    public enum IndexingScheme {TILE_INDEX, SPATIAL_INDEX};
     public static IndexingScheme indexingScheme = IndexingScheme.SPATIAL_INDEX;
 
     // underlying database
