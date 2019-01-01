@@ -1,12 +1,12 @@
 package cache;
 
-import java.util.ArrayList;
-import java.util.Map;
-
+import main.Config;
 import project.Canvas;
 import project.Layer;
-import main.Config;
+
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class TileCache {
     private static LinkedHashMap tileCache;

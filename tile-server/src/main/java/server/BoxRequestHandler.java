@@ -1,13 +1,11 @@
 package server;
 
 import box.BoxandData;
-import box.History;
 import box.MikeBoxGetter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import main.Config;
 import main.Main;
 import project.Canvas;
 import project.Project;
@@ -16,7 +14,6 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +24,6 @@ public class BoxRequestHandler  implements HttpHandler {
     private final Gson gson;
     private final Project project;
     private MikeBoxGetter boxGetter;
-    private History history;
 
     public BoxRequestHandler() {
 

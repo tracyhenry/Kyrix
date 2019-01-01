@@ -5,11 +5,9 @@ import com.sun.net.httpserver.HttpServer;
 import index.Indexer;
 import main.Config;
 
-import javax.script.ScriptException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 

@@ -1,6 +1,7 @@
 package box;
 
 import project.Canvas;
+
 import java.util.ArrayList;
 
 public class History {

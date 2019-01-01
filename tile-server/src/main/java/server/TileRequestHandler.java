@@ -1,5 +1,6 @@
 package server;
 
+import cache.TileCache;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
@@ -7,7 +8,6 @@ import com.sun.net.httpserver.HttpHandler;
 import main.Config;
 import main.Main;
 import project.Canvas;
-import cache.TileCache;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;

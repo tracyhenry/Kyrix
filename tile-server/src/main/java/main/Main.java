@@ -1,16 +1,16 @@
 package main;
 
+import cache.TileCache;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import index.Indexer;
 import project.Project;
 import server.Server;
-import cache.TileCache;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 

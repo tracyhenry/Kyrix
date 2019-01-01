@@ -8,13 +8,11 @@ import main.Config;
 import main.DbConnector;
 import main.Main;
 import project.Canvas;
-import project.Project;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
