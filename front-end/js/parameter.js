@@ -49,3 +49,6 @@ param.geometricSemanticZoom = "geometric_semantic_zoom";
 
 // fetching scheme -- either tiling or dbox
 param.fetchingScheme = "dbox";
+
+// whether use delta box
+param.deltaBox = true;

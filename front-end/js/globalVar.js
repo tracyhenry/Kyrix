@@ -5,18 +5,11 @@ var globalVar = {};
 globalVar.tileW = 0;
 globalVar.tileH = 0;
 
-//dynamic box coor and size
-globalVar.boxX = 0;
-globalVar.boxY = 0;
-globalVar.boxH = 0;
-globalVar.boxW = 0;
+// render data
 globalVar.renderData = null;
 
 // whether there is a pending box request
 globalVar.pendingBoxRequest = false;
-
-// whether there is already a box request sent for the current canvas
-globalVar.hasBox = false;
 
 // current viewport info
 globalVar.initialViewportX = 0;

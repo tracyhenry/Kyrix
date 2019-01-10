@@ -215,17 +215,22 @@ function RefreshDynamicLayers(viewportX, viewportY) {
         // send request to backend to get data
         var postData = "id=" + globalVar.curCanvasId + "&"
             + "x=" + (viewportX | 0) + "&"
-            + "y=" + (viewportY | 0) + "&"
-            + "hasbox=" + globalVar.hasBox;
+            + "y=" + (viewportY | 0);
         for (var i = 0; i < globalVar.predicates.length; i ++)
             postData += "&predicate" + i + "=" + globalVar.predicates[i];
+        var cBoxX = globalVar.boxX[globalVar.boxX.length - 1], cBoxY = globalVar.boxY[globalVar.boxY.length - 1];
+        var cBoxW = globalVar.boxW[globalVar.boxW.length - 1], cBoxH = globalVar.boxH[globalVar.boxH.length - 1];
+        if (param.deltaBox)
+            postData += "&oboxx=" + cBoxX + "&oboxy=" + cBoxY
+                + "&oboxw=" + cBoxW + "&oboxh=" + cBoxH;
+        else
+            postData += "&oboxx=" + (-1e5) + "&oboxy=" + (-1e5)
+                + "&oboxw=" + (-1e5) + "&oboxh=" + (-1e5);
+        if (cBoxX < -1e4 || (viewportX <= cBoxX + vpW / 3 && cBoxX >= 0)
+            || ((viewportX + vpW) >= (cBoxX + cBoxW) - vpW / 3 && cBoxX + cBoxW <= globalVar.curCanvas.w)
+            || (viewportY <= cBoxY + vpH / 3 && cBoxY >= 0)
+            || ((viewportY + vpH) >= (cBoxY + cBoxH) - vpH / 3 && cBoxY + cBoxH <= globalVar.curCanvas.h)) {
 
-        if (! globalVar.hasBox || (viewportX <= globalVar.boxX + vpW / 3 && globalVar.boxX >= 0)
-            || ((viewportX + vpW) >= (globalVar.boxX + globalVar.boxW) - vpW / 3 && globalVar.boxX + globalVar.boxW <= globalVar.curCanvas.w)
-            || (viewportY <= globalVar.boxY + vpH / 3 && globalVar.boxY >= 0)
-            || ((viewportY + vpH) >= (globalVar.boxY + globalVar.boxH) - vpH / 3 && globalVar.boxY + globalVar.boxH <= globalVar.curCanvas.h)) {
-
-            globalVar.hasBox = true;
             globalVar.pendingBoxRequest = true;
             $.post("/dbox", postData, function (data) {
 
@@ -234,28 +239,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                 var x = response.minx;
                 var y = response.miny;
                 var canvasId = response.canvasId;
-                // remove those tuple who is outside the viewport
-                // doing this because some backend indexers use compression
-                // and may return tuples outside viewport
-                // doing this in the backend is not efficient, so we do it here
-                // also dedup
                 var renderData = response.renderData;
-                var numLayers = globalVar.curCanvas.layers.length;
-                for (var i = 0; i < numLayers; i ++) {
-                    var mp = {};
-                    globalVar.renderData[i].forEach(function (d) {
-                        mp[JSON.stringify(d)] = true;
-                    });
-                    renderData[i] = renderData[i].filter(function (d) {
-                        if (+d[d.length - param.maxxOffset] < x ||
-                            +d[d.length - param.minxOffset] > (x + response.boxW) ||
-                            +d[d.length - param.maxyOffset] < y ||
-                            +d[d.length - param.minyOffset] > (y + response.boxH))
-                            return false;
-                        if (mp.hasOwnProperty(JSON.stringify(d)))
-                            return false;
-                        return true;});
-                }
 
                 // check if this response is already outdated
                 if (canvasId != globalVar.curCanvasId) {
@@ -264,6 +248,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                 }
 
                 // loop over every layer to render
+                var numLayers = globalVar.curCanvas.layers.length;
                 for (var i = numLayers - 1; i >= 0; i --) {
 
                     // current layer object
@@ -299,20 +284,38 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                         })
                         .remove();
 
+                    // remove those returned objects outside the viewport
+                    // doing this because some backend indexers use compression
+                    // and may return tuples outside viewport
+                    // doing this in the backend is not efficient, so we do it here
+                    // also dedup
+                    var mp = {};
+                    globalVar.renderData[i].forEach(function (d) {
+                        mp[JSON.stringify(d)] = true;
+                    });
+                    renderData[i] = renderData[i].filter(function (d) {
+                        if (+d[d.length - param.maxxOffset] < x ||
+                            +d[d.length - param.minxOffset] > (x + response.boxW) ||
+                            +d[d.length - param.maxyOffset] < y ||
+                            +d[d.length - param.minyOffset] > (y + response.boxH))
+                            return false;
+                        if (mp.hasOwnProperty(JSON.stringify(d)))
+                            return false;
+                        return true;});
+
                     // construct new globalVar.renderData
-                    // 1) add data from intersection
-                    // 2) add data from response.renderData
-                    var newLayerData = [];
-                    for (var j = 0; j < globalVar.renderData[i].length; j ++) {
-                        var d = globalVar.renderData[i][j];
-                        if (! (d[d.length - param.maxxOffset] < x ||
-                                d[d.length - param.minxOffset] > (x + response.boxW) ||
-                                d[d.length - param.maxyOffset] < y ||
-                                d[d.length - param.minyOffset] > (y + response.boxH)))
-                            newLayerData.push(d);
+                    var newLayerData = renderData[i];
+                    if (param.deltaBox) {
+                        // add data from intersection w/ old box data
+                        for (var j = 0; j < globalVar.renderData[i].length; j ++) {
+                            var d = globalVar.renderData[i][j];
+                            if (! (d[d.length - param.maxxOffset] < x ||
+                                    d[d.length - param.minxOffset] > (x + response.boxW) ||
+                                    d[d.length - param.maxyOffset] < y ||
+                                    d[d.length - param.minyOffset] > (y + response.boxH)))
+                                newLayerData.push(d);
+                        }
                     }
-                    for (var j = 0; j < renderData[i].length; j ++)
-                        newLayerData.push(renderData[i][j]);
                     globalVar.renderData[i] = newLayerData;
 
                     // draw current layer
@@ -334,10 +337,10 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                 }
 
                 // modify global var
-                globalVar.boxH = response.boxH;
-                globalVar.boxW = response.boxW;
-                globalVar.boxX = x;
-                globalVar.boxY = y;
+                globalVar.boxH.push(response.boxH);
+                globalVar.boxW.push(response.boxW);
+                globalVar.boxX.push(x);
+                globalVar.boxY.push(y);
                 globalVar.pendingBoxRequest = false;
 
                 // refresh dynamic layers again while panning (#37)

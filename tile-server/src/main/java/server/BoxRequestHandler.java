@@ -1,5 +1,6 @@
 package server;
 
+import box.Box;
 import box.BoxandData;
 import box.MikeBoxGetter;
 import com.google.gson.Gson;
@@ -43,9 +44,6 @@ public class BoxRequestHandler  implements HttpHandler {
         String response;
         String canvasId;
         double minx, miny;
-        int viewportH = Main.getProject().getViewportHeight();
-        int viewportW = Main.getProject().getViewportWidth();
-        boolean hasBox;
         BoxandData data = null;
 
         // check if this is a POST request
@@ -73,17 +71,20 @@ public class BoxRequestHandler  implements HttpHandler {
         canvasId = queryMap.get("id");
         minx = Double.valueOf(queryMap.get("x"));
         miny = Double.valueOf(queryMap.get("y"));
-        hasBox = Boolean.valueOf(queryMap.get("hasbox"));
         Canvas c = project.getCanvas(canvasId);
         ArrayList<String> predicates = new ArrayList<>();
-
         for (int i = 0; i < c.getLayers().size(); i ++)
             predicates.add(queryMap.get("predicate" + i));
+        double oMinX = Double.valueOf(queryMap.get("oboxx"));
+        double oMinY = Double.valueOf(queryMap.get("oboxy"));
+        double oMaxX = oMinX + Double.valueOf(queryMap.get("oboxw"));
+        double oMaxY = oMinY + Double.valueOf(queryMap.get("oboxh"));
+        Box oldBox = new Box(oMinX, oMinY, oMaxX, oMaxY);
 
         //get box data
         long st = System.currentTimeMillis();
         try {
-            data = boxGetter.getBox(c, minx, miny, viewportH, viewportW, predicates, hasBox);
+            data = boxGetter.getBox(c, minx, miny, oldBox, predicates);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -47,8 +47,12 @@ function setupLayerLayouts() {
     d3.selectAll(".layerg").remove();
 
     // set box flag
-    if (param.fetchingScheme == "dbox")
-        globalVar.hasBox = false;
+    if (param.fetchingScheme == "dbox") {
+        globalVar.boxX = [-1e5];
+        globalVar.boxY = [-1e5];
+        globalVar.boxH = [-1e5];
+        globalVar.boxW = [-1e5];
+    }
 
     // set render data
     globalVar.renderData = [];
