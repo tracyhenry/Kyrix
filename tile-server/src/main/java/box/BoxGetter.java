@@ -17,10 +17,7 @@ import project.Project;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.io.*;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -32,21 +29,15 @@ public abstract class BoxGetter {
         project = Main.getProject();
     }
 
-    public ArrayList<ArrayList<ArrayList<String>>> fetchData(Canvas c, int minx, int miny, int maxx, int maxy, ArrayList<String> predicates, boolean hasBox)
+    public ArrayList<ArrayList<ArrayList<String>>> fetchData(Canvas c, Box newBox, Box oldBox, ArrayList<String> predicates)
             throws SQLException, ClassNotFoundException, ParseException {
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
         Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
 
-        int oldMinx, oldMiny, oldMaxx, oldMaxy;
-        if (! hasBox) {
-            oldMinx = oldMaxx = oldMiny = oldMaxy = Integer.MIN_VALUE;
-            History.reset(0);
-        } else {
-            oldMinx = History.getBox(0).getMinx();
-            oldMiny = History.getBox(0).getMiny();
-            oldMaxx = History.getBox(0).getMaxx();
-            oldMaxy = History.getBox(0).getMaxy();
-        }
+        double newMinx = newBox.getMinx(), newMiny = newBox.getMiny();
+        double newMaxx = newBox.getMaxx(), newMaxy = newBox.getMaxy();
+        double oldMinx = oldBox.getMinx(), oldMiny = oldBox.getMiny();
+        double oldMaxx = oldBox.getMaxx(), oldMaxy = oldBox.getMaxy();
 
         // loop through each layer
         for (int i = 0; i < c.getLayers().size(); i++) {
@@ -57,8 +48,8 @@ public abstract class BoxGetter {
             }
             GeometryFactory fact = new GeometryFactory();
             WKTReader wktRdr = new WKTReader(fact);
-            String wktNew = "POLYGON((" + minx + " " + miny + "," +minx + " " + maxy + ","
-                    + maxx + " " + maxy + "," + maxx + " " + miny + "," + minx + " " + miny + "))";
+            String wktNew = "POLYGON((" + newMinx + " " + newMiny + "," + newMinx + " " + newMaxy + ","
+                    + newMaxx + " " + newMaxy + "," + newMaxx + " " + newMiny + "," + newMinx + " " + newMiny + "))";
             String wktOld = "POLYGON((" + oldMinx + " " + oldMiny + "," +oldMinx + " " + oldMaxy + ","
                     + oldMaxx + " " + oldMaxy + "," + oldMaxx + " " + oldMiny + "," + oldMinx + " " + oldMiny + "))";
             Geometry newBoxGeom = wktRdr.read(wktNew);
@@ -76,7 +67,7 @@ public abstract class BoxGetter {
             if (predicates.get(i).length() > 0)
                 sql += " and " + predicates.get(i);
             sql += ";";
-            System.out.println(minx + " " + miny + " : " + sql);
+            System.out.println(newMinx + " " + newMiny + " : " + sql);
 
             // add to response
             ArrayList<ArrayList<String>> curResults = DbConnector.getQueryResult(stmt, sql);
@@ -84,13 +75,12 @@ public abstract class BoxGetter {
                 curResults.get(j).set(curResults.get(j).size() - 1, "");
             data.add(curResults);
         }
-        History.updateHistory(0, c, new Box(minx, miny, maxx, maxy), 0);
         stmt.close();
 
         return data;
     }
 
-    public ArrayList<ArrayList<ArrayList<String>>> fetchEEGData(Canvas c, int minx, int maxx, ArrayList<String> predicates, boolean hasBox)
+    public ArrayList<ArrayList<ArrayList<String>>> fetchEEGData(Canvas c, int minx, int maxx, Box oldBox, ArrayList<String> predicates)
             throws SQLException, ClassNotFoundException, IOException {
 
         System.out.println("minx, maxx : " + minx + " " + maxx);
@@ -106,16 +96,8 @@ public abstract class BoxGetter {
                 "fp2", "fz", "o1", "o2", "p3", "p4", "pz", "t3", "t4", "t5", "t6"};
 
         // calculate start & end key rows
-        int oldStart, oldEnd, newStart = minx, newEnd = maxx;
-        if (! hasBox) {
-            oldStart = oldEnd = Integer.MIN_VALUE;
-            History.reset(2);
-        } else {
-            oldStart = History.getBox(2).getMinx();
-            oldEnd = History.getBox(2).getMaxx();
-        }
-        History.updateHistory(2, c, new Box(newStart, 0, newEnd, 0), 0);
-
+        int newStart = minx, newEnd = maxx;
+        int oldStart = oldBox.getMinx(), oldEnd = oldBox.getMaxx();
         oldStart = (int) Math.floor(oldStart / 200);
         oldEnd = (int) Math.floor(oldEnd / 200);
         newStart = (int) Math.floor(newStart / 200);
@@ -175,7 +157,7 @@ public abstract class BoxGetter {
         return data;
     }
 
-    public ArrayList<ArrayList<ArrayList<String>>> fetchSpectrogramData(Canvas c, int minx, int maxx, ArrayList<String> predicates, boolean hasBox)
+    public ArrayList<ArrayList<ArrayList<String>>> fetchSpectrogramData(Canvas c, int minx, int maxx, Box oldBox, ArrayList<String> predicates)
             throws SQLException, ClassNotFoundException, IOException {
 
         System.out.println("minx, maxx : " + minx + " " + maxx);
@@ -186,15 +168,8 @@ public abstract class BoxGetter {
         ArrayList<ArrayList<String>> spectrogramData = new ArrayList<>();
 
         // calculate start & end key rows
-        int oldStart, oldEnd, newStart = minx, newEnd = maxx;
-        if (History.getCanvas(1) == null || ! History.getCanvas(1).getId().equals(c.getId())) {
-            oldStart = oldEnd = Integer.MIN_VALUE;
-            History.reset(1);
-        } else {
-            oldStart = History.getBox(1).getMinx();
-            oldEnd = History.getBox(1).getMaxx();
-        }
-        History.updateHistory(1, c, new Box(newStart, 0, newEnd, 0), 0);
+        int newStart = minx, newEnd = maxx;
+        int oldStart = oldBox.getMinx(), oldEnd = oldBox.getMaxx();
         oldStart = (int) Math.floor(oldStart / imageWidth);
         oldEnd = (int) Math.floor(oldEnd / imageWidth);
         newStart = (int) Math.floor(newStart / imageWidth);
@@ -250,5 +225,5 @@ public abstract class BoxGetter {
         return data;
     }
 
-    public abstract BoxandData getBox(Canvas c, int cx, int cy, int viewportH, int viewportW, ArrayList<String> predicates, boolean hasBox) throws SQLException, ClassNotFoundException, IOException, ParseException;
+    public abstract BoxandData getBox(Canvas c, int cx, int cy, Box oldBox, ArrayList<String> predicates) throws SQLException, ClassNotFoundException, IOException, ParseException;
 }

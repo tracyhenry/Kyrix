@@ -1,14 +1,10 @@
 package server;
 
-import box.BoxandData;
-import box.History;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import main.Config;
 import main.Main;
-import project.Canvas;
 import project.Project;
 import editing.Labeler;
 
@@ -16,7 +12,6 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.SQLException;
 import java.util.*;
 
 public class EditHandler  implements HttpHandler {

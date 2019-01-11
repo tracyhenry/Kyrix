@@ -15,17 +15,16 @@ for (var i = 0; i < globalVar.numViews; i ++) {
     var globalVarDict = globalVar.views[i];
 
     // dynamic box coor and size
-    globalVarDict.boxX = 0;
-    globalVarDict.boxY = 0;
-    globalVarDict.boxH = 0;
-    globalVarDict.boxW = 0;
     globalVarDict.renderData = null;
 
     // whether there is a pending box request
     globalVarDict.pendingBoxRequest = false;
 
-    // whether there is already a box request sent for the current canvas
-    globalVarDict.hasBox = false;
+    // box locations
+    globalVarDict.boxX = [-1e5];
+    globalVarDict.boxY = [-1e5];
+    globalVarDict.boxH = [-1e5];
+    globalVarDict.boxW = [-1e5];
 
     // current viewport info
     globalVarDict.initialViewportX = 0;

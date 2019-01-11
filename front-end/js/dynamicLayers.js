@@ -87,17 +87,19 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
     // send request to backend to get data
     var postData = "id=" + globalVarDict.curCanvasId + "&"
         + "x=" + (viewportX | 0) + "&"
-        + "y=" + (viewportY | 0) + "&"
-        + "hasbox=" + globalVarDict.hasBox;
+        + "y=" + (viewportY | 0);
     for (var i = 0; i < globalVarDict.predicates.length; i ++)
         postData += "&predicate" + i + "=" + globalVarDict.predicates[i];
+    var cBoxX = globalVarDict.boxX[globalVarDict.boxX.length - 1], cBoxY = globalVarDict.boxY[globalVarDict.boxY.length - 1];
+    var cBoxW = globalVarDict.boxW[globalVarDict.boxW.length - 1], cBoxH = globalVarDict.boxH[globalVarDict.boxH.length - 1];
+    postData += "&oboxx=" + cBoxX + "&oboxy=" + cBoxY
+        + "&oboxw=" + cBoxW + "&oboxh=" + cBoxH;
 
-    if (! globalVarDict.hasBox || (viewportX <= globalVarDict.boxX + vpW / 3 && globalVarDict.boxX >= 0)
-            || ((viewportX + vpW) >= (globalVarDict.boxX + globalVarDict.boxW) - vpW / 3 && globalVarDict.boxX + globalVarDict.boxW <= globalVarDict.curCanvas.w)
-            || (viewportY <= globalVarDict.boxY + vpH / 3 && globalVarDict.boxY >= 0)
-            || ((viewportY + vpH) >= (globalVarDict.boxY + globalVarDict.boxH) - vpH / 3 && globalVarDict.boxY + globalVarDict.boxH <= globalVarDict.curCanvas.h)) {
+    if (cBoxX < -1e4 || (viewportX <= cBoxX + vpW / 3 && cBoxX >= 0)
+        || ((viewportX + vpW) >= (cBoxX + cBoxW) - vpW / 3 && cBoxX + cBoxW <= globalVarDict.curCanvas.w)
+        || (viewportY <= cBoxY + vpH / 3 && cBoxY >= 0)
+        || ((viewportY + vpH) >= (cBoxY + cBoxH) - vpH / 3 && cBoxY + cBoxH <= globalVarDict.curCanvas.h)) {
 
-        globalVarDict.hasBox = true;
         globalVarDict.pendingBoxRequest = true;
         $.ajax({
             type : "POST",
@@ -189,10 +191,10 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
                 }
 
                 // modify global var
-                globalVarDict.boxH = response.boxH;
-                globalVarDict.boxW = response.boxW;
-                globalVarDict.boxX = x;
-                globalVarDict.boxY = y;
+                globalVarDict.boxH.push(response.boxH);
+                globalVarDict.boxW.push(response.boxW);
+                globalVarDict.boxX.push(x);
+                globalVarDict.boxY.push(y);
                 globalVarDict.pendingBoxRequest = false;
 
                 // refresh dynamic layers again (#37)

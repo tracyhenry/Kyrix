@@ -1,15 +1,13 @@
 package server;
 
+import box.Box;
 import box.BoxandData;
-import box.History;
 import box.MikeBoxGetter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import main.Config;
 import main.Main;
-import org.locationtech.jts.io.ParseException;
 import project.Canvas;
 import project.Project;
 
@@ -17,7 +15,6 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,14 +25,12 @@ public class BoxRequestHandler  implements HttpHandler {
     private final Gson gson;
     private final Project project;
     private MikeBoxGetter boxGetter;
-    private History history;
 
     public BoxRequestHandler() {
 
         gson = new GsonBuilder().create();
         project = Main.getProject();
         boxGetter = new MikeBoxGetter();
-
     }
 
     @Override
@@ -49,9 +44,6 @@ public class BoxRequestHandler  implements HttpHandler {
         String response;
         String canvasId;
         int minx, miny;
-        boolean hasBox;
-        int viewportH = Main.getProject().getViewportHeight();
-        int viewportW = Main.getProject().getViewportWidth();
         BoxandData data = null;
 
         // check if this is a POST request
@@ -79,17 +71,20 @@ public class BoxRequestHandler  implements HttpHandler {
         canvasId = queryMap.get("id");
         minx = Integer.valueOf(queryMap.get("x"));
         miny = Integer.valueOf(queryMap.get("y"));
-        hasBox = Boolean.valueOf(queryMap.get("hasbox"));
         Canvas c = project.getCanvas(canvasId);
         ArrayList<String> predicates = new ArrayList<>();
-
         for (int i = 0; i < c.getLayers().size(); i ++)
             predicates.add(queryMap.get("predicate" + i));
+        int oMinX = Integer.valueOf(queryMap.get("oboxx"));
+        int oMinY = Integer.valueOf(queryMap.get("oboxy"));
+        int oMaxX = oMinX + Integer.valueOf(queryMap.get("oboxw"));
+        int oMaxY = oMinY + Integer.valueOf(queryMap.get("oboxh"));
+        Box oldBox = new Box(oMinX, oMinY, oMaxX, oMaxY);
 
         //get box data
         long st = System.currentTimeMillis();
         try {
-            data = boxGetter.getBox(c, minx, miny, viewportH, viewportW, predicates, hasBox);
+            data = boxGetter.getBox(c, minx, miny, oldBox, predicates);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -33,8 +33,9 @@ function registerJumps(viewId, svg, layerId) {
 
             // set canvasId
             globalVarDict.curCanvasId = jumps[k].destId;
+
             // reset globalvar.boxx
-            globalVarDict.boxX = -1000;
+//            globalVarDict.boxX = -1000;
 
             // calculate new predicates
             globalVarDict.predicates = jumps[k].newPredicates.parseFunction()(tuple);
