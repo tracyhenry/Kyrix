@@ -1,4 +1,4 @@
-// register jump info for a tile
+// register jump info
 function registerJumps(viewId, svg, layerId) {
 
     // hardcoding: no register jump for eeg or spectrogram

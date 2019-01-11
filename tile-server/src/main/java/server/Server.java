@@ -28,7 +28,6 @@ public class Server {
 		server = HttpServer.create(new InetSocketAddress(portNumber), 0);
 		server.createContext("/", new IndexHandler());
 		server.createContext("/first", new FirstRequestHandler());
-		server.createContext("/tile", new TileRequestHandler());
 		server.createContext("/dbox", new BoxRequestHandler());
 		server.createContext("/canvas", new CanvasRequestHandler());
 		server.createContext("/viewport", new ViewportRequestHandler());

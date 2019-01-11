@@ -37,23 +37,11 @@ public class Config {
 	// table name
 	public static String projectTableName = "project";
 
-	// tile size
-	public static int tileW = 1024, tileH = 1024;
-
 	// number of worker threads
 	public static int numThread = 4;
 
 	// number of batch size when inserting records
 	public static int bboxBatchSize = 5000;
-	public static int tileBatchSize = 10000;
-
-	// tile indexing scheme
-	public enum IndexingScheme {TUPLE_MAPPING, SPATIAL_INDEX, SORTED_TUPLE_MAPPING};
-	public static IndexingScheme indexingScheme = IndexingScheme.SPATIAL_INDEX;
-
-	// underlying database
-	public enum Database {MYSQL, PSQL};
-	public static Database database;
 
 	// database iterator fetch size
 	public static int iteratorfetchSize = 1000;

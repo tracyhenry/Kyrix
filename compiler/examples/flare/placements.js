@@ -1,3 +1,0 @@
-/*
-no placement is needed for the flare example.
- */

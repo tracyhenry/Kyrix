@@ -47,8 +47,6 @@ public class FirstRequestHandler implements HttpHandler {
 		respMap.put("viewportWidth", project.getViewportWidth());
 		respMap.put("viewportHeight", project.getViewportHeight());
 		respMap.put("initialCanvasId", project.getInitialCanvasId());
-		respMap.put("tileH", Config.tileH);
-		respMap.put("tileW", Config.tileW);
 		respMap.put("renderingParams", project.getRenderingParams());
 
 		// convert the response to a json object and send it back

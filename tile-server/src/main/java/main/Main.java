@@ -1,6 +1,5 @@
 package main;
 
-import box.MikeBoxGetter;
 import com.google.cloud.bigtable.hbase.BigtableConfiguration;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -9,7 +8,6 @@ import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.client.Connection;
 import project.Project;
 import server.Server;
-import cache.TileCache;
 
 import javax.script.ScriptException;
 import java.io.*;
@@ -55,9 +53,6 @@ public class Main {
 		else if (project != null)
 			System.out.println("Main project definition has not been changed since last session. Starting server right away...");
 
-		//cache
-		TileCache.create();
-
 		// start server
 		Server.startServer(Config.portNumber);
 	}
@@ -96,8 +91,6 @@ public class Main {
 
 		Config.projectName = inputStrings.get(Config.projectNameRow);
 		Config.portNumber = Integer.valueOf(inputStrings.get(Config.portNumberRow));
-		Config.database = (inputStrings.get(Config.dbRow).toLowerCase().equals("mysql") ?
-				Config.Database.MYSQL : Config.Database.PSQL);
 		Config.dbServer = inputStrings.get(Config.dbServerRow);
 		Config.userName = inputStrings.get(Config.userNameRow);
 		Config.password = inputStrings.get(Config.passwordRow);

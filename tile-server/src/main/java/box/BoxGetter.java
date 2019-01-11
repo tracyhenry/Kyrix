@@ -61,8 +61,7 @@ public abstract class BoxGetter {
             // construct range query
             String sql = "select * from bbox_" + project.getName() + "_"
                     + c.getId() + "layer" + i + " where ";
-            sql += (Config.database == Config.Database.MYSQL ? "MBRIntersects(GeomFromText" :
-                    "st_Intersects(st_GeomFromText");
+            sql += "st_Intersects(st_GeomFromText";
             sql += "('" + deltaWkt + "'),geom)";
             if (predicates.get(i).length() > 0)
                 sql += " and " + predicates.get(i);

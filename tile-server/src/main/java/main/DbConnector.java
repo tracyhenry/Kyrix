@@ -18,22 +18,15 @@ public class DbConnector {
 		Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
 
 		// set autocommit
-		if (Config.database == Config.Database.PSQL)
-			conn.setAutoCommit(false);
+		conn.setAutoCommit(false);
 
 		// get statement
 		Statement retStmt = null;
-		if (Config.database == Config.Database.PSQL)
-			retStmt = conn.createStatement();
-		else if (Config.database == Config.Database.MYSQL)
-			retStmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		retStmt = conn.createStatement();
 
 		// set fetch size
 		// NOTE: MySQL doesn't support fetch size very well. And MIN_VALUE isn't that bad.
-		if (Config.database == Config.Database.MYSQL)
-			retStmt.setFetchSize(Integer.MIN_VALUE);
-		else
-			retStmt.setFetchSize(Config.iteratorfetchSize);
+		retStmt.setFetchSize(Config.iteratorfetchSize);
 
 		return retStmt;
 	}
@@ -81,27 +74,15 @@ public class DbConnector {
 		if (connections.containsKey(dbName))
 			return connections.get(dbName);
 		Connection dbConn = null;
-		if (Config.database == Config.Database.PSQL) {
-			Class.forName("org.postgresql.Driver");
-			dbConn = DriverManager.getConnection("jdbc:postgresql://" + dbServer +
-							"/" + dbName + "?sendStringParametersAsUnicode=false",
-					userName, password);
-		}
-		else if (Config.database == Config.Database.MYSQL){
-			Class.forName("com.mysql.jdbc.Driver");
-			dbConn = DriverManager.getConnection("jdbc:mysql://" + dbServer +
-							"/" + dbName + "?sendStringParametersAsUnicode=false",
-					userName, password);
-		}
+		Class.forName("org.postgresql.Driver");
+		dbConn = DriverManager.getConnection("jdbc:postgresql://" + dbServer +
+						"/" + dbName + "?sendStringParametersAsUnicode=false",
+				userName, password);
 		connections.put(dbName, dbConn);
 		return dbConn;
 	}
 
 	public static void commitConnection(String dbName) throws SQLException, ClassNotFoundException{
-
-		// mysql uses autocommit
-		if (Config.database == Config.Database.MYSQL)
-			return ;
 
 		Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
 		conn.commit();
