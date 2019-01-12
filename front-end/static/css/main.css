@@ -69,12 +69,17 @@ body {
     background-color : #FFEEEE;
 }
 
-#editIdBox {
+#editIdBox, #passcodeBox {
     font-size : 23px;
     font-weight : bold;
     width : 170px;
     overflow-wrap : break-word;
     margin : auto;
+}
+
+input[name="passcode"]{
+    width : 150px;
+    font-weight : normal;
 }
 
 label {
