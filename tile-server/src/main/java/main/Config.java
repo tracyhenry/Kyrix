@@ -12,6 +12,7 @@ public class Config {
     // config file name
     public static String configFileName = "../config.txt";
 
+
     // config file row numbers
     public static int projectNameRow = 0;
     public static int portNumberRow = 1;
@@ -38,14 +39,14 @@ public class Config {
     public static String projectTableName = "project";
 
     // tile size
-    public static int tileW = 1024, tileH = 1024;
+    public static int tileW = 4096, tileH = 4096;
 
     // number of worker threads
     public static int numThread = 4;
 
     // number of batch size when inserting records
     public static int bboxBatchSize = 5000;
-    // public static int bboxBatchSize = 1500; //vsql
+    public static int vsqlBBoxBatchSize = 1500;
     public static int tileBatchSize = 10000;
 
     // tile indexing scheme
@@ -56,7 +57,7 @@ public class Config {
     public enum Database {MYSQL, PSQL, VSQL};
     public static Database database;
 
-    //VSQL ResultsBufferSize
+    // vsql ResultsBufferSize
     public static int vsqlBufferSize = 10240000;
 
     // database iterator fetch size

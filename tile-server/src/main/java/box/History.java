@@ -1,33 +1,30 @@
 package box;
 
+import box.Box;
 import project.Canvas;
-import java.util.ArrayList;
 
 public class History {
+    static Canvas canvas;
+    static int history;
+    static Box box;
 
-    private static Canvas canvas;
-    private static Box box;
-    private static ArrayList<String> predicates;
-    private static int count;
-
-    public static void reset() {
-
-        canvas = null;
+    public static void resetHistory(Canvas c) {
+        history = 0;
+        canvas = c;
         box = null;
-        predicates = null;
-        count = 0;
     }
-
-    public static void updateHistory(Canvas c, Box b, ArrayList<String> p, int ct) {
-
+    public static void updateHistory(int count, Box b, Canvas c){
+        history = count;
         box = b;
         canvas = c;
-        predicates = p;
-        count = ct;
     }
 
-    public static Box getBox() {
-
-        return box;
+    public static Canvas getCanvas(){
+        return canvas;
     }
+
+    public static int getCount(Canvas c){
+        return history;
+    }
+
 }

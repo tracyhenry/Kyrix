@@ -78,7 +78,6 @@ public class DbConnector {
     private static Connection getDbConn(String dbServer, String dbName, String userName, String password)
             throws SQLException, ClassNotFoundException {
 
-
         Connection dbConn = null;
         if (Config.database == Config.Database.PSQL) {
             Class.forName("org.postgresql.Driver");
@@ -98,7 +97,6 @@ public class DbConnector {
                     userName, password);
 
             ((VerticaConnection) dbConn).setProperty("ResultBufferSize", Config.vsqlBufferSize);
-            //((VerticaConnection) dbConn).setProperty("LogLevel","DEBUG");
         }
 
         return dbConn;

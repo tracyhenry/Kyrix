@@ -84,6 +84,7 @@ public class Main {
         Config.projectName = inputStrings.get(Config.projectNameRow);
         Config.portNumber = Integer.valueOf(inputStrings.get(Config.portNumberRow));
 
+        String database = inputStrings.get(Config.dbRow).toLowerCase();
         Config.database = database.equals("mysql") ?
                 Config.Database.MYSQL : database.equals("psql") ?
                 Config.Database.PSQL : Config.Database.VSQL;

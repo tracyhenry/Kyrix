@@ -1,17 +1,15 @@
 package box;
 
 import main.Main;
-import org.locationtech.jts.io.ParseException;
 import project.Canvas;
 import project.Project;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class BigSparseBoxGetter extends BoxGetter {
-    public BoxandData getBox(Canvas c, int mx, int my, int viewportH, int viewportW, ArrayList<String> predicates, boolean hasBox)
-            throws SQLException, ClassNotFoundException, ParseException {
-
+public class BigSparseBoxGetter extends BoxGetter{
+    public BoxandData getBox(Canvas c, int mx, int my, int viewportH, int viewportW, ArrayList<String> predicates)
+            throws SQLException, ClassNotFoundException {
         ArrayList<ArrayList<ArrayList<String>>> data;
         double wrapLength = 0.5;
         int count = 0;
@@ -19,13 +17,13 @@ public class BigSparseBoxGetter extends BoxGetter {
         int miny = (int)Math.max(0, my - wrapLength * viewportH);
         int maxx = (int)Math.min(c.getH(), minx + (1 + 2 * wrapLength) * viewportW);
         int maxy = (int)Math.min(c.getW(), miny + (1 + 2 * wrapLength) * viewportH);
-        int deltaRight = (int) 0.5 * viewportW;
-        int deltaLeft = (int) 0.5 * viewportW;
-        int deltaUp = (int) 0.5 * viewportH;
-        int deltaDown = (int) 0.5 * viewportH;
+        int deltaRight = (int)0.5 * viewportW;
+        int deltaLeft = (int)0.5 * viewportW;
+        int deltaUp = (int)0.5 * viewportH;
+        int deltaDown = (int)0.5 * viewportH;
 
         //check if regular size box contains dense area
-        data = fetchData(c, minx, miny, maxx, maxy, predicates, hasBox);
+        data = fetchData(c, minx, miny, maxx, maxy, predicates);
         for (int i = 0; i < data.get(0).size(); i++)
             count += data.get(i).size();
 
@@ -37,7 +35,7 @@ public class BigSparseBoxGetter extends BoxGetter {
         //extend rightwards
         for (int extendCount =0; extendCount < 20000;) {
             deltaRight *= 2;
-            data = fetchData(c, maxx, miny, maxx + deltaRight, maxy, predicates, hasBox);
+            data = fetchData(c, maxx, miny, maxx + deltaRight, maxy, predicates);
             for (int i = 0; i < data.get(0).size(); i++)
                 extendCount += data.get(i).size();
         }
@@ -45,7 +43,7 @@ public class BigSparseBoxGetter extends BoxGetter {
         //extend downwards
         for (int extendCount =0; extendCount < 20000;) {
             deltaDown *= 2;
-            data = fetchData(c, minx, maxy, maxx, maxy + deltaDown, predicates, hasBox);
+            data = fetchData(c, minx, maxy, maxx, maxy + deltaDown, predicates);
             for (int i = 0; i < data.get(0).size(); i++)
                 extendCount += data.get(i).size();
         }
@@ -53,7 +51,7 @@ public class BigSparseBoxGetter extends BoxGetter {
         //extend leftwards
         for (int extendCount =0; extendCount < 20000;) {
             deltaLeft *= 2;
-            data = fetchData(c, minx - deltaLeft, miny, minx, maxy, predicates, hasBox);
+            data = fetchData(c, minx - deltaLeft, miny, minx, maxy, predicates);
             for (int i = 0; i < data.get(0).size(); i++)
                 extendCount += data.get(i).size();
         }
@@ -61,13 +59,13 @@ public class BigSparseBoxGetter extends BoxGetter {
         //extend upwards
         for (int extendCount =0; extendCount < 20000;) {
             deltaUp *= 2;
-            data = fetchData(c, minx, miny - deltaUp, maxx, miny, predicates, hasBox);
+            data = fetchData(c, minx, miny - deltaUp, maxx, miny, predicates);
             for (int i = 0; i < data.get(0).size(); i++)
                 extendCount += data.get(i).size();
         }
         miny -= deltaUp;
 
-        data = fetchData(c, minx, miny, maxx, maxy, predicates, hasBox);
+        data = fetchData(c, minx, miny, maxx, maxy, predicates);
         Box box = new Box(minx, miny, maxx, maxy);
         return new BoxandData(box, data);
     }

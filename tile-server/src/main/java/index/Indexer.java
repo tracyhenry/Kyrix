@@ -27,10 +27,10 @@ public class Indexer {
 	private Statement bboxStmt;
 	private Statement tileStmt;
 
-	public Indexer() throws SQLException, 
-	       ClassNotFoundException, 
-	       ScriptException, 
-	       NoSuchMethodException {
+	public Indexer() throws SQLException,
+			ClassNotFoundException,
+			ScriptException,
+			NoSuchMethodException {
 
 		project = Main.getProject();
 		bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
@@ -44,13 +44,20 @@ public class Indexer {
 			ScriptException,
 			NoSuchMethodException {
 
-		// if (true) return;
+		if (true) return;
 
 		System.out.println("Precomputing...");
 
 		String projectName = project.getName();
 
 		System.out.println("Project name:" + projectName);
+
+		// Vertica cannot handle too many unionized insertions as a single query statement.
+		// XXX: Kyrix should use "prepared statements" for larger and faster batch insertions
+		if(Config.database == Config.Database.VSQL) {
+			Config.bboxBatchSize = Config.vsqlBBoxBatchSize;
+		}
+
 		System.out.println("Bbox batch size:" + Config.bboxBatchSize);
 		System.out.println("Tile batch size:" + Config.tileBatchSize);
 
@@ -62,9 +69,6 @@ public class Indexer {
 			psql = "CREATE EXTENSION if not exists postgis_topology;";
 			bboxStmt.executeUpdate(psql);
 
-		} else if (Config.database == Config.Database.VSQL){
-			// Vertica supports spatial index creation  out of the box, kind of
-			System.out.println("Vertica supports spatial indexes natively...");
 		}
 
 		// for each canvas and for each layer
@@ -108,7 +112,7 @@ public class Indexer {
 				if (Config.database == Config.Database.PSQL){
 
 					if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
-							Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING) {
+							Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING){
 						sql += "tuple_id int, ";
 					}
 
@@ -140,18 +144,50 @@ public class Indexer {
 
 				}
 
-				sql += ");";
+
+				if(Config.database == Config.Database.VSQL) {
+
+				    if(Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX ) {
+
+						// We also want the Vertica table to be sorted by geom as we'll use
+						// manual intersection instead of spatial index
+						sql += ") ORDER BY geom;";
+
+					} else {
+
+                        // Vertica insertions are sorted by the first column by default
+						sql += ");"; // equivalent to sql += ") ORDER BY tuple_id;"
+
+					}
+
+				} else {
+
+					sql += ");";
+
+				}
+
 				bboxStmt.executeUpdate(sql);
 
 				// create tile table
 				if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
 						Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING) {
-					if (Config.database == Config.Database.PSQL)
+
+					if (Config.database == Config.Database.PSQL) {
+
 						sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50));";
-					else if (Config.database == Config.Database.VSQL)
-						sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50));";
-					else if (Config.database == Config.Database.MYSQL)
+
+					} else if (Config.database == Config.Database.VSQL) {
+
+						// Since  we cannot create an "index" over tile_id in Vertica,
+						// we'll sort the table by it to help with the query performance
+						sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50))  ORDER BY tile_id;";
+
+					} else if (Config.database == Config.Database.MYSQL) {
+
 						sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50), index (tile_id));";
+
+					}
+
 					tileStmt.executeUpdate(sql);
 				}
 
@@ -192,12 +228,11 @@ public class Indexer {
 				// TODO: distinguish between separable and non-separable cases
 				//
 
-				//
-				// Only one database can be up on a Vertica server
-				// This means that user data and Kyrix tables  will be on the
-				// same database and we need two separate connections to
-				// read from and write to it, respectively.
-				//
+				// Only one database can be up on a given Vertica server.
+				// We'll create the Kyrix tables  on the same database
+				// where the user data resides. For that, we'll need to
+				// open two separate connections, one for reading from it and
+				// one for writing to it.
 				String key;
 				ResultSet rs;
 				if(Config.database == Config.Database.VSQL){
@@ -206,7 +241,7 @@ public class Indexer {
 					rs = DbConnector.getQueryResultIteratorByKey(key,
 							Config.databaseName,
 							trans.getQuery());
-				}else{
+				} else {
 					rs = DbConnector.getQueryResultIterator(trans.getDb(), trans.getQuery());
 				}
 
@@ -254,8 +289,9 @@ public class Indexer {
 
 					//get raw row
 					ArrayList<String> curRawRow = new ArrayList<>();
-					for (int i = 1; i <= numColumn; i ++)
+					for (int i = 1; i <= numColumn; i ++){
 						curRawRow.add(rs.getString(i));
+					}
 
 					// step 3: run transform function on this tuple
 					String[] transformedStrArray = (String[]) engine	// TODO: figure out why row.slice does not work. learn more about nashorn types
@@ -461,36 +497,27 @@ public class Indexer {
 
 				} else if (Config.database == Config.Database.VSQL) {
 
+				    // NO OP
 
 					if (Config.indexingScheme == Config.IndexingScheme.TUPLE_MAPPING ||
 							Config.indexingScheme == Config.IndexingScheme.SORTED_TUPLE_MAPPING) {
 
-						System.out.println("No indexes in Vertica. Sort?");
-						//
-						// create projections ?
-						//
-						// sql = "create index tuple_idx on " + bboxTableName + " (tuple_id);";
-						// bboxStmt.executeUpdate(sql);
-						// sql = "create index tile_idx on " + tileTableName + " (tile_id);";
-						// tileStmt.executeUpdate(sql);
+					    // These two indexing schemes, tuple mapping and sorted tuple mapping, will
+						// be identical for Vertica. There is no concept of indexing (except spatial index)
+						// or clustering (always clustered?) in Vertica. In both cases, the table will be
+						// sorted by tile_id. See the table creation statements above.
+
+
 					}
 
 					if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX) {
 
-					  // NO SPATIAL INDEX COMPUTATION 
-					  // 
-					  // The spatial index implementation in Vertica 9.1.x is buggy and cannot 
-					  // be used. Even this is fixed, Vertica's intersection function 
-					  // STV_Intersect() that uses indexes isn't exactly what Kyrix 
-					  // intersection operations need. We'll rely on manual intersection testing
-					  // on the table sorted by the geom column.     
-					  //
-					  /*
-						String indexName = "sp_"+bboxTableName;
-						sql = "select STV_Create_Index(tuple_id, geom USING PARAMETERS index=\'"+indexName+"\', overwrite=\'true') OVER() from "+bboxTableName+";";
-						bboxStmt.executeQuery(sql);
-
-					  */
+						// NO SPATIAL INDEX COMPUTATION:
+						// The spatial index implementation in Vertica 9.1.x is buggy and cannot
+						// be used. Even it is fixed, Vertica's intersection function  STV_Intersect()
+						// using spatial index isn't exactly what Kyrix intersection operations need.
+						// We'll rely on manual intersection testing
+						// on the table sorted by the geom column.
 
 					}
 
