@@ -15,6 +15,7 @@ $(function () {
 		var idBox = null;
 		var buttonsBox = null;
 		var passcodeBox = null;
+		var labelDiv = null;
 		var getIdFromRow = function () {
 			return row[0] + "_" + row[1] + "_" + row[2] + "_" + row[3];
 		};
@@ -41,9 +42,8 @@ $(function () {
 			if (data != row) {
 				editBox.show();
 				row = data;
-				editBox.html("");
 				idBox.text(getIdFromRow());
-				editBox.append(idBox);
+				labelDiv.html("");
 				for (var key in labels) {
 					var labelOptionDiv = $("<div>");
 					var option = $("<input name='label' type='radio'>");
@@ -55,12 +55,8 @@ $(function () {
 					optionLabel.attr("for", key);
 					optionLabel.text(labels[key]);
 					labelOptionDiv.append(optionLabel);
-					editBox.append(labelOptionDiv);
+					labelDiv.append(labelOptionDiv);
 				}
-				passcodeBox = $("<div id='passcodeBox'>");
-				passcodeBox.text("passcode: ");
-				passcodeBox.append($("<input name='passcode' type='text'>"));
-				editBox.append(passcodeBox);
 			}
 		};
 
@@ -73,6 +69,12 @@ $(function () {
 			buttonsBox = $("#buttons");
 			idBox = $("#editIdBox");
 			editBox = $("#editor");
+			labelDiv = $("<div>");
+			editBox.append(labelDiv);
+			passcodeBox = $("<div id='passcodeBox'>");
+			passcodeBox.text("passcode: ");
+			passcodeBox.append($("<input name='passcode' type='text'>"));
+			editBox.append(passcodeBox);
 		};
 		startEditor();
 

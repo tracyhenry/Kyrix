@@ -12,7 +12,8 @@ Start the cloud instance `kyrix-m`. Log into the instance using `gcloud compute 
 * Mouse drag to pan on the cluster view. 
 * Left/Right arrows to pan the EEG, or use mouse drag.
 * Up/Down arrows to increase/decrease the gain. 
+* Press `M` key to switch montages. 
 * Spectrogram is not zoomable right now. It shouldn't be pannable since we want to sync it w/ EEG. 
-* Click on a radio box in the upper right corner to make a label for the highlighted 2-sec segment.
+* Click on a radio box in the upper right corner to make a label for the highlighted 2-sec segment. 
 
 ## Development
