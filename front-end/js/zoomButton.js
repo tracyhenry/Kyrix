@@ -139,7 +139,10 @@ function backspace() {
             })
             .on("start", startZoomingBack);
     else {
-        d3.selectAll(".oldlayerg").remove();
+        d3.selectAll(".oldlayerg")
+            .transition()
+            .delay(param.oldRemovalDelay)
+            .remove();
         startZoomingBack();
     }
 

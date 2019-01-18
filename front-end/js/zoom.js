@@ -105,20 +105,17 @@ function completeZoom(zoomType, oldZoomFactorX, oldZoomFactorY) {
     globalVar.initialViewportX = curViewport[0] * oldZoomFactorX;
     globalVar.initialViewportY = curViewport[1] * oldZoomFactorY;
 
+    // pre animation
+    preAnimation();
+
     // get the canvas object
     getCurCanvas();
 
     // render static layers
     renderStaticLayers();
 
-    // set up zoom
-    setupZoom(1);
-
-    // set up button states
-    setButtonState();
-
-    // remove all popovers
-    removePopovers();
+    // post animation
+    postAnimation();
 };
 
 // listener function for zoom actions

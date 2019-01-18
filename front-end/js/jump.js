@@ -93,7 +93,7 @@ function postAnimation(zoomType) {
 
     // use a d3 transition to remove things based on zoom type
     var removalDelay = 0;
-    if (zoomType == param.geometricSemanticZoom)
+    if (zoomType != param.semanticZoom)
         removalDelay = param.oldRemovalDelay;
     var numOldLayer = d3.selectAll(".oldlayerg").size();
     d3.selectAll(".oldlayerg")

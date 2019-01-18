@@ -129,7 +129,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                             var x = response.minx;
                             var y = response.miny;
 
-                            // remove those tuple who is outside the viewport
+                            // remove tuples outside the viewport
                             // doing this because some backend indexers use compression
                             // and may return tuples outside viewport
                             // doing this in the backend is not efficient, so we do it here
