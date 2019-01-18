@@ -160,6 +160,10 @@ flare.json
 compiler/examples/nba/preprocessing/
 compiler/examples/USMap/preprocessing/
 compiler/examples/flare/preprocessing/
+compiler/examples/dots/
+compiler/examples/lZoomScatterPlot
+compiler/examples/lZoomScatterPlotSingleAxis
+compiler/examples/nameBubbles
 front-end/static/images/
 dots.txt
 dots_small.txt
