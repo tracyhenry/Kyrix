@@ -39,7 +39,8 @@ var jumpName = function (row) {
     return "Zoom into " + row[1];
 };
 
-p.addJump(new Jump(flareCanvas, flareCanvas, selector, newViewport, newPredicate, "semantic_zoom", jumpName));
+p.addJump(new Jump(flareCanvas, flareCanvas, "semantic_zoom", {selector : selector,
+    viewport : newViewport, predicates : newPredicate, name : jumpName}));
 
 // initialize canvas
 p.setInitialStates(flareCanvas, 0, 0, ["(id = \'1\' or parent_id = \'1\')"]);

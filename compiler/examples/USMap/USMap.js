@@ -67,7 +67,8 @@ var jumpName = function (row) {
     return "County map of " + row[3];
 };
 
-p.addJump(new Jump(stateMapCanvas, countyMapCanvas, selector, newViewport, newPredicates, "geometric_semantic_zoom", jumpName));
+p.addJump(new Jump(stateMapCanvas, countyMapCanvas, "geometric_semantic_zoom", {selector : selector,
+    viewport : newViewport, predicates : newPredicates, name : jumpName}));
 
 // setting initial states
 p.setInitialStates(stateMapCanvas, 0, 0, ["", ""]);

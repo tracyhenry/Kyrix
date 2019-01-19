@@ -99,7 +99,8 @@ var jumpName = function (row) {
     return "2017~2018 Regular Season Games of\n" + row[4] + " " + row[5];
 };
 
-p.addJump(new Jump(teamLogoCanvas, teamTimelineCanvas, selector, newViewport, newPredicate, "semantic_zoom", jumpName));
+p.addJump(new Jump(teamLogoCanvas, teamTimelineCanvas, "semantic_zoom", {selector : selector,
+    viewport : newViewport, predicates : newPredicate, name : jumpName}));
 
 // ================== teamtimeline -> playbyplay ===================
 var selector = function (row, layerId) {
@@ -107,7 +108,7 @@ var selector = function (row, layerId) {
 };
 
 var newViewport = function (row) {
-    return [0, 0, 0]
+    return [0, 0, 0];
 };
 
 var newPredicate = function (row) {
@@ -119,7 +120,8 @@ var jumpName = function (row) {
     return "Scoring Plays of " + row[7] + "@" + row[6];
 };
 
-p.addJump(new Jump(teamTimelineCanvas, playByPlayCanvas, selector, newViewport, newPredicate, "semantic_zoom", jumpName));
+p.addJump(new Jump(teamTimelineCanvas, playByPlayCanvas, "semantic_zoom", {selector : selector,
+    viewport : newViewport, predicates : newPredicate, name : jumpName}));
 
 // ================== teamtimeline -> boxscore ===================
 var selector = function (row, layerId) {
@@ -148,8 +150,10 @@ var jumpNameAway = function (row) {
     return "Box score of " + row[7];
 };
 
-p.addJump(new Jump(teamTimelineCanvas, boxscoreCanvas, selector, newViewport, newPredicateHome, "semantic_zoom", jumpNameHome));
-p.addJump(new Jump(teamTimelineCanvas, boxscoreCanvas, selector, newViewport, newPredicateAway, "semantic_zoom", jumpNameAway));
+p.addJump(new Jump(teamTimelineCanvas, boxscoreCanvas, "semantic_zoom", {selector : selector,
+    viewport : newViewport, predicates : newPredicateHome, name : jumpNameHome}));
+p.addJump(new Jump(teamTimelineCanvas, boxscoreCanvas, "semantic_zoom", {selector : selector,
+    viewport : newViewport, predicates : newPredicateAway, name : jumpNameAway}));
 
 // setting up initial states
 p.setInitialStates(teamLogoCanvas, 0, 0, [""]);
