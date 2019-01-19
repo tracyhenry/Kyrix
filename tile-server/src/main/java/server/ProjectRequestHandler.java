@@ -95,9 +95,9 @@ public class ProjectRequestHandler implements HttpHandler {
                     matchFound = true;
 
                     // if size is different, recalculate.
-                    if (oldCanvas.getW() != newCanvas.getW())
+                    if (oldCanvas.getwSql().length() == 0 && oldCanvas.getW() != newCanvas.getW())
                         return true;
-                    if (oldCanvas.getH() != newCanvas.getH())
+                    if (oldCanvas.gethSql().length() == 0 && oldCanvas.getH() != newCanvas.getH())
                         return true;
 
                     // if there's different number of layers, re-index is for sure needed
