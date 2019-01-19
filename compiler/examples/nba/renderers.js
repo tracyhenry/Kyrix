@@ -67,7 +67,7 @@ var teamLogoRendering = function (svg, data) {
         .attr("xlink:href", function (d) {return "https://rawgit.com/tracyhenry/f0c8534bb87c6b48a8b9ee167b3a102f/raw/7724c716788e5e08079e0ec70bd0ecf834bbffea/" + d[6] + ".svg";});
 };
 
-var teamTimelineRendering = function (svg, data, width, height, params) {
+var teamTimelineRendering = function (svg, data, args) {
 
     var rectWidth = 160;
     var rectHeight = 100;
@@ -82,6 +82,7 @@ var teamTimelineRendering = function (svg, data, width, height, params) {
     var d2Delta = 15;
 
     g = svg.append("g");
+    var params = args.renderingParams;
 
     // rect background
     g.selectAll("rect")
@@ -174,7 +175,7 @@ var teamTimelineRendering = function (svg, data, width, height, params) {
         .style("stroke-width", 3);
 };
 
-var playByPlayRendering = function (svg, data, width, height, params) {
+var playByPlayRendering = function (svg, data, args) {
 
     var centerTextWidth = 100;
     var centerTextHeight = 100;
@@ -196,6 +197,8 @@ var playByPlayRendering = function (svg, data, width, height, params) {
         "OT 1", "OT 2", "OT 3", "OT 4", "OT 5", "OT 6"];
 
     var g = svg.append("g");
+    var params = args.renderingParams;
+    var height = args.canvasH;
 
     // extract home plays and away plays
     var homePlays = [], awayPlays = [];
@@ -450,10 +453,12 @@ var playByPlayStaticBkg = function (svg, data) {
         .style("opacity", 0.07);
 };
 
-var boxscorePkRendering = function (svg, data, width, height, params) {
+var boxscorePkRendering = function (svg, data, args) {
 
     // create a new g
     var g = svg.append("g");
+    var height = args.canvasH;
+    var params = args.renderingParams;
 
     // precompute some stuff
     var headerStartHeight = height / 2 - ((data.length + 1) * params.cellHeight + params.headerHeight) / 2;
@@ -584,10 +589,12 @@ var boxscorePkRendering = function (svg, data, width, height, params) {
         .style("fill", "white");
 };
 
-var boxscoreStatsRendering = function (svg, data, width, height, params) {
+var boxscoreStatsRendering = function (svg, data, args) {
 
     // create a new g
     var g = svg.append("g");
+    var height = args.canvasH;
+    var params = args.renderingParams;
 
     // precompute some stuff
     var headerStartHeight = height / 2 - ((data.length + 1) * params.cellHeight + params.headerHeight) / 2;

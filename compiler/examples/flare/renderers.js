@@ -42,9 +42,10 @@ var renderingParams = {"textwrap" : function textwrap(text, width) {
     }
 };
 
-var flarePackRendering = function (svg, data, width, height, params) {
+var flarePackRendering = function (svg, data, args) {
 
     var g = svg.append("g");
+    var params = args.renderingParams;
 
     // get root json from data, using d3-stratify
     var table = [];

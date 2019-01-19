@@ -16,9 +16,11 @@ var renderingParams = {
     "pelagic" : [9518, 2017, 562, 1033]
 };
 
-var backgroundRendering = function (svg, data, width, height, params) {
+var backgroundRendering = function (svg, data, args) {
 
     g = svg.append("g");
+    var params = args.renderingParams;
+
     g.selectAll("image")
         .data(data)
         .enter()
@@ -30,7 +32,7 @@ var backgroundRendering = function (svg, data, width, height, params) {
         .attr("xlink:href", function (d) {return "https://farm" + d[4] + ".staticflickr.com/" + d[5] + "_o.jpg";});
 };
 
-var animalCircleRendering = function (svg, data, width, height, params) {
+var animalCircleRendering = function (svg, data) {
     g = svg.append("g");
     g.selectAll("animalcircle")
         .data(data)
@@ -42,18 +44,9 @@ var animalCircleRendering = function (svg, data, width, height, params) {
         .attr("fill", "white");
 };
 
-var animalIconRendering = function (svg, data, width, height, params) {
+var animalIconRendering = function (svg, data) {
 
     g = svg.append("g");
-    // g.selectAll("animalicon")
-    //     .data(data)
-    //     .enter()
-    //     .append("circle")
-    //     .attr("cx", function (d) {return d[5];})
-    //     .attr("cy", function (d) {return d[6];})
-    //     .attr("r", function (d) {return d[7];})
-    //     .attr("fill", "white")
-    //     .style("fill-opacity", 0.5);
     g.selectAll("image")
         .data(data)
         .enter()
@@ -68,18 +61,6 @@ var animalIconRendering = function (svg, data, width, height, params) {
             myPicXO.src = d[8];
             return d[6] - myPicXO.height;
         })
-        /*
-        .attr("width", function (d) {
-            var myPicXO = new Image();
-            myPicXO.src = d[8];
-            return myPicXO.width;
-        })
-        .attr("height", function (d) {
-            var myPicXO = new Image();
-            myPicXO.src = d[8];
-            return myPicXO.height;
-        })
-        */
         .attr("xlink:href", function (d) {return d[8];});
     g.selectAll("text")
         .data(data)
@@ -94,7 +75,7 @@ var animalIconRendering = function (svg, data, width, height, params) {
 
 };
 
-var svgbackgroundRendering = function (svg, data, width, height, params) {
+var svgbackgroundRendering = function (svg, data) {
 
     g = svg.append("g");
     g.selectAll("image")

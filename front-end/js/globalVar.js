@@ -50,3 +50,15 @@ if (typeof String.prototype.parseFunction != 'function') {
             return null;
     };
 }
+
+function getOptionalArgs() {
+
+    var predicateDict = {};
+    for (var i = 0; i < globalVar.predicates.length; i ++)
+        predicateDict["layer" + i] = globalVar.predicates[i];
+    var optionalArgs = {canvasW : globalVar.curCanvas.w, canvasH : globalVar.curCanvas.h,
+        viewportW : globalVar.viewportWidth, viewportH : globalVar.viewportHeight,
+        predicates : predicateDict, renderingParams : globalVar.renderingParams};
+
+    return optionalArgs;
+}

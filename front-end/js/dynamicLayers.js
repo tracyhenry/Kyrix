@@ -69,6 +69,11 @@ function RefreshDynamicLayers(viewportX, viewportY) {
 
     viewportX = +viewportX;
     viewportY = +viewportY;
+
+    // optional rendering args
+    var optionalArgs = getOptionalArgs();
+    optionalArgs["viewportX"] = viewportX;
+    optionalArgs["viewportY"] = viewportY;
     if (param.fetchingScheme == "tiling") {
 
         var tileW = globalVar.tileW;
@@ -165,10 +170,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                                     return;
 
                                 // draw current layer
-                                curLayer.rendering.parseFunction()(tileSvg, renderData[i],
-                                    globalVar.curCanvas.w,
-                                    globalVar.curCanvas.h,
-                                    globalVar.renderingParams);
+                                curLayer.rendering.parseFunction()(tileSvg, renderData[i], optionalArgs);
 
                                 tileSvg.transition()
                                     .duration(param.tileEnteringDuration)
@@ -319,10 +321,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                     globalVar.renderData[i] = newLayerData;
 
                     // draw current layer
-                    curLayer.rendering.parseFunction()(dboxSvg, renderData[i],
-                        globalVar.curCanvas.w,
-                        globalVar.curCanvas.h,
-                        globalVar.renderingParams);
+                    curLayer.rendering.parseFunction()(dboxSvg, renderData[i], optionalArgs);
 
                     // register jumps
                     if (!globalVar.animation)

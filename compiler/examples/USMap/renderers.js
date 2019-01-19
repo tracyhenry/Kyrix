@@ -7,9 +7,11 @@ var renderingParams = {
     "countyScaleStep" : 250
 };
 
-var stateMapRendering = function (svg, data, width, height, param) {
+var stateMapRendering = function (svg, data, args) {
 
     g = svg.append("g");
+    var width = args.canvasW, height = args.canvasH;
+    var param = args.renderingParams;
 
     var projection = d3.geoAlbersUsa()
         .scale(param.stateMapScale)
@@ -36,7 +38,7 @@ var stateMapRendering = function (svg, data, width, height, param) {
         });
 };
 
-var stateMapLegendRendering = function (svg, data, width, height, param) {
+var stateMapLegendRendering = function (svg, data, args) {
 
     // parameters
     var bkgRectWidth = 600;
@@ -50,6 +52,8 @@ var stateMapLegendRendering = function (svg, data, width, height, param) {
     var tickFontSize = 12;
 
     var g = svg.append("g");
+    var width = args.canvasW;
+    var param = args.renderingParams;
 
     // rectangles representing colors
     var color = d3.scaleThreshold()
@@ -92,9 +96,11 @@ var stateMapLegendRendering = function (svg, data, width, height, param) {
         .remove();
 };
 
-var countyMapStateBoundaryRendering = function (svg, data, width, height, param) {
+var countyMapStateBoundaryRendering = function (svg, data, args) {
 
     g = svg.append("g");
+    var width = args.canvasW, height = args.canvasH;
+    var param = args.renderingParams;
 
     var projection = d3.geoAlbersUsa()
         .scale(param.countyMapScale)
@@ -115,7 +121,7 @@ var countyMapStateBoundaryRendering = function (svg, data, width, height, param)
         .style("fill", "none");
 };
 
-var countyMapLegendRendering = function (svg, data, width, height, param) {
+var countyMapLegendRendering = function (svg, data, args) {
 
     // parameters
     var bkgRectWidth = 570;
@@ -130,6 +136,8 @@ var countyMapLegendRendering = function (svg, data, width, height, param) {
     var tickFontSize = 12;
 
     var g = svg.append("g");
+    var width = args.canvasW;
+    var param = args.renderingParams;
 
     // append a background rectangle
     g.append("rect")
@@ -182,9 +190,11 @@ var countyMapLegendRendering = function (svg, data, width, height, param) {
         .remove();
 };
 
-var countyMapRendering = function (svg, data, width, height, param) {
+var countyMapRendering = function (svg, data, args) {
 
     g = svg.append("g");
+    var width = args.canvasW, height = args.canvasH;
+    var param = args.renderingParams;
 
     var projection = d3.geoAlbersUsa()
         .scale(param.countyMapScale)
