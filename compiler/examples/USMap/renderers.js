@@ -52,7 +52,7 @@ var stateMapLegendRendering = function (svg, data, args) {
     var tickFontSize = 12;
 
     var g = svg.append("g");
-    var width = args.canvasW;
+    var width = args.viewportW;
     var param = args.renderingParams;
 
     // rectangles representing colors
@@ -136,7 +136,7 @@ var countyMapLegendRendering = function (svg, data, args) {
     var tickFontSize = 12;
 
     var g = svg.append("g");
-    var width = args.canvasW;
+    var width = args.viewportW;
     var param = args.renderingParams;
 
     // append a background rectangle

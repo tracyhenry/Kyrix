@@ -38,7 +38,6 @@ public class Main {
             System.out.println("Main project definition has not been changed since last session. Starting server right away...");
         }
 
-
         //cache
         TileCache.create();
 

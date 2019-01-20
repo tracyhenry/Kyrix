@@ -457,7 +457,7 @@ var boxscorePkRendering = function (svg, data, args) {
 
     // create a new g
     var g = svg.append("g");
-    var height = args.canvasH;
+    var height = args.viewportH;
     var params = args.renderingParams;
 
     // precompute some stuff

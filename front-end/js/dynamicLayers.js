@@ -213,26 +213,30 @@ function RefreshDynamicLayers(viewportX, viewportY) {
         if (d3.event != null && d3.event.transform.k != 1)
             return ;
 
-        // get new box
-        // send request to backend to get data
-        var postData = "id=" + globalVar.curCanvasId + "&"
-            + "x=" + (viewportX | 0) + "&"
-            + "y=" + (viewportY | 0);
-        for (var i = 0; i < globalVar.predicates.length; i ++)
-            postData += "&predicate" + i + "=" + globalVar.predicates[i];
+        // check if the user has moved outside the current box
         var cBoxX = globalVar.boxX[globalVar.boxX.length - 1], cBoxY = globalVar.boxY[globalVar.boxY.length - 1];
         var cBoxW = globalVar.boxW[globalVar.boxW.length - 1], cBoxH = globalVar.boxH[globalVar.boxH.length - 1];
-        if (param.deltaBox)
-            postData += "&oboxx=" + cBoxX + "&oboxy=" + cBoxY
-                + "&oboxw=" + cBoxW + "&oboxh=" + cBoxH;
-        else
-            postData += "&oboxx=" + (-1e5) + "&oboxy=" + (-1e5)
-                + "&oboxw=" + (-1e5) + "&oboxh=" + (-1e5);
         if (cBoxX < -1e4 || (viewportX <= cBoxX + vpW / 3 && cBoxX >= 0)
             || ((viewportX + vpW) >= (cBoxX + cBoxW) - vpW / 3 && cBoxX + cBoxW <= globalVar.curCanvas.w)
             || (viewportY <= cBoxY + vpH / 3 && cBoxY >= 0)
             || ((viewportY + vpH) >= (cBoxY + cBoxH) - vpH / 3 && cBoxY + cBoxH <= globalVar.curCanvas.h)) {
 
+            // new box request
+            var postData = "id=" + globalVar.curCanvasId + "&"
+                + "x=" + (viewportX | 0) + "&"
+                + "y=" + (viewportY | 0);
+            for (var i = 0; i < globalVar.predicates.length; i ++)
+                postData += "&predicate" + i + "=" + globalVar.predicates[i];
+            if (param.deltaBox)
+                postData += "&oboxx=" + cBoxX + "&oboxy=" + cBoxY
+                    + "&oboxw=" + cBoxW + "&oboxh=" + cBoxH;
+            else
+                postData += "&oboxx=" + (-1e5) + "&oboxy=" + (-1e5)
+                    + "&oboxw=" + (-1e5) + "&oboxh=" + (-1e5);
+            if (globalVar.curCanvas.wSql.length > 0)
+                postData += "&canvasw=" + globalVar.curCanvas.w;
+            if (globalVar.curCanvas.hSql.length > 0)
+                postData += "&canvash=" + globalVar.curCanvas.h;
             globalVar.pendingBoxRequest = true;
             $.post("/dbox", postData, function (data) {
 

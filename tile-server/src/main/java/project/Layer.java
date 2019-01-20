@@ -2,10 +2,12 @@ package project;
 
 import index.Indexer;
 
+import java.io.Serializable;
+
 /**
  * Created by wenbo on 4/3/18.
  */
-public class Layer {
+public class Layer implements Serializable {
 
     private Transform transform;
     private boolean isStatic;

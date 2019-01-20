@@ -50,11 +50,11 @@ public class CanvasRequestHandler implements HttpHandler {
         String canvasId = queryMap.get("id");
 
         // get the current canvas
-        Canvas curCanvas = Main.getProject().getCanvas(canvasId);
-        if (curCanvas == null) {
-            // canvas id does not exist and send back a bad request response
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "canvas " + query + " does not exist.");
-            return ;
+        Canvas curCanvas = null;
+        try {
+            curCanvas = Main.getProject().getCanvas(canvasId).deepCopy();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         // list of predicates
