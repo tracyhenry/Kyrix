@@ -51,8 +51,8 @@ countyBoundaryLayer.addPlacement(placements.countyMapPlacement);
 countyBoundaryLayer.addRenderingFunc(renderers.countyMapRendering);
 
 // ================== state -> county ===================
-var selector = function (row, layerId) {
-    return (layerId == 1);
+var selector = function (row, args) {
+    return (args.layerId == 1);
 };
 
 var newPredicates = function () {

@@ -275,6 +275,8 @@ function registerJumps(svg, layerId) {
 
     var jumps = globalVar.curJump;
     var shapes = svg.select("g:last-of-type").selectAll("*");
+    var optionalArgs = getOptionalArgs();
+    optionalArgs["layerId"] = layerId;
 
     shapes.each(function(p) {
 
@@ -282,7 +284,7 @@ function registerJumps(svg, layerId) {
         var hasJump = false;
         for (var k = 0; k < jumps.length; k ++)
             if ((jumps[k].type == param.semanticZoom || jumps[k].type == param.geometricSemanticZoom)
-                && jumps[k].selector.parseFunction()(p, layerId)) {
+                && jumps[k].selector.parseFunction()(p, optionalArgs)) {
                 hasJump = true;
                 break;
             }
@@ -343,7 +345,7 @@ function registerJumps(svg, layerId) {
 
                 // check if this jump is applied in this layer
                 if ((jumps[k].type != param.semanticZoom && jumps[k].type != param.geometricSemanticZoom)
-                    || ! jumps[k].selector.parseFunction()(tuple, layerId))
+                    || ! jumps[k].selector.parseFunction()(tuple, optionalArgs))
                     continue;
 
                 // create table cell and append it to #popovercontent
@@ -354,7 +356,7 @@ function registerJumps(svg, layerId) {
                     .datum(tuple)
                     .attr("data-jump-id", k)
                     .html(jumps[k].name.parseFunction() == null ? jumps[k].name
-                        : jumps[k].name.parseFunction()(tuple));
+                        : jumps[k].name.parseFunction()(tuple, optionalArgs));
 
                 // on click
                 jumpOption.on("click", function () {
@@ -374,7 +376,7 @@ function registerJumps(svg, layerId) {
                     globalVar.curCanvasId = jumps[jumpId].destId;
 
                     // calculate new predicates
-                    globalVar.predicates = jumps[jumpId].newPredicates.parseFunction()(tuple);
+                    globalVar.predicates = jumps[jumpId].newPredicates.parseFunction()(tuple, optionalArgs);
 
                     // prefetch canvas object by sending an async request to server
                     var postData = "id=" + globalVar.curCanvasId;
@@ -399,7 +401,7 @@ function registerJumps(svg, layerId) {
 
                     // calculate new viewport
                     var newViewportFunc = jumps[jumpId].newViewports.parseFunction();
-                    var newViewportRet = newViewportFunc(tuple);
+                    var newViewportRet = newViewportFunc(tuple, optionalArgs);
                     if (newViewportRet[0] == 0) {
                         // constant viewport, no predicate
                         var newViewportX = newViewportRet[1];

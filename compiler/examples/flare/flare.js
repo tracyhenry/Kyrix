@@ -23,11 +23,11 @@ flareCanvas.addLayer(flarePackLayer);
 flarePackLayer.addRenderingFunc(renderers.flarePackRendering);
 
 // ================== self jump ===================
-var selector = function (row, layerId) {
-    return (layerId == 0);
+var selector = function () {
+    return true;
 };
 
-var newViewport = function (row) {
+var newViewport = function () {
     return [0, 0, 0]
 };
 

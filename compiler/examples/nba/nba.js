@@ -83,13 +83,14 @@ statsLayer.addPlacement(placements.boxscorePlacement);
 statsLayer.addRenderingFunc(renderers.boxscoreStatsRendering);
 
 // ================== teamlogo -> teamtimeline ===================
-var selector = function (row, layerId) {
-    return (layerId == 0);
+var selector = function () {
+    return true;
 };
 
-var newViewport = function (row) {
+var newViewport = function () {
     return [0, 0, 0]
 };
+
 var newPredicate = function (row) {
     return ["(home_team=\'" + row[6] + "\' or " + "away_team=\'" + row[6] + "\')",
             "abbr=\'" + row[6] + "\'"];
@@ -103,11 +104,11 @@ p.addJump(new Jump(teamLogoCanvas, teamTimelineCanvas, "semantic_zoom", {selecto
     viewport : newViewport, predicates : newPredicate, name : jumpName}));
 
 // ================== teamtimeline -> playbyplay ===================
-var selector = function (row, layerId) {
-    return (layerId == 0);
+var selector = function (row, args) {
+    return (args.layerId == 0);
 };
 
-var newViewport = function (row) {
+var newViewport = function () {
     return [0, 0, 0];
 };
 
@@ -124,8 +125,8 @@ p.addJump(new Jump(teamTimelineCanvas, playByPlayCanvas, "semantic_zoom", {selec
     viewport : newViewport, predicates : newPredicate, name : jumpName}));
 
 // ================== teamtimeline -> boxscore ===================
-var selector = function (row, layerId) {
-    return (layerId == 0);
+var selector = function (row, args) {
+    return (args.layerId == 0);
 };
 
 var newViewport = function () {
