@@ -63,36 +63,45 @@ function getTileArray(canvasId, vX, vY, vWidth, vHeight) {
 
 function RefreshDynamicLayers(viewportX, viewportY) {
 
+    // current viewport
+    viewportX = +viewportX;
+    viewportY = +viewportY;
+    var vpW, vpH;
+    if (d3.select(".mainsvg:not(.static)").size() == 0)
+        vpW = globalVar.viewportWidth, vpH = globalVar.viewportHeight;
+    else {
+        var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
+        vpW = +curViewport[2];
+        vpH = +curViewport[3];
+    }
+
+    // render axes
+    renderAxes(viewportX, viewportY, vpW, vpH);
+
     // no dynamic layers? return
     if (d3.select(".mainsvg:not(.static)").size() == 0)
         return ;
-
-    viewportX = +viewportX;
-    viewportY = +viewportY;
 
     // optional rendering args
     var optionalArgs = getOptionalArgs();
     optionalArgs["viewportX"] = viewportX;
     optionalArgs["viewportY"] = viewportY;
+
     if (param.fetchingScheme == "tiling") {
 
         var tileW = globalVar.tileW;
         var tileH = globalVar.tileH;
 
         // get tile ids
-        var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
         var tileIds = getTileArray(globalVar.curCanvasId,
-            viewportX, viewportY, +curViewport[2], +curViewport[3]);
-
-        // render axes
-        renderAxes(viewportX, viewportY, +curViewport[2], +curViewport[3]);
+            viewportX, viewportY, vpW, vpH);
 
         // set viewport, here we only change min-x and min-y of the viewport.
         // Size of the viewport is set either by pageOnLoad(), animateSemanticZoom() or zoomed()
         // and should not be changed in this function
         d3.selectAll(".mainsvg:not(.static)")
             .attr("viewBox", viewportX + " " + viewportY + " "
-                + curViewport[2]+ " " + curViewport[3])
+                + vpW + " " + vpH)
             .each(function () { // remove invisible tiles
                 var tiles = d3.select(this)
                     .selectAll("svg")
@@ -190,15 +199,6 @@ function RefreshDynamicLayers(viewportX, viewportY) {
             });
     }
     else if (param.fetchingScheme == "dbox") {
-
-        // todo: presumably there should be a request queue to handle concurrent requests
-        // get current viewport
-        var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
-        var vpW = +curViewport[2];
-        var vpH = +curViewport[3];
-
-        // render axes
-        renderAxes(viewportX, viewportY, +curViewport[2], +curViewport[3]);
 
         d3.selectAll(".mainsvg:not(.static)")
             .attr("viewBox", viewportX + " " + viewportY + " " + vpW + " " + vpH);

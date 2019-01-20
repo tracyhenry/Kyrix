@@ -18,8 +18,6 @@ function Transform(query, db, transformFunc, columnNames, separable) {
     this.columnNames = columnNames;
     this.transformFunc = transformFunc;
     this.separable = separable;
-
-    //TODO: check column names are valid JS dictionary key names
 };
 
 defaultEmptyTransform = new Transform("", "", "", [], true);
