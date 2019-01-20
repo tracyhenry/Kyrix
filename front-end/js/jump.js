@@ -121,11 +121,8 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
         curViewport = d3.select(".oldmainsvg:not(.static)").attr("viewBox").split(" ");
     for (var i = 0; i < curViewport.length; i ++)
         curViewport[i] = +curViewport[i];
-    var tupleLen = tuple.length;
-    var tupleCX = +tuple[tupleLen - param.cxOffset];
-    var tupleCY = +tuple[tupleLen - param.cyOffset];
-    var tupleWidth = tuple[tupleLen - param.maxxOffset] - tuple[tupleLen - param.minxOffset];
-    var tupleHeight = tuple[tupleLen - param.maxyOffset] - tuple[tupleLen - param.minyOffset];
+    var tupleWidth = +tuple.maxx - tuple.minx;
+    var tupleHeight = +tuple.maxy - tuple.miny;
     var minx, maxx, miny, maxy;
     if (tupleWidth == 0 || tupleHeight == 0) {  // check when placement func does not exist
         minx = globalVar.curCanvas.w;
@@ -145,10 +142,10 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
             });
     }
     else {
-        minx = tupleCX - tupleWidth / 2.0;
-        maxx = tupleCX + tupleWidth / 2.0;
-        miny = tupleCY - tupleHeight / 2.0;
-        maxy = tupleCY + tupleHeight / 2.0;
+        minx = +tuple.cx - tupleWidth / 2.0;
+        maxx = +tuple.cx + tupleWidth / 2.0;
+        miny = +tuple.cy - tupleHeight / 2.0;
+        maxy = +tuple.cy + tupleHeight / 2.0;
     }
 
     // use tuple boundary to calculate start and end views, and log them to the last history object

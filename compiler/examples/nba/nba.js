@@ -92,12 +92,12 @@ var newViewport = function () {
 };
 
 var newPredicate = function (row) {
-    return ["(home_team=\'" + row[6] + "\' or " + "away_team=\'" + row[6] + "\')",
-            "abbr=\'" + row[6] + "\'"];
+    return ["(home_team=\'" + row.abbr + "\' or " + "away_team=\'" + row.abbr + "\')",
+            "abbr=\'" + row.abbr + "\'"];
 };
 
 var jumpName = function (row) {
-    return "2017~2018 Regular Season Games of\n" + row[4] + " " + row[5];
+    return "2017~2018 Regular Season Games of\n" + row.city + " " + row.name;
 };
 
 p.addJump(new Jump(teamLogoCanvas, teamTimelineCanvas, "semantic_zoom", {selector : selector,
@@ -113,12 +113,12 @@ var newViewport = function () {
 };
 
 var newPredicate = function (row) {
-    return ["game_id = \'" + row[0] + "\'",
-            "abbr1=\'" + row[6] + "\' and abbr2=\'" + row[7] + "\'"];
+    return ["game_id = \'" + row.game_id + "\'",
+            "abbr1=\'" + row.home_team + "\' and abbr2=\'" + row.away_team + "\'"];
 };
 
 var jumpName = function (row) {
-    return "Scoring Plays of " + row[7] + "@" + row[6];
+    return "Play-by-Play of " + row.away_team + "@" + row.home_team;
 };
 
 p.addJump(new Jump(teamTimelineCanvas, playByPlayCanvas, "semantic_zoom", {selector : selector,
@@ -134,21 +134,21 @@ var newViewport = function () {
 };
 
 var newPredicateHome = function (row) {
-    return ["game_id = \'" + row[0] + "\' and team_abbreviation = \'" + row[6] + "\'",
-        "game_id = \'" + row[0] + "\' and team_abbreviation = \'" + row[6] + "\'"];
+    return ["GAME_ID = \'" + row.game_id + "\' and TEAM_ABBR = \'" + row.home_team + "\'",
+        "GAME_ID = \'" + row.game_id + "\' and TEAM_ABBR = \'" + row.home_team + "\'"];
 };
 
 var newPredicateAway = function (row) {
-    return ["game_id = \'" + row[0] + "\' and team_abbreviation = \'" + row[7] + "\'",
-        "game_id = \'" + row[0] + "\' and team_abbreviation = \'" + row[7] + "\'"];
+    return ["GAME_ID = \'" + row.game_id + "\' and TEAM_ABBR = \'" + row.away_team + "\'",
+        "GAME_ID = \'" + row.game_id + "\' and TEAM_ABBR = \'" + row.away_team + "\'"];
 };
 
 var jumpNameHome = function (row) {
-    return "Box score of " + row[6];
+    return "Box score of " + row.home_team;
 };
 
 var jumpNameAway = function (row) {
-    return "Box score of " + row[7];
+    return "Box score of " + row.away_team;
 };
 
 p.addJump(new Jump(teamTimelineCanvas, boxscoreCanvas, "semantic_zoom", {selector : selector,

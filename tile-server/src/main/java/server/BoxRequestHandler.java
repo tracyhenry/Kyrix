@@ -9,7 +9,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import main.Main;
 import project.Canvas;
-import project.Project;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -99,7 +98,7 @@ public class BoxRequestHandler  implements HttpHandler {
 
         //send data and box back
         Map<String, Object> respMap = new HashMap<>();
-        respMap.put("renderData", data.data);
+        respMap.put("renderData", BoxandData.getDictionaryFromData(data.data, c));
         respMap.put("minx", data.box.getMinx());
         respMap.put("miny", data.box.getMiny());
         respMap.put("boxH", data.box.getHight());

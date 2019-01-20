@@ -142,10 +142,8 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                             var numLayers = globalVar.curCanvas.layers.length;
                             for (var i = 0; i < numLayers; i ++)
                                 renderData[i] = renderData[i].filter(function (d) {
-                                        if (d[d.length - param.maxxOffset] < x ||
-                                            d[d.length - param.minxOffset] > (x + globalVar.tileW) ||
-                                            d[d.length - param.maxyOffset] < y ||
-                                            d[d.length - param.minyOffset] > (y + globalVar.tileH))
+                                        if (+d.maxx < x || +d.minx > (x + globalVar.tileW)
+                                            || +d.maxy < y || +d.miny > (y + globalVar.tileH))
                                             return false;
                                         return true;});
 
@@ -273,10 +271,8 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                         .selectAll("*")
                         .filter(function(d) {
                             if (d == null) return false; // requiring all non-def stuff to be bound to data
-                            if (d[d.length - param.maxxOffset] < x ||
-                                d[d.length - param.minxOffset] > (x + response.boxW) ||
-                                d[d.length - param.maxyOffset] < y ||
-                                d[d.length - param.minyOffset] > (y + response.boxH))
+                            if (+d.maxx < x || +d.minx > (x + response.boxW)
+                                || +d.maxy < y || +d.miny > (y + response.boxH))
                                 return true;
                             else
                                 return false;
@@ -300,10 +296,8 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                         mp[JSON.stringify(d)] = true;
                     });
                     renderData[i] = renderData[i].filter(function (d) {
-                        if (+d[d.length - param.maxxOffset] < x ||
-                            +d[d.length - param.minxOffset] > (x + response.boxW) ||
-                            +d[d.length - param.maxyOffset] < y ||
-                            +d[d.length - param.minyOffset] > (y + response.boxH))
+                        if (+d.maxx < x || +d.minx > (x + response.boxW)
+                            || +d.maxy < y || +d.miny > (y + response.boxH))
                             return false;
                         if (mp.hasOwnProperty(JSON.stringify(d)))
                             return false;
@@ -315,10 +309,8 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                         // add data from intersection w/ old box data
                         for (var j = 0; j < globalVar.renderData[i].length; j ++) {
                             var d = globalVar.renderData[i][j];
-                            if (! (d[d.length - param.maxxOffset] < x ||
-                                    d[d.length - param.minxOffset] > (x + response.boxW) ||
-                                    d[d.length - param.maxyOffset] < y ||
-                                    d[d.length - param.minyOffset] > (y + response.boxH)))
+                            if (! (+d.maxx < x || +d.minx > (x + response.boxW)
+                                    || +d.maxy < y || +d.miny > (y + response.boxH)))
                                 newLayerData.push(d);
                         }
                     }

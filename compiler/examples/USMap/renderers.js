@@ -28,13 +28,13 @@ var stateMapRendering = function (svg, data, args) {
         .enter()
         .append("path")
         .attr("d", function (d) {
-            var feature = JSON.parse(d[5]);
+            var feature = JSON.parse(d.geomstr);
             return path(feature);
         })
         .style("stroke", "#fff")
         .style("stroke-width", "0.5")
         .style("fill", function (d) {
-            return color(d[4]);
+            return color(d.crimerate);
         });
 };
 
@@ -113,7 +113,7 @@ var countyMapStateBoundaryRendering = function (svg, data, args) {
         .enter()
         .append("path")
         .attr("d", function (d) {
-            var feature = JSON.parse(d[4]);
+            var feature = JSON.parse(d.geomstr);
             return path(feature);
         })
         .style("stroke", "#fff")
@@ -212,13 +212,13 @@ var countyMapRendering = function (svg, data, args) {
         .enter()
         .append("path")
         .attr("d", function (d) {
-            var feature = JSON.parse(d[9]);
+            var feature = JSON.parse(d.geomstr);
             return path(feature);
         })
         .style("stroke", "#fff")
         .style("stroke-width", "0.5")
         .style("fill", function (d) {
-            return color(d[7]);
+            return color(d.crimerate);
         })
         .on("mouseover", function (d, i) {
 
@@ -240,7 +240,7 @@ var countyMapRendering = function (svg, data, args) {
             tooltip.transition()
                 .duration(200)
                 .style("opacity", .9);
-            tooltip.html(d[6] + "\n" + d[7])
+            tooltip.html(d.name + "\n" + d.crimerate)
                 .style("left", (d3.event.pageX) + "px")
                 .style("top", (d3.event.pageY) + "px");
         })

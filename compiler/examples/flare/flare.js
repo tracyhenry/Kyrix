@@ -32,11 +32,11 @@ var newViewport = function () {
 };
 
 var newPredicate = function (row) {
-    return ["(id=\'" + row[0] + "\' or " + "parent_id=\'" + row[0] + "\')"];
+    return ["(id=\'" + row.id + "\' or " + "parent_id=\'" + row.id + "\')"];
 };
 
 var jumpName = function (row) {
-    return "Zoom into " + row[1];
+    return "Zoom into " + row.name;
 };
 
 p.addJump(new Jump(flareCanvas, flareCanvas, "semantic_zoom", {selector : selector,

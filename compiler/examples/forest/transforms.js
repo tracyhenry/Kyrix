@@ -54,24 +54,6 @@ var c3BackgroundTransform = new Transform("select * from canvas_bg where canvas_
     ["id", "x", "y", "canvas_id", "farm_id", "url"],
     true);
 
-var svgBackgroundTransform = new Transform("select * from svg;",
-    "svg",
-    function (row, width, height, params){
-        var x = parseInt(row[4]) + 585;
-        var y = parseInt(row[5]) + 448;
-        var ret = [];
-        ret.push(row[0]);
-        ret.push(row[1]);
-        ret.push(row[2]);
-        ret.push(row[3]);
-        ret.push(x);
-        ret.push(y);
-
-        return Java.to(ret ,"java.lang.String[]");
-    },
-    ["id", "path", "stroke", "fill", "x", "y"],
-    true);
-
 var c1AnimalTransform = new Transform("select * from animal;",
     "forest",
     function (row, width, height, params){
@@ -137,7 +119,6 @@ module.exports = {
     c1BackgroundTransform : c1BackgroundTransform,
     c2BackgroundTransform : c2BackgroundTransform,
     c3BackgroundTransform : c3BackgroundTransform,
-    svgBackgroundTransform : svgBackgroundTransform,
     c1AnimalTransform : c1AnimalTransform,
     c2AnimalTransform : c2AnimalTransform,
     c3AnimalTransform : c3AnimalTransform

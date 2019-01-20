@@ -1,14 +1,6 @@
 // parameters
 param = {};
 
-// bounding box column offsets
-param.cxOffset = 6;
-param.cyOffset = 5;
-param.maxxOffset = 2;
-param.minxOffset = 4;
-param.maxyOffset = 1;
-param.minyOffset = 3;
-
 // animation durations, delays
 param.enteringDelta = 0.5;
 param.enteringDuration = 1300;

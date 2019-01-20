@@ -98,7 +98,7 @@ var playByPlayStaticTransform = new Transform("select team1.abbr, team2.abbr fro
 var boxscoreTransform = new Transform("select * from player_boxscore",
     "nba",
     "",
-    ['id', 'GAME_ID', 'TEAM_ID', 'TEAM_ABBREVIATION', 'TEAM_CITY', 'PLAYER_ID', 'PLAYER_NAME', 'START_POSITION', 'MIN', 'PTS', 'FGM', 'FGA', 'FG_PCT', 'FG3M', 'FG3A', 'FG3_PCT', 'FTM', 'FTA', 'FT_PCT', 'OREB', 'DREB', 'REB', 'AST', 'STL', 'BLK', 'TUNROVER', 'PF', 'PLUS_MINUS'],
+    ['id', 'GAME_ID', 'TEAM_ID', 'TEAM_ABBR', 'TEAM_CITY', 'PLAYER_ID', 'PLAYER_NAME', 'POS', 'MIN', 'PTS', 'FGM', 'FGA', 'FG_PCT', 'FG3M', 'FG3A', 'FG3_PCT', 'FTM', 'FTA', 'FT_PCT', 'OREB', 'DREB', 'REB', 'AST', 'STL', 'BLK', 'TURNOVER', 'PF', 'PLUS_MINUS'],
     true);
 
 module.exports = {

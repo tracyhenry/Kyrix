@@ -60,11 +60,11 @@ var newPredicates = function () {
 };
 
 var newViewport = function (row) {
-    return [0, row[1] * 5 - 1000, row[2] * 5 - 500];
+    return [0, row.bbox_x * 5 - 1000, row.bbox_y * 5 - 500];
 };
 
 var jumpName = function (row) {
-    return "County map of " + row[3];
+    return "County map of " + row.name;
 };
 
 p.addJump(new Jump(stateMapCanvas, countyMapCanvas, "geometric_semantic_zoom", {selector : selector,
