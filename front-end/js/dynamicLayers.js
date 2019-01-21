@@ -135,7 +135,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                             + "x=" + d[0] + "&"
                             + "y=" + d[1];
                         for (var i = 0; i < globalVar.predicates.length; i ++)
-                            postData += "&predicate" + i + "=" + getSqlPredicate(globalVar.predicates[i]);
+                            postData += "&predicate" + i + "=" + globalVar.predicates[i];
                         $.post("/tile", postData, function (data, status) {
 
                             // response data
@@ -224,7 +224,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                 + "x=" + (viewportX | 0) + "&"
                 + "y=" + (viewportY | 0);
             for (var i = 0; i < globalVar.predicates.length; i ++)
-                postData += "&predicate" + i + "=" + getSqlPredicate(globalVar.predicates[i]);
+                postData += "&predicate" + i + "=" + globalVar.predicates[i];
             if (param.deltaBox)
                 postData += "&oboxx=" + cBoxX + "&oboxy=" + cBoxY
                     + "&oboxw=" + cBoxW + "&oboxh=" + cBoxH;

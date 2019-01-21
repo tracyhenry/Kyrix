@@ -9,11 +9,14 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
 
     if (optional == null)
         optional = {};
-    // check canvas objects have ids
+    // check must-have fields
     if (sourceCanvas.id == null || destCanvas.id == null)
         throw new Error("Constructing Jump: unidentified source or destination canvas.");
     if (type == null)
-        throw new Error("Constructing Jump: jump type is missing.");
+        throw new Error("Constructing Jump: missing jump type.");
+    if (type == "semantic_zoom" || type == "geometric_semantic_zoom")
+        if (! ("selector" in optional) || ! ("viewport" in optional) || ! ("predicates" in optional))
+            throw new Error("Constructing Jump: missing customization functions for semantic zoom.");
 
     this.type = type;
     this.sourceId = sourceCanvas.id;

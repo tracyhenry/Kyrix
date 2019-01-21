@@ -191,7 +191,6 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
 
                         // render
                         RefreshDynamicLayers(newViewportX, newViewportY);
-
                     })
                     .on("end", function () {
 
@@ -373,12 +372,19 @@ function registerJumps(svg, layerId) {
                     globalVar.curCanvasId = jumps[jumpId].destId;
 
                     // calculate new predicates
-                    globalVar.predicates = jumps[jumpId].newPredicates.parseFunction()(tuple, optionalArgs);
+                    var predDict = jumps[jumpId].newPredicates.parseFunction()(tuple, optionalArgs);
+                    var numLayer = getCanvasById(globalVar.curCanvasId).layers.length;
+                    globalVar.predicates = [];
+                    for (var i = 0; i < numLayer; i ++)
+                        if (("layer" + i) in predDict)
+                            globalVar.predicates.push(getSqlPredicate(predDict["layer" + i]));
+                        else
+                            globalVar.predicates.push("");
 
                     // prefetch canvas object by sending an async request to server
                     var postData = "id=" + globalVar.curCanvasId;
                     for (var i = 0; i < globalVar.predicates.length; i ++)
-                        postData += "&predicate" + i + "=" + getSqlPredicate(globalVar.predicates[i]);
+                        postData += "&predicate" + i + "=" + globalVar.predicates[i];
                     if (! (postData in globalVar.cachedCanvases)) {
                         $.ajax({
                             type : "POST",

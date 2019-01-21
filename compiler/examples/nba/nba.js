@@ -97,7 +97,7 @@ var newPredicate = function (row) {
             {"==" : ["away_team", row.abbr]}
         ]};
     var pred1 = {"==" : ["abbr", row.abbr]};
-    return [pred0, pred1];
+    return {"layer0" : pred0, "layer1" : pred1};
 };
 
 var jumpName = function (row) {
@@ -122,7 +122,7 @@ var newPredicate = function (row) {
             {"==" : ["abbr1", row.home_team]},
             {"==" : ["abbr2", row.away_team]}
         ]};
-    return [pred0, pred1];
+    return {"layer0" : pred0, "layer1" : pred1};
 };
 
 var jumpName = function (row) {
@@ -146,7 +146,7 @@ var newPredicateHome = function (row) {
             {"==" : ["GAME_ID", row.game_id]},
             {"==" : ["TEAM_ABBR", row.home_team]}
         ]};
-    return [pred, pred];
+    return {"layer0" : pred, "layer1" : pred};
 };
 
 var newPredicateAway = function (row) {
@@ -154,7 +154,7 @@ var newPredicateAway = function (row) {
             {"==" : ["GAME_ID", row.game_id]},
             {"==" : ["TEAM_ABBR", row.away_team]}
         ]};
-    return [pred, pred];
+    return {"layer0" : pred, "layer1" : pred};
 };
 
 var jumpNameHome = function (row) {

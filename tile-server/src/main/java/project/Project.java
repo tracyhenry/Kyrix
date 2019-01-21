@@ -25,7 +25,7 @@ public class Project {
     private String initialCanvasId;
     private int initialViewportX;
     private int initialViewportY;
-    private ArrayList<String> initialPredicates;
+    private String initialPredicates;
     private ArrayList<Canvas> canvases;
     private ArrayList<Jump> jumps;
     private String renderingParams;
@@ -54,7 +54,7 @@ public class Project {
         return initialViewportY;
     }
 
-    public ArrayList<String> getInitialPredicates() {
+    public String getInitialPredicates() {
         return initialPredicates;
     }
 

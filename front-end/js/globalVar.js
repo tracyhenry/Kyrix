@@ -76,3 +76,12 @@ function getSqlPredicate(p) {
             + getSqlPredicate(p["OR"][1]) + ")";
     return "";
 }
+
+function getCanvasById(canvasId) {
+
+    for (var i = 0; i < globalVar.project.canvases.length; i ++)
+        if (globalVar.project.canvases[i].id == canvasId)
+            return globalVar.project.canvases[i];
+
+    return null;
+}

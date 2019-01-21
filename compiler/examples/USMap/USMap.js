@@ -56,7 +56,7 @@ var selector = function (row, args) {
 };
 
 var newPredicates = function () {
-    return [{}, {}, {}];
+    return {};
 };
 
 var newViewport = function (row) {

@@ -3,7 +3,7 @@ function getCurCanvas() {
 
     var postData = "id=" + globalVar.curCanvasId;
     for (var i = 0; i < globalVar.predicates.length; i ++)
-        postData += "&predicate" + i + "=" + getSqlPredicate(globalVar.predicates[i]);
+        postData += "&predicate" + i + "=" + globalVar.predicates[i];
 
     // check if cache has it
     if (postData in globalVar.cachedCanvases) {
@@ -97,18 +97,27 @@ function pageOnLoad() {
     // get information about the first canvas to render
     $.post("/first/", {}, function (data) {
         var response = JSON.parse(data);
-        globalVar.initialViewportX = +response.initialViewportX;
-        globalVar.initialViewportY = +response.initialViewportY;
-        globalVar.viewportWidth = +response.viewportWidth;
-        globalVar.viewportHeight = +response.viewportHeight;
-        globalVar.curCanvasId = response.initialCanvasId;
+        globalVar.project = response.project;
+
+        // initial setup
+        globalVar.initialViewportX = globalVar.project.initialViewportX;
+        globalVar.initialViewportY = globalVar.project.initialViewportY;
+        globalVar.viewportWidth = globalVar.project.viewportWidth;
+        globalVar.viewportHeight = globalVar.project.viewportHeight;
+        globalVar.curCanvasId = globalVar.project.initialCanvasId;
         globalVar.tileW = +response.tileW;
         globalVar.tileH = +response.tileH;
-        globalVar.renderingParams = JSON.parse(response.renderingParams);
-        globalVar.predicates = response.initialPredicates.map(
-            function (o) {
-                return JSON.parse(o);
-            });
+        globalVar.renderingParams = JSON.parse(globalVar.project.renderingParams);
+
+        // process initial predicates
+        var predDict = JSON.parse(globalVar.project.initialPredicates);
+        var numLayer = getCanvasById(globalVar.curCanvasId).layers.length;
+        globalVar.predicates = [];
+        for (var i = 0; i < numLayer; i ++)
+            if (("layer" + i) in predDict)
+                globalVar.predicates.push(getSqlPredicate(predDict["layer" + i]));
+            else
+                globalVar.predicates.push("");
 
         // set up global and main svgs
         d3.select("body")
