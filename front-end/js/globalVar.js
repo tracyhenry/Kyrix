@@ -51,6 +51,7 @@ if (typeof String.prototype.parseFunction != 'function') {
     };
 }
 
+/******** common functions ********/
 function getOptionalArgs() {
 
     var predicateDict = {};
@@ -61,4 +62,17 @@ function getOptionalArgs() {
         predicates : predicateDict, renderingParams : globalVar.renderingParams};
 
     return optionalArgs;
+}
+
+function getSqlPredicate(p) {
+
+    if ("==" in p)
+        return "(" + p["=="][0] + "=\'" + p["=="][1] + "\')";
+    if ("AND" in p)
+        return "(" + getSqlPredicate(p["AND"][0]) + " AND "
+            + getSqlPredicate(p["AND"][1]) + ")";
+    if ("OR" in p)
+        return "(" + getSqlPredicate(p["OR"][0]) + " OR "
+            + getSqlPredicate(p["OR"][1]) + ")";
+    return "";
 }

@@ -71,7 +71,7 @@ p.addJump(new Jump(c2BackgroundCanvas, c3BackgroundCanvas, "literal_zoom_in"));
 p.addJump(new Jump(c3BackgroundCanvas, c2BackgroundCanvas, "literal_zoom_out"));
 
 // initialize canvas
-p.setInitialStates(c1BackgroundCanvas, 0, 0, ["", ""]);
+p.setInitialStates(c1BackgroundCanvas, 0, 0);
 
 // save to db
 p.saveProject();

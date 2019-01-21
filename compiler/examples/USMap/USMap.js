@@ -56,7 +56,7 @@ var selector = function (row, args) {
 };
 
 var newPredicates = function () {
-    return ["", "", ""];
+    return [{}, {}, {}];
 };
 
 var newViewport = function (row) {
@@ -71,7 +71,7 @@ p.addJump(new Jump(stateMapCanvas, countyMapCanvas, "geometric_semantic_zoom", {
     viewport : newViewport, predicates : newPredicates, name : jumpName}));
 
 // setting initial states
-p.setInitialStates(stateMapCanvas, 0, 0, ["", ""]);
+p.setInitialStates(stateMapCanvas, 0, 0);
 
 // save to db
 p.saveProject();

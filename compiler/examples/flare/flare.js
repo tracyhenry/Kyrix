@@ -32,7 +32,11 @@ var newViewport = function () {
 };
 
 var newPredicate = function (row) {
-    return ["(id=\'" + row.id + "\' or " + "parent_id=\'" + row.id + "\')"];
+    var pred = {"OR" : [
+            {"==" : ["id", row.id]},
+            {"==" : ["parent_id", row.id]}
+        ]};
+    return [pred];
 };
 
 var jumpName = function (row) {
@@ -43,7 +47,10 @@ p.addJump(new Jump(flareCanvas, flareCanvas, "semantic_zoom", {selector : select
     viewport : newViewport, predicates : newPredicate, name : jumpName}));
 
 // initialize canvas
-p.setInitialStates(flareCanvas, 0, 0, ["(id = \'1\' or parent_id = \'1\')"]);
+p.setInitialStates(flareCanvas, 0, 0, [{"OR" : [
+        {"==" : ["id", "1"]},
+        {"==" : ["parent_id", "1"]}
+    ]}]);
 
 // save to db
 p.saveProject();

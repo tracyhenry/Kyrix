@@ -3,7 +3,7 @@ function getCurCanvas() {
 
     var postData = "id=" + globalVar.curCanvasId;
     for (var i = 0; i < globalVar.predicates.length; i ++)
-        postData += "&predicate" + i + "=" + globalVar.predicates[i];
+        postData += "&predicate" + i + "=" + getSqlPredicate(globalVar.predicates[i]);
 
     // check if cache has it
     if (postData in globalVar.cachedCanvases) {
@@ -95,18 +95,20 @@ function processRenderingParams() {
 function pageOnLoad() {
 
     // get information about the first canvas to render
-    $.post("/first/", {}, function (data, status) {
+    $.post("/first/", {}, function (data) {
         var response = JSON.parse(data);
-        console.log(response);
         globalVar.initialViewportX = +response.initialViewportX;
         globalVar.initialViewportY = +response.initialViewportY;
-        globalVar.predicates = response.initialPredicates;
         globalVar.viewportWidth = +response.viewportWidth;
         globalVar.viewportHeight = +response.viewportHeight;
         globalVar.curCanvasId = response.initialCanvasId;
         globalVar.tileW = +response.tileW;
         globalVar.tileH = +response.tileH;
         globalVar.renderingParams = JSON.parse(response.renderingParams);
+        globalVar.predicates = response.initialPredicates.map(
+            function (o) {
+                return JSON.parse(o);
+            });
 
         // set up global and main svgs
         d3.select("body")

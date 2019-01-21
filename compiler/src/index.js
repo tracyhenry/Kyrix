@@ -166,10 +166,14 @@ function setInitialStates(canvasObj, viewportX, viewportY, predicates) {
     if (predicates == null) {
         predicates = [];
         for (var i = 0; i < this.canvases[canvasId].layers.length; i ++)
-            predicates.push("");
+            predicates.push({});
     }
     if (predicates.length != this.canvases[canvasId].layers.length)
         throw new Error("Initial canvas: # predicates does not equal # layers.");
+
+    // serialize initial predicates into strings, so that gson (in the backend) can recognize
+    for (var i = 0; i < predicates.length; i ++)
+        predicates[i] = JSON.stringify(predicates[i]);
 
     // assign fields
     this.initialCanvasId = canvasObj.id;

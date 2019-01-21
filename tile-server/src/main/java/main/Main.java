@@ -98,6 +98,7 @@ public class Main {
             project = gson.fromJson(projectJSON, Project.class);
         } catch (Exception e) {
             System.out.println("Cannot find definition of main project... waiting...");
+            e.printStackTrace();
         }
         DbConnector.commitConnection(Config.databaseName);
     }

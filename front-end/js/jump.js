@@ -378,7 +378,7 @@ function registerJumps(svg, layerId) {
                     // prefetch canvas object by sending an async request to server
                     var postData = "id=" + globalVar.curCanvasId;
                     for (var i = 0; i < globalVar.predicates.length; i ++)
-                        postData += "&predicate" + i + "=" + globalVar.predicates[i];
+                        postData += "&predicate" + i + "=" + getSqlPredicate(globalVar.predicates[i]);
                     if (! (postData in globalVar.cachedCanvases)) {
                         $.ajax({
                             type : "POST",
@@ -409,7 +409,7 @@ function registerJumps(svg, layerId) {
                         // viewport is fixed at a certain tuple
                         var postData = "canvasId=" + globalVar.curCanvasId;
                         for (var i = 0; i < newViewportRet[1].length; i++)
-                            postData += "&predicate" + i + "=" + newViewportRet[1][i];
+                            postData += "&predicate" + i + "=" + getSqlPredicate(newViewportRet[1][i]);
                         $.ajax({
                             type: "POST",
                             url: "viewport",

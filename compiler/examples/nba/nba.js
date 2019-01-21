@@ -92,8 +92,12 @@ var newViewport = function () {
 };
 
 var newPredicate = function (row) {
-    return ["(home_team=\'" + row.abbr + "\' or " + "away_team=\'" + row.abbr + "\')",
-            "abbr=\'" + row.abbr + "\'"];
+    var pred0 = {"OR" : [
+            {"==" : ["home_team", row.abbr]},
+            {"==" : ["away_team", row.abbr]}
+        ]};
+    var pred1 = {"==" : ["abbr", row.abbr]};
+    return [pred0, pred1];
 };
 
 var jumpName = function (row) {
@@ -113,8 +117,12 @@ var newViewport = function () {
 };
 
 var newPredicate = function (row) {
-    return ["game_id = \'" + row.game_id + "\'",
-            "abbr1=\'" + row.home_team + "\' and abbr2=\'" + row.away_team + "\'"];
+    var pred0 = {"==" : ["game_id", row.game_id]};
+    var pred1 = {"AND" : [
+            {"==" : ["abbr1", row.home_team]},
+            {"==" : ["abbr2", row.away_team]}
+        ]};
+    return [pred0, pred1];
 };
 
 var jumpName = function (row) {
@@ -134,13 +142,19 @@ var newViewport = function () {
 };
 
 var newPredicateHome = function (row) {
-    return ["GAME_ID = \'" + row.game_id + "\' and TEAM_ABBR = \'" + row.home_team + "\'",
-        "GAME_ID = \'" + row.game_id + "\' and TEAM_ABBR = \'" + row.home_team + "\'"];
+    var pred = {"AND" : [
+            {"==" : ["GAME_ID", row.game_id]},
+            {"==" : ["TEAM_ABBR", row.home_team]}
+        ]};
+    return [pred, pred];
 };
 
 var newPredicateAway = function (row) {
-    return ["GAME_ID = \'" + row.game_id + "\' and TEAM_ABBR = \'" + row.away_team + "\'",
-        "GAME_ID = \'" + row.game_id + "\' and TEAM_ABBR = \'" + row.away_team + "\'"];
+    var pred = {"AND" : [
+            {"==" : ["GAME_ID", row.game_id]},
+            {"==" : ["TEAM_ABBR", row.away_team]}
+        ]};
+    return [pred, pred];
 };
 
 var jumpNameHome = function (row) {
@@ -157,7 +171,7 @@ p.addJump(new Jump(teamTimelineCanvas, boxscoreCanvas, "semantic_zoom", {selecto
     viewport : newViewport, predicates : newPredicateAway, name : jumpNameAway}));
 
 // setting up initial states
-p.setInitialStates(teamLogoCanvas, 0, 0, [""]);
+p.setInitialStates(teamLogoCanvas, 0, 0);
 
 // save to db
 p.saveProject();
