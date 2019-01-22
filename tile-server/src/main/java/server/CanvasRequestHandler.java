@@ -1,5 +1,6 @@
 package server;
 
+import box.BoxandData;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
@@ -14,7 +15,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,49 +50,49 @@ public class CanvasRequestHandler implements HttpHandler {
         String canvasId = queryMap.get("id");
 
         // get the current canvas
-        Canvas curCanvas = Main.getProject().getCanvas(canvasId);
-        if (curCanvas == null) {
-            // canvas id does not exist and send back a bad request response
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "canvas " + query + " does not exist.");
-            return ;
+        Canvas c = null;
+        try {
+            c = Main.getProject().getCanvas(canvasId).deepCopy();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         // list of predicates
         ArrayList<String> predicates = new ArrayList<>();
-        for (int i = 0; i < curCanvas.getLayers().size(); i ++)
+        for (int i = 0; i < c.getLayers().size(); i ++)
             predicates.add(queryMap.get("predicate" + i));
 
         // calculate w or h if they are not pre-determined
-        if (curCanvas.getwSql().length() > 0) {
-            String predicate = queryMap.get("predicate" + curCanvas.getwLayerId());
-            String sql = curCanvas.getwSql() + " and " + predicate;
-            String db = curCanvas.getDbByLayerId(curCanvas.getwLayerId());
+        if (c.getwSql().length() > 0) {
+            String predicate = queryMap.get("predicate" + c.getwLayerId());
+            String sql = c.getwSql() + " and " + predicate;
+            String db = c.getDbByLayerId(c.getwLayerId());
             try {
-                curCanvas.setW(getWidthOrHeightBySql(sql, db));
+                c.setW(getWidthOrHeightBySql(sql, db));
             } catch (Exception e) {}
         }
-        if (curCanvas.gethSql().length() > 0) {
-            String predicate = queryMap.get("predicate" + curCanvas.gethLayerId());
-            String sql = curCanvas.gethSql() + " and " + predicate;
-            String db = curCanvas.getDbByLayerId(curCanvas.gethLayerId());
+        if (c.gethSql().length() > 0) {
+            String predicate = queryMap.get("predicate" + c.gethLayerId());
+            String sql = c.gethSql() + " and " + predicate;
+            String db = c.getDbByLayerId(c.gethLayerId());
             try {
-                curCanvas.setH(getWidthOrHeightBySql(sql, db));
+                c.setH(getWidthOrHeightBySql(sql, db));
             } catch (Exception e) {}
         }
 
         // get static data
         ArrayList<ArrayList<ArrayList<String>>> staticData = null;
         try {
-            staticData = getStaticData(curCanvas, predicates);
+            staticData = getStaticData(c, predicates);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         // construct the response object
         Map<String, Object> respMap = new HashMap<>();
-        respMap.put("canvas", curCanvas);
+        respMap.put("canvas", c);
         respMap.put("jump", Main.getProject().getJumps(canvasId));
-        respMap.put("staticData", staticData);
+        respMap.put("staticData", BoxandData.getDictionaryFromData(staticData, c));
         String response = gson.toJson(respMap);
 
         // send the response back

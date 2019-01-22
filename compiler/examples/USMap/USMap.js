@@ -51,26 +51,27 @@ countyBoundaryLayer.addPlacement(placements.countyMapPlacement);
 countyBoundaryLayer.addRenderingFunc(renderers.countyMapRendering);
 
 // ================== state -> county ===================
-var selector = function (row, layerId) {
-    return (layerId == 1);
+var selector = function (row, args) {
+    return (args.layerId == 1);
 };
 
 var newPredicates = function () {
-    return ["", "", ""];
+    return {};
 };
 
 var newViewport = function (row) {
-    return [0, row[1] * 5 - 1000, row[2] * 5 - 500];
+    return {"constant" : [row.bbox_x * 5 - 1000, row.bbox_y * 5 - 500]};
 };
 
 var jumpName = function (row) {
-    return "County map of " + row[3];
+    return "County map of " + row.name;
 };
 
-p.addJump(new Jump(stateMapCanvas, countyMapCanvas, selector, newViewport, newPredicates, "geometric_semantic_zoom", jumpName));
+p.addJump(new Jump(stateMapCanvas, countyMapCanvas, "geometric_semantic_zoom", {selector : selector,
+    viewport : newViewport, predicates : newPredicates, name : jumpName}));
 
 // setting initial states
-p.setInitialStates(stateMapCanvas, 0, 0, ["", ""]);
+p.setInitialStates(stateMapCanvas, 0, 0);
 
 // save to db
 p.saveProject();

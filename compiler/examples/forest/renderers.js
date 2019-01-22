@@ -16,102 +16,68 @@ var renderingParams = {
     "pelagic" : [9518, 2017, 562, 1033]
 };
 
-var backgroundRendering = function (svg, data, width, height, params) {
+var backgroundRendering = function (svg, data, args) {
 
     g = svg.append("g");
+    var params = args.renderingParams;
+
     g.selectAll("image")
         .data(data)
         .enter()
         .append("image")
-        .attr("x", function (d) {return d[1] - params.blockwidth[d[3]-1]/2 - ((d[0]-1) % params.colnumber[d[3]-1]);})
-        .attr("y", function (d) {return d[2] - params.blockheight[d[3]-1]/2 - Math.floor((d[0]-1) / params.colnumber[d[3]-1]);})
-        .attr("width", function (d) {return params.blockwidth[d[3]-1];})
-        .attr("height", function (d) {return params.blockheight[d[3]-1];})
-        .attr("xlink:href", function (d) {return "https://farm" + d[4] + ".staticflickr.com/" + d[5] + "_o.jpg";});
+        .attr("x", function (d) {return +d.x - params.blockwidth[+d.canvas_id - 1] / 2 - ((+d.id - 1) % params.colnumber[+d.canvas_id - 1]);})
+        .attr("y", function (d) {return +d.y - params.blockheight[+d.canvas_id - 1] / 2 - Math.floor((+d.id - 1) / params.colnumber[+d.canvas_id - 1]);})
+        .attr("width", function (d) {return params.blockwidth[+d.canvas_id - 1];})
+        .attr("height", function (d) {return params.blockheight[+d.canvas_id - 1];})
+        .attr("xlink:href", function (d) {return "https://farm" + d.farm_id + ".staticflickr.com/" + d.url + "_o.jpg";});
 };
 
-var animalCircleRendering = function (svg, data, width, height, params) {
+var animalCircleRendering = function (svg, data) {
     g = svg.append("g");
     g.selectAll("animalcircle")
         .data(data)
         .enter()
         .append("circle")
-        .attr("cx", function (d) {return d[5];})
-        .attr("cy", function (d) {return d[6];})
-        .attr("r", function (d) {return d[7];})
+        .attr("cx", function (d) {return +d.x;})
+        .attr("cy", function (d) {return +d.y;})
+        .attr("r", function (d) {return +d.r;})
         .attr("fill", "white");
 };
 
-var animalIconRendering = function (svg, data, width, height, params) {
+var animalIconRendering = function (svg, data) {
 
     g = svg.append("g");
-    // g.selectAll("animalicon")
-    //     .data(data)
-    //     .enter()
-    //     .append("circle")
-    //     .attr("cx", function (d) {return d[5];})
-    //     .attr("cy", function (d) {return d[6];})
-    //     .attr("r", function (d) {return d[7];})
-    //     .attr("fill", "white")
-    //     .style("fill-opacity", 0.5);
     g.selectAll("image")
         .data(data)
         .enter()
         .append("image")
         .attr("x", function (d) {
             var myPicXO = new Image();
-            myPicXO.src = d[8];
-            return d[5] - myPicXO.width/2;
+            myPicXO.src = d.url;
+            return +d.x - myPicXO.width/2;
         })
         .attr("y", function (d) {
             var myPicXO = new Image();
-            myPicXO.src = d[8];
-            return d[6] - myPicXO.height;
+            myPicXO.src = d.url;
+            return +d.y - myPicXO.height;
         })
-        /*
-        .attr("width", function (d) {
-            var myPicXO = new Image();
-            myPicXO.src = d[8];
-            return myPicXO.width;
-        })
-        .attr("height", function (d) {
-            var myPicXO = new Image();
-            myPicXO.src = d[8];
-            return myPicXO.height;
-        })
-        */
-        .attr("xlink:href", function (d) {return d[8];});
+        .attr("xlink:href", function (d) {return d.url;});
     g.selectAll("text")
         .data(data)
         .enter()
         .append("text")
-        .text(function(d) {return d[2];})
-        .attr("x", function(d) {return d[5];})
-        .attr("y", function(d) {return d[6];})
+        .text(function(d) {return d.species;})
+        .attr("x", function(d) {return +d.x;})
+        .attr("y", function(d) {return +d.y;})
         .attr("font-size", "20px")
         .attr("text-anchor", "middle")
         .attr("fill", "white");
 
 };
 
-var svgbackgroundRendering = function (svg, data, width, height, params) {
-
-    g = svg.append("g");
-    g.selectAll("image")
-        .data(data)
-        .enter()
-        .append("path")
-        .attr("d", function (d) {return d[1];})
-        .attr("stroke", function (d) {return d[2];})
-        .attr("stroke-width", "10pt")
-        .attr("fill", function (d) {return d[3];})
-        .attr("transform", function (d) {return "translate(" + (d[4] - 585) + " " + (d[5] - 448) + ")"});
-};
-
 module.exports = {
     renderingParams : renderingParams,
     backgroundRendering : backgroundRendering,
     animalCircleRendering : animalCircleRendering,
-    animalIconRendering : animalIconRendering,
-    svgbackgroundRendering : svgbackgroundRendering
+    animalIconRendering : animalIconRendering
 };

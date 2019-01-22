@@ -38,7 +38,6 @@ public class Main {
             System.out.println("Main project definition has not been changed since last session. Starting server right away...");
         }
 
-
         //cache
         TileCache.create();
 
@@ -99,6 +98,7 @@ public class Main {
             project = gson.fromJson(projectJSON, Project.class);
         } catch (Exception e) {
             System.out.println("Cannot find definition of main project... waiting...");
+            e.printStackTrace();
         }
         DbConnector.commitConnection(Config.databaseName);
     }

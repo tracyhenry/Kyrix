@@ -41,15 +41,9 @@ public class FirstRequestHandler implements HttpHandler {
 
         // construct a response map
         Map<String, Object> respMap = new HashMap<>();
-        respMap.put("initialViewportX", project.getInitialViewportX());
-        respMap.put("initialViewportY", project.getInitialViewportY());
-        respMap.put("initialPredicates", project.getInitialPredicates());
-        respMap.put("viewportWidth", project.getViewportWidth());
-        respMap.put("viewportHeight", project.getViewportHeight());
-        respMap.put("initialCanvasId", project.getInitialCanvasId());
+        respMap.put("project", project);
         respMap.put("tileH", Config.tileH);
         respMap.put("tileW", Config.tileW);
-        respMap.put("renderingParams", project.getRenderingParams());
 
         // convert the response to a json object and send it back
         String response = gson.toJson(respMap);

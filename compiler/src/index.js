@@ -163,19 +163,14 @@ function setInitialStates(canvasObj, viewportX, viewportY, predicates) {
         throw new Error("Initial canvas: viewportY out of range.");
 
     // check if the size of the predicates array equals the number of layers
-    if (predicates == null) {
-        predicates = [];
-        for (var i = 0; i < this.canvases[canvasId].layers.length; i ++)
-            predicates.push("");
-    }
-    if (predicates.length != this.canvases[canvasId].layers.length)
-        throw new Error("Initial canvas: # predicates does not equal # layers.");
+    if (predicates == null)
+        predicates = {};
 
     // assign fields
     this.initialCanvasId = canvasObj.id;
     this.initialViewportX = viewportX;
     this.initialViewportY = viewportY;
-    this.initialPredicates = predicates;
+    this.initialPredicates = JSON.stringify(predicates);
 }
 
 function sendProjectRequestToBackend(portNumber, projectJSON) {

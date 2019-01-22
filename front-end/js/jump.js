@@ -121,11 +121,8 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
         curViewport = d3.select(".oldmainsvg:not(.static)").attr("viewBox").split(" ");
     for (var i = 0; i < curViewport.length; i ++)
         curViewport[i] = +curViewport[i];
-    var tupleLen = tuple.length;
-    var tupleCX = +tuple[tupleLen - param.cxOffset];
-    var tupleCY = +tuple[tupleLen - param.cyOffset];
-    var tupleWidth = tuple[tupleLen - param.maxxOffset] - tuple[tupleLen - param.minxOffset];
-    var tupleHeight = tuple[tupleLen - param.maxyOffset] - tuple[tupleLen - param.minyOffset];
+    var tupleWidth = +tuple.maxx - tuple.minx;
+    var tupleHeight = +tuple.maxy - tuple.miny;
     var minx, maxx, miny, maxy;
     if (tupleWidth == 0 || tupleHeight == 0) {  // check when placement func does not exist
         minx = globalVar.curCanvas.w;
@@ -145,10 +142,10 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
             });
     }
     else {
-        minx = tupleCX - tupleWidth / 2.0;
-        maxx = tupleCX + tupleWidth / 2.0;
-        miny = tupleCY - tupleHeight / 2.0;
-        maxy = tupleCY + tupleHeight / 2.0;
+        minx = +tuple.cx - tupleWidth / 2.0;
+        maxx = +tuple.cx + tupleWidth / 2.0;
+        miny = +tuple.cy - tupleHeight / 2.0;
+        maxy = +tuple.cy + tupleHeight / 2.0;
     }
 
     // use tuple boundary to calculate start and end views, and log them to the last history object
@@ -194,7 +191,6 @@ function animateSemanticZoom(tuple, newViewportX, newViewportY) {
 
                         // render
                         RefreshDynamicLayers(newViewportX, newViewportY);
-
                     })
                     .on("end", function () {
 
@@ -275,6 +271,8 @@ function registerJumps(svg, layerId) {
 
     var jumps = globalVar.curJump;
     var shapes = svg.select("g:last-of-type").selectAll("*");
+    var optionalArgs = getOptionalArgs();
+    optionalArgs["layerId"] = layerId;
 
     shapes.each(function(p) {
 
@@ -282,7 +280,7 @@ function registerJumps(svg, layerId) {
         var hasJump = false;
         for (var k = 0; k < jumps.length; k ++)
             if ((jumps[k].type == param.semanticZoom || jumps[k].type == param.geometricSemanticZoom)
-                && jumps[k].selector.parseFunction()(p, layerId)) {
+                && jumps[k].selector.parseFunction()(p, optionalArgs)) {
                 hasJump = true;
                 break;
             }
@@ -343,7 +341,7 @@ function registerJumps(svg, layerId) {
 
                 // check if this jump is applied in this layer
                 if ((jumps[k].type != param.semanticZoom && jumps[k].type != param.geometricSemanticZoom)
-                    || ! jumps[k].selector.parseFunction()(tuple, layerId))
+                    || ! jumps[k].selector.parseFunction()(tuple, optionalArgs))
                     continue;
 
                 // create table cell and append it to #popovercontent
@@ -354,7 +352,7 @@ function registerJumps(svg, layerId) {
                     .datum(tuple)
                     .attr("data-jump-id", k)
                     .html(jumps[k].name.parseFunction() == null ? jumps[k].name
-                        : jumps[k].name.parseFunction()(tuple));
+                        : jumps[k].name.parseFunction()(tuple, optionalArgs));
 
                 // on click
                 jumpOption.on("click", function () {
@@ -374,12 +372,19 @@ function registerJumps(svg, layerId) {
                     globalVar.curCanvasId = jumps[jumpId].destId;
 
                     // calculate new predicates
-                    globalVar.predicates = jumps[jumpId].newPredicates.parseFunction()(tuple);
+                    var predDict = jumps[jumpId].newPredicates.parseFunction()(tuple, optionalArgs);
+                    var numLayer = getCanvasById(globalVar.curCanvasId).layers.length;
+                    globalVar.predicates = [];
+                    for (var i = 0; i < numLayer; i ++)
+                        if (("layer" + i) in predDict)
+                            globalVar.predicates.push(predDict["layer" + i]);
+                        else
+                            globalVar.predicates.push({});
 
                     // prefetch canvas object by sending an async request to server
                     var postData = "id=" + globalVar.curCanvasId;
                     for (var i = 0; i < globalVar.predicates.length; i ++)
-                        postData += "&predicate" + i + "=" + globalVar.predicates[i];
+                        postData += "&predicate" + i + "=" + getSqlPredicate(globalVar.predicates[i]);
                     if (! (postData in globalVar.cachedCanvases)) {
                         $.ajax({
                             type : "POST",
@@ -399,18 +404,22 @@ function registerJumps(svg, layerId) {
 
                     // calculate new viewport
                     var newViewportFunc = jumps[jumpId].newViewports.parseFunction();
-                    var newViewportRet = newViewportFunc(tuple);
-                    if (newViewportRet[0] == 0) {
+                    var newViewportRet = newViewportFunc(tuple, optionalArgs);
+                    if ("constant" in newViewportRet) {
                         // constant viewport, no predicate
-                        var newViewportX = newViewportRet[1];
-                        var newViewportY = newViewportRet[2];
+                        var newViewportX = newViewportRet["constant"][0];
+                        var newViewportY = newViewportRet["constant"][1];
                         animateSemanticZoom(tuple, newViewportX, newViewportY);
                     }
-                    else {
+                    else if ("centroid" in newViewportRet) { //TODO: this is not tested
                         // viewport is fixed at a certain tuple
                         var postData = "canvasId=" + globalVar.curCanvasId;
-                        for (var i = 0; i < newViewportRet[1].length; i++)
-                            postData += "&predicate" + i + "=" + newViewportRet[1][i];
+                        var predDict = newViewportRet["centroid"];
+                        for (var i = 0; i < numLayer; i ++)
+                            if (("layer" + i) in predDict)
+                                postData += "&predicate" + i + "=" + getSqlPredicate(predDict["layer" + i]);
+                            else
+                                postData += "&predicate" + i + "=";
                         $.ajax({
                             type: "POST",
                             url: "viewport",
@@ -425,6 +434,8 @@ function registerJumps(svg, layerId) {
                             async: false
                         });
                     }
+                    else
+                        throw new Error("Unrecognized new viewport function return value.");
                 });
             }
 

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import index.Indexer;
 import main.Config;
 import main.Main;
 import project.Canvas;
@@ -61,8 +62,10 @@ public class ProjectRequestHandler implements HttpHandler {
                 System.out.println("There is diff that requires recomputing indexes. Shutting down server and recomputing...");
                 Server.terminate();
             }
-            else
+            else {
+                Indexer.associateIndexer();
                 System.out.println("The diff does not require recompute. Refresh your web page now!");
+            }
             Main.setProjectClean();
         } catch (Exception e) {
             e.printStackTrace();
@@ -95,9 +98,11 @@ public class ProjectRequestHandler implements HttpHandler {
                     matchFound = true;
 
                     // if size is different, recalculate.
-                    if (oldCanvas.getW() != newCanvas.getW())
+                    if (oldCanvas.getW() != newCanvas.getW() || ! oldCanvas.getwSql().equals(newCanvas.getwSql())
+                            || ! oldCanvas.getwLayerId().equals(newCanvas.getwLayerId()))
                         return true;
-                    if (oldCanvas.getH() != newCanvas.getH())
+                    if (oldCanvas.getH() != newCanvas.getH() || ! oldCanvas.gethSql().equals(newCanvas.gethSql())
+                            || ! oldCanvas.gethLayerId().equals(newCanvas.gethLayerId()))
                         return true;
 
                     // if there's different number of layers, re-index is for sure needed

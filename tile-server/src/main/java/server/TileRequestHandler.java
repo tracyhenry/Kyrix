@@ -1,5 +1,6 @@
 package server;
 
+import box.BoxandData;
 import cache.TileCache;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -81,7 +82,7 @@ public class TileRequestHandler implements HttpHandler {
 
         // construct response
         Map<String, Object> respMap = new HashMap<>();
-        respMap.put("renderData", data);
+        respMap.put("renderData", BoxandData.getDictionaryFromData(data, c));
         respMap.put("minx", minx);
         respMap.put("miny", miny);
         response = gson.toJson(respMap);

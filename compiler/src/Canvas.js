@@ -14,6 +14,7 @@ function Canvas(id, w, h, wString, hString) {
         throw new Error("Constructing canvas: h must be a positive integer.");
     if (w == 0) {
         wString = processWidthHeightString(wString);
+        this.w = -1;
         this.wLayerId = wString.split(":")[0];
         this.wSql = wString.substring(this.wLayerId.length + 1);
     }
@@ -23,6 +24,7 @@ function Canvas(id, w, h, wString, hString) {
 
     if (h == 0) {
         hString = processWidthHeightString(hString);
+        this.h = -1;
         this.hLayerId = hString.split(":")[0];
         this.hSql = hString.substring(this.hLayerId.length + 1);
     }

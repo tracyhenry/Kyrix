@@ -1,11 +1,12 @@
 package project;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  * Created by wenbo on 4/3/18.
  */
-public class Transform {
+public class Transform implements Serializable {
 
     private String id;
     private String query;

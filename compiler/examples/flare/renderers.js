@@ -42,26 +42,20 @@ var renderingParams = {"textwrap" : function textwrap(text, width) {
     }
 };
 
-var flarePackRendering = function (svg, data, width, height, params) {
+var flarePackRendering = function (svg, data, args) {
 
     var g = svg.append("g");
+    var params = args.renderingParams;
 
     // get root json from data, using d3-stratify
     var table = [];
     for (var i = 0; i < data.length; i ++) {
 
-        table.push({
-            "id": data[i][0],
-            "name": data[i][1],
-            "size": data[i][2],
-            "parent_id": data[i][3],
-            "depth": data[i][4]
-        });
-
+        table.push(data[i]);
         // check if this one is root, if so, set its parent_id to -1
         var root = true;
         for (var j = 0; j < data.length; j ++)
-            if (i != j && data[j][0] == data[i][3])
+            if (i != j && data[j].id == data[i].parent_id)
                 root = false;
         if (root)
             table[i].parent_id = -1;
@@ -91,9 +85,9 @@ var flarePackRendering = function (svg, data, width, height, params) {
         .data(data)
         .enter()
         .append("circle")
-        .attr("r", function (d) {return dict[d[0]].r;})
-        .attr("cx", function (d) {return dict[d[0]].x;})
-        .attr("cy", function (d) {return dict[d[0]].y;})
+        .attr("r", function (d) {return dict[d.id].r;})
+        .attr("cx", function (d) {return dict[d.id].x;})
+        .attr("cy", function (d) {return dict[d.id].y;})
         .style("fill-opacity", .25)
         .attr("fill", "honeydew")
         .attr("stroke", "#ADADAD")
@@ -103,19 +97,19 @@ var flarePackRendering = function (svg, data, width, height, params) {
         .enter()
         .append("text")
         .filter(function (d) {
-            return ! dict[d[0]].children;
+            return ! dict[d.id].children;
         })
         .attr("dy", "0.3em")
-        .text(function (d) {return d[1];})
-        .attr("font-size", function (d) {return dict[d[0]].r / 1000 * 300;})
-        .attr("x", function(d) {return dict[d[0]].x;})
-        .attr("y", function(d) {return dict[d[0]].y;})
+        .text(function (d) {return d.name;})
+        .attr("font-size", function (d) {return dict[d.id].r / 1000 * 300;})
+        .attr("x", function(d) {return dict[d.id].x;})
+        .attr("y", function(d) {return dict[d.id].y;})
         .attr("dy", ".35em")
         .attr("text-anchor", "middle")
         .style("fill-opacity", 1)
         .style("fill", "navy")
         .each(function (d) {
-            params.textwrap(d3.select(this), dict[d[0]].r * 1.5);
+            params.textwrap(d3.select(this), dict[d.id].r * 1.5);
         });
 };
 

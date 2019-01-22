@@ -1,11 +1,12 @@
 package project;
 
+import java.io.*;
 import java.util.ArrayList;
 
 /**
  * Created by wenbo on 1/4/18.
  */
-public class Canvas {
+public class Canvas implements Serializable {
 
     private String id;
     private int w;
@@ -15,6 +16,22 @@ public class Canvas {
     private double zoomOutFactorX, zoomOutFactorY;
     private ArrayList<Layer> layers;
     private String axes;
+
+    // https://stackoverflow.com/questions/64036/how-do-you-make-a-deep-copy-of-an-object-in-java
+    // this method ensures that the canvas objects are not modified by request handlers in anyway
+    // otherwise dynamic canvas size will be a mess
+    public Canvas deepCopy() throws IOException, ClassNotFoundException {
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(this);
+        oos.flush();
+        oos.close();
+        bos.close();
+        byte[] byteData = bos.toByteArray();
+        ByteArrayInputStream bais = new ByteArrayInputStream(byteData);
+        return (Canvas) new ObjectInputStream(bais).readObject();
+    }
 
     public void setW(int w) {
         this.w = w;

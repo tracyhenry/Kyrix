@@ -13,6 +13,7 @@ import project.Placement;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +21,7 @@ import java.util.Map;
 /**
  * Created by wenbo on 12/30/18.
  */
-public abstract class Indexer {
+public abstract class Indexer implements Serializable {
 
     // abstract methods
     public abstract void createMV(Canvas c, int layerId) throws Exception;
@@ -120,7 +121,7 @@ public abstract class Indexer {
 
             // centroid_x
             if (centroid_x.substring(0, 4).equals("full"))
-                centroid_x_dbl = c.getW() / 2;
+                centroid_x_dbl = 0;
             else if (centroid_x.substring(0, 3).equals("con"))
                 centroid_x_dbl = Double.parseDouble(centroid_x.substring(4));
             else {
@@ -131,7 +132,7 @@ public abstract class Indexer {
 
             // centroid_y
             if (centroid_y.substring(0, 4).equals("full"))
-                centroid_y_dbl = c.getH() / 2;
+                centroid_y_dbl = 0;
             else if (centroid_y.substring(0, 3).equals("con"))
                 centroid_y_dbl = Double.parseDouble(centroid_y.substring(4));
             else {
@@ -142,7 +143,7 @@ public abstract class Indexer {
 
             // width
             if (width_func.substring(0, 4).equals("full"))
-                width_dbl = c.getW();
+                width_dbl = Double.MAX_VALUE;
             else if (width_func.substring(0, 3).equals("con"))
                 width_dbl = Double.parseDouble(width_func.substring(4));
             else {
@@ -153,7 +154,7 @@ public abstract class Indexer {
 
             // height
             if (height_func.substring(0, 4).equals("full"))
-                height_dbl = c.getH();
+                height_dbl = Double.MAX_VALUE;
             else if (height_func.substring(0, 3).equals("con"))
                 height_dbl = Double.parseDouble(height_func.substring(4));
             else {

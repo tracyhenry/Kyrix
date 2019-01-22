@@ -9,7 +9,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import main.Main;
 import project.Canvas;
-import project.Project;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -23,13 +22,11 @@ public class BoxRequestHandler  implements HttpHandler {
 
     // gson builder
     private final Gson gson;
-    private final Project project;
     private MikeBoxGetter boxGetter;
 
     public BoxRequestHandler() {
 
         gson = new GsonBuilder().create();
-        project = Main.getProject();
         boxGetter = new MikeBoxGetter();
 
     }
@@ -71,7 +68,16 @@ public class BoxRequestHandler  implements HttpHandler {
         canvasId = queryMap.get("id");
         minx = Double.valueOf(queryMap.get("x"));
         miny = Double.valueOf(queryMap.get("y"));
-        Canvas c = project.getCanvas(canvasId);
+        Canvas c = null;
+        try {
+            c = Main.getProject().getCanvas(canvasId).deepCopy();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (queryMap.containsKey("canvasw"))
+            c.setW(Integer.valueOf(queryMap.get("canvasw")));
+        if (queryMap.containsKey("canvash"))
+            c.setH(Integer.valueOf(queryMap.get("canvash")));
         ArrayList<String> predicates = new ArrayList<>();
         for (int i = 0; i < c.getLayers().size(); i ++)
             predicates.add(queryMap.get("predicate" + i));
@@ -92,7 +98,7 @@ public class BoxRequestHandler  implements HttpHandler {
 
         //send data and box back
         Map<String, Object> respMap = new HashMap<>();
-        respMap.put("renderData", data.data);
+        respMap.put("renderData", BoxandData.getDictionaryFromData(data.data, c));
         respMap.put("minx", data.box.getMinx());
         respMap.put("miny", data.box.getMiny());
         respMap.put("boxH", data.box.getHight());
@@ -118,7 +124,7 @@ public class BoxRequestHandler  implements HttpHandler {
         String canvasId = queryMap.get("id");
 
         // check whether this canvas exists
-        if (project.getCanvas(canvasId) == null)
+        if (Main.getProject().getCanvas(canvasId) == null)
             return "Canvas " + canvasId + " does not exist!";
 
         // check passed

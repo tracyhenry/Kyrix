@@ -1,9 +1,11 @@
 package project;
 
+import java.io.Serializable;
+
 /**
  * Created by wenbo on 1/12/18.
  */
-public class Placement {
+public class Placement implements Serializable {
 
     private String centroid_x;
     private String centroid_y;

@@ -9,7 +9,7 @@ function renderAxes(viewportX, viewportY, vWidth, vHeight) {
     if (axesFunc == "")
         return ;
 
-    var axes = axesFunc.parseFunction()(globalVar.curCanvas.w, globalVar.curCanvas.h);
+    var axes = axesFunc.parseFunction()(getOptionalArgs());
     for (var i = 0; i < axes.length; i ++) {
         // create g element
         var curg = axesg.append("g")
@@ -63,31 +63,45 @@ function getTileArray(canvasId, vX, vY, vWidth, vHeight) {
 
 function RefreshDynamicLayers(viewportX, viewportY) {
 
+    // current viewport
+    viewportX = +viewportX;
+    viewportY = +viewportY;
+    var vpW, vpH;
+    if (d3.select(".mainsvg:not(.static)").size() == 0)
+        vpW = globalVar.viewportWidth, vpH = globalVar.viewportHeight;
+    else {
+        var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
+        vpW = +curViewport[2];
+        vpH = +curViewport[3];
+    }
+
+    // render axes
+    renderAxes(viewportX, viewportY, vpW, vpH);
+
     // no dynamic layers? return
     if (d3.select(".mainsvg:not(.static)").size() == 0)
         return ;
 
-    viewportX = +viewportX;
-    viewportY = +viewportY;
+    // optional rendering args
+    var optionalArgs = getOptionalArgs();
+    optionalArgs["viewportX"] = viewportX;
+    optionalArgs["viewportY"] = viewportY;
+
     if (param.fetchingScheme == "tiling") {
 
         var tileW = globalVar.tileW;
         var tileH = globalVar.tileH;
 
         // get tile ids
-        var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
         var tileIds = getTileArray(globalVar.curCanvasId,
-            viewportX, viewportY, +curViewport[2], +curViewport[3]);
-
-        // render axes
-        renderAxes(viewportX, viewportY, +curViewport[2], +curViewport[3]);
+            viewportX, viewportY, vpW, vpH);
 
         // set viewport, here we only change min-x and min-y of the viewport.
         // Size of the viewport is set either by pageOnLoad(), animateSemanticZoom() or zoomed()
         // and should not be changed in this function
         d3.selectAll(".mainsvg:not(.static)")
             .attr("viewBox", viewportX + " " + viewportY + " "
-                + curViewport[2]+ " " + curViewport[3])
+                + vpW + " " + vpH)
             .each(function () { // remove invisible tiles
                 var tiles = d3.select(this)
                     .selectAll("svg")
@@ -121,7 +135,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                             + "x=" + d[0] + "&"
                             + "y=" + d[1];
                         for (var i = 0; i < globalVar.predicates.length; i ++)
-                            postData += "&predicate" + i + "=" + globalVar.predicates[i];
+                            postData += "&predicate" + i + "=" + getSqlPredicate(globalVar.predicates[i]);
                         $.post("/tile", postData, function (data, status) {
 
                             // response data
@@ -137,10 +151,8 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                             var numLayers = globalVar.curCanvas.layers.length;
                             for (var i = 0; i < numLayers; i ++)
                                 renderData[i] = renderData[i].filter(function (d) {
-                                        if (d[d.length - param.maxxOffset] < x ||
-                                            d[d.length - param.minxOffset] > (x + globalVar.tileW) ||
-                                            d[d.length - param.maxyOffset] < y ||
-                                            d[d.length - param.minyOffset] > (y + globalVar.tileH))
+                                        if (+d.maxx < x || +d.minx > (x + globalVar.tileW)
+                                            || +d.maxy < y || +d.miny > (y + globalVar.tileH))
                                             return false;
                                         return true;});
 
@@ -165,10 +177,7 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                                     return;
 
                                 // draw current layer
-                                curLayer.rendering.parseFunction()(tileSvg, renderData[i],
-                                    globalVar.curCanvas.w,
-                                    globalVar.curCanvas.h,
-                                    globalVar.renderingParams);
+                                curLayer.rendering.parseFunction()(tileSvg, renderData[i], optionalArgs);
 
                                 tileSvg.transition()
                                     .duration(param.tileEnteringDuration)
@@ -191,15 +200,6 @@ function RefreshDynamicLayers(viewportX, viewportY) {
     }
     else if (param.fetchingScheme == "dbox") {
 
-        // todo: presumably there should be a request queue to handle concurrent requests
-        // get current viewport
-        var curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
-        var vpW = +curViewport[2];
-        var vpH = +curViewport[3];
-
-        // render axes
-        renderAxes(viewportX, viewportY, +curViewport[2], +curViewport[3]);
-
         d3.selectAll(".mainsvg:not(.static)")
             .attr("viewBox", viewportX + " " + viewportY + " " + vpW + " " + vpH);
 
@@ -211,26 +211,30 @@ function RefreshDynamicLayers(viewportX, viewportY) {
         if (d3.event != null && d3.event.transform.k != 1)
             return ;
 
-        // get new box
-        // send request to backend to get data
-        var postData = "id=" + globalVar.curCanvasId + "&"
-            + "x=" + (viewportX | 0) + "&"
-            + "y=" + (viewportY | 0);
-        for (var i = 0; i < globalVar.predicates.length; i ++)
-            postData += "&predicate" + i + "=" + globalVar.predicates[i];
+        // check if the user has moved outside the current box
         var cBoxX = globalVar.boxX[globalVar.boxX.length - 1], cBoxY = globalVar.boxY[globalVar.boxY.length - 1];
         var cBoxW = globalVar.boxW[globalVar.boxW.length - 1], cBoxH = globalVar.boxH[globalVar.boxH.length - 1];
-        if (param.deltaBox)
-            postData += "&oboxx=" + cBoxX + "&oboxy=" + cBoxY
-                + "&oboxw=" + cBoxW + "&oboxh=" + cBoxH;
-        else
-            postData += "&oboxx=" + (-1e5) + "&oboxy=" + (-1e5)
-                + "&oboxw=" + (-1e5) + "&oboxh=" + (-1e5);
         if (cBoxX < -1e4 || (viewportX <= cBoxX + vpW / 3 && cBoxX >= 0)
             || ((viewportX + vpW) >= (cBoxX + cBoxW) - vpW / 3 && cBoxX + cBoxW <= globalVar.curCanvas.w)
             || (viewportY <= cBoxY + vpH / 3 && cBoxY >= 0)
             || ((viewportY + vpH) >= (cBoxY + cBoxH) - vpH / 3 && cBoxY + cBoxH <= globalVar.curCanvas.h)) {
 
+            // new box request
+            var postData = "id=" + globalVar.curCanvasId + "&"
+                + "x=" + (viewportX | 0) + "&"
+                + "y=" + (viewportY | 0);
+            for (var i = 0; i < globalVar.predicates.length; i ++)
+                postData += "&predicate" + i + "=" + getSqlPredicate(globalVar.predicates[i]);
+            if (param.deltaBox)
+                postData += "&oboxx=" + cBoxX + "&oboxy=" + cBoxY
+                    + "&oboxw=" + cBoxW + "&oboxh=" + cBoxH;
+            else
+                postData += "&oboxx=" + (-1e5) + "&oboxy=" + (-1e5)
+                    + "&oboxw=" + (-1e5) + "&oboxh=" + (-1e5);
+            if (globalVar.curCanvas.wSql.length > 0)
+                postData += "&canvasw=" + globalVar.curCanvas.w;
+            if (globalVar.curCanvas.hSql.length > 0)
+                postData += "&canvash=" + globalVar.curCanvas.h;
             globalVar.pendingBoxRequest = true;
             $.post("/dbox", postData, function (data) {
 
@@ -267,10 +271,8 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                         .selectAll("*")
                         .filter(function(d) {
                             if (d == null) return false; // requiring all non-def stuff to be bound to data
-                            if (d[d.length - param.maxxOffset] < x ||
-                                d[d.length - param.minxOffset] > (x + response.boxW) ||
-                                d[d.length - param.maxyOffset] < y ||
-                                d[d.length - param.minyOffset] > (y + response.boxH))
+                            if (+d.maxx < x || +d.minx > (x + response.boxW)
+                                || +d.maxy < y || +d.miny > (y + response.boxH))
                                 return true;
                             else
                                 return false;
@@ -294,10 +296,8 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                         mp[JSON.stringify(d)] = true;
                     });
                     renderData[i] = renderData[i].filter(function (d) {
-                        if (+d[d.length - param.maxxOffset] < x ||
-                            +d[d.length - param.minxOffset] > (x + response.boxW) ||
-                            +d[d.length - param.maxyOffset] < y ||
-                            +d[d.length - param.minyOffset] > (y + response.boxH))
+                        if (+d.maxx < x || +d.minx > (x + response.boxW)
+                            || +d.maxy < y || +d.miny > (y + response.boxH))
                             return false;
                         if (mp.hasOwnProperty(JSON.stringify(d)))
                             return false;
@@ -309,20 +309,15 @@ function RefreshDynamicLayers(viewportX, viewportY) {
                         // add data from intersection w/ old box data
                         for (var j = 0; j < globalVar.renderData[i].length; j ++) {
                             var d = globalVar.renderData[i][j];
-                            if (! (d[d.length - param.maxxOffset] < x ||
-                                    d[d.length - param.minxOffset] > (x + response.boxW) ||
-                                    d[d.length - param.maxyOffset] < y ||
-                                    d[d.length - param.minyOffset] > (y + response.boxH)))
+                            if (! (+d.maxx < x || +d.minx > (x + response.boxW)
+                                    || +d.maxy < y || +d.miny > (y + response.boxH)))
                                 newLayerData.push(d);
                         }
                     }
                     globalVar.renderData[i] = newLayerData;
 
                     // draw current layer
-                    curLayer.rendering.parseFunction()(dboxSvg, renderData[i],
-                        globalVar.curCanvas.w,
-                        globalVar.curCanvas.h,
-                        globalVar.renderingParams);
+                    curLayer.rendering.parseFunction()(dboxSvg, renderData[i], optionalArgs);
 
                     // register jumps
                     if (!globalVar.animation)
