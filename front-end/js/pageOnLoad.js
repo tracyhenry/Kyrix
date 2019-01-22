@@ -3,7 +3,7 @@ function getCurCanvas() {
 
     var postData = "id=" + globalVar.curCanvasId;
     for (var i = 0; i < globalVar.predicates.length; i ++)
-        postData += "&predicate" + i + "=" + globalVar.predicates[i];
+        postData += "&predicate" + i + "=" + getSqlPredicate(globalVar.predicates[i]);
 
     // check if cache has it
     if (postData in globalVar.cachedCanvases) {
@@ -115,9 +115,9 @@ function pageOnLoad() {
         globalVar.predicates = [];
         for (var i = 0; i < numLayer; i ++)
             if (("layer" + i) in predDict)
-                globalVar.predicates.push(getSqlPredicate(predDict["layer" + i]));
+                globalVar.predicates.push(predDict["layer" + i]);
             else
-                globalVar.predicates.push("");
+                globalVar.predicates.push({});
 
         // set up global and main svgs
         d3.select("body")
