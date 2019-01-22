@@ -405,17 +405,21 @@ function registerJumps(svg, layerId) {
                     // calculate new viewport
                     var newViewportFunc = jumps[jumpId].newViewports.parseFunction();
                     var newViewportRet = newViewportFunc(tuple, optionalArgs);
-                    if (newViewportRet[0] == 0) {
+                    if ("constant" in newViewportRet) {
                         // constant viewport, no predicate
-                        var newViewportX = newViewportRet[1];
-                        var newViewportY = newViewportRet[2];
+                        var newViewportX = newViewportRet["constant"][0];
+                        var newViewportY = newViewportRet["constant"][1];
                         animateSemanticZoom(tuple, newViewportX, newViewportY);
                     }
-                    else {
+                    else if ("centroid" in newViewportRet) { //TODO: this is not tested
                         // viewport is fixed at a certain tuple
                         var postData = "canvasId=" + globalVar.curCanvasId;
-                        for (var i = 0; i < newViewportRet[1].length; i++)
-                            postData += "&predicate" + i + "=" + getSqlPredicate(newViewportRet[1][i]);
+                        var predDict = newViewportRet["centroid"];
+                        for (var i = 0; i < numLayer; i ++)
+                            if (("layer" + i) in predDict)
+                                postData += "&predicate" + i + "=" + getSqlPredicate(predDict["layer" + i]);
+                            else
+                                postData += "&predicate" + i + "=";
                         $.ajax({
                             type: "POST",
                             url: "viewport",
@@ -430,6 +434,8 @@ function registerJumps(svg, layerId) {
                             async: false
                         });
                     }
+                    else
+                        throw new Error("Unrecognized new viewport function return value.");
                 });
             }
 

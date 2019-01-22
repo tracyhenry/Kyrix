@@ -88,7 +88,7 @@ var selector = function () {
 };
 
 var newViewport = function () {
-    return [0, 0, 0]
+    return {"constant" : [0, 0]};
 };
 
 var newPredicate = function (row) {
@@ -113,7 +113,7 @@ var selector = function (row, args) {
 };
 
 var newViewport = function () {
-    return [0, 0, 0];
+    return {"constant" : [0, 0]};
 };
 
 var newPredicate = function (row) {
@@ -138,7 +138,7 @@ var selector = function (row, args) {
 };
 
 var newViewport = function () {
-    return [0, 0, 0]
+    return {"constant" : [0, 0]};
 };
 
 var newPredicateHome = function (row) {

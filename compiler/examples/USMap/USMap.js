@@ -60,7 +60,7 @@ var newPredicates = function () {
 };
 
 var newViewport = function (row) {
-    return [0, row.bbox_x * 5 - 1000, row.bbox_y * 5 - 500];
+    return {"constant" : [row.bbox_x * 5 - 1000, row.bbox_y * 5 - 500]};
 };
 
 var jumpName = function (row) {
