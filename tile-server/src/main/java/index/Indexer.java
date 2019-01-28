@@ -36,7 +36,7 @@ public class Indexer {
 			ScriptException,
 			NoSuchMethodException {
 
-//		if (true) return ;
+		if (true) return ;
 		System.out.println("Precomputing...");
 		String projectName = project.getName();
 		String psql = "CREATE EXTENSION if not exists postgis;";

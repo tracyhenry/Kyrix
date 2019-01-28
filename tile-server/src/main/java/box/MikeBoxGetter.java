@@ -11,18 +11,15 @@ import java.util.ArrayList;
 public class MikeBoxGetter extends BoxGetter {
     @Override
     //get box with fixed size which is two times larger than the viewport
-    public BoxandData getBox(Canvas c, int mx, int my, Box oldBox, ArrayList<String> predicates)
+    public BoxandData getBox(Canvas c, int vpW, int vpH, int mx, int my, Box oldBox, ArrayList<String> predicates)
             throws SQLException, ClassNotFoundException, IOException, ParseException {
-        
 
         ArrayList<ArrayList<ArrayList<String>>> data;
-        int viewportW = Main.getProject().getViewportWidth();
-        int viewportH = Main.getProject().getViewportHeight();
         double wrapLength = 0.5;
-        int minx = (int) Math.max(-10, mx - wrapLength * viewportW);
-        int miny = (int) Math.max(-10, my - wrapLength * viewportH);
-        int maxx = (int) Math.min(c.getW() + 10, minx + (1 + 2 * wrapLength) * viewportW);
-        int maxy = (int) Math.min(c.getH() + 10, miny + (1 + 2 * wrapLength) * viewportH);
+        int minx = (int) Math.max(-10, mx - wrapLength * vpW);
+        int miny = (int) Math.max(-10, my - wrapLength * vpH);
+        int maxx = (int) Math.min(c.getW() + 10, minx + (1 + 2 * wrapLength) * vpW);
+        int maxy = (int) Math.min(c.getH() + 10, miny + (1 + 2 * wrapLength) * vpH);
         Box newBox = new Box(minx, miny, maxx, maxy);
 
         if (Main.getProject().getName().equals("mgh") && c.getId().equals("eeg"))

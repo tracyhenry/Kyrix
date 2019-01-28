@@ -11,13 +11,13 @@ const transforms = require("./transforms");
 const placements = require("./placements");
 
 // construct a project
-var viewportWidth = 1600;
+var viewportWidth = 2000;
 var viewportHeight = 1600;
 var p = new Project("mgh", "../../../config.txt", viewportWidth, viewportHeight);
 p.addRenderingParams(renderers.renderingParams);
 
 // ================== cluster canvases ===============
-var width = 500;
+var width = 800;
 var height = 1000;
 var clusterCanvases = [];
 
@@ -52,8 +52,8 @@ for (var i = 0; i < numLevels; i ++) {
 
 // ================== EEG canvas ===================
 var maxSegNum = 43200;
-var pixelPerSeg = 200;
-var layerHeight = 80;
+var pixelPerSeg = 250;
+var layerHeight = 85;
 var numChannel = 20;
 var eegCanvas = new Canvas("eeg", maxSegNum * pixelPerSeg, layerHeight * numChannel);
 p.addCanvas(eegCanvas);
@@ -74,7 +74,7 @@ eegCanvas.addAxes(renderers.eegXAxes);
 
 // ================== Spectrogram canvas (15-min images) ===================
 var spectrogramWidth = 86400 / 15 / 60 * 450;
-var spectrogramHeight = 500; // spectrogram viewport width is 500 in coordinated views
+var spectrogramHeight = 600; // spectrogram viewport width is 800 in coordinated views
 var spectrogramCanvas = new Canvas("spectrogram", spectrogramWidth, spectrogramHeight);
 p.addCanvas(spectrogramCanvas);
 
@@ -97,7 +97,7 @@ var selector = function () {
 
 var newEEGViewport = function (row) {
     var tokens = row[0].split("_");
-    xStart = Math.max(tokens[3] * 200 + 100 - 1600 / 2, 0);
+    xStart = Math.max(tokens[3] * 250 + 125 - 2000 / 2, 0);
     return [0, xStart, 0];
 };
 
@@ -116,7 +116,7 @@ for (var i = 0; i < numLevels; i ++)
 // ================== jump from cluster to spectrogram ================
 var newSpectrogramViewport = function (row) {
     var tokens = row[0].split("_");
-    xStart = Math.max(tokens[3] - 500 / 2, 0); // spectrogram viewport width is 500 in coordinated views
+    xStart = Math.max(tokens[3] - 800 / 2, 0); // spectrogram viewport width is 800 in coordinated views
     return [0, xStart, 0];
 };
 

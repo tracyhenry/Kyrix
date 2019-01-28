@@ -71,7 +71,7 @@ var eegRendering = function (svg, data, width, height, params, magnitude, montag
     };
 
     // cook data
-    var pixelPerSeg = 200;
+    var pixelPerSeg = 250;
     var channelHeight = height / numChannels;
     var channelMargin = 5;
     var minV = -500, maxV = 500;
@@ -190,7 +190,7 @@ var spectrogramRendering = function (svg, data) {
         .attr("y", 0)
         .attr("width", 450)
         .attr("height", 150)
-        .attr("transform", "scale(1 3)")
+        .attr("transform", "scale(1 4)")
         .attr("xlink:href", function (d){return d[1];});
 };
 

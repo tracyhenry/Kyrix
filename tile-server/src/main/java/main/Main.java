@@ -35,7 +35,7 @@ public class Main {
 
 		// connnect to big table
 		connectBigtable();
-		testBigtable();
+//		testBigtable();
 
 		// read config file
 		readConfigFile();
@@ -107,6 +107,7 @@ public class Main {
 			Gson gson = new GsonBuilder().create();
 			project = gson.fromJson(projectJSON, Project.class);
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.out.println("Cannot find definition of main project... waiting...");
 		}
 	}

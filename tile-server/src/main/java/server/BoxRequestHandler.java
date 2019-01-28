@@ -75,6 +75,8 @@ public class BoxRequestHandler  implements HttpHandler {
         ArrayList<String> predicates = new ArrayList<>();
         for (int i = 0; i < c.getLayers().size(); i ++)
             predicates.add(queryMap.get("predicate" + i));
+        int vpW = Integer.valueOf(queryMap.get("vpw"));
+        int vpH = Integer.valueOf(queryMap.get("vph"));
         int oMinX = Integer.valueOf(queryMap.get("oboxx"));
         int oMinY = Integer.valueOf(queryMap.get("oboxy"));
         int oMaxX = oMinX + Integer.valueOf(queryMap.get("oboxw"));
@@ -84,7 +86,7 @@ public class BoxRequestHandler  implements HttpHandler {
         //get box data
         long st = System.currentTimeMillis();
         try {
-            data = boxGetter.getBox(c, minx, miny, oldBox, predicates);
+            data = boxGetter.getBox(c, vpW, vpH, minx, miny, oldBox, predicates);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -94,11 +94,12 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
     var cBoxW = globalVarDict.boxW[globalVarDict.boxW.length - 1], cBoxH = globalVarDict.boxH[globalVarDict.boxH.length - 1];
     postData += "&oboxx=" + cBoxX + "&oboxy=" + cBoxY
         + "&oboxw=" + cBoxW + "&oboxh=" + cBoxH;
+    postData += "&vpw=" + vpW + "&vph=" + vpH;
 
     if (cBoxX < -1e4 || (viewportX <= cBoxX + vpW / 3 && cBoxX >= 0)
-        || ((viewportX + vpW) >= (cBoxX + cBoxW) - vpW / 3 && cBoxX + cBoxW <= globalVarDict.curCanvas.w)
+        || (viewportX + vpW >= (cBoxX + cBoxW) - vpW / 3 && cBoxX + cBoxW <= globalVarDict.curCanvas.w)
         || (viewportY <= cBoxY + vpH / 3 && cBoxY >= 0)
-        || ((viewportY + vpH) >= (cBoxY + cBoxH) - vpH / 3 && cBoxY + cBoxH <= globalVarDict.curCanvas.h)) {
+        || (viewportY + vpH >= (cBoxY + cBoxH) - vpH / 3 && cBoxY + cBoxH <= globalVarDict.curCanvas.h)) {
 
         globalVarDict.pendingBoxRequest = true;
         $.ajax({

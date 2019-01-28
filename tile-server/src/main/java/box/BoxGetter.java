@@ -97,10 +97,11 @@ public abstract class BoxGetter {
         // calculate start & end key rows
         int newStart = minx, newEnd = maxx;
         int oldStart = oldBox.getMinx(), oldEnd = oldBox.getMaxx();
-        oldStart = (int) Math.floor(oldStart / 200);
-        oldEnd = (int) Math.floor(oldEnd / 200);
-        newStart = (int) Math.floor(newStart / 200);
-        newEnd = (int) Math.floor(newEnd / 200);
+        int pixelPerSeg = 250;
+        oldStart = (int) Math.floor(oldStart / pixelPerSeg);
+        oldEnd = (int) Math.floor(oldEnd / pixelPerSeg);
+        newStart = (int) Math.floor(newStart / pixelPerSeg);
+        newEnd = (int) Math.floor(newEnd / pixelPerSeg);
 
         if (! (newStart == oldStart && newEnd == oldEnd)) {
 
@@ -136,14 +137,14 @@ public abstract class BoxGetter {
                 }
 
                 // add bounding box data
-                int bboxMinx = Integer.valueOf(keys[3]) * 200;
-                int bboxMaxx = bboxMinx + 200;
+                int bboxMinx = Integer.valueOf(keys[3]) * pixelPerSeg;
+                int bboxMaxx = bboxMinx + pixelPerSeg;
                 curRow.add(String.valueOf((bboxMinx + bboxMaxx) / 2));
-                curRow.add("800");
+                curRow.add("850");
                 curRow.add(String.valueOf(bboxMinx));
                 curRow.add("0");
                 curRow.add(String.valueOf(bboxMaxx));
-                curRow.add("1600");
+                curRow.add("1700");
                 curRow.add("");
 
                 // add this row to layer data
@@ -207,11 +208,11 @@ public abstract class BoxGetter {
                     int bboxMinx = i * imageWidth;
                     int bboxMaxx = bboxMinx + imageWidth;
                     curRow.add(String.valueOf((bboxMinx + bboxMaxx) / 2));
-                    curRow.add("800");
+                    curRow.add("850");
                     curRow.add(String.valueOf(bboxMinx));
                     curRow.add("0");
                     curRow.add(String.valueOf(bboxMaxx));
-                    curRow.add("1600");
+                    curRow.add("1700");
                     curRow.add("");
 
                     // add data to layer data
@@ -224,5 +225,5 @@ public abstract class BoxGetter {
         return data;
     }
 
-    public abstract BoxandData getBox(Canvas c, int cx, int cy, Box oldBox, ArrayList<String> predicates) throws SQLException, ClassNotFoundException, IOException, ParseException;
+    public abstract BoxandData getBox(Canvas c, int vpW, int vpH, int cx, int cy, Box oldBox, ArrayList<String> predicates) throws SQLException, ClassNotFoundException, IOException, ParseException;
 }

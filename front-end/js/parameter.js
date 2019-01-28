@@ -9,11 +9,14 @@ param.minxOffset = 5;
 param.maxyOffset = 2;
 param.minyOffset = 4;
 
+// pixel per segment
+param.pixelPerSeg = 250;
+
 // animation durations, delays
 param.literalZoomDuration = 300;
 
 // padding for the view svg
-param.viewPadding = 50;
+param.viewPadding = 80;
 
 // jump types
 param.semanticZoom = "semantic_zoom";

@@ -170,7 +170,7 @@ function zoomed(viewId) {
     // hardcoding - mark the median segment & trigger pan in spectrogram
     if (viewId == 2) {
         markMedianSegment();
-        var deltaX = (curViewport[0] - viewportX) / 200;
+        var deltaX = (curViewport[0] - viewportX) / param.pixelPerSeg;
         var curSelection = d3.select(".view1.maing");
         var zoomTransform = d3.zoomTransform(curSelection.node());
         zoomTransform = zoomTransform.translate(deltaX, 0);
@@ -197,9 +197,9 @@ function markMedianSegment() {
     var curViewport = d3.select(".view2.mainsvg:not(.static)")
         .attr("viewBox").split(" ");
     var containsMiddleLine = function(d) {
-        var vpMiddleLine = +curViewport[0] + 800;
-        return (d[3] * 200 <= vpMiddleLine)
-            && (vpMiddleLine < (+d[3] + 1) * 200);
+        var vpMiddleLine = +curViewport[0] + curViewport[2] / 2;
+        return (d[3] * param.pixelPerSeg <= vpMiddleLine)
+            && (vpMiddleLine < (+d[3] + 1) * param.pixelPerSeg);
     };
 	d3.selectAll(".eegrect")
 		.filter(function (d) {

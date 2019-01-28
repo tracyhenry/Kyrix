@@ -71,7 +71,7 @@ function setupLayerLayouts(viewId) {
                     event.stopImmediatePropagation();
                     // calculate new transform
                     var delta = (event.key == "ArrowRight" ? -1 : 1);
-                    var pixelPerSeg = 200;
+                    var pixelPerSeg = 250;
                     var numPannedSeg = 5;
                     d3.transition()
                         .duration(1000)
@@ -167,15 +167,15 @@ function pageOnLoad() {
     d3.select("body")
         .append("svg")
         .attr("id", "containerSvg")
-        .attr("width", 2300)
-        .attr("height", 1700);
+        .attr("width", 3000)
+        .attr("height", 1800);
 
     // hardcoded view info - should get from /first
-    var viewportWidths = [500, 500, 1600];
-    var viewportHeights = [1000, 500, 1600];
+    var viewportWidths = [800, 800, 2000];
+    var viewportHeights = [1000, 600, 1700];
     var canvasIds = ["clusterlevel0", "", ""];
     var predicates = [[""], [], []];
-    var viewSvgX = [0, 0, 600];
+    var viewSvgX = [0, 0, 900];
     var viewSvgY = [0, 1100, 0];
     globalVar.Editor.hide();
 
