@@ -44,4 +44,23 @@ public class Labeler {
         stmt.close();
         return updates > 0;
     }
+    
+    public Boolean backspace(String table, String labeler, String label, String item) throws ClassNotFoundException, SQLException {
+
+        // get db connector for reuse among layers
+        Statement stmt = DbConnector.getStmtByDbName(DATABASE_NAME);
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
+        //String sql = String.format("select * from %s where doctorname = \'%s\' order by \"timestamp\" desc limit 1 ", table, labeler);
+        String sql = String.format("delete from %s where doctorname = \'%s\' and timestamp in (select timestamp from neweeglabels where doctorname = \'%s\' order by timestamp desc limit 1)", table, labeler, labeler);
+        
+        //String sql = String.format("INSERT INTO %s VALUES (\'%s\', \'%s\', \'%s\', \'%s\');", table, item, labeler, label, timestamp);
+
+        // run query, add to response
+        int updates = stmt.executeUpdate(sql);
+        DbConnector.commitConnection(DATABASE_NAME);
+
+        stmt.close();
+        return updates > 0;
+    }     
 }

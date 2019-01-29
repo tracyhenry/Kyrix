@@ -33,6 +33,7 @@ public class Server {
 		server.createContext("/viewport", new ViewportRequestHandler());
 		server.createContext("/project", new ProjectRequestHandler());
 		server.createContext("/edit", new EditHandler());
+        server.createContext("/backspace", new BackspaceHandler());
 		server.setExecutor(null);//java.util.concurrent.Executors.newFixedThreadPool(Config.numThread));
 		terminated = false;
 		server.start();

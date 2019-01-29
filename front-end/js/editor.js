@@ -15,6 +15,7 @@ $(function () {
 		var idBox = null;
 		var buttonsBox = null;
 		var passcodeBox = null;
+        var backBtn=null;
 		var labelDiv = null;
 		var getIdFromRow = function () {
 			return row[0] + "_" + row[1] + "_" + row[2] + "_" + row[3];
@@ -38,6 +39,25 @@ $(function () {
 			});
 			displayNext();
 		};
+		var backspaceEdit = function () {
+			//var label = $("input[name=label]:checked").val();
+			var passcode = $("input[name=passcode]").val();
+			$.ajax({
+				type: "POST",
+				url: "backspace",
+				data: {
+					"item": "",
+					"labeler": passcode,
+					"label": ""
+				},
+				success: function (data, status) {
+				},
+				error: function (data, status) {
+					console.log("Label Failed");
+				}
+			});
+		};        
+        
 		var selectRow = function (data) {
 			floatBox.insertAfter($("#containerSvg"));
 			if (data != row) {
@@ -76,6 +96,11 @@ $(function () {
 			passcodeBox.text("passcode: ");
 			passcodeBox.append($("<input name='passcode' type='text'>"));
 			editBox.append(passcodeBox);
+			
+            backBtn=$("<input id='backspaceBtn' value='back' type='button'>");
+            backBtn.on('click',backspaceEdit);
+            editBox.append(backBtn);            
+            
 		};
 		startEditor();
 
