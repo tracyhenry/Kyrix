@@ -7,6 +7,9 @@ globalVar.cachedCanvases = {};
 // number of views
 globalVar.numViews = 3;
 
+// current position of the label list
+globalVar.listPos = -1;
+
 // view array
 globalVar.views = [];
 for (var i = 0; i < globalVar.numViews; i ++) {

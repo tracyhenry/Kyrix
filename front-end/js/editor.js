@@ -36,6 +36,7 @@ $(function () {
 					console.log("Label Failed");
 				}
 			});
+			displayNext();
 		};
 		var selectRow = function (data) {
 			floatBox.insertAfter($("#containerSvg"));

@@ -21,3 +21,6 @@ param.viewPadding = 80;
 // jump types
 param.semanticZoom = "semantic_zoom";
 param.geometricSemanticZoom = "geometric_semantic_zoom";
+
+// labeling mode - "free" or "list"
+param.labelingMode = "list";

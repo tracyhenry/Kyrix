@@ -67,6 +67,8 @@ function setupLayerLayouts(viewId) {
             .on("keydown", function () {
 
                 if (event.key == "ArrowLeft" || event.key == "ArrowRight") {
+                    if (param.labelingMode == "list")
+                        return ;
                     event.preventDefault();
                     event.stopImmediatePropagation();
                     // calculate new transform
@@ -234,6 +236,10 @@ function pageOnLoad() {
 
                     // set up zoom
                     setupZoom(i, 1);
+
+                    // list labeling
+                    if (param.labelingMode == "list")
+                        displayNext();
                 };
             })(i));
         }

@@ -106,12 +106,8 @@ var newEEGPredicate = function (row) {
     return ["", tokens[0] + "_" + tokens[1] + "_" + tokens[2]];
 };
 
-var jumpNameEEG = function (row) {
-    return "Jump to EEG: " + row[0];
-};
-
 for (var i = 0; i < numLevels; i ++)
-    p.addJump(new Jump(clusterCanvases[i], eegCanvas, selector, newEEGViewport, newEEGPredicate, "semantic_zoom", jumpNameEEG));
+    p.addJump(new Jump(clusterCanvases[i], eegCanvas, selector, newEEGViewport, newEEGPredicate, "semantic_zoom"));
 
 // ================== jump from cluster to spectrogram ================
 var newSpectrogramViewport = function (row) {
@@ -125,12 +121,8 @@ var newSpectrogramPredicate = function (row) {
     return [tokens[0] + "_" + tokens[1] + "_" + tokens[2]];
 };
 
-var jumpNameSpectrogram = function (row) {
-    return "Jump to Spectrogram: " + row[0];
-};
-
 for (var i = 0; i < numLevels; i ++)
-    p.addJump(new Jump(clusterCanvases[i], spectrogramCanvas, selector, newSpectrogramViewport, newSpectrogramPredicate, "semantic_zoom", jumpNameSpectrogram));
+    p.addJump(new Jump(clusterCanvases[i], spectrogramCanvas, selector, newSpectrogramViewport, newSpectrogramPredicate, "semantic_zoom"));
 
 // setting up initial states
 // abn999_20140711_151337
