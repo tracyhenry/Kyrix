@@ -40,8 +40,15 @@ $(function () {
 			displayNext();
 		};
 		var backspaceEdit = function () {
+
+            
+            // funky logic - return list index then issue POST
+            var res=displayPrev();
 			//var label = $("input[name=label]:checked").val();
-			var passcode = $("input[name=passcode]").val();
+			
+            if (res >= 0){
+            
+            var passcode = $("input[name=passcode]").val();
 			$.ajax({
 				type: "POST",
 				url: "backspace",
@@ -56,6 +63,9 @@ $(function () {
 					console.log("Label Failed");
 				}
 			});
+            
+            };
+
 		};        
         
 		var selectRow = function (data) {

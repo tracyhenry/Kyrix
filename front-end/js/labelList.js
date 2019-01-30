@@ -10,3 +10,16 @@ function displayNext() {
     var tuple = [globalVar.labelList[globalVar.listPos]];
     jumpListener(tuple);
 };
+
+// For backspace
+function displayPrev() {
+
+    globalVar.listPos --;
+    //if (globalVar.listPos < 0) {
+    //    return globalVar.listPos;
+    //}
+    var tuple = [globalVar.labelList[globalVar.listPos]];
+    jumpListener(tuple);
+    
+    return globalVar.listPos;
+};
