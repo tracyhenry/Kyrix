@@ -16,16 +16,12 @@ public class Project {
     // private variables
     private boolean mapInitialized = false;
     private Map<String, Canvas> canvasMap;
+    private Map<String, View> viewMap;
     private Map<String, ArrayList<Jump>> jumpMap;
 
     // JSON fields
     private String name;
-    private int viewportWidth;
-    private int viewportHeight;
-    private String initialCanvasId;
-    private int initialViewportX;
-    private int initialViewportY;
-    private String initialPredicates;
+    private ArrayList<View> views;
     private ArrayList<Canvas> canvases;
     private ArrayList<Jump> jumps;
     private String renderingParams;
@@ -34,28 +30,8 @@ public class Project {
         return name;
     }
 
-    public int getViewportWidth() {
-        return viewportWidth;
-    }
-
-    public int getViewportHeight() {
-        return viewportHeight;
-    }
-
-    public String getInitialCanvasId() {
-        return initialCanvasId;
-    }
-
-    public int getInitialViewportX() {
-        return initialViewportX;
-    }
-
-    public int getInitialViewportY() {
-        return initialViewportY;
-    }
-
-    public String getInitialPredicates() {
-        return initialPredicates;
+    public ArrayList<View> getViews() {
+        return views;
     }
 
     public ArrayList<Canvas> getCanvases() {
@@ -76,19 +52,30 @@ public class Project {
             mapInitialized = true;
             initializeMaps();
         }
-
         if (canvasMap.containsKey(canvasId))
             return canvasMap.get(canvasId);
         else
             return null;
     }
 
-    public ArrayList<Jump> getJumps(String canvasId) {
+    public View getView(String viewId) {
+
         if (! mapInitialized) {
             mapInitialized = true;
             initializeMaps();
         }
+        if (viewMap.containsKey(viewId))
+            return viewMap.get(viewId);
+        else
+            return null;
+    }
 
+    public ArrayList<Jump> getJumps(String canvasId) {
+
+        if (! mapInitialized) {
+            mapInitialized = true;
+            initializeMaps();
+        }
         if (jumpMap.containsKey(canvasId))
             return jumpMap.get(canvasId);
         else
@@ -101,6 +88,11 @@ public class Project {
         canvasMap = new HashMap<>();
         for (Canvas c : canvases)
             canvasMap.put(c.getId(), c);
+
+        // initialize view map
+        viewMap = new HashMap<>();
+        for (View v : views)
+            viewMap.put(v.getId(), v);
 
         // initialize jump map
         jumpMap = new HashMap<>();
@@ -117,16 +109,8 @@ public class Project {
     @Override
     public String toString() {
         return "Project{" +
-                "mapInitialized=" + mapInitialized +
-                ", canvasMap=" + canvasMap +
-                ", jumpMap=" + jumpMap +
-                ", name='" + name + '\'' +
-                ", viewportWidth=" + viewportWidth +
-                ", viewportHeight=" + viewportHeight +
-                ", initialCanvasId='" + initialCanvasId + '\'' +
-                ", initialViewportX=" + initialViewportX +
-                ", initialViewportY=" + initialViewportY +
-                ", initialPredicates=" + initialPredicates +
+                "name='" + name + '\'' +
+                ", views=" + views +
                 ", canvases=" + canvases +
                 ", jumps=" + jumps +
                 ", renderingParams='" + renderingParams + '\'' +

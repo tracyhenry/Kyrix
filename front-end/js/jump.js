@@ -372,7 +372,7 @@ function registerJumps(svg, layerId) {
                     globalVar.curCanvasId = jumps[jumpId].destId;
 
                     // calculate new predicates
-                    var predDict = jumps[jumpId].newPredicates.parseFunction()(tuple, optionalArgs);
+                    var predDict = jumps[jumpId].predicates.parseFunction()(tuple, optionalArgs);
                     var numLayer = getCanvasById(globalVar.curCanvasId).layers.length;
                     globalVar.predicates = [];
                     for (var i = 0; i < numLayer; i ++)
@@ -403,18 +403,18 @@ function registerJumps(svg, layerId) {
                     }
 
                     // calculate new viewport
-                    var newViewportFunc = jumps[jumpId].newViewports.parseFunction();
-                    var newViewportRet = newViewportFunc(tuple, optionalArgs);
-                    if ("constant" in newViewportRet) {
+                    var viewportFunc = jumps[jumpId].viewport.parseFunction();
+                    var viewportFuncRet = viewportFunc(tuple, optionalArgs);
+                    if ("constant" in viewportFuncRet) {
                         // constant viewport, no predicate
-                        var newViewportX = newViewportRet["constant"][0];
-                        var newViewportY = newViewportRet["constant"][1];
+                        var newViewportX = viewportFuncRet["constant"][0];
+                        var newViewportY = viewportFuncRet["constant"][1];
                         animateSemanticZoom(tuple, newViewportX, newViewportY);
                     }
-                    else if ("centroid" in newViewportRet) { //TODO: this is not tested
+                    else if ("centroid" in viewportFuncRet) { //TODO: this is not tested
                         // viewport is fixed at a certain tuple
                         var postData = "canvasId=" + globalVar.curCanvasId;
-                        var predDict = newViewportRet["centroid"];
+                        var predDict = viewportFuncRet["centroid"];
                         for (var i = 0; i < numLayer; i ++)
                             if (("layer" + i) in predDict)
                                 postData += "&predicate" + i + "=" + getSqlPredicate(predDict["layer" + i]);

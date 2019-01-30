@@ -6,6 +6,7 @@ import org.locationtech.jts.io.WKTReader;
 import org.locationtech.jts.io.WKTWriter;
 import project.Canvas;
 import project.Layer;
+import project.View;
 
 import java.util.ArrayList;
 
@@ -47,6 +48,6 @@ public abstract class BoxGetter {
         return data;
     }
 
-    public abstract BoxandData getBox(Canvas c, double mx, double my, Box oldBox, ArrayList<String> predicates)
+    public abstract BoxandData getBox(Canvas c, View v, double mx, double my, Box oldBox, ArrayList<String> predicates)
             throws Exception;
 }
