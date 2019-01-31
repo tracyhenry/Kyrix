@@ -132,7 +132,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     gvd.initialViewportX = newVpX;
     gvd.initialViewportY = newVpY;
 
-/*    // prefetch canvas object by sending an async request to server
+    // prefetch canvas object by sending an async request to server
     var postData = "id=" + gvd.curCanvasId;
     for (var i = 0; i < gvd.predicates.length; i ++)
         postData += "&predicate" + i + "=" + getSqlPredicate(gvd.predicates[i]);
@@ -152,7 +152,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
             async : true
         });
     }
-*/
+
     // disable stuff before animation
     preAnimation(viewId);
 
@@ -247,7 +247,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
 
                 // get the canvas object for the destination canvas
                 var gotCanvas = getCurCanvas(viewId);
-                gotCanvs.then(function () {
+                gotCanvas.then(function () {
 
                     // static trim
                     renderStaticLayers(viewId);

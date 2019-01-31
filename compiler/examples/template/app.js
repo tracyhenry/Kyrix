@@ -1,13 +1,14 @@
 // libraries
-const index = require("../../src/index");
-const Project = index.Project;
-const Canvas = index.Canvas;
-const Layer = index.Layer;
-const Jump = index.Jump;
+const Project = require("../../src/index").Project;
+const Canvas = require("../../src/Canvas").Canvas;
+const Jump = require("../../src/Jump").Jump;
+const Layer = require("../../src/Layer").Layer;
+const View = require("../../src/View").View;
+
 
 // project components
 const renderers = require("./renderers");
 const transforms = require("./transforms");
 const placements = require("./placements");
 
-// definition of projects, canvases, layers and jumps
+// definition of projects, views, canvases, layers and jumps

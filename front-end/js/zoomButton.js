@@ -247,7 +247,7 @@ function literalZoomIn(viewId) {
 
     var gvd = globalVar.views[viewId];
 
-    startLiteralZoomTransition([gvd.viewportWidth / 2, gvd.viewportHeight / 2],
+    startLiteralZoomTransition(viewId, [gvd.viewportWidth / 2, gvd.viewportHeight / 2],
         gvd.maxScale, gvd.maxScale / 2 * param.literalZoomDuration);
 };
 
@@ -256,6 +256,6 @@ function literalZoomOut(viewId) {
 
     var gvd = globalVar.views[viewId];
 
-    startLiteralZoomTransition([gvd.viewportWidth / 2, gvd.viewportHeight / 2],
+    startLiteralZoomTransition(viewId, [gvd.viewportWidth / 2, gvd.viewportHeight / 2],
         gvd.minScale, 1 / gvd.minScale/ 2 * param.literalZoomDuration);
 };
