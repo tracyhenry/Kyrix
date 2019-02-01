@@ -51,8 +51,11 @@ function setupLayerLayouts(viewId) {
     // remove existing layers
     d3.selectAll(".view" + viewId + ".layerg").remove();
 
-    // set box flag
-    globalVarDict.hasBox = false;
+    // reset dynamic boxes
+    globalVarDict.boxX = [-1e5];
+    globalVarDict.boxY = [-1e5];
+    globalVarDict.boxH = [-1e5];
+    globalVarDict.boxW = [-1e5];
 
     // set render data
     globalVarDict.renderData = [];
