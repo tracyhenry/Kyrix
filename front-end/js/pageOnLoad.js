@@ -115,7 +115,7 @@ function setupLayerLayouts(viewId) {
                 else if (event.key == "m") {
                     event.preventDefault();
                     event.stopImmediatePropagation();
-                    globalVarDict.montage = 3 - globalVarDict.montage;
+                    globalVarDict.montage = globalVarDict.montage % 3 + 1;
                     var dboxSvg = d3.select(".layerg.layer0.view2")
                         .select(".mainsvg");
                     dboxSvg.selectAll("*").remove();
