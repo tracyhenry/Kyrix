@@ -172,15 +172,15 @@ function pageOnLoad() {
     d3.select("body")
         .append("svg")
         .attr("id", "containerSvg")
-        .attr("width", 3000)
+        .attr("width", 3100)
         .attr("height", 1800);
 
     // hardcoded view info - should get from /first
-    var viewportWidths = [800, 800, 2000];
+    var viewportWidths = [1000, 1000, 2000];
     var viewportHeights = [1000, 600, 1700];
     var canvasIds = ["clusterlevel0", "", ""];
     var predicates = [[""], [], []];
-    var viewSvgX = [0, 0, 900];
+    var viewSvgX = [0, 0, 1050];
     var viewSvgY = [0, 1100, 0];
     globalVar.Editor.hide();
 
