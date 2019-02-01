@@ -37,16 +37,16 @@ $(function () {
 					console.log("Label Failed");
 				}
 			});
-			displayNext();
+			if (param.labelingMode == "list")
+				displayNext();
 		};
 		var backspaceEdit = function () {
 
             
             // funky logic - return list index then issue POST
             var res=displayPrev();
-			//var label = $("input[name=label]:checked").val();
 			
-            if (res >= 0){
+            if (param.labelingMode == "free" || res >= 0){
             
             var passcode = $("input[name=passcode]").val();
 			$.ajax({

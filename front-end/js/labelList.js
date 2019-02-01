@@ -14,11 +14,11 @@ function displayNext() {
 // For backspace
 function displayPrev() {
 
-    if (globalVar.listPos == 0)
-        return 0;
+    if (globalVar.listPos <= 0)
+        return -1;
     globalVar.listPos --;
     var tuple = [globalVar.labelList[globalVar.listPos]];
     jumpListener(tuple);
 
-    return 1;
+    return 0;
 };
