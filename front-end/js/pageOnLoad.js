@@ -51,8 +51,11 @@ function setupLayerLayouts(viewId) {
     // remove existing layers
     d3.selectAll(".view" + viewId + ".layerg").remove();
 
-    // set box flag
-    globalVarDict.hasBox = false;
+    // reset dynamic boxes
+    globalVarDict.boxX = [-1e5];
+    globalVarDict.boxY = [-1e5];
+    globalVarDict.boxH = [-1e5];
+    globalVarDict.boxW = [-1e5];
 
     // set render data
     globalVarDict.renderData = [];
@@ -112,7 +115,7 @@ function setupLayerLayouts(viewId) {
                 else if (event.key == "m") {
                     event.preventDefault();
                     event.stopImmediatePropagation();
-                    globalVarDict.montage = 3 - globalVarDict.montage;
+                    globalVarDict.montage = globalVarDict.montage % 3 + 1;
                     var dboxSvg = d3.select(".layerg.layer0.view2")
                         .select(".mainsvg");
                     dboxSvg.selectAll("*").remove();
@@ -169,15 +172,15 @@ function pageOnLoad() {
     d3.select("body")
         .append("svg")
         .attr("id", "containerSvg")
-        .attr("width", 3000)
+        .attr("width", 3100)
         .attr("height", 1800);
 
     // hardcoded view info - should get from /first
-    var viewportWidths = [800, 800, 2000];
+    var viewportWidths = [1000, 1000, 2000];
     var viewportHeights = [1000, 600, 1700];
     var canvasIds = ["clusterlevel0", "", ""];
     var predicates = [[""], [], []];
-    var viewSvgX = [0, 0, 900];
+    var viewSvgX = [0, 0, 1050];
     var viewSvgY = [0, 1100, 0];
     globalVar.Editor.hide();
 

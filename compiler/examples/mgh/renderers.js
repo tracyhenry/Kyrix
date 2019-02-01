@@ -47,28 +47,52 @@ var eegRendering = function (svg, data, width, height, params, magnitude, montag
     // prepare raw data
     var segNum = data.length;
     var numPoints = 400;
-    var numChannels = (montage == 1 ? 20 : 22);
-    var m2First = [8, 6, 16, 18, -1, 9, 7, 17, 19, -1, 8, 4, 0, 13, -1, 9, 5, 1, 14, -1, 10, 2];
-    var m2Second = [6, 16, 18, 11, -1, 7, 17, 19, 12, -1, 4, 0, 13, 11, -1, 5, 1, 14, 12, -1, 2, 15];
+    var numChannels = (montage == 2 ? 24 : 23);
+    var m1 = [8, 4, 0, 13, 11, 6, 16, 18, -1, 10, 2, 15, -1, 9, 5, 1, 14, 12, 7, 17, 19, -1, 3];
+    var m2First = [8, 6, 16, 18, -1, 9, 7, 17, 19, -1, 8, 4, 0, 13, -1, 9, 5, 1, 14, -1, 10, 2, -1, 3];
+    var m2Second = [6, 16, 18, 11, -1, 7, 17, 19, 12, -1, 4, 0, 13, 11, -1, 5, 1, 14, 12, -1, 2, 15, -1, -1];
+
     var raw = [];
     for (var i = 0; i < segNum; i ++) {
         var curSeg = [];
         for (var k = 0; k < numChannels; k ++) {
             var curSegChn = [];
-            if (montage == 1)
-                curSegChn = data[i][k + 4].split(",");
-            else if (montage == 2 && m2First[k] < 0)
-                curSegChn = Array.apply(null, Array(numPoints)).map(Number.prototype.valueOf, 0);
-            else if (montage == 2 && m2First[k] >= 0) {
-                var firstArray = data[i][m2First[k] + 4].split(",");
-                var secondArray = data[i][m2Second[k] + 4].split(",");
-                for (var p = 0; p < numPoints; p ++)
-                    curSegChn.push(firstArray[p] - secondArray[p])
+            if (montage == 1 || montage == 3) {
+                if (m1[k] < 0)
+                    curSegChn = Array.apply(null, Array(numPoints)).map(Number.prototype.valueOf, 0);
+                else
+                    curSegChn = data[i][m1[k] + 4].split(",");
+            }
+            else if (montage == 2) {
+                if (m2First[k] < 0 && m2Second[k] < 0)
+                    curSegChn = Array.apply(null, Array(numPoints)).map(Number.prototype.valueOf, 0);
+                else if (m2Second[k] < 0)
+                    curSegChn = data[i][m2First[k] + 4].split(",");
+                else {
+                    var firstArray = data[i][m2First[k] + 4].split(",");
+                    var secondArray = data[i][m2Second[k] + 4].split(",");
+                    for (var p = 0; p < numPoints; p ++)
+                        curSegChn.push(firstArray[p] - secondArray[p])
+                }
             }
             curSeg.push(curSegChn);
         }
         raw.push(curSeg);
     };
+
+    // if montage is 3, subtract avg
+    if (montage == 3)
+    for (var i = 0; i < segNum; i ++)
+        for (var j = 0; j < numPoints; j ++) {
+            var sum = 0, count = 0;
+            for (var k = 0; k < numChannels - 1; k ++)
+                if (m1[k] > 0)
+                    sum += (+raw[i][k][j]), count ++;
+            var avg = sum / count;
+            for (var k = 0; k < numChannels - 1; k ++)
+                if (m1[k] > 0)
+                    raw[i][k][j] = raw[i][k][j] - avg;
+        }
 
     // cook data
     var pixelPerSeg = 250;
@@ -120,6 +144,9 @@ var eegRendering = function (svg, data, width, height, params, magnitude, montag
     for (var i = 0; i < numChannels; i ++) {
         if (montage == 2 && m2First[i] < 0)
             continue;
+        if (montage == 1 || montage == 3)
+            if (m1[i] < 0)
+                continue;
         for (var j = 0; j < segNum; j++) {
             g.append('path')
                 .attr('class', 'line')
@@ -136,13 +163,16 @@ var eegLabelRendering = function (svg, data, width, height, montage) {
 
     g = svg.append("g");
 
+    // raw data channel name ["C3", "C4", "CZ", "EKG", "F3", "F4", "F7", "F8", "FP1", "FP2", "FZ", "O1", "O2", "P3", "P4", "PZ", "T3", "T4", "T5", "T6"];
+
     var channel_name;
-    var numChannels = (montage == 1 ? 20 : 22);
+    var numChannels = (montage == 2 ? 24 : 23);
     if (montage == 1)
-        channel_name = ["C3", "C4", "CZ", "EKG", "F3", "F4", "F7", "F8", "FP1",
-        "FP2", "FZ", "O1", "O2", "P3", "P4", "PZ", "T3", "T4", "T5", "T6"];
-    else
-        channel_name = ["Fp1-F7", "F7-T3", "T3-T5", "T5-O1", "", "Fp2-F8", "F8-T4", "T4-T6", "T6-O2", "", "Fp1-F3", "F3-C3", "C3-P3", "P3-O1", "", "Fp2-F4", "F4-C4", "C4-P4", "P4-O2", "", "Fz-Cz", "Cz-Pz"];
+        channel_name = ["Fp1", "F3", "C3", "P3", "O1", "F7", "T3", "T5", "", "Fz", "Cz", "Pz", "", "Fp2", "F4", "C4", "P4", "O2", "F8", "T4", "T6", "", "EKG"];
+    else if (montage == 2)
+        channel_name = ["Fp1-F7", "F7-T3", "T3-T5", "T5-O1", "", "Fp2-F8", "F8-T4", "T4-T6", "T6-O2", "", "Fp1-F3", "F3-C3", "C3-P3", "P3-O1", "", "Fp2-F4", "F4-C4", "C4-P4", "P4-O2", "", "Fz-Cz", "Cz-Pz", "", "EKG"];
+    else if (montage == 3)
+        channel_name = ["Fp1-AVE", "F3-AVE", "C3-AVE", "P3-AVE", "O1-AVE", "F7-AVE", "T3-AVE", "T5-AVE", "", "Fz-AVE", "Cz-AVE", "Pz-AVE", "", "Fp2-AVE", "F4-AVE", "C4-AVE", "P4-AVE", "O2-AVE", "F8-AVE", "T4-AVE", "T6-AVE", "", "EKG"];
 
 
     var layerHeight = (height) / numChannels;

@@ -42,9 +42,7 @@ function setupZoom(viewId, initialScale) {
     // hardcode - disable pan and zoom when labeling mode is list
     if (param.labelingMode == "list")
         d3.selectAll(".maing")
-            .on("mouseup.zoom", null)
-            .on("mousemove.zoom", null)
-            .on("mousedown.zoom", null);
+            .on(".zoom", null);
 };
 
 function startLiteralZoomTransition(viewId, center, scale, duration) {

@@ -17,7 +17,7 @@ var p = new Project("mgh", "../../../config.txt", viewportWidth, viewportHeight)
 p.addRenderingParams(renderers.renderingParams);
 
 // ================== cluster canvases ===============
-var width = 800;
+var width = 1000;
 var height = 1000;
 var clusterCanvases = [];
 
@@ -74,7 +74,7 @@ eegCanvas.addAxes(renderers.eegXAxes);
 
 // ================== Spectrogram canvas (15-min images) ===================
 var spectrogramWidth = 86400 / 15 / 60 * 450;
-var spectrogramHeight = 600; // spectrogram viewport width is 800 in coordinated views
+var spectrogramHeight = 600; // spectrogram viewport width is 1000 in coordinated views
 var spectrogramCanvas = new Canvas("spectrogram", spectrogramWidth, spectrogramHeight);
 p.addCanvas(spectrogramCanvas);
 
@@ -112,7 +112,7 @@ for (var i = 0; i < numLevels; i ++)
 // ================== jump from cluster to spectrogram ================
 var newSpectrogramViewport = function (row) {
     var tokens = row[0].split("_");
-    xStart = Math.max(tokens[3] - 800 / 2, 0); // spectrogram viewport width is 800 in coordinated views
+    xStart = Math.max(tokens[3] - 1000 / 2, 0); // spectrogram viewport width is 1000 in coordinated views
     return [0, xStart, 0];
 };
 
