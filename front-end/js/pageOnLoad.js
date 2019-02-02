@@ -94,9 +94,9 @@ function setupLayerLayouts(viewId) {
                     event.preventDefault();
                     event.stopImmediatePropagation();
                     if (event.key == "ArrowUp")
-                        globalVarDict.eegMagnitude += 0.1;
+                        globalVarDict.eegMagnitude += 0.3;
                     else
-                        globalVarDict.eegMagnitude -= 0.1;
+                        globalVarDict.eegMagnitude -= 0.3;
                     var dboxSvg = d3.select(".layerg.layer1.view2")
                         .select(".mainsvg");
 
