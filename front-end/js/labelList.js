@@ -22,3 +22,24 @@ function displayPrev() {
 
     return 0;
 };
+
+function highlightPoint() {
+
+    var tSNEx = 679 + Math.random() * 19;
+    var tSNEy = 632 + Math.random() * 33;
+
+    // first convert it to canvas coordinates
+    var width = globalVar.views[0].curCanvas.w, height = globalVar.views[0].curCanvas.h;
+    var sx = d3.scaleLinear().domain([679, 698]).range([0, width])(tSNEx);
+    var sy = d3.scaleLinear().domain([632, 665]).range([0, height])(tSNEy);
+
+    d3.selectAll(".highlight").remove();
+    d3.select(".view0.mainsvg")
+        .append("image")
+        .classed("highlight", true)
+        .attr("x", sx - 35)
+        .attr("y", sy - 35)
+        .attr("width", 70)
+        .attr("height", 70)
+        .attr("xlink:href", "https://upload.wikimedia.org/wikipedia/commons/e/e5/Full_Star_Yellow.svg");
+}

@@ -41,6 +41,26 @@ var jumpListener = function (tuple) {
             };
         })(i));
     }
+
+    // hardcode: jump back to the top level of the cluster view
+    if (param.labelingMode == "list") {
+        if (globalVar.views[0].curCanvasId != "clusterlevel0") {
+            globalVarDict = globalVar.views[0];
+            globalVarDict.curCanvasId = "clusterlevel0";
+            globalVarDict.initialViewportX = globalVarDict.initialViewportY = 0;
+            globalVarDict.predicates = [""];
+            var gotCanvas = getCurCanvas(0);
+            gotCanvas.then(function () {
+                // render static trims
+                renderStaticLayers(0);
+
+                // set up zoom
+                setupZoom(0, 1);
+            });
+        }
+        else
+            RefreshDynamicLayers(0, 0, 0);
+    }
 };
 
 // register jump info

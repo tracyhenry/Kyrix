@@ -183,6 +183,10 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
                         globalVarDict.eegMagnitude,
                         globalVarDict.montage);
 
+                    // hardcode: highlighting the current point
+                    if (viewId == 0 && param.labelingMode == "list")
+                        highlightPoint();
+
                     // hardcoding: mark median segment
                     if (viewId == 2)
                         markMedianSegment();
@@ -206,4 +210,7 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
             async : true
         });
     }
+    else     // hardcode: highlighting the current point
+    if (viewId == 0 && param.labelingMode == "list")
+        highlightPoint();
 };
