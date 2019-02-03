@@ -23,6 +23,11 @@ $(function () {
 		var submitEdit = function () {
 			var label = $("input[name=label]:checked").val();
 			var passcode = $("input[name=passcode]").val();
+			if (passcode == "") {
+				$("input[name=label]").prop("checked", false);
+				alert("Please input passcode before making any labels.");
+				return ;
+			}
 			$.ajax({
 				type: "POST",
 				url: "edit",

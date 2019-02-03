@@ -94,9 +94,9 @@ function setupLayerLayouts(viewId) {
                     event.preventDefault();
                     event.stopImmediatePropagation();
                     if (event.key == "ArrowUp")
-                        globalVarDict.eegMagnitude += 0.3;
+                        globalVarDict.eegMagnitude += param.gainIncrease;
                     else
-                        globalVarDict.eegMagnitude -= 0.3;
+                        globalVarDict.eegMagnitude -= param.gainIncrease;
                     var dboxSvg = d3.select(".layerg.layer1.view2")
                         .select(".mainsvg");
 
@@ -167,6 +167,9 @@ function setupLayerLayouts(viewId) {
 
 // set up page
 function pageOnLoad() {
+
+    // reminder to input passcode
+    alert("Reminder: please input pre-assigned passcode before making any labels.");
 
     // set up a svg container
     d3.select("body")

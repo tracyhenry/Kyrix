@@ -22,5 +22,8 @@ param.viewPadding = 80;
 param.semanticZoom = "semantic_zoom";
 param.geometricSemanticZoom = "geometric_semantic_zoom";
 
+// gain increase
+param.gainIncrease = 1.5;
+
 // labeling mode - "free" or "list"
 param.labelingMode = "list";
