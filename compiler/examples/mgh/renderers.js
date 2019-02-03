@@ -53,6 +53,7 @@ var eegRendering = function (svg, data, width, height, params, magnitude, montag
     var m2Second = [6, 16, 18, 11, -1, 7, 17, 19, 12, -1, 4, 0, 13, 11, -1, 5, 1, 14, 12, -1, 2, 15, -1, -1];
 
     var raw = [];
+    var lpf = new LPF(0.2);
     for (var i = 0; i < segNum; i ++) {
         var curSeg = [];
         for (var k = 0; k < numChannels; k ++) {
@@ -75,6 +76,9 @@ var eegRendering = function (svg, data, width, height, params, magnitude, montag
                         curSegChn.push(firstArray[p] - secondArray[p])
                 }
             }
+            for (var p = 0; p < numPoints; p ++)
+                curSegChn[p] = +curSegChn[p];
+            curSegChn = lpf.smoothArray(curSegChn);
             curSeg.push(curSegChn);
         }
         raw.push(curSeg);
