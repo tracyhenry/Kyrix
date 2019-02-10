@@ -1,0 +1,33 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: ./kompose convert
+    kompose.version: 1.17.0 (a74acad)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: manager
+  name: manager
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: manager
+    spec:
+      containers:
+      - image: citusdata/membership-manager:0.2.0
+        name: citus-manager
+        resources: {}
+        volumeMounts:
+        - mountPath: /var/run/docker.sock
+          name: manager-claim0
+      restartPolicy: Always
+      volumes:
+      - name: manager-claim0
+        persistentVolumeClaim:
+          claimName: manager-claim0
+status: {}

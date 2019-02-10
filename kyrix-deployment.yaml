@@ -1,0 +1,24 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  name: kyrix
+  labels:
+    io.kompose.service: kyrix
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: kyrix
+    spec:
+      containers:
+      - image: asah/kyrix:1.7
+        name: kyrix
+        ports:
+        - containerPort: 8000
+        resources: {}
+      restartPolicy: Always
+status: {}

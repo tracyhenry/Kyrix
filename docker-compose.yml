@@ -10,9 +10,6 @@
 
 version: '3.1'
 
-# TODO: set config.txt (incl 'kyrix' db password) from here or env vars
-# note: config.txt could be moved from Dockerfile-kyrix to start-kyrix.sh
-
 services:
 
   db:
@@ -23,7 +20,7 @@ services:
     ports: # comment-out for extra security or to avoid conflicts with host OS
      - "5432:5432"   
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-no_really_change_me}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kyrixftw}
 #    # for backup - requires special config on MacOS host OSs
 #    volumes:
 #     - /etc/postgresql:/etc/postgresql
@@ -39,7 +36,7 @@ services:
     depends_on:
      - db
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-no_really_change_me}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kyrixftw}
     entrypoint: sh -c 'sleep 5; /wait-for-postgres db:5432 -t 60 -- /start-kyrix.sh'
 
 #  adminer:
