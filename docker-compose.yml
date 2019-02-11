@@ -21,7 +21,8 @@ services:
      - "5432:5432"   
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kyrixftw}
-#    # for backup - requires special config on MacOS host OSs
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+# for backup - requires special config on MacOS host OSs
 #    volumes:
 #     - /etc/postgresql:/etc/postgresql
 #     - /var/log/postgresql:/var/log/postgresql
@@ -37,7 +38,7 @@ services:
      - db
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kyrixftw}
-    entrypoint: sh -c 'sleep 5; /wait-for-postgres db:5432 -t 60 -- /start-kyrix.sh'
+    entrypoint: sh -c 'sleep 5; /wait-for-postgres db:5432 -t 60 -- /start-kyrix.sh; tail -f /dev/null'
 
 #  adminer:
 #    image: adminer

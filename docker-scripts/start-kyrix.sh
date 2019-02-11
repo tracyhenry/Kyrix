@@ -7,7 +7,7 @@ USER_NAME=${USER_NAME:-kyrix}
 USER_PASSWORD=${USER_PASSWORD:-kyrix_password}
 
 PGCONN_STRING_POSTGRES=postgresql://postgres:$POSTGRES_PASSWORD@$PGHOST
-PGCONN_STRING_USER=postgresql://$USERNAME:$USER_PASSWORD@$PGHOST
+PGCONN_STRING_USER=postgresql://$USER_NAME:$USER_PASSWORD@$PGHOST
 
 cd /kyrix
 echo $KYRIX_DB > /kyrix/config.txt
@@ -34,7 +34,14 @@ psql $PGCONN_STRING_USER/$KYRIX_DB -c "$EXT_CMD" | egrep -v "$IGNORE_RX" 2>&1 ||
 psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
 psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
 
-plays=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select count(*)>500000 from plays;" || true)
+cd /kyrix/tile-server
+
+plays_exists=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select exists(select 1 from information_schema.tables where table_schema='public' and table_name='plays');" || true)
+if [ "$plays_exists" = "t" ]; then
+    plays=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select count(*)>500000 from plays;" || true)
+else
+    plays=f
+fi
 if [ "$plays" = "t" ]; then
     # if you want to force a reload, the easiest way is to dropdb, e.g.
     #   docker exec -u postgres -it kyrix_db_1 sh -c "dropdb nba"
@@ -50,7 +57,7 @@ fi
 
 echo "*** starting tile server..."
 cd /kyrix/tile-server
-mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn exec:java -Dexec.mainClass="main.Main" | stdbuf -oL grep -v Downloading: | tee mvn-exec.out | egrep -v '(Downloading|Downloaded)' &
+mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn exec:java -Dexec.mainClass="main.Main" | stdbuf -oL grep -v Downloading: | tee mvn-exec.out &
 touch mvn-exec.out
 while [ -z "$(egrep 'Done precomputing|Tile server started' mvn-exec.out)" ]; do echo "waiting for tile server"; sleep 5; done
 
@@ -62,5 +69,3 @@ node nba.js | egrep -i "error|connected" || true
 
 echo "*** done! Kyrix ready at: http://<host>:8000/  (may need a minute to recompute indexes - watch this log for messages)"
 
-# keep mvn exec running in background, don't exit container
-tail -f /dev/null

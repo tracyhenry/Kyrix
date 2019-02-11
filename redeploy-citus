@@ -67,7 +67,8 @@ kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"$EXT_CMD\" "; stty s
 # run_command_on_workers() doesn't seem to run properly within a database?
 for w in $WORKERS; do kubectl exec $w -- su - postgres -c "psql $DBNAME -c \"$EXT_CMD\" " > /dev/null 2> /dev/null & done;
 
-while [ 1 ]; do w=`for w in $WORKERS; do stty sane; kubectl exec -it $w -- su - postgres -c "psql $DBNAME -t -c \"select count(*) from pg_extension where extname like '%postgis%';\""; done | grep -c 4`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w postgres servers initialized with postgis, waiting for $NUM_WORKERS"; sleep 3; done; stty sane
+while [ 1 ]; do w=`for w in $WORKERS; do stty sane; kubectl exec -it $w -- su - postgres -c "psql $DBNAME -t -c \"select count(*) from pg_extension where extname like '%postgis%';\""; done | grep -c 4`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w postgres servers initialized with postgis, waiting for $NUM_WORKERS (be patient)"; sleep 3; done; stty sane
+
 for w in $WORKER_IPS; do kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -t -c \"SELECT * from master_add_node('$w', 5432);\""|grep 5432; done|head
 
 # test postgis on master
@@ -88,6 +89,5 @@ kubectl exec -it $MASTER -- sh -c 'if [ -x "$(command -v apk)" ]; then apk insta
 source setup-bastion-vars.env
 
 echo "done! to connect to citus:"
-echo " - easy: source ./setup-shell-vars.sh; kyrix-psql"
+echo " - easy: source ./setup-shell-vars.env; kyrix-psql"
 echo " - manually: psql postgres://$USERNAME:$USER_PASSWORD@$BASTION_IP/$DBNAME   (warning: uses old MD5 auth: not safe over the open internet)"
-echo "note: password required"

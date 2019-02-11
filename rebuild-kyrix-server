@@ -1,8 +1,8 @@
 #!/bin/bash
 
-KV=${1:-asah/kyrix:1.6}
+KV=${1:-asah/kyrix:1.8}
 
-sudo docker build . -f Dockerfile-kyrix-kubernetes -t $KV
+sudo docker build . -f Dockerfile-kyrix-alpine -t $KV
 sudo docker push $KV
 
 echo "updating kyrix-deployment.yaml"

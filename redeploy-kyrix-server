@@ -29,7 +29,7 @@ kubectl expose replicaset.apps/$RS_KYRIX --type=LoadBalancer --name=kyrixserver 
 kubectl exec -it $KYRIX -- apk add -y busybox-extras emacs > /dev/null 2>&1
 cat docker-scripts/start-kyrix.sh | kubectl exec -i $KYRIX -- sh -c "cat > /start-kyrix.sh"
 
-kubectl exec -it $KYRIX -- sh -c "PGHOST=master POSTGRES_PASSWORD=kyrixftw USERNAME=kyrix USER_PASSWORD=kyrix_password /wait-for-postgres master:5432 -t 60 -- /start-kyrix.sh" &
+kubectl exec -it $KYRIX -- sh -c "cd /kyrix/tile-server; PGHOST=master POSTGRES_PASSWORD=kyrixftw USERNAME=kyrix USER_PASSWORD=kyrix_password /wait-for-postgres master:5432 -t 60 -- /start-kyrix.sh" &
 
 while [ 1 ]; do ip=`kubectl get services -o wide | grep kyrixserver | awk '{print $4}'`; if [ $ip != '<pending>' ]; then break; fi; spin "waiting for external IP"; done
 

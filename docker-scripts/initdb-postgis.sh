@@ -21,3 +21,6 @@ for DB in template_postgis "$POSTGRES_DB"; do
 		CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
 EOSQL
 done
+
+
+
