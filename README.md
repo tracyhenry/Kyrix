@@ -12,16 +12,34 @@
 
 ## Installation instructions for the impatient
 
-Just install [docker CE](https://docs.docker.com/install/) for your laptop or server,
-install [docker-compose](https://docs.docker.com/compose/install/) and then run `docker-compose up`.
-Depending on CPU and network speed, after 10-20mins a Kyrix server will be up and you can point a
-browser at http://<computer>:8000/ and see a bunch of NBA team logos, which are part of the
-[NBA example](https://github.com/tracyhenry/Kyrix/tree/master/compiler/examples/nba).
+1. create a cloud-hosted Ubuntu 18.04 instance (Google, AWS, Azure, DigitalOcean, etc) with 4+ GB RAM, 2-4+ cores and 10+ GB disk.
+2. ssh to it.
+3. run `sudo apt install docker.io docker-compose; sudo docker-compose up`
+4. wait 15-20 minutes, then point your browser at <ip address>:8000 - remember that you may (probably) need to open your cloud provider's firewall for this port. If that sounds scary, you can create an SSH tunnel from your PC (e.g. Mac) using `ssh -N <server ipaddr> -L 8000:<same ipaddr>:8000` to forward your laptop's port 8000 to the server via [SSH tunneling](https://www.tecmint.com/create-ssh-tunneling-port-forwarding-in-linux/).
 
-Depending on your network and CPU, please allow 10-20 minutes for fresh installs to startup.
-This docker config works great on cloud instances, e.g. AWS, Google Cloud, Azure, etc.
-We recommend 2-4+ CPUs and 4+ GB RAM, though it might be possible to run smaller configurations
-e.g. for automated testing.
+note that you'll need to wait for a message saying `Tile server started...` like this:
+```
+kyrix_1  | Serving /project
+kyrix_1  |  New project definition coming...
+kyrix_1  | There is diff that requires recomputing indexes. Shutting down server and recomputing...
+kyrix_1  | Precomputing...
+kyrix_1  | *** done! Kyrix ready at: http://<host>:8000/  (may need a minute to recompute indexes - watch this log for messages)
+kyrix_1  | Done precomputing!
+kyrix_1  | Completed recomputing indexes. Server restarting...
+kyrix_1  | Tile server started...
+```
+
+## Installation for database clusters via Kubernetes (Google Cloud) and CitusDB
+
+You will need a Kubernetes cluster provider - these instructions are for Google Cloud. [Learn more about CitusDB](https://citusdata.com/)
+
+1. install kubectl  (e.g. `sudo snap install kubectl --classic` - [kubectl docs](https://kubernetes.io/docs/tasks/tools/install-kubectl/))
+2. setup kubectl to the given cluster (e.g. `gcloud container clusters get-credentials <cluster name>` - [gcloud install instructions](https://cloud.google.com/sdk/docs/downloads-apt-get))
+3. run `./redeploy-citus; ./redeploy-kyrix-server` then wait for "Tile server started..." (see above)
+4. look for "Kyrix running; run 'source setup-kyrix-vars.env' for convenience scripts/functions or visit http://<ipaddr>:8000/
+5. point a browser at this URL - for most kubernetes providers, no firewall changes should be required.
+
+coming soon: parallel speedups; admin instructions for citus clusters.
 
 ## More information
 * [Quick-start Tutorial](https://github.com/tracyhenry/Kyrix/wiki/Tutorial)
