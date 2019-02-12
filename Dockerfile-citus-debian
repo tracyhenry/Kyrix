@@ -54,7 +54,7 @@ RUN echo "shared_preload_libraries='citus'" >> /usr/share/postgresql/postgresql.
 # add scripts to run after initdb
 # note: 002-create-postgis-extension.sql should only be run in user databases, as per postgis instructions
 # (it's also super slow...)
-COPY docker-scripts/000-configure-stats.sh docker-scripts/001-create-citus-extension.sql docker-scripts/003-enable-logging.sh /docker-entrypoint-initdb.d/
+COPY docker-scripts/000-configure-stats.sh docker-scripts/001-create-citus-extension.sql /docker-entrypoint-initdb.d/
 
 # add health check script
 COPY docker-scripts/pg_healthcheck /
