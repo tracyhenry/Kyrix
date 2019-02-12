@@ -16,7 +16,7 @@ done
 while [ 1 ]; do w=`kubectl get -o name pods,deployments,services,pvc | egrep -v '(kubernetes|kyrix)' | wc -l`; if [ $w = 0 ]; then break; fi; echo "waiting for $w kubernetes resources (pods, etc) to shut down"; sleep 3; done
 
 echo "starting new deployment..."
-for file in master-service manager-deployment manager-claim0-persistentvolumeclaim master-deployment worker-deployment; do
+for file in master-service manager-deployment master-deployment worker-deployment; do
     kubectl create -f $file.yaml
 done
 
