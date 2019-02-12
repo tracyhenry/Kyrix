@@ -52,7 +52,7 @@ public class Config {
     public static IndexingScheme indexingScheme = IndexingScheme.SPATIAL_INDEX;
 
     // underlying database
-    public enum Database {MYSQL, PSQL};
+    public enum Database {MYSQL, PSQL, CITUS};
     public static Database database;
 
     // database iterator fetch size

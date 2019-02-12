@@ -79,8 +79,10 @@ public class Main {
 
         Config.projectName = inputStrings.get(Config.projectNameRow);
         Config.portNumber = Integer.valueOf(inputStrings.get(Config.portNumberRow));
-        Config.database = (inputStrings.get(Config.dbRow).toLowerCase().equals("mysql") ?
-                Config.Database.MYSQL : Config.Database.PSQL);
+	String dbtype = inputStrings.get(Config.dbRow).toLowerCase();
+        Config.database = (dbtype.equals("mysql") ? Config.Database.MYSQL :
+			   dbtype.equals("psql") ? Config.Database.PSQL :
+			   Config.Database.CITUS);
         Config.dbServer = inputStrings.get(Config.dbServerRow);
         Config.userName = inputStrings.get(Config.userNameRow);
         Config.password = inputStrings.get(Config.passwordRow);

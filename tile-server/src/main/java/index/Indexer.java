@@ -35,9 +35,15 @@ public abstract class Indexer implements Serializable {
                 Indexer indexer = null;
                 if (Config.database == Config.Database.PSQL) {
                     if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
-                        indexer = PsqlSpatialIndexer.getInstance();
+                        indexer = PsqlSpatialIndexer.getInstance(false);
                     else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
-                        indexer = PsqlTileIndexer.getInstance();
+                        indexer = PsqlTileIndexer.getInstance(false);
+                }
+                else if (Config.database == Config.Database.CITUS) {
+                    if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
+                        indexer = PsqlSpatialIndexer.getInstance(true);
+                    else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
+                        indexer = PsqlTileIndexer.getInstance(true);
                 }
                 else if (Config.database == Config.Database.MYSQL) {
                     if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)

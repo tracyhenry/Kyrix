@@ -20,15 +20,16 @@ import java.util.ArrayList;
 public class PsqlSpatialIndexer extends Indexer {
 
     private static PsqlSpatialIndexer instance = null;
+    private static boolean isCitus = false;
 
     // singleton pattern to ensure only one instance existed
-    private PsqlSpatialIndexer() {}
+    private PsqlSpatialIndexer(boolean isCitus) { this.isCitus = isCitus; }
 
     // thread-safe instance getter
-    public static synchronized PsqlSpatialIndexer getInstance() {
+    public static synchronized PsqlSpatialIndexer getInstance(boolean isCitus) {
 
         if (instance == null)
-            instance = new PsqlSpatialIndexer();
+            instance = new PsqlSpatialIndexer(isCitus);
         return instance;
     }
 
@@ -58,6 +59,9 @@ public class PsqlSpatialIndexer extends Indexer {
         sql = "create table " + bboxTableName + " (";
         for (int i = 0; i < trans.getColumnNames().size(); i ++)
             sql += trans.getColumnNames().get(i) + " text, ";
+	if (isCitus) {
+	    sql += "citus_distribution_id int, ";
+	}
         sql += "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom geometry(polygon));";
         bboxStmt.executeUpdate(sql);
 
@@ -79,13 +83,16 @@ public class PsqlSpatialIndexer extends Indexer {
         String insertSql = "insert into " + bboxTableName + " values (";
         for (int i = 0; i < trans.getColumnNames().size() + 6; i ++)
             insertSql += "?, ";
+	if (isCitus) {
+	    insertSql += "?, ";
+	}
         insertSql += "ST_GeomFromText(?));";
         PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
         while (rs.next()) {
 
             // count log
             rowCount ++;
-            if (rowCount % 1000000 == 0)
+            if (rowCount % 1000000 == 0)  // TODO: print progress every T seconds, not R rows...
                 System.out.println(rowCount);
 
             // get raw row
@@ -106,8 +113,12 @@ public class PsqlSpatialIndexer extends Indexer {
             // insert into bbox table
             for (int i = 0; i < transformedRow.size(); i ++)
                 preparedStmt.setString(i + 1, transformedRow.get(i).replaceAll("\'", "\'\'"));
+	    if (isCitus) {
+		// row number is a fine distribution key (for now) - round robin across the cluster
+		preparedStmt.setInt(transformedRow.size() + 1, rowCount);
+	    }
             for (int i = 0; i < 6; i ++)
-                preparedStmt.setDouble(transformedRow.size() + i + 1, curBbox.get(i));
+                preparedStmt.setDouble(transformedRow.size() + i + 2, curBbox.get(i));
 
             double minx, miny, maxx, maxy;
             minx = curBbox.get(2);
