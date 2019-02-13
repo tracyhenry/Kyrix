@@ -23,11 +23,23 @@ while [ 1 ]; do w=`kubectl get pods -o wide | egrep "kyrix.+Running" |wc -l`; if
 
 source setup-kyrix-vars.env
 
+# expose early because it takes a while to allocate an external IP address
 kubectl expose replicaset.apps/$RS_KYRIX --type=LoadBalancer --name=kyrixserver --port=8000 --target-port=8000
 
-# provide telnet, ping, emacs
-kubectl exec -it $KYRIX -- apk add -y busybox-extras emacs > /dev/null 2>&1
-cat docker-scripts/start-kyrix.sh | kubectl exec -i $KYRIX -- sh -c "cat > /start-kyrix.sh"
+# development
+if [ "x$DEV" = "x1" ]; then
+    # provide telnet, ping, emacs
+    echo "recreating nba db..."
+    recreatedb-kyrix
+    echo "adding dev tools on the kyrix server..."
+    kubectl exec -it $KYRIX -- apk add -y bash busybox-extras emacs > /dev/null 2>&1
+    echo "copying tile-server code..."
+    cat docker-scripts/start-kyrix.sh | kubectl exec -i $KYRIX -- sh -c "cat > /start-kyrix.sh; chmod 755 /start-kyrix.sh"
+    tar cf - tile-server/src | kubectl exec -it $KYRIX -- sh -c "cd ..; tar xvf -"
+    echo "recompiling tile-server code..."
+    kubectl exec -it $KYRIX -- ba
+    sh -c 'cd /kyrix/tile-server; mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out >/dev/null 2>&'
+fi
 
 kubectl exec -it $KYRIX -- sh -c "cd /kyrix/tile-server; PGHOST=master POSTGRES_PASSWORD=kyrixftw USERNAME=kyrix USER_PASSWORD=kyrix_password /wait-for-postgres master:5432 -t 60 -- /start-kyrix.sh" &
 

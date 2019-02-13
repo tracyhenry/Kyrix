@@ -12,7 +12,7 @@ PGCONN_STRING_USER=postgresql://$USER_NAME:$USER_PASSWORD@$PGHOST
 cd /kyrix
 echo $KYRIX_DB > /kyrix/config.txt
 echo "8000" >> /kyrix/config.txt
-echo "psql" >> /kyrix/config.txt
+echo "citus" >> /kyrix/config.txt
 echo $PGHOST >> /kyrix/config.txt
 echo $USER_NAME >> /kyrix/config.txt
 echo $USER_PASSWORD >> /kyrix/config.txt

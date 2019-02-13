@@ -118,7 +118,7 @@ public class PsqlSpatialIndexer extends Indexer {
 		preparedStmt.setInt(transformedRow.size() + 1, rowCount);
 	    }
             for (int i = 0; i < 6; i ++)
-                preparedStmt.setDouble(transformedRow.size() + i + 2, curBbox.get(i));
+                preparedStmt.setDouble(transformedRow.size() + i + 1 + (isCitus ? 1 : 0), curBbox.get(i));
 
             double minx, miny, maxx, maxy;
             minx = curBbox.get(2);

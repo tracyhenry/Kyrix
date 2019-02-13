@@ -33,17 +33,13 @@ public abstract class Indexer implements Serializable {
         for (Canvas c : Main.getProject().getCanvases())
             for (int layerId = 0; layerId < c.getLayers().size(); layerId ++) {
                 Indexer indexer = null;
-                if (Config.database == Config.Database.PSQL) {
+                if (Config.database == Config.Database.PSQL ||
+		    Config.database == Config.Database.CITUS) {
+		    isCitus = (Config.database == Config.Database.CITUS);
                     if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
-                        indexer = PsqlSpatialIndexer.getInstance(false);
+                        indexer = PsqlSpatialIndexer.getInstance(isCitus);
                     else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
-                        indexer = PsqlTileIndexer.getInstance(false);
-                }
-                else if (Config.database == Config.Database.CITUS) {
-                    if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
-                        indexer = PsqlSpatialIndexer.getInstance(true);
-                    else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
-                        indexer = PsqlTileIndexer.getInstance(true);
+                        indexer = PsqlTileIndexer.getInstance(isCitus);
                 }
                 else if (Config.database == Config.Database.MYSQL) {
                     if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
