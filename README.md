@@ -14,7 +14,7 @@
 
 1. create a cloud-hosted Ubuntu 18.04 instance (Google, AWS, Azure, DigitalOcean, etc) with 4+ GB RAM, 2-4+ cores and 10+ GB disk.
 2. ssh to it.
-3. run `sudo apt install docker.io docker-compose; sudo docker-compose up`
+3. run `sudo apt update; sudo apt install -y docker.io docker-compose; sudo docker-compose up`
 4. wait 15-20 minutes, then point your browser at <ip address>:8000 - remember that you may (probably) need to open your cloud provider's firewall for this port. If that sounds scary, you can create an SSH tunnel from your PC (e.g. Mac) using `ssh -N <server ipaddr> -L 8000:<same ipaddr>:8000` to forward your laptop's port 8000 to the server via [SSH tunneling](https://www.tecmint.com/create-ssh-tunneling-port-forwarding-in-linux/).
 
 note that you'll need to wait for a message saying `Tile server started...` like this:
