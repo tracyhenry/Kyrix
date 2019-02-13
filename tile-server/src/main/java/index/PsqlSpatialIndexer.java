@@ -97,7 +97,8 @@ public class PsqlSpatialIndexer extends Indexer {
         insertSql += "ST_GeomFromText(?));";
         System.out.println(insertSql);
         PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
-	long last_ts = (new Date()).getTime();
+	long start_ts = (new Date()).getTime();
+	long last_ts = start_ts;
         while (rs.next()) {
 
             // count log
@@ -106,7 +107,7 @@ public class PsqlSpatialIndexer extends Indexer {
                 long cur_ts = (new Date()).getTime();
 		if (cur_ts/5000 > last_ts/5000) {
                     last_ts = cur_ts;
-                    System.out.println(cur_ts + ") "+rowCount+" records inserted");
+                    System.out.println((cur_ts-start_ts) + " secs: "+rowCount+" records inserted. "+rowCount/(cur_ts-start_ts)+" recs/sec.");
 		}
             }
 
