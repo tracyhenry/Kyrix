@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * Created by wenbo on 12/30/18.
@@ -63,8 +64,15 @@ public class PsqlSpatialIndexer extends Indexer {
 	    sql += "citus_distribution_id int, ";
 	}
         sql += "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom geometry(polygon));";
+        System.out.println(sql);
         bboxStmt.executeUpdate(sql);
 
+	if (isCitus) {
+	    sql = "SELECT create_distributed_table('"+bboxTableName+"', 'citus_distribution_id');";
+	    System.out.println(sql);
+	    bboxStmt.executeQuery(sql);
+	}
+	
         // if this is an empty layer, return
         if (trans.getDb().equals(""))
             return ;
@@ -87,13 +95,20 @@ public class PsqlSpatialIndexer extends Indexer {
 	    insertSql += "?, ";
 	}
         insertSql += "ST_GeomFromText(?));";
+        System.out.println(insertSql);
         PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
+	long last_ts = (new Date()).getTime();
         while (rs.next()) {
 
             // count log
             rowCount ++;
-            if (rowCount % 1000000 == 0)  // TODO: print progress every T seconds, not R rows...
-                System.out.println(rowCount);
+            if (rowCount % 1000 == 0) {
+                long cur_ts = (new Date()).getTime();
+		if (cur_ts/5000 > last_ts/5000) {
+                    last_ts = cur_ts;
+                    System.out.println(cur_ts + ") "+rowCount+" records inserted");
+		}
+            }
 
             // get raw row
             ArrayList<String> curRawRow = new ArrayList<>();
@@ -111,21 +126,22 @@ public class PsqlSpatialIndexer extends Indexer {
             ArrayList<Double> curBbox = getBboxCoordinates(c, l, transformedRow);
 
             // insert into bbox table
+	    int pscol = 1;
             for (int i = 0; i < transformedRow.size(); i ++)
-                preparedStmt.setString(i + 1, transformedRow.get(i).replaceAll("\'", "\'\'"));
+                preparedStmt.setString(pscol++, transformedRow.get(i).replaceAll("\'", "\'\'"));
 	    if (isCitus) {
 		// row number is a fine distribution key (for now) - round robin across the cluster
-		preparedStmt.setInt(transformedRow.size() + 1, rowCount);
+		preparedStmt.setInt(pscol++, rowCount);
 	    }
             for (int i = 0; i < 6; i ++)
-                preparedStmt.setDouble(transformedRow.size() + i + 1 + (isCitus ? 1 : 0), curBbox.get(i));
+                preparedStmt.setDouble(pscol++, curBbox.get(i));
 
             double minx, miny, maxx, maxy;
             minx = curBbox.get(2);
             miny = curBbox.get(3);
             maxx = curBbox.get(4);
             maxy = curBbox.get(5);
-            preparedStmt.setString(transformedRow.size() + 7,
+            preparedStmt.setString(pscol++,
                     getPolygonText(minx, miny, maxx, maxy));
             preparedStmt.addBatch();
 

@@ -278,9 +278,9 @@ function saveProject()
 
         // construct a connection to the postgres db to create Kyrix db
         var postgresConn = new psql.Client({host : config.serverName,
-            user : config.userName,
-            password : config.password,
-            database : "postgres"});
+					    user : config.userName,
+					    password : config.password,
+					    database : "postgres"});
 
         // create Kyrix DB and ignore error
         postgresConn.connect(function (err) {
@@ -299,23 +299,39 @@ function saveProject()
                         console.error('connection error', err.stack);
                     else
                         console.log('connected');
-
                     if (err) throw err;
 
                     // create a table and ignore the error
                     dbConn.query(createTableQuery, function (err) {
 
+			if (err)
+                            console.error('error with CREATE TABLE', err.stack);
+			else
+                            console.log('table created');
+			if (err) throw err;
+
                         // delete the project if exists
                         dbConn.query(deleteProjQuery, function (err) {
 
+			    if (err)
+				console.error('error with delete project', err.stack);
+			    else
+				console.log('old project record deleted');
+			    if (err) throw err;
+
                             // insert the JSON blob into the project table
-                            dbConn.query(insertProjQueryPSQL,
-                                function (err) {
-                                    if (err) throw err;
-                                    sendProjectRequestToBackend(config.serverPortNumber, projectJSON);
-                                    dbConn.end();
-                                    postgresConn.end();
-                                });
+                            dbConn.query(insertProjQueryPSQL, function (err) {				  
+
+				if (err)
+				    console.error('error with insert project', err.stack);
+				else
+				    console.log('new project record inserted');
+				if (err) throw err;
+				
+                                sendProjectRequestToBackend(config.serverPortNumber, projectJSON);
+                                dbConn.end();
+                                postgresConn.end();
+                            });
                         });
                     });
                 });
