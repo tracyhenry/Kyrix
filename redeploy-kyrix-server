@@ -37,8 +37,7 @@ if [ "x$DEV" = "x1" ]; then
     cat docker-scripts/start-kyrix.sh | kubectl exec -i $KYRIX -- sh -c "cat > /start-kyrix.sh; chmod 755 /start-kyrix.sh"
     tar cf - tile-server/src | kubectl exec -it $KYRIX -- sh -c "cd ..; tar xvf -"
     echo "recompiling tile-server code..."
-    kubectl exec -it $KYRIX -- ba
-    sh -c 'cd /kyrix/tile-server; mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out >/dev/null 2>&'
+    kubectl exec -it $KYRIX -- bash -c 'cd /kyrix/tile-server; mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out >/dev/null 2>&1'
 fi
 
 kubectl exec -it $KYRIX -- sh -c "cd /kyrix/tile-server; PGHOST=master POSTGRES_PASSWORD=kyrixftw USERNAME=kyrix USER_PASSWORD=kyrix_password /wait-for-postgres master:5432 -t 60 -- /start-kyrix.sh" &
@@ -47,6 +46,7 @@ while [ 1 ]; do ip=`kubectl get services -o wide | grep kyrixserver | awk '{prin
 
 source setup-kyrix-vars.env
 
+wait
 echo "Kyrix running; run 'source setup-kyrix-vars.env' for convenience scripts/functions or visit http://$KYRIX_IP:8000/"
 
 exit 0

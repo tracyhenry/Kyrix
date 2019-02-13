@@ -83,6 +83,7 @@ public class Main {
         Config.database = (dbtype.equals("mysql") ? Config.Database.MYSQL :
 			   dbtype.equals("psql") ? Config.Database.PSQL :
 			   Config.Database.CITUS);
+	System.out.println("dbtype: " + dbtype + "  Config.database=" + Config.database);
         Config.dbServer = inputStrings.get(Config.dbServerRow);
         Config.userName = inputStrings.get(Config.userNameRow);
         Config.password = inputStrings.get(Config.passwordRow);

@@ -35,7 +35,7 @@ public abstract class Indexer implements Serializable {
                 Indexer indexer = null;
                 if (Config.database == Config.Database.PSQL ||
 		    Config.database == Config.Database.CITUS) {
-		    isCitus = (Config.database == Config.Database.CITUS);
+		    boolean isCitus = (Config.database == Config.Database.CITUS);
                     if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
                         indexer = PsqlSpatialIndexer.getInstance(isCitus);
                     else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
