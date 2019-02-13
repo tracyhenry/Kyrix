@@ -271,7 +271,7 @@ function saveProject()
         // end connection
         dbConn.end();
     }
-    else if (config.database == "psql") {
+    else if (config.database == "psql" || config.database == "citus") {
 
         var createDbQuery = "CREATE DATABASE \"" + config.kyrixDbName + "\"";
         var useDbQuery = "USE \"" + config.kyrixDbName + "\";";
@@ -321,6 +321,8 @@ function saveProject()
                 });
             });
         });
+    } else {
+        console.error('unknown database type', config.database);
     }
 }
 
