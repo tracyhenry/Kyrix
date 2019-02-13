@@ -107,7 +107,7 @@ public class PsqlSpatialIndexer extends Indexer {
                 long cur_ts = (new Date()).getTime();
 		if (cur_ts/5000 > last_ts/5000) {
                     last_ts = cur_ts;
-                    System.out.println((cur_ts-start_ts) + " secs: "+rowCount+" records inserted. "+rowCount/(cur_ts-start_ts)+" recs/sec.");
+                    System.out.println((cur_ts-start_ts)/1000 + " secs: "+rowCount+" records inserted. "+1000*rowCount/(cur_ts-start_ts)+" recs/sec.");
 		}
             }
 
