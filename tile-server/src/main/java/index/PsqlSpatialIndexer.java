@@ -97,17 +97,17 @@ public class PsqlSpatialIndexer extends Indexer {
         insertSql += "ST_GeomFromText(?));";
         System.out.println(insertSql);
         PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
-	long start_ts = (new Date()).getTime();
-	long last_ts = start_ts;
+	long startTs = (new Date()).getTime();
+	long lastTs = startTs;
         while (rs.next()) {
 
             // count log
             rowCount ++;
             if (rowCount % 1000 == 0) {
-                long cur_ts = (new Date()).getTime();
-		if (cur_ts/5000 > last_ts/5000) {
-                    last_ts = cur_ts;
-                    System.out.println((cur_ts-start_ts)/1000 + " secs: "+rowCount+" records inserted. "+1000*rowCount/(cur_ts-start_ts)+" recs/sec.");
+                long currTs = (new Date()).getTime();
+		if (currTs/5000 > lastTs/5000) {
+                    lastTs = currTs;
+                    System.out.println((currTs-startTs)/1000 + " secs: "+rowCount+" records inserted. "+1000*rowCount/(currTs-startTs)+" recs/sec.");
 		}
             }
 
