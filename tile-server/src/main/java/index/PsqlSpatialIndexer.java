@@ -54,6 +54,7 @@ public class PsqlSpatialIndexer extends Indexer {
 
         // drop table if exists
         String sql = "drop table if exists " + bboxTableName + ";";
+        System.out.println(sql);
         bboxStmt.executeUpdate(sql);
 
         // create the bbox table
@@ -77,7 +78,7 @@ public class PsqlSpatialIndexer extends Indexer {
         if (trans.getDb().equals(""))
             return ;
 
-        // step 1: set up nashorn environment
+        // step 1: set up nashorn environment for running javascript code
         NashornScriptEngine engine = null;
         if (! trans.getTransformFunc().equals(""))
             engine = setupNashorn(trans.getTransformFunc());

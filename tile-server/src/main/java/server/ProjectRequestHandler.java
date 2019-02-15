@@ -55,10 +55,16 @@ public class ProjectRequestHandler implements HttpHandler {
         Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Good, updating main project.");
 
         // diff between old and new
+	String forceRecomputeStr = httpExchange.getRequestHeaders().getFirst("X-Kyrix-Force-Recompute");
+	boolean forceRecompute = forceRecomputeStr.equals("1"); // handle null
         Project oldProject = Main.getProject();
         Main.setProject(newProject);
         try {
-            if (needsReIndex(oldProject, newProject)) {
+            if (forceRecompute) {
+                System.out.println("Requesting force-recompute, Ignoring diff, and shutting down server and recomputing...");
+                Server.terminate();
+            }
+            else if (needsReIndex(oldProject, newProject)) {
                 System.out.println("There is diff that requires recomputing indexes. Shutting down server and recomputing...");
                 Server.terminate();
             }

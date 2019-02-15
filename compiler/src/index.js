@@ -173,7 +173,7 @@ function setInitialStates(canvasObj, viewportX, viewportY, predicates) {
     this.initialPredicates = JSON.stringify(predicates);
 }
 
-function sendProjectRequestToBackend(portNumber, projectJSON) {
+function sendProjectRequestToBackend(portNumber, projectJSON, force_recompute=false) {
 
     // set up http post connections
     var post_options = {
@@ -183,6 +183,10 @@ function sendProjectRequestToBackend(portNumber, projectJSON) {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     };
+    if (force_recompute || process.env.FORCE == "1") {  // FORCE=1 node foo.js
+        console.log("forcing recompute via HTTP header X-Kyrix-Force-Recompute: 1");
+        post_options['headers']['X-Kyrix-Force-Recompute'] = '1';
+    }
     console.log(post_options);
     var post_req = http.request(post_options, function(res) {
         res.setEncoding('utf8');
