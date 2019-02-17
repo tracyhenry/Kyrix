@@ -291,7 +291,7 @@ function renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs
                     return true;});
 
                 // construct new globalVar.renderData
-                var newLayerData = renderData[i];
+                var newLayerData = JSON.parse(JSON.stringify(renderData[i]));
                 if (param.deltaBox) {
                     // add data from intersection w/ old box data
                     for (var j = 0; j < gvd.renderData[i].length; j ++) {
