@@ -2,6 +2,8 @@
 function drawZoomButtons(viewId) {
 
     var viewClass = ".view_" + viewId;
+    if (globalVar.views[viewId].curCanvasId == "")
+        return ;
 
     // create buttons if not existed
     if (d3.select(viewClass + ".gobackbutton").empty())
@@ -38,8 +40,8 @@ function drawZoomButtons(viewId) {
     var bTop = +bbox.top + (+d3.select(viewClass + ".viewsvg").attr("y"));
 
     // position the buttons
-    var leftMargin = 100;
-    var topMargin = 50;
+    var leftMargin = 20;
+    var topMargin = 20;
     var dist = 50;
     d3.select(viewClass + ".gobackbutton")
         .style("top", bTop + topMargin + "px")

@@ -324,6 +324,10 @@ function load(predArray, newVpX, newVpY, jump) {
     // pre animation
     preAnimation(destViewId);
 
+    // draw buttons because they were not created if it was an empty view
+    drawZoomButtons(destViewId);
+
+    // fetch static data from server, then render the view
     var gotCanvas = getCurCanvas(destViewId);
     gotCanvas.then(function () {
 
