@@ -84,7 +84,7 @@ function startLiteralZoomTransition(viewId, center, scale, duration) {
     // start transition
     gvd.animation = true;
     var initialZoomTransform = d3.zoomTransform(curSelection.node());
-    d3.transition()
+    d3.transition("literalTween_" + viewId)
         .duration(duration)
         .tween("literalTween", function() {
             var i = d3.interpolateNumber(1, scale);

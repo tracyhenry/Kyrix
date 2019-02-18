@@ -153,7 +153,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
 
                 // it's possible when the tile data is delayed
                 // and this tile is already removed
-                if (tileSvg == null)
+                if (tileSvg.empty())
                     return;
 
                 // draw current layer
@@ -233,6 +233,7 @@ function renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs
             var renderData = response.renderData;
 
             // check if this response is already outdated
+            // TODO: only checking canvasID might not be sufficient
             if (canvasId != gvd.curCanvasId) {
                 gvd.pendingBoxRequest = false;
                 return ;

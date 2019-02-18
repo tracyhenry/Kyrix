@@ -145,7 +145,7 @@ function backspace(viewId) {
 
     // start a exit & fade transition
     if (fadingAnimation)
-        d3.transition("fadeTween")
+        d3.transition("fadeTween_" + viewId)
             .duration(param.enteringDuration)
             .tween("fadeTween", function() {
 
@@ -168,7 +168,7 @@ function backspace(viewId) {
             param.axesOutDuration);
         if (! fadingAnimation)
             enteringDelay = 0;
-        d3.transition("zoomOutTween")
+        d3.transition("zoomOutTween_" + viewId)
             .delay(enteringDelay)
             .duration(zoomDuration)
             .tween("zoomOutTween", function () {

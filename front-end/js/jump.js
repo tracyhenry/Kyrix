@@ -204,7 +204,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     // set up zoom transitions
     param.zoomDuration = d3.interpolateZoom(startView, endView).duration;
     param.enteringDelay = Math.round(param.zoomDuration * param.enteringDelta);
-    d3.transition("zoomInTween")
+    d3.transition("zoomInTween_" + viewId)
         .duration(param.zoomDuration)
         .tween("zoomInTween", function() {
 
@@ -215,7 +215,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
 
             // schedule a new entering transition
             if (enteringAnimation)
-                d3.transition("enterTween")
+                d3.transition("enterTween_" + viewId)
                     .delay(param.enteringDelay)
                     .duration(param.enteringDuration)
                     .tween("enterTween", function() {
@@ -315,11 +315,23 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
 function load(predArray, newVpX, newVpY, jump) {
 
     var destViewId = jump.destViewId;
+
+    // stop any tweens
+    d3.selection().interrupt("zoomInTween_" + destViewId);
+    d3.selection().interrupt("enterTween_" + destViewId);
+    d3.selection().interrupt("zoomOutTween_" + destViewId);
+    d3.selection().interrupt("fadeTween_" + destViewId);
+    d3.selection().interrupt("literalTween_" + destViewId);
+
+    // reset global vars
     var gvd = globalVar.views[destViewId];
     gvd.curCanvasId = jump.destId;
     gvd.predicates = predArray;
     gvd.initialViewportX = newVpX;
     gvd.initialViewportY = newVpY;
+    gvd.renderData = null;
+    gvd.pendingBoxRequest = false;
+    gvd.history = [];
 
     // pre animation
     preAnimation(destViewId);
