@@ -127,7 +127,7 @@ function backspace(viewId) {
     var fadingAnimation = (zoomType == param.semanticZoom ? true : false);
 
     // disable and remove stuff
-    preAnimation(viewId);
+    preJump(viewId);
 
     // assign back global vars
     gvd.curCanvasId = curHistory.canvasId;
@@ -189,7 +189,7 @@ function backspace(viewId) {
             })
             .on("end", function () {
 
-                postAnimation(viewId);
+                postJump(viewId);
             });
     }
 

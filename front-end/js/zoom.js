@@ -118,7 +118,7 @@ function completeZoom(viewId, zoomType, oldZoomFactorX, oldZoomFactorY) {
     gvd.initialViewportY = curViewport[1] * oldZoomFactorY;
 
     // pre animation
-    preAnimation(viewId);
+    preJump(viewId);
 
     // get the canvas object
     var gotCanvas = getCurCanvas(viewId);
@@ -128,7 +128,7 @@ function completeZoom(viewId, zoomType, oldZoomFactorX, oldZoomFactorY) {
         renderStaticLayers(viewId);
 
         // post animation
-        postAnimation(viewId);
+        postJump(viewId);
     });
 };
 

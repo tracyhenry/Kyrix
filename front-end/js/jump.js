@@ -18,8 +18,8 @@ function removePopoversSmooth(viewId) {
         .remove();
 };
 
-// disable and remove stuff before animation
-function preAnimation(viewId) {
+// disable and remove stuff before jump
+function preJump(viewId) {
 
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
@@ -52,7 +52,7 @@ function preAnimation(viewId) {
     gvd.animation = true;
 };
 
-function postAnimation(viewId, zoomType) {
+function postJump(viewId, zoomType) {
 
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
@@ -154,7 +154,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     }
 
     // disable stuff before animation
-    preAnimation(viewId);
+    preJump(viewId);
 
     // whether this semantic zoom is also geometric
     var zoomType = gvd.history[gvd.history.length - 1].zoomType;
@@ -238,7 +238,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
                     })
                     .on("end", function () {
 
-                        postAnimation(viewId, zoomType);
+                        postJump(viewId, zoomType);
                     });
         })
         .on("end", function () {
@@ -256,7 +256,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
                     RefreshDynamicLayers(viewId, newVpX, newVpY);
 
                     // clean up
-                    postAnimation(viewId, zoomType);
+                    postJump(viewId, zoomType);
                 })
             }
         });
@@ -334,7 +334,7 @@ function load(predArray, newVpX, newVpY, jump) {
     gvd.history = [];
 
     // pre animation
-    preAnimation(destViewId);
+    preJump(destViewId);
 
     // draw buttons because they were not created if it was an empty view
     drawZoomButtons(destViewId);
@@ -347,7 +347,7 @@ function load(predArray, newVpX, newVpY, jump) {
         renderStaticLayers(destViewId);
 
         // post animation
-        postAnimation(destViewId);
+        postJump(destViewId);
     });
 }
 
@@ -401,7 +401,7 @@ function registerJumps(viewId, svg, layerId) {
                 .append("h2")
                 .classed("view_" + viewId + " popover-title", true)
                 .attr("id", "popovertitle")
-                .html("Zoom into ")
+                .html("Jump Options")
                 .append("a")
                 .classed("view_" + viewId + " close", true)
                 .attr("href", "#")
@@ -424,14 +424,18 @@ function registerJumps(viewId, svg, layerId) {
                     continue;
 
                 // create table cell and append it to #popovercontent
+                var optionText ="<b>ZOOM IN </b>";
+                if (jumps[k].type == param.load)
+                    optionText = "<b>LOAD " + jumps[k].destViewId + " VIEW with </b>";
+                optionText += jumps[k].name.parseFunction() == null ? jumps[k].name
+                    : jumps[k].name.parseFunction()(d, optionalArgs);
                 var jumpOption = d3.select(viewClass + "#popovercontent")
                     .append("a")
                     .classed("list-group-item", true)
                     .attr("href", "#")
                     .datum(d)
                     .attr("data-jump-id", k)
-                    .html(jumps[k].name.parseFunction() == null ? jumps[k].name
-                        : jumps[k].name.parseFunction()(d, optionalArgs));
+                    .html(optionText);
 
                 // on click
                 jumpOption.on("click", function (d) {
@@ -475,8 +479,8 @@ function registerJumps(viewId, svg, layerId) {
                             success: function (data, status) {
                                 var cx = JSON.parse(data).cx;
                                 var cy = JSON.parse(data).cy;
-                                newVpX = cx - globalVar.viewportWidth / 2;
-                                newVpY = cy - globalVar.viewportHeight / 2;
+                                newVpX = cx - gvd.viewportWidth / 2;
+                                newVpY = cy - gvd.viewportHeight / 2;
                             },
                             async: false
                         });
