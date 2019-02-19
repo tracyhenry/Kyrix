@@ -65,20 +65,27 @@ function postJump(viewId, zoomType) {
         // set up button states
         setButtonState(viewId);
 
-        // register jumps here because during animation
-        // jumps are not allowed to be registered
+        // animation stopped now
         gvd.animation = false;
-        for (var i = 0; i < gvd.curCanvas.layers.length; i ++) {
-            var curLayer = gvd.curCanvas.layers[i];
-            if (! curLayer.isStatic && param.fetchingScheme == "tiling")
-                d3.select(viewClass + ".layerg.layer" + i)
-                    .select("svg")
-                    .selectAll(".lowestsvg")
-                    .each(function() {
-                        registerJumps(viewId, d3.select(this), i);
-                    });
-            else
-                registerJumps(viewId, d3.select(viewClass + ".layerg.layer" + i).select("svg"), i);
+
+        // register jumps after every jump
+        // because some coordination-based jump smaybe applicable after a jump
+        for (var i = 0; i < globalVar.project.views.length; i ++) {
+            var nViewId = globalVar.project.views[i].id;
+            var nGvd = globalVar.views[nViewId];
+            var nViewClass = ".view_" + nViewId;
+            for (var j = 0; j < nGvd.curCanvas.layers.length; j ++) {
+                var curLayer = nGvd.curCanvas.layers[j];
+                if (! curLayer.isStatic && param.fetchingScheme == "tiling")
+                    d3.select(nViewClass + ".layerg.layer" + j)
+                        .select("svg")
+                        .selectAll(".lowestsvg")
+                        .each(function() {
+                            registerJumps(nViewId, d3.select(this), j);
+                        });
+                else
+                    registerJumps(nViewId, d3.select(nViewClass + ".layerg.layer" + j).select("svg"), j);
+            }
         }
     };
 
@@ -387,7 +394,8 @@ function registerJumps(viewId, svg, layerId) {
             if ((jumps[k].type == param.semanticZoom
                 || jumps[k].type == param.geometricSemanticZoom
                 || (jumps[k].type == param.load && jumps[k].sourceViewId == viewId)
-                || (jumps[k].type == param.highlight && jumps[k].sourceViewId == viewId))
+                || (jumps[k].type == param.highlight && jumps[k].sourceViewId == viewId
+                    && globalVar.views[jumps[k].destViewId].curCanvasId == jumps[k].destId))
                 && jumps[k].selector.parseFunction()(p, optionalArgs)) {
                 hasJump = true;
                 break;
@@ -438,7 +446,8 @@ function registerJumps(viewId, svg, layerId) {
                 if ((jumps[k].type != param.semanticZoom
                     && jumps[k].type != param.geometricSemanticZoom
                     && (jumps[k].type != param.load || jumps[k].sourceViewId != viewId)
-                    && (jumps[k].type != param.highlight || jumps[k].sourceViewId != viewId))
+                    && (jumps[k].type != param.highlight || jumps[k].sourceViewId != viewId
+                            || globalVar.views[jumps[k].destViewId].curCanvasId != jumps[k].destId))
                     || ! jumps[k].selector.parseFunction()(d, optionalArgs))
                     continue;
 
