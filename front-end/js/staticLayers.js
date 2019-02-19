@@ -18,12 +18,14 @@ function renderStaticLayers(viewId) {
         // render
         var renderFunc = curLayer.rendering.parseFunction();
         var curSvg = d3.select(viewClass + ".layerg.layer" + i)
-            .select("svg")
-            .classed("lowestsvg", true);
+            .select("svg");
         renderFunc(curSvg, gvd.curStaticData[i], getOptionalArgs(viewId));
 
         // register jump
         if (! gvd.animation)
             registerJumps(viewId, curSvg, i);
+
+        // highlight
+        highlightLowestSvg(viewId, curSvg, i);
     }
 };

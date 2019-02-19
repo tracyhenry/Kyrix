@@ -16,12 +16,15 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
         throw new Error("Constructing Jump: literal zooms do not need optional arguments.");
     if (optional == null)
         optional = {};
-    if (type == "semantic_zoom" || type == "geometric_semantic_zoom")
+    if (type == "semantic_zoom" || type == "geometric_semantic_zoom" || type == "load")
         if (! ("selector" in optional) || ! ("viewport" in optional) || ! ("predicates" in optional))
-            throw new Error("Constructing Jump: missing customization functions for semantic zoom.");
-    if (type == "load")
+            throw new Error("Constructing Jump: missing customization functions for semantic zoom and load.");
+    if (type == "load" || type == "highlight")
         if (! ("sourceView" in optional) || ! ("destView" in optional))
-            throw new Error("Constructing Jump: missing view objects for load.");
+            throw new Error("Constructing Jump: missing view objects for load/highlight.");
+    if (type == "highlight")
+        if (! ("selector" in optional) || ! ("predicates" in optional))
+            throw new Error("Constructing Jump: missing customization functions for highlight.");
 
     this.type = type;
     this.sourceId = sourceCanvas.id;

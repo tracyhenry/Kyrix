@@ -90,7 +90,7 @@ p.setInitialStates(leftView, teamLogoCanvas, 0, 0);
 var rightView = new View("right", 1100, 0, 1000, 1000);
 p.addView(rightView);
 
-// ================== teamlogo -> teamtimeline ===================
+// ================== teamlogo -> teamtimeline (load) ===================
 var selector = function () {
     return true;
 };
@@ -115,6 +115,32 @@ var jumpName = function (row) {
 p.addJump(new Jump(teamLogoCanvas, teamTimelineCanvas, "load", {selector : selector,
     viewport : newViewport, predicates : newPredicate, name : jumpName,
     sourceView : leftView, destView : rightView}));
+
+
+
+// ================== teamlogo -> teamtimeline (highlight) ===================
+var selector = function () {
+    return true;
+};
+
+var newPredicate = function (row) {
+    var pred = {"OR" : [
+            {"==" : ["home_team", row.abbr]},
+            {"==" : ["away_team", row.abbr]}
+        ]};
+    return {"layer0" : pred};
+};
+
+var jumpName = function (row) {
+    return "all games against\n" + row.city + " " + row.name;
+};
+
+p.addJump(new Jump(teamLogoCanvas, teamTimelineCanvas, "highlight", {selector : selector,
+    predicates : newPredicate, name : jumpName,
+    sourceView : leftView, destView : rightView}));
+
+
+
 
 // ================== teamtimeline -> playbyplay ===================
 var selector = function (row, args) {

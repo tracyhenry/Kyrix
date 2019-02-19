@@ -81,7 +81,8 @@ function setupLayerLayouts(viewId) {
                 : gvd.initialViewportX
                 + " " + gvd.initialViewportY
                 + " " +  gvd.viewportWidth
-                + " " + gvd.viewportHeight));
+                + " " + gvd.viewportHeight))
+            .classed("lowestsvg", (isStatic || param.fetchingScheme == "dbox"));
     }
 }
 
@@ -145,6 +146,7 @@ function pageOnLoad() {
             gvd.history = [];
             gvd.animation = false;
             gvd.predicates = [];
+            gvd.highlightPredicates = [];
             if (gvd.curCanvasId != "") {
                 var predDict = JSON.parse(viewSpecs[i].initialPredicates);
                 var numLayer = getCanvasById(gvd.curCanvasId).layers.length;

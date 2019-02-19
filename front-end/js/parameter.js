@@ -26,6 +26,9 @@ param.staticTrimInDuration = 500;
 param.staticTrimOutDuration = 500;
 param.popoverOutDuration = 200;
 
+// for coordinated highlighting - dim opacity
+param.dimOpacity = 0.4;
+
 // extra tiles per dimension
 param.extraTiles = 0;
 
@@ -39,6 +42,7 @@ param.retainSizeZoom = false;
 param.semanticZoom = "semantic_zoom";
 param.geometricSemanticZoom = "geometric_semantic_zoom";
 param.load = "load";
+param.highlight = "highlight";
 
 // fetching scheme -- either tiling or dbox
 param.fetchingScheme = "dbox";

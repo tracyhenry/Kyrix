@@ -66,6 +66,23 @@ function getTileArray(viewId, vX, vY, vWidth, vHeight) {
     return tileIds;
 };
 
+function highlightLowestSvg(viewId, svg, layerId) {
+
+    var gvd = globalVar.views[viewId];
+    if (gvd.highlightPredicates.length == 0)
+        return ;
+    svg.selectAll("g")
+        .selectAll("*")
+        .each(function (d) {
+            if (d == null || gvd.highlightPredicates[layerId] == {})
+                return ;
+            if (isHighlighted(d, gvd.highlightPredicates[layerId]))
+                d3.select(this).style("opacity", 1);
+            else
+                d3.select(this).style("opacity", param.dimOpacity);
+        });
+}
+
 function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
 
     var gvd = globalVar.views[viewId];
@@ -165,7 +182,10 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
 
                 // register jumps
                 if (!globalVar.animation)
-                    registerJumps(viewId, tileSvg, +i);
+                    registerJumps(viewId, tileSvg, i);
+
+                // highlight
+                highlightLowestSvg(viewId, tileSvg, i);
 
                 // apply additional zoom transforms
                 if (param.retainSizeZoom &&
@@ -309,7 +329,10 @@ function renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs
 
                 // register jumps
                 if (! gvd.animation)
-                    registerJumps(viewId, dboxSvg, +i);
+                    registerJumps(viewId, dboxSvg, i);
+
+                // highlight
+                highlightLowestSvg(viewId, dboxSvg, i);
 
                 // apply additional zoom transforms
                 if (param.retainSizeZoom &&

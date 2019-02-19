@@ -96,6 +96,7 @@ function logHistory(viewId, zoom_type) {
 
     // save global variables
     curHistory.predicates = gvd.predicates;
+    curHistory.highlightPredicates = gvd.highlightPredicates;
     curHistory.canvasId = gvd.curCanvasId;
     curHistory.canvasObj = gvd.curCanvas;
     curHistory.jumps = gvd.curJump;
@@ -135,6 +136,7 @@ function backspace(viewId) {
     gvd.curJump = curHistory.jumps;
     gvd.curStaticData = curHistory.staticData;
     gvd.predicates = curHistory.predicates;
+    gvd.highlightPredicates = curHistory.highlightPredicates;
     gvd.initialViewportX = curHistory.viewportX;
     gvd.initialViewportY = curHistory.viewportY;
 

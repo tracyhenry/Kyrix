@@ -42,6 +42,7 @@ function getOptionalArgs(viewId) {
     return optionalArgs;
 }
 
+// get SQL predicates from a predicate dictionary
 function getSqlPredicate(p) {
 
     if ("==" in p)
@@ -55,6 +56,22 @@ function getSqlPredicate(p) {
     return "";
 }
 
+// check whether a given datum passes a filter
+function isHighlighted(d, p) {
+
+    if (p == null || p == {})
+        return true;
+    if ("==" in p)
+        return d[p["=="][0]] == p["=="][1];
+    if ("AND" in p)
+        return isHighlighted(d, p["AND"][0]) && isHighlighted(d, p["AND"][1]);
+    if ("OR" in p)
+        return isHighlighted(d, p["OR"][0]) || isHighlighted(d, p["OR"][1]);
+
+    return false;
+}
+
+// get a canvas object by a canvas ID
 function getCanvasById(canvasId) {
 
     for (var i = 0; i < globalVar.project.canvases.length; i ++)
