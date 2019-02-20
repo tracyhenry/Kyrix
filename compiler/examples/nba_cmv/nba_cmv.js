@@ -11,7 +11,7 @@ const transforms = require("../nba/transforms");
 const placements = require("../nba/placements");
 
 // construct a project
-var p = new Project("nba_cmv", "../../../config.txt");
+var p = new Project("nba", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
 
 // ================== Canvas teamlogo ===================
