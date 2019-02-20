@@ -3,6 +3,9 @@ function getCurCanvas(viewId) {
 
     var gvd = globalVar.views[viewId];
 
+    // get all jumps starting at currrent canvas
+    gvd.curJump = getJumpsByCanvasId(gvd.curCanvasId);
+
     // check if cache has it
     var postData = "id=" + gvd.curCanvasId;
     for (var i = 0; i < gvd.predicates.length; i ++)
@@ -10,8 +13,10 @@ function getCurCanvas(viewId) {
     if (postData in globalVar.cachedCanvases)
         return new Promise(function (resolve) {
 
+            // note that we don't directly get canvas objects from gvd.project
+            // because sometimes the canvas w/h is dynamic and not set, in which
+            // case we need to fetch from the backend (using gvd.predicates)
             gvd.curCanvas = globalVar.cachedCanvases[postData].canvasObj;
-            gvd.curJump = globalVar.cachedCanvases[postData].jumps;
             gvd.curStaticData = globalVar.cachedCanvases[postData].staticData;
             setupLayerLayouts(viewId);
             resolve();
@@ -24,7 +29,6 @@ function getCurCanvas(viewId) {
         data : postData,
         success : function (data) {
             gvd.curCanvas = JSON.parse(data).canvas;
-            gvd.curJump = JSON.parse(data).jump;
             gvd.curStaticData = JSON.parse(data).staticData;
             setupLayerLayouts(viewId);
 
@@ -32,7 +36,6 @@ function getCurCanvas(viewId) {
             if (! (postData in globalVar.cachedCanvases)) {
                 globalVar.cachedCanvases[postData] = {};
                 globalVar.cachedCanvases[postData].canvasObj = gvd.curCanvas;
-                globalVar.cachedCanvases[postData].jumps = gvd.curJump;
                 globalVar.cachedCanvases[postData].staticData = gvd.curStaticData;
             }
         }

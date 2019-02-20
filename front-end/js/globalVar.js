@@ -28,7 +28,7 @@ if (typeof String.prototype.parseFunction != 'function') {
     };
 }
 
-/******** common functions ********/
+/****************** common functions ******************/
 function getOptionalArgs(viewId) {
 
     var gvd = globalVar.views[viewId];
@@ -79,4 +79,15 @@ function getCanvasById(canvasId) {
             return globalVar.project.canvases[i];
 
     return null;
+}
+
+// get jumps starting from a canvas
+function getJumpsByCanvasId(canvasId) {
+
+    var jumps = [];
+    for (var i = 0; i < globalVar.project.jumps.length; i ++)
+        if (globalVar.project.jumps[i].sourceId == canvasId)
+            jumps.push(globalVar.project.jumps[i]);
+
+    return jumps;
 }

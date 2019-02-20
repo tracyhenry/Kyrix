@@ -69,7 +69,7 @@ function postJump(viewId, zoomType) {
         gvd.animation = false;
 
         // register jumps after every jump
-        // because some coordination-based jump smaybe applicable after a jump
+        // reason: some coordination-based jumps maybe become applicable after a jump
         for (var i = 0; i < globalVar.project.views.length; i ++) {
             var nViewId = globalVar.project.views[i].id;
             var nGvd = globalVar.views[nViewId];

@@ -17,7 +17,6 @@ public class Project {
     private boolean mapInitialized = false;
     private Map<String, Canvas> canvasMap;
     private Map<String, View> viewMap;
-    private Map<String, ArrayList<Jump>> jumpMap;
 
     // JSON fields
     private String name;
@@ -70,18 +69,6 @@ public class Project {
             return null;
     }
 
-    public ArrayList<Jump> getJumps(String canvasId) {
-
-        if (! mapInitialized) {
-            mapInitialized = true;
-            initializeMaps();
-        }
-        if (jumpMap.containsKey(canvasId))
-            return jumpMap.get(canvasId);
-        else
-            return null;
-    }
-
     private void initializeMaps() {
 
         // initialize canvas map
@@ -93,17 +80,6 @@ public class Project {
         viewMap = new HashMap<>();
         for (View v : views)
             viewMap.put(v.getId(), v);
-
-        // initialize jump map
-        jumpMap = new HashMap<>();
-        for (Canvas c : canvases) {
-
-            String curCanvasId = c.getId();
-            jumpMap.put(curCanvasId, new ArrayList<Jump>());
-            for (Jump j : jumps)
-                if (j.getSourceId().equals(c.getId()))
-                    jumpMap.get(curCanvasId).add(j);
-        }
     }
 
     @Override
