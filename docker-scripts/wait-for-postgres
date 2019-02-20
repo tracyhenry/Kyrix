@@ -22,8 +22,9 @@ USAGE
 wait_for() {
   for i in `seq $TIMEOUT` ; do
     #nc -z "$HOST" "$PORT" > /dev/null 2>&1
-    # for some reason, nc isn't working even though pgsql is the example in the docs!      
-    psql -q postgresql://postgres:$POSTGRES_PASSWORD@db:5432/ '\q'
+    # for some reason, nc isn't working even though pgsql is the example in the docs!
+    echo "waiting for postgres via postgresql://postgres:$POSTGRES_PASSWORD@$HOST:$PORT/ "
+    psql -q postgresql://postgres:$POSTGRES_PASSWORD@$HOST:$PORT/ -c '\q'
     
     result=$?
     if [ $result -eq 0 ] ; then
@@ -38,6 +39,7 @@ wait_for() {
   exit 1
 }
 
+echo "$0 $*"
 while [ $# -gt 0 ]
 do
   case "$1" in

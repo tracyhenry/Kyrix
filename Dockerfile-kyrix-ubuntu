@@ -7,55 +7,40 @@
 # Dockerfile-kyrix-alpine
 #
 
-#FROM ubuntu:18.04  # works too, but is larger
+# 18.04 works too, but is even larger
+#FROM ubuntu:18.04
 FROM ubuntu:16.04
 
-RUN echo "*** updating Ubuntu and adding basic packages..."
+# update Ubuntu and adding basic packages
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get -qq -y update > apt-update.out && apt-get -qq -y upgrade > apt-upgrade.out
-RUN apt-get -qq -y install npm postgresql-client maven openjdk-8-jdk git curl wget > apt-get.out
-RUN curl -sL https://deb.nodesource.com/setup_8.x | bash > nodejs.out && apt-get -qq -y install nodejs > apt-install-node.out
+RUN apt-get -qq -y update > apt-update.out && apt-get -qq -y upgrade > apt-upgrade.out && \
+    apt-get -qq -y install npm postgresql-client postgresql-server-dev-10 maven openjdk-8-jdk git curl wget > apt-get.out && \
+    curl -sL https://deb.nodesource.com/setup_8.x | bash > nodejs.out && apt-get -qq -y install nodejs > apt-install-node.out
 
-#RUN echo "*** copying kyrix source, then working in /root..."
+# copy kyrix source, then work in /root
 RUN mkdir -p /kyrix/compiler /kyrix/tile-server
 ADD ./front-end /kyrix/front-end/
 ADD ./compiler /kyrix/compiler/
 ADD ./tile-server /kyrix/tile-server/
-RUN ls /kyrix/
 
 # if instead you want to get from git...
-#RUN echo "*** fetching kyrix source, then working in /root..."
 #RUN git clone https://github.com/tracyhenry/kyrix > git-clone.out
 
-RUN echo "*** setting up Kyrix compiler..."
-RUN ls /kyrix
-RUN ls /kyrix/compiler
+# setup Kyrix compiler - rebuild node_modules because of native modules
 WORKDIR /kyrix/compiler
-RUN npm install
-RUN ls /kyrix
+RUN rm -fr /kyrix/compiler/node_modules && npm install
 RUN sed -i 's/\(.\+\equest\)/\/\/\1/' node_modules/d3/build/d3.node.js
 
-RUN echo "*** creating config file..."
-WORKDIR /kyrix
-RUN echo "nba" > config.txt
-RUN echo "8000" >> config.txt
-RUN echo "psql" >> config.txt
-RUN echo "db" >> config.txt
-RUN echo "kyrix" >> config.txt
-RUN echo "kyrix_password" >> config.txt
-RUN echo "kyrix" >> config.txt
-RUN echo "/kyrix/compiler" >> config.txt
-
-COPY docker-postgis/wait-for-postgres /wait-for-postgres
-RUN chmod 755 /wait-for-postgres
-COPY docker-postgis/start-kyrix.sh /start-kyrix.sh
-RUN chmod 755 /start-kyrix.sh
+COPY docker-scripts/wait-for-postgres docker-scripts/start-kyrix.sh /
+RUN chmod 755 /wait-for-postgres /start-kyrix.sh
 
 EXPOSE 8000
 
-RUN echo "*** setting up tile server..."
+# setup tile server
 WORKDIR /kyrix/tile-server
 RUN mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out
 
-RUN echo "*** downloading NBA example..."
+# download NBA example
 RUN wget -q -O nba_db_psql.sql 'https://www.dropbox.com/s/baqb01thxvfthk5/nba_db_psql.sql?dl=1'
+
+ENTRYPOINT sh -c 'sleep 5; /wait-for-postgres ${PGHOST}:5432 -t 60 -- /start-kyrix.sh'
