@@ -1,9 +1,9 @@
 // libraries
-const index = require("../../src/index");
-const Project = index.Project;
-const Canvas = index.Canvas;
-const Layer = index.Layer;
-const Jump = index.Jump;
+const Project = require("../../src/index").Project;
+const Canvas = require("../../src/Canvas").Canvas;
+const Jump = require("../../src/Jump").Jump;
+const Layer = require("../../src/Layer").Layer;
+const View = require("../../src/View").View;
 
 // project components
 const renderers = require("./renderers");
@@ -11,7 +11,7 @@ const transforms = require("./transforms");
 const placements = require("./placements");
 
 // construct a project
-var p = new Project("usmap", "../../../config.txt", 2000, 1000);
+var p = new Project("usmap", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
 
 // ================== state map canvas ===================
@@ -50,6 +50,11 @@ countyMapCanvas.addLayer(countyBoundaryLayer);
 countyBoundaryLayer.addPlacement(placements.countyMapPlacement);
 countyBoundaryLayer.addRenderingFunc(renderers.countyMapRendering);
 
+// ================== Views ===================
+var view = new View("usmap", 0, 0, 2000, 1000);
+p.addView(view);
+p.setInitialStates(view, stateMapCanvas, 0, 0);
+
 // ================== state -> county ===================
 var selector = function (row, args) {
     return (args.layerId == 1);
@@ -69,9 +74,6 @@ var jumpName = function (row) {
 
 p.addJump(new Jump(stateMapCanvas, countyMapCanvas, "geometric_semantic_zoom", {selector : selector,
     viewport : newViewport, predicates : newPredicates, name : jumpName}));
-
-// setting initial states
-p.setInitialStates(stateMapCanvas, 0, 0);
 
 // save to db
 p.saveProject();

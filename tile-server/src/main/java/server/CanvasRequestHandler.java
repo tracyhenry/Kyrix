@@ -91,7 +91,6 @@ public class CanvasRequestHandler implements HttpHandler {
         // construct the response object
         Map<String, Object> respMap = new HashMap<>();
         respMap.put("canvas", c);
-        respMap.put("jump", Main.getProject().getJumps(canvasId));
         respMap.put("staticData", BoxandData.getDictionaryFromData(staticData, c));
         String response = gson.toJson(respMap);
 

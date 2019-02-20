@@ -1,12 +1,15 @@
-function renderStaticLayers() {
+function renderStaticLayers(viewId) {
+
+    var gvd = globalVar.views[viewId];
+    var viewClass = ".view_" + viewId;
 
     // number of layers
-    var numLayers = globalVar.curCanvas.layers.length;
+    var numLayers = gvd.curCanvas.layers.length;
 
     // loop over every layer
     for (var i = numLayers - 1; i >= 0; i--) {
         // current layer object
-         var curLayer = globalVar.curCanvas.layers[i];
+         var curLayer = gvd.curCanvas.layers[i];
 
         // if this layer is not static, return
         if (! curLayer.isStatic)
@@ -14,13 +17,15 @@ function renderStaticLayers() {
 
         // render
         var renderFunc = curLayer.rendering.parseFunction();
-        var curSvg = d3.select(".layerg.layer" + i)
-            .select("svg")
-            .classed("lowestsvg", true);
-        renderFunc(curSvg, globalVar.curStaticData[i], getOptionalArgs());
+        var curSvg = d3.select(viewClass + ".layerg.layer" + i)
+            .select("svg");
+        renderFunc(curSvg, gvd.curStaticData[i], getOptionalArgs(viewId));
 
         // register jump
-        if (! globalVar.animation)
-            registerJumps(curSvg, i);
+        if (! gvd.animation)
+            registerJumps(viewId, curSvg, i);
+
+        // highlight
+        highlightLowestSvg(viewId, curSvg, i);
     }
 };

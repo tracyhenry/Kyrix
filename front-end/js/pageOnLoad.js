@@ -1,83 +1,91 @@
 // get from backend the current canvas object assuming curCanvasId is already correctly set
-function getCurCanvas() {
+function getCurCanvas(viewId) {
 
-    var postData = "id=" + globalVar.curCanvasId;
-    for (var i = 0; i < globalVar.predicates.length; i ++)
-        postData += "&predicate" + i + "=" + getSqlPredicate(globalVar.predicates[i]);
+    var gvd = globalVar.views[viewId];
+
+    // get all jumps starting at currrent canvas
+    gvd.curJump = getJumpsByCanvasId(gvd.curCanvasId);
 
     // check if cache has it
-    if (postData in globalVar.cachedCanvases) {
-        globalVar.curCanvas = globalVar.cachedCanvases[postData].canvasObj;
-        globalVar.curJump = globalVar.cachedCanvases[postData].jumps;
-        globalVar.curStaticData = globalVar.cachedCanvases[postData].staticData;
-        setupLayerLayouts();
-        return ;
-    }
+    var postData = "id=" + gvd.curCanvasId;
+    for (var i = 0; i < gvd.predicates.length; i ++)
+        postData += "&predicate" + i + "=" + getSqlPredicate(gvd.predicates[i]);
+    if (postData in globalVar.cachedCanvases)
+        return new Promise(function (resolve) {
 
-    // otherwise make a blocked http request to the server
-    $.ajax({
+            // note that we don't directly get canvas objects from gvd.project
+            // because sometimes the canvas w/h is dynamic and not set, in which
+            // case we need to fetch from the backend (using gvd.predicates)
+            gvd.curCanvas = globalVar.cachedCanvases[postData].canvasObj;
+            gvd.curStaticData = globalVar.cachedCanvases[postData].staticData;
+            setupLayerLayouts(viewId);
+            resolve();
+        });
+
+    // otherwise make a non-blocked http request to the server
+    return $.ajax({
         type : "POST",
         url : "canvas",
         data : postData,
-        success : function (data, status) {
-            globalVar.curCanvas = JSON.parse(data).canvas;
-            globalVar.curJump = JSON.parse(data).jump;
-            globalVar.curStaticData = JSON.parse(data).staticData;
-            setupLayerLayouts();
+        success : function (data) {
+            gvd.curCanvas = JSON.parse(data).canvas;
+            gvd.curStaticData = JSON.parse(data).staticData;
+            setupLayerLayouts(viewId);
 
             // insert into cache
             if (! (postData in globalVar.cachedCanvases)) {
                 globalVar.cachedCanvases[postData] = {};
-                globalVar.cachedCanvases[postData].canvasObj = globalVar.curCanvas;
-                globalVar.cachedCanvases[postData].jumps = globalVar.curJump;
-                globalVar.cachedCanvases[postData].staticData = globalVar.curStaticData;
+                globalVar.cachedCanvases[postData].canvasObj = gvd.curCanvas;
+                globalVar.cachedCanvases[postData].staticData = gvd.curStaticData;
             }
-        },
-        async : false
+        }
     });
 }
 
 // setup <g>s and <svg>s for each layer
-function setupLayerLayouts() {
+function setupLayerLayouts(viewId) {
+
+    var gvd = globalVar.views[viewId];
 
     // number of layers
-    var numLayers = globalVar.curCanvas.layers.length;
+    var numLayers = gvd.curCanvas.layers.length;
 
     // set box flag
     if (param.fetchingScheme == "dbox") {
-        globalVar.boxX = [-1e5];
-        globalVar.boxY = [-1e5];
-        globalVar.boxH = [-1e5];
-        globalVar.boxW = [-1e5];
+        gvd.boxX = [-1e5];
+        gvd.boxY = [-1e5];
+        gvd.boxH = [-1e5];
+        gvd.boxW = [-1e5];
     }
 
     // set render data
-    globalVar.renderData = [];
+    gvd.renderData = [];
     for (var i = numLayers - 1; i >= 0; i --)
-        globalVar.renderData.push([]);
+        gvd.renderData.push([]);
 
+    // create layers
     for (var i = numLayers - 1; i >= 0; i --) {
-        var isStatic = globalVar.curCanvas.layers[i].isStatic;
+        var isStatic = gvd.curCanvas.layers[i].isStatic;
         // add new <g>
-        d3.select("#maing")
+        d3.select(".view_" + viewId + ".maing")
             .append("g")
-            .classed("layerg", true)
-            .classed("layer" + i, true)
+            .classed("view_" + viewId + " layerg layer" + i, true)
             .append("svg")
-            .classed("mainsvg", true)
+            .classed("view_" + viewId + " mainsvg", true)
             .classed("static", isStatic)
-            .attr("width", globalVar.viewportWidth)
-            .attr("height", globalVar.viewportHeight)
+            .attr("width", gvd.viewportWidth)
+            .attr("height", gvd.viewportHeight)
             .attr("preserveAspectRatio", "none")
             .attr("x", 0)
             .attr("y", 0)
             .attr("viewBox", (isStatic ? "0 0"
-                + " " + globalVar.viewportWidth
-                + " " + globalVar.viewportHeight
-                : globalVar.initialViewportX
-                + " " + globalVar.initialViewportY
-                + " " +  globalVar.viewportWidth
-                + " " + globalVar.viewportHeight));
+                + " " + gvd.viewportWidth
+                + " " + gvd.viewportHeight
+                : gvd.initialViewportX
+                + " " + gvd.initialViewportY
+                + " " +  gvd.viewportWidth
+                + " " + gvd.viewportHeight))
+            .classed("lowestsvg", (isStatic || param.fetchingScheme == "dbox"));
     }
 }
 
@@ -98,79 +106,118 @@ function pageOnLoad() {
     $.post("/first/", {}, function (data) {
         var response = JSON.parse(data);
         globalVar.project = response.project;
-
-        // initial setup
-        globalVar.initialViewportX = globalVar.project.initialViewportX;
-        globalVar.initialViewportY = globalVar.project.initialViewportY;
-        globalVar.viewportWidth = globalVar.project.viewportWidth;
-        globalVar.viewportHeight = globalVar.project.viewportHeight;
-        globalVar.curCanvasId = globalVar.project.initialCanvasId;
         globalVar.tileW = +response.tileW;
         globalVar.tileH = +response.tileH;
         globalVar.renderingParams = JSON.parse(globalVar.project.renderingParams);
+        processRenderingParams();
 
-        // process initial predicates
-        var predDict = JSON.parse(globalVar.project.initialPredicates);
-        var numLayer = getCanvasById(globalVar.curCanvasId).layers.length;
-        globalVar.predicates = [];
-        for (var i = 0; i < numLayer; i ++)
-            if (("layer" + i) in predDict)
-                globalVar.predicates.push(predDict["layer" + i]);
-            else
-                globalVar.predicates.push({});
+        // remove all jump option popovers when the window is resized
+        d3.select(window).on("resize.popover", removePopovers);
+        //d3.select(window).on("click", removePopovers);
 
-        // set up global and main svgs
+        // set up container SVG
+        var containerW = 0, containerH = 0;
+        var viewSpecs = globalVar.project.views;
+        for (var i = 0; i < viewSpecs.length; i ++) {
+            containerW = Math.max(containerW, viewSpecs[i].minx + viewSpecs[i].width + param.viewPadding * 2);
+            containerH = Math.max(containerH, viewSpecs[i].miny + viewSpecs[i].height + param.viewPadding * 2);
+        }
         d3.select("body")
             .append("svg")
             .attr("id", "containerSvg")
-            .attr("width", globalVar.viewportWidth + param.containerPadding * 2)
-            .attr("height", globalVar.viewportHeight + param.containerPadding * 2)
-            .append("g")
-            .attr("id", "maing")
-            .attr("transform", "translate("
-                + param.containerPadding
-                + ","
-                + param.containerPadding
-                + ")")
-            .append("rect") // a transparent rect to receive pointer events
-            .attr("x", 0)
-            .attr("y", 0)
-            .attr("width", globalVar.viewportWidth)
-            .attr("height", globalVar.viewportHeight)
-            .style("opacity", 0);
+            .attr("width", containerW)
+            .attr("height", containerH);
 
-        // set up axes group
-        d3.select("#containerSvg")
-            .append("g")
-            .attr("id", "axesg")
-            .attr("transform", "translate("
-                + param.containerPadding
-                + ","
-                + param.containerPadding
-                + ")");
+        for (var i = 0; i < viewSpecs.length; i ++) {
 
-        // initialize zoom buttons, must before getCurCanvas is called
-        drawZoomButtons();
-        d3.select(window).on("resize.zoombutton", drawZoomButtons);
+            // get a reference for current globalvar dict
+            var viewId = viewSpecs[i].id;
+            globalVar.views[viewId] = {};
+            var gvd = globalVar.views[viewId];
 
-        // remove jump option popovers when body is clicked or resized
-        d3.select(window).on("resize.popover", removePopovers);
-        d3.select(window).on("click", removePopovers);
+            // initial setup
+            gvd.initialViewportX = viewSpecs[i].initialViewportX;
+            gvd.initialViewportY = viewSpecs[i].initialViewportY;
+            gvd.viewportWidth = viewSpecs[i].width;
+            gvd.viewportHeight = viewSpecs[i].height;
+            gvd.curCanvasId = viewSpecs[i].initialCanvasId;
+            gvd.renderData = null;
+            gvd.pendingBoxRequest = false;
+            gvd.curCanvas = null;
+            gvd.curJump = null;
+            gvd.curStaticData = null;
+            gvd.history = [];
+            gvd.animation = false;
+            gvd.predicates = [];
+            gvd.highlightPredicates = [];
+            if (gvd.curCanvasId != "") {
+                var predDict = JSON.parse(viewSpecs[i].initialPredicates);
+                var numLayer = getCanvasById(gvd.curCanvasId).layers.length;
+                for (var j = 0; j < numLayer; j ++)
+                    if (("layer" + j) in predDict)
+                        gvd.predicates.push(predDict["layer" + j]);
+                    else
+                        gvd.predicates.push({});
+            }
 
-        // process rendering params
-        processRenderingParams();
+            // set up view svg
+            d3.select("#containerSvg")
+                .append("svg")
+                .classed("view_" + viewId + " viewsvg", true)
+                .attr("width", gvd.viewportWidth + param.viewPadding * 2)
+                .attr("height", gvd.viewportHeight + param.viewPadding * 2)
+                .attr("x", viewSpecs[i].minx)
+                .attr("y", viewSpecs[i].miny)
+                .append("g")
+                .classed("view_" + viewId + " maing", true)
+                .attr("transform", "translate("
+                    + param.viewPadding
+                    + ","
+                    + param.viewPadding
+                    + ")")
+                .append("rect") // a transparent rect to receive pointer events
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", gvd.viewportWidth)
+                .attr("height", gvd.viewportHeight)
+                .style("opacity", 0);
 
-        // get current canvas object
-        getCurCanvas();
+            // set up axes group
+            d3.select(".view_" + viewId + ".viewsvg")
+                .append("g")
+                .classed("view_" + viewId + " axesg", true)
+                .attr("transform", "translate("
+                    + param.viewPadding
+                    + ","
+                    + param.viewPadding
+                    + ")");
 
-        // render static trims
-        renderStaticLayers();
+            // initialize zoom buttons, must before getCurCanvas is called
+            drawZoomButtons(viewId);
+            d3.select(window).on("resize.zoombutton", function () {
+                for (var viewId in globalVar.views)
+                    drawZoomButtons(viewId);
+            });
 
-        // set up zoom
-        setupZoom(1);
+            // render this view
+            if (gvd.curCanvasId != "") {
+                var gotCanvas = getCurCanvas(viewId);
+                gotCanvas.then((function (viewId) {
 
-        // set button state
-        setButtonState();
+                    return function () {
+
+                        // render static trims
+                        renderStaticLayers(viewId);
+
+                        // set up zoom
+                        setupZoom(viewId, 1);
+
+                        // set button state
+                        setButtonState(viewId);
+                    }
+                })(viewId));
+            }
+        }
     });
 }
 

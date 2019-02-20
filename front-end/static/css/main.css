@@ -3,6 +3,11 @@
     margin : auto;
 }
 
+.viewsvg {
+    display : block;
+    margin : auto;
+}
+
 #jumppopover {
     display : block;
     opacity : 0.9;
@@ -33,14 +38,14 @@
     font-family: 'Source Serif Pro', sans-serif !important;
 }
 
-#gobackbutton {
+.gobackbutton {
     position : absolute;
 }
 
-#zoominbutton {
+.zoominbutton {
     position : absolute;
 }
 
-#zoomoutbutton {
+.zoomoutbutton {
     position : absolute;
 }

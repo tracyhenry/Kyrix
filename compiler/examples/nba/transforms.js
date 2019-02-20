@@ -1,4 +1,4 @@
-const Transform = require("../../src/index").Transform;
+const Transform = require("../../src/Transform").Transform;
 
 var teamLogoTransform = new Transform("select * from teams;",
     "nba",

@@ -1,4 +1,4 @@
-const Transform = require("../../src/index").Transform;
+const Transform = require("../../src/Transform").Transform;
 
 var flareTransform = new Transform("select * from flare;",
     "flare",

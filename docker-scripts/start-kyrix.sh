@@ -62,10 +62,11 @@ touch mvn-exec.out
 while [ -z "$(egrep 'Done precomputing|Tile server started' mvn-exec.out)" ]; do echo "waiting for tile server"; sleep 5; done
 
 echo "*** (re)configuring for NBA examples to ensure tile server recomputes..."
+
 cd /kyrix/compiler
 npm rebuild | egrep -v '(@[0-9.]+ /kyrix/compiler/node_modules/)'
-cd /kyrix/compiler/examples/nba
-node nba.js | egrep -i "error|connected" || true
+cd /kyrix/compiler/examples/nba_cmv
+node nba_cmv.js | egrep -i "error|connected" || true
 
 echo "*** done! Kyrix ready at: http://<host>:8000/  (may need a minute to recompute indexes - watch this log for messages)"
 
