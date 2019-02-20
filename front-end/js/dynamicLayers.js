@@ -94,13 +94,9 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
     var tileIds = getTileArray(viewId,
         viewportX, viewportY, vpW, vpH);
 
-    // set viewport, here we only change min-x and min-y of the viewport.
-    // Size of the viewport is set either by pageOnLoad(), semanticZoom() or zoomed()
-    // and should not be changed in this function
+    // remove invisible tiles
     d3.selectAll(viewClass + ".mainsvg:not(.static)")
-        .attr("viewBox", viewportX + " " + viewportY + " "
-            + vpW + " " + vpH)
-        .each(function () { // remove invisible tiles
+        .each(function () {
             var tiles = d3.select(this)
                 .selectAll("svg")
                 .data(tileIds, function (d){return d;});
@@ -125,6 +121,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
             .attr("viewBox", d[0] + " " + d[1] + " " + tileW + " " + tileH)
             .style("opacity", 0)
             .classed("a" + d[0] + d[1] + gvd.curCanvasId, true)
+            .classed("view_" + viewId, true)
             .classed("lowestsvg", true);
 
         // send request to backend to get data
@@ -186,15 +183,6 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
 
                 // highlight
                 highlightLowestSvg(viewId, tileSvg, i);
-
-                // apply additional zoom transforms
-                if (param.retainSizeZoom &&
-                    d3.zoomTransform(d3.select(viewClass + ".maing").node()).k > 1)
-                    tileSvg.selectAll("g")
-                        .selectAll("*")
-                        .each(function () {
-                            zoomRescale(viewId, this);
-                        });
             }
         });
     });
@@ -205,16 +193,8 @@ function renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
 
-    // set viewboxes
-    d3.selectAll(viewClass + ".mainsvg:not(.static)")
-        .attr("viewBox", viewportX + " " + viewportY + " " + vpW + " " + vpH);
-
     // check if there is pending box requests
     if (gvd.pendingBoxRequest)
-        return ;
-
-    // check if there is literal zooming going on
-    if (d3.event != null && d3.event.transform.k != 1)
         return ;
 
     // check if the user has moved outside the current box
@@ -333,15 +313,6 @@ function renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs
 
                 // highlight
                 highlightLowestSvg(viewId, dboxSvg, i);
-
-                // apply additional zoom transforms
-                if (param.retainSizeZoom &&
-                    d3.zoomTransform(d3.select(viewClass + ".maing").node()).k > 1)
-                    dboxSvg.selectAll("g")
-                        .selectAll("*")
-                        .each(function () {
-                            zoomRescale(viewId, this);
-                        });
             }
 
             // modify global var
@@ -389,8 +360,26 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
     optionalArgs["viewportX"] = viewportX;
     optionalArgs["viewportY"] = viewportY;
 
-    if (param.fetchingScheme == "tiling")
-        renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);
-    else if (param.fetchingScheme == "dbox")
-        renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);
+    // set viewboxes
+    d3.selectAll(viewClass + ".mainsvg:not(.static)")
+        .attr("viewBox", viewportX + " " + viewportY + " " + vpW + " " + vpH);
+
+    // check if there is literal zooming going on
+    // if yes, rescale the objects if asked
+    if (d3.event != null && d3.event.transform.k != 1) {
+        // apply additional zoom transforms
+        if (param.retainSizeZoom)
+            d3.selectAll(viewClass + ".lowestsvg:not(.static)")
+                .selectAll("g")
+                .selectAll("*")
+                .each(function () {
+                    zoomRescale(viewId, this);
+                });
+    }
+    else {
+        if (param.fetchingScheme == "tiling")
+            renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);
+        else if (param.fetchingScheme == "dbox")
+            renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);
+    }
 };
