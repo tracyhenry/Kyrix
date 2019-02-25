@@ -1,4 +1,4 @@
- // get from backend the current canvas object assuming curCanvasId is already correctly set
+// get from backend the current canvas object assuming curCanvasId is already correctly set
 function getCurCanvas(viewId) {
 
     var gvd = globalVar.views[viewId];
