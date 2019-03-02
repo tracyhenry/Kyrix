@@ -24,7 +24,7 @@ function getCurCanvas(viewId) {
 
     // otherwise make a non-blocked http request to the server
     return $.ajax({
-        type : "POST",
+        type : "GET",
         url : "canvas",
         data : postData,
         success : function (data) {
@@ -103,7 +103,7 @@ function processRenderingParams() {
 function pageOnLoad() {
 
     // get information about the first canvas to render
-    $.post("/first/", {}, function (data) {
+    $.get("/first/", {}, function (data) {
         var response = JSON.parse(data);
         globalVar.project = response.project;
         globalVar.tileW = +response.tileW;
