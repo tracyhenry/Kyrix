@@ -13,6 +13,34 @@
     <link href="https://fonts.googleapis.com/css?family=Source Serif Pro" rel="stylesheet">
     <script>
         kyrix.pageOnLoad();
+        console.log(kyrix.getData());
+
+        d3.select("body")
+            .on("keydown", function () {
+                if (event.key == "ArrowLeft" || event.key == "ArrowRight") {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    // calculate new transform
+                    var delta = (event.key == "ArrowRight" ? -1 : 1);
+                    kyrix.Pan("usmap",1000, 0, delta);
+                }
+                if (event.key == "ArrowUp" || event.key == "ArrowDown") {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    // calculate new transform
+                    var delta = (event.key == "ArrowDown" ? -1 : 1);
+                    kyrix.Pan("usmap",0, 1000, delta);
+                }
+            });
+
+        d3.select("body")
+            .append('input')
+            .attr('type', 'text')
+            .attr('name', 'state:')
+            .on("keydown",function (){
+                var svg = d3.select(".view_usmap.layerg.layer1").select(".mainsvg");
+                kyrix.highlightByInput(svg, event.key);
+            })
 
     </script>
 </head>

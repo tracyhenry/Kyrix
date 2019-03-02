@@ -42,6 +42,7 @@ function getCurCanvas(viewId) {
     });
 }
 
+
 // setup <g>s and <svg>s for each layer
 function setupLayerLayouts(viewId) {
 
