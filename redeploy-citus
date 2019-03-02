@@ -62,17 +62,25 @@ kubectl expose replicaset.apps/$RS_MASTER --type=LoadBalancer --name=bastion
 # setup user database
 echo "setting up user database $DBNAME (slow because of postgis initialization)"
 kubectl exec $MASTER -- su - postgres -c "psql -c \"create database $DBNAME owner $USERNAME;\" " | grep CREATE 2>&1
-EXT_CMD='create extension if not exists citus; create extension if not exists postgis; create extension if not exists postgis_topology; create extension if not exists postgis_sfcgal; create extension if not exists fuzzystrmatch; create extension if not exists address_standardizer; create extension if not exists address_standardizer_data_us; create extension if not exists postgis_tiger_geocoder';
+#EXT_CMD='create extension if not exists citus; create extension if not exists postgis; create extension if not exists postgis_topology; create extension if not exists postgis_sfcgal; create extension if not exists fuzzystrmatch; create extension if not exists address_standardizer; create extension if not exists address_standardizer_data_us; create extension if not exists postgis_tiger_geocoder';
+EXT_CMD='create extension if not exists citus; create extension if not exists plv8;'
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"$EXT_CMD\" "; stty sane  # HARMLESS HACK: for some reason the EXT_CMD corrupts the TTY on my Mac iTerm2
 # run_command_on_workers() doesn't seem to run properly within a database?
 for w in $WORKERS; do kubectl exec $w -- su - postgres -c "psql $DBNAME -c \"$EXT_CMD\" " > /dev/null 2> /dev/null & done;
 
-while [ 1 ]; do w=`for w in $WORKERS; do stty sane; kubectl exec -it $w -- su - postgres -c "psql $DBNAME -t -c \"select count(*) from pg_extension where extname like '%postgis%';\""; done | grep -c 4`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w postgres servers initialized with postgis, waiting for $NUM_WORKERS (be patient)"; sleep 3; done; stty sane
+while [ 1 ]; do w=`for w in $WORKERS; do stty sane; kubectl exec -it $w -- su - postgres -c "psql $DBNAME -t -c \"select count(*) from pg_extension where extname = 'plv8' or extname='citus';\""; done | grep -c 2`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w postgres servers initialized with extensions, waiting for $NUM_WORKERS (be patient)"; sleep 3; done; stty sane
 
 for w in $WORKER_IPS; do kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -t -c \"SELECT * from master_add_node('$w', 5432);\""|grep 5432; done|head
 
 # test postgis on master
-kubectl exec -it $MASTER -- su - postgres -c "psql $DBNAME -t -c \"SELECT num, street, city, state, zip FROM parse_address('1 Devonshire Place PH301, Boston, MA 02109');\""
+#kubectl exec -it $MASTER -- su - postgres -c "psql $DBNAME -t -c \"SELECT num, street FROM parse_address('1 Devonshire Place PH301, Boston, MA 02109');\""
+
+# test plv8 on master
+res=$(kubectl exec -it $MASTER -- su - postgres -c "psql $DBNAME -q -t -c \"DO \\\$\\\$ plv8.elog(NOTICE, 42); \\\$\\\$ LANGUAGE plv8;\""|grep -c 42)
+if [ "x$res" != "x1" ]; then
+    echo "error executing plv8 test function."
+    exit 1
+fi
 
 # test citus
 kubectl exec -it $MASTER -- su - postgres -c "psql $DBNAME" < docker-scripts/citus-test.sql

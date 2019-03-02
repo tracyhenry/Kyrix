@@ -1,3 +1,5 @@
+FROM plv8user/plv8:2.3.9-pg11 as plv8
+
 FROM postgres:11
 ARG VERSION=8.1.1
 
@@ -60,3 +62,17 @@ COPY docker-scripts/000-configure-stats.sh docker-scripts/001-create-citus-exten
 COPY docker-scripts/pg_healthcheck /
 
 HEALTHCHECK --interval=4s --start-period=6s CMD ./pg_healthcheck
+
+
+# install plv8
+
+COPY --from=plv8 /usr/share/postgresql/11/extension/plcoffee* /usr/share/postgresql/11/extension/
+COPY --from=plv8 /usr/share/postgresql/11/extension/plls* /usr/share/postgresql/11/extension/
+COPY --from=plv8 /usr/share/postgresql/11/extension/plv8* /usr/share/postgresql/11/extension/
+COPY --from=plv8 /usr/lib/postgresql/11/lib/plv8*.so /usr/lib/postgresql/11/lib/
+RUN chmod 644 /usr/share/postgresql/11/extension/plcoffee* \
+    && chmod 644 /usr/share/postgresql/11/extension/plls* \
+    && chmod 644 /usr/share/postgresql/11/extension/plv8* \
+    && chmod 755 /usr/lib/postgresql/11/lib/plv8*.so
+# plv8 is dynamically linked
+RUN apt update && apt install libc++1
