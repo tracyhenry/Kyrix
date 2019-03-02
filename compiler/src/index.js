@@ -131,6 +131,8 @@ function addJump(jump) {
 // Add a rendering parameter object
 function addRenderingParams(renderingParams) {
 
+    if (renderingParams == null)
+        return ;
     this.renderingParams = JSON.stringify(renderingParams, function (key, value) {
         if (typeof value === 'function')
             return value.toString();
@@ -204,13 +206,39 @@ function saveProject()
 {
     // final checks before saving
     for (var i = 0; i < this.canvases.length; i ++) {
+        // a canvas should have at least one layer
         if (this.canvases[i].layers.length == 0)
             throw new Error("Canvas " + this.canvases[i].id + " has 0 layers.");
-        for (var j = 0; j < this.canvases[i].layers.length; j ++)
+        for (var j = 0; j < this.canvases[i].layers.length; j ++) {
+            // a static layer does not need a placement object
             if (this.canvases[i].layers[j].isStatic && this.canvases[i].layers[j].placement != null)
                 throw new Error("Canvas " + this.canvases[i] + " layer " + j + " is static and does not need a placement object.");
-            else if (! this.canvases[i].layers[j].isStatic && this.canvases[i].layers[j].placement == null)
+            // a dynamic layer does need a placement object
+            else if (!this.canvases[i].layers[j].isStatic && this.canvases[i].layers[j].placement == null)
                 throw new Error("Canvas " + this.canvases[i] + " layer " + j + " is dynamic and requires a placement object.");
+            // columns in the placement object should exist in the transform
+            if (this.canvases[i].layers[j].placement != null) {
+                var curPlacement = this.canvases[i].layers[j].placement;
+                var curTransform = this.canvases[i].layers[j].transform;
+                var placementColNames = [];
+                if (curPlacement.centroid_x.startsWith("col"))
+                    placementColNames.push(curPlacement.centroid_x.substr(4));
+                if (curPlacement.centroid_y.startsWith("col"))
+                    placementColNames.push(curPlacement.centroid_y.substr(4));
+                if (curPlacement.width.startsWith("col"))
+                    placementColNames.push(curPlacement.width.substr(4));
+                if (curPlacement.height.startsWith("col"))
+                    placementColNames.push(curPlacement.height.substr(4));
+                for (var k = 0; k < placementColNames.length; k++) {
+                    var exist = false;
+                    for (var p = 0; p < curTransform.columnNames.length; p++)
+                        if (placementColNames[k] == curTransform.columnNames[p])
+                            exist = true;
+                    if (!exist)
+                        throw new Error("Unidentified placement column name: " + placementColNames[k]);
+                }
+            }
+        }
     }
 
     // prepare project definition JSON strings
