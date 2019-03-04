@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TAG=${1:-asah/pg11_postgis25_citus811:1.4}
+TAG=${1:-asah/pg11_postgis25_citus811:1.8}
 
 sudo docker build . -f Dockerfile-citus-debian -t $TAG
 sudo docker push $TAG
