@@ -168,6 +168,7 @@ function zoomed(viewId) {
     if (zoomInFactorY <= 1 && zoomOutFactorY >= 1)
         scaleY = 1;
 
+
     // get new viewport coordinates
     var viewportX = iVX - transform.x / scaleX;
     var viewportY = iVY - transform.y / scaleY;

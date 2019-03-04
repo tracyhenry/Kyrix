@@ -3,7 +3,7 @@ export function getViews(){
     return globalVar.views;
 }
 
-export function Pan(viewId, panX, panY, delta){
+export function triggerPan(viewId, panX, panY, delta){
     var globalVarDict = globalVar.views[viewId];
     // number of layers
     var numLayers = globalVarDict.curCanvas.layers.length;
@@ -39,12 +39,12 @@ export function getData(){
 }
 
 var keyboardHistory = "";
-var pred = "";
 var datum;
 export function highlightByInput(svg, key){
+    var count = 0;
     function toHighlight(d, pred) {
         if(d.name.toLowerCase().includes(pred)){
-            pred = d.name;
+            count ++;
             datum = d;
             return true;
         }
@@ -54,12 +54,12 @@ export function highlightByInput(svg, key){
     }
     if(key == "Backspace")
         keyboardHistory = keyboardHistory.slice(0, -1);
-    if(key == "Enter")
+    else if(key == "Enter")
         triggerJump("usmap");
     else
         keyboardHistory += key;
-   // console.log(keyboardHistory);
 
+    console.log(keyboardHistory);
     svg.selectAll("g")
         .selectAll("*")
         .each(function(d){
@@ -69,7 +69,8 @@ export function highlightByInput(svg, key){
             else
                 d3.select(this).style("opacity", 0.4);
         });
-
+    if(count == 1)
+        triggerJump("usmap");
 }
 
 export function triggerJump(viewId){
@@ -77,10 +78,14 @@ export function triggerJump(viewId){
     var jumps = gvd.curJump;
     var optionalArgs = getOptionalArgs(viewId);
 
+    console.log(globalVar.disableZoom);
+    if(globalVar.disableZoom)
+        return;
+
     d3.event.preventDefault();
     var jump = jumps[0];
     removePopovers(viewId);
-    console.log(datum);
+
     // calculate new predicates
     var predDict = jump.predicates.parseFunction()(datum, optionalArgs);
     var predArray = [];
@@ -128,4 +133,48 @@ export function triggerJump(viewId){
             throw new Error("Unrecognized new viewport function return value.");
     }
     semanticZoom(viewId, jump, predArray, newVpX, newVpY, datum);
+}
+
+export function refresh(viewId, callbackDynamic, callbackStatic, par){
+    var viewClass = ".view_" + viewId;
+    var gvd = globalVar.views[viewId];
+
+ //   globalVar.newRender = callback;
+ //   globalVar.newRenderPara = par;
+    var numLayers = gvd.curCanvas.layers.length;
+    var optionalArgs = getOptionalArgs(viewId);
+
+    for (var i = numLayers - 1; i >= 0; i --) {
+        var curLayer = gvd.curCanvas.layers[i];
+        if (!curLayer.isStatic) {
+            var dboxSvg = d3.select(viewClass + ".layerg.layer" + i)
+                .select(".mainsvg");
+            dboxSvg.selectAll("g")
+                .filter(function () {
+                    return d3.select(this).select("*").empty();
+                })
+                .remove();
+            callbackDynamic(dboxSvg, gvd.renderData[i], optionalArgs, par);
+            //register jump
+        }
+        else{
+            var curSvg = d3.select(viewClass + ".layerg.layer" + i)
+                .select("svg");
+            curSvg.selectAll("*").remove();
+            callbackStatic(curSvg, gvd.curStaticData[i], optionalArgs, par);
+        }
+    }
+}
+
+export function onPan(callback, viewId){
+    globalVar.panCallback = callback;
+    globalVar.panViewId = viewId;
+}
+
+export function getSvg(viewId){
+    return d3.select(".view_" + viewId + ".layerg.layer1").select(".mainsvg");
+}
+
+export function zoomControl(zoom){
+    globalVar.disableZoom = zoom;
 }

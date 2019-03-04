@@ -1,6 +1,10 @@
 // setting up global variables
 var globalVar = {};
 
+globalVar.panCallback = null;
+globalVar.panViewId = null;
+globalVar.disableZoom = false;
+
 // tile width and tile height
 globalVar.tileW = 0;
 globalVar.tileH = 0;
