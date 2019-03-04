@@ -1,4 +1,4 @@
-const Transform = require("../../src/index").Transform;
+const Transform = require("../../src/Transform").Transform;
 
 var stateMapTransform = new Transform("select state.state_id, state.name, stateCrimeRate.crimeRate, state.geomstr from (select state_id, avg(crimeRate) as crimeRate from county group by state_id) as stateCrimeRate, state where state.state_id = stateCrimeRate.state_id;",
     "usmap",

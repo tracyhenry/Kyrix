@@ -31,7 +31,7 @@ public class FirstRequestHandler implements HttpHandler {
         System.out.println("Serving /first");
 
         // check if this is a POST request
-        if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
+        if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
             return;
         }

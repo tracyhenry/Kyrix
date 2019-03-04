@@ -6,9 +6,9 @@ const Layer = require("../../src/Layer").Layer;
 const View = require("../../src/View").View;
 
 // project components
-const renderers = require("./renderers");
-const transforms = require("./transforms");
-const placements = require("./placements");
+const renderers = require("../nba/renderers");
+const transforms = require("../nba/transforms");
+const placements = require("../nba/placements");
 
 // construct a project
 var p = new Project("nba", "../../../config.txt");
@@ -83,11 +83,14 @@ statsLayer.addPlacement(placements.boxscorePlacement);
 statsLayer.addRenderingFunc(renderers.boxscoreStatsRendering);
 
 // ================== Views ===================
-var view = new View("nba", 0, 0, 1000, 1000);
-p.addView(view);
-p.setInitialStates(view, teamLogoCanvas, 0, 0);
+var leftView = new View("left", 0, 0, 1000, 1000);
+p.addView(leftView);
+p.setInitialStates(leftView, teamLogoCanvas, 0, 0);
 
-// ================== teamlogo -> teamtimeline ===================
+var rightView = new View("right", 1100, 0, 1000, 1000);
+p.addView(rightView);
+
+// ================== teamlogo -> teamtimeline (load) ===================
 var selector = function () {
     return true;
 };
@@ -109,8 +112,35 @@ var jumpName = function (row) {
     return "2017~2018 Regular Season Games of\n" + row.city + " " + row.name;
 };
 
-p.addJump(new Jump(teamLogoCanvas, teamTimelineCanvas, "semantic_zoom", {selector : selector,
-    viewport : newViewport, predicates : newPredicate, name : jumpName}));
+p.addJump(new Jump(teamLogoCanvas, teamTimelineCanvas, "load", {selector : selector,
+    viewport : newViewport, predicates : newPredicate, name : jumpName,
+    sourceView : leftView, destView : rightView}));
+
+
+
+// ================== teamlogo -> teamtimeline (highlight) ===================
+var selector = function () {
+    return true;
+};
+
+var newPredicate = function (row) {
+    var pred = {"OR" : [
+            {"==" : ["home_team", row.abbr]},
+            {"==" : ["away_team", row.abbr]}
+        ]};
+    return {"layer0" : pred};
+};
+
+var jumpName = function (row) {
+    return "all games against\n" + row.city + " " + row.name;
+};
+
+p.addJump(new Jump(teamLogoCanvas, teamTimelineCanvas, "highlight", {selector : selector,
+    predicates : newPredicate, name : jumpName,
+    sourceView : leftView, destView : rightView}));
+
+
+
 
 // ================== teamtimeline -> playbyplay ===================
 var selector = function (row, args) {

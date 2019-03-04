@@ -3,20 +3,14 @@ const fs = require("fs");
 const mysql = require("mysql");
 const psql = require("pg");
 const http = require("http");
-const Canvas = require("./Canvas").Canvas;
-const Jump = require("./Jump").Jump;
-const Layer = require("./Layer").Layer;
-const Transform = require("./Transform").Transform;
 
 /**
  *
  * @param {string} name - project name.
  * @param {string} configFile - a configuration file for this project. This file contains six lines which are documented in README.md in the root folder. See dbconfig.example for an example. NEVER check this file into the repo. 'config.txt' is added to gitignore, so it'll be convenient to just name it as 'config.txt'. Note that if relative path is used, the path is relative to the directory the Kyrix spec is run in.
- * @param {number} viewportWidth - the width of the viewport, in pixels.
- * @param {number} viewportHeight - the height of the viewport, in pixels.
  * @constructor
  */
-function Project(name, configFile, viewportWidth, viewportHeight) {
+function Project(name, configFile) {
 
     // name
     this.name = name;
@@ -31,26 +25,37 @@ function Project(name, configFile, viewportWidth, viewportHeight) {
     this.config.password = lines[5].replace('\r', '');
     this.config.kyrixDbName = lines[6].replace('\r', '');
 
-    // viewport
-    this.viewportWidth = viewportWidth;
-    this.viewportHeight = viewportHeight;
+    // set of views
+    this.views = [];
 
-    // the set of canvases
+    // set of canvases
     this.canvases = [];
 
     // the set of jump transitions
     this.jumps = [];
 
-    // initial viewport, canvas, rendering parameters
-    this.initialCanvasId = "";
-    this.initialViewportX = 0;
-    this.initialViewportY = 0;
+    // rendering parameters
     this.renderingParams = "{}";
 }
 
-/**
- * Add a canvas to a project.
- */
+// Add a view to a project.
+function addView(view) {
+
+    for (var i = 0; i < this.views.length; i ++) {
+        if (this.views[i].id == view.id)
+            throw new Error("Adding View: view id already existed.");
+        if (this.views[i].minx > view.minx + view.width ||
+            this.views[i].miny > view.miny + view.height ||
+            view.minx > this.views[i].minx + this.views[i].width ||
+            view.miny > this.views[i].miny + this.views[i].height)
+            continue;
+        else
+            throw new Error("Adding View: this view intersects with an existing view.");
+    }
+    this.views.push(view);
+}
+
+// Add a canvas to a project.
 function addCanvas(canvas) {
 
     // check whether id is used
@@ -68,9 +73,7 @@ function addCanvas(canvas) {
     this.canvases.push(canvas);
 }
 
-/**
- * Add a Jump to a project.
- */
+// Add a Jump to a project.
 function addJump(jump) {
 
     var sourceCanvas = null, destCanvas = null;
@@ -125,9 +128,11 @@ function addJump(jump) {
     this.jumps.push(jump);
 }
 
-// add a rendering parameter object
+// Add a rendering parameter object
 function addRenderingParams(renderingParams) {
 
+    if (renderingParams == null)
+        return ;
     this.renderingParams = JSON.stringify(renderingParams, function (key, value) {
         if (typeof value === 'function')
             return value.toString();
@@ -136,13 +141,13 @@ function addRenderingParams(renderingParams) {
 }
 
 /**
- * Set the initialStates for a project
+ * Set the initial states for a view object
  * @param {object} canvasObj - a canvas object representing the initial canvas
  * @param {number} viewportX - x coordinate of the initial viewport (top left)
  * @param {number} viewportY - y coordinate of the initial viewport (top left)
  * @param {array} predicates - the initial predicates to be added to the sql query of data transforms
  */
-function setInitialStates(canvasObj, viewportX, viewportY, predicates) {
+function setInitialStates(viewObj, canvasObj, viewportX, viewportY, predicates) {
 
     // check whether canvasObj has an id field
     if (canvasObj.id == null)
@@ -157,9 +162,9 @@ function setInitialStates(canvasObj, viewportX, viewportY, predicates) {
         throw new Error("Initial canvas: unidentified canvasObj.");
 
     // check viewport range
-    if (viewportX < 0 || viewportX + this.viewportWidth > this.canvases[canvasId].w)
+    if (viewportX < 0 || viewportX + viewObj.width > this.canvases[canvasId].w)
         throw new Error("Initial canvas: viewportX out of range.");
-    if (viewportY < 0 || viewportY + this.viewportHeight > this.canvases[canvasId].h)
+    if (viewportY < 0 || viewportY + viewObj.height > this.canvases[canvasId].h)
         throw new Error("Initial canvas: viewportY out of range.");
 
     // check if the size of the predicates array equals the number of layers
@@ -167,10 +172,10 @@ function setInitialStates(canvasObj, viewportX, viewportY, predicates) {
         predicates = {};
 
     // assign fields
-    this.initialCanvasId = canvasObj.id;
-    this.initialViewportX = viewportX;
-    this.initialViewportY = viewportY;
-    this.initialPredicates = JSON.stringify(predicates);
+    viewObj.initialCanvasId = canvasObj.id;
+    viewObj.initialViewportX = viewportX;
+    viewObj.initialViewportY = viewportY;
+    viewObj.initialPredicates = JSON.stringify(predicates);
 }
 
 function sendProjectRequestToBackend(portNumber, projectJSON, force_recompute=false) {
@@ -205,13 +210,39 @@ function saveProject()
 {
     // final checks before saving
     for (var i = 0; i < this.canvases.length; i ++) {
+        // a canvas should have at least one layer
         if (this.canvases[i].layers.length == 0)
             throw new Error("Canvas " + this.canvases[i].id + " has 0 layers.");
-        for (var j = 0; j < this.canvases[i].layers.length; j ++)
+        for (var j = 0; j < this.canvases[i].layers.length; j ++) {
+            // a static layer does not need a placement object
             if (this.canvases[i].layers[j].isStatic && this.canvases[i].layers[j].placement != null)
                 throw new Error("Canvas " + this.canvases[i] + " layer " + j + " is static and does not need a placement object.");
-            else if (! this.canvases[i].layers[j].isStatic && this.canvases[i].layers[j].placement == null)
+            // a dynamic layer does need a placement object
+            else if (!this.canvases[i].layers[j].isStatic && this.canvases[i].layers[j].placement == null)
                 throw new Error("Canvas " + this.canvases[i] + " layer " + j + " is dynamic and requires a placement object.");
+            // columns in the placement object should exist in the transform
+            if (this.canvases[i].layers[j].placement != null) {
+                var curPlacement = this.canvases[i].layers[j].placement;
+                var curTransform = this.canvases[i].layers[j].transform;
+                var placementColNames = [];
+                if (curPlacement.centroid_x.startsWith("col"))
+                    placementColNames.push(curPlacement.centroid_x.substr(4));
+                if (curPlacement.centroid_y.startsWith("col"))
+                    placementColNames.push(curPlacement.centroid_y.substr(4));
+                if (curPlacement.width.startsWith("col"))
+                    placementColNames.push(curPlacement.width.substr(4));
+                if (curPlacement.height.startsWith("col"))
+                    placementColNames.push(curPlacement.height.substr(4));
+                for (var k = 0; k < placementColNames.length; k++) {
+                    var exist = false;
+                    for (var p = 0; p < curTransform.columnNames.length; p++)
+                        if (placementColNames[k] == curTransform.columnNames[p])
+                            exist = true;
+                    if (!exist)
+                        throw new Error("Unidentified placement column name: " + placementColNames[k]);
+                }
+            }
+        }
     }
 
     // prepare project definition JSON strings
@@ -348,18 +379,15 @@ function saveProject()
 
 // define prototype functions
 Project.prototype = {
-    addCanvas: addCanvas,
-    addJump: addJump,
-    setInitialStates: setInitialStates,
-    saveProject: saveProject,
+    addView : addView,
+    addCanvas : addCanvas,
+    addJump : addJump,
+    setInitialStates : setInitialStates,
+    saveProject : saveProject,
     addRenderingParams : addRenderingParams
 };
 
 // exports
 module.exports = {
-    Project : Project,
-    Canvas : Canvas,
-    Jump : Jump,
-    Layer : Layer,
-    Transform : Transform
+    Project : Project
 };

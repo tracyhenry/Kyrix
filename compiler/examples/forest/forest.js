@@ -1,9 +1,9 @@
 // libraries
-const index = require("../../src/index");
-const Project = index.Project;
-const Canvas = index.Canvas;
-const Layer = index.Layer;
-const Jump = index.Jump;
+const Project = require("../../src/index").Project;
+const Canvas = require("../../src/Canvas").Canvas;
+const Jump = require("../../src/Jump").Jump;
+const Layer = require("../../src/Layer").Layer;
+const View = require("../../src/View").View;
 
 // project components
 const renderers = require("./renderers");
@@ -11,7 +11,7 @@ const transforms = require("./transforms");
 const placements = require("./placements");
 
 // construct a project
-var p = new Project("forest", "../../../config.txt", 1400, 800);
+var p = new Project("forest", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
 
 // ================== Canvas 1 ===================
@@ -62,6 +62,11 @@ c3BackgroundCanvas.addLayer(c3BackgroundLayer);
 c3BackgroundLayer.addPlacement(placements.c3BackgroundPlacement);
 c3BackgroundLayer.addRenderingFunc(renderers.backgroundRendering);
 
+// ================== Views ===================
+var view = new View("forest", 0, 0, 1400, 800);
+p.addView(view);
+p.setInitialStates(view, c1BackgroundCanvas, 0, 0);
+
 // ================== Canvas 1 <-> Canvas 2 ===================
 p.addJump(new Jump(c1BackgroundCanvas, c2BackgroundCanvas, "literal_zoom_in"));
 p.addJump(new Jump(c2BackgroundCanvas, c1BackgroundCanvas, "literal_zoom_out"));
@@ -69,9 +74,6 @@ p.addJump(new Jump(c2BackgroundCanvas, c1BackgroundCanvas, "literal_zoom_out"));
 // ================== Canvas 2 <-> Canvas 3 ===================
 p.addJump(new Jump(c2BackgroundCanvas, c3BackgroundCanvas, "literal_zoom_in"));
 p.addJump(new Jump(c3BackgroundCanvas, c2BackgroundCanvas, "literal_zoom_out"));
-
-// initialize canvas
-p.setInitialStates(c1BackgroundCanvas, 0, 0);
 
 // save to db
 p.saveProject();

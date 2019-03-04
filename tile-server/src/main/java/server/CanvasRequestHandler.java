@@ -37,15 +37,13 @@ public class CanvasRequestHandler implements HttpHandler {
         System.out.println("Serving /canvas");
 
         // check if this is a POST request
-        if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
+        if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
             return;
         }
 
         // get data of the current request
-        InputStreamReader isr =  new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
-        BufferedReader br = new BufferedReader(isr);
-        String query = br.readLine();
+        String query = httpExchange.getRequestURI().getQuery();
         Map<String, String> queryMap = Server.queryToMap(query);
         String canvasId = queryMap.get("id");
 
@@ -91,7 +89,6 @@ public class CanvasRequestHandler implements HttpHandler {
         // construct the response object
         Map<String, Object> respMap = new HashMap<>();
         respMap.put("canvas", c);
-        respMap.put("jump", Main.getProject().getJumps(canvasId));
         respMap.put("staticData", BoxandData.getDictionaryFromData(staticData, c));
         String response = gson.toJson(respMap);
 

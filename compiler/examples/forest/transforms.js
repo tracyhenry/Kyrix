@@ -1,4 +1,4 @@
-const Transform = require("../../src/index").Transform;
+const Transform = require("../../src/Transform").Transform;
 
 var c1BackgroundTransform = new Transform("select * from canvas_bg where canvas_id = 1;",
     "forest",

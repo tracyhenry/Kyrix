@@ -5,13 +5,10 @@ package project;
  */
 public class Jump {
 
-    private String sourceId;
-    private String destId;
-    private String selector;
-    private String newViewports;
-    private String newPredicates;
+    private String sourceId, destId;
     private String type;
-    private String name;
+    private String selector, viewport, predicates, name;
+    private String sourceViewId, destViewId;
 
     public String getSourceId() {
         return sourceId;
@@ -29,16 +26,24 @@ public class Jump {
         return type;
     }
 
-    public String getNewViewports() {
-        return newViewports;
+    public String getViewport() {
+        return viewport;
     }
 
-    public String getNewPredicates() {
-        return newPredicates;
+    public String getPredicates() {
+        return predicates;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getSourceViewId() {
+        return sourceViewId;
+    }
+
+    public String getDestViewId() {
+        return destViewId;
     }
 
     @Override
@@ -46,11 +51,13 @@ public class Jump {
         return "Jump{" +
                 "sourceId='" + sourceId + '\'' +
                 ", destId='" + destId + '\'' +
-                ", selector='" + selector + '\'' +
-                ", newViewports='" + newViewports + '\'' +
-                ", newPredicates='" + newPredicates + '\'' +
                 ", type='" + type + '\'' +
+                ", selector='" + selector + '\'' +
+                ", viewport='" + viewport + '\'' +
+                ", predicates='" + predicates + '\'' +
                 ", name='" + name + '\'' +
+                ", sourceViewId='" + sourceViewId + '\'' +
+                ", destViewId='" + destViewId + '\'' +
                 '}';
     }
 }

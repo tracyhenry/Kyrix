@@ -1,16 +1,16 @@
 // libraries
-const index = require("../../src/index");
-const Project = index.Project;
-const Canvas = index.Canvas;
-const Layer = index.Layer;
-const Jump = index.Jump;
+const Project = require("../../src/index").Project;
+const Canvas = require("../../src/Canvas").Canvas;
+const Jump = require("../../src/Jump").Jump;
+const Layer = require("../../src/Layer").Layer;
+const View = require("../../src/View").View;
 
 // project components (placement is not needed in this example)
 const renderers = require("./renderers");
 const transforms = require("./transforms");
 
 // construct a project
-var p = new Project("flare", "../../../config.txt", 1000, 1000);
+var p = new Project("flare", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
 
 // ================== the only canvas ===================
@@ -21,6 +21,16 @@ p.addCanvas(flareCanvas);
 var flarePackLayer = new Layer(transforms.flareTransform, true);
 flareCanvas.addLayer(flarePackLayer);
 flarePackLayer.addRenderingFunc(renderers.flarePackRendering);
+
+// ================== Views ===================
+var view = new View("flare", 0, 0, 1000, 1000);
+p.addView(view);
+p.setInitialStates(view, flareCanvas, 0, 0, {"layer0" : {
+        "OR" : [
+            {"==" : ["id", "1"]},
+            {"==" : ["parent_id", "1"]}
+        ]
+    }});
 
 // ================== self jump ===================
 var selector = function () {
@@ -45,14 +55,6 @@ var jumpName = function (row) {
 
 p.addJump(new Jump(flareCanvas, flareCanvas, "semantic_zoom", {selector : selector,
     viewport : newViewport, predicates : newPredicate, name : jumpName}));
-
-// initialize canvas
-p.setInitialStates(flareCanvas, 0, 0, {"layer0" : {
-        "OR" : [
-            {"==" : ["id", "1"]},
-            {"==" : ["parent_id", "1"]}
-        ]
-    }});
 
 // save to db
 p.saveProject();

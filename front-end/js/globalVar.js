@@ -5,40 +5,17 @@ var globalVar = {};
 globalVar.tileW = 0;
 globalVar.tileH = 0;
 
-// render data
-globalVar.renderData = null;
-
-// whether there is a pending box request
-globalVar.pendingBoxRequest = false;
-
-// current viewport info
-globalVar.initialViewportX = 0;
-globalVar.initialViewportY = 0;
-globalVar.viewportWidth = 0;
-globalVar.viewportHeight = 0;
-
-// predicates of the current canvas, used to retrieve data from backend
-globalVar.predicates = [];
-
-// the id of the current canvas
-globalVar.curCanvasId = "";
-
-// current canvas & jump object;
-globalVar.curCanvas = null;
-globalVar.curJump = null;
-globalVar.curStaticData = null;
-
-// history
-globalVar.history = [];
-
-// whether there is a zooming animation happening
-globalVar.animation = false;
-
 // cache
 globalVar.cachedCanvases = {};
 
 // global rendering params (specified by the developer)
 globalVar.renderingParams = null;
+
+// global var dictionaries for views
+globalVar.views = {};
+
+// globalVar project
+globalVar.project = null;
 
 if (typeof String.prototype.parseFunction != 'function') {
     String.prototype.parseFunction = function () {
@@ -51,19 +28,21 @@ if (typeof String.prototype.parseFunction != 'function') {
     };
 }
 
-/******** common functions ********/
-function getOptionalArgs() {
+/****************** common functions ******************/
+function getOptionalArgs(viewId) {
 
+    var gvd = globalVar.views[viewId];
     var predicateDict = {};
-    for (var i = 0; i < globalVar.predicates.length; i ++)
-        predicateDict["layer" + i] = globalVar.predicates[i];
-    var optionalArgs = {canvasW : globalVar.curCanvas.w, canvasH : globalVar.curCanvas.h,
-        viewportW : globalVar.viewportWidth, viewportH : globalVar.viewportHeight,
+    for (var i = 0; i < gvd.predicates.length; i ++)
+        predicateDict["layer" + i] = gvd.predicates[i];
+    var optionalArgs = {canvasW : gvd.curCanvas.w, canvasH : gvd.curCanvas.h,
+        viewportW : gvd.viewportWidth, viewportH : gvd.viewportHeight,
         predicates : predicateDict, renderingParams : globalVar.renderingParams};
 
     return optionalArgs;
 }
 
+// get SQL predicates from a predicate dictionary
 function getSqlPredicate(p) {
 
     if ("==" in p)
@@ -77,6 +56,22 @@ function getSqlPredicate(p) {
     return "";
 }
 
+// check whether a given datum passes a filter
+function isHighlighted(d, p) {
+
+    if (p == null || p == {})
+        return true;
+    if ("==" in p)
+        return d[p["=="][0]] == p["=="][1];
+    if ("AND" in p)
+        return isHighlighted(d, p["AND"][0]) && isHighlighted(d, p["AND"][1]);
+    if ("OR" in p)
+        return isHighlighted(d, p["OR"][0]) || isHighlighted(d, p["OR"][1]);
+
+    return false;
+}
+
+// get a canvas object by a canvas ID
 function getCanvasById(canvasId) {
 
     for (var i = 0; i < globalVar.project.canvases.length; i ++)
@@ -84,4 +79,15 @@ function getCanvasById(canvasId) {
             return globalVar.project.canvases[i];
 
     return null;
+}
+
+// get jumps starting from a canvas
+function getJumpsByCanvasId(canvasId) {
+
+    var jumps = [];
+    for (var i = 0; i < globalVar.project.jumps.length; i ++)
+        if (globalVar.project.jumps[i].sourceId == canvasId)
+            jumps.push(globalVar.project.jumps[i]);
+
+    return jumps;
 }

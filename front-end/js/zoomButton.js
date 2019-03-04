@@ -1,137 +1,153 @@
 // called on page load, and on page resize
-function drawZoomButtons() {
+function drawZoomButtons(viewId) {
+
+    var viewClass = ".view_" + viewId;
+    if (globalVar.views[viewId].curCanvasId == "")
+        return ;
 
     // create buttons if not existed
-    if (d3.select("#gobackbutton").empty())
+    if (d3.select(viewClass + ".gobackbutton").empty())
         d3.select("body")
             .append("button")
-            .attr("id", "gobackbutton")
+            .classed("view_" + viewId + " gobackbutton", true)
             .attr("disabled", "true")
             .classed("btn", true)
             .classed("btn-default", true)
             .classed("btn-lg", true)
             .html("<span class=\"glyphicon glyphicon-arrow-left\"></span>");
-    if (d3.select("#zoominbutton").empty())
+    if (d3.select(viewClass + ".zoominbutton").empty())
         d3.select("body")
             .append("button")
-            .attr("id", "zoominbutton")
+            .classed("view_" + viewId + " zoominbutton", true)
             .attr("disabled", "true")
             .classed("btn", true)
             .classed("btn-default", true)
             .classed("btn-lg", true)
             .html("<span class=\"glyphicon glyphicon-zoom-in\"></span>");
-    if (d3.select("#zoomoutbutton").empty())
+    if (d3.select(viewClass + ".zoomoutbutton").empty())
         d3.select("body")
             .append("button")
-            .attr("id", "zoomoutbutton")
+            .classed("view_" + viewId + " zoomoutbutton", true)
             .attr("disabled", "true")
             .classed("btn", true)
             .classed("btn-default", true)
             .classed("btn-lg", true)
             .html("<span class=\"glyphicon glyphicon-zoom-out\"></span>");
 
-    // get client bounding rect of #containerSvg
+    // get client bounding rect of view svg
     var bbox = d3.select("#containerSvg").node().getBoundingClientRect();
+    var bLeft = +bbox.left + (+d3.select(viewClass + ".viewsvg").attr("x"));
+    var bTop = +bbox.top + (+d3.select(viewClass + ".viewsvg").attr("y"));
 
     // position the buttons
-    var leftMargin = 100;
-    var topMargin = 50;
+    var leftMargin = 20;
+    var topMargin = 20;
     var dist = 50;
-    d3.select("#gobackbutton")
-        .style("top", +bbox.top + topMargin + "px")
-        .style("left", (bbox.left - leftMargin) + "px");
-    d3.select("#zoominbutton")
-        .style("top", +bbox.top + topMargin + dist + "px")
-        .style("left", (bbox.left - leftMargin) + "px");
-    d3.select("#zoomoutbutton")
-        .style("top", +bbox.top + topMargin + dist * 2 + "px")
-        .style("left", (bbox.left - leftMargin) + "px");
+    d3.select(viewClass + ".gobackbutton")
+        .style("top", bTop + topMargin + "px")
+        .style("left", (bLeft - leftMargin) + "px");
+    d3.select(viewClass + ".zoominbutton")
+        .style("top", bTop + topMargin + dist + "px")
+        .style("left", (bLeft - leftMargin) + "px");
+    d3.select(viewClass + ".zoomoutbutton")
+        .style("top", bTop + topMargin + dist * 2 + "px")
+        .style("left", (bLeft - leftMargin) + "px");
 };
 
 // called after a new canvas is completely rendered
-function setButtonState() {
+function setButtonState(viewId) {
+
+    var gvd = globalVar.views[viewId];
+    var viewClass = ".view_" + viewId;
 
     // goback
-    if (globalVar.history.length > 0)
-        d3.select("#gobackbutton")
+    if (gvd.history.length > 0)
+        d3.select(viewClass + ".gobackbutton")
             .attr("disabled", null)
-            .on("click", backspace);
+            .on("click", function () {backspace(viewId);});
     else
-        d3.select("#gobackbutton")
+        d3.select(viewClass + ".gobackbutton")
             .attr("disabled", true);
 
     // literal zoom buttons
-    d3.select("#zoominbutton")
+    d3.select(viewClass + ".zoominbutton")
         .attr("disabled", true);
-    d3.select("#zoomoutbutton")
+    d3.select(viewClass + ".zoomoutbutton")
         .attr("disabled", true);
-    var jumps = globalVar.curJump;
+    var jumps = gvd.curJump;
     for (var i = 0; i < jumps.length; i ++)
         if (jumps[i].type == "literal_zoom_in")
-            d3.select("#zoominbutton")
+            d3.select(viewClass + ".zoominbutton")
                 .attr("disabled", null)
-                .on("click", literalZoomIn);
+                .on("click", function() {literalZoomIn(viewId);});
         else if (jumps[i].type == "literal_zoom_out")
-            d3.select("#zoomoutbutton")
+            d3.select(viewClass + ".zoomoutbutton")
                 .attr("disabled", null)
-                .on("click", literalZoomOut);
+                .on("click", function() {literalZoomOut(viewId);});
 };
 
 // called in completeZoom() and RegisterJump()
 // before global variables are changed
-function logHistory(zoom_type) {
+function logHistory(viewId, zoom_type) {
 
+    var gvd = globalVar.views[viewId];
+    var viewClass = ".view_" + viewId;
     var curHistory = {"zoomType" : zoom_type};
 
     // save global variables
-    curHistory.predicates = globalVar.predicates;
-    curHistory.canvasId = globalVar.curCanvasId;
-    curHistory.canvasObj = globalVar.curCanvas;
-    curHistory.jumps = globalVar.curJump;
-    curHistory.staticData = globalVar.curStaticData;
+    curHistory.predicates = gvd.predicates;
+    curHistory.highlightPredicates = gvd.highlightPredicates;
+    curHistory.canvasId = gvd.curCanvasId;
+    curHistory.canvasObj = gvd.curCanvas;
+    curHistory.jumps = gvd.curJump;
+    curHistory.staticData = gvd.curStaticData;
 
     // save current viewport
-    var curViewport = [0, 0, globalVar.viewportWidth, globalVar.viewportHeight];
-    if (d3.select(".mainsvg:not(.static)").size())
-        curViewport = d3.select(".mainsvg:not(.static)").attr("viewBox").split(" ");
+    var curViewport = [0, 0, gvd.viewportWidth, gvd.viewportHeight];
+    if (d3.select(viewClass + ".mainsvg:not(.static)").size())
+        curViewport = d3.select(viewClass + ".mainsvg:not(.static)").attr("viewBox").split(" ");
     curHistory.viewportX = +curViewport[0];
     curHistory.viewportY = +curViewport[1];
     curHistory.viewportW = +curViewport[2];
     curHistory.viewportH = +curViewport[3];
 
-    globalVar.history.push(curHistory);
+    gvd.history.push(curHistory);
 };
 
 // handler for go back button
-function backspace() {
+function backspace(viewId) {
+
+    var gvd = globalVar.views[viewId];
+    var viewClass = ".view_" + viewId;
 
     // get and pop last history object
-    var curHistory = globalVar.history.pop();
+    var curHistory = gvd.history.pop();
 
     // whether this semantic zoom is also geometric
     var zoomType = curHistory.zoomType;
     var fadingAnimation = (zoomType == param.semanticZoom ? true : false);
 
     // disable and remove stuff
-    preAnimation();
+    preJump(viewId);
 
     // assign back global vars
-    globalVar.curCanvasId = curHistory.canvasId;
-    globalVar.curCanvas = curHistory.canvasObj;
-    globalVar.curJump = curHistory.jumps;
-    globalVar.curStaticData = curHistory.staticData;
-    globalVar.predicates = curHistory.predicates;
-    globalVar.initialViewportX = curHistory.viewportX;
-    globalVar.initialViewportY = curHistory.viewportY;
+    gvd.curCanvasId = curHistory.canvasId;
+    gvd.curCanvas = curHistory.canvasObj;
+    gvd.curJump = curHistory.jumps;
+    gvd.curStaticData = curHistory.staticData;
+    gvd.predicates = curHistory.predicates;
+    gvd.highlightPredicates = curHistory.highlightPredicates;
+    gvd.initialViewportX = curHistory.viewportX;
+    gvd.initialViewportY = curHistory.viewportY;
 
     // get current viewport
-    var curViewport = [0, 0, globalVar.viewportWidth, globalVar.viewportHeight];
-    if (d3.select(".oldmainsvg:not(.static)").size())
-        curViewport = d3.select(".oldmainsvg:not(.static)").attr("viewBox").split(" ");
+    var curViewport = [0, 0, gvd.viewportWidth, gvd.viewportHeight];
+    if (d3.select(viewClass + ".oldmainsvg:not(.static)").size())
+        curViewport = d3.select(viewClass + ".oldmainsvg:not(.static)").attr("viewBox").split(" ");
 
     // start a exit & fade transition
     if (fadingAnimation)
-        d3.transition("fadeTween")
+        d3.transition("fadeTween_" + viewId)
             .duration(param.enteringDuration)
             .tween("fadeTween", function() {
 
@@ -139,7 +155,7 @@ function backspace() {
             })
             .on("start", startZoomingBack);
     else {
-        d3.selectAll(".oldlayerg")
+        d3.selectAll(viewClass + ".oldlayerg")
             .transition()
             .delay(param.oldRemovalDelay)
             .remove();
@@ -154,7 +170,7 @@ function backspace() {
             param.axesOutDuration);
         if (! fadingAnimation)
             enteringDelay = 0;
-        d3.transition("zoomOutTween")
+        d3.transition("zoomOutTween_" + viewId)
             .delay(enteringDelay)
             .duration(zoomDuration)
             .tween("zoomOutTween", function () {
@@ -165,42 +181,42 @@ function backspace() {
             .on("start", function() {
 
                 // set up layer layouts
-                setupLayerLayouts();
+                setupLayerLayouts(viewId);
 
                 // static trim
-                renderStaticLayers();
+                renderStaticLayers(viewId);
 
                 // render
-                RefreshDynamicLayers(globalVar.initialViewportX, globalVar.initialViewportY);
+                RefreshDynamicLayers(viewId, gvd.initialViewportX, gvd.initialViewportY);
             })
             .on("end", function () {
 
-                postAnimation();
+                postJump(viewId);
             });
     }
 
     function enterAndZoom(t, v) {
 
         var vWidth = v[2];
-        var vHeight = globalVar.viewportHeight / globalVar.viewportWidth * vWidth;
-        var minx = globalVar.initialViewportX + v[0] - vWidth / 2.0;
-        var miny = globalVar.initialViewportY + v[1] - vHeight / 2.0;
+        var vHeight = gvd.viewportHeight / gvd.viewportWidth * vWidth;
+        var minx = gvd.initialViewportX + v[0] - vWidth / 2.0;
+        var miny = gvd.initialViewportY + v[1] - vHeight / 2.0;
 
         // change viewBox of dynamic layers
-        d3.selectAll(".mainsvg:not(.static)")
+        d3.selectAll(viewClass + ".mainsvg:not(.static)")
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
 
         // change viewBox of static layers
         minx = v[0] - vWidth / 2.0;
         miny = v[1] - vHeight / 2.0;
-        d3.selectAll(".mainsvg.static")
+        d3.selectAll(viewClass + ".mainsvg.static")
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
 
         // change opacity
         if (fadingAnimation) {
             var threshold = param.fadeThreshold;
             if (1 - t >= threshold) {
-                d3.selectAll(".mainsvg")
+                d3.selectAll(viewClass + ".mainsvg")
                     .style("opacity", 1.0 - (1 - t - threshold) / (1.0 - threshold));
             }
         }
@@ -208,39 +224,42 @@ function backspace() {
 
     function fadeAndExit(t) {
 
-        var vWidth = globalVar.viewportWidth * param.enteringScaleFactor
+        var vWidth = gvd.viewportWidth * param.enteringScaleFactor
             / (1.0 + (param.enteringScaleFactor - 1.0) * t);
-        var vHeight = globalVar.viewportHeight * param.enteringScaleFactor
+        var vHeight = gvd.viewportHeight * param.enteringScaleFactor
             / (1.0 + (param.enteringScaleFactor - 1.0) * t);
-        var minx = +curViewport[0] + globalVar.viewportWidth / 2.0 - vWidth / 2.0;
-        var miny = +curViewport[1] + globalVar.viewportHeight / 2.0 - vHeight / 2.0;
+        var minx = +curViewport[0] + gvd.viewportWidth / 2.0 - vWidth / 2.0;
+        var miny = +curViewport[1] + gvd.viewportHeight / 2.0 - vHeight / 2.0;
 
         // change viewBox of old dynamic layers
-        d3.selectAll(".oldmainsvg:not(.static)")
+        d3.selectAll(viewClass + ".oldmainsvg:not(.static)")
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
 
         // change viewBox of old static layers
-        minx = globalVar.viewportWidth / 2 - vWidth / 2;
-        miny = globalVar.viewportHeight / 2 - vHeight / 2;
-        d3.selectAll(".oldmainsvg.static")
+        minx = gvd.viewportWidth / 2 - vWidth / 2;
+        miny = gvd.viewportHeight / 2 - vHeight / 2;
+        d3.selectAll(viewClass + ".oldmainsvg.static")
             .attr("viewBox", minx + " " + miny + " " + vWidth + " " + vHeight);
 
         // change opacity
-        d3.selectAll(".oldmainsvg").style("opacity", t);
+        d3.selectAll(viewClass + ".oldmainsvg").style("opacity", t);
     };
 };
 
 // handler for zoom in button
-function literalZoomIn() {
+function literalZoomIn(viewId) {
 
-    startLiteralZoomTransition([globalVar.viewportWidth / 2, globalVar.viewportHeight / 2],
-        globalVar.maxScale, globalVar.maxScale / 2 * param.literalZoomDuration);
+    var gvd = globalVar.views[viewId];
+
+    startLiteralZoomTransition(viewId, [gvd.viewportWidth / 2, gvd.viewportHeight / 2],
+        gvd.maxScale, gvd.maxScale / 2 * param.literalZoomDuration);
 };
 
 // handler for zoom out button
-function literalZoomOut() {
+function literalZoomOut(viewId) {
 
-    startLiteralZoomTransition([globalVar.viewportWidth / 2, globalVar.viewportHeight / 2],
-        globalVar.minScale, 1 / globalVar.minScale/ 2 * param.literalZoomDuration);
+    var gvd = globalVar.views[viewId];
 
+    startLiteralZoomTransition(viewId, [gvd.viewportWidth / 2, gvd.viewportHeight / 2],
+        gvd.minScale, 1 / gvd.minScale/ 2 * param.literalZoomDuration);
 };

@@ -16,17 +16,25 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
         throw new Error("Constructing Jump: literal zooms do not need optional arguments.");
     if (optional == null)
         optional = {};
-    if (type == "semantic_zoom" || type == "geometric_semantic_zoom")
+    if (type == "semantic_zoom" || type == "geometric_semantic_zoom" || type == "load")
         if (! ("selector" in optional) || ! ("viewport" in optional) || ! ("predicates" in optional))
-            throw new Error("Constructing Jump: missing customization functions for semantic zoom.");
+            throw new Error("Constructing Jump: missing customization functions for semantic zoom and load.");
+    if (type == "load" || type == "highlight")
+        if (! ("sourceView" in optional) || ! ("destView" in optional))
+            throw new Error("Constructing Jump: missing view objects for load/highlight.");
+    if (type == "highlight")
+        if (! ("selector" in optional) || ! ("predicates" in optional))
+            throw new Error("Constructing Jump: missing customization functions for highlight.");
 
     this.type = type;
     this.sourceId = sourceCanvas.id;
     this.destId = destCanvas.id;
-    this.selector = ("selector" in optional ? optional["selector"] : "");
-    this.newViewports = ("viewport" in optional ? optional["viewport"] : "");
-    this.newPredicates = ("predicates" in optional ? optional["predicates"] : "");
-    this.name = ("name" in optional ? optional["name"] : destCanvas.id);
+    this.selector = ("selector" in optional ? optional.selector : "");
+    this.viewport = ("viewport" in optional ? optional.viewport : "");
+    this.predicates = ("predicates" in optional ? optional.predicates : "");
+    this.name = ("name" in optional ? optional.name : destCanvas.id);
+    this.sourceViewId = ("sourceView" in optional ? optional.sourceView.id : "");
+    this.destViewId = ("destView" in optional ? optional.destView.id : "");
 };
 
 // exports

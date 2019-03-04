@@ -44,15 +44,13 @@ public class TileRequestHandler implements HttpHandler {
         ArrayList<ArrayList<ArrayList<String>>> data = null;
 
         // check if this is a POST request
-        if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
+        if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
             return;
         }
 
         // get data of the current request
-        InputStreamReader isr =  new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
-        BufferedReader br = new BufferedReader(isr);
-        String query = br.readLine();
+        String query = httpExchange.getRequestURI().getQuery();
         Map<String, String> queryMap = Server.queryToMap(query);
         // print
         for (String s : queryMap.keySet())

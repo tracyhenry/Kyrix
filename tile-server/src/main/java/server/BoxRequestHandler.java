@@ -9,6 +9,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import main.Main;
 import project.Canvas;
+import project.View;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -39,20 +40,18 @@ public class BoxRequestHandler  implements HttpHandler {
         // get data of the current request
         // variable definitions
         String response;
-        String canvasId;
+        String canvasId, viewId;
         double minx, miny;
         BoxandData data = null;
 
         // check if this is a POST request
-        if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
+        if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
             return;
         }
 
         // get data of the current request
-        InputStreamReader isr =  new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
-        BufferedReader br = new BufferedReader(isr);
-        String query = br.readLine();
+        String query = httpExchange.getRequestURI().getQuery();
         Map<String, String> queryMap = Server.queryToMap(query);
         // print
         for (String s : queryMap.keySet())
@@ -66,6 +65,7 @@ public class BoxRequestHandler  implements HttpHandler {
         }
         // get parameters
         canvasId = queryMap.get("id");
+        viewId = queryMap.get("viewId");
         minx = Double.valueOf(queryMap.get("x"));
         miny = Double.valueOf(queryMap.get("y"));
         Canvas c = null;
@@ -74,6 +74,7 @@ public class BoxRequestHandler  implements HttpHandler {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        View v = Main.getProject().getView(viewId);
         if (queryMap.containsKey("canvasw"))
             c.setW(Integer.valueOf(queryMap.get("canvasw")));
         if (queryMap.containsKey("canvash"))
@@ -90,7 +91,7 @@ public class BoxRequestHandler  implements HttpHandler {
         //get box data
         long st = System.currentTimeMillis();
         try {
-            data = boxGetter.getBox(c, minx, miny, oldBox, predicates);
+            data = boxGetter.getBox(c, v, minx, miny, oldBox, predicates);
         } catch (Exception e) {
             e.printStackTrace();
         }
