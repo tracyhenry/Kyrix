@@ -36,6 +36,7 @@ var stateMapRendering = function (svg, data, args) {
         .style("fill", function (d) {
             return color(d.crimerate);
         });
+
 };
 
 var stateMapLegendRendering = function (svg, data, args) {

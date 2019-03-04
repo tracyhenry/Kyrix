@@ -55,6 +55,9 @@ var view = new View("usmap", 0, 0, 2000, 1000);
 p.addView(view);
 p.setInitialStates(view, stateMapCanvas, 0, 0);
 
+var rightView = new View("right", 2100, 0, 2000, 1000);
+p.addView(rightView);
+
 // ================== state -> county ===================
 var selector = function (row, args) {
     return (args.layerId == 1);
@@ -72,8 +75,8 @@ var jumpName = function (row) {
     return "County map of " + row.name;
 };
 
-p.addJump(new Jump(stateMapCanvas, countyMapCanvas, "geometric_semantic_zoom", {selector : selector,
-    viewport : newViewport, predicates : newPredicates, name : jumpName}));
+p.addJump(new Jump(stateMapCanvas, countyMapCanvas, "load", {selector : selector,
+    viewport : newViewport, predicates : newPredicates, name : jumpName, sourceView : view, destView : rightView}));
 
 // save to db
 p.saveProject();
