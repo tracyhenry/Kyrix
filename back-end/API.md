@@ -1,10 +1,10 @@
 # OLD/OUTDATED
 
-please see [Server.java](/tile-server/src/main/java/server/Server.java#L22)
+please see [Server.java](/back-end/src/main/java/server/Server.java#L22)
 
 
 
-# Tile Server API
+# Backend Server API
 **:small_orange_diamond: Fetching the Definition of the First Canvas**
 ----
 * **URL:**  `/first`
@@ -141,7 +141,8 @@ please see [Server.java](/tile-server/src/main/java/server/Server.java#L22)
   ```
 
 * **Notes:**
-  This API call is used when the `newViewport` function of this jump is **NOT** producing a constant viewport. In this case, frontend needs to communicate with the tile server using this API call to get the new viewport center coordinates. 
+  This API call is used when the `newViewport` function of this jump is **NOT** producing a constant viewport. In this case, frontend needs to communicate with the backend using this API call to get the new viewport center 
+coordinates. 
 
 
 **:small_orange_diamond: Fetching Data inside a Window**

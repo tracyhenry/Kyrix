@@ -34,7 +34,7 @@ psql $PGCONN_STRING_USER/$KYRIX_DB -c "$EXT_CMD" | egrep -v "$IGNORE_RX" 2>&1 ||
 psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
 psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
 
-cd /kyrix/tile-server
+cd /kyrix/back-end
 
 plays_exists=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select exists(select 1 from information_schema.tables where table_schema='public' and table_name='plays');" || true)
 if [ "$plays_exists" = "t" ]; then
@@ -55,13 +55,13 @@ else
     echo "numplays loaded: $numplays"
 fi
 
-echo "*** starting tile server..."
-cd /kyrix/tile-server
+echo "*** starting backend server..."
+cd /kyrix/back-end
 mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn exec:java -Dexec.mainClass="main.Main" | stdbuf -oL grep -v Downloading: | tee mvn-exec.out &
 touch mvn-exec.out
-while [ -z "$(egrep 'Done precomputing|Tile server started' mvn-exec.out)" ]; do echo "waiting for tile server"; sleep 5; done
+while [ -z "$(egrep 'Done precomputing|Backend server started' mvn-exec.out)" ]; do echo "waiting for backend server"; sleep 5; done
 
-echo "*** (re)configuring for NBA examples to ensure tile server recomputes..."
+echo "*** (re)configuring for NBA examples to ensure backend server recomputes..."
 
 cd /kyrix/compiler
 npm rebuild | egrep -v '(@[0-9.]+ /kyrix/compiler/node_modules/)'

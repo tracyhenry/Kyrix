@@ -33,7 +33,7 @@ public class Server {
         server.setExecutor(null);//java.util.concurrent.Executors.newFixedThreadPool(Config.numThread));
         terminated = false;
         server.start();
-        System.out.println("Tile server started...");
+        System.out.println("Backend server started...");
         synchronized (terminationLock) {
             while (!terminated)
                 terminationLock.wait();

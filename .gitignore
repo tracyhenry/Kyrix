@@ -151,7 +151,7 @@ buildNumber.properties
 ################# Kyrix-specific #################
 config.txt
 mgh_config.txt
-tile-server/lib
+back-end/lib
 .DS_Store
 test.html
 zoomable.html
