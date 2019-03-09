@@ -200,7 +200,7 @@ function sendProjectRequestToBackend(portNumber, projectJSON, force_recompute=fa
         });
     });
 
-    // send the project definition to tile server
+    // send the project definition to backend server
     post_req.write(projectJSON);
     post_req.end();
 }

@@ -5,7 +5,7 @@
 #
 
 # notes for newbies to docker/docker-compose:
-# - Dockerfiles can't refer to files in parent directories (e.g. tile-server and compiler),
+# - Dockerfiles can't refer to files in parent directories (e.g. back-end and compiler),
 #   hence the Dockerfiles in the parent, outside of docker-scripts/
 
 version: '3.1'
