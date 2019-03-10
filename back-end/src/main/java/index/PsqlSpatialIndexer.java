@@ -41,6 +41,7 @@ public class PsqlSpatialIndexer extends Indexer {
         Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
 
         // create postgis extension if not existed
+        System.out.println("running create extension for postgis/postgis_topology");
         String psql = "CREATE EXTENSION if not exists postgis;";
         bboxStmt.executeUpdate(psql);
         psql = "CREATE EXTENSION if not exists postgis_topology;";

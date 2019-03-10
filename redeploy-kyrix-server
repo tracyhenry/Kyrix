@@ -35,9 +35,9 @@ if [ "x$DEV" = "x1" ]; then
     kubectl exec -it $KYRIX -- apk add -y bash busybox-extras emacs > /dev/null 2>&1
     echo "copying tile-server code..."
     cat docker-scripts/start-kyrix.sh | kubectl exec -i $KYRIX -- sh -c "cat > /start-kyrix.sh; chmod 755 /start-kyrix.sh"
-    tar cf - tile-server/src | kubectl exec -it $KYRIX -- sh -c "cd ..; tar xvf -"
+    tar cf - back-end/src | kubectl exec -it $KYRIX -- sh -c "cd ..; tar xvf -"
     echo "recompiling tile-server code..."
-    kubectl exec -it $KYRIX -- bash -c 'cd /kyrix/tile-server; mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out >/dev/null 2>&1'
+    kubectl exec -it $KYRIX -- bash -c 'cd /kyrix/back-end; mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out >/dev/null 2>&1'
 fi
 
 # note: DBTYPE=psql is safe, but won't distribute the data across the Citus cluster, i.e. it'll use local tables on the master Citus node only.

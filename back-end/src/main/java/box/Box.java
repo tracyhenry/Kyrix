@@ -34,4 +34,8 @@ public class Box {
     public double getMiny() {
         return miny;
     }
+
+    public String getCSV() {
+        return minx + "," + miny + "," + maxx + "," + maxy;
+    }
 }
