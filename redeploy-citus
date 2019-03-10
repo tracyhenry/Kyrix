@@ -86,7 +86,7 @@ while [ 1 ]; do ip=`kubectl get services -o wide | grep bastion | awk '{print $4
 # for development
 echo "installing developer tools (optional)"
 kubectl exec -it $MASTER -- sh -c 'if [ -x "$(command -v apt)" ]; then apt install -y iputils-ping telnet emacs; fi' > /dev/null 2>&1  # ubuntu
-kubectl exec -it $MASTER -- sh -c 'if [ -x "$(command -v apk)" ]; then apk install -y inetutils-ping inetutils-telnet emacs; fi' > /dev/null 2>&1  # alpine
+kubectl exec -it $MASTER -- sh -c 'if [ -x "$(command -v apk)" ]; then apk install -y bash busybox-extras emacs; fi' > /dev/null 2>&1  # alpine
 
 source setup-bastion-vars.env
 
