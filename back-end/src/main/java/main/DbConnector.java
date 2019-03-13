@@ -18,12 +18,12 @@ public class DbConnector {
         Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
 
         // set autocommit
-        if (Config.database == Config.Database.PSQL)
+        if (Config.database == Config.Database.PSQL || Config.database == Config.Database.SCIDB)
             conn.setAutoCommit(false);
 
         // get statement
         Statement retStmt = null;
-        if (Config.database == Config.Database.PSQL)
+        if (Config.database == Config.Database.PSQL || Config.database == Config.Database.SCIDB)
             retStmt = conn.createStatement();
         else if (Config.database == Config.Database.MYSQL)
             retStmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
@@ -83,7 +83,7 @@ public class DbConnector {
         if (connections.containsKey(dbName))
             return connections.get(dbName);
         Connection dbConn = null;
-        if (Config.database == Config.Database.PSQL) {
+        if (Config.database == Config.Database.PSQL || Config.database == Config.Database.SCIDB) {
             Class.forName("org.postgresql.Driver");
             dbConn = DriverManager.getConnection("jdbc:postgresql://" + dbServer +
                             "/" + dbName + "?sendStringParametersAsUnicode=false",

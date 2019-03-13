@@ -385,9 +385,8 @@ function registerJumps(viewId, svg, layerId) {
     var shapes = svg.select("g:last-of-type").selectAll("*");
     var optionalArgs = getOptionalArgs(viewId);
     optionalArgs["layerId"] = layerId;
-
+console.log(shapes);
     shapes.each(function(p) {
-
         // check if this shape has jumps
         var hasJump = false;
         for (var k = 0; k < jumps.length; k ++)
@@ -402,7 +401,7 @@ function registerJumps(viewId, svg, layerId) {
             }
         if (! hasJump)
             return ;
-
+//console.log(d3.select(this));
         // make cursor a hand when hovering over this shape
         d3.select(this).style("cursor", "zoom-in");
 

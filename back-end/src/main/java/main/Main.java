@@ -10,19 +10,27 @@ import server.Server;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.sql.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.net.*;
+import java.io.*;
 
 public class Main {
 
     private static Project project = null;
     public static String projectJSON = "";
+    private static String sessionId = null;
 
     public static void main(String[] args) throws Exception {
 
         // read config file
         readConfigFile();
+
+        //connect scidb
+        if (Config.database == Config.Database.SCIDB)
+            connectScidb();
 
         // get project definition, create project object
         getProjectObject();
@@ -80,7 +88,8 @@ public class Main {
         Config.projectName = inputStrings.get(Config.projectNameRow);
         Config.portNumber = Integer.valueOf(inputStrings.get(Config.portNumberRow));
         Config.database = (inputStrings.get(Config.dbRow).toLowerCase().equals("mysql") ?
-                Config.Database.MYSQL : Config.Database.PSQL);
+                Config.Database.MYSQL : (inputStrings.get(Config.dbRow).toLowerCase().equals("psql") ?
+                Config.Database.PSQL : Config.Database.SCIDB));
         Config.dbServer = inputStrings.get(Config.dbServerRow);
         Config.userName = inputStrings.get(Config.userNameRow);
         Config.password = inputStrings.get(Config.passwordRow);
@@ -101,5 +110,21 @@ public class Main {
             e.printStackTrace();
         }
         DbConnector.commitConnection(Config.databaseName);
+    }
+
+    public static void connectScidb() {
+        try{
+            URL url = new URL("http://localhost:8080/new_session");
+            URLConnection conn = url.openConnection();
+            conn.setDoOutput(true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            sessionId = in.readLine();
+        }catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    public static String getSessionId() {
+        return sessionId;
     }
 }

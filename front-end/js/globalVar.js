@@ -1,6 +1,8 @@
 // setting up global variables
 var globalVar = {};
 
+globalVar.tableCallback = null;
+
 // tile width and tile height
 globalVar.tileW = 0;
 globalVar.tileH = 0;

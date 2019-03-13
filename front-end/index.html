@@ -12,9 +12,68 @@
     <script src = "/js/dynamicLayers.js"></script>
     <script src = "/js/jump.js"></script>
     <script src = "/js/staticLayers.js"></script>
-
+    <script src = "/js/bundle.js"></script>
     <link rel = "stylesheet" type = "text/css" href = "/static/css/main.css">
     <link rel = "stylesheet" type = "text/css" href = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css?family=Source Serif Pro" rel="stylesheet">
+    <script>
+
+        //table data
+        var tableData = function (data) {
+            if(!d3.select("table").empty())
+                d3.selectAll("table").remove();
+
+            table = d3.select('body').append('table')
+                .style("border-collapse", "collapse")
+                .style("border", "2px black solid")
+                .attr("style","position: absolute;top:600px;left: 50px");
+            //table header
+            var colomns = ["id", "x", "log10 p-value"];
+            table.append("thead").append("tr")
+                .selectAll("th")
+                .data(colomns)
+                .enter().append("th")
+                .text(function(d) { return d; })
+                .style("border", "1px black solid")
+                .style("padding", "5px")
+                .style("background-color", "lightgray")
+                .style("font-weight", "bold")
+                .style("text-transform", "uppercase");
+
+            table.append("tbody")
+                .selectAll("tr").data(data.slice(1))
+                .enter().append("tr")
+                .selectAll("td")
+                .data(function (d) {
+                    return [d.icd_idx,d.x,d.y];
+                })
+                .enter().append("td")
+                .style("border", "1px black solid")
+                .style("padding", "5px")
+                .text(function(d){return d;})
+                .style("font-size", "12px");
+
+            //table pagination
+            d3.select("#buttons").datum({portion : 0});
+            // the chain select here pushes the datum onto the up and down buttons also
+            d3.select("#buttons").select("#up").on ("click", function(d) {
+                d.portion -= 10;
+                redraw (d.portion);
+            });
+            d3.select("#buttons").select("#down").on ("click", function(d) {
+                d.portion += 10;
+                redraw (d.portion);
+            })
+            function redraw (start) {
+                d3.select("table:last-of-type").selectAll("tr")
+                    .style("display", function(d, i) {
+                        return i >= start && i < start + 10 ? null : "none";
+                    })
+            }
+            redraw(0);
+        }
+        kyrix.getRenderData(tableData);
+
+    </script>
 </head>
 </html>

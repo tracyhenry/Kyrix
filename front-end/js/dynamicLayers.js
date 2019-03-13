@@ -364,6 +364,11 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
     d3.selectAll(viewClass + ".mainsvg:not(.static)")
         .attr("viewBox", viewportX + " " + viewportY + " " + vpW + " " + vpH);
 
+    //callback draw table function on pan/zoom
+    if(typeof globalVar.tableCallback === "function" && gvd.curCanvas.id == "dots") {
+        globalVar.tableCallback(gvd.renderData[0]);
+    }
+
     // check if there is literal zooming going on
     // if yes, rescale the objects if asked
     if (d3.event != null && d3.event.transform.k != 1) {

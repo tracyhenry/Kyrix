@@ -1,5 +1,5 @@
 // parameters
-param = {};
+var param = {};
 
 // animation durations, delays
 param.enteringDelta = 0.5;
@@ -48,4 +48,4 @@ param.highlight = "highlight";
 param.fetchingScheme = "dbox";
 
 // whether use delta box
-param.deltaBox = true;
+param.deltaBox = false;

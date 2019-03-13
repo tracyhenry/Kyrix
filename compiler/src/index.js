@@ -25,6 +25,9 @@ function Project(name, configFile) {
     this.config.password = lines[5].replace('\r', '');
     this.config.kyrixDbName = lines[6].replace('\r', '');
 
+    if (this.config.database == "scidb")
+	this.config.database = "psql";
+
     // set of views
     this.views = [];
 
@@ -234,8 +237,8 @@ function saveProject()
                     for (var p = 0; p < curTransform.columnNames.length; p++)
                         if (placementColNames[k] == curTransform.columnNames[p])
                             exist = true;
-                    if (!exist)
-                        throw new Error("Unidentified placement column name: " + placementColNames[k]);
+//                    if (!exist)
+//                        throw new Error("Unidentified placement column name: " + placementColNames[k]);
                 }
             }
         }

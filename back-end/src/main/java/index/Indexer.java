@@ -45,6 +45,9 @@ public abstract class Indexer implements Serializable {
                     else if (Config.indexingScheme == Config.indexingScheme.TILE_INDEX)
                         indexer = MysqlTileIndexer.getInstance();
                 }
+                else if (Config.database == Config.Database.SCIDB)
+                    indexer = ScidbIndexer.getInstance();
+
                 c.getLayers().get(layerId).setIndexer(indexer);
             }
     }

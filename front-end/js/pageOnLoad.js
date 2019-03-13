@@ -100,7 +100,7 @@ function processRenderingParams() {
 }
 
 // set up page
-function pageOnLoad() {
+export function pageOnLoad() {
 
     // get information about the first canvas to render
     $.get("/first/", {}, function (data) {
