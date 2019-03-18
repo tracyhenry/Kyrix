@@ -9,6 +9,7 @@ import main.Main;
 import project.Canvas;
 import project.Layer;
 import project.Placement;
+import box.Box;
 
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -25,11 +26,18 @@ public abstract class Indexer implements Serializable {
 
     // abstract methods
     public abstract void createMV(Canvas c, int layerId) throws Exception;
-    public abstract ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception;
+    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception {
+	// cannot be abstract because of the override below
+	throw new Exception("getDataFromRegion not implemented?!");
+    }
+    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox) throws Exception {
+	// for backwards compatibility, just drop the boxes and call the underlying
+	return getDataFromRegion(c, layerId, regionWKT, predicate);
+    }
     public abstract ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate) throws Exception;
 
     // associate each layer with a proper indexer
-    public static void associateIndexer() {
+    public static void associateIndexer() throws Exception {
         for (Canvas c : Main.getProject().getCanvases())
             for (int layerId = 0; layerId < c.getLayers().size(); layerId ++) {
                 Indexer indexer = null;
@@ -40,12 +48,16 @@ public abstract class Indexer implements Serializable {
                         indexer = PsqlSpatialIndexer.getInstance(isCitus);
                     else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
                         indexer = PsqlTileIndexer.getInstance(isCitus);
+                    else if (Config.indexingScheme == Config.IndexingScheme.NATIVEBOX_INDEX)
+                        indexer = PsqlNativeBoxIndexer.getInstance(isCitus);
                 }
                 else if (Config.database == Config.Database.MYSQL) {
                     if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
                         indexer = MysqlSpatialIndexer.getInstance();
                     else if (Config.indexingScheme == Config.indexingScheme.TILE_INDEX)
                         indexer = MysqlTileIndexer.getInstance();
+                    else if (Config.indexingScheme == Config.IndexingScheme.NATIVEBOX_INDEX)
+                        throw new Exception("NATIVEBOX_INDEX not supported for dbtype MYSQL");
                 }
                 c.getLayers().get(layerId).setIndexer(indexer);
             }

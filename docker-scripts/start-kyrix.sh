@@ -27,10 +27,11 @@ psql $PGCONN_STRING_POSTGRES/postgres -c "CREATE USER $USER_NAME WITH SUPERUSER 
 psql $PGCONN_STRING_POSTGRES/postgres -c "CREATE DATABASE kyrix OWNER $USER_NAME;" | egrep -v "$IGNORE_RX" 2>&1 || true
 psql $PGCONN_STRING_POSTGRES/postgres -c "CREATE DATABASE $KYRIX_DB OWNER $USER_NAME;" | egrep -v "$IGNORE_RX" 2>&1 || true
 
+# if used, postgis is setup previously in the database - this is to support citus, which needs is initialized on every node
 # TODO: throwing errors: CREATE EXTENSION postgis_sfcgal; CREATE EXTENSION address_standardizer;CREATE EXTENSION address_standardizer_data_us;
-EXT_CMD='CREATE EXTENSION postgis;CREATE EXTENSION postgis_topology;CREATE EXTENSION fuzzystrmatch;CREATE EXTENSION postgis_tiger_geocoder'
-psql $PGCONN_STRING_USER/kyrix -c "$EXT_CMD" | egrep -v "$IGNORE_RX" 2>&1 || true
-psql $PGCONN_STRING_USER/$KYRIX_DB -c "$EXT_CMD" | egrep -v "$IGNORE_RX" 2>&1 || true
+#EXT_CMD='CREATE EXTENSION IF NOT EXISTS postgis;CREATE EXTENSION IF NOT EXISTS postgis_topology;CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder'
+#psql $PGCONN_STRING_USER/kyrix -c "$EXT_CMD" | egrep -v "$IGNORE_RX" 2>&1 || true
+#psql $PGCONN_STRING_USER/$KYRIX_DB -c "$EXT_CMD" | egrep -v "$IGNORE_RX" 2>&1 || true
 
 # workaround this issue: https://github.com/tracyhenry/Kyrix/issues/42
 psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"

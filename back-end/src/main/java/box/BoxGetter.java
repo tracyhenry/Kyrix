@@ -43,7 +43,7 @@ public abstract class BoxGetter {
             if (curLayer.isStatic())
                 data.add(new ArrayList<>());
             else
-                data.add(curLayer.getIndexer().getDataFromRegion(c, i, deltaWkt, predicates.get(i)));
+                data.add(curLayer.getIndexer().getDataFromRegion(c, i, deltaWkt, predicates.get(i), newBox, oldBox));
         }
         return data;
     }

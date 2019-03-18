@@ -48,8 +48,9 @@ public class Config {
     public static int tileBatchSize = 10000;
 
     // tile indexing scheme
-    public enum IndexingScheme {TILE_INDEX, SPATIAL_INDEX};
-    public static IndexingScheme indexingScheme = IndexingScheme.SPATIAL_INDEX;
+    public enum IndexingScheme {TILE_INDEX, SPATIAL_INDEX, NATIVEBOX_INDEX};
+    public static IndexingScheme indexingScheme = IndexingScheme.NATIVEBOX_INDEX;
+    //public static IndexingScheme indexingScheme = IndexingScheme.SPATIAL_INDEX;
 
     // underlying database
     public enum Database {MYSQL, PSQL, CITUS};
