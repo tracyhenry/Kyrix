@@ -13,7 +13,7 @@ FROM node:8-alpine
 
 # coreutils provides stdbuf; --update nodejs required to get npm
 RUN apk add --no-cache --virtual .build-dependencies -q --update \
-    nodejs nodejs-npm postgresql-client maven curl wget git openjdk8 coreutils python
+    nodejs nodejs-npm postgresql-client maven curl wget git openjdk8 coreutils python nss
 
 # copying kyrix source, then working in /root
 RUN mkdir -p /kyrix/compiler /kyrix/back-end /kyrix/front-end
