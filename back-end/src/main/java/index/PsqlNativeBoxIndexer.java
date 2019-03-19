@@ -53,7 +53,7 @@ public class PsqlNativeBoxIndexer extends Indexer {
         bboxStmt.executeUpdate(sql);
 
         // create the bbox table
-        sql = "create table " + bboxTableName + " (";
+        sql = "create unlogged table " + bboxTableName + " (";
         for (int i = 0; i < trans.getColumnNames().size(); i ++)
             sql += trans.getColumnNames().get(i) + " text, ";
 	if (isCitus) {
@@ -161,8 +161,16 @@ public class PsqlNativeBoxIndexer extends Indexer {
 	    bboxStmt.executeQuery(sql);
 	}
 	
-        // create index
+        // create index - gist/spgist require logged table type
 	// TODO: consider sp-gist
+	sql = "alter table " + bboxTableName + " set logged;";
+	if (isCitus) {
+	    sql = "SELECT run_command_on_workers('"+sql+"')";
+	    System.out.println(sql);
+	    bboxStmt.executeQuery(sql);
+	} else {
+	    bboxStmt.executeUpdate(sql);
+	}
         sql = "create index sp_" + bboxTableName + " on " + bboxTableName + " using gist (geom);";
         bboxStmt.executeUpdate(sql);
         sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
