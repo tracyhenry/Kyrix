@@ -15,7 +15,7 @@ const placements = require("./placements");
 var p = new Project("genomic", "../../../config.txt", 1000, 500);
 
 // ================== Canvas phenotype =============
-var nameCanvas = new Canvas("name",6000, 1500);
+var nameCanvas = new Canvas("name", 6000, 1500);
 p.addCanvas(nameCanvas);
 
 var nameLayer = new Layer(transforms.phenotypeTransform, false);

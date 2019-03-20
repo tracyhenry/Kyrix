@@ -31,7 +31,7 @@ public class ScidbIndexer extends Indexer{
     }
 
     private static String sessionId;
-    private static int tilesize = 500;
+    private static int tilesize = 2;
 
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
@@ -145,14 +145,18 @@ public class ScidbIndexer extends Indexer{
             starty = (int) (miny / tilesize);
             endx = (int) (maxx / tilesize);
             endy = (int) (maxy / tilesize);
-
+            System.out.println(endx);
+            if (!c.getId().equals("name")) {
+                int typeId = Integer.valueOf(transformedRow.get(2));
+                kyrix.get(typeId).get(Math.abs(endy)).get(Math.abs(endx)).append(bboxInsSqlBuilder);
+            }
             for (int m = startx; m <= endx; m++)
                 for (int n = starty; n <= endy; n++) {
                     if (c.getId().equals("name")) {
                         kyrixName.get(n).get(m).append(bboxInsSqlBuilder);
-                    } else {
-                        int typeId = Integer.valueOf(transformedRow.get(2));
-                        kyrix.get(typeId).get(n).get(m).append(bboxInsSqlBuilder);
+             //       } else {
+             //           int typeId = Integer.valueOf(transformedRow.get(2));
+             //           kyrix.get(typeId).get(n).get(m).append(bboxInsSqlBuilder);
                     }
                 }
 
