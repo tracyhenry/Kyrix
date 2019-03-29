@@ -50,7 +50,7 @@ var newPredicate = function (row) {
 };
 
 var jumpName = function (row) {
-    return "Zoom into " + row.name;
+    return row.name;
 };
 
 p.addJump(new Jump(flareCanvas, flareCanvas, "semantic_zoom", {selector : selector,

@@ -11,6 +11,10 @@ function Transform(query, db, transformFunc, columnNames, separable) {
 
     if (typeof separable !== "boolean")
         throw new Error("Constructing Transform: separable must be boolean.");
+    if (! Array.isArray(columnNames))
+        throw new Error("Constructing Transform: column names must be an array.");
+    if (columnNames.length == 0 && transformFunc != "")
+        throw new Error("Constructing Transform: column names must be provided if transform function exists.");
 
     // assign fields
     this.query = query;

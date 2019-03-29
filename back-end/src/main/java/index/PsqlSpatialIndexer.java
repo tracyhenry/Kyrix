@@ -44,8 +44,12 @@ public class PsqlSpatialIndexer extends Indexer {
         psql = "CREATE EXTENSION if not exists postgis_topology;";
         bboxStmt.executeUpdate(psql);
 
+        // run query and set column names if not existed
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
+        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb()));
+        ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
+        setColumnNames(l, rs);
 
         // step 0: create tables for storing bboxes and tiles
         String bboxTableName = "bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
@@ -62,25 +66,24 @@ public class PsqlSpatialIndexer extends Indexer {
         bboxStmt.executeUpdate(sql);
 
         // if this is an empty layer, return
-        if (trans.getDb().equals(""))
+        if (trans.getDb().isEmpty())
             return ;
 
         // step 1: set up nashorn environment
         NashornScriptEngine engine = null;
-        if (! trans.getTransformFunc().equals(""))
+        if (! trans.getTransformFunc().isEmpty())
             engine = setupNashorn(trans.getTransformFunc());
 
         // step 2: looping through query results
         // TODO: distinguish between separable and non-separable cases
-        Statement rawDBStmt = DbConnector.getStmtByDbName(trans.getDb());
-        ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery());
-        int numColumn = rs.getMetaData().getColumnCount();
-        int rowCount = 0;
         String insertSql = "insert into " + bboxTableName + " values (";
         for (int i = 0; i < trans.getColumnNames().size() + 6; i ++)
             insertSql += "?, ";
         insertSql += "ST_GeomFromText(?));";
         PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
+
+        int rowCount = 0;
+        int numColumn = rs.getMetaData().getColumnCount();
         while (rs.next()) {
 
             // count log
@@ -95,13 +98,13 @@ public class PsqlSpatialIndexer extends Indexer {
 
             // step 3: run transform function on this tuple
             ArrayList<String> transformedRow;
-            if (! trans.getTransformFunc().equals(""))
+            if (! trans.getTransformFunc().isEmpty())
                 transformedRow = getTransformedRow(c, curRawRow, engine);
             else
                 transformedRow = curRawRow;
 
             // step 4: calculate bounding boxes
-            ArrayList<Double> curBbox = getBboxCoordinates(c, l, transformedRow);
+            ArrayList<Double> curBbox = getBboxCoordinates(l, transformedRow);
 
             // insert into bbox table
             for (int i = 0; i < transformedRow.size(); i ++)
