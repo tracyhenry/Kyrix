@@ -3,9 +3,8 @@ function zoomRescale(viewId, ele) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
 
-    var bbox = ele.getBBox();
-    var cx = bbox.x + (bbox.width / 2),
-        cy = bbox.y + (bbox.height / 2);   // finding center of element
+    var cx = d3.select(ele).datum().cx;
+        cy = d3.select(ele).datum().cy;   // finding center of element
     var transform = d3.zoomTransform(d3.select(viewClass + ".maing").node());
     var scaleX = 1 / transform.k;
     var scaleY = 1 / transform.k;
@@ -19,7 +18,7 @@ function zoomRescale(viewId, ele) {
     var tx = -cx * (scaleX - 1);
     var ty = -cy * (scaleY - 1);
     var translatestr = tx + ',' + ty;
-    ele.setAttribute("transform","translate("
+    d3.select(ele).attr("transform","translate("
         + translatestr + ") scale("
         + scaleX + ", " + scaleY + ")");
 };
