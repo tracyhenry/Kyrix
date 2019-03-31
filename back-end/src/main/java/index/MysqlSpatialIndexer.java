@@ -41,7 +41,6 @@ public class MysqlSpatialIndexer extends Indexer {
         Transform trans = l.getTransform();
         Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb()));
         ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
-        setColumnNames(l, rs);
 
         // step 0: create tables for storing bboxes and tiles
         String bboxTableName = "bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;

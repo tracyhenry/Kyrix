@@ -192,17 +192,4 @@ public abstract class Indexer implements Serializable {
 
         return polygonText;
     }
-
-    // set column names for a data transform using query result set
-    protected static void setColumnNames(Layer l, ResultSet rs) throws SQLException {
-
-        if (l.getTransform().getColumnNames().size() > 0 || rs == null)
-            return ;
-
-        ArrayList<String> schema = new ArrayList<>();
-        int colCount = rs.getMetaData().getColumnCount();
-        for (int i = 1; i <= colCount; i ++)
-            schema.add(rs.getMetaData().getColumnName(i));
-        l.getTransform().setColumnNames(schema);
-    }
 }
