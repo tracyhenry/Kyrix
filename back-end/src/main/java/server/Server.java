@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import index.Indexer;
 import main.Config;
+import main.Main;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -40,6 +41,7 @@ public class Server {
         }
         Server.stopServer();
         Indexer.precompute();
+        Main.setProjectClean();
         System.out.println("Completed recomputing indexes. Server restarting...");
         Server.startServer(Config.portNumber);
     }
