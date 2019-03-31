@@ -30,7 +30,7 @@ kubectl expose replicaset.apps/$RS_KYRIX --type=LoadBalancer --name=kyrixserver 
 if [ "x$DEV" = "x1" ]; then
     # provide telnet, ping, emacs
     echo "recreating nba db..."
-    recreatedb-kyrix
+    recreatedb-kyrix nba
     echo "adding dev tools on the kyrix server..."
     kubectl exec -it $KYRIX -- apk add -y bash busybox-extras emacs > /dev/null 2>&1
     echo "copying tile-server code..."
@@ -38,6 +38,8 @@ if [ "x$DEV" = "x1" ]; then
     tar cf - back-end/src | kubectl exec -it $KYRIX -- sh -c "cd ..; tar xvf -"
     echo "recompiling tile-server code..."
     kubectl exec -it $KYRIX -- bash -c 'cd /kyrix/back-end; mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out >/dev/null 2>&1'
+    echo "re-copying local start-kyrix.sh..."
+    kubectl cp docker-scripts/start-kyrix.sh $KYRIX:/
 fi
 
 # note: DBTYPE=psql is safe, but won't distribute the data across the Citus cluster, i.e. it'll use local tables on the master Citus node only.
