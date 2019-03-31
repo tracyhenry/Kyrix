@@ -36,8 +36,12 @@ public class MysqlSpatialIndexer extends Indexer {
         // TODO: switch to prepared statements
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
+        // run query and set column names if not existed
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
+        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb()));
+        ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
+        setColumnNames(l, rs);
 
         // step 0: create tables for storing bboxes and tiles
         String bboxTableName = "bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
@@ -54,22 +58,21 @@ public class MysqlSpatialIndexer extends Indexer {
                 "maxx double precision, maxy double precision, geom polygon not null, spatial index (geom));";
         bboxStmt.executeUpdate(sql);
 
-        // if this is an empty layer, continue
-        if (trans.getDb().equals(""))
+        // if this is an empty layer, return
+        if (trans.getDb().isEmpty())
             return ;
 
         // step 1: set up nashorn environment, prepared statement, column name to id mapping
         NashornScriptEngine engine = null;
-        if (! trans.getTransformFunc().equals(""))
+        if (! trans.getTransformFunc().isEmpty())
             engine = setupNashorn(trans.getTransformFunc());
 
         // step 2: looping through query results
         // TODO: distinguish between separable and non-separable cases
-        Statement rawDBStmt = DbConnector.getStmtByDbName(trans.getDb());
-        ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery());
-        int numColumn = rs.getMetaData().getColumnCount();
-        int rowCount = 0, mappingCount = 0;
         StringBuilder bboxInsSqlBuilder = new StringBuilder("insert into " + bboxTableName + " values");
+
+        int rowCount = 0;
+        int numColumn = rs.getMetaData().getColumnCount();
         while (rs.next()) {
 
             // count log
@@ -84,13 +87,13 @@ public class MysqlSpatialIndexer extends Indexer {
 
             // step 3: run transform function on this tuple
             ArrayList<String> transformedRow;
-            if (! trans.getTransformFunc().equals(""))
+            if (! trans.getTransformFunc().isEmpty())
                 transformedRow = getTransformedRow(c, curRawRow, engine);
             else
                 transformedRow = curRawRow;
 
             // step 4: get bounding boxes coordinates
-            ArrayList<Double> curBbox = Indexer.getBboxCoordinates(c, l, transformedRow);
+            ArrayList<Double> curBbox = Indexer.getBboxCoordinates(l, transformedRow);
 
             // insert into bbox table
             if (bboxInsSqlBuilder.charAt(bboxInsSqlBuilder.length() - 1) == ')')

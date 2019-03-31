@@ -38,8 +38,12 @@ public class MysqlTileIndexer extends Indexer {
         bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
         tileStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
+        // run query and set column names if not existed
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
+        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb()));
+        ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
+        setColumnNames(l, rs);
 
         // step 0: create tables for storing bboxes and tiles
         String bboxTableName = "bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
@@ -67,23 +71,22 @@ public class MysqlTileIndexer extends Indexer {
         sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50), index (tile_id));";
         tileStmt.executeUpdate(sql);
 
-        // if this is an empty layer, continue
-        if (trans.getDb().equals(""))
+        // if this is an empty layer, return
+        if (trans.getDb().isEmpty())
             return ;
 
         // step 1: set up nashorn environment, prepared statement, column name to id mapping
         NashornScriptEngine engine = null;
-        if (! trans.getTransformFunc().equals(""))
+        if (! trans.getTransformFunc().isEmpty())
             engine = setupNashorn(trans.getTransformFunc());
 
         // step 2: looping through query results
         // TODO: distinguish between separable and non-separable cases
-        Statement rawDBStmt = DbConnector.getStmtByDbName(trans.getDb());
-        ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery());
-        int numColumn = rs.getMetaData().getColumnCount();
-        int rowCount = 0, mappingCount = 0;
         StringBuilder bboxInsSqlBuilder = new StringBuilder("insert into " + bboxTableName + " values");
         StringBuilder tileInsSqlBuilder = new StringBuilder("insert into " + tileTableName + " values");
+
+        int rowCount = 0, mappingCount = 0;
+        int numColumn = rs.getMetaData().getColumnCount();
         while (rs.next()) {
 
             // count log
@@ -98,13 +101,13 @@ public class MysqlTileIndexer extends Indexer {
 
             // step 3: run transform function on this tuple
             ArrayList<String> transformedRow;
-            if (! trans.getTransformFunc().equals(""))
+            if (! trans.getTransformFunc().isEmpty())
                 transformedRow = getTransformedRow(c, curRawRow, engine);
             else
                 transformedRow = curRawRow;
 
             // step 4: get bounding boxes coordinates
-            ArrayList<Double> curBbox = Indexer.getBboxCoordinates(c, l, transformedRow);
+            ArrayList<Double> curBbox = Indexer.getBboxCoordinates(l, transformedRow);
 
             // insert into bbox table
             if (bboxInsSqlBuilder.charAt(bboxInsSqlBuilder.length() - 1) == ')')

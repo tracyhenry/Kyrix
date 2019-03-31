@@ -48,6 +48,10 @@ public class Transform implements Serializable {
         return separable;
     }
 
+    public void setColumnNames(ArrayList<String> _colNames) {
+        columnNames = _colNames;
+    }
+
     @Override
     public String toString() {
         return "Transform{" +
