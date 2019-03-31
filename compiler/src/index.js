@@ -3,6 +3,11 @@ const fs = require("fs");
 const mysql = require("mysql");
 const psql = require("pg");
 const http = require("http");
+const Canvas = require("./Canvas").Canvas;
+const View = require("./View").View;
+const Jump = require("./Jump").Jump;
+const Layer = require("./Layer").Layer;
+const Transform = require("./Transform");
 
 /**
  *
@@ -31,8 +36,11 @@ function Project(name, configFile) {
     // set of canvases
     this.canvases = [];
 
-    // the set of jump transitions
+    // set of jump transitions
     this.jumps = [];
+
+    // set of autoDDs
+    this.autoDDs = [];
 
     // rendering parameters
     this.renderingParams = "{}";
@@ -126,6 +134,60 @@ function addJump(jump) {
     }
 
     this.jumps.push(jump);
+}
+
+// Add an autoDD to a project, this will create a hierarchy of canvases that form a pyramid shape
+function addAutoDD(autoDD, isInNewView) {
+
+    // add to project
+    this.autoDDs.push(autoDD);
+
+    // construct canvases
+    var canvasNamePrefix = "autodd" + (this.autoDDs.length - 1) + "_";
+    var autoDDCanvases = [];
+    for (var i = 0; i < autoDD.numLevels; i ++) {
+        var width = autoDD.topLevelWidth * Math.pow(autoDD.zoomFactor, i);
+        var height = autoDD.topLevelHeight * Math.pow(autoDD.zoomFactor, i);
+
+        // construct a new canvas
+        var curCanvas = new Canvas(canvasNamePrefix + "level" + i, width, height);
+        autoDDCanvases.push(curCanvas);
+        this.addCanvas(curCanvas);
+
+        // create one layer
+        var curLayer = new Layer(Transform.defaultEmptyTransform, false);
+        curCanvas.addLayer(curLayer);
+
+        // set isAutoDD
+        curLayer.setIsAutoDD(true);
+
+        // dummy placement
+        curLayer.addPlacement({"centroid_x" : "con:0", "centroid_y" : "con:0", "width" : "con:0", "height" : "con:0"});
+
+        // construct rendering function
+        var udfRenderer = autoDD.rendering;
+        var renderFuncBody = (udfRenderer == null ? "" : "(" + udfRenderer.toString() + ")(svg, data);") + "\n";
+        renderFuncBody += "var g = svg.append(\"g\"); g.selectAll(\"text\").data(data).enter().append(\"text\")" +
+            ".text(function(d) {return d.clusterNum;}).attr(\"x\", function(d) {return +d.maxx + 10;})" +
+            ".attr(\"y\", function(d) {return +d.cy;}).attr(\"dy\", \".35em\").attr(\"font-size\", 20)" +
+            ".attr(\"text-anchor\", \"middle\").style(\"fill-opacity\", 1);";
+        var renderFunc = new Function("svg", "data", renderFuncBody);
+        curLayer.addRenderingFunc(new Function("svg", "data", renderFuncBody));
+        // TODO: add default circle-based renderer
+    }
+
+    // literal zooms
+    for (var i = 0; i + 1 < autoDD.numLevels; i ++) {
+        this.addJump(new Jump(autoDDCanvases[i], autoDDCanvases[i + 1], "literal_zoom_in"));
+        this.addJump(new Jump(autoDDCanvases[i + 1], autoDDCanvases[i], "literal_zoom_out"));
+    }
+
+    // add a view
+    if (! isInNewView)
+        return ;
+    var view = new View("autodd_" + (this.autoDDs.length - 1), 0, 0, autoDD.topLevelWidth, autoDD.topLevelHeight);
+    this.addView(view);
+    this.setInitialStates(view, autoDDCanvases[0], 0, 0);
 }
 
 // Add a rendering parameter object
@@ -229,7 +291,7 @@ function saveProject()
                     placementColNames.push(curPlacement.width.substr(4));
                 if (curPlacement.height.startsWith("col"))
                     placementColNames.push(curPlacement.height.substr(4));
-                for (var k = 0; k < placementColNames.length; k++) {
+                for (var k = 0; k < placementColNames.length; k ++) {
                     var exist = false;
                     for (var p = 0; p < curTransform.columnNames.length; p++)
                         if (placementColNames[k] == curTransform.columnNames[p])
@@ -360,9 +422,10 @@ Project.prototype = {
     addView : addView,
     addCanvas : addCanvas,
     addJump : addJump,
+    addAutoDD : addAutoDD,
+    addRenderingParams : addRenderingParams,
     setInitialStates : setInitialStates,
-    saveProject : saveProject,
-    addRenderingParams : addRenderingParams
+    saveProject : saveProject
 };
 
 // exports

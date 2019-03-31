@@ -19,6 +19,7 @@ function Layer(transform, isStatic) {
         this.isStatic = false;
     else
         this.isStatic = isStatic;
+    this.isAutoDDLayer = false;
 };
 
 /**
@@ -51,10 +52,20 @@ function addRenderingFunc(rendering) {
     this.rendering = rendering;
 };
 
+/**
+ * set isAutoDD, which tells the backend that this layer should use the autodd indexer
+ * @param isAutoDD
+ */
+function setIsAutoDD(isAutoDD) {
+
+    this.isAutoDD = isAutoDD;
+}
+
 // define prototype
 Layer.prototype = {
     addPlacement: addPlacement,
-    addRenderingFunc: addRenderingFunc
+    addRenderingFunc: addRenderingFunc,
+    setIsAutoDD : setIsAutoDD
 };
 
 // exports
