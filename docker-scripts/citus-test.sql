@@ -2,7 +2,14 @@
 
 SET client_min_messages TO WARNING;
 
-DROP TABLE IF EXISTS ltowns;
+CREATE OR REPLACE FUNCTION citus_raise (msg text) returns boolean as $$
+BEGIN
+       RAISE WARNING '%', msg;
+       return true;
+END;
+$$ language plpgsql;
+
+DROP TABLE IF EXISTS ltowns CASCADE;
 CREATE TABLE ltowns (
   id SERIAL,
   code VARCHAR(10),
@@ -10,6 +17,8 @@ CREATE TABLE ltowns (
   name TEXT, -- not unique
   department VARCHAR(4)
 );
+
+select citus_raise('inserting 2.5M records into ltowns (local table)...');
 insert into ltowns (
     code, article, name, department
 ) select
@@ -20,14 +29,19 @@ insert into ltowns (
 from generate_series(1, 2500000) s(i);
 
 -- citus table: dtowns -- partitioned table
-DROP TABLE IF EXISTS dtowns;
+DROP TABLE IF EXISTS dtowns CASCADE;
+select citus_raise('copying ltowns to dtowns...');
 CREATE TABLE dtowns as select * from ltowns;
+select citus_raise('distributing dtowns across the cluster as a distributed/sharded table...');
 select create_distributed_table('dtowns', 'id');
 
 -- citus table: rtowns -- reference table (replicated on all nodes)
-DROP TABLE IF EXISTS rtowns;
+DROP TABLE IF EXISTS rtowns CASCADE;
+select citus_raise('copying ltowns to rtowns...');
 CREATE TABLE rtowns as select * from ltowns;
+select citus_raise('distributing dtowns across the cluster as a reference/replicated table...');
 select create_reference_table('rtowns');
+select citus_raise('done creating citus test tables.');
 
 -- test citus performance: first two queries should be slow, last should be 3-5x faster
 -- (this has been automated with EXPLAIN queries in redeploy-citus)
