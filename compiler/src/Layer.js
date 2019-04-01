@@ -58,7 +58,7 @@ function addRenderingFunc(rendering) {
  */
 function setIsAutoDD(isAutoDD) {
 
-    this.isAutoDD = isAutoDD;
+    this.isAutoDDLayer = isAutoDD;
 }
 
 // define prototype
