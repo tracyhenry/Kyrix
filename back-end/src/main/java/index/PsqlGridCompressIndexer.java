@@ -51,12 +51,11 @@ public class PsqlGridCompressIndexer extends Indexer {
         psql = "CREATE EXTENSION if not exists postgis_topology;";
         bboxStmt.executeUpdate(psql);
 
-        // run query and set column names if not existed
+        // set up query iterator
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
         Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb()));
         ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
-        setColumnNames(l, rs);
 
         // step 0: create tables for storing upgrouped grids
         String ungroupedTableName = "bbox_ungrouped_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
