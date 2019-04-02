@@ -160,6 +160,7 @@ var teamTimelineRendering = function (svg, data, args) {
         .style("fill-opacity", 1);
 
     // line
+    if (data.length > 0 && "timeline" in data[0])
     g.selectAll("line")
         .data(data)
         .enter()

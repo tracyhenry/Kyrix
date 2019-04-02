@@ -42,6 +42,10 @@ public class Project {
         return jumps;
     }
 
+    public ArrayList<AutoDD> getAutoDDs() {
+        return autoDDs;
+    }
+
     public String getRenderingParams() {
         return renderingParams;
     }

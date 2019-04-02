@@ -36,12 +36,15 @@ public abstract class Indexer implements Serializable {
             for (int layerId = 0; layerId < c.getLayers().size(); layerId ++) {
                 Indexer indexer = null;
                 if (Config.database == Config.Database.PSQL) {
-                    if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
+                    if (c.getLayers().get(layerId).isAutoDDLayer())
+                        indexer = AutoDDIndexer.getInstance();
+                    else if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
                         indexer = PsqlSpatialIndexer.getInstance();
                     else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
                         indexer = PsqlTileIndexer.getInstance();
                 }
                 else if (Config.database == Config.Database.MYSQL) {
+                    // TODO: autoDD support for MySQL
                     if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
                         indexer = MysqlSpatialIndexer.getInstance();
                     else if (Config.indexingScheme == Config.indexingScheme.TILE_INDEX)

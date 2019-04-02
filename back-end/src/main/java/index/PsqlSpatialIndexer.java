@@ -22,7 +22,7 @@ public class PsqlSpatialIndexer extends Indexer {
     private static PsqlSpatialIndexer instance = null;
 
     // singleton pattern to ensure only one instance existed
-    private PsqlSpatialIndexer() {}
+    protected PsqlSpatialIndexer() {}
 
     // thread-safe instance getter
     public static synchronized PsqlSpatialIndexer getInstance() {

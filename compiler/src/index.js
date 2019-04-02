@@ -7,7 +7,7 @@ const Canvas = require("./Canvas").Canvas;
 const View = require("./View").View;
 const Jump = require("./Jump").Jump;
 const Layer = require("./Layer").Layer;
-const Transform = require("./Transform");
+const Transform = require("./Transform").Transform;
 
 /**
  *
@@ -145,6 +145,7 @@ function addAutoDD(autoDD, isInNewView) {
     // construct canvases
     var canvasNamePrefix = "autodd" + (this.autoDDs.length - 1) + "_";
     var autoDDCanvases = [];
+    var transform = new Transform(autoDD.query, autoDD.db, "", [], true);
     for (var i = 0; i < autoDD.numLevels; i ++) {
         var width = autoDD.topLevelWidth * Math.pow(autoDD.zoomFactor, i);
         var height = autoDD.topLevelHeight * Math.pow(autoDD.zoomFactor, i);
@@ -155,7 +156,7 @@ function addAutoDD(autoDD, isInNewView) {
         this.addCanvas(curCanvas);
 
         // create one layer
-        var curLayer = new Layer(Transform.defaultEmptyTransform, false);
+        var curLayer = new Layer(transform, false);
         curCanvas.addLayer(curLayer);
 
         // set isAutoDD
@@ -166,14 +167,28 @@ function addAutoDD(autoDD, isInNewView) {
 
         // construct rendering function
         var udfRenderer = autoDD.rendering;
-        var renderFuncBody = (udfRenderer == null ? "" : "(" + udfRenderer.toString() + ")(svg, data);") + "\n";
+        var renderFuncBody = (udfRenderer == null ? "" : "(" + udfRenderer.toString() + ")(svg, data, args);") + "\n";
         renderFuncBody += "var g = svg.append(\"g\"); g.selectAll(\"text\").data(data).enter().append(\"text\")" +
             ".text(function(d) {return d.clusterNum;}).attr(\"x\", function(d) {return +d.maxx + 10;})" +
             ".attr(\"y\", function(d) {return +d.cy;}).attr(\"dy\", \".35em\").attr(\"font-size\", 20)" +
             ".attr(\"text-anchor\", \"middle\").style(\"fill-opacity\", 1);";
-        var renderFunc = new Function("svg", "data", renderFuncBody);
-        curLayer.addRenderingFunc(new Function("svg", "data", renderFuncBody));
+        var renderFunc = new Function("svg", "data", "args", renderFuncBody);
+        curLayer.addRenderingFunc(new Function("svg", "data", "args", renderFuncBody));
         // TODO: add default circle-based renderer
+
+        // axes
+        if (autoDD.axis) {
+            var axesFuncBody = "var cWidth = args.canvasW, cHeight = args.canvasH; var axes = [];\n" +
+                "//x \nvar x = d3.scaleLinear().domain([" + autoDD.loX + ", " + autoDD.hiX + "]).range([0, cWidth]);\n" +
+                "var xAxis = d3.axisTop().tickSize(-cHeight); " +
+                "axes.push({\"dim\": \"x\", \"scale\": x, \"axis\": xAxis, \"translate\": [0, 0]});\n" +
+                "//y \nvar y = d3.scaleLinear().domain([" + autoDD.loY + ", " + autoDD.hiY + "]).range([0, cHeight]);\n" +
+                "var yAxis = d3.axisLeft().tickSize(-cWidth); " +
+                "axes.push({\"dim\": \"y\", \"scale\": y, \"axis\": yAxis, \"translate\": [0, 0]});\n" +
+                "return axes;";
+            var axesFunc = new Function("args", axesFuncBody);
+            curCanvas.addAxes(axesFunc);
+        }
     }
 
     // literal zooms
@@ -185,7 +200,7 @@ function addAutoDD(autoDD, isInNewView) {
     // add a view
     if (! isInNewView)
         return ;
-    var view = new View("autodd_" + (this.autoDDs.length - 1), 0, 0, autoDD.topLevelWidth, autoDD.topLevelHeight);
+    var view = new View("autodd" + (this.autoDDs.length - 1), 0, 0, autoDD.topLevelWidth, autoDD.topLevelHeight);
     this.addView(view);
     this.setInitialStates(view, autoDDCanvases[0], 0, 0);
 }
@@ -266,7 +281,11 @@ function sendProjectRequestToBackend(portNumber, projectJSON) {
 // save the current project, and send it to backend server
 function saveProject()
 {
+    var config = this.config;
+
     // final checks before saving
+    if (this.autoDDs.length > 0 && config.database == "mysql")
+        throw new Error("Auto drill down for MySQL is not supported right now.");
     for (var i = 0; i < this.canvases.length; i ++) {
         // a canvas should have at least one layer
         if (this.canvases[i].layers.length == 0)
@@ -330,7 +349,6 @@ function saveProject()
         this.name + "\', \'" + projectJSONEscapedPSQL + "\', 1);";
 
     // connect to databases
-    var config = this.config;
     if (config.database == "mysql") {
 
         var createDbQuery = "CREATE DATABASE " + config.kyrixDbName;

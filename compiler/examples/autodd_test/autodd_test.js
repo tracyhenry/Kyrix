@@ -12,6 +12,13 @@ var query = "select game_id, year, month, day, team1.abbr as home_team, team2.ab
     + "from games, teams as team1, teams as team2 "
     + "where games.home_team = team1.abbr and games.away_team = team2.abbr;";
 
-p.addAutoDD(new AutoDD(query, "nba", "home_score", "away_score", 160, 130, {rendering : renderers.teamTimelineRendering}), true);
+var args = {query : query, db : "nba",
+    xCol : "home_score", yCol : "away_score",
+    loX : 69, hiX : 149, loY : 69, hiY : 148,
+    bboxW : 162, bboxH : 132,
+    axis : true,
+    rendering : renderers.teamTimelineRendering};
+
+p.addAutoDD(new AutoDD(args), true);
 
 p.saveProject();

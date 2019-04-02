@@ -57,4 +57,7 @@ public class Config {
 
     // database iterator fetch size
     public static int iteratorfetchSize = 1000;
+
+    // for auto drill down
+    public static int autoDDDConstraintDValue = 30;
 }

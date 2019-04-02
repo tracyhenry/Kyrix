@@ -1,34 +1,50 @@
 /**
  * Constructor of an AutoDD object
- * @param query
- * @param xCol
- * @param yCol
- * @param smallestBboxSize
- * @param largestBBoxSize
- * @param optional
+ * @param args
  * @constructor
  */
-function AutoDD(query, db, xCol, yCol, bboxW, bboxH, optional) {
+function AutoDD(args) {
 
-    if (optional == null)
-        optional = {};
-    // check constraints
-    if (typeof query !== "string")
-        throw new Error("Constructing Transform: separable must be boolean.");
+    // query, db, xCol, yCol, bboxW, bboxH
+    if (args == null)
+        args = {};
+
+    // check required args
+    var requiredArgs = ["query", "db", "xCol", "yCol", "bboxW", "bboxH"];
+    var requiredArgsTypes = ["string", "string", "string", "string", "number", "number"];
+    for (var i = 0; i < requiredArgs.length; i ++) {
+        if (! (requiredArgs[i] in args))
+            throw new Error("Constructing AutoDD: " + requiredArgs[i] + " missing.");
+        if (typeof args[requiredArgs[i]] !== requiredArgsTypes[i])
+            throw new Error("Constructing AutoDD: " + requiredArgs[i] + " must be " + requiredArgsTypes[i] + ".");
+        if (requiredArgsTypes[i] == "string")
+            if (args[requiredArgs[i]].length == 0)
+                throw new Error("Constructing AutoDD: " + requiredArgs[i] + " cannot be an empty string.");
+    }
+
+    // other constraints
+    if (args["bboxW"] <= 0 || args["bboxH"] <= 0)
+        throw new Error("Constructing AutoDD: non-positive bbox size.");
+    if ("axis" in args && (! "loX" in args || ! "loY" in args || ! "hiX" in args || ! "hiY" in args))
+        throw new Error("Constructing AutoDD: raw data domain needs to be specified for rendering an axis.");
+    if (("loX" in args || "loY" in args || "hiX" in args || "hiY" in args) &&
+        ! ("loX" in args && "loY" in args && "hiX" in args && "hiY" in args))
+        throw new Error("Constructing AutoDD: loX, loY, hiX, hiY must all be provided.");
 
     // assign fields
-    this.query = query;
-    this.db = db;
-    this.xCol = xCol;
-    this.yCol = yCol;
-    this.bboxW = bboxW;
-    this.bboxH = bboxH;
-    this.rendering = ("rendering" in optional ? optional.rendering : null);
-    this.columnNames = ("columnNames" in optional ? optional.columnNames : []);
-    this.numLevels = ("numLevels" in optional ? optional.numLevels : 5);
-    this.topLevelWidth = ("topLevelWidth" in optional ? optional.topLevelWidth : 1000);
-    this.topLevelHeight = ("topLevelHeight" in optional ? optional.topLevelHeight : 1000);
-    this.zoomFactor = ("zoomFactor" in optional ? optional.zoomFactor : 2);
+    for (var i = 0; i < requiredArgs.length; i ++)
+        this[requiredArgs[i]] = args[requiredArgs[i]];
+    this.rendering = ("rendering" in args ? args.rendering : null);
+    this.columnNames = ("columnNames" in args ? args.columnNames : []);
+    this.numLevels = ("numLevels" in args ? args.numLevels : 5);
+    this.topLevelWidth = ("topLevelWidth" in args ? args.topLevelWidth : 1000);
+    this.topLevelHeight = ("topLevelHeight" in args ? args.topLevelHeight : 1000);
+    this.zoomFactor = ("zoomFactor" in args ? args.zoomFactor : 2);
+    this.axis = ("axis" in args ? args.axis : false);
+    this.loX = ("loX" in args ? args.loX : null);
+    this.loY = ("loY" in args ? args.loY : null);
+    this.hiX = ("hiX" in args ? args.hiX : null);
+    this.hiY = ("hiY" in args ? args.hiY : null);
 };
 
 // exports
