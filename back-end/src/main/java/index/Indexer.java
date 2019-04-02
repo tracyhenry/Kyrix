@@ -190,4 +190,22 @@ public abstract class Indexer implements Serializable {
 
         return polygonText;
     }
+
+    protected static String getCubeText(double minx, double miny, double maxx, double maxy, int canvasId) {
+
+        String cubeText = "cube ( ";
+        /*
+        sql:
+        insert into tbl_cube select id, cube ( array[minx, miny, canvasid], array[minx, maxy, canvasid], array[maxx, maxy, canvasid])
+        */
+        cubeText += "array[" + String.valueOf(minx) + ", " + String.valueOf(miny) + ", "
+                + String.valueOf(canvasId) + "], "
+                + "array[" + String.valueOf(minx) + ", " + String.valueOf(maxy) + ", "
+                + String.valueOf(canvasId) + "], "
+                + "array[" + String.valueOf(maxx) + ", " + String.valueOf(maxy) + ", "
+                + String.valueOf(canvasId) + "]";
+        cubeText += ")";
+
+        return cubeText;
+    }
 }
