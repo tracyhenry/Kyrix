@@ -27,21 +27,25 @@ public class Main {
         // get project definition, create project object
         getProjectObject();
 
-        // if project object is not null and is dirty, precompute
-        if (project != null && isProjectDirty()) {
-            System.out.println("Main project definition has been changed since last session, re-calculating indexes...");
-            Indexer.precompute();
-            setProjectClean();
-        }
-        else if (project != null) {
-            Indexer.associateIndexer();
-            System.out.println("Main project definition has not been changed since last session. Starting server right away...");
-        }
+        // precompute if project object is not null and is dirty
+        if (project == null) {
+	    System.out.println("No main project definition. Skipping reindexing...");
+        } else {
+	    if (isProjectDirty()) {
+		System.out.println("Main project ("+project.getName()+") definition has been changed since last session, re-calculating indexes...");
+		Indexer.precompute();
+		System.out.println("Marking project ("+project.getName()+") as clean...");
+		setProjectClean();
+	    } else {
+		Indexer.associateIndexer();
+		System.out.println("Main project ("+project.getName()+") definition has not been changed since last session. Skipping reindexing...");
+	    }
+	}
 
-        //cache
+	System.out.println("Creating tile cache...");
         TileCache.create();
 
-        // start server
+	System.out.println("Starting server...");
         Server.startServer(Config.portNumber);
     }
 

@@ -79,11 +79,14 @@ public class PsqlNativeBoxIndexer extends Indexer {
         int numColumn = rs.getMetaData().getColumnCount();
         int rowCount = 0;
         String insertSql = "insert into " + bboxTableName + " values (";
-        for (int i = 0; i < trans.getColumnNames().size() + 6; i ++)
-            insertSql += "?, ";
+	// for debugging, vary number of spaces after the commas
+        for (int i = 0; i < trans.getColumnNames().size(); i ++)
+            insertSql += "?,";
 	if (isCitus) {
-	    insertSql += "?, ";
+	    insertSql += "?,  ";
 	}
+        for (int i = 0; i < 6; i ++)
+            insertSql += "?, ";
 	insertSql += "box( point(?,?), point(?,?) ) );";
         System.out.println(insertSql);
         PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
@@ -114,7 +117,7 @@ public class PsqlNativeBoxIndexer extends Indexer {
                 transformedRow = curRawRow;
 
             // step 4: calculate bounding boxes
-            ArrayList<Double> curBbox = getBboxCoordinates(c, l, transformedRow);
+            ArrayList<Double> curBbox = getBboxCoordinates(l, transformedRow);
 
             // insert into bbox table
 	    int pscol = 1;
@@ -154,7 +157,7 @@ public class PsqlNativeBoxIndexer extends Indexer {
         }
         preparedStmt.close();
 
-	// for performance distribute the citus table after loading
+	// for performance distribute the citus table after loading - must happen before CREATE INDEX
 	if (isCitus) {
 	    sql = "SELECT create_distributed_table('"+bboxTableName+"', 'citus_distribution_id');";
 	    System.out.println(sql);
@@ -163,6 +166,12 @@ public class PsqlNativeBoxIndexer extends Indexer {
 	
         // create index - gist/spgist require logged table type
 	// TODO: consider sp-gist
+        sql = "create index sp_" + bboxTableName + " on " + bboxTableName + " using gist (geom);";
+        bboxStmt.executeUpdate(sql);
+        sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
+        bboxStmt.executeUpdate(sql);
+        DbConnector.commitConnection(Config.databaseName);
+
 	sql = "alter table " + bboxTableName + " set logged;";
 	if (isCitus) {
 	    sql = "SELECT run_command_on_workers('"+sql+"')";
@@ -171,11 +180,6 @@ public class PsqlNativeBoxIndexer extends Indexer {
 	} else {
 	    bboxStmt.executeUpdate(sql);
 	}
-        sql = "create index sp_" + bboxTableName + " on " + bboxTableName + " using gist (geom);";
-        bboxStmt.executeUpdate(sql);
-        sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
-        bboxStmt.executeUpdate(sql);
-        DbConnector.commitConnection(Config.databaseName);
         bboxStmt.close();
     }
 

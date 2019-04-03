@@ -72,9 +72,6 @@ while [ 1 ]; do w=`for w in $WORKERS; do stty sane; kubectl exec -it $w -- su - 
 
 for w in $WORKER_IPS; do kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -t -c \"SELECT * from master_add_node('$w', 5432);\""|grep 5432; done|head
 
-echo "installing citus test tables..."
-kubectl exec -i $MASTER -- su - postgres -c "psql -q $DBNAME" < docker-scripts/citus-test.sql > /dev/null
-
 ./test-citus
 ./test-plv8
 #./test-postgis

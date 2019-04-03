@@ -1,9 +1,13 @@
-#!/bin/sh
+#!/bin/bash
+
+source /kyrix/docker-scripts/spinner.sh
 
 KYRIX_DB=${KYRIX_DB:-nba}
 KYRIX_DB_TEST_TABLE=${KYRIX_DB_TEST_TABLE:-plays}  # source table (one of...) checked to avoid duplicate loads
 KYRIX_DB_TEST_TABLE_MIN_RECS=${KYRIX_DB_TEST_TABLE_MIN_RECS:-500000}  # rarely needs changing: min records to find in test table
 KYRIX_DB_LOAD_CMD=${KYRIX_DB_LOAD_CMD:-/kyrix/compiler/examples/nba/reload-nba.sh}
+KYRIX_DB_INDEX_CMD=${KYRIX_DB_INDEX_CMD:-/kyrix/compiler/examples/nba/reindex-nba.sh}
+KYRIX_DB_INDEX_FORCE=${KYRIX_DB_INDEX_FORCE:0}
 
 PGHOST=${PGHOST:-db}  # db is the default used in docker-compose.yml
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-kyrixftw}
@@ -57,10 +61,10 @@ if [ "$recs_found" = "t" ]; then
 else
     # TODO: prints ugly error message the first time
     echo "raw data records not found - loading..."
-    $KYRIX_DB_LOAD_CMD | psql $PGCONN_STRING_USER/$KYRIX_DB | egrep -i 'error' || true
-    numrecs=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select count(*) from $KYRIX_DB_TEST_TABLE;" || true)
+    PGCONN=$PGCONN_STRING_USER/$KYRIX_DB $KYRIX_DB_LOAD_CMD | psql $PGCONN_STRING_USER/$KYRIX_DB | egrep -i 'error' || true
+    numrecs=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select count(*) from $KYRIX_DB_TEST_TABLE;" || -1)
     echo "raw data records loaded: $numrecs"
-    recs=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select count(*)>$KYRIX_DB_TEST_TABLE_MIN_RECS from $KYRIX_DB_TEST_TABLE;" || true)
+    # TODO(asah): test for >KYRIX_DB_TEST_TABLE_MIN_RECS
 fi
 
 echo "*** starting backend server..."
@@ -69,12 +73,14 @@ mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransfe
 touch mvn-exec.out
 while [ -z "$(egrep 'Done precomputing|Backend server started' mvn-exec.out)" ]; do echo "waiting for backend server"; sleep 5; done
 
-echo "*** (re)configuring for NBA examples to ensure backend server recomputes..."
+echo "*** (re)indexing..."
+FORCE=$KYRIX_DB_INDEX_FORCE $KYRIX_DB_INDEX_CMD || true
 
-cd /kyrix/compiler
-npm rebuild | egrep -v '(@[0-9.]+ /kyrix/compiler/node_modules/)'
-cd /kyrix/compiler/examples/nba_cmv
-node nba_cmv.js | egrep -i "error|connected" || true
+while [ 1 ]; do
+    w=`psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select dirty from project where name='$KYRIX_DB';" || -1`;
+    if [ "$w" = "0" ]; then break; fi;
+    spin "waiting for kyrix re-index: dirty=$w"
+done
 
-echo "*** done! Kyrix ready at: http://<host>:8000/  (may need a minute to recompute indexes - watch this log for messages)"
+echo "*** done! Kyrix ready at: http://<host>:8000/  (index recompute may need a few minutes, blank screens until then - watch this log for messages)"
 
