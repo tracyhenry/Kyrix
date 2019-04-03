@@ -26,6 +26,10 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         return instance;
     }
 
+    protected void debug(String msg) {
+        System.out.println("[DEBUG]:  " + msg);
+    }
+
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
@@ -54,7 +58,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         }
 
         // need to add value based on canvas id and layer id
-        sql += "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, v cube;";
+        sql += "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, v cube);";
         bboxStmt.executeUpdate(sql);
 
         // if this is an empty layer, return
@@ -77,7 +81,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         for (int i = 0; i < colNames.size() + 6; i ++) {
             insertSql += "?, ";
         }
-        insertSql += "cube(?)";
+        insertSql += "?);";
         PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
         while (rs.next()) {
 
@@ -103,7 +107,8 @@ public class PsqlCubeSpatialIndexer extends Indexer {
 
             // insert into bbox table
             for (int i = 0; i < transformedRow.size(); i ++)
-                preparedStmt.setString(i + 1, transformedRow.get(i).replaceAll("\'", "\'\'"));
+                // preparedStmt.setString(i + 1, transformedRow.get(i).replaceAll("\'", "\'\'"));
+                preparedStmt.setString(i + 1, transformedRow.get(i));
             for (int i = 0; i < 6; i ++)
                 preparedStmt.setDouble(transformedRow.size() + i + 1, curBbox.get(i));
 
@@ -113,7 +118,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
             maxx = curBbox.get(4);
             maxy = curBbox.get(5);
             // assume that canvas id is an int, not sure if that is part of spec...
-            int canvasId = Integer.parseInt(c.getId());
+            int canvasId = c.getNumericId();
             preparedStmt.setString(transformedRow.size() + 7,
                     // getPolygonText(minx, miny, maxx, maxy));
                     getCubeText(minx, miny, maxx, maxy, canvasId));
@@ -176,10 +181,10 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
         
         // make bounding box cube to intersect with
-        String tileCube = "cube (" + 
-            "array [" + minx + ", " + miny + ", " + c.getId() + "], " +
-            "array [" + minx + ", " + (miny + Config.tileH) + ", " + c.getId() + "], " +
-            "array [" + (minx + Config.tileW) + ", " + (miny + Config.tileH) + ", " + c.getId() + "] )";
+        String tileCube = "(" + 
+            "array [" + minx + ", " + miny + ", " + c.getNumericId() + "], " +
+            "array [" + minx + ", " + (miny + Config.tileH) + ", " + c.getNumericId() + "], " +
+            "array [" + (minx + Config.tileW) + ", " + (miny + Config.tileH) + ", " + c.getNumericId() + "])";
         
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName()
@@ -189,7 +194,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
             sql += " and " + predicate + ";";
         else
             sql += ";";
-        System.out.println(minx + " " + miny + " " + c.getId() + " : " + sql);
+        System.out.println(minx + " " + miny + " " + c.getNumericId() + " : " + sql);
 
         // return
         return DbConnector.getQueryResult(Config.databaseName, sql);

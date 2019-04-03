@@ -41,6 +41,13 @@ public class Canvas implements Serializable {
         this.h = h;
     }
 
+    /*
+    Super dumb way now to use id as coordinate in cube indexing, just assign a num based on letters 
+    */
+    public int getNumericId() {
+        return id.hashCode();
+    }
+
     public String getId() {
         return id;
     }

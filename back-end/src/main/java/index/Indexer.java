@@ -195,7 +195,7 @@ public abstract class Indexer implements Serializable {
 
     protected static String getCubeText(double minx, double miny, double maxx, double maxy, int canvasId) {
 
-        String cubeText = "cube ( ";
+        String cubeText = "(";
         /*
         sql:
         insert into tbl_cube select id, cube ( array[minx, miny, canvasid], array[minx, maxy, canvasid], array[maxx, maxy, canvasid])
