@@ -38,6 +38,8 @@ public abstract class Indexer implements Serializable {
                         indexer = PsqlSpatialIndexer.getInstance();
                     else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
                         indexer = PsqlTileIndexer.getInstance();
+                    else if (Config.indexingScheme == Config.IndexingScheme.CUBE_INDEX)
+                        indexer = PsqlCubeSpatialIndexer.getInstance();
                 }
                 else if (Config.database == Config.Database.MYSQL) {
                     if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)

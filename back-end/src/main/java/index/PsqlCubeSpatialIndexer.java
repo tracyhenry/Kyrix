@@ -37,7 +37,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
 
         // step 0: create tables for storing bboxes and tiles
         // put all canvases and layers in same table
-        String bboxTableName = "bbox_" + Main.getProject();
+        String bboxTableName = "bbox_" + Main.getProject().getName();
 
         // create extension if it doesn't exist
         String extSql = "create extension if not exists cube;";
@@ -141,12 +141,58 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         sql:
             create index idx_tbl_cube_1 on tbl_cube using gist (v);
         */
-
         sql = "create index 3d_" + bboxTableName + " on " + bboxTableName + " using gist (v);";
         bboxStmt.executeUpdate(sql);
         DbConnector.commitConnection(Config.databaseName);
         bboxStmt.close();
+    }
 
+    @Override
+    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate)
+            throws Exception {
+        
+        // get column list string
+        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
+
+        // construct range query
+        String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName()
+                + " where v && ";
+        sql += regionWKT;
+        if (predicate.length() > 0) 
+            sql += " and " + predicate + ";";
+        else
+            sql += ";";
+        System.out.println(sql);
+
+        // return
+        return DbConnector.getQueryResult(Config.databaseName, sql);
+    }
+
+    @Override
+    public ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate)
+            throws Exception {
+
+        // get column list string
+        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
+        
+        // make bounding box cube to intersect with
+        String tileCube = "cube (" + 
+            "array [" + minx + ", " + miny + ", " + c.getId() + "], " +
+            "array [" + minx + ", " + (miny + Config.tileH) + ", " + c.getId() + "], " +
+            "array [" + (minx + Config.tileW) + ", " + (miny + Config.tileH) + ", " + c.getId() + "] )";
+        
+        // construct range query
+        String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName()
+                + " where v && " + tileCube;
+        
+        if (predicate.length() > 0)
+            sql += " and " + predicate + ";";
+        else
+            sql += ";";
+        System.out.println(minx + " " + miny + " " + c.getId() + " : " + sql);
+
+        // return
+        return DbConnector.getQueryResult(Config.databaseName, sql);
     }
 
 }

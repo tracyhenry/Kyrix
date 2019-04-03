@@ -3,6 +3,7 @@ package server;
 import box.Box;
 import box.BoxandData;
 import box.MikeBoxGetter;
+import box.TDBoxGetter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
@@ -23,13 +24,13 @@ public class BoxRequestHandler  implements HttpHandler {
 
     // gson builder
     private final Gson gson;
-    private MikeBoxGetter boxGetter;
+    private TDBoxGetter boxGetter;
 
     public BoxRequestHandler() {
 
         gson = new GsonBuilder().create();
-        boxGetter = new MikeBoxGetter();
-
+        // boxGetter = new MikeBoxGetter();
+        boxGetter = new TDBoxGetter();
     }
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
