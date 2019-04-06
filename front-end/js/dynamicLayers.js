@@ -43,7 +43,7 @@ function renderAxes(viewId, viewportX, viewportY, vWidth, vHeight) {
         // styling for autodd
         if (gvd.curCanvasId.startsWith("autodd")) {
             curg.selectAll(".tick line").attr("stroke", "#777").attr("stroke-dasharray", "3,10");
-            curg.style("font", "20px arial")
+            curg.style("font", "20px arial");
             curg.selectAll("path").remove();
         }
     }
@@ -190,6 +190,15 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
 
                 // highlight
                 highlightLowestSvg(viewId, tileSvg, i);
+
+                // rescale
+                if (param.retainSizeZoom) {
+                    tileSvg.select("g:last-of-type")
+                        .selectAll("*")
+                        .each(function () {
+                            zoomRescale(viewId, this);
+                        });
+                }
             }
         });
     });
@@ -320,6 +329,15 @@ function renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs
 
                 // highlight
                 highlightLowestSvg(viewId, dboxSvg, i);
+
+                // rescale
+                if (param.retainSizeZoom) {
+                    dboxSvg.select("g:last-of-type")
+                        .selectAll("*")
+                        .each(function () {
+                            zoomRescale(viewId, this);
+                        });
+                }
             }
 
             // modify global var
@@ -372,21 +390,29 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
         .attr("viewBox", viewportX + " " + viewportY + " " + vpW + " " + vpH);
 
     // check if there is literal zooming going on
-    // if yes, rescale the objects if asked
-    if (d3.event != null && d3.event.transform.k != 1) {
-        // apply additional zoom transforms
-        if (param.retainSizeZoom)
-            d3.selectAll(viewClass + ".lowestsvg:not(.static)")
-                .selectAll("g")
-                .selectAll("*")
-                .each(function () {
+    // if yes, rescale the objects
+    // do it both here and upon data return
+    if (d3.event != null && d3.event.transform.k != 1 && param.retainSizeZoom) {
+        // check if this is just a pan
+        var objectSelection = d3.selectAll(viewClass + ".lowestsvg:not(.static)")
+            .selectAll("g")
+            .selectAll("*");
+        if (! objectSelection.empty()) {
+            var transformStr = objectSelection.attr("transform");
+            var match = /.*scale\(([\d.]+), ([\d.]+)\)/g.exec(transformStr);
+            var scaleX = parseFloat(match[1]);
+            var scaleY = parseFloat(match[2]);
+        }
+        // rescale only if there is zoom
+        if (Math.abs(Math.max(scaleX, scaleY) * d3.event.transform.k - 1) > param.eps) {
+            objectSelection.each(function () {
                     zoomRescale(viewId, this);
                 });
+        }
     }
-    else {
-        if (param.fetchingScheme == "tiling")
-            renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);
-        else if (param.fetchingScheme == "dbox")
-            renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);
-    }
+
+    if (param.fetchingScheme == "tiling")
+        renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);
+    else if (param.fetchingScheme == "dbox")
+        renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);
 };

@@ -59,5 +59,5 @@ public class Config {
     public static int iteratorfetchSize = 1000;
 
     // for auto drill down
-    public static int autoDDDConstraintDValue = 30;
+    public static int autoDDDConstraintDValue = 40;
 }

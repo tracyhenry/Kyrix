@@ -16,7 +16,8 @@ public class AutoDD {
     private int bboxW, bboxH;
     private String rendering;
     private ArrayList<String> columnNames, queriedColumnNames = null;
-    private int numLevels, topLevelWidth, topLevelHeight, zoomFactor;
+    private int numLevels, topLevelWidth, topLevelHeight;
+    private double zoomFactor;
     private int xColId = -1, yColId = -1;
     private double loX = Double.NaN, loY, hiX, hiY;
 
@@ -104,7 +105,7 @@ public class AutoDD {
         return topLevelHeight;
     }
 
-    public int getZoomFactor() {
+    public double getZoomFactor() {
         return zoomFactor;
     }
 
@@ -134,9 +135,9 @@ public class AutoDD {
             }
         }
         if (isX)
-            return (topLevelWidth - bboxW) * (v - loX) / (hiX - loX) * Math.pow(zoomFactor, level) + bboxW / 2.0;
+            return ((topLevelWidth - bboxW) * (v - loX) / (hiX - loX) + bboxW / 2.0) * Math.pow(zoomFactor, level);
         else
-            return (topLevelHeight - bboxH) * (v - loY) / (hiY - loY) * Math.pow(zoomFactor, level) + bboxH / 2.0;
+            return ((topLevelHeight - bboxH) * (v - loY) / (hiY - loY) + bboxH / 2.0) * Math.pow(zoomFactor, level);
     }
 
     @Override

@@ -147,8 +147,8 @@ function addAutoDD(autoDD, isInNewView) {
     var autoDDCanvases = [];
     var transform = new Transform(autoDD.query, autoDD.db, "", [], true);
     for (var i = 0; i < autoDD.numLevels; i ++) {
-        var width = autoDD.topLevelWidth * Math.pow(autoDD.zoomFactor, i);
-        var height = autoDD.topLevelHeight * Math.pow(autoDD.zoomFactor, i);
+        var width = autoDD.topLevelWidth * Math.pow(autoDD.zoomFactor, i) | 0;
+        var height = autoDD.topLevelHeight * Math.pow(autoDD.zoomFactor, i) | 0;
 
         // construct a new canvas
         var curCanvas = new Canvas(canvasNamePrefix + "level" + i, width, height);
@@ -168,7 +168,7 @@ function addAutoDD(autoDD, isInNewView) {
         // construct rendering function
         var udfRenderer = autoDD.rendering;
         var renderFuncBody = (udfRenderer == null ? "" : "(" + udfRenderer.toString() + ")(svg, data, args);") + "\n";
-        renderFuncBody += "var g = svg.append(\"g\"); g.selectAll(\"text\").data(data).enter().append(\"text\")" +
+        renderFuncBody += "var g = svg.select(\"g:last-of-type\"); g.selectAll(\"text\").data(data).enter().append(\"text\")" +
             ".text(function(d) {return d.clusterNum;}).attr(\"x\", function(d) {return +d.maxx + 10;})" +
             ".attr(\"y\", function(d) {return +d.cy;}).attr(\"dy\", \".35em\").attr(\"font-size\", 20)" +
             ".attr(\"text-anchor\", \"middle\").style(\"fill-opacity\", 1);";
@@ -178,11 +178,13 @@ function addAutoDD(autoDD, isInNewView) {
 
         // axes
         if (autoDD.axis) {
+            var axesOffsetX = autoDD.bboxW / 2 * Math.pow(autoDD.zoomFactor, i);
+            var axesOffsetY = autoDD.bboxH / 2 * Math.pow(autoDD.zoomFactor, i);
             var axesFuncBody = "var cWidth = args.canvasW, cHeight = args.canvasH; var axes = [];\n" +
-                "//x \nvar x = d3.scaleLinear().domain([" + autoDD.loX + ", " + autoDD.hiX + "]).range([0, cWidth]);\n" +
+                "//x \nvar x = d3.scaleLinear().domain([" + autoDD.loX + ", " + autoDD.hiX + "]).range([" + axesOffsetX + ", cWidth - " + axesOffsetX + "]);\n" +
                 "var xAxis = d3.axisTop().tickSize(-cHeight); " +
                 "axes.push({\"dim\": \"x\", \"scale\": x, \"axis\": xAxis, \"translate\": [0, 0]});\n" +
-                "//y \nvar y = d3.scaleLinear().domain([" + autoDD.loY + ", " + autoDD.hiY + "]).range([0, cHeight]);\n" +
+                "//y \nvar y = d3.scaleLinear().domain([" + autoDD.loY + ", " + autoDD.hiY + "]).range([" + axesOffsetY + ", cHeight - " + axesOffsetY + "]);\n" +
                 "var yAxis = d3.axisLeft().tickSize(-cWidth); " +
                 "axes.push({\"dim\": \"y\", \"scale\": y, \"axis\": yAxis, \"translate\": [0, 0]});\n" +
                 "return axes;";

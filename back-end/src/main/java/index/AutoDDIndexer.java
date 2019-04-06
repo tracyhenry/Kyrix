@@ -131,11 +131,10 @@ public class AutoDDIndexer extends PsqlSpatialIndexer {
             // check D constraint
             String sql = "select ST_Distance(st_GeomFromText('" + polygonText + "'), geom) from " + getAutoDDBboxTableName(autoDDIndex, level)
                     + " order by geom <-> st_GeomFromText('" + polygonText + "') limit 1;";
-            //System.out.println(sql);
             ArrayList<ArrayList<String>> disResult = DbConnector.getQueryResult(Config.databaseName, sql);
             if (! disResult.isEmpty()) {
                 double dis = Double.valueOf(disResult.get(0).get(0));
-                if (dis < Config.autoDDDConstraintDValue)
+                if (dis <= Config.autoDDDConstraintDValue)
                     continue;
             }
 
@@ -155,8 +154,10 @@ public class AutoDDIndexer extends PsqlSpatialIndexer {
                         getPolygonText(minx, miny, maxx, maxy));
                 preparedStmt.addBatch();
                 cx *= zoomFactor; cy *= zoomFactor;
-                minx *= zoomFactor; miny *= zoomFactor;
-                maxx *= zoomFactor; maxy *= zoomFactor;
+                minx = cx - autoDD.getBboxW() / 2;
+                miny = cy - autoDD.getBboxH() / 2;
+                maxx = cx + autoDD.getBboxW() / 2;
+                maxy = cy + autoDD.getBboxH() / 2;
             }
             // TODO: batch insert
             for (int i = level; i < numLevels; i ++)
