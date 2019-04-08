@@ -20,6 +20,7 @@ function Layer(transform, isStatic) {
     else
         this.isStatic = isStatic;
     this.isAutoDDLayer = false;
+    this.retainSizeZoom = false;
 };
 
 /**
@@ -61,11 +62,21 @@ function setIsAutoDD(isAutoDD) {
     this.isAutoDDLayer = isAutoDD;
 }
 
+/**
+ * set retainSizeZoom,
+ * @param retainSizeZoom
+ */
+function setRetainSizeZoom(retainSizeZoom) {
+
+    this.retainSizeZoom = retainSizeZoom;
+}
+
 // define prototype
 Layer.prototype = {
     addPlacement: addPlacement,
     addRenderingFunc: addRenderingFunc,
-    setIsAutoDD : setIsAutoDD
+    setIsAutoDD : setIsAutoDD,
+    setRetainSizeZoom : setRetainSizeZoom
 };
 
 // exports

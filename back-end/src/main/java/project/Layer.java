@@ -15,6 +15,7 @@ public class Layer implements Serializable {
     private String rendering;
     private Indexer indexer;
     private boolean isAutoDDLayer;
+    private boolean retainSizeZoom;
 
     public Transform getTransform() {
         return transform;
@@ -44,6 +45,10 @@ public class Layer implements Serializable {
         return isAutoDDLayer;
     }
 
+    public boolean isRetainSizeZoom() {
+        return retainSizeZoom;
+    }
+
     @Override
     public String toString() {
         return "Layer{" +
@@ -52,6 +57,7 @@ public class Layer implements Serializable {
                 ", placement=" + placement +
                 ", rendering='" + rendering + '\'' +
                 ", isAutoDDLayer=" + isAutoDDLayer +
+                ", retainSizeZoom=" + retainSizeZoom +
                 '}';
     }
 }

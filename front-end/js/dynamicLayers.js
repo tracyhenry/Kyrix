@@ -192,7 +192,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                 highlightLowestSvg(viewId, tileSvg, i);
 
                 // rescale
-                if (param.retainSizeZoom) {
+                if (gvd.curCanvas.layers[i].retainSizeZoom) {
                     tileSvg.select("g:last-of-type")
                         .selectAll("*")
                         .each(function () {
@@ -331,7 +331,7 @@ function renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs
                 highlightLowestSvg(viewId, dboxSvg, i);
 
                 // rescale
-                if (param.retainSizeZoom) {
+                if (gvd.curCanvas.layers[i].retainSizeZoom) {
                     dboxSvg.select("g:last-of-type")
                         .selectAll("*")
                         .each(function () {
@@ -392,25 +392,32 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
     // check if there is literal zooming going on
     // if yes, rescale the objects
     // do it both here and upon data return
-    if (d3.event != null && d3.event.transform.k != 1 && param.retainSizeZoom) {
-        // check if this is just a pan
-        var objectSelection = d3.selectAll(viewClass + ".lowestsvg:not(.static)")
-            .selectAll("g")
-            .selectAll("*");
-        if (! objectSelection.empty()) {
-            var transformStr = objectSelection.attr("transform");
-            var match = /.*scale\(([\d.]+), ([\d.]+)\)/g.exec(transformStr);
-            var scaleX = parseFloat(match[1]);
-            var scaleY = parseFloat(match[2]);
-        }
+    if (d3.event != null && d3.event.transform.k != 1) {
+
         // rescale only if there is zoom
-        if (Math.abs(Math.max(scaleX, scaleY) * d3.event.transform.k - 1) > param.eps) {
-            objectSelection.each(function () {
+        var numLayer = gvd.curCanvas.layers.length;
+        for (var i = 0; i < numLayer; i ++) {
+            if (! gvd.curCanvas.layers[i].retainSizeZoom)
+                continue;
+            // check if this is just a pan
+            objectSelection = d3.selectAll(viewClass + ".layerg.layer" + i)
+                .selectAll(".lowestsvg:not(.static)")
+                .selectAll("g")
+                .selectAll("*");
+            if (! objectSelection.empty()) {
+                var transformStr = objectSelection.attr("transform");
+                var match = /.*scale\(([\d.]+), ([\d.]+)\)/g.exec(transformStr);
+                var scaleX = parseFloat(match[1]);
+                var scaleY = parseFloat(match[2]);
+            }
+            if (Math.abs(Math.max(scaleX, scaleY) * d3.event.transform.k - 1) > param.eps)
+                objectSelection.each(function () {
                     zoomRescale(viewId, this);
                 });
         }
     }
 
+    // fetch data
     if (param.fetchingScheme == "tiling")
         renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);
     else if (param.fetchingScheme == "dbox")

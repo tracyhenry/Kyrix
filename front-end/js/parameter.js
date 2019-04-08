@@ -38,9 +38,6 @@ param.extraTiles = 0;
 // padding for the container svg
 param.viewPadding = 50;
 
-// whether retain size when literal zooming
-param.retainSizeZoom = true;
-
 // jump types
 param.literalZoomIn = "literal_zoom_in";
 param.literalZoomOut = "literal_zoom_out";

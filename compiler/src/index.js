@@ -162,6 +162,9 @@ function addAutoDD(autoDD, isInNewView) {
         // set isAutoDD
         curLayer.setIsAutoDD(true);
 
+        // set retainSizeZoom
+        curLayer.setRetainSizeZoom(true);
+
         // dummy placement
         curLayer.addPlacement({"centroid_x" : "con:0", "centroid_y" : "con:0", "width" : "con:0", "height" : "con:0"});
 
