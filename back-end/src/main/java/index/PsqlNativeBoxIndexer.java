@@ -55,7 +55,7 @@ public class PsqlNativeBoxIndexer extends Indexer {
         // create the bbox table
         sql = "create unlogged table " + bboxTableName + " (";
         for (int i = 0; i < trans.getColumnNames().size(); i ++)
-            sql += trans.getColumnNames().get(i) + " text, ";
+	    sql += trans.getColumnNames().get(i) + " text, ";
 	if (isCitus) {
 	    sql += "citus_distribution_id int, ";
 	}
@@ -81,7 +81,7 @@ public class PsqlNativeBoxIndexer extends Indexer {
         String insertSql = "insert into " + bboxTableName + " values (";
 	// for debugging, vary number of spaces after the commas
         for (int i = 0; i < trans.getColumnNames().size(); i ++)
-            insertSql += "?,";
+	    insertSql += "?,";
 	if (isCitus) {
 	    insertSql += "?,  ";
 	}
@@ -121,7 +121,7 @@ public class PsqlNativeBoxIndexer extends Indexer {
 
             // insert into bbox table
 	    int pscol = 1;
-            for (int i = 0; i < transformedRow.size(); i ++)
+	    for (int i = 0; i < trans.getColumnNames().size(); i ++)
                 preparedStmt.setString(pscol++, transformedRow.get(i).replaceAll("\'", "\'\'"));
 	    if (isCitus) {
 		// row number is a fine distribution key (for now) - round robin across the cluster

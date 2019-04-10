@@ -33,33 +33,33 @@ public class ProjectRequestHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
 
-        System.out.println("\n\nServing /project\n New project definition coming...");
-
-        // check if this is a POST request
-        if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
-            return;
-        }
-
-        // extract project object
-        InputStreamReader isr =  new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
-        BufferedReader br = new BufferedReader(isr);
-        String projectJSON = br.readLine();
-        Project newProject = gson.fromJson(projectJSON, Project.class);
-        if (! newProject.getName().equals(Config.projectName)) {
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Not main project.");
-            System.out.println("Not the main project... doing nothing");
-            return ;
-        }
-
-        Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Good, updating main project.");
-
-        // diff between old and new
-	String forceRecomputeStr = httpExchange.getRequestHeaders().getFirst("X-Kyrix-Force-Recompute");
-	boolean forceRecompute = forceRecomputeStr.equals("1"); // handle null
-        Project oldProject = Main.getProject();
-        Main.setProject(newProject);
         try {
+	    System.out.println("\n\nServing /project\n New project definition coming...");
+
+	    // check if this is a POST request
+	    if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
+		Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
+		return;
+	    }
+
+	    // extract project object
+	    InputStreamReader isr =  new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
+	    BufferedReader br = new BufferedReader(isr);
+	    String projectJSON = br.readLine();
+	    Project newProject = gson.fromJson(projectJSON, Project.class);
+	    if (! newProject.getName().equals(Config.projectName)) {
+		Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Not main project.");
+		System.out.println("Not the main project... doing nothing");
+		return ;
+	    }
+
+	    Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Good, updating main project.");
+
+	    // diff between old and new
+	    String forceRecomputeStr = httpExchange.getRequestHeaders().getFirst("X-Kyrix-Force-Recompute");
+	    boolean forceRecompute = (forceRecomputeStr == null) ? false : forceRecomputeStr.equals("1");
+	    Project oldProject = Main.getProject();
+	    Main.setProject(newProject);
             if (forceRecompute) {
                 System.out.println("Requesting force-recompute, Ignoring diff, and shutting down server and recomputing...");
                 Server.terminate();
