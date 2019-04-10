@@ -81,7 +81,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         for (int i = 0; i < colNames.size() + 6; i ++) {
             insertSql += "?, ";
         }
-        insertSql += "?);";
+        insertSql += "?::cube);";
         PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
         while (rs.next()) {
 
@@ -146,7 +146,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         sql:
             create index idx_tbl_cube_1 on tbl_cube using gist (v);
         */
-        sql = "create index 3d_" + bboxTableName + " on " + bboxTableName + " using gist (v);";
+        sql = "create index cube_idx_" + bboxTableName + " on " + bboxTableName + " using gist (v);";
         bboxStmt.executeUpdate(sql);
         DbConnector.commitConnection(Config.databaseName);
         bboxStmt.close();
@@ -183,7 +183,6 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         // make bounding box cube to intersect with
         String tileCube = "(" + 
             "array [" + minx + ", " + miny + ", " + c.getNumericId() + "], " +
-            "array [" + minx + ", " + (miny + Config.tileH) + ", " + c.getNumericId() + "], " +
             "array [" + (minx + Config.tileW) + ", " + (miny + Config.tileH) + ", " + c.getNumericId() + "])";
         
         // construct range query

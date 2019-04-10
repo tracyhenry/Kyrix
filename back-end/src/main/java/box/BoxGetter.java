@@ -61,7 +61,6 @@ public abstract class BoxGetter {
 
         String cubeNew = "[" + 
             "(" + newMinx + ", " + newMiny + ", " + c.getNumericId() + "), " +
-            "(" + newMinx + ", " + newMaxy + ", " + c.getNumericId() + "), " +
             "(" + newMaxx + ", " + newMaxy + ", " + c.getNumericId() + ")]";
         
         // loop through each layer
