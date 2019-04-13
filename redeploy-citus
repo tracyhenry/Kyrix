@@ -4,7 +4,7 @@
 echo "redeploying citus on kubernetes..."
 
 source docker-scripts/spinner.sh
-source ./setup-db-vars.env
+source ./setup-db-vars.env > /dev/null
 echo "$NUM_WORKERS workers found in worker-deployment.yaml"
 
 echo "deleting existing citus deployment..."
@@ -25,7 +25,7 @@ echo "waiting for new deployment to complete..."
 while [ 1 ]; do w=`kubectl get pods | egrep -c 'worker.+Running'`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w kubernetes containers running, waiting for $NUM_WORKERS"; sleep 3; done
 echo "all $NUM_WORKERS kubernetes containers running."
 
-source ./setup-citus-vars.env
+source ./setup-citus-vars.env > /dev/null
 
 # convenience for developers
 kubectl exec -it $MASTER -- su - postgres -c "echo \"\\set PROMPT1 '%n@%/%R%# '\" > .psqlrc"
@@ -85,7 +85,7 @@ echo "installing developer tools (optional)"
 kubectl exec -it $MASTER -- sh -c 'if [ -x "$(command -v apt)" ]; then apt install -y iputils-ping telnet emacs; fi' > /dev/null 2>&1  # ubuntu
 kubectl exec -it $MASTER -- sh -c 'if [ -x "$(command -v apk)" ]; then apk install -y bash busybox-extras emacs; fi' > /dev/null 2>&1  # alpine
 
-source setup-bastion-vars.env
+source setup-bastion-vars.env > /dev/null
 
 echo "done! to connect to citus:"
 echo " - easy: source ./setup-shell-vars.env; kyrix-psql"

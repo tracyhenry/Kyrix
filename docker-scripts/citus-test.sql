@@ -18,7 +18,7 @@ CREATE TABLE ltowns (
   department VARCHAR(4)
 );
 
-select citus_raise('inserting 2.5M records into ltowns (local table)...');
+select citus_raise('inserting records into ltowns (local table)...');
 insert into ltowns (
     code, article, name, department
 ) select
@@ -26,7 +26,7 @@ insert into ltowns (
     md5(random()::text),
     md5(random()::text),
     left(md5(random()::text), 4)
-from generate_series(1, 2500000) s(i);
+from generate_series(1, 250000) s(i);   -- change to 2.5M for scale tests
 
 -- citus table: dtowns -- partitioned table
 DROP TABLE IF EXISTS dtowns CASCADE;
