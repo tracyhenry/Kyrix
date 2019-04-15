@@ -9,7 +9,7 @@ SRCDATA_DB_TEST_TABLE=${SRCDATA_DB_TEST_TABLE:-plays}  # source table (one of...
 SRCDATA_DB_TEST_TABLE_MIN_RECS=${SRCDATA_DB_TEST_TABLE_MIN_RECS:-500000}  # rarely needs changing: min records to find in test table
 SRCDATA_DB_LOAD_CMD=${SRCDATA_DB_LOAD_CMD:-/kyrix/compiler/examples/nba/reload-nba.sh}
 KYRIX_DB_INDEX_CMD=${KYRIX_DB_INDEX_CMD:-/kyrix/compiler/examples/nba/reindex-nba.sh}
-KYRIX_DB_INDEX_FORCE=${KYRIX_DB_INDEX_FORCE:0}
+KYRIX_DB_INDEX_FORCE=${KYRIX_DB_INDEX_FORCE:-0}
 
 PGHOST=${PGHOST:-db}  # db is the default used in docker-compose.yml
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-kyrixftw}
@@ -34,10 +34,13 @@ echo "kyrix" >> /kyrix/config.txt
 echo "/kyrix/compiler" >> /kyrix/config.txt
 
 IGNORE_RX="(NOTICE|HINT|already exists)"
-echo "*** setting up postgres roles/databases..."
+echo "*** setting up postgres roles/databases on master..."
 psql $PGCONN_STRING_POSTGRES/postgres -c "CREATE USER $USER_NAME WITH SUPERUSER PASSWORD '$USER_PASSWORD';" | egrep -v "$IGNORE_RX" 2>&1 || true
+# TOOD(citus): if kyrix is missing, we actually need to create on every node... currently, this is handled by redeploy-citus
 psql $PGCONN_STRING_POSTGRES/postgres -c "CREATE DATABASE kyrix OWNER $USER_NAME;" | egrep -v "$IGNORE_RX" 2>&1 || true
+# citus: this data isn't distributed, so these DBs
 psql $PGCONN_STRING_POSTGRES/postgres -c "CREATE DATABASE $SRCDATA_DB OWNER $USER_NAME;" | egrep -v "$IGNORE_RX" 2>&1 || true
+
 
 # if used, postgis is setup previously in the database - this is to support citus, which needs is initialized on every node
 # TODO: throwing errors: CREATE EXTENSION postgis_sfcgal; CREATE EXTENSION address_standardizer;CREATE EXTENSION address_standardizer_data_us;
@@ -50,9 +53,9 @@ psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARC
 
 cd /kyrix/back-end
 
-recs_exists=$(psql $PGCONN_STRING_USER/kyrix -X -P t -P format=unaligned -c "select exists(select 1 from information_schema.tables where table_schema='public' and table_name='$SRCDATA_DB_TEST_TABLE');" || true)
+recs_exists=$(psql $PGCONN_STRING_USER/$SRCDATA_DB -X -P t -P format=unaligned -c "select exists(select 1 from information_schema.tables where table_schema='public' and table_name='$SRCDATA_DB_TEST_TABLE');" || true)
 if [ "$recs_exists" = "t" ]; then
-    recs_found=$(psql $PGCONN_STRING_USER/kyrix -X -P t -P format=unaligned -c "select count(*)>$SRCDATA_DB_TEST_TABLE_MIN_RECS from $SRCDATA_DB_TEST_TABLE;" || true)
+    recs_found=$(psql $PGCONN_STRING_USER/$SRCDATA_DB -X -P t -P format=unaligned -c "select count(*)>$SRCDATA_DB_TEST_TABLE_MIN_RECS from $SRCDATA_DB_TEST_TABLE;" || true)
 else
     recs_found=f
 fi
@@ -69,6 +72,8 @@ else
     echo "raw data records loaded: $numrecs"
     # TODO(asah): test for >SRCDATA_DB_TEST_TABLE_MIN_RECS
 fi
+
+while [ 1 ]; do KYRIX_PID=`ps awwwx | grep Slf4jMavenTransferListener | grep -v grep | head -1 | awk '{print $1}' | tr -d '\n'`; if [ "x$KYRIX_PID" == "x" ]; then break; fi; spin "backend server found - killing $KYRIX_PID..."; kill $KYRIX_PID; sleep 1; done
 
 echo "*** starting backend server..."
 cd /kyrix/back-end
@@ -87,7 +92,7 @@ echo "cmd=$cmd"
 while [ 1 ]; do
     w=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select dirty from project where name='$SRCDATA_DB';") || -1;
     if [ "x$w" = "x0" ]; then break; fi;
-    spin "waiting for kyrix re-index: dirty=$w"
+    spin "waiting for kyrix re-index, currently dirty=$w"
 done
 echo "yes" > /kyrix-started
 
