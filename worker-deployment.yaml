@@ -19,7 +19,7 @@ spec:
         io.kompose.service: worker
     spec:
       containers:
-      - image: asah/pg11_postgis25_citus811:1.8.1555163918
+      - image: asah/pg11_postgis25_citus811:1.8.1555177017
         name: worker
         resources: {}
       restartPolicy: Always
