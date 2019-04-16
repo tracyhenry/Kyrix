@@ -171,8 +171,10 @@ public class PsqlNativeBoxIndexer extends Indexer {
         // create index - gist/spgist require logged table type
 	// TODO: consider sp-gist
         sql = "create index sp_" + bboxTableName + " on " + bboxTableName + " using gist (geom);";
+	System.out.println(sql);
         bboxStmt.executeUpdate(sql);
         sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
+	System.out.println(sql);
         bboxStmt.executeUpdate(sql);
         DbConnector.commitConnection(Config.databaseName);
 
