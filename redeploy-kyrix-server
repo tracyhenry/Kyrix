@@ -2,6 +2,8 @@
 # Google GCP note: to run, you must first create a kubernetes cluster with plenty of RAM - we use n1-standard-2 (7.5GB)
 source docker-scripts/spinner.sh
 
+DATA=${DATA:-nba}
+
 echo "checking for Citus-on-Kubernetes and gathering connection info..."
 source setup-citus-vars.env > /dev/null
 source setup-bastion-vars.env > /dev/null
@@ -47,7 +49,7 @@ if [ "x$DEV" = "x1" ]; then
     kubectl cp docker-scripts/start-kyrix.sh $KYRIX:/
 fi
 
-./restart-kyrix-server.sh &
+DATA=$DATA ./restart-kyrix-server.sh &
 
 # wait for external IP then export vars
 while [ 1 ]; do ip=`kubectl get services -o wide | grep kyrixserver | awk '{print $4}'`; if [ $ip != '<pending>' ]; then break; fi; spin "waiting for external IP"; done
