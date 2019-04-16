@@ -10,6 +10,7 @@ SRCDATA_DB_TEST_TABLE_MIN_RECS=${SRCDATA_DB_TEST_TABLE_MIN_RECS:-500000}  # rare
 SRCDATA_DB_LOAD_CMD=${SRCDATA_DB_LOAD_CMD:-/kyrix/compiler/examples/nba/reload-nba.sh}
 KYRIX_DB_INDEX_CMD=${KYRIX_DB_INDEX_CMD:-/kyrix/compiler/examples/nba/reindex-nba.sh}
 KYRIX_DB_INDEX_FORCE=${KYRIX_DB_INDEX_FORCE:-0}
+KYRIX_DB_RELOAD_FORCE=${KYRIX_DB_RELOAD_FORCE:-0}
 
 PGHOST=${PGHOST:-db}  # db is the default used in docker-compose.yml
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-kyrixftw}
@@ -59,7 +60,7 @@ if [ "$recs_exists" = "t" ]; then
 else
     recs_found=f
 fi
-if [ "$recs_found" = "t" ]; then
+if [ "$recs_found" = "t" ] && [ "x$KYRIX_DB_RELOAD_FORCE" = "x0" ]; then
     # if you want to force a reload, the easiest way is to dropdb, e.g.
     #   docker exec -u postgres -it kyrix_db_1 sh -c "dropdb nba"
     # note: requires the database to be running, i.e. let docker-compose finish starting up.
@@ -67,7 +68,7 @@ if [ "$recs_found" = "t" ]; then
 else
     # TODO: prints ugly error message the first time
     echo "raw data records not found - loading..."
-    PGCONN=$PGCONN_STRING_USER/$SRCDATA_DB $SRCDATA_DB_LOAD_CMD | psql $PGCONN_STRING_USER/$SRCDATA_DB | egrep -i 'error' || true
+    PGCONN=$PGCONN_STRING_USER/$SRCDATA_DB $SRCDATA_DB_LOAD_CMD
     numrecs=$(psql $PGCONN_STRING_USER/$SRCDATA_DB -X -P t -P format=unaligned -c "select count(*) from $SRCDATA_DB_TEST_TABLE;" || -1)
     echo "raw data records loaded: $numrecs"
     # TODO(asah): test for >SRCDATA_DB_TEST_TABLE_MIN_RECS
