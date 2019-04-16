@@ -5,17 +5,19 @@ import main.DbConnector;
 import main.Main;
 import project.AutoDD;
 import project.Canvas;
-import project.Layer;
 
 import java.sql.*;
 import java.util.ArrayList;
 
 /**
- * Created by wenbo on 4/1/19.
+ * Created by wenbo on 4/15/19.
  */
 public class AutoDDIndexer extends PsqlSpatialIndexer {
 
     private static AutoDDIndexer instance = null;
+    private static int virtualViewportSize = 100;
+    private static int densityUpperBound = 5;
+    private double overlappingThreshold = 0.5; //TODO: formalize this overlapping parameter
 
     // singleton pattern to ensure only one instance existed
     private AutoDDIndexer() {}
@@ -79,14 +81,22 @@ public class AutoDDIndexer extends PsqlSpatialIndexer {
         // do indexing for each level
         for (int i = 0; i < autoDD.getNumLevels(); i ++)
             createMVForLevel(i, autoDDIndex);
+
+        DbConnector.closeConnection(Config.databaseName);
     }
 
     private void createMVForLevel(int level, int autoDDIndex) throws SQLException, ClassNotFoundException {
+
+        System.out.println("Algorithm: direct density check...");
 
         AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
         Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
         double zoomFactor = autoDD.getZoomFactor();
         int numLevels = autoDD.getNumLevels();
+        if (level == 0) // Hardcode
+            densityUpperBound = 15;
+        else
+            densityUpperBound = 6;
 
         // set up query iterator
         Statement rawDBStmt = DbConnector.getStmtByDbName(autoDD.getDb());
@@ -111,7 +121,7 @@ public class AutoDDIndexer extends PsqlSpatialIndexer {
 
             // count log
             rowCount ++;
-            if (rowCount % 1000000 == 0)
+            if (rowCount % 1000 == 0)
                 System.out.println(level + " : " + rowCount);
 
             // get raw row
@@ -126,17 +136,56 @@ public class AutoDDIndexer extends PsqlSpatialIndexer {
             double miny = cy - autoDD.getBboxH() / 2;
             double maxx = cx + autoDD.getBboxW() / 2;
             double maxy = cy + autoDD.getBboxH() / 2;
-            String polygonText = getPolygonText(minx, miny, maxx, maxy);
+            String bigBoxPolygonText = getPolygonText(cx - virtualViewportSize, cy - virtualViewportSize,
+                    cx + virtualViewportSize, cy + virtualViewportSize);
 
-            // check D constraint
-            String sql = "select ST_Distance(st_GeomFromText('" + polygonText + "'), geom) from " + getAutoDDBboxTableName(autoDDIndex, level)
-                    + " order by geom <-> st_GeomFromText('" + polygonText + "') limit 1;";
-            ArrayList<ArrayList<String>> disResult = DbConnector.getQueryResult(Config.databaseName, sql);
-            if (! disResult.isEmpty()) {
-                double dis = Double.valueOf(disResult.get(0).get(0));
-                if (dis <= Config.autoDDDConstraintDValue)
-                    continue;
+            // find objects close enough to the current new object
+            String sql = "select cx, cy from " + getAutoDDBboxTableName(autoDDIndex, level)
+                    + " where st_intersects(st_GeomFromText('" + bigBoxPolygonText + "'), geom);";
+            ArrayList<ArrayList<String>> closeObjects = DbConnector.getQueryResult(Config.databaseName, sql);
+            boolean isAddingCurNewObject = true;
+
+            // check overlap
+            for (int i = 0; i < closeObjects.size(); i ++) {
+                double curCx = Double.valueOf(closeObjects.get(i).get(0));
+                double curCy = Double.valueOf(closeObjects.get(i).get(1));
+                if (Math.abs(curCx - cx) / (double) autoDD.getBboxW() < overlappingThreshold &&
+                        Math.abs(curCy - cy) / (double) autoDD.getBboxH() < overlappingThreshold) {
+                    isAddingCurNewObject = false;
+                    break;
+                }
             }
+            if (! isAddingCurNewObject)
+                continue;
+
+            // check density: O(C^3) TODO: improve it to O(C^2 log C)
+            for (int i = 0; i < closeObjects.size(); i ++) {
+                for (int j = 0; j < closeObjects.size(); j ++) {
+                    if (i == j)
+                        continue;
+                    double curMinx = Double.valueOf(closeObjects.get(i).get(0));
+                    double curMiny = Double.valueOf(closeObjects.get(j).get(1));
+                    double curMaxx = curMinx + virtualViewportSize;
+                    double curMaxy = curMiny + virtualViewportSize;
+                    int density = 0;
+                    for (int k = 0; k < closeObjects.size(); k ++) {
+                        double curCx = Double.valueOf(closeObjects.get(k).get(0));
+                        double curCy = Double.valueOf(closeObjects.get(k).get(1));
+                        if (curMinx <= curCx && curCx <= curMaxx && curMiny <= curCy && curCy <= curMaxy)
+                            density ++;
+                    }
+                    if (curMinx <= cx && cx <= curMaxx && curMiny <= cy && cy <= curMaxy)
+                        density ++;
+                    if (density > densityUpperBound) {
+                        isAddingCurNewObject = false;
+                        break;
+                    }
+                }
+                if (! isAddingCurNewObject)
+                    break;
+            }
+            if (! isAddingCurNewObject)
+                continue;
 
             // sample this object, insert to all levels below this level
             for (int i = level; i < numLevels; i ++) {

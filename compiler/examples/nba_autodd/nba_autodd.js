@@ -4,7 +4,7 @@ const AutoDD = require("../../src/AutoDD").AutoDD;
 const renderers = require("../nba/renderers");
 
 // construct a project
-var p = new Project("autodd_test", "../../../config.txt");
+var p = new Project("nba_autodd", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
 
 // set up auto drill down
