@@ -53,6 +53,7 @@ public class PsqlNativeBoxIndexer extends Indexer {
         bboxStmt.executeUpdate(sql);
 
         // create the bbox table
+	// TODO: set unlogged on the shards... this is just the master...
         sql = "create unlogged table " + bboxTableName + " (";
         for (int i = 0; i < trans.getColumnNames().size(); i ++)
 	    sql += trans.getColumnNames().get(i) + " text, ";
@@ -100,7 +101,10 @@ public class PsqlNativeBoxIndexer extends Indexer {
                 long currTs = (new Date()).getTime();
 		if (currTs/5000 > lastTs/5000) {
                     lastTs = currTs;
-                    System.out.println((currTs-startTs)/1000 + " secs: "+rowCount+" records inserted. "+1000*rowCount/(currTs-startTs)+" recs/sec.");
+		    long secs = (currTs-startTs)/1000;
+		    if (secs > 0) {
+			System.out.println(secs + " secs: "+rowCount+" records inserted. "+(rowCount/secs)+" recs/sec.");
+		    }
 		}
             }
 
@@ -174,6 +178,7 @@ public class PsqlNativeBoxIndexer extends Indexer {
 
 	sql = "alter table " + bboxTableName + " set logged;";
 	if (isCitus) {
+	    // TODO: doesn't work because workers have sharded table-names (and multiple shards)...
 	    sql = "SELECT run_command_on_workers('"+sql+"')";
 	    System.out.println(sql);
 	    bboxStmt.executeQuery(sql);
