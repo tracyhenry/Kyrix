@@ -53,8 +53,9 @@ public class PsqlNativeBoxIndexer extends Indexer {
         bboxStmt.executeUpdate(sql);
 
         // create the bbox table
-	// TODO: set unlogged on the shards... this is just the master...
-        sql = "create unlogged table " + bboxTableName + " (";
+	// yes, citus supports unlogged tables!
+	// http://docs.citusdata.com/en/v8.1/performance/performance_tuning.html#postgresql-tuning
+        sql = "CREATE UNLOGGED TABLE " + bboxTableName + " (";
         for (int i = 0; i < trans.getColumnNames().size(); i ++)
 	    sql += trans.getColumnNames().get(i) + " text, ";
 	if (isCitus) {
@@ -170,24 +171,24 @@ public class PsqlNativeBoxIndexer extends Indexer {
 	
         // create index - gist/spgist require logged table type
 	// TODO: consider sp-gist
-        sql = "create index sp_" + bboxTableName + " on " + bboxTableName + " using gist (geom);";
+        sql = "CREATE INDEX sp_" + bboxTableName + " ON " + bboxTableName + " USING gist (geom);";
 	System.out.println(sql);
         bboxStmt.executeUpdate(sql);
-        sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
-	System.out.println(sql);
-        bboxStmt.executeUpdate(sql);
+	// don't use clustering
+        //sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
+	//System.out.println(sql);
+        //bboxStmt.executeUpdate(sql);
         DbConnector.commitConnection(Config.databaseName);
 
-	sql = "alter table " + bboxTableName + " set logged;";
-	if (isCitus) {
-	    // TODO: doesn't work because workers have sharded table-names (and multiple shards)...
-	    sql = "SELECT run_command_on_workers('"+sql+"')";
+	// ALTER TABLE SET LOGGED is not supported by citus - could maybe perform locally using
+	//    run_command_on_shards() ?
+	// https://github.com/citusdata/citus/blob/master/src/backend/distributed/commands/table.c#L903
+	if (!isCitus) {
+	    sql = "ALTER TABLE " + bboxTableName + " SET LOGGED;";
 	    System.out.println(sql);
-	    bboxStmt.executeQuery(sql);
-	} else {
 	    bboxStmt.executeUpdate(sql);
+	    bboxStmt.close();
 	}
-        bboxStmt.close();
     }
 
     @Override
