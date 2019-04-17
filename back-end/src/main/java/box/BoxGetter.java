@@ -59,9 +59,9 @@ public abstract class BoxGetter {
         double oldMinx = oldBox.getMinx(), oldMiny = oldBox.getMiny();
         double oldMaxx = oldBox.getMaxx(), oldMaxy = oldBox.getMaxy();
 
-        String cubeNew = "[" + 
-            "(" + newMinx + ", " + newMiny + ", " + c.getNumericId() + "), " +
-            "(" + newMaxx + ", " + newMaxy + ", " + c.getNumericId() + ")]";
+        String cubeNew = "cube (" + 
+            "array[" + newMinx + ", " + newMiny + ", " + c.getNumericId() + "], " +
+            "array[" + newMaxx + ", " + newMaxy + ", " + c.getNumericId() + "])";
         
         // loop through each layer
         for (int i = 0; i < c.getLayers().size(); i ++) {

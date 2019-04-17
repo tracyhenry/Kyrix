@@ -1,6 +1,6 @@
 #!/bin/sh
 
-KYRIX_DB=nba
+KYRIX_DB=dots
 PGHOST=${PGHOST:-db}  # db is the default used in docker-compose.yml
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-kyrixftw}
 USER_NAME=${USER_NAME:-kyrix}
@@ -34,7 +34,13 @@ psql $PGCONN_STRING_USER/$KYRIX_DB -c "$EXT_CMD" | egrep -v "$IGNORE_RX" 2>&1 ||
 psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
 psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
 
+
+psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE DOTS (id int, x int, y int);"
+
 cd /kyrix/back-end
+
+psql $PGCONN_STRING_USER/$KYRIX_DB -c "copy dots from '/dots_big.csv' delimiter E'\t' csv header;"
+
 
 plays_exists=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select exists(select 1 from information_schema.tables where table_schema='public' and table_name='plays');" || true)
 if [ "$plays_exists" = "t" ]; then
@@ -65,8 +71,8 @@ echo "*** (re)configuring for NBA examples to ensure backend server recomputes..
 
 cd /kyrix/compiler
 npm rebuild | egrep -v '(@[0-9.]+ /kyrix/compiler/node_modules/)'
-cd /kyrix/compiler/examples/nba_cmv
-node nba_cmv.js | egrep -i "error|connected" || true
+cd /kyrix/compiler/examples/dots
+node dots.js | egrep -i "error|connected" || true
 
 echo "*** done! Kyrix ready at: http://<host>:8000/  (may need a minute to recompute indexes - watch this log for messages)"
 

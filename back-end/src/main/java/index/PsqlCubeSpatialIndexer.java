@@ -181,9 +181,9 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
         
         // make bounding box cube to intersect with
-        String tileCube = "(" + 
-            "array [" + minx + ", " + miny + ", " + c.getNumericId() + "], " +
-            "array [" + (minx + Config.tileW) + ", " + (miny + Config.tileH) + ", " + c.getNumericId() + "])";
+        String tileCube = "cube (" + 
+            "(" + minx + ", " + miny + ", " + c.getNumericId() + "), " +
+            "(" + (minx + Config.tileW) + ", " + (miny + Config.tileH) + ", " + c.getNumericId() + "))";
         
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName()

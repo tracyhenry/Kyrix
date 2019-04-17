@@ -177,5 +177,6 @@ dots.txt
 dots_small.txt
 log.txt
 gen
+*.csv
 
 

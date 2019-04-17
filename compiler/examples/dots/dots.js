@@ -12,6 +12,7 @@ const placements = require("./placements");
 
 // construct a project
 var p = new Project("dots", "../../../config.txt");
+p.addRenderingParams(renderers.renderingParams);
 
 // ================== top zoom level ===================
 var topWidth = 1000000, topHeight = 1000000;
