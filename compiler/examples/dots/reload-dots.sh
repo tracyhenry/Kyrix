@@ -12,17 +12,17 @@ if [ "x$DISTRIB" = "xUNIFORM" ]; then
     echo "DISTRIB=UNIFORM"
     for i in {1..100}; do
         echo `date +%s`": loading dots data #$i of 100 (uniform)..."
-        $PSQL $PGCONN -t -c "insert into dots (id,w,h) select id, (random()*1000000)::bigint, (random()*100000)::bigint from generate_series(1,10000*$SCALE) id;"
+        $PSQL $PGCONN -q -t -c "insert into dots (id,w,h) select id, (random()*1000000)::bigint, (random()*100000)::bigint from generate_series(1,10000*$SCALE) id;"
     done
 elif [ "x$DISTRIB" = "xSKEWED" ]; then
     echo "DISTRIB=SKEWED"
     for i in {1..80}; do
         echo `date +%s`": loading dots data #$i of 100 (skewed to small area)..."
-        $PSQL $PGCONN -t -c "insert into dots (id,w,h) select id, (random()*400000)::bigint, (random()*50000)::bigint from generate_series(1,10000*$SCALE) id;"
+        $PSQL $PGCONN -q -t -c "insert into dots (id,w,h) select id, (random()*400000)::bigint, (random()*50000)::bigint from generate_series(1,10000*$SCALE) id;"
     done
     for i in {81..100}; do
         echo `date +%s`": loading dots data #$i of 100 (uniform)..."
-        $PSQL $PGCONN -t -c "insert into dots (id,w,h) select id, (random()*1000000)::bigint, (random()*100000)::bigint from generate_series(1,10000*$SCALE) id;"
+        $PSQL $PGCONN -q -t -c "insert into dots (id,w,h) select id, (random()*1000000)::bigint, (random()*100000)::bigint from generate_series(1,10000*$SCALE) id;"
     done
 else
     echo "unknown DISTRIB=$DISTRIB ?!?!?!"

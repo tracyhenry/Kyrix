@@ -15,7 +15,7 @@ spec:
         io.kompose.service: kyrix
     spec:
       containers:
-      - image: asah/kyrix:1.0.1555378045
+      - image: asah/kyrix:1.0.1555466161
         name: kyrix
         ports:
         - containerPort: 8000
