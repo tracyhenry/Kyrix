@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.*;
 
 public class Main {
 
@@ -20,6 +21,11 @@ public class Main {
     public static String projectJSON = "";
 
     public static void main(String[] args) throws Exception {
+
+	// for use in a Dockerfile, where we don't want to connect to the database
+	if (args.length > 0 && args[0].equals("--immediate-shutdown")) {
+	    System.exit(0);
+	}
 
         // read config file
         readConfigFile();
