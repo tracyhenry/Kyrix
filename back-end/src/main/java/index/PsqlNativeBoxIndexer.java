@@ -38,9 +38,7 @@ public class PsqlNativeBoxIndexer extends Indexer {
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
 
-        Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
         Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
-
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
 
@@ -48,9 +46,10 @@ public class PsqlNativeBoxIndexer extends Indexer {
         String bboxTableName = "bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
 
         // drop table if exists
+        Statement dropCreateStmt = DbConnector.getStmtByDbName(Config.databaseName);
         String sql = "drop table if exists " + bboxTableName + ";";
         System.out.println(sql);
-        bboxStmt.executeUpdate(sql);
+        dropCreateStmt.executeUpdate(sql);
 
         // create the bbox table
 	// yes, citus supports unlogged tables!
@@ -63,8 +62,10 @@ public class PsqlNativeBoxIndexer extends Indexer {
 	}
         sql += "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)";
         System.out.println(sql);
-        bboxStmt.executeUpdate(sql);
-
+        dropCreateStmt.executeUpdate(sql);
+	DbConnector.commitConnection(Config.databaseName);
+        dropCreateStmt.close();
+	
         // if this is an empty layer, return
         if (trans.getDb().equals(""))
             return ;
@@ -162,33 +163,38 @@ public class PsqlNativeBoxIndexer extends Indexer {
         }
         preparedStmt.close();
 
-	// for performance distribute the citus table after loading - must happen before CREATE INDEX
+	// TODO: move to parallel kyrix-indexing: pushdown this computation into the DB and run on each shard independently.
 	if (isCitus) {
-	    sql = "SELECT create_distributed_table('"+bboxTableName+"', 'citus_distribution_id');";
-	    System.out.println(sql);
-	    bboxStmt.executeQuery(sql);
+	    // by distributing afterwards, loading is ~10x faster (minus a few minutes to distribute the data)
+	    Statement distributeStmt = DbConnector.getStmtByDbName(Config.databaseName);
+            sql = "SELECT create_distributed_table('"+bboxTableName+"', 'citus_distribution_id');";
+            System.out.println(sql);
+            distributeStmt.executeQuery(sql);
+	    DbConnector.commitConnection(Config.databaseName);
+	    distributeStmt.close();
+	    distributeStmt = DbConnector.getStmtByDbName(Config.databaseName);
+	    // citus leaves leftover data on master when distributing non-empty tables - who knows why?
+            sql = "BEGIN; SET LOCAL citus.enable_ddl_propagation TO off; TRUNCATE "+bboxTableName+"; END;";
+            System.out.println(sql);
+            distributeStmt.executeUpdate(sql);
+	    DbConnector.commitConnection(Config.databaseName);
+	    distributeStmt.close();
 	}
 	
         // create index - gist/spgist require logged table type
 	// TODO: consider sp-gist
+        Statement createIndexStmt = DbConnector.getStmtByDbName(Config.databaseName);
         sql = "CREATE INDEX sp_" + bboxTableName + " ON " + bboxTableName + " USING gist (geom);";
 	System.out.println(sql);
-        bboxStmt.executeUpdate(sql);
+        createIndexStmt.executeUpdate(sql);
+	DbConnector.commitConnection(Config.databaseName);
+	createIndexStmt.close();
+
 	// don't use clustering
         //sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
 	//System.out.println(sql);
         //bboxStmt.executeUpdate(sql);
-        DbConnector.commitConnection(Config.databaseName);
-
-	// ALTER TABLE SET LOGGED is not supported by citus - could maybe perform locally using
-	//    run_command_on_shards() ?
-	// https://github.com/citusdata/citus/blob/master/src/backend/distributed/commands/table.c#L903
-	if (!isCitus) {
-	    sql = "ALTER TABLE " + bboxTableName + " SET LOGGED;";
-	    System.out.println(sql);
-	    bboxStmt.executeUpdate(sql);
-	    bboxStmt.close();
-	}
+        //DbConnector.commitConnection(Config.databaseName);
     }
 
     @Override
