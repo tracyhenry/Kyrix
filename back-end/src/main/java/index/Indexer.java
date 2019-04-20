@@ -113,24 +113,25 @@ public abstract class Indexer implements Serializable {
     }
 
     // calculate bounding box indexes for a given row in a given layer
-    static ArrayList<Double> static_bbox = null;
     static Map<String, Integer> colName2Id = null;
-    static ArrayList<Double> bbox = new ArrayList<>(6);
+    static ArrayList<Double> bbox = null;
     static double centroid_x_dbl = -1.0, centroid_y_dbl = -1.0;
     static int curColId_x, curColId_y, curColId_w, curColId_h;
     static double width_dbl = -1.0, height_dbl = -1.0;
     protected static ArrayList<Double> getBboxCoordinates(Layer l, ArrayList<String> row) {
 
-        // calculate bounding box
         if (l.isStatic()) {
-	    if (static_bbox == null) {
-		static_bbox = new ArrayList<Double>();
+	    if (bbox == null) {
+		bbox = new ArrayList<>(6);
 		for (int i = 0; i < 6; i ++)
-		    static_bbox.add(0.0);
+		    bbox.set(i, 0.0);
 	    }
-	    return static_bbox;
+	    return bbox;
 	}
-	if (colName2Id == null) {
+
+	// one-time initialization
+	if (bbox == null) {
+	    bbox = new ArrayList<>(6);
 	    colName2Id = new HashMap();
 	    // construct a column name to column index mapping table
 	    for (int i = 0; i < l.getTransform().getColumnNames().size(); i ++)
