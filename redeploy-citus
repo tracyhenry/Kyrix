@@ -70,7 +70,10 @@ for w in $WORKERS; do kubectl exec $w -- su - postgres -c "psql $DBNAME -c \"$EX
 
 while [ 1 ]; do w=`for w in $WORKERS; do stty sane; kubectl exec -it $w -- su - postgres -c "psql $DBNAME -t -c \"select count(*) from pg_extension where extname = 'plv8' or extname='citus';\""; done | grep -c 2`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w postgres servers initialized with extensions, waiting for $NUM_WORKERS (be patient)"; sleep 3; done; stty sane
 
+# register workers with master
 for w in $WORKER_IPS; do kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -t -c \"SELECT * from master_add_node('$w', 5432);\""|grep 5432; done|head
+
+for w in $CITUS_ALL_NODES; do kubectl exec $w -- su - postgres -c "./install-d3.sh $DBNAME"; done
 
 ./test-citus
 ./test-plv8

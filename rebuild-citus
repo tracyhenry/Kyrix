@@ -1,6 +1,7 @@
 #!/bin/bash
 
-TAG=${1:-asah/pg11_postgis25_citus811:1.8}
+# latest always gets pulled
+TAG=${1:-asah/pg11_postgis25_citus811_plv8:latest}
 
 sudo docker build . -f Dockerfile-citus-debian -t $TAG
 sudo docker push $TAG

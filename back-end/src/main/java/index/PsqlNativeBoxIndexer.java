@@ -76,7 +76,7 @@ public class PsqlNativeBoxIndexer extends Indexer {
         // if this is an empty layer, return
         if (trans.getDb().equals(""))
             return ;
-
+	
         // step 1: set up nashorn environment for running javascript code
         NashornScriptEngine engine = null;
         if (! trans.getTransformFunc().equals(""))
