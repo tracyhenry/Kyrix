@@ -37,9 +37,11 @@ psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE IF NOT EXISTS project (name 
 
 psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE DOTS (id int, x int, y int);"
 
+psql $PGCONN_STRING_USER/$KYRIX_DB -c "copy dots from '/dots.csv' delimiter E'\t' csv header;"
+
+
 cd /kyrix/back-end
 
-psql $PGCONN_STRING_USER/$KYRIX_DB -c "copy dots from '/dots_big.csv' delimiter E'\t' csv header;"
 
 
 plays_exists=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select exists(select 1 from information_schema.tables where table_schema='public' and table_name='plays');" || true)

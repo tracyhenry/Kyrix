@@ -9,6 +9,7 @@ import java.util.ArrayList;
 public class Canvas implements Serializable {
 
     private String id;
+    private int numId;
     private int w;
     private int h;
     private String wSql, hSql, wLayerId, hLayerId;
@@ -41,11 +42,15 @@ public class Canvas implements Serializable {
         this.h = h;
     }
 
+    public void setNumId(String cId) {
+        this.numId = cId.hashCode();
+    }
+
     /*
     Super dumb way now to use id as coordinate in cube indexing, just assign a num based on letters 
     */
     public int getNumericId() {
-        return id.hashCode();
+        return numId;
     }
 
     public String getId() {

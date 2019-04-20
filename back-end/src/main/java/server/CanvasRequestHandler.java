@@ -51,6 +51,7 @@ public class CanvasRequestHandler implements HttpHandler {
         Canvas c = null;
         try {
             c = Main.getProject().getCanvas(canvasId).deepCopy();
+            c.setNumId(canvasId);
         } catch (Exception e) {
             e.printStackTrace();
         }

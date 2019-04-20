@@ -169,6 +169,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
             sql += ";";
         System.out.println(sql);
 
+        System.out.println("get data from region is called with canvas: " + c.getId());
         // return
         return DbConnector.getQueryResult(Config.databaseName, sql);
     }

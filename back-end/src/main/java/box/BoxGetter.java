@@ -71,6 +71,7 @@ public abstract class BoxGetter {
                 data.add(new ArrayList<>());
             else
                 data.add(curLayer.getIndexer().getDataFromRegion(c, i, cubeNew, predicates.get(i)));
+                System.out.println("intersecting cube data: " + data.get(data.size()-1));
         }
         return data;
 
