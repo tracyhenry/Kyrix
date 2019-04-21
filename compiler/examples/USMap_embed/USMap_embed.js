@@ -6,9 +6,9 @@ const Layer = require("../../src/Layer").Layer;
 const View = require("../../src/View").View;
 
 // project components
-const renderers = require("./renderers");
-const transforms = require("./transforms");
-const placements = require("./placements");
+const renderers = require("../USMap/renderers");
+const transforms = require("../USMap/transforms");
+const placements = require("../USMap/placements");
 
 // construct a project
 var p = new Project("usmap", "../../../config.txt");
