@@ -63,19 +63,19 @@ public class PsqlTileIndexer extends Indexer {
         sql = "create table " + bboxTableName + " (";
         for (int i = 0; i < trans.getColumnNames().size(); i ++)
                 sql += trans.getColumnNames().get(i) + " text, ";
-	if (isCitus) {
-	    sql += "citus_distribution_id int, ";
-	}
+        if (isCitus) {
+            sql += "citus_distribution_id int, ";
+        }
         sql += "tuple_id int, cx double precision, cy double precision, minx double " +
                 "precision, miny double precision, maxx double precision, maxy double precision);";
         bboxStmt.executeUpdate(sql);
 
         // create tile table
         sql = "create table " + tileTableName + " ("+
-	    "tuple_id int, " +
-	    (isCitus ? "citus_distribution_id int, " : "") + 
-	    "tile_id varchar(50)" +
-	    ");";
+            "tuple_id int, " +
+            (isCitus ? "citus_distribution_id int, " : "") + 
+            "tile_id varchar(50)" +
+            ");";
         tileStmt.executeUpdate(sql);
 
         // if this is an empty layer, continue
@@ -123,10 +123,10 @@ public class PsqlTileIndexer extends Indexer {
                 bboxInsSqlBuilder.append(" (");
             for (int i = 0; i < transformedRow.size(); i ++)
                 bboxInsSqlBuilder.append("'" + transformedRow.get(i).replaceAll("\'", "\'\'") + "', ");
-	    if (isCitus) {
-		// row number is a fine distribution key (for now) - round robin across the cluster
-		bboxInsSqlBuilder.append(rowCount);
-	    }
+            if (isCitus) {
+                // row number is a fine distribution key (for now) - round robin across the cluster
+                bboxInsSqlBuilder.append(rowCount);
+            }
             bboxInsSqlBuilder.append(String.valueOf(rowCount));
             for (int i = 0; i < 6; i ++)
                 bboxInsSqlBuilder.append(", " + String.valueOf(curBbox.get(i)));
@@ -159,9 +159,9 @@ public class PsqlTileIndexer extends Indexer {
                         else
                             tileInsSqlBuilder.append(" (");
                         tileInsSqlBuilder.append(rowCount + ", " +
-						 // rownum is a fine distrib key (for now) - round robin across the cluster
-						 (isCitus ? (rowCount + ", ") : "") +
-						 "'" + tileId + "')");
+                                                 // rownum is a fine distrib key (for now) - round robin across the cluster
+                                                 (isCitus ? (rowCount + ", ") : "") +
+                                                 "'" + tileId + "')");
                         if (mappingCount % Config.tileBatchSize== 0) {
                             tileInsSqlBuilder.append(";");
                             tileStmt.executeUpdate(tileInsSqlBuilder.toString());

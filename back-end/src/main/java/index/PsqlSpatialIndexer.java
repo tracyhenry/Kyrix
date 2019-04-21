@@ -65,19 +65,19 @@ public class PsqlSpatialIndexer extends Indexer {
         sql = "create table " + bboxTableName + " (";
         for (int i = 0; i < trans.getColumnNames().size(); i ++)
             sql += trans.getColumnNames().get(i) + " text, ";
-	if (isCitus) {
-	    sql += "citus_distribution_id int, ";
-	}
+        if (isCitus) {
+            sql += "citus_distribution_id int, ";
+        }
         sql += "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom geometry(polygon));";
         System.out.println(sql);
         bboxStmt.executeUpdate(sql);
 
-	if (isCitus) {
-	    sql = "SELECT create_distributed_table('"+bboxTableName+"', 'citus_distribution_id');";
-	    System.out.println(sql);
-	    bboxStmt.executeQuery(sql);
-	}
-	
+        if (isCitus) {
+            sql = "SELECT create_distributed_table('"+bboxTableName+"', 'citus_distribution_id');";
+            System.out.println(sql);
+            bboxStmt.executeQuery(sql);
+        }
+        
         // if this is an empty layer, return
         if (trans.getDb().isEmpty())
             return ;
@@ -92,14 +92,14 @@ public class PsqlSpatialIndexer extends Indexer {
         String insertSql = "insert into " + bboxTableName + " values (";
         for (int i = 0; i < trans.getColumnNames().size() + 6; i ++)
             insertSql += "?, ";
-	if (isCitus) {
-	    insertSql += "?, ";
-	}
+        if (isCitus) {
+            insertSql += "?, ";
+        }
         insertSql += "ST_GeomFromText(?));";
         System.out.println(insertSql);
         PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
-	long startTs = (new Date()).getTime();
-	long lastTs = startTs;
+        long startTs = (new Date()).getTime();
+        long lastTs = startTs;
         int rowCount = 0;
         int numColumn = rs.getMetaData().getColumnCount();
         while (rs.next()) {
@@ -108,13 +108,13 @@ public class PsqlSpatialIndexer extends Indexer {
             rowCount ++;
             if (rowCount % 1000 == 0) {
                 long currTs = (new Date()).getTime();
-		if (currTs/5000 > lastTs/5000) {
+                if (currTs/5000 > lastTs/5000) {
                     lastTs = currTs;
-		    long secs = (currTs-startTs)/1000;
-		    if (secs > 0) {
-			System.out.println(secs + " secs: "+rowCount+" records inserted. "+(rowCount/secs)+" recs/sec.");
-		    }
-		}
+                    long secs = (currTs-startTs)/1000;
+                    if (secs > 0) {
+                        System.out.println(secs + " secs: "+rowCount+" records inserted. "+(rowCount/secs)+" recs/sec.");
+                    }
+                }
             }
 
             // get raw row
@@ -133,13 +133,13 @@ public class PsqlSpatialIndexer extends Indexer {
             ArrayList<Double> curBbox = getBboxCoordinates(l, transformedRow);
 
             // insert into bbox table
-	    int pscol = 1;
+            int pscol = 1;
             for (int i = 0; i < transformedRow.size(); i ++)
                 preparedStmt.setString(pscol++, transformedRow.get(i).replaceAll("\'", "\'\'"));
-	    if (isCitus) {
-		// row number is a fine distribution key (for now) - round robin across the cluster
-		preparedStmt.setInt(pscol++, rowCount);
-	    }
+            if (isCitus) {
+                // row number is a fine distribution key (for now) - round robin across the cluster
+                preparedStmt.setInt(pscol++, rowCount);
+            }
             for (int i = 0; i < 6; i ++)
                 preparedStmt.setDouble(pscol++, curBbox.get(i));
 
