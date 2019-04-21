@@ -29,12 +29,12 @@ public abstract class Indexer implements Serializable {
     // abstract methods
     public abstract void createMV(Canvas c, int layerId) throws Exception;
     public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception {
-	// cannot be abstract because of the override below
-	throw new Exception("getDataFromRegion not implemented?!");
+        // cannot be abstract because of the override below
+        throw new Exception("getDataFromRegion not implemented?!");
     }
     public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox) throws Exception {
-	// for backwards compatibility, just drop the boxes and call the underlying
-	return getDataFromRegion(c, layerId, regionWKT, predicate);
+        // for backwards compatibility, just drop the boxes and call the underlying
+        return getDataFromRegion(c, layerId, regionWKT, predicate);
     }
     public abstract ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate) throws Exception;
 
@@ -44,8 +44,8 @@ public abstract class Indexer implements Serializable {
             for (int layerId = 0; layerId < c.getLayers().size(); layerId ++) {
                 Indexer indexer = null;
                 if (Config.database == Config.Database.PSQL ||
-		    Config.database == Config.Database.CITUS) {
-		    boolean isCitus = (Config.database == Config.Database.CITUS);
+                    Config.database == Config.Database.CITUS) {
+                    boolean isCitus = (Config.database == Config.Database.CITUS);
                     if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
                         indexer = PsqlSpatialIndexer.getInstance(isCitus);
                     else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
@@ -113,80 +113,83 @@ public abstract class Indexer implements Serializable {
     }
 
     // calculate bounding box indexes for a given row in a given layer
-    static Map<String, Integer> colName2Id = null;
-    static ArrayList<Double> bbox = null;
-    static double centroid_x_dbl = -1.0, centroid_y_dbl = -1.0;
-    static int curColId_x, curColId_y, curColId_w, curColId_h;
-    static double width_dbl = -1.0, height_dbl = -1.0;
     protected static ArrayList<Double> getBboxCoordinates(Layer l, ArrayList<String> row) {
 
-        if (l.isStatic()) {
-	    if (bbox == null) {
-		bbox = new ArrayList<>(6);
-		for (int i = 0; i < 6; i ++)
-		    bbox.set(i, 0.0);
-	    }
-	    return bbox;
-	}
+        // array to return
+        ArrayList<Double> bbox = new ArrayList<>();
 
-	// one-time initialization
-	if (bbox == null) {
-	    bbox = new ArrayList<>(6);
-	    colName2Id = new HashMap();
-	    // construct a column name to column index mapping table
-	    for (int i = 0; i < l.getTransform().getColumnNames().size(); i ++)
-		colName2Id.put(l.getTransform().getColumnNames().get(i), i);
-	    // placement stuff
-	    Placement p = l.getPlacement();
-	    String centroid_x = p.getCentroid_x();
-	    String centroid_y = p.getCentroid_y();
-	    String width_func = p.getWidth();
-	    String height_func = p.getHeight();
-	    // centroid_x
-	    if (centroid_x.substring(0, 4).equals("full"))
-		centroid_x_dbl = 0;
-	    else if (centroid_x.substring(0, 3).equals("con"))
-		centroid_x_dbl = Double.parseDouble(centroid_x.substring(4));
-	    else
-		curColId_x = colName2Id.get(centroid_x.substring(4));
+        // construct a column name to column index mapping table
+        Map<String, Integer> colName2Id = new HashMap<>();
+        for (int i = 0; i < l.getTransform().getColumnNames().size(); i ++)
+            colName2Id.put(l.getTransform().getColumnNames().get(i), i);
+
+        // placement stuff
+        Placement p = (l.isStatic() ? null : l.getPlacement());
+        String centroid_x = (l.isStatic() ? null : p.getCentroid_x());
+        String centroid_y = (l.isStatic() ? null : p.getCentroid_y());
+        String width_func = (l.isStatic() ? null : p.getWidth());
+        String height_func = (l.isStatic() ? null : p.getHeight());
+
+        // calculate bounding box
+        if (! l.isStatic()) {
+            double centroid_x_dbl, centroid_y_dbl;
+            double width_dbl, height_dbl;
+
+            // centroid_x
+            if (centroid_x.substring(0, 4).equals("full"))
+                centroid_x_dbl = 0;
+            else if (centroid_x.substring(0, 3).equals("con"))
+                centroid_x_dbl = Double.parseDouble(centroid_x.substring(4));
+            else {
+                String curColName = centroid_x.substring(4);
+                int curColId = colName2Id.get(curColName);
+                centroid_x_dbl = Double.parseDouble(row.get(curColId));
+            }
 
             // centroid_y
             if (centroid_y.substring(0, 4).equals("full"))
                 centroid_y_dbl = 0;
             else if (centroid_y.substring(0, 3).equals("con"))
                 centroid_y_dbl = Double.parseDouble(centroid_y.substring(4));
-	    else
-		curColId_y = colName2Id.get(centroid_y.substring(4));
+            else {
+                String curColName = centroid_y.substring(4);
+                int curColId = colName2Id.get(curColName);
+                centroid_y_dbl = Double.parseDouble(row.get(curColId));
+            }
 
             // width
             if (width_func.substring(0, 4).equals("full"))
                 width_dbl = Double.MAX_VALUE;
             else if (width_func.substring(0, 3).equals("con"))
                 width_dbl = Double.parseDouble(width_func.substring(4));
-	    else
-		curColId_w = colName2Id.get(width_func.substring(4));
+            else {
+                String curColName = width_func.substring(4);
+                int curColId = colName2Id.get(curColName);
+                width_dbl = Double.parseDouble(row.get(curColId));
+            }
 
             // height
             if (height_func.substring(0, 4).equals("full"))
                 height_dbl = Double.MAX_VALUE;
             else if (height_func.substring(0, 3).equals("con"))
                 height_dbl = Double.parseDouble(height_func.substring(4));
-	    else
-		curColId_h = colName2Id.get(height_func.substring(4));
-	}
+            else {
+                String curColName = height_func.substring(4);
+                int curColId = colName2Id.get(curColName);
+                height_dbl = Double.parseDouble(row.get(curColId));
+            }
 
-	double my_centroid_x_dbl = (centroid_x_dbl >= 0.0) ? centroid_x_dbl : Double.parseDouble(row.get(curColId_x));
-	double my_centroid_y_dbl = (centroid_y_dbl >= 0.0) ? centroid_y_dbl : Double.parseDouble(row.get(curColId_y));
-	double my_width_dbl = (width_dbl > 0.0) ? width_dbl : Double.parseDouble(row.get(curColId_w));
-	double my_height_dbl = (height_dbl > 0.0) ? height_dbl : Double.parseDouble(row.get(curColId_h));
-
-	bbox.set(0, my_centroid_x_dbl);	// cx
-	bbox.set(1, my_centroid_y_dbl);	// cy
-	bbox.set(2, my_centroid_x_dbl - my_width_dbl / 2.0);	// min x
-	bbox.set(3, my_centroid_y_dbl - my_height_dbl / 2.0);	// min y
-	bbox.set(4, my_centroid_x_dbl + my_width_dbl / 2.0);	// max x
-	bbox.set(5, my_centroid_y_dbl + my_height_dbl / 2.0);	// max y
-
+            // get bounding box
+            bbox.add(centroid_x_dbl);  // cx
+            bbox.add(centroid_y_dbl);  // cy
+            bbox.add(centroid_x_dbl - width_dbl / 2.0);        // min x
+            bbox.add(centroid_y_dbl - height_dbl / 2.0);       // min y
+            bbox.add(centroid_x_dbl + width_dbl / 2.0);        // max x
+            bbox.add(centroid_y_dbl + height_dbl / 2.0);       // max y
+        }
+        else
+            for (int i = 0; i < 6; i ++)
+                bbox.add(0.0);
         return bbox;
     }
 
