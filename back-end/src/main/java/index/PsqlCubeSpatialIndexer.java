@@ -36,6 +36,8 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
 
         Layer l = c.getLayers().get(layerId);
+        // assume that canvas id is an int, not sure if that is part of spec...
+        int canvasId = c.getNumericId();
         Transform trans = l.getTransform();
         ArrayList colNames = trans.getColumnNames();
 
@@ -47,12 +49,12 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         String extSql = "create extension if not exists cube;";
         bboxStmt.executeUpdate(extSql);
 
-        // drop table if exists
-        String sql = "drop table if exists " + bboxTableName + ";";
-        bboxStmt.executeUpdate(sql);
+        // drop table if exists -- NO DON'T WANT TO DROP TABLE NOW ONE BIG TABLE
+        // String sql = "drop table if exists " + bboxTableName + ";";
+        // bboxStmt.executeUpdate(sql);
 
         // create the bbox table
-        sql = "create table " + bboxTableName + " (";
+        String sql = "create table if not exists " + bboxTableName + " (";
         for (int i = 0; i < colNames.size(); i++) {
             sql += colNames.get(i) + " text, ";
         }
@@ -117,8 +119,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
             miny = curBbox.get(3);
             maxx = curBbox.get(4);
             maxy = curBbox.get(5);
-            // assume that canvas id is an int, not sure if that is part of spec...
-            int canvasId = c.getNumericId();
+            
             preparedStmt.setString(transformedRow.size() + 7,
                     // getPolygonText(minx, miny, maxx, maxy));
                     getCubeText(minx, miny, maxx, maxy, canvasId));
@@ -140,15 +141,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         }
         preparedStmt.close();
 
-        // create index
-
-        /*
-        sql:
-            create index idx_tbl_cube_1 on tbl_cube using gist (v);
-        */
-        sql = "create index cube_idx_" + bboxTableName + " on " + bboxTableName + " using gist (v);";
-        bboxStmt.executeUpdate(sql);
-        DbConnector.commitConnection(Config.databaseName);
+        
         bboxStmt.close();
     }
 
@@ -198,6 +191,24 @@ public class PsqlCubeSpatialIndexer extends Indexer {
 
         // return
         return DbConnector.getQueryResult(Config.databaseName, sql);
+    }
+
+    public void indexData () throws Exception {
+        Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
+        Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
+        String bboxTableName = "bbox_" + Main.getProject().getName();
+
+        // create index
+
+        /*
+        sql:
+            create index idx_tbl_cube_1 on tbl_cube using gist (v);
+        */
+
+        String sql = "create index cube_idx_" + bboxTableName + " on " + bboxTableName + " using gist (v);";
+        bboxStmt.executeUpdate(sql);
+        DbConnector.commitConnection(Config.databaseName);
+        bboxStmt.close();
     }
 
 }
