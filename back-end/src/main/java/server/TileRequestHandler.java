@@ -1,15 +1,14 @@
 package server;
 
-import box.Box;
 import box.BoxandData;
-import box.MikeBoxGetter;
+import cache.TileCache;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import main.Config;
 import main.Main;
 import project.Canvas;
-import project.View;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -19,41 +18,39 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BoxRequestHandler  implements HttpHandler {
+/**
+ * Created by wenbo on 1/2/18.
+ */
+public class TileRequestHandler implements HttpHandler {
 
     // gson builder
     private final Gson gson;
-    private MikeBoxGetter boxGetter;
 
-    public BoxRequestHandler() {
+    public TileRequestHandler() {
 
         gson = new GsonBuilder().create();
-        boxGetter = new MikeBoxGetter();
-
     }
+
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
 
         // TODO: this method should be thread safe, allowing concurrent requests
-        System.out.println("\nServing /dynamic Box");
+        System.out.println("\nServing /tile");
 
-        // get data of the current request
         // variable definitions
         String response;
-        String canvasId, viewId;
-        double minx, miny;
-        BoxandData data = null;
+        String canvasId;
+        int minx, miny;
+        ArrayList<ArrayList<ArrayList<String>>> data = null;
 
         // check if this is a POST request
-        if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
+        if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
             return;
         }
 
         // get data of the current request
-        InputStreamReader isr =  new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
-        BufferedReader br = new BufferedReader(isr);
-        String query = br.readLine();
+        String query = httpExchange.getRequestURI().getQuery();
         Map<String, String> queryMap = Server.queryToMap(query);
         // print
         for (String s : queryMap.keySet())
@@ -65,57 +62,35 @@ public class BoxRequestHandler  implements HttpHandler {
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, response);
             return;
         }
-        // get parameters
+
+        // get data
         canvasId = queryMap.get("id");
-        viewId = queryMap.get("viewId");
-        minx = Double.valueOf(queryMap.get("x"));
-        miny = Double.valueOf(queryMap.get("y"));
-        Canvas c = null;
-        try {
-            c = Main.getProject().getCanvas(canvasId).deepCopy();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        View v = Main.getProject().getView(viewId);
-        if (queryMap.containsKey("canvasw"))
-            c.setW(Integer.valueOf(queryMap.get("canvasw")));
-        if (queryMap.containsKey("canvash"))
-            c.setH(Integer.valueOf(queryMap.get("canvash")));
+        minx = Integer.valueOf(queryMap.get("x"));
+        miny = Integer.valueOf(queryMap.get("y"));
+        Canvas c = Main.getProject().getCanvas(canvasId);
         ArrayList<String> predicates = new ArrayList<>();
         for (int i = 0; i < c.getLayers().size(); i ++)
             predicates.add(queryMap.get("predicate" + i));
-        double oMinX = Double.valueOf(queryMap.get("oboxx"));
-        double oMinY = Double.valueOf(queryMap.get("oboxy"));
-        double oMaxX = oMinX + Double.valueOf(queryMap.get("oboxw"));
-        double oMaxY = oMinY + Double.valueOf(queryMap.get("oboxh"));
-        Box oldBox = new Box(oMinX, oMinY, oMaxX, oMaxY);
 
-        //get box data
-        long st = System.currentTimeMillis();
         try {
-            data = boxGetter.getBox(c, v, minx, miny, oldBox, predicates);
+            data = TileCache.getTile(c, minx, miny, predicates);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Fetch data time: " + (System.currentTimeMillis() - st) + "ms.");
 
-        //send data and box back
+        // construct response
         Map<String, Object> respMap = new HashMap<>();
-        respMap.put("renderData", BoxandData.getDictionaryFromData(data.data, c));
-        respMap.put("minx", data.box.getMinx());
-        respMap.put("miny", data.box.getMiny());
-        respMap.put("boxH", data.box.getHight());
-        respMap.put("boxW", data.box.getWidth());
-        respMap.put("canvasId", canvasId);
+        respMap.put("renderData", BoxandData.getDictionaryFromData(data, c));
+        respMap.put("minx", minx);
+        respMap.put("miny", miny);
         response = gson.toJson(respMap);
 
         // send back response
-        st = System.currentTimeMillis();
         Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
-        System.out.println("Send response time: " + (System.currentTimeMillis() - st) + "ms.");
         System.out.println();
     }
 
+    // check paramters
     private String checkParameters(Map<String, String> queryMap) {
 
         // check fields
@@ -125,10 +100,16 @@ public class BoxRequestHandler  implements HttpHandler {
             return "x or y missing.";
 
         String canvasId = queryMap.get("id");
+        int minx = Integer.valueOf(queryMap.get("x"));
+        int miny = Integer.valueOf(queryMap.get("y"));
 
         // check whether this canvas exists
         if (Main.getProject().getCanvas(canvasId) == null)
             return "Canvas " + canvasId + " does not exist!";
+
+        // check whether x and y corresponds to the top-left corner of a tile
+        if (minx % Config.tileW != 0 || miny % Config.tileH != 0)
+            return "x and y must be a multiple of tile size!";
 
         // check passed
         return "";

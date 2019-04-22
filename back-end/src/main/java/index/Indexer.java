@@ -14,6 +14,8 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.File;
 import java.io.Serializable;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,7 +64,7 @@ public abstract class Indexer implements Serializable {
         System.out.println("Done precomputing!");
     }
 
-    // commonly static methods used by child classes
+    // common static methods used by child classes
     protected static NashornScriptEngine setupNashorn(String transformFunc) throws ScriptException {
 
         NashornScriptEngine engine = (NashornScriptEngine) new ScriptEngineManager()
@@ -97,7 +99,7 @@ public abstract class Indexer implements Serializable {
     }
 
     // calculate bounding box indexes for a given row in a given layer
-    protected static ArrayList<Double> getBboxCoordinates(Canvas c, Layer l, ArrayList<String> row) {
+    protected static ArrayList<Double> getBboxCoordinates(Layer l, ArrayList<String> row) {
 
         // array to return
         ArrayList<Double> bbox = new ArrayList<>();

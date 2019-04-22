@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import index.Indexer;
 import main.Config;
+import main.Main;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,13 +34,14 @@ public class Server {
         server.setExecutor(null);//java.util.concurrent.Executors.newFixedThreadPool(Config.numThread));
         terminated = false;
         server.start();
-        System.out.println("Tile server started...");
+        System.out.println("Backend server started...");
         synchronized (terminationLock) {
             while (!terminated)
                 terminationLock.wait();
         }
         Server.stopServer();
         Indexer.precompute();
+        Main.setProjectClean();
         System.out.println("Completed recomputing indexes. Server restarting...");
         Server.startServer(Config.portNumber);
     }

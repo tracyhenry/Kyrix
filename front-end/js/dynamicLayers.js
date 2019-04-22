@@ -130,7 +130,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
             + "y=" + d[1];
         for (var i = 0; i < gvd.predicates.length; i ++)
             postData += "&predicate" + i + "=" + getSqlPredicate(gvd.predicates[i]);
-        $.post("/tile", postData, function (data, status) {
+        $.get("/tile", postData, function (data, status) {
 
             // response data
             var response = JSON.parse(data);
@@ -223,7 +223,7 @@ function renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs
         if (gvd.curCanvas.hSql.length > 0)
             postData += "&canvash=" + gvd.curCanvas.h;
         gvd.pendingBoxRequest = true;
-        $.post("/dbox", postData, function (data) {
+        $.get("/dbox", postData, function (data) {
 
             // response data
             var response = JSON.parse(data);

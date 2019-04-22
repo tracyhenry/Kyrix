@@ -5,7 +5,7 @@
 #
 
 # notes for newbies to docker/docker-compose:
-# - Dockerfiles can't refer to files in parent directories (e.g. tile-server and compiler),
+# - Dockerfiles can't refer to files in parent directories (e.g. back-end and compiler),
 #   hence the Dockerfiles in the parent, outside of docker-scripts/
 
 version: '3.1'
@@ -20,7 +20,7 @@ services:
     ports: # comment-out for extra security or to avoid conflicts with host OS
      - "5432:5432"   
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kyrixftw}
+      POSTGRES_PASS: ${POSTGRES_PASSWORD:-kyrixftw}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
 # for backup - requires special config on MacOS host OSs
 #    volumes:
