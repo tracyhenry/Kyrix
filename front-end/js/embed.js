@@ -1,4 +1,3 @@
-
 export function getViews(){
     return globalVar.views;
 }

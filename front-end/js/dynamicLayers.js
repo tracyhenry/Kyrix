@@ -368,7 +368,6 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
         globalVar.panCallback(viewportX / 5, viewportY / 5);
     }
 
-
     // check if there is literal zooming going on
     // if yes, rescale the objects if asked
     if (d3.event != null && d3.event.transform.k != 1) {
