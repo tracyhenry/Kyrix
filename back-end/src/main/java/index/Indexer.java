@@ -58,8 +58,6 @@ public abstract class Indexer implements Serializable {
 
         associateIndexer();
         for (Canvas c : Main.getProject().getCanvases()) {
-            String cId = c.getId();
-            c.setNumId(cId);
             System.out.println("indexing canvas with id: " + c.getId());
             System.out.println("canvas has num id: " + c.getNumericId());
             for (int layerId = 0; layerId < c.getLayers().size(); layerId ++) {
