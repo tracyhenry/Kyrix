@@ -16,16 +16,14 @@ function renderStaticLayers(viewId) {
             continue;
 
         // render
-            var renderFunc = curLayer.rendering.parseFunction();
-            var curSvg = d3.select(viewClass + ".layerg.layer" + i)
-                .select("svg");
-            renderFunc(curSvg, gvd.curStaticData[i], getOptionalArgs(viewId));
-            if(typeof globalVar.newRender ==="function") {
-                console.log(curSvg);
-                curSvg.selectAll("*").remove();
-                console.log(curSvg);
-                globalVar.newRender(curSvg, gvd.curStaticData[i], getOptionalArgs(viewId), globalVar.newRenderPara);
-            }
+        var renderFunc = curLayer.rendering.parseFunction();
+        var curSvg = d3.select(viewClass + ".layerg.layer" + i)
+            .select("svg");
+        renderFunc(curSvg, gvd.curStaticData[i], getOptionalArgs(viewId));
+        if(typeof globalVar.newRender ==="function") {
+            curSvg.selectAll("*").remove();
+            globalVar.newRender(curSvg, gvd.curStaticData[i], getOptionalArgs(viewId), globalVar.newRenderPara);
+        }
         // register jump
         if (! gvd.animation)
             registerJumps(viewId, curSvg, i);
