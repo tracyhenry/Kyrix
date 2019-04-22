@@ -9,6 +9,13 @@
  */
 function Transform(query, db, transformFunc, columnNames, separable) {
 
+    if (typeof query == "object") {
+        if (arguments.length > 1)
+            throw new Error("Constructing Transform: object-style construction may only have one argument");
+        this.v2obj = query;
+        return;
+    }
+
     if (typeof separable !== "boolean")
         throw new Error("Constructing Transform: separable must be boolean.");
     if (! Array.isArray(columnNames))

@@ -84,8 +84,11 @@ public class PsqlNativeBoxIndexer extends Indexer {
 
         // step 2: looping through query results
         // TODO: distinguish between separable and non-separable cases
-        Statement rawDBStmt = DbConnector.getStmtByDbName(trans.getDb());
-        ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery());
+        String transDb = trans.getDb();
+        String transQuery = trans.getQuery();
+        System.out.println("db="+transDb+" - query="+transQuery);
+        Statement rawDBStmt = DbConnector.getStmtByDbName(transDb);
+        ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, transQuery);
         int numColumn = rs.getMetaData().getColumnCount();
         int rowCount = 0;
         String copySql = "COPY " + bboxTableName + "(";

@@ -1,6 +1,8 @@
 This is an application used to test performance/scalability. 
 
-## Generating data
+For dots-uniform, the assumption is that the data is distributed evenly/randomly across the canvas.
+
+## Generating data (legacy)
 As defined in `transform.js`, running this app needs a database `dots` with a relation `dots`, whose schema is `create table dots (id int, x int, y int);`.  The data generator `/datagen/gen.cpp` can generate a file which you can use to populate the `dots` relation (e.g. in Postgres, `COPY dots FROM 'absolute/path/to/data/file'`).  You can modify `num_points` in the cpp file to vary the number of total points.
 
 ## Running the app

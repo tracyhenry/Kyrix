@@ -54,9 +54,9 @@ psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARC
 
 cd /kyrix/back-end
 
-recs_exists=$(psql $PGCONN_STRING_USER/$SRCDATA_DB -X -P t -P format=unaligned -c "select exists(select 1 from information_schema.tables where table_schema='public' and table_name='$SRCDATA_DB_TEST_TABLE');" || true)
+recs_exists=$(psql $PGCONN_STRING_USER/$SRCDATA_DB -X -P t -P format=unaligned -c "select exists(select 1 from information_schema.tables where table_schema='public' and table_name='$SRCDATA_DB_TEST_TABLE');")
 if [ "$recs_exists" = "t" ]; then
-    recs_found=$(psql $PGCONN_STRING_USER/$SRCDATA_DB -X -P t -P format=unaligned -c "select count(*)>$SRCDATA_DB_TEST_TABLE_MIN_RECS from $SRCDATA_DB_TEST_TABLE;" || true)
+    recs_found=$(psql $PGCONN_STRING_USER/$SRCDATA_DB -X -P t -P format=unaligned -c "select count(*)>$SRCDATA_DB_TEST_TABLE_MIN_RECS from $SRCDATA_DB_TEST_TABLE;")
 else
     recs_found=f
 fi
@@ -69,7 +69,7 @@ else
     # TODO: prints ugly error message the first time
     echo "raw data records not found - loading..."
     PGCONN=$PGCONN_STRING_USER/$SRCDATA_DB $SRCDATA_DB_LOAD_CMD
-    numrecs=$(psql $PGCONN_STRING_USER/$SRCDATA_DB -X -P t -P format=unaligned -c "select count(*) from $SRCDATA_DB_TEST_TABLE;" || -1)
+    numrecs=$(psql $PGCONN_STRING_USER/$SRCDATA_DB -X -P t -P format=unaligned -c "select count(*) from $SRCDATA_DB_TEST_TABLE;")
     echo "raw data records loaded: $numrecs"
     # TODO(asah): test for >SRCDATA_DB_TEST_TABLE_MIN_RECS
 fi
