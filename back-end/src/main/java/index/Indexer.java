@@ -141,7 +141,7 @@ public abstract class Indexer implements Serializable {
             else if (centroid_x.substring(0, 3).equals("con"))
                 centroid_x_dbl = Double.parseDouble(centroid_x.substring(4));
             else {
-                String curColName = centroid_x.substring(4);
+                String curColName = centroid_x.substring(4); // col:<name>
                 int curColId = colName2Id.get(curColName);
                 centroid_x_dbl = Double.parseDouble(row.get(curColId));
             }

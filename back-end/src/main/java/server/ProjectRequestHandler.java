@@ -49,8 +49,9 @@ public class ProjectRequestHandler implements HttpHandler {
             Project newProject = gson.fromJson(projectJSON, Project.class);
             if (! newProject.getName().equals(Config.projectName)) {
                 Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Not main project.");
-                System.out.println("Not the main project... doing nothing");
-                return ;
+                System.out.println("Not the main project... doing nothing (config="+Config.projectName+
+                                   "  new="+newProject.getName()+")");
+                return;
             }
 
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Good, updating main project.");
