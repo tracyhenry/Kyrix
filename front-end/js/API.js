@@ -1,17 +1,20 @@
 // initialize app, pass in server url (and possibly app name in the future)
-// return a promise of the first request
+// return a div that kyrix vis is contained in
 export function initializeApp(serverAddr) {
 
     return pageOnLoad(serverAddr);
 }
 
-export function filterData(viewId, filterFunc) {
+export function filterData(viewId, layerId, filterFunc) {
 
     var gvd = globalVar.views[viewId];
+    var viewClass = ".view_" + viewId;
     d3.select(".kyrixdiv")
-        .selectAll(viewClass + ".lowestsvg:not(.static)")
+        .selectAll(viewClass + ".layerg.layer" + layerId)
+        .selectAll(".lowestsvg")
         .selectAll("g")
         .selectAll("*")
+        .attr("opacity", 1)
         .filter(filterFunc)
         .attr("opacity", 0);
 }

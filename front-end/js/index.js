@@ -1,5 +1,5 @@
 //get kyrix svg
-export {pageOnLoad} from "./all";
+export {initializeApp, filterData} from "./all";
 
 //trigger kyrix event
 export {triggerPan, triggerJump, highlightByInput, refresh} from "./all";

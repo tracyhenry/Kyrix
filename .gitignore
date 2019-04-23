@@ -169,3 +169,5 @@ dots.txt
 dots_small.txt
 log.txt
 gen
+front-end/js/all.js
+front-end/js/bundle.js
