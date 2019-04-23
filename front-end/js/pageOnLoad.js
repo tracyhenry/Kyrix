@@ -42,7 +42,6 @@ function getCurCanvas(viewId) {
     });
 }
 
-
 // setup <g>s and <svg>s for each layer
 function setupLayerLayouts(viewId) {
 
@@ -115,6 +114,11 @@ function pageOnLoad(serverAddr) {
     else
         globalVar.serverAddr = "";
 
+    // create a div where kyrix vis lives in
+    var kyrixDiv = d3.select("body")
+        .append("div")
+        .classed("kyrixdiv", true);
+
     // get information about the first canvas to render
     $.ajax({
         type : "GET",
@@ -140,8 +144,7 @@ function pageOnLoad(serverAddr) {
                 containerW = Math.max(containerW, viewSpecs[i].minx + viewSpecs[i].width + param.viewPadding * 2);
                 containerH = Math.max(containerH, viewSpecs[i].miny + viewSpecs[i].height + param.viewPadding * 2);
             }
-            d3.select("body")
-                .append("svg")
+            kyrixDiv.append("svg")
                 .attr("id", "containerSvg")
                 .attr("width", containerW)
                 .attr("height", containerH);
@@ -238,4 +241,6 @@ function pageOnLoad(serverAddr) {
             }
         }
     });
+
+    return kyrixDiv;
 }

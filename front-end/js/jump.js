@@ -416,7 +416,7 @@ function registerJumps(viewId, svg, layerId) {
             removePopovers(viewId);
 
             // create a jumpoption popover using bootstrap
-            d3.select("body").append("div")
+            d3.select(".kyrixdiv").append("div")
                 .classed("view_" + viewId + " popover fade right in", true)
                 .attr("role", "tooltip")
                 .attr("id", "jumppopover")
