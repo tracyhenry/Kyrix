@@ -38,13 +38,13 @@ public class Main {
             System.out.println("No main project definition. Skipping reindexing...");
         } else {
             if (isProjectDirty()) {
-                System.out.println("Main project ("+project.getName()+") definition has been changed since last session, re-calculating indexes...");
+                System.out.println("Main project (" + project.getName() + ") definition has been changed since last session, re-calculating indexes...");
                 Indexer.precompute();
-                System.out.println("Marking project ("+project.getName()+") as clean...");
+                System.out.println("Marking project (" + project.getName() + ") as clean...");
                 setProjectClean();
             } else {
                 Indexer.associateIndexer();
-                System.out.println("Main project ("+project.getName()+") definition has not been changed since last session. Skipping reindexing...");
+                System.out.println("Main project (" + project.getName() + ") definition has not been changed since last session. Skipping reindexing...");
             }
         }
 
@@ -89,10 +89,9 @@ public class Main {
 
         Config.projectName = inputStrings.get(Config.projectNameRow);
         Config.portNumber = Integer.valueOf(inputStrings.get(Config.portNumberRow));
-        String dbtype = inputStrings.get(Config.dbRow).toLowerCase();
-        Config.database = (inputStrings.get(Config.dbRow).toLowerCase().equals("mysql") ?
-                Config.Database.MYSQL : Config.Database.PSQL);
-        System.out.println("dbtype: " + dbtype + "  Config.database=" + Config.database);
+        String dbStr = inputStrings.get(Config.dbRow).toLowerCase();
+        Config.database = (dbStr.equals("mysql") ? Config.Database.MYSQL : Config.Database.PSQL);
+        System.out.println("dbtype: " + dbStr + "  Config.database=" + Config.database);
         Config.dbServer = inputStrings.get(Config.dbServerRow);
         Config.userName = inputStrings.get(Config.userNameRow);
         Config.password = inputStrings.get(Config.passwordRow);
@@ -105,7 +104,7 @@ public class Main {
         String sql = "select content from " + Config.projectTableName + " where name = \'" + Config.projectName + "\';";
         try {
             ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(Config.databaseName, sql);
-            if (ret.size() > 0) {
+            if (ret.size() == 0) {
                 project = null;
             } else {
                 projectJSON = ret.get(0).get(0);
@@ -113,7 +112,7 @@ public class Main {
                 project = gson.fromJson(projectJSON, Project.class);
             }
         } catch (Exception e) {
-            System.out.println("Cannot find definition of main project (db="+Config.databaseName+", table="+Config.projectTableName+")... waiting...");
+            System.out.println("Cannot find definition of main project (db=" + Config.databaseName + ", table=" + Config.projectTableName + ")... waiting...");
             e.printStackTrace();
         }
         DbConnector.commitConnection(Config.databaseName);
