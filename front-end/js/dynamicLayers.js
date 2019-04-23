@@ -130,59 +130,65 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
             + "y=" + d[1];
         for (var i = 0; i < gvd.predicates.length; i ++)
             postData += "&predicate" + i + "=" + getSqlPredicate(gvd.predicates[i]);
-        $.get("/tile", postData, function (data, status) {
+        $.ajax({
+            type : "GET",
+            url : globalVar.serverAddr + "/tile",
+            data : postData,
+            success : function (data, status) {
 
-            // response data
-            var response = JSON.parse(data);
-            var x = response.minx;
-            var y = response.miny;
+                // response data
+                var response = JSON.parse(data);
+                var x = response.minx;
+                var y = response.miny;
 
-            // remove tuples outside the viewport
-            // doing this because some backend indexers use compression
-            // and may return tuples outside viewport
-            // doing this in the backend is not efficient, so we do it here
-            var renderData = response.renderData;
-            var numLayers = gvd.curCanvas.layers.length;
-            for (var i = 0; i < numLayers; i ++)
-                renderData[i] = renderData[i].filter(function (d) {
-                    if (+d.maxx < x || +d.minx > (x + gvd.tileW)
-                        || +d.maxy < y || +d.miny > (y + gvd.tileH))
-                        return false;
-                    return true;});
+                // remove tuples outside the viewport
+                // doing this because some backend indexers use compression
+                // and may return tuples outside viewport
+                // doing this in the backend is not efficient, so we do it here
+                var renderData = response.renderData;
+                var numLayers = gvd.curCanvas.layers.length;
+                for (var i = 0; i < numLayers; i++)
+                    renderData[i] = renderData[i].filter(function (d) {
+                        if (+d.maxx < x || +d.minx > (x + gvd.tileW)
+                            || +d.maxy < y || +d.miny > (y + gvd.tileH))
+                            return false;
+                        return true;
+                    });
 
-            // loop over every layer
-            for (var i = numLayers - 1; i >= 0; i--) {
+                // loop over every layer
+                for (var i = numLayers - 1; i >= 0; i--) {
 
-                // current layer object
-                var curLayer = gvd.curCanvas.layers[i];
+                    // current layer object
+                    var curLayer = gvd.curCanvas.layers[i];
 
-                // if this layer is static, return
-                if (curLayer.isStatic)
-                    continue;
+                    // if this layer is static, return
+                    if (curLayer.isStatic)
+                        continue;
 
-                // current tile svg
-                var tileSvg = d3.select(viewClass + ".layerg.layer" + i)
-                    .select(".mainsvg")
-                    .select(".a" + x + y + gvd.curCanvasId);
+                    // current tile svg
+                    var tileSvg = d3.select(viewClass + ".layerg.layer" + i)
+                        .select(".mainsvg")
+                        .select(".a" + x + y + gvd.curCanvasId);
 
-                // it's possible when the tile data is delayed
-                // and this tile is already removed
-                if (tileSvg.empty())
-                    return;
+                    // it's possible when the tile data is delayed
+                    // and this tile is already removed
+                    if (tileSvg.empty())
+                        return;
 
-                // draw current layer
-                curLayer.rendering.parseFunction()(tileSvg, renderData[i], optionalArgs);
+                    // draw current layer
+                    curLayer.rendering.parseFunction()(tileSvg, renderData[i], optionalArgs);
 
-                tileSvg.transition()
-                    .duration(param.tileEnteringDuration)
-                    .style("opacity", 1.0);
+                    tileSvg.transition()
+                        .duration(param.tileEnteringDuration)
+                        .style("opacity", 1.0);
 
-                // register jumps
-                if (!globalVar.animation)
-                    registerJumps(viewId, tileSvg, i);
+                    // register jumps
+                    if (!globalVar.animation)
+                        registerJumps(viewId, tileSvg, i);
 
-                // highlight
-                highlightLowestSvg(viewId, tileSvg, i);
+                    // highlight
+                    highlightLowestSvg(viewId, tileSvg, i);
+                }
             }
         });
     });
@@ -223,109 +229,115 @@ function renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs
         if (gvd.curCanvas.hSql.length > 0)
             postData += "&canvash=" + gvd.curCanvas.h;
         gvd.pendingBoxRequest = true;
-        $.get("/dbox", postData, function (data) {
+        $.ajax({
+            type : "GET",
+            url : globalVar.serverAddr + "/dbox",
+            data : postData,
+            success :function (data) {
 
-            // response data
-            var response = JSON.parse(data);
-            var x = response.minx;
-            var y = response.miny;
-            var canvasId = response.canvasId;
-            var renderData = response.renderData;
+                // response data
+                var response = JSON.parse(data);
+                var x = response.minx;
+                var y = response.miny;
+                var canvasId = response.canvasId;
+                var renderData = response.renderData;
 
-            // check if this response is already outdated
-            // TODO: only checking canvasID might not be sufficient
-            if (canvasId != gvd.curCanvasId) {
-                gvd.pendingBoxRequest = false;
-                return ;
-            }
+                // check if this response is already outdated
+                // TODO: only checking canvasID might not be sufficient
+                if (canvasId != gvd.curCanvasId) {
+                    gvd.pendingBoxRequest = false;
+                    return;
+                }
 
-            // loop over every layer to render
-            var numLayers = gvd.curCanvas.layers.length;
-            for (var i = numLayers - 1; i >= 0; i --) {
+                // loop over every layer to render
+                var numLayers = gvd.curCanvas.layers.length;
+                for (var i = numLayers - 1; i >= 0; i--) {
 
-                // current layer object
-                var curLayer = gvd.curCanvas.layers[i];
+                    // current layer object
+                    var curLayer = gvd.curCanvas.layers[i];
 
-                // if this layer is static, return
-                if (curLayer.isStatic)
-                    continue;
+                    // if this layer is static, return
+                    if (curLayer.isStatic)
+                        continue;
 
-                // current box svg
-                var dboxSvg = d3.select(viewClass + ".layerg.layer" + i)
-                    .select(".mainsvg");
+                    // current box svg
+                    var dboxSvg = d3.select(viewClass + ".layerg.layer" + i)
+                        .select(".mainsvg");
 
-                // remove stale geometries
-                dboxSvg.selectAll("g")
-                    .selectAll("*")
-                    .filter(function(d) {
-                        if (d == null) return false; // requiring all non-def stuff to be bound to data
+                    // remove stale geometries
+                    dboxSvg.selectAll("g")
+                        .selectAll("*")
+                        .filter(function (d) {
+                            if (d == null) return false; // requiring all non-def stuff to be bound to data
+                            if (+d.maxx < x || +d.minx > (x + response.boxW)
+                                || +d.maxy < y || +d.miny > (y + response.boxH))
+                                return true;
+                            else
+                                return false;
+                        })
+                        .remove();
+
+                    // remove empty <g>s.
+                    dboxSvg.selectAll("g")
+                        .filter(function () {
+                            return d3.select(this).select("*").empty();
+                        })
+                        .remove();
+
+                    // remove those returned objects outside the viewport
+                    // doing this because some backend indexers use compression
+                    // and may return tuples outside viewport
+                    // doing this in the backend is not efficient, so we do it here
+                    // also dedup
+                    var mp = {};
+                    gvd.renderData[i].forEach(function (d) {
+                        mp[JSON.stringify(d)] = true;
+                    });
+                    renderData[i] = renderData[i].filter(function (d) {
                         if (+d.maxx < x || +d.minx > (x + response.boxW)
                             || +d.maxy < y || +d.miny > (y + response.boxH))
-                            return true;
-                        else
                             return false;
-                    })
-                    .remove();
+                        if (mp.hasOwnProperty(JSON.stringify(d)))
+                            return false;
+                        return true;
+                    });
 
-                // remove empty <g>s.
-                dboxSvg.selectAll("g")
-                    .filter(function() {
-                        return d3.select(this).select("*").empty();
-                    })
-                    .remove();
-
-                // remove those returned objects outside the viewport
-                // doing this because some backend indexers use compression
-                // and may return tuples outside viewport
-                // doing this in the backend is not efficient, so we do it here
-                // also dedup
-                var mp = {};
-                gvd.renderData[i].forEach(function (d) {
-                    mp[JSON.stringify(d)] = true;
-                });
-                renderData[i] = renderData[i].filter(function (d) {
-                    if (+d.maxx < x || +d.minx > (x + response.boxW)
-                        || +d.maxy < y || +d.miny > (y + response.boxH))
-                        return false;
-                    if (mp.hasOwnProperty(JSON.stringify(d)))
-                        return false;
-                    return true;});
-
-                // construct new globalVar.renderData
-                var newLayerData = JSON.parse(JSON.stringify(renderData[i]));
-                if (param.deltaBox) {
-                    // add data from intersection w/ old box data
-                    for (var j = 0; j < gvd.renderData[i].length; j ++) {
-                        var d = gvd.renderData[i][j];
-                        if (! (+d.maxx < x || +d.minx > (x + response.boxW)
-                                || +d.maxy < y || +d.miny > (y + response.boxH)))
-                            newLayerData.push(d);
+                    // construct new globalVar.renderData
+                    var newLayerData = JSON.parse(JSON.stringify(renderData[i]));
+                    if (param.deltaBox) {
+                        // add data from intersection w/ old box data
+                        for (var j = 0; j < gvd.renderData[i].length; j++) {
+                            var d = gvd.renderData[i][j];
+                            if (!(+d.maxx < x || +d.minx > (x + response.boxW)
+                                    || +d.maxy < y || +d.miny > (y + response.boxH)))
+                                newLayerData.push(d);
+                        }
                     }
+                    gvd.renderData[i] = newLayerData;
+
+                    // draw current layer
+                    curLayer.rendering.parseFunction()(dboxSvg, renderData[i], optionalArgs);
+
+                    // register jumps
+                    if (!gvd.animation)
+                        registerJumps(viewId, dboxSvg, i);
+
+                    // highlight
+                    highlightLowestSvg(viewId, dboxSvg, i);
                 }
-                gvd.renderData[i] = newLayerData;
 
-                // draw current layer
-                curLayer.rendering.parseFunction()(dboxSvg, renderData[i], optionalArgs);
+                // modify global var
+                gvd.boxH.push(response.boxH);
+                gvd.boxW.push(response.boxW);
+                gvd.boxX.push(x);
+                gvd.boxY.push(y);
+                gvd.pendingBoxRequest = false;
 
-                // register jumps
-                if (! gvd.animation)
-                    registerJumps(viewId, dboxSvg, i);
-
-                // highlight
-                highlightLowestSvg(viewId, dboxSvg, i);
-            }
-
-            // modify global var
-            gvd.boxH.push(response.boxH);
-            gvd.boxW.push(response.boxW);
-            gvd.boxX.push(x);
-            gvd.boxY.push(y);
-            gvd.pendingBoxRequest = false;
-
-            // refresh dynamic layers again while panning (#37)
-            if (! gvd.animation) {
-                var curViewport = d3.select(viewClass + ".mainsvg:not(.static)").attr("viewBox").split(" ");
-                RefreshDynamicLayers(viewId, curViewport[0], curViewport[1]);
+                // refresh dynamic layers again while panning (#37)
+                if (!gvd.animation) {
+                    var curViewport = d3.select(viewClass + ".mainsvg:not(.static)").attr("viewBox").split(" ");
+                    RefreshDynamicLayers(viewId, curViewport[0], curViewport[1]);
+                }
             }
         });
     }

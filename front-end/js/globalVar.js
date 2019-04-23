@@ -1,6 +1,7 @@
 // setting up global variables
 var globalVar = {};
 
+globalVar.serverAddr = "N/A";
 globalVar.panCallback = null;
 globalVar.panViewId = null;
 globalVar.disableZoom = false;

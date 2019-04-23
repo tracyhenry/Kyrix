@@ -1,3 +1,10 @@
+// initialize app, pass in server url (and possibly app name in the future)
+// return a promise of the first request
+export function initializeApp(serverAddr) {
+
+    return pageOnLoad(serverAddr);
+}
+
 export function getViews(){
     return globalVar.views;
 }

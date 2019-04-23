@@ -147,7 +147,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     if (! (postData in globalVar.cachedCanvases)) {
         $.ajax({
             type : "GET",
-            url : "canvas",
+            url : globalVar.serverAddr + "/canvas",
             data : postData,
             success : function (data, status) {
                 if (! (postData in globalVar.cachedCanvases)) {
@@ -506,7 +506,7 @@ function registerJumps(viewId, svg, layerId) {
                                     postData += "&predicate" + i + "=";
                             $.ajax({
                                 type: "GET",
-                                url: "viewport",
+                                url: globalVar.serverAddr + "/viewport",
                                 data: postData,
                                 success: function (data, status) {
                                     var cx = JSON.parse(data).cx;
