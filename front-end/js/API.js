@@ -5,11 +5,22 @@ export function initializeApp(serverAddr) {
     return pageOnLoad(serverAddr);
 }
 
-export function getViews(){
+export function filterData(viewId, filterFunc) {
+
+    var gvd = globalVar.views[viewId];
+    d3.select(".kyrixdiv")
+        .selectAll(viewClass + ".lowestsvg:not(.static)")
+        .selectAll("g")
+        .selectAll("*")
+        .filter(filterFunc)
+        .attr("opacity", 0);
+}
+
+export function getViews() {
     return globalVar.views;
 }
 
-export function triggerPan(viewId, panX, panY, delta){
+export function triggerPan(viewId, panX, panY, delta) {
     var globalVarDict = globalVar.views[viewId];
     // number of layers
     var numLayers = globalVarDict.curCanvas.layers.length;
@@ -40,13 +51,13 @@ export function triggerPan(viewId, panX, panY, delta){
         });
 }
 
-export function getData(){
+export function getData() {
     return globalVar;
 }
 
 var keyboardHistory = "";
 var datum;
-export function highlightByInput(svg, key){
+export function highlightByInput(svg, key) {
     var count = 0;
     function toHighlight(d, pred) {
         if(d.name.toLowerCase().includes(pred)){
@@ -79,7 +90,7 @@ export function highlightByInput(svg, key){
         triggerJump("usmap");
 }
 
-export function triggerJump(viewId){
+export function triggerJump(viewId) {
     var gvd = globalVar.views[viewId];
     var jumps = gvd.curJump;
     var optionalArgs = getOptionalArgs(viewId);
