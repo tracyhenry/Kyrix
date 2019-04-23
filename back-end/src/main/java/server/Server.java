@@ -83,6 +83,7 @@ public class Server {
     // send response using string
     public static void sendResponse(HttpExchange httpExchange, int responseCode, String response) throws IOException {
 
+        //https://stackoverflow.com/questions/35313180/cors-with-com-sun-net-httpserver
         httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
         if (httpExchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
             httpExchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
