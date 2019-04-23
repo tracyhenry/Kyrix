@@ -12,6 +12,10 @@ if [ ! -f nba_db_psql.sql ]; then
     wget -q -O nba_db_psql.sql 'https://www.dropbox.com/s/baqb01thxvfthk5/nba_db_psql.sql?dl=1' > /dev/null
 fi
 
+echo "dropping NBA source tables..."
+cat nba_db_psql.sql | perl -ne 'print if (s@^CREATE TABLE ([^ ]+).+@DROP TABLE IF EXISTS \1 CASCADE;@);' | $PSQL $PGCONN | egrep -i 'error'
+
 echo "loading NBA dataset..."
-perl -ne 'print if (s@^CREATE TABLE ([^ ]+).+@DROP TABLE IF EXISTS \1 CASCADE;@);' < nba_db_psql.sql | { cat; cat nba_db_psql.sql; } | egrep -v '^SET idle_in_transaction_session_timeout' | $PSQL $PGCONN | egrep -i 'error'
+cat nba_db_psql.sql | egrep -v '^SET idle_in_transaction_session_timeout' | $PSQL $PGCONN | egrep -i 'error'
 # || true
+
