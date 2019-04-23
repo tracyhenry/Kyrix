@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.*;
 
 public class Main {
 
@@ -21,27 +22,36 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
+        // for use in a Dockerfile, where we don't want to connect to the database
+        if (args.length > 0 && args[0].equals("--immediate-shutdown")) {
+            System.exit(0);
+        }
+
         // read config file
         readConfigFile();
 
         // get project definition, create project object
         getProjectObject();
 
-        // if project object is not null and is dirty, precompute
-        if (project != null && isProjectDirty()) {
-            System.out.println("Main project definition has been changed since last session, re-calculating indexes...");
-            Indexer.precompute();
-            setProjectClean();
-        }
-        else if (project != null) {
-            Indexer.associateIndexer();
-            System.out.println("Main project definition has not been changed since last session. Starting server right away...");
+        // precompute if project object is not null and is dirty
+        if (project == null) {
+            System.out.println("No main project definition. Skipping reindexing...");
+        } else {
+            if (isProjectDirty()) {
+                System.out.println("Main project ("+project.getName()+") definition has been changed since last session, re-calculating indexes...");
+                Indexer.precompute();
+                System.out.println("Marking project ("+project.getName()+") as clean...");
+                setProjectClean();
+            } else {
+                Indexer.associateIndexer();
+                System.out.println("Main project ("+project.getName()+") definition has not been changed since last session. Skipping reindexing...");
+            }
         }
 
-        //cache
+        System.out.println("Creating tile cache...");
         TileCache.create();
 
-        // start server
+        System.out.println("Starting server...");
         Server.startServer(Config.portNumber);
     }
 
@@ -79,8 +89,10 @@ public class Main {
 
         Config.projectName = inputStrings.get(Config.projectNameRow);
         Config.portNumber = Integer.valueOf(inputStrings.get(Config.portNumberRow));
+        String dbtype = inputStrings.get(Config.dbRow).toLowerCase();
         Config.database = (inputStrings.get(Config.dbRow).toLowerCase().equals("mysql") ?
                 Config.Database.MYSQL : Config.Database.PSQL);
+        System.out.println("dbtype: " + dbtype + "  Config.database=" + Config.database);
         Config.dbServer = inputStrings.get(Config.dbServerRow);
         Config.userName = inputStrings.get(Config.userNameRow);
         Config.password = inputStrings.get(Config.passwordRow);
@@ -93,11 +105,15 @@ public class Main {
         String sql = "select content from " + Config.projectTableName + " where name = \'" + Config.projectName + "\';";
         try {
             ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(Config.databaseName, sql);
-            projectJSON = ret.get(0).get(0);
-            Gson gson = new GsonBuilder().create();
-            project = gson.fromJson(projectJSON, Project.class);
+            if (ret.size() > 0) {
+                project = null;
+            } else {
+                projectJSON = ret.get(0).get(0);
+                Gson gson = new GsonBuilder().create();
+                project = gson.fromJson(projectJSON, Project.class);
+            }
         } catch (Exception e) {
-            System.out.println("Cannot find definition of main project... waiting...");
+            System.out.println("Cannot find definition of main project (db="+Config.databaseName+", table="+Config.projectTableName+")... waiting...");
             e.printStackTrace();
         }
         DbConnector.commitConnection(Config.databaseName);
