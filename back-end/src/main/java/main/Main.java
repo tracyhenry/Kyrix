@@ -106,9 +106,13 @@ public class Main {
         String sql = "select content from " + Config.projectTableName + " where name = \'" + Config.projectName + "\';";
         try {
             ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(Config.databaseName, sql);
-            projectJSON = ret.get(0).get(0);
-            Gson gson = new GsonBuilder().create();
-            project = gson.fromJson(projectJSON, Project.class);
+            if (ret.size() > 0) {
+                project = null;
+            } else {
+                projectJSON = ret.get(0).get(0);
+                Gson gson = new GsonBuilder().create();
+                project = gson.fromJson(projectJSON, Project.class);
+            }
         } catch (Exception e) {
             System.out.println("Cannot find definition of main project (db="+Config.databaseName+", table="+Config.projectTableName+")... waiting...");
             e.printStackTrace();
