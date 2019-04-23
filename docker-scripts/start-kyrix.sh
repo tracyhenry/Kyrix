@@ -4,6 +4,7 @@ echo "no" > /kyrix-started
 
 source /kyrix/docker-scripts/spinner.sh
 
+SRCDATA_PROJECT_NAME=${SRCDATA_PROJECT_NAME:-nba}
 SRCDATA_DB=${SRCDATA_DB:-nba}
 SRCDATA_DB_TEST_TABLE=${SRCDATA_DB_TEST_TABLE:-plays}  # source table (one of...) checked to avoid duplicate loads
 SRCDATA_DB_TEST_TABLE_MIN_RECS=${SRCDATA_DB_TEST_TABLE_MIN_RECS:-500000}  # rarely needs changing: min records to find in test table
@@ -25,7 +26,7 @@ DBTYPE=${DBTYPE:-psql}  # other option is citus
 KYRIX_DB=${KYRIX_DB:-kyrix}
 
 cd /kyrix
-echo $SRCDATA_DB > /kyrix/config.txt
+echo $SRCDATA_PROJECT_NAME > /kyrix/config.txt
 echo "8000" >> /kyrix/config.txt
 echo $DBTYPE >> /kyrix/config.txt
 echo $PGHOST >> /kyrix/config.txt
