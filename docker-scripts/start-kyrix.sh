@@ -68,7 +68,7 @@ if [ "$recs_found" = "t" ] && [ "x$KYRIX_DB_RELOAD_FORCE" = "x0" ]; then
     echo "raw data records found - skipping reload to avoid duplicate records."
 else
     # TODO: prints ugly error message the first time
-    echo "raw data records not found - loading..."
+    echo "raw data records not found - loading... PGCONN=$PGCONN_STRING_USER/$SRCDATA_DB loadcmd=$SRCDATA_DB_LOAD_CMD testing $SRCDATA_DB_TEST_TABLE"
     PGCONN=$PGCONN_STRING_USER/$SRCDATA_DB $SRCDATA_DB_LOAD_CMD
     numrecs=$(psql $PGCONN_STRING_USER/$SRCDATA_DB -X -P t -P format=unaligned -c "select count(*) from $SRCDATA_DB_TEST_TABLE;")
     echo "raw data records loaded: $numrecs"

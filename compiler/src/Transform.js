@@ -35,7 +35,7 @@ function Transform(query, db, transformFunc, columnNames, separable) {
         this.columnNames = matches.join(",").replace(/\/\/ *@result: */g, '').split(','); // safe bec we restricted the charset above
         console.log("columnNames="+this.columnNames);
         this.dbsource = query['dbsource']
-        this.db = "db_is_unused";
+        this.db = "src_db_same_as_kyrix";
         if (typeof this.dbsource !== "string") throw new Error("Constructing Transform: dbsource required and must be a string");
         if (this.dbsource.toUpperCase().startsWith('SELECT ')) {
             this.query = this.dbsource;

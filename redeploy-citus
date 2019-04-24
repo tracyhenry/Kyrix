@@ -15,8 +15,8 @@ done
 
 while [ 1 ]; do w=`kubectl get -o name pods,deployments,services,pvc | egrep -v '(kubernetes|kyrix)' | wc -l`; if [ $w = 0 ]; then break; fi; echo "waiting for $w kubernetes resources (pods, etc) to shut down"; sleep 3; done
 
-echo "starting new deployment..."
-for file in master-service manager-deployment master-deployment worker-deployment; do
+echo "starting new deployment..."  # TODO: manager-deployment
+for file in master-service master-deployment worker-deployment; do
     kubectl create -f $file.yaml
 done
 
@@ -30,7 +30,7 @@ source ./setup-citus-vars.env > /dev/null
 # convenience for developers
 kubectl exec -it $MASTER -- su - postgres -c "echo \"\\set PROMPT1 '%n@%/%R%# '\" > .psqlrc"
 
-echo "master=$MASTER, manager=$MANAGER, workers=$WORKERS"
+echo "master=$MASTER, workers=$WORKERS"   # manager=$MANAGER, 
 
 echo "waiting for postgres and citus initialization..."
 while [ 1 ]; do w=`for w in $WORKERS; do kubectl exec -it $w -- su - postgres -c "pg_isready"; done | grep -c accepting`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w kubernetes postgres servers running, waiting for $NUM_WORKERS"; sleep 3; done
