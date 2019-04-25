@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class BoxRequestHandler  implements HttpHandler {
@@ -25,12 +26,14 @@ public class BoxRequestHandler  implements HttpHandler {
     // gson builder
     private final Gson gson;
     private TDBoxGetter boxGetter;
+    private List<Double> fetchTimes;
 
     public BoxRequestHandler() {
 
         gson = new GsonBuilder().create();
         // boxGetter = new MikeBoxGetter();
         boxGetter = new TDBoxGetter();
+        fetchTimes = new ArrayList<>();
     }
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
@@ -96,7 +99,13 @@ public class BoxRequestHandler  implements HttpHandler {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Fetch data time: " + (System.currentTimeMillis() - st) + "ms.");
+        double fetchTime = System.currentTimeMillis() - st;
+        System.out.println("Fetch data time: " + fetchTime + "ms.");
+        fetchTimes.add(fetchTime);
+        if (fetchTimes.size() % 5 == 0 && fetchTimes.size() > 0) {
+            System.out.println("writing fetch data");
+            JsonWriter.writeJSON("fetchTimes", fetchTimes);
+        }
 
         //send data and box back
         Map<String, Object> respMap = new HashMap<>();

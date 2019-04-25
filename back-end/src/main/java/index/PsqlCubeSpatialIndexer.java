@@ -7,18 +7,24 @@ import main.Main;
 import project.Canvas;
 import project.Layer;
 import project.Transform;
+import server.JsonWriter;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 
 public class PsqlCubeSpatialIndexer extends Indexer {
 
     private static PsqlCubeSpatialIndexer instance = null;
 
-    private PsqlCubeSpatialIndexer() {}
+    private List<Integer> rowsFetched;
+
+    private PsqlCubeSpatialIndexer() {
+        rowsFetched = new ArrayList<>();
+    }
 
     public static synchronized PsqlCubeSpatialIndexer getInstance() {
         if (instance == null)
@@ -164,7 +170,16 @@ public class PsqlCubeSpatialIndexer extends Indexer {
 
         System.out.println("get data from region is called with canvas: " + c.getId());
         // return
-        return DbConnector.getQueryResult(Config.databaseName, sql);
+        int numIntersected = 0;
+        ArrayList<ArrayList<String>> queryResult = DbConnector.getQueryResult(Config.databaseName, sql);
+        for (int i = 0; i < queryResult.size(); i++) 
+            numIntersected += queryResult.get(i).size();
+                
+        rowsFetched.add(numIntersected);
+        if (rowsFetched.size() % 5 == 0 && rowsFetched.size() > 0) 
+            System.out.println("writing intersecting rows json");
+            JsonWriter.writeJSON("intersectingRows", rowsFetched);
+        return queryResult;
     }
 
     @Override
