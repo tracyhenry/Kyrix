@@ -7,7 +7,6 @@ export function initializeApp(serverAddr) {
 
 export function filterData(viewId, layerId, filterFunc) {
 
-    var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
     d3.select(".kyrixdiv")
         .selectAll(viewClass + ".layerg.layer" + layerId)
@@ -17,6 +16,11 @@ export function filterData(viewId, layerId, filterFunc) {
         .attr("opacity", 1)
         .filter(filterFunc)
         .attr("opacity", 0);
+}
+
+export function getCurrentCanvasId(viewId) {
+
+    return globalVar.views[viewId].curCanvasId;
 }
 
 export function getViews() {

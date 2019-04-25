@@ -13,13 +13,16 @@
     <script src = "http://128.52.164.24:8000/kyrix.js"></script>
     <script>
         // TODO: change the address where the kyrix backend is running, has to start with http://
-        var serverAddr = "http://128.30.9.117:8000";
+        var serverAddr = "http://18.21.210.95:8000";
 
         // initializeApp() loads kyrix vis into a div, and returns this div
         kyrix.initializeApp(serverAddr);
 
         // filter data upon input change -- this will filter all teams that start with the input letters
         $("#test_input").on('propertychange input', function () {
+
+            if (kyrix.getCurrentCanvasId("nba") != "teamlogo")
+                return ;
             var filterValue = $(this).val();
             kyrix.filterData("nba", 0, function (d) {
                 if (d.abbr.startsWith(filterValue))
