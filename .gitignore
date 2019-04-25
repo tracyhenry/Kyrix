@@ -164,6 +164,7 @@ compiler/examples/flare/preprocessing/
 compiler/examples/lZoomScatterPlot
 compiler/examples/lZoomScatterPlotSingleAxis
 compiler/examples/nameBubbles
+compiler/examples/twitter_hashtag
 front-end/static/images/
 dots.txt
 dots_small.txt

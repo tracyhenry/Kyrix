@@ -1,9 +1,10 @@
 <html>
 <body>
+<br>
+<br>
 <div>
     Filter team that starts with: <input type="text" id="test_input" name="filter" value=""><br>
 </div>
-<input type="button" id="test_button" value="Go!">
 </body>
 <head>
     <script src = "https://code.jquery.com/jquery-3.2.1.min.js"></script>
@@ -12,14 +13,14 @@
     <script src = "http://128.52.164.24:8000/kyrix.js"></script>
     <script>
         // TODO: change the address where the kyrix backend is running, has to start with http://
-        var serverAddr = "http://128.31.36.104:8000";
+        var serverAddr = "http://128.30.9.117:8000";
 
         // initializeApp() loads kyrix vis into a div, and returns this div
         kyrix.initializeApp(serverAddr);
 
-        // filter data upon clicking -- this will filter all teams that start
-        $("#test_button").click(function () {
-            var filterValue = $("#test_input").val();
+        // filter data upon input change -- this will filter all teams that start with the input letters
+        $("#test_input").on('propertychange input', function () {
+            var filterValue = $(this).val();
             kyrix.filterData("nba", 0, function (d) {
                 if (d.abbr.startsWith(filterValue))
                     return false;
