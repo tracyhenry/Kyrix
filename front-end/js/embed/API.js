@@ -94,6 +94,7 @@ export function getMainSvg(viewId, layerId) {
 export function getCurrentViewport(viewId) {
 
     var gvd = globalVar.views[viewId];
+    var viewClass = ".view_" + viewId;
     if (d3.select(viewClass + ".mainsvg:not(.static)").size() == 0)
         return {vpX : 0, vpY : 0, vpW : gvd.viewportWidth, vpH : gvd.viewportHeight};
     else {
