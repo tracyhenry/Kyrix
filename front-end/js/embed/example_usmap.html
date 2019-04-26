@@ -42,8 +42,8 @@
             .attr("id", "statenameinput");
         $("#statenameinput").on('propertychange input', function () {
             var filterValue = $(this).val();
-            kyrix.filterData("state", 0, function (d) {
-                if (d.abbr.toLowerCase.includes(filterValue))
+            kyrix.filterData("state", 1, function (d) {
+                if (d.name.toLowerCase().includes(filterValue.toLowerCase()))
                     return false;
                 else
                     return true;
@@ -55,7 +55,7 @@
 
         //onPan
         var addRectToState = function () {
-            var svg = d3.select(kyrix.getMainsvg("state", 1));
+            var svg = d3.select(kyrix.getMainSvg("state", 1));
             var vp = kyrix.getCurrentViewport("county");
             if (svg.select("#overviewrect").empty())
                 svg.append("rect")
@@ -81,10 +81,11 @@
         d3.select("body")
             .append("select")
             .attr("style", "width : 150px; height : 40px; position : absolute; top : 150px; left : 100px; font-size : 30")
-            .on('change',function (d) {
+            .on("change", function () {
 
-                kyrix.reRender("state", 0, {colorScheme : colorSchemes[d]});
-                kyrix.reRender("state", 1, {colorScheme : colorSchemes[d]});
+                var colorsChoice = d3.select(this).property('value');
+                kyrix.reRender("state", 0, {colorScheme : colorSchemes[colorsChoice]});
+                kyrix.reRender("state", 1, {colorScheme : colorSchemes[colorsChoice]});
             })
             .selectAll('option')
             .data(colors)
