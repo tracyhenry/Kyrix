@@ -87,12 +87,12 @@ while [ 1 ]; do if grep -E -q 'Done precomputing|Backend server started' mvn-exe
 echo "*** (re)indexing (force=$KYRIX_DB_INDEX_FORCE)..."
 FORCE=$KYRIX_DB_INDEX_FORCE $KYRIX_DB_INDEX_CMD || true
 
-sql="select dirty from project where name='$KYRIX_DB';"
+sql="select dirty from project where name='$SRCDATA_PROJECT_NAME';"
 echo "sql=$sql"
 cmd="psql $PGCONN_STRING_USER/kyrix -X -P t -P format=unaligned -c \"$sql\""
 echo "cmd=$cmd"
 while [ 1 ]; do
-    w=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select dirty from project where name='$SRCDATA_DB';") || -1;
+    w=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select dirty from project where name='$SRCDATA_PROJECT_NAME';") || -1;
     if [ "x$w" = "x0" ]; then break; fi;
     spin "waiting for kyrix re-index, currently dirty=$w"
 done
