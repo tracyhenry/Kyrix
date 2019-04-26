@@ -56,11 +56,19 @@ kubectl exec $MASTER -- sed -i "s@host all all all trust@host all all all $PG_EN
 # allow citus to communicate without passwords
 kubectl exec $MASTER -- bash -c "echo \"host all all $POD_INTERNAL_SUBNET trust\" >> /var/lib/postgresql/data/pg_hba.conf"
 kubectl exec $MASTER -- cat /var/lib/postgresql/data/pg_hba.conf | egrep '^(host|local)'
+# set shared_buffers to 1/4 RAM
+QTR_RAM=$(kubectl exec $MASTER free | grep Mem | perl -ane 'printf("%.2fg", $F[1]/1024/1024/4);')
+kubectl exec $MASTER -- sed -i "s@^[#]\?shared_buffers.*@shared_buffers = '$QTR_RAM'@" /var/lib/postgresql/data/postgresql.conf
+kubectl exec $MASTER -- sed -i "s@^[#]\?work_mem.*@work_mem = '200m'@" /var/lib/postgresql/data/postgresql.conf
+kubectl exec $MASTER -- sed -i "s@^[#]\?maintenance_work_mem.*@maintenance_work_mem = '1g'@" /var/lib/postgresql/data/postgresql.conf
 kubectl exec $MASTER -- bash -c "echo \"plv8.start_proc = 'commonjs.plv8_startup'\" >> /var/lib/postgresql/data/postgresql.conf"
 kubectl exec $MASTER -- su - postgres -c "/usr/lib/postgresql/11/bin/pg_ctl -D /var/lib/postgresql/data reload -s"
 kubectl expose replicaset.apps/$RS_MASTER --type=LoadBalancer --name=bastion
 
 for w in $WORKERS; do 
+  kubectl exec $w -- sed -i "s@^[#]\?shared_buffers.*@shared_buffers = '$QTR_RAM'@" /var/lib/postgresql/data/postgresql.conf
+  kubectl exec $w -- sed -i "s@^[#]\?work_mem.*@work_mem = '200m'@" /var/lib/postgresql/data/postgresql.conf
+  kubectl exec $w -- sed -i "s@^[#]\?maintenance_work_mem.*@maintenance_work_mem = '1g'@" /var/lib/postgresql/data/postgresql.conf
   kubectl exec $w -- bash -c "echo \"plv8.start_proc = 'commonjs.plv8_startup'\" >> /var/lib/postgresql/data/postgresql.conf"
   kubectl exec $w -- su - postgres -c "/usr/lib/postgresql/11/bin/pg_ctl -D /var/lib/postgresql/data reload -s"
 done
