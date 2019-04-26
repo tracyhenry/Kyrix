@@ -101,27 +101,67 @@ DROP TABLE IF EXISTS bbox_dots_pushdown_uniform_toplayer0 CASCADE;
 CREATE UNLOGGED TABLE bbox_dots_pushdown_uniform_toplayer0(id bigint,x int,y int, citus_distribution_id int, cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision);
 SELECT create_distributed_table('bbox_dots_pushdown_uniform_toplayer0', 'citus_distribution_id', colocate_with => 'dots_pushdown_uniform');
 
-
-
-EXPLAIN
-INSERT INTO bbox_dots_pushdown_uniform_toplayer0 (id,x,y,citus_distribution_id, cx, cy, minx, miny, maxx, maxy)
+SET citus.task_executor_type = 'task-tracker';
+DROP VIEW if exists bbox_dots_pushdown_uniform_pipeline_query;
+CREATE VIEW bbox_dots_pushdown_uniform_pipeline_query AS
 SELECT id, x, y, citus_distribution_id, (coords::kyrix_bbox_coords_type).cx, (coords::kyrix_bbox_coords_type).cy,
        (coords::kyrix_bbox_coords_type).minx, (coords::kyrix_bbox_coords_type).miny, (coords::kyrix_bbox_coords_type).maxx, (coords::kyrix_bbox_coords_type).maxy
   FROM (
-    SELECT (v::kyrix_transform_null_type).id, (v::kyrix_transform_null_type).x, (v::kyrix_transform_null_type).y,
-           citus_distribution_id, kyrix_bbox_coords_null( (v::kyrix_transform_null_type).x, (v::kyrix_transform_null_type).y ) coords
+    SELECT (v::kyrix_transform_example_type).id, (v::kyrix_transform_example_type).x, (v::kyrix_transform_example_type).y,
+           citus_distribution_id, kyrix_bbox_coords_null( (v::kyrix_transform_example_type).x, (v::kyrix_transform_example_type).y ) coords
     FROM (
-      SELECT kyrix_transform_null(id,w,h) v, citus_distribution_id
+      SELECT kyrix_transform_example(id,w,h) v, citus_distribution_id
       FROM dots_pushdown_uniform
-      --WHERE id < 1500
     ) sq1
   ) sq2
 ;
 
+\timing on
+\echo 'running 0.1% pipeline query from dots_pushdown_uniform...'
+select sum(x+y) from (
+SELECT id, x, y, citus_distribution_id, (coords::kyrix_bbox_coords_type).cx, (coords::kyrix_bbox_coords_type).cy,
+       (coords::kyrix_bbox_coords_type).minx, (coords::kyrix_bbox_coords_type).miny, (coords::kyrix_bbox_coords_type).maxx, (coords::kyrix_bbox_coords_type).maxy
+  FROM (
+    SELECT (v::kyrix_transform_example_type).id, (v::kyrix_transform_example_type).x, (v::kyrix_transform_example_type).y,
+           citus_distribution_id, kyrix_bbox_coords_null( (v::kyrix_transform_example_type).x, (v::kyrix_transform_example_type).y ) coords
+    FROM (
+      SELECT kyrix_transform_example(id,w,h) v, citus_distribution_id
+      FROM dots_pushdown_uniform
+      where w % 1000 < 1
+    ) sq1
+  ) sq2
+)t;
+;
+
+\echo 'running 1% pipeline query from dots_pushdown_uniform...'
+select sum(x+y) from (
+SELECT id, x, y, citus_distribution_id, (coords::kyrix_bbox_coords_type).cx, (coords::kyrix_bbox_coords_type).cy,
+       (coords::kyrix_bbox_coords_type).minx, (coords::kyrix_bbox_coords_type).miny, (coords::kyrix_bbox_coords_type).maxx, (coords::kyrix_bbox_coords_type).maxy
+  FROM (
+    SELECT (v::kyrix_transform_example_type).id, (v::kyrix_transform_example_type).x, (v::kyrix_transform_example_type).y,
+           citus_distribution_id, kyrix_bbox_coords_null( (v::kyrix_transform_example_type).x, (v::kyrix_transform_example_type).y ) coords
+    FROM (
+      SELECT kyrix_transform_example(id,w,h) v, citus_distribution_id
+      FROM dots_pushdown_uniform
+      where w % 1000 < 10
+    ) sq1
+  ) sq2
+)t;
+;
+
+\echo 'running 100% pipeline from dots_pushdown_uniform to bbox_dots_pushdown_uniform_toplayer0...'
+EXPLAIN INSERT INTO bbox_dots_pushdown_uniform_toplayer0 (id,x,y,citus_distribution_id, cx, cy, minx, miny, maxx, maxy) SELECT * FROM bbox_dots_pushdown_uniform_pipeline_query;
+INSERT INTO bbox_dots_pushdown_uniform_toplayer0 (id,x,y,citus_distribution_id, cx, cy, minx, miny, maxx, maxy) SELECT * FROM bbox_dots_pushdown_uniform_pipeline_query;
+
 -- not sure why this isn't getting created...
+\echo 'adding geom column...';
 alter table bbox_dots_pushdown_uniform_toplayer0 add column geom box;
 
+\echo 'setting geom column...';
 update bbox_dots_pushdown_uniform_toplayer0 set geom = box( point(minx,miny), point(maxx, maxy) );
 
 -- this is slow: 3+ mins
+\echo 'CREATE INDEX on geom column...';
 create index bbox_dots_pushdown_uniform_toplayer0_idx on bbox_dots_pushdown_uniform_toplayer0 using gist(geom);
+
+SET citus.task_executor_type = 'real-time';
