@@ -124,6 +124,7 @@ function pageOnLoad(serverAddr) {
         type : "GET",
         url : globalVar.serverAddr + "/first",
         data : {},
+        async : false,
         success :function (data) {
 
             var response = JSON.parse(data);

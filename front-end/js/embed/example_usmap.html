@@ -8,7 +8,7 @@
     <script>
 
         // TODO: change the address where the kyrix backend is running, has to start with http://
-        var serverAddr = "http://128.31.38.134:8000";
+        var serverAddr = "http://127.0.0.1:8000";
 
         // initializeApp() loads kyrix vis into a div, and returns this div
         kyrix.initializeApp(serverAddr);
@@ -73,7 +73,7 @@
                 .attr("x", vp["vpX"] / 5)
                 .attr("y", vp["vpY"] / 5);
         };
-        kyrix.onPan("right", addRectToState);
+        kyrix.onPan("county", addRectToState);
 
         //change rendering color
         var colors = ["red", "green", "blue"];
@@ -83,8 +83,8 @@
             .attr("style", "width : 150px; height : 40px; position : absolute; top : 150px; left : 100px; font-size : 30")
             .on('change',function (d) {
 
-                kyrix.reRender("usmap", 0, {colorScheme : colorSchemes[d]});
-                kyrix.reRender("usmap", 1, {colorScheme : colorSchemes[d]});
+                kyrix.reRender("state", 0, {colorScheme : colorSchemes[d]});
+                kyrix.reRender("state", 1, {colorScheme : colorSchemes[d]});
             })
             .selectAll('option')
             .data(colors)
