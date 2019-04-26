@@ -212,4 +212,8 @@ function zoomed(viewId) {
     if ((zoomOutFactorX < 1 && scaleX <= gvd.minScale) ||
         (zoomOutFactorY < 1 && scaleY <= gvd.minScale))
         completeZoom(viewId, "literal_zoom_out", zoomOutFactorX, zoomOutFactorY);
+
+    // call onPan & onZoom handlers
+    if (gvd.onPanHandler != null && typeof gvd.onPanHandler == "function")
+        gvd.onPanHandler();
 };

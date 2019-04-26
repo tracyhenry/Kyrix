@@ -1,10 +1,8 @@
 // setting up global variables
 var globalVar = {};
 
+// kyrix backend url
 globalVar.serverAddr = "N/A";
-globalVar.panCallback = null;
-globalVar.panViewId = null;
-globalVar.disableZoom = false;
 
 // tile width and tile height
 globalVar.tileW = 0;

@@ -11,7 +11,7 @@ const transforms = require("../USMap/transforms");
 const placements = require("../USMap/placements");
 
 // construct a project
-var p = new Project("usmap", "../../../config.txt");
+var p = new Project("usmap_cmv", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
 
 // ================== state map canvas ===================
@@ -51,11 +51,11 @@ countyBoundaryLayer.addPlacement(placements.countyMapPlacement);
 countyBoundaryLayer.addRenderingFunc(renderers.countyMapRendering);
 
 // ================== Views ===================
-var view = new View("usmap", 0, 0, 2000, 1000);
+var view = new View("state", 0, 0, 2000, 1000);
 p.addView(view);
 p.setInitialStates(view, stateMapCanvas, 0, 0);
 
-var rightView = new View("right", 2100, 0, 2000, 1000);
+var rightView = new View("county", 2100, 0, 2000, 1000);
 p.addView(rightView);
 
 // ================== state -> county ===================
