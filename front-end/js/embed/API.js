@@ -123,12 +123,12 @@ export function reRender(viewId, layerId, additionalArgs) {
     var allArgs = Object.assign({}, oldArgs, additionalArgs);
 
     // re render the svg
-    d3.select(viewClass + ".layerg.layer" + i)
+    d3.select(viewClass + ".layerg.layer" + layerId)
         .selectAll(".lowestsvg")
         .selectAll("*")
         .remove();
     var renderData = getRenderDataOfLayer(viewId, layerId);
-    d3.select(viewClass + ".layerg.layer" + i)
+    d3.select(viewClass + ".layerg.layer" + layerId)
         .selectAll(".lowestsvg")
         .each(function () {
 
