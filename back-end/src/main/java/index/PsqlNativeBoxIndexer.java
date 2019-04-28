@@ -43,6 +43,7 @@ public class PsqlNativeBoxIndexer extends Indexer {
     void run_citus_dml_ddl(Statement stmt, String sql) throws Exception {
         System.out.println(sql + " -- also running on workers");
         System.out.println(sql.replaceAll("\n", " "));
+        stmt.executeUpdate(sql);
         sql = "select run_command_on_workers($CITUS$ "+sql+" $CITUS$);";
         System.out.println(sql.replaceAll("\n", " "));
         stmt.executeQuery(sql);
@@ -148,9 +149,6 @@ public class PsqlNativeBoxIndexer extends Indexer {
             
             for (int i = 0; i < 100; i++) {
                 // break into 100 steps so we can hopefully see progress
-                if (i % 10 == 0) {
-                    System.out.println("pipeline/insertion stage "+i+" of 100...");
-                }
                 sql = tsql.apply(
                            "INSERT INTO bboxtbl(id,x,y,citus_distribution_id,cx,cy,minx,miny,maxx,maxy) "+
                            "SELECT id, x, y, citus_distribution_id, "+
@@ -170,13 +168,13 @@ public class PsqlNativeBoxIndexer extends Indexer {
                            "    WHERE w % 100 = "+i+
                            "  ) sq1"+
                            ") sq2");
-                if (i % 10 == 0) {
-                    long startts = System.nanoTime();
-                    System.out.println(sql);
-                    pushdownIndexStmt.executeUpdate(sql);
-                    long elapsed = System.nanoTime() - startts;
+                long startts = System.nanoTime();
+                if (i % 20 == 0)
+                    System.out.println("pipeline/insertion stage "+i+" of 100: "+sql);
+                pushdownIndexStmt.executeUpdate(sql);
+                long elapsed = System.nanoTime() - startts;
+                if (i % 20 == 0)
                     System.out.println("stage "+i+" took "+(elapsed/1000000)+" msec");
-                }
             }
 
             // compute geom field in the database, where it can happen in parallel
