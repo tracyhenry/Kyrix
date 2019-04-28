@@ -33,7 +33,7 @@ source ./setup-citus-vars.env > /dev/null
 # convenience for developers
 kubectl exec -it $MASTER -- su - postgres -c "echo \"\\set PROMPT1 '%n@%/%R%# '\" > .psqlrc"
 
-echo "master=$MASTER, workers=$WORKERS"   # TODO: manager=$MANAGER - not working right now...
+echo "master=$MASTER, workers=$WORKERS, cores/worker=$NUM_CORES_PER_WORKER"   # TODO: manager=$MANAGER - not working right now...
 
 echo "waiting for postgres and citus initialization..."
 while [ 1 ]; do w=`for w in $WORKERS; do kubectl exec -it $w -- su - postgres -c "pg_isready"; done | grep -c accepting`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w kubernetes postgres servers running, waiting for $NUM_WORKERS"; sleep 3; done
@@ -79,47 +79,31 @@ kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"DROP TYPE if exists 
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$CITUS\\\$ DROP TYPE if exists kyrix_bbox_coords_type CASCADE; \\\$CITUS\\\$);\"" > /dev/null
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"CREATE TYPE kyrix_bbox_coords_type as (cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision);\"" > /dev/null
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$CITUS\\\$  CREATE TYPE kyrix_bbox_coords_type as (cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision); \\\$CITUS\\\$);\"" > /dev/null
-# null bbox_coords function, for testing incl performance
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"DROP FUNCTION IF EXISTS kyrix_bbox_coords_null;\""
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"CREATE OR REPLACE FUNCTION kyrix_bbox_coords_null(x int,y int) returns kyrix_bbox_coords_type AS $$ return { cx: x, cy: y, minx: x-0.5, miny: y-0.5, maxx: x+0.5, maxy: y+0.5, } $$ language plv8 stable;\""
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$CITUS\\\$ DROP FUNCTION if exists kyrix_bbox_coords_null \\\$CITUS\\\$);\""
+# identity bbox_coords function, for testing incl performance
+kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"DROP FUNCTION IF EXISTS kyrix_bbox_coords_identity;\""
+kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"CREATE OR REPLACE FUNCTION kyrix_bbox_coords_identity(x int,y int) returns kyrix_bbox_coords_type AS \\\$\\\$ return { cx: x, cy: y, minx: x-0.5, miny: y-0.5, maxx: x+0.5, maxy: y+0.5, } \\\$\\\$ language plv8 stable;\""
+kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$CITUS\\\$ DROP FUNCTION if exists kyrix_bbox_coords_identity \\\$CITUS\\\$);\""
 # master needs stable, workers need voltile
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(s) FROM ( select replace(pg_catalog.pg_get_functiondef('kyrix_bbox_coords_null(int,int)'::regprocedure::oid)::text, 'STABLE', '') s)t;\""
-
---
--- example bbox_coords function, for testing incl performance
---
-DROP FUNCTION IF EXISTS kyrix_bbox_coords_example;
-CREATE OR REPLACE FUNCTION kyrix_bbox_coords_example(x int,y int) returns kyrix_bbox_coords_type AS $$
-  //plv8.elog(INFO,'kyrix_bbox_coords_example called on master');
-  return { cx: x, cy: y,
-    minx: x-0.5,
-    miny: y-0.5,
-    maxx: x+0.5,
-    maxy: y+0.5,
-  }
-$$ language plv8 stable;  -- master needs stable for citus to pushdown to workers
-select run_command_on_workers($CITUS$ DROP FUNCTION if exists kyrix_bbox_coords_example $CITUS$);
-select run_command_on_workers(s) FROM (
-  select replace(pg_catalog.pg_get_functiondef('kyrix_bbox_coords_example(int,int)'::regprocedure::oid)::text, 'STABLE', '') s
-)t;  -- workers need volatile for pg11 to memoize
-
-
+kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(s) FROM ( select replace(pg_catalog.pg_get_functiondef('kyrix_bbox_coords_identity(int,int)'::regprocedure::oid)::text, 'STABLE', '') s)t;\""
 
 function tune_postgres() {
+    CONF=/var/lib/postgresql/data/postgresql.conf
     kubectl exec $1 -- su - postgres -c "psql -c \"create extension if not exists plv8\" " # shutup start_proc warning
-    kubectl exec $1 -- sed -i "s@^[#]\?shared_buffers.*@shared_buffers = '$QTR_RAM'@" /var/lib/postgresql/data/postgresql.conf
-    kubectl exec $1 -- sed -i "s@^[#]\?work_mem.*@work_mem = '200m'@" /var/lib/postgresql/data/postgresql.conf
-    kubectl exec $1 -- sed -i "s@^[#]\?maintenance_work_mem.*@maintenance_work_mem = '1g'@" /var/lib/postgresql/data/postgresql.conf
-    kubectl exec $1 -- bash -c "echo \"plv8.start_proc = 'commonjs.plv8_startup'\" >> /var/lib/postgresql/data/postgresql.conf"
+    kubectl exec $1 -- sed -i "s@^[#]\?shared_buffers.*@shared_buffers = '$SHARED_BUFFERS_RAM'@" $CONF
+    kubectl exec $1 -- sed -i "s@^[#]\?work_mem.*@work_mem = '$WORK_MEM_RAM'@" $CONF
+    kubectl exec $1 -- sed -i "s@^[#]\?maintenance_work_mem.*@maintenance_work_mem = '1g'@" $CONF
+    kubectl exec $1 -- bash -c "echo \"plv8.start_proc = 'commonjs.plv8_startup'\" >> $CONF; echo \"citus.max_files_per_process = '5000'\" >> $CONF; echo \"citus.task_executor_type = 'task-tracker'\" >> $CONF; echo \"citus.max_connections = '500'\" >> $CONF"
     kubectl exec $1 -- su - postgres -c "/usr/lib/postgresql/11/bin/pg_ctl -D /var/lib/postgresql/data reload -s"
 }
 
-# set shared_buffers to 1/4 RAM - master/coordinator may have different RAM than
 echo "tuning postgres on each node, then reloading..."
-QTR_RAM=$(kubectl exec $FIRST_WORKER free | grep Mem | perl -ane 'printf("%.2fg", $F[1]/1024/1024/4);')
+# set shared_buffers to 1/4 RAM - master/coordinator may have different RAM than workers
+# set work_mem to 2% of RAM
+SHARED_BUFFERS_RAM=$(kubectl exec $FIRST_WORKER free | grep Mem | perl -ane 'printf("%.2fg", $F[1]/1024/1024/4);')
+WORK_MEM_RAM=$(kubectl exec $FIRST_WORKER free | grep Mem | perl -ane 'printf("%.2fm", $F[1]/1024/100*3);')
 for w in $CITUS_ALL_NODES; do tune_postgres $w; done > /dev/null
-QTR_RAM=$(kubectl exec $MASTER free | grep Mem | perl -ane 'printf("%.2fg", $F[1]/1024/1024/4);')
+SHARED_BUFFERS_RAM=$(kubectl exec $MASTER free | grep Mem | perl -ane 'printf("%.2fg", $F[1]/1024/1024/4);')
+WORK_MEM_RAM=$(kubectl exec $MASTER free | grep Mem | perl -ane 'printf("%.2fm", $F[1]/1024/100*3);')
 tune_postgres $MASTER 
 
 echo "testing citus..."
