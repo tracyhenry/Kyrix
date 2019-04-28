@@ -79,6 +79,32 @@ kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"DROP TYPE if exists 
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$CITUS\\\$ DROP TYPE if exists kyrix_bbox_coords_type CASCADE; \\\$CITUS\\\$);\"" > /dev/null
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"CREATE TYPE kyrix_bbox_coords_type as (cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision);\"" > /dev/null
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$CITUS\\\$  CREATE TYPE kyrix_bbox_coords_type as (cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision); \\\$CITUS\\\$);\"" > /dev/null
+# null bbox_coords function, for testing incl performance
+kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"DROP FUNCTION IF EXISTS kyrix_bbox_coords_null;\""
+kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"CREATE OR REPLACE FUNCTION kyrix_bbox_coords_null(x int,y int) returns kyrix_bbox_coords_type AS $$ return { cx: x, cy: y, minx: x-0.5, miny: y-0.5, maxx: x+0.5, maxy: y+0.5, } $$ language plv8 stable;\""
+kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$CITUS\\\$ DROP FUNCTION if exists kyrix_bbox_coords_null \\\$CITUS\\\$);\""
+# master needs stable, workers need voltile
+kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(s) FROM ( select replace(pg_catalog.pg_get_functiondef('kyrix_bbox_coords_null(int,int)'::regprocedure::oid)::text, 'STABLE', '') s)t;\""
+
+--
+-- example bbox_coords function, for testing incl performance
+--
+DROP FUNCTION IF EXISTS kyrix_bbox_coords_example;
+CREATE OR REPLACE FUNCTION kyrix_bbox_coords_example(x int,y int) returns kyrix_bbox_coords_type AS $$
+  //plv8.elog(INFO,'kyrix_bbox_coords_example called on master');
+  return { cx: x, cy: y,
+    minx: x-0.5,
+    miny: y-0.5,
+    maxx: x+0.5,
+    maxy: y+0.5,
+  }
+$$ language plv8 stable;  -- master needs stable for citus to pushdown to workers
+select run_command_on_workers($CITUS$ DROP FUNCTION if exists kyrix_bbox_coords_example $CITUS$);
+select run_command_on_workers(s) FROM (
+  select replace(pg_catalog.pg_get_functiondef('kyrix_bbox_coords_example(int,int)'::regprocedure::oid)::text, 'STABLE', '') s
+)t;  -- workers need volatile for pg11 to memoize
+
+
 
 function tune_postgres() {
     kubectl exec $1 -- su - postgres -c "psql -c \"create extension if not exists plv8\" " # shutup start_proc warning

@@ -2,11 +2,19 @@
 // https://stackoverflow.com/a/9924463
 var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 var ARGUMENT_NAMES = /([^\s,]+)/g;
-function getParamNames(func) {
+function getFuncParamNames(func) {
   var fnStr = func.toString().replace(STRIP_COMMENTS, '');
   var result = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
   if(result === null)
      result = [];
+  return result;
+}
+function getFuncBody(func) {
+  var fnStr = func.toString().replace(STRIP_COMMENTS, '');
+  //fnStr="function foo(x){ ..body..{...if...} }"; fnStr.slice(fnStr.indexOf('{')+1, fnStr.lastIndexOf('}'));
+  var result = fnStr.slice(fnStr.indexOf('{')+1, fnStr.lastIndexOf('}'));
+  if(result === null)
+     result = "";
   return result;
 }
 
@@ -27,7 +35,8 @@ function Transform(query, db, transformFunc, columnNames, separable) {
         this.v2obj = query;
         this.transformFunc = query['transformFunc']
         if (typeof this.transformFunc !== "function") throw new Error("Constructing Transform: transformFunc required and must be a JavaScript function");
-        this.params = getParamNames(this.transformFunc);
+        this.params = getFuncParamNames(this.transformFunc);
+        this.transformFuncBody = getFuncBody(this.transformFunc);
         if (this.params.length == 0) throw new Error("Constructing Transform: transformFunc must take parameters (whose names match the dbsource output)");
         transformFuncSource = this.transformFunc.toString();
         matches = transformFuncSource.match(/\/\/ *@result: *([a-zA-Z_][a-zA-Z0-9_]*)/g);

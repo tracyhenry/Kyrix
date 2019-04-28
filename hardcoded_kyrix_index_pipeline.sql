@@ -23,7 +23,7 @@ $$ LANGUAGE sql STRICT;
 -- null transform, for testing incl performance
 --
 DROP TYPE kyrix_transform_null_type CASCADE;
-select run_command_on_workers($CITUS$ DROP TYPE kyrix_transform_null_type $CITUS$);
+select run_command_on_workers($CITUS$ DROP TYPE kyrix_transform_null_type CASCADE $CITUS$);
 CREATE TYPE kyrix_transform_null_type as (id bigint,x int,y int); 
 select run_command_on_workers($CITUS$ CREATE TYPE kyrix_transform_null_type as (id bigint,x int,y int); $CITUS$);
 DROP FUNCTION IF EXISTS kyrix_transform_null;
@@ -39,19 +39,34 @@ select run_command_on_workers(s) FROM (
 -- example transform, for testing incl performance
 --
 DROP TYPE kyrix_transform_example_type CASCADE;
-select run_command_on_workers($CITUS$ DROP TYPE kyrix_transform_example_type; $CITUS$);
+select run_command_on_workers($CITUS$ DROP TYPE kyrix_transform_example_type CASCADE; $CITUS$);
 CREATE TYPE kyrix_transform_example_type as (id bigint,x int,y int); 
 select run_command_on_workers($CITUS$ CREATE TYPE kyrix_transform_example_type as (id bigint,x int,y int); $CITUS$);
 
+// normally executed by PsqlNativeBoxIndexer using data JS Canvas (width,height) and Project (rendering params).
+DO $$
+   plv8.canvas_width = 1000000;
+   plv8.canvas_height = 1000000;
+$$ language plv8;
+select run_command_on_workers($$
+   plv8.canvas_width = 1000000;
+   plv8.canvas_height = 1000000;
+$$ language plv8;
+
 DROP FUNCTION IF EXISTS kyrix_transform_example;
 CREATE OR REPLACE FUNCTION kyrix_transform_example(id bigint,w int,h int) returns kyrix_transform_example_type AS $$
-      d3=require('d3');
-      kyrix={width:1000000,height:1000000};
-      //plv8.elog(INFO, "plv8 called on master: id="+id+"  w="+w+"  h="+h);
+      if (!('xscale' in plv8)) {
+        d3=require('d3');
+        plv8.xscale = d3.scaleLinear().domain([0, 100000]).range([0, plv8.canvas_width]);
+      };
+      if (!('yscale' in plv8)) {
+        d3=require('d3');
+        plv8.yscale = d3.scaleLinear().domain([0, 100000]).range([0, plv8.canvas_height]);
+      };
       return {
         id: id,
-        x: d3.scaleLinear().domain([0, 100000]).range([0, kyrix.width])(w),
-        y: d3.scaleLinear().domain([0, 100000]).range([0, kyrix.height])(h),
+        x: plv8.xscale(w),
+        y: plv8.yscale(h),
       };
 $$ language plv8 stable;  -- master needs stable for citus to pushdown to workers
 select run_command_on_workers('  DROP FUNCTION IF EXISTS kyrix_transform_example;');
@@ -59,8 +74,33 @@ select run_command_on_workers(s) FROM (
   select replace(pg_catalog.pg_get_functiondef('kyrix_transform_example(bigint,int,int)'::regprocedure::oid)::text, 'STABLE', '') s
 )t;  -- workers need volatile for pg11 to memoize
 
-     
+--select sum(w) FROM dots_pushdown_uniform where w % 1000 < 1;
 
+DROP FUNCTION IF EXISTS kyrix_transform_fastlinear;
+CREATE OR REPLACE FUNCTION kyrix_transform_fastlinear(id bigint,w int,h int) returns kyrix_transform_example_type AS $$
+      -- kyrix={width:1000000,height:1000000};
+      SELECT id, (w/100000.0*1000000)::int as x, (h/100000.0*1000000)::int as y;
+$$ language sql stable;  -- master needs stable for citus to pushdown to workers
+select run_command_on_workers('  DROP FUNCTION IF EXISTS kyrix_transform_fastlinear;');
+select run_command_on_workers(s) FROM (
+  select replace(pg_catalog.pg_get_functiondef('kyrix_transform_fastlinear(bigint,int,int)'::regprocedure::oid)::text, 'STABLE', '') s
+)t;  -- workers need volatile for pg11 to memoize
+--select sum((v::kyrix_transform_example_type).x) from (select kyrix_transform_fastlinear(id,w,h) v, citus_distribution_id FROM dots_pushdown_uniform where w % 1000 < 1)t;
+
+DROP FUNCTION IF EXISTS kyrix_transform_inlined;
+CREATE OR REPLACE FUNCTION kyrix_transform_inlined(id bigint,w int,h int) returns json AS $$
+      -- kyrix={width:1000000,height:1000000};
+      SELECT json_build_object('id', id, 'x', (w/100000.0*1000000)::int, 'y', (h/100000.0*1000000)::int);
+$$ language sql stable;  -- master needs stable for citus to pushdown to workers
+select run_command_on_workers('  DROP FUNCTION IF EXISTS kyrix_transform_inlined;');
+select run_command_on_workers(s) FROM (
+  select replace(pg_catalog.pg_get_functiondef('kyrix_transform_inlined(bigint,int,int)'::regprocedure::oid)::text, 'STABLE', '') s
+)t;  -- workers need volatile for pg11 to memoize
+--select sum((v->>'x')::int) from (select kyrix_transform_inlined(id,w,h) v, citus_distribution_id FROM dots_pushdown_uniform where w % 1000 < 1)t;
+
+     
+DROP TYPE kyrix_bbox_coords_type CASCADE;
+select run_command_on_workers($CITUS$ DROP TYPE kyrix_bbox_coords_type CASCADE; $CITUS$);
 CREATE TYPE kyrix_bbox_coords_type as (cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision);
 select run_command_on_workers($CITUS$
   CREATE TYPE kyrix_bbox_coords_type as (cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision);
@@ -116,9 +156,11 @@ SELECT id, x, y, citus_distribution_id, (coords::kyrix_bbox_coords_type).cx, (co
   ) sq2
 ;
 
+EXPLAIN INSERT INTO bbox_dots_pushdown_uniform_toplayer0 (id,x,y,citus_distribution_id, cx, cy, minx, miny, maxx, maxy) SELECT * FROM bbox_dots_pushdown_uniform_pipeline_query;
+
 \timing on
 \echo 'running 0.1% pipeline query from dots_pushdown_uniform...'
-select sum(x+y) from (
+select sum(x+minx) from ( -- x+minx forces the computation
 SELECT id, x, y, citus_distribution_id, (coords::kyrix_bbox_coords_type).cx, (coords::kyrix_bbox_coords_type).cy,
        (coords::kyrix_bbox_coords_type).minx, (coords::kyrix_bbox_coords_type).miny, (coords::kyrix_bbox_coords_type).maxx, (coords::kyrix_bbox_coords_type).maxy
   FROM (
@@ -134,7 +176,7 @@ SELECT id, x, y, citus_distribution_id, (coords::kyrix_bbox_coords_type).cx, (co
 ;
 
 \echo 'running 1% pipeline query from dots_pushdown_uniform...'
-select sum(x+y) from (
+select sum(x+minx) from (
 SELECT id, x, y, citus_distribution_id, (coords::kyrix_bbox_coords_type).cx, (coords::kyrix_bbox_coords_type).cy,
        (coords::kyrix_bbox_coords_type).minx, (coords::kyrix_bbox_coords_type).miny, (coords::kyrix_bbox_coords_type).maxx, (coords::kyrix_bbox_coords_type).maxy
   FROM (
@@ -150,7 +192,6 @@ SELECT id, x, y, citus_distribution_id, (coords::kyrix_bbox_coords_type).cx, (co
 ;
 
 \echo 'running 100% pipeline from dots_pushdown_uniform to bbox_dots_pushdown_uniform_toplayer0...'
-EXPLAIN INSERT INTO bbox_dots_pushdown_uniform_toplayer0 (id,x,y,citus_distribution_id, cx, cy, minx, miny, maxx, maxy) SELECT * FROM bbox_dots_pushdown_uniform_pipeline_query;
 INSERT INTO bbox_dots_pushdown_uniform_toplayer0 (id,x,y,citus_distribution_id, cx, cy, minx, miny, maxx, maxy) SELECT * FROM bbox_dots_pushdown_uniform_pipeline_query;
 
 -- not sure why this isn't getting created...
