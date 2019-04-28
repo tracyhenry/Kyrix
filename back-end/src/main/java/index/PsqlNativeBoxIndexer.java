@@ -41,18 +41,18 @@ public class PsqlNativeBoxIndexer extends Indexer {
     }
 
     void run_citus_dml_ddl(Statement stmt, String sql) throws Exception {
-        System.out.println(sql);
-        stmt.executeUpdate(sql);
+        System.out.println(sql + " -- also running on workers");
+        System.out.println(sql.replaceAll("\n", " "));
         sql = "select run_command_on_workers($CITUS$ "+sql+" $CITUS$);";
-        System.out.println(sql);
+        System.out.println(sql.replaceAll("\n", " "));
         stmt.executeQuery(sql);
     }
     
     void run_citus_dml_ddl2(Statement stmt, String masterSql, String workerSql) throws Exception {
-        System.out.println(masterSql);
+        System.out.println(masterSql.replaceAll("\n", " "));
         stmt.executeUpdate(masterSql);
         String dworkerSql = "select run_command_on_workers($CITUS$ "+workerSql+" $CITUS$);";
-        System.out.println(dworkerSql);
+        System.out.println(dworkerSql.replaceAll("\n", " "));
         stmt.executeQuery(dworkerSql);
     }
 
@@ -107,7 +107,9 @@ public class PsqlNativeBoxIndexer extends Indexer {
             java.util.function.UnaryOperator<String> tsql = (sqlstr) -> {
                 return (sqlstr.replaceAll("transtype", transformResultType).replaceAll("transfunc", transformFuncName).
                         replaceAll("bboxfunc", bboxFuncName).replaceAll("bboxtbl", bboxTableName).
-                        replaceAll("dbsource", trans.getDbsource()) );
+                        replaceAll("dbsource", trans.getDbsource()).
+                        replaceAll("CANVAS_WIDTH", String.valueOf(c.getW())).replaceAll("CANVAS_HEIGHT", String.valueOf(c.getH()))
+                        );
             };
             
             // register transform JS function with Postgres/Citus
@@ -139,22 +141,31 @@ public class PsqlNativeBoxIndexer extends Indexer {
                              "colocate_with => 'dbsource')");
             System.out.println(sql);
             pushdownIndexStmt.executeQuery(sql);
+
+            sql = "SET citus.task_executor_type = 'task-tracker';";
+            System.out.println(sql);
+            pushdownIndexStmt.executeUpdate(sql);
             
             for (int i = 0; i < 100; i++) {
                 // break into 100 steps so we can hopefully see progress
-                System.out.println("pipeline/insertion stage "+i+" of 100...");
-                sql = tsql.apply(  //"BEGIN; SET citus.task_executor_type = 'task-tracker';" +
-                           "INSERT INTO bboxtbl (id,x,y,citus_distribution_id, "+
-                           "   cx, cy, minx, miny, maxx, maxy) "+
+                if (i % 10 == 0) {
+                    System.out.println("pipeline/insertion stage "+i+" of 100...");
+                }
+                sql = tsql.apply(
+                           "INSERT INTO bboxtbl(id,x,y,citus_distribution_id,cx,cy,minx,miny,maxx,maxy) "+
                            "SELECT id, x, y, citus_distribution_id, "+
                            "(coords::kyrix_bbox_coords_type).cx, (coords::kyrix_bbox_coords_type).cy,"+
                            "(coords::kyrix_bbox_coords_type).minx, (coords::kyrix_bbox_coords_type).miny,"+
                            "(coords::kyrix_bbox_coords_type).maxx, (coords::kyrix_bbox_coords_type).maxy "+
                            "FROM ("+
+                           // TODO: replace v:: args with parsed results from the trans func
                            "  SELECT (v::transtype).id, (v::transtype).x, (v::transtype).y, "+
                            "         citus_distribution_id, "+
+                           // TODO: replace v:: args with parsed results from the trans func
+                           // TODO: can we inline bboxfunc?  could be easier than another plv8 func...
                            "         bboxfunc( (v::transtype).id, (v::transtype).x, (v::transtype).y ) coords"+
                            "  FROM ("+
+                           // TODO: replace args to transfunc with parsed args from the func decl
                            "    SELECT transfunc(id,w,h) v, citus_distribution_id FROM dbsource "+
                            "    WHERE w % 100 = "+i+
                            "  ) sq1"+
