@@ -14,8 +14,8 @@ K8S_NUM_NODES=`gcloud container node-pools describe $K8S_POOL --cluster $K8S_CLU
 echo "k8s nodes in pool: $K8S_NUM_NODES"
 NUM_WORKERS=`expr $K8S_NUM_NODES - 2`
 echo "setting worker-deployment.yaml replicas to $NUM_WORKERS (reserving nodes for kyrix server and citus master/coordinator"
-sed -i "s@replicas: [0-9]+@replicas: $NUM_WORKERS@" worker-deployment.yaml
-
+sed -i "s@replicas:.*@replicas: $NUM_WORKERS@" worker-deployment.yaml
+grep replicas worker-deployment.yaml
 
 source docker-scripts/spinner.sh
 source ./setup-db-vars.env > /dev/null
