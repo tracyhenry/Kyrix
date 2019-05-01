@@ -5,22 +5,34 @@ export function initializeApp(serverAddr) {
     return pageOnLoad(serverAddr);
 }
 
-export function filterData(viewId, layerId, filterFunc, forEachFunc) {
+export function filteredNodes(viewId, layerId, filterFunc) {
 
     var viewClass = ".view_" + viewId;
-    d3.select(".kyrixdiv")
+    return d3.select(".kyrixdiv")
         .selectAll(viewClass + ".layerg.layer" + layerId)
         .selectAll(".lowestsvg")
         .selectAll("g")
         .selectAll("*")
-        .attr("opacity", 1)
         .filter(filterFunc)
-        .each(function (d) {
-            if (forEachFunc != null)
-                forEachFunc(this, d);
-            else
-                d3.select(this).attr("opacity", 0);
-        });
+        .nodes();
+}
+
+export function setFilteredNodesOpacity(viewId, layerId, filterFunc, opacity) {
+
+    var visibleNodes = filteredNodes(viewId, layerId, filterFunc);
+    visibleNodes.forEach(function (node) {
+        d3.select(node).attr("opacity", opacity);
+    });
+    return visibleNodes;
+}
+
+export function displayOnlyFilteredNodes(viewId, layerId, filterFunc) {
+
+    var visibleNodes = setFilteredNodesOpacity(viewId, layerId, filterFunc, 1);
+    setFilteredNodesOpacity(viewId, layerId, function(d) {
+        return ! filterFunc(d);
+    }, 0);
+    return visibleNodes;
 }
 
 export function getCurrentCanvasId(viewId) {
@@ -143,64 +155,18 @@ export function reRender(viewId, layerId, additionalArgs) {
         });
 }
 
-export function triggerJump(viewId) {
+export function triggerJump(viewId, selector, layerId, jumpId) {
+
     var gvd = globalVar.views[viewId];
-    var jumps = gvd.curJump;
+    var curDatum = d3.select(selector).datum();
+    var jump = gvd.curJump[jumpId];
+
+    // check applicability
     var optionalArgs = getOptionalArgs(viewId);
+    optionalArgs["layerId"] = layerId;
+    if (! jump.selector.parseFunction()(curDatum, optionalArgs))
+        throw new Error("This jump is not applicable on this object.");
 
-    console.log(globalVar.disableZoom);
-    if(globalVar.disableZoom)
-        return;
-
-    d3.event.preventDefault();
-    var jump = jumps[0];
-    removePopovers(viewId);
-
-    // calculate new predicates
-    var predDict = jump.predicates.parseFunction()(datum, optionalArgs);
-    var predArray = [];
-    var numLayer = getCanvasById(jump.destId).layers.length;
-    for (var i = 0; i < numLayer; i ++)
-        if (("layer" + i) in predDict)
-            predArray.push(predDict["layer" + i]);
-        else
-            predArray.push({});
-
-    // calculate new viewport
-    var newVpX, newVpY;
-    if (jump.viewport.length > 0) {
-        var viewportFunc = jump.viewport.parseFunction();
-        var viewportFuncRet = viewportFunc(datum, optionalArgs);
-
-        if ("constant" in viewportFuncRet) {
-            // constant viewport, no predicate
-            newVpX = viewportFuncRet["constant"][0];
-            newVpY = viewportFuncRet["constant"][1];
-        }
-        else if ("centroid" in viewportFuncRet) { //TODO: this is not tested
-            // viewport is fixed at a certain tuple
-            var postData = "canvasId=" + jump.destId;
-            var predDict = viewportFuncRet["centroid"];
-            for (var i = 0; i < numLayer; i ++)
-                if (("layer" + i) in predDict)
-                    postData += "&predicate" + i + "=" + getSqlPredicate(predDict["layer" + i]);
-                else
-                    postData += "&predicate" + i + "=";
-            $.ajax({
-                type: "POST",
-                url: "viewport",
-                data: postData,
-                success: function (data, status) {
-                    var cx = JSON.parse(data).cx;
-                    var cy = JSON.parse(data).cy;
-                    newVpX = cx - gvd.viewportWidth / 2;
-                    newVpY = cy - gvd.viewportHeight / 2;
-                },
-                async: false
-            });
-        }
-        else
-            throw new Error("Unrecognized new viewport function return value.");
-    }
-    semanticZoom(viewId, jump, predArray, newVpX, newVpY, datum);
+    // start jump
+    startJump(viewId, curDatum, jump, optionalArgs);
 }

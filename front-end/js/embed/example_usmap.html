@@ -40,17 +40,25 @@
             .attr("name", "state:")
             .attr("style", "width : 150px; height : 40px; position : absolute; top : 50px; left : 100px; font-size : 30;")
             .attr("id", "statenameinput");
-        $("#statenameinput").on('propertychange input', function () {
+        $("#statenameinput").keyup(function (e) {
             var filterValue = $(this).val();
-            kyrix.filterData("state", 1, function (d) {
+
+            // highlight states that match the input
+            var isMatchingFilterValue = function (d) {
                 if (d.name.toLowerCase().includes(filterValue.toLowerCase()))
-                    return false;
-                else
                     return true;
-            }, function (node) {
-                d3.select(node)
-                    .attr("opacity", 0.4);
-            });
+                else
+                    return false;
+            };
+
+            var matchingStates = kyrix.displayOnlyFilteredNodes("state", 1, isMatchingFilterValue);
+            kyrix.setFilteredNodesOpacity("state", 1, function(d) {
+                return ! isMatchingFilterValue(d);
+            }, 0.4);
+
+            // upon pressing 'ENTER', trigger the load jump at the first matching state
+            if (e.which == 13)
+                kyrix.triggerJump("state", matchingStates[0], 1, 0);
         });
 
         //onPan

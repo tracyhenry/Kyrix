@@ -21,17 +21,24 @@
         //--------------------------NBA-------------------------
         // filter data upon input change -- this will filter all teams that start with the input letters
         // and filtering is done only when the current canvas is teamlogo
-        $("#test_input").on('propertychange input', function () {
+        $("#test_input").keyup(function (e) {
 
+            // if current canvas is not logo, do nothing
             if (kyrix.getCurrentCanvasId("nba") != "teamlogo")
                 return ;
+
+            // filter logos
             var filterValue = $(this).val();
-            kyrix.filterData("nba", 0, function (d) {
-                if (d.abbr.startsWith(filterValue))
-                    return false;
-                else
+            var visibleLogos = kyrix.displayOnlyFilteredNodes("nba", 0, function (d) {
+                if (d.abbr.toLowerCase().startsWith(filterValue.toLowerCase()))
                     return true;
+                else
+                    return false;
             });
+
+            // trigger jump upon hitting enter -- if there are multiple teams visible, do the first one
+            if (e.which == 13)
+                kyrix.triggerJump("nba", visibleLogos[0], 0, 0);
         });
     </script>
 
