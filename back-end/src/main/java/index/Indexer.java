@@ -193,6 +193,7 @@ public abstract class Indexer implements Serializable {
         return bbox;
     }
 
+    // WORK IN PROGRESS
     // return a String expression suitable for pushing into javascript or SQL.
     // note: may refer to column names coming from the outut of the transform func
     protected static String getBboxCoordinatesFunc(Layer l) {

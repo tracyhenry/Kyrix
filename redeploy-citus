@@ -3,6 +3,20 @@
 
 echo "redeploying citus on kubernetes..."
 
+# TODO: support non-GCP
+
+echo "checking Kubernetes for number of nodes..."
+K8S_CLUSTER=`kubectl config current-context|perl -ne 's@.+_@@;print;'`
+echo "k8s current cluster: $K8S_CLUSTER"
+K8S_POOL=`gcloud container node-pools list --cluster $K8S_CLUSTER|tail +2|head -1 | perl -ane 'print $F[0]'`
+echo "k8s first pool: $K8S_POOL"
+K8S_NUM_NODES=`gcloud container node-pools describe $K8S_POOL --cluster $K8S_CLUSTER | perl -ane 'print $F[1] if $F[0] eq "initialNodeCount:"' `
+echo "k8s nodes in pool: $K8S_NUM_NODES"
+NUM_WORKERS=`expr $K8S_NUM_NODES - 2`
+echo "setting worker-deployment.yaml replicas to $NUM_WORKERS (reserving nodes for kyrix server and citus master/coordinator"
+sed -i "s@replicas: [0-9]+@replicas: $NUM_WORKERS@" worker-deployment.yaml
+
+
 source docker-scripts/spinner.sh
 source ./setup-db-vars.env > /dev/null
 echo "$NUM_WORKERS workers found in worker-deployment.yaml"
