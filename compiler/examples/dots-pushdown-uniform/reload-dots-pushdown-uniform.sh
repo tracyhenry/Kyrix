@@ -6,12 +6,11 @@ if [ "x$PSQL" ]; then PSQL=`which psql`; fi
 if [ ! -x $PSQL ]; then echo "$0: $PSQL not found - consider setting PSQL to the psql(1) path."; exit 1; fi
 SCALE=${SCALE:-1}  # times 1M records
 
-# TODO: auto-detect... $(python -c "print(max(32, $NUM_WORKERS * $NUM_CORES_PER_WORKER))")
-# (but this info isn't on the worker nodes...)
-SHARD_COUNT=640
+NUM_CORES=`nproc`
+SHARD_COUNT=$(python -c "print(max(32, $NUM_WORKERS * $NUM_CORES))")
 RECS=$(python -c "print(1000000*$SCALE)")
-       
-echo "$0: PSQL = $PSQL, PGCONN = $PGCONN - dropping and recreating dots_pushdown_uniform table with $RECS across $SHARD_COUNT shards."
+
+echo "$0: PSQL = $PSQL, PGCONN = $PGCONN - dropping and recreating dots_pushdown_uniform table with $RECS across $SHARD_COUNT shards (NUM_CORES=$NUM_CORES, NUM_WORKERS=$NUM_WORKERS)"
 cmd="drop table if exists dots_pushdown_uniform cascade; create table dots_pushdown_uniform(id bigint, w int, h int, citus_distribution_id int); set citus.shard_count=$SHARD_COUNT; select create_distributed_table('dots_pushdown_uniform', 'citus_distribution_id')"
 echo "$cmd" | tee | $PSQL $PGCONN -q -t
 
