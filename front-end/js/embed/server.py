@@ -8,6 +8,8 @@ def hello():
 
 @route('/kyrix.js')
 def get():
-    return static_file('bundle.js', root='/home/ubuntu/Kyrix/front-end/js/embed/')
+    response = static_file('bundle.js', root = '/home/ubuntu/Kyrix/front-end/js/embed/')
+    response.set_header("Cache-Control", "no-store")
+    return response
 
-run(host='128.52.164.24', port=8000, debug=True)
+run(host = '128.52.164.24', port = 8000, debug = True)
