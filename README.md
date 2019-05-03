@@ -37,7 +37,7 @@ At this time, only the "dots" synthetic dataset supports parallel indexing "out 
 
 Kyrix serving is not parallelized at this time, and indeed the system overhead of coordinating queries can lead to substantial latency (800-2000msec in our tests). It's current work and open research on how to improve this - we believe there are ways to reduce the fixed overhead per-query for pan/zoom operations, such as sharding by canvas location (x/y) and then "skipping" the coordinator node and querying the shards directly from the Kyrix server.
 
-Parallel Kyrix is implemented using [Kubernetes on Google Cloud](https://cloud.google.com/kubernetes-engine/) for orchestration the [Citus Postgres extension](https://citusdata.com) to provide parallel query/update/DDL. It would be straightforward to port this to other Kubernetes providers. To execute the JavaScript transform function inside Postgres (and avoid bottlenecking on the Kyrix middleware), we use [plv8](https://www.google.com/search?q=plv8), though you could (in theory) run multiple Kyrix middleware servers.
+Parallel Kyrix is implemented using [Kubernetes on Google Cloud](https://cloud.google.com/kubernetes-engine/) for orchestration and the [Citus Postgres extension](https://citusdata.com) to provide parallel query/update/DDL. It would be straightforward to port this to other Kubernetes providers. To execute the JavaScript transform function inside Postgres (and avoid bottlenecking on the Kyrix middleware), we use [plv8](https://www.google.com/search?q=plv8), though you could (in theory) run multiple Kyrix middleware servers.
 
 To use parallel Kyrix, you will need a Kubernetes cluster provider - these instructions are for Google Cloud.
 
