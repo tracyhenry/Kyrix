@@ -154,6 +154,7 @@ mgh_config.txt
 back-end/lib
 .DS_Store
 test.html
+renderer_test.html
 zoomable.html
 favicon.ico
 flare.json
@@ -163,9 +164,11 @@ compiler/examples/flare/preprocessing/
 compiler/examples/lZoomScatterPlot
 compiler/examples/lZoomScatterPlotSingleAxis
 compiler/examples/nameBubbles
+compiler/examples/twitter_hashtag
 front-end/static/images/
 dots.txt
 dots_small.txt
 log.txt
 gen
-
+front-end/js/embed/all.js
+front-end/js/embed/bundle.js

@@ -147,7 +147,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     if (! (postData in globalVar.cachedCanvases)) {
         $.ajax({
             type : "GET",
-            url : "canvas",
+            url : globalVar.serverAddr + "/canvas",
             data : postData,
             success : function (data, status) {
                 if (! (postData in globalVar.cachedCanvases)) {
@@ -375,6 +375,66 @@ function highlight(predArray, jump) {
             });
 }
 
+// trigger jump on object [d], assuming this jump is applicable on d
+function startJump(viewId, d, jump, optionalArgs) {
+
+    removePopovers(viewId);
+
+    // calculate new predicates
+    var predDict = jump.predicates.parseFunction()(d, optionalArgs);
+    var predArray = [];
+    var numLayer = getCanvasById(jump.destId).layers.length;
+    for (var i = 0; i < numLayer; i ++)
+        if (("layer" + i) in predDict)
+            predArray.push(predDict["layer" + i]);
+        else
+            predArray.push({});
+
+    // calculate new viewport
+    var newVpX, newVpY;
+    if (jump.viewport.length > 0) {
+        var viewportFunc = jump.viewport.parseFunction();
+        var viewportFuncRet = viewportFunc(d, optionalArgs);
+
+        if ("constant" in viewportFuncRet) {
+            // constant viewport, no predicate
+            newVpX = viewportFuncRet["constant"][0];
+            newVpY = viewportFuncRet["constant"][1];
+        }
+        else if ("centroid" in viewportFuncRet) { //TODO: this is not tested
+            // viewport is fixed at a certain tuple
+            var postData = "canvasId=" + jump.destId;
+            var predDict = viewportFuncRet["centroid"];
+            for (var i = 0; i < numLayer; i ++)
+                if (("layer" + i) in predDict)
+                    postData += "&predicate" + i + "=" + getSqlPredicate(predDict["layer" + i]);
+                else
+                    postData += "&predicate" + i + "=";
+            $.ajax({
+                type: "GET",
+                url: globalVar.serverAddr + "/viewport",
+                data: postData,
+                success: function (data, status) {
+                    var cx = JSON.parse(data).cx;
+                    var cy = JSON.parse(data).cy;
+                    newVpX = cx - gvd.viewportWidth / 2;
+                    newVpY = cy - gvd.viewportHeight / 2;
+                },
+                async: false
+            });
+        }
+        else
+            throw new Error("Unrecognized new viewport function return value.");
+    }
+
+    if (jump.type == param.semanticZoom || jump.type == param.geometricSemanticZoom)
+        semanticZoom(viewId, jump, predArray, newVpX, newVpY, d);
+    else if (jump.type == param.load)
+        load(predArray, newVpX, newVpY, jump);
+    else if (jump.type == param.highlight)
+        highlight(predArray, jump);
+}
+
 // register jump info
 function registerJumps(viewId, svg, layerId) {
 
@@ -416,7 +476,7 @@ function registerJumps(viewId, svg, layerId) {
             removePopovers(viewId);
 
             // create a jumpoption popover using bootstrap
-            d3.select("body").append("div")
+            d3.select(".kyrixdiv").append("div")
                 .classed("view_" + viewId + " popover fade right in", true)
                 .attr("role", "tooltip")
                 .attr("id", "jumppopover")
@@ -472,61 +532,7 @@ function registerJumps(viewId, svg, layerId) {
 
                     d3.event.preventDefault();
                     var jump = jumps[d3.select(this).attr("data-jump-id")];
-                    removePopovers(viewId);
-
-                    // calculate new predicates
-                    var predDict = jump.predicates.parseFunction()(d, optionalArgs);
-                    var predArray = [];
-                    var numLayer = getCanvasById(jump.destId).layers.length;
-                    for (var i = 0; i < numLayer; i ++)
-                        if (("layer" + i) in predDict)
-                            predArray.push(predDict["layer" + i]);
-                        else
-                            predArray.push({});
-
-                    // calculate new viewport
-                    var newVpX, newVpY;
-                    if (jump.viewport.length > 0) {
-                        var viewportFunc = jump.viewport.parseFunction();
-                        var viewportFuncRet = viewportFunc(d, optionalArgs);
-
-                        if ("constant" in viewportFuncRet) {
-                            // constant viewport, no predicate
-                            newVpX = viewportFuncRet["constant"][0];
-                            newVpY = viewportFuncRet["constant"][1];
-                        }
-                        else if ("centroid" in viewportFuncRet) { //TODO: this is not tested
-                            // viewport is fixed at a certain tuple
-                            var postData = "canvasId=" + jump.destId;
-                            var predDict = viewportFuncRet["centroid"];
-                            for (var i = 0; i < numLayer; i ++)
-                                if (("layer" + i) in predDict)
-                                    postData += "&predicate" + i + "=" + getSqlPredicate(predDict["layer" + i]);
-                                else
-                                    postData += "&predicate" + i + "=";
-                            $.ajax({
-                                type: "GET",
-                                url: "viewport",
-                                data: postData,
-                                success: function (data, status) {
-                                    var cx = JSON.parse(data).cx;
-                                    var cy = JSON.parse(data).cy;
-                                    newVpX = cx - gvd.viewportWidth / 2;
-                                    newVpY = cy - gvd.viewportHeight / 2;
-                                },
-                                async: false
-                            });
-                        }
-                        else
-                            throw new Error("Unrecognized new viewport function return value.");
-                    }
-
-                    if (jump.type == param.semanticZoom || jump.type == param.geometricSemanticZoom)
-                        semanticZoom(viewId, jump, predArray, newVpX, newVpY, d);
-                    else if (jump.type == param.load)
-                        load(predArray, newVpX, newVpY, jump);
-                    else if (jump.type == param.highlight)
-                        highlight(predArray, jump);
+                    startJump(viewId, d, jump, optionalArgs);
                 });
             }
 

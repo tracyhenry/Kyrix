@@ -21,7 +21,7 @@ var stateMapRendering = function (svg, data, args) {
 
     var color = d3.scaleThreshold()
         .domain(d3.range(0, param.stateScaleRange, param.stateScaleStep))
-        .range(d3.schemeYlOrRd[9]);
+        .range(("colorScheme" in args ? args.colorScheme : d3.schemeYlOrRd[9]));
 
     g.selectAll("path")
         .data(data)
@@ -58,7 +58,7 @@ var stateMapLegendRendering = function (svg, data, args) {
     // rectangles representing colors
     var color = d3.scaleThreshold()
         .domain(d3.range(0, param.stateScaleRange, param.stateScaleStep))
-        .range(d3.schemeYlOrRd[9]);
+        .range("colorScheme" in args ? args.colorScheme : d3.schemeYlOrRd[9]);
     g.selectAll(".legendrect")
         .data(color.range().slice(1))
         .enter()
