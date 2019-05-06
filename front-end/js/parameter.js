@@ -1,5 +1,5 @@
 // parameters
-param = {};
+var param = {};
 
 // animation durations, delays
 param.semanticZoomEnteringDelta = 0.5;

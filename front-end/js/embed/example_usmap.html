@@ -1,0 +1,111 @@
+<html>
+<body></body>
+<head>
+    <script src = "https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src = "https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.min.js"></script>
+    <script src = "https://d3js.org/d3.v5.min.js"></script>
+    <script src = "http://128.52.164.24:8000/kyrix.js"></script>
+    <script>
+
+        // TODO: change the address where the kyrix backend is running, has to start with http://
+        var serverAddr = "http://127.0.0.1:8000";
+
+        // initializeApp() loads kyrix vis into a div, and returns this div
+        kyrix.initializeApp(serverAddr);
+
+        //--------------------------US Map-------------------------
+        //pan by arrow
+        d3.select("body")
+            .on("keydown", function () {
+                if (event.key == "ArrowLeft" || event.key == "ArrowRight") {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    // calculate new transform
+                    var delta = (event.key == "ArrowRight" ? -1 : 1);
+                    kyrix.triggerPan("county", 1000 * delta, 0);
+                }
+                if (event.key == "ArrowUp" || event.key == "ArrowDown") {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    // calculate new transform
+                    var delta = (event.key == "ArrowDown" ? -1 : 1);
+                    kyrix.triggerPan("county", 0, 1000 * delta);
+                }
+            });
+
+        //highlight states on input change
+        d3.select("body")
+            .append("input")
+            .attr("type", "text")
+            .attr("name", "state:")
+            .attr("style", "width : 150px; height : 40px; position : absolute; top : 50px; left : 100px; font-size : 30;")
+            .attr("id", "statenameinput");
+        $("#statenameinput").keyup(function (e) {
+            var filterValue = $(this).val();
+
+            // highlight states that match the input
+            var isMatchingFilterValue = function (d) {
+                if (d.name.toLowerCase().includes(filterValue.toLowerCase()))
+                    return true;
+                else
+                    return false;
+            };
+
+            var matchingStates = kyrix.displayOnlyFilteredNodes("state", 1, isMatchingFilterValue);
+            kyrix.setFilteredNodesOpacity("state", 1, function(d) {
+                return ! isMatchingFilterValue(d);
+            }, 0.4);
+
+            // upon pressing 'ENTER', trigger the load jump at the first matching state
+            if (e.which == 13)
+                kyrix.triggerJump("state", matchingStates[0], 1, 0);
+        });
+
+        //onPan
+        var addRectToState = function () {
+            var svg = d3.select(kyrix.getMainSvg("state", 1));
+            var vp = kyrix.getCurrentViewport("county");
+            if (svg.select("#overviewrect").empty())
+                svg.append("rect")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("id", "overviewrect")
+                    .attr("width", 400)
+                    .attr("height", 200)
+                    .attr("fill", "rgba(0, 0, 0, 0)")
+                    .attr("stroke", "#2378ae")
+                    .attr("stroke-dasharray", "10,5")
+                    .attr("stroke-linecap", "butt")
+                    .attr("stroke-width", "3");
+            svg.select("#overviewrect")
+                .attr("x", vp["vpX"] / 5)
+                .attr("y", vp["vpY"] / 5);
+        };
+        kyrix.onPan("county", addRectToState);
+
+        //change rendering color
+        var colors = ["red", "green", "blue"];
+        var colorSchemes = {"red" : d3.schemeYlOrRd[9], "green" : d3.schemeYlGn[9], "blue" : d3.schemePuBu[9]};
+        d3.select("body")
+            .append("select")
+            .attr("style", "width : 150px; height : 40px; position : absolute; top : 150px; left : 100px; font-size : 30")
+            .on("change", function () {
+
+                var colorsChoice = d3.select(this).property('value');
+                kyrix.reRender("state", 0, {colorScheme : colorSchemes[colorsChoice]});
+                kyrix.reRender("state", 1, {colorScheme : colorSchemes[colorsChoice]});
+            })
+            .selectAll('option')
+            .data(colors)
+            .enter()
+            .append('option')
+            .attr('value',function (d){return d;})
+            .text(function (d) {return d;});
+
+    </script>
+
+    <link rel = "stylesheet" type = "text/css" href = "../../static/css/main.css">
+    <link rel = "stylesheet" type = "text/css" href = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Source Serif Pro" rel="stylesheet">
+</head>
+</html>

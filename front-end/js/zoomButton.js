@@ -7,7 +7,7 @@ function drawZoomButtons(viewId) {
 
     // create buttons if not existed
     if (d3.select(viewClass + ".gobackbutton").empty())
-        d3.select("body")
+        d3.select(".kyrixdiv")
             .append("button")
             .classed("view_" + viewId + " gobackbutton", true)
             .attr("disabled", "true")
@@ -16,7 +16,7 @@ function drawZoomButtons(viewId) {
             .classed("btn-lg", true)
             .html("<span class=\"glyphicon glyphicon-arrow-left\"></span>");
     if (d3.select(viewClass + ".zoominbutton").empty())
-        d3.select("body")
+        d3.select(".kyrixdiv")
             .append("button")
             .classed("view_" + viewId + " zoominbutton", true)
             .attr("disabled", "true")
@@ -25,7 +25,7 @@ function drawZoomButtons(viewId) {
             .classed("btn-lg", true)
             .html("<span class=\"glyphicon glyphicon-zoom-in\"></span>");
     if (d3.select(viewClass + ".zoomoutbutton").empty())
-        d3.select("body")
+        d3.select(".kyrixdiv")
             .append("button")
             .classed("view_" + viewId + " zoomoutbutton", true)
             .attr("disabled", "true")

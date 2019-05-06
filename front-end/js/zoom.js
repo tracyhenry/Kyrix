@@ -201,4 +201,8 @@ function zoomed(viewId) {
     if ((zoomOutFactorX < 1 && scaleX <= 1 - param.eps) ||
         (zoomOutFactorY < 1 && scaleY <= 1 - param.eps))
         completeZoom(viewId, "literal_zoom_out", zoomOutFactorX, zoomOutFactorY);
+
+    // call onPan & onZoom handlers
+    if (gvd.onPanHandler != null && typeof gvd.onPanHandler == "function")
+        gvd.onPanHandler();
 };
