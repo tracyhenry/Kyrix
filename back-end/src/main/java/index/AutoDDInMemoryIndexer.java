@@ -160,7 +160,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             double maxx = cx + autoDD.getBboxW() / 2;
             double maxy = cy + autoDD.getBboxH() / 2;
 
-            // check overlap
+            // check overlap  TODO: use in memory R-tree
             boolean isAddingCurNewObject = true;
             ArrayList<ArrayList<String>> curSamples = samples.get(level);
             for (int i = 0; i < curSamples.size(); i ++) {
