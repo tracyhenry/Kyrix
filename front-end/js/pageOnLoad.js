@@ -145,7 +145,6 @@ function pageOnLoad(serverAddr) {
                 containerW = Math.max(containerW, viewSpecs[i].minx + viewSpecs[i].width + param.viewPadding * 2);
                 containerH = Math.max(containerH, viewSpecs[i].miny + viewSpecs[i].height + param.viewPadding * 2);
             }
-
             kyrixDiv.append("svg")
                 .attr("id", "containerSvg")
                 .attr("width", containerW)
@@ -192,6 +191,16 @@ function pageOnLoad(serverAddr) {
                     .attr("x", viewSpecs[i].minx)
                     .attr("y", viewSpecs[i].miny)
                     .append("g")
+                    .classed("view_" + viewId + " axesg", true)
+                    .attr("transform", "translate("
+                        + param.viewPadding
+                        + ","
+                        + param.viewPadding
+                        + ")");
+
+                // set up main group
+                d3.select(".view_" + viewId + ".viewsvg")
+                    .append("g")
                     .classed("view_" + viewId + " maing", true)
                     .attr("transform", "translate("
                         + param.viewPadding
@@ -204,16 +213,6 @@ function pageOnLoad(serverAddr) {
                     .attr("width", gvd.viewportWidth)
                     .attr("height", gvd.viewportHeight)
                     .style("opacity", 0);
-
-                // set up axes group
-                d3.select(".view_" + viewId + ".viewsvg")
-                    .append("g")
-                    .classed("view_" + viewId + " axesg", true)
-                    .attr("transform", "translate("
-                        + param.viewPadding
-                        + ","
-                        + param.viewPadding
-                        + ")");
 
                 // initialize zoom buttons, must before getCurCanvas is called
                 drawZoomButtons(viewId);

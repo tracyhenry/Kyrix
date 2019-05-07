@@ -45,6 +45,12 @@ public class AutoDDIndexer extends PsqlSpatialIndexer {
         // create tables
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
+        // create postgis extension if not existed
+        String psql = "CREATE EXTENSION if not exists postgis;";
+        bboxStmt.executeUpdate(psql);
+        psql = "CREATE EXTENSION if not exists postgis_topology;";
+        bboxStmt.executeUpdate(psql);
+
         for (int i = 0; i < autoDD.getNumLevels(); i ++) {
             // step 0: create tables for storing bboxes
             String bboxTableName = getAutoDDBboxTableName(autoDDIndex, i);
@@ -68,12 +74,6 @@ public class AutoDDIndexer extends PsqlSpatialIndexer {
             bboxStmt.executeUpdate(sql);
         }
 
-        // create postgis extension if not existed
-        String psql = "CREATE EXTENSION if not exists postgis;";
-        bboxStmt.executeUpdate(psql);
-        psql = "CREATE EXTENSION if not exists postgis_topology;";
-        bboxStmt.executeUpdate(psql);
-
         // commit & close connections
         DbConnector.commitConnection(Config.databaseName);
         bboxStmt.close();
@@ -93,10 +93,11 @@ public class AutoDDIndexer extends PsqlSpatialIndexer {
         Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
         double zoomFactor = autoDD.getZoomFactor();
         int numLevels = autoDD.getNumLevels();
-        if (level == 0) // Hardcode
+
+/*        if (level == 0) // Hardcode for twitter app
             densityUpperBound = 15;
         else
-            densityUpperBound = 6;
+            densityUpperBound = 6; */
 
         // set up query iterator
         Statement rawDBStmt = DbConnector.getStmtByDbName(autoDD.getDb());

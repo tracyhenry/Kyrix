@@ -35,7 +35,7 @@ public abstract class Indexer implements Serializable {
                 Indexer indexer = null;
                 if (Config.database == Config.Database.PSQL) {
                     if (c.getLayers().get(layerId).isAutoDDLayer())
-                        indexer = AutoDDIndexer.getInstance();
+                        indexer = AutoDDInMemoryIndexer.getInstance();
                     else if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
                         indexer = PsqlSpatialIndexer.getInstance();
                     else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
