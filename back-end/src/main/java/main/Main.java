@@ -75,7 +75,6 @@ public class Main {
 
         String sql = "update " + Config.projectTableName + " set dirty = " + 0 + " where name = \'" + Config.projectName + "\';";
         DbConnector.executeUpdate(Config.databaseName, sql);
-        DbConnector.commitConnection(Config.databaseName);
     }
 
     private static void readConfigFile() throws IOException {
@@ -115,6 +114,5 @@ public class Main {
             System.out.println("Cannot find definition of main project (db=" + Config.databaseName + ", table=" + Config.projectTableName + ")... waiting...");
             e.printStackTrace();
         }
-        DbConnector.commitConnection(Config.databaseName);
     }
 }

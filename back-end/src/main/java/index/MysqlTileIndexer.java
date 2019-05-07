@@ -122,7 +122,6 @@ public class MysqlTileIndexer extends Indexer {
             if (rowCount % Config.bboxBatchSize == 0) {
                 bboxInsSqlBuilder.append(";");
                 bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
-                DbConnector.commitConnection(Config.databaseName);
                 bboxInsSqlBuilder = new StringBuilder("insert into " + bboxTableName + " values");
             }
 
@@ -150,7 +149,6 @@ public class MysqlTileIndexer extends Indexer {
                         if (mappingCount % Config.tileBatchSize== 0) {
                             tileInsSqlBuilder.append(";");
                             tileStmt.executeUpdate(tileInsSqlBuilder.toString());
-                            DbConnector.commitConnection(Config.databaseName);
                             tileInsSqlBuilder = new StringBuilder("insert into " + tileTableName + " values");
                         }
                     }
@@ -164,12 +162,10 @@ public class MysqlTileIndexer extends Indexer {
         if (rowCount % Config.bboxBatchSize != 0) {
             bboxInsSqlBuilder.append(";");
             bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
-            DbConnector.commitConnection(Config.databaseName);
         }
         if (mappingCount % Config.tileBatchSize != 0) {
             tileInsSqlBuilder.append(";");
             tileStmt.executeUpdate(tileInsSqlBuilder.toString());
-            DbConnector.commitConnection(Config.databaseName);
         }
 
         // sorted cluster
@@ -179,11 +175,11 @@ public class MysqlTileIndexer extends Indexer {
         tileStmt.executeUpdate(sql);
         sql = "alter table sorted_" + tileTableName + " add index(tile_id);";
         tileStmt.executeUpdate(sql);
-        DbConnector.commitConnection(Config.databaseName);
 
         // close db connections
         bboxStmt.close();
         tileStmt.close();
+        DbConnector.closeConnection(Config.databaseName);
     }
 
     @Override

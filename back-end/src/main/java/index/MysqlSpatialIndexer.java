@@ -116,7 +116,6 @@ public class MysqlSpatialIndexer extends Indexer {
             if (rowCount % Config.bboxBatchSize == 0) {
                 bboxInsSqlBuilder.append(";");
                 bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
-                DbConnector.commitConnection(Config.databaseName);
                 bboxInsSqlBuilder = new StringBuilder("insert into " + bboxTableName + " values");
             }
         }
@@ -128,7 +127,6 @@ public class MysqlSpatialIndexer extends Indexer {
         if (rowCount % Config.bboxBatchSize != 0) {
             bboxInsSqlBuilder.append(";");
             bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
-            DbConnector.commitConnection(Config.databaseName);
         }
 
         // close db connections

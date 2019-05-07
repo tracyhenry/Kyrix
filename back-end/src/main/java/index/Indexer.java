@@ -57,10 +57,12 @@ public abstract class Indexer implements Serializable {
         System.out.println("Precomputing...");
 
         associateIndexer();
+        long indexingStartTime = System.currentTimeMillis();
         for (Canvas c : Main.getProject().getCanvases())
             for (int layerId = 0; layerId < c.getLayers().size(); layerId ++)
                 c.getLayers().get(layerId).getIndexer().createMV(c, layerId);
 
+        System.out.println("Indexing took: " + (System.currentTimeMillis() - indexingStartTime) / 1000 + "s.");
         System.out.println("Done precomputing!");
     }
 

@@ -120,20 +120,16 @@ public class PsqlSpatialIndexer extends Indexer {
                     getPolygonText(minx, miny, maxx, maxy));
             preparedStmt.addBatch();
 
-            if (rowCount % Config.bboxBatchSize == 0) {
+            if (rowCount % Config.bboxBatchSize == 0)
                 preparedStmt.executeBatch();
-                DbConnector.commitConnection(Config.databaseName);
-            }
         }
         rs.close();
         rawDBStmt.close();
         DbConnector.closeConnection(trans.getDb());
 
         // insert tail stuff
-        if (rowCount % Config.bboxBatchSize != 0) {
+        if (rowCount % Config.bboxBatchSize != 0)
             preparedStmt.executeBatch();
-            DbConnector.commitConnection(Config.databaseName);
-        }
         preparedStmt.close();
 
         // create index
@@ -141,8 +137,8 @@ public class PsqlSpatialIndexer extends Indexer {
         bboxStmt.executeUpdate(sql);
         sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
         bboxStmt.executeUpdate(sql);
-        DbConnector.commitConnection(Config.databaseName);
         bboxStmt.close();
+        DbConnector.closeConnection(Config.databaseName);
     }
 
     @Override
