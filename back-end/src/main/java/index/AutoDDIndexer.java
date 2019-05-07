@@ -73,9 +73,6 @@ public class AutoDDIndexer extends PsqlSpatialIndexer {
             sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
             bboxStmt.executeUpdate(sql);
         }
-
-        // commit & close connections
-        DbConnector.commitConnection(Config.databaseName);
         bboxStmt.close();
 
         // do indexing for each level
@@ -212,7 +209,6 @@ public class AutoDDIndexer extends PsqlSpatialIndexer {
             // TODO: batch insert
             for (int i = level; i < numLevels; i ++)
                 preparedStmts.get(i).executeBatch();
-            DbConnector.commitConnection(Config.databaseName);
         }
         rs.close();
         rawDBStmt.close();

@@ -108,13 +108,10 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 preparedStmt.addBatch();
 
                 // batch commit
-                if ((j + 1) % Config.bboxBatchSize == 0) {
+                if ((j + 1) % Config.bboxBatchSize == 0)
                     preparedStmt.executeBatch();
-                    DbConnector.commitConnection(Config.databaseName);
-                }
             }
             preparedStmt.executeBatch();
-            DbConnector.commitConnection(Config.databaseName);
             preparedStmt.close();
 
             // build spatial index
@@ -127,7 +124,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
         // commit & close connections
         bboxStmt.close();
-        DbConnector.commitConnection(Config.databaseName);
         DbConnector.closeConnection(Config.databaseName);
     }
 
