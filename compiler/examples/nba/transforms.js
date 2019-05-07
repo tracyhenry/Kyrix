@@ -20,9 +20,7 @@ var teamLogoTransform = new Transform("select * from teams;",
     ["id", "x", "y", "team_id", "city", "name", "abbr"],
     true);
 
-var teamTimelineTransform = new Transform("select game_id, year, month, day, team1.abbr as home_team, team2.abbr as away_team, home_score, away_score, 1 "
-    + "from games, teams as team1, teams as team2 "
-    + "where games.home_team = team1.abbr and games.away_team = team2.abbr;",
+var teamTimelineTransform = new Transform("select game_id, year, month, day, home_team, away_team, home_score, away_score, 1 from games;",
     "nba",
     function (row, width, height, renderParams) {
         var ret = [];
