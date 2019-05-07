@@ -129,7 +129,6 @@ public class PsqlGridCompressIndexer extends Indexer {
                 }
                 System.out.println("Insertion count: " + insCount);
                 insPrepStmt.executeBatch();
-                DbConnector.commitConnection(Config.databaseName);
                 blobs.clear();
                 boxes.clear();
                 lastBatchSt = System.currentTimeMillis();
@@ -249,7 +248,6 @@ public class PsqlGridCompressIndexer extends Indexer {
         }
         rs.close();
         insPrepStmt.executeBatch();
-        DbConnector.commitConnection(Config.databaseName);
         insPrepStmt.close();
         System.out.println("Constructing grouped table: " + (System.currentTimeMillis() - st) / 1000.0 + "s.");
 
@@ -259,10 +257,10 @@ public class PsqlGridCompressIndexer extends Indexer {
         bboxStmt.executeUpdate(sql);
         sql = "cluster " + groupedTableName + " using sp_" + groupedTableName + ";";
         bboxStmt.executeUpdate(sql);
-        DbConnector.commitConnection(Config.databaseName);
         System.out.println("Indexing: " + (System.currentTimeMillis() - st) / 1000.0 + "s.");
         System.out.println();
         bboxStmt.close();
+        DbConnector.closeConnection(Config.databaseName);
     }
 
     @Override
