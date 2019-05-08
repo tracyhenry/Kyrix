@@ -137,7 +137,7 @@ public class MysqlSpatialIndexer extends Indexer {
     public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception {
 
         // get column list string
-        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
+        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("", false);
 
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
@@ -155,7 +155,7 @@ public class MysqlSpatialIndexer extends Indexer {
     public ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate) throws Exception {
 
         // get column list string
-        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
+        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("", false);
 
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"

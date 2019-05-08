@@ -171,10 +171,10 @@ function addAutoDD(autoDD, isInNewView) {
         // construct rendering function
         var udfRenderer = autoDD.rendering;
         var renderFuncBody = (udfRenderer == null ? "" : "(" + udfRenderer.toString() + ")(svg, data, args);") + "\n";
-        renderFuncBody += "var g = svg.select(\"g:last-of-type\"); g.selectAll(\"text\").data(data).enter().append(\"text\")" +
-            ".text(function(d) {return d.clusterNum;}).attr(\"x\", function(d) {return +d.maxx + 10;})" +
-            ".attr(\"y\", function(d) {return +d.cy;}).attr(\"dy\", \".35em\").attr(\"font-size\", 20)" +
-            ".attr(\"text-anchor\", \"middle\").style(\"fill-opacity\", 1);";
+        renderFuncBody += "var g = svg.select(\"g:last-of-type\"); g.selectAll(\".clusternum\").data(data).enter().append(\"text\")" +
+            ".text(function(d) {return d.cluster_num;}).attr(\"x\", function(d) {return +d.cx;})" +
+            ".attr(\"y\", function(d) {return +d.miny;}).attr(\"dy\", \".35em\").attr(\"font-size\", 30)" +
+            ".attr(\"text-anchor\", \"middle\").attr(\"fill\", \"#f47142\").style(\"fill-opacity\", 1);";
         var renderFunc = new Function("svg", "data", "args", renderFuncBody);
         curLayer.addRenderingFunc(new Function("svg", "data", "args", renderFuncBody));
         // TODO: add default circle-based renderer

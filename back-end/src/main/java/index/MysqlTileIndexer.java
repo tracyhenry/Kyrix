@@ -191,7 +191,7 @@ public class MysqlTileIndexer extends Indexer {
     public ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate) throws Exception {
 
         // get column list string
-        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("bbox");
+        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("bbox", false);
 
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"

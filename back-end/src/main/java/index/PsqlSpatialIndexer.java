@@ -145,8 +145,9 @@ public class PsqlSpatialIndexer extends Indexer {
     public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate)
             throws Exception {
 
+        Layer curLayer = c.getLayers().get(layerId);
         // get column list string
-        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
+        String colListStr = curLayer.getTransform().getColStr("", curLayer.isAutoDDLayer());
 
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
@@ -164,8 +165,9 @@ public class PsqlSpatialIndexer extends Indexer {
     public ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate)
             throws Exception {
 
+        Layer curLayer = c.getLayers().get(layerId);
         // get column list string
-        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
+        String colListStr = curLayer.getTransform().getColStr("", curLayer.isAutoDDLayer());
 
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"

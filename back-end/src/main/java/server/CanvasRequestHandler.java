@@ -9,6 +9,7 @@ import main.Config;
 import main.DbConnector;
 import main.Main;
 import project.Canvas;
+import project.Layer;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -110,14 +111,15 @@ public class CanvasRequestHandler implements HttpHandler {
         // loop over layers
         for (int i = 0; i < c.getLayers().size(); i ++) {
 
+            Layer curLayer = c.getLayers().get(i);
             // add an empty placeholder for static layers
-            if (! c.getLayers().get(i).isStatic()) {
+            if (! curLayer.isStatic()) {
                 data.add(new ArrayList<>());
                 continue;
             }
 
             // get column list string
-            String colListStr = c.getLayers().get(i).getTransform().getColStr("");
+            String colListStr = c.getLayers().get(i).getTransform().getColStr("", false);
 
             // construct range query
             String sql = "select " + colListStr + " from bbox_" + Config.projectName + "_"
