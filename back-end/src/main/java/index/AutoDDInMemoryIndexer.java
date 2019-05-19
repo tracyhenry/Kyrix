@@ -1,5 +1,11 @@
 package index;
 
+import com.github.davidmoten.rtree.Entry;
+import com.github.davidmoten.rtree.RTree;
+import com.github.davidmoten.rtree.geometry.Geometries;
+import com.github.davidmoten.rtree.geometry.Geometry;
+import com.github.davidmoten.rtree.geometry.Point;
+import com.github.davidmoten.rtree.geometry.Rectangle;
 import main.Config;
 import main.DbConnector;
 import main.Main;
@@ -16,7 +22,10 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
     private static AutoDDInMemoryIndexer instance = null;
     private double overlappingThreshold = 1.2;
-    private ArrayList<ArrayList<ArrayList<String>>> samples;
+
+    // One Rtree per level to store samples
+    // https://github.com/davidmoten/rtree
+    private ArrayList<RTree<ArrayList<String>, Rectangle>> Rtrees;
 
     // singleton pattern to ensure only one instance existed
     private AutoDDInMemoryIndexer() {}
@@ -44,42 +53,49 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         int numRawColumns = autoDD.getColumnNames().size();
 
         // sample for each level
-        samples = new ArrayList<>();
+        Rtrees = new ArrayList<>();
         for (int i = 0; i < numLevels; i ++)
-            samples.add(new ArrayList<>());
+            Rtrees.add(RTree.create());
         for (int i = 0; i < numLevels; i ++)
             createMVForLevel(i, autoDDIndex);
 
         // compute cluster number
         for (int i = numLevels - 1; i > 0; i --) {
-            ArrayList<ArrayList<String>> curSamples = samples.get(i);
-            for (int j = 0; j < curSamples.size(); j ++) {
-                ArrayList<String> curSample = curSamples.get(j);
-                double cx = Double.valueOf(curSample.get(numRawColumns + 1));
-                double cy = Double.valueOf(curSample.get(numRawColumns + 2));
+            Iterable<Entry<ArrayList<String>, Rectangle>> curSamples = Rtrees.get(i).entries()
+                    .toBlocking().toIterable();
+            for (Entry<ArrayList<String>, Rectangle> o : curSamples) {
+                ArrayList<String> curRow = o.value();
                 // boundary case: last level
                 if (i == numLevels - 1)
-                    curSample.set(numRawColumns, "1");
+                    curRow.set(numRawColumns, "1");
 
-                    //find its nearest neighbor in one level up TODO: use Rtree
-                ArrayList<ArrayList<String>> samplesInOneLevelup = samples.get(i - 1);
+                // find its nearest neighbor in one level up
+                // using binary search + Rtree
                 double minDistance = Double.MAX_VALUE;
-                int nearestNeighborId = -1;
-                for (int k = 0; k < samplesInOneLevelup.size(); k ++) {
-                    ArrayList<String> curFather = samplesInOneLevelup.get(k);
-                    double curCx = autoDD.getCanvasCoordinate(i, Double.valueOf(curFather.get(autoDD.getXColId())), true);
-                    double curCy = autoDD.getCanvasCoordinate(i, Double.valueOf(curFather.get(autoDD.getYColId())), false);
+                ArrayList<String> nearestNeighbor = null;
+                double cx = autoDD.getCanvasCoordinate(i - 1, Double.valueOf(curRow.get(autoDD.getXColId())), true);
+                double cy = autoDD.getCanvasCoordinate(i - 1, Double.valueOf(curRow.get(autoDD.getYColId())), false);
+                double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2 ;
+                double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
+                double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
+                double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
+                Iterable<Entry<ArrayList<String>, Rectangle>> neighbors = Rtrees.get(i - 1)
+                            .search(Geometries.rectangle(minx, miny, maxx, maxy))
+                            .toBlocking().toIterable();
+                for (Entry<ArrayList<String>, Rectangle> nb : neighbors) {
+                    ArrayList<String> curNeighbor = nb.value();
+                    double curCx = autoDD.getCanvasCoordinate(i - 1, Double.valueOf(curNeighbor.get(autoDD.getXColId())), true);
+                    double curCy = autoDD.getCanvasCoordinate(i - 1, Double.valueOf(curNeighbor.get(autoDD.getYColId())), false);
                     double curDistance = (cx - curCx) * (cx - curCx) + (cy - curCy) * (cy - curCy);
                     if (curDistance < minDistance) {
                         minDistance = curDistance;
-                        nearestNeighborId = k;
+                        nearestNeighbor = curNeighbor;
                     }
                 }
 
                 // increment the cluster number of the NN
-                ArrayList<String> nearestNeighbor = samplesInOneLevelup.get(nearestNeighborId);
                 int clusterNumBeforeIncrement = Integer.valueOf(nearestNeighbor.get(numRawColumns));
-                int clusterNumAfterIncrement = clusterNumBeforeIncrement + Integer.valueOf(curSample.get(numRawColumns));
+                int clusterNumAfterIncrement = clusterNumBeforeIncrement + Integer.valueOf(curRow.get(numRawColumns));
                 nearestNeighbor.set(numRawColumns, String.valueOf(clusterNumAfterIncrement));
             }
         }
@@ -117,27 +133,30 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 insertSql += "?, ";
             insertSql += "ST_GeomFromText(?));";
             PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
-            ArrayList<ArrayList<String>> curSamples = samples.get(i);
-            for (int j = 0; j < curSamples.size(); j ++) {
-                ArrayList<String> curSample = curSamples.get(j);
+            int insertCount = 0;
+            Iterable<Entry<ArrayList<String>, Rectangle>> samples = Rtrees.get(i).entries()
+                    .toBlocking().toIterable();
+            for (Entry<ArrayList<String>, Rectangle> o : samples) {
+                ArrayList<String> curRow = o.value();
 
                 // raw data fields
                 for (int k = 0; k < numRawColumns; k ++)
-                    preparedStmt.setString(k + 1, curSample.get(k).replaceAll("\'", "\'\'"));
+                    preparedStmt.setString(k + 1, curRow.get(k).replaceAll("\'", "\'\'"));
 
                 // cluster_num & bounding box fields
                 for (int k = 0; k <= 6; k ++)
-                    preparedStmt.setDouble(numRawColumns + k + 1, Double.valueOf(curSample.get(numRawColumns + k)));
-                double minx = Double.valueOf(curSample.get(numRawColumns + 3));
-                double miny = Double.valueOf(curSample.get(numRawColumns + 4));
-                double maxx = Double.valueOf(curSample.get(numRawColumns + 5));
-                double maxy = Double.valueOf(curSample.get(numRawColumns + 6));
+                    preparedStmt.setDouble(numRawColumns + k + 1, Double.valueOf(curRow.get(numRawColumns + k)));
+                double minx = Double.valueOf(curRow.get(numRawColumns + 3));
+                double miny = Double.valueOf(curRow.get(numRawColumns + 4));
+                double maxx = Double.valueOf(curRow.get(numRawColumns + 5));
+                double maxy = Double.valueOf(curRow.get(numRawColumns + 6));
                 preparedStmt.setString(numRawColumns + 8,
                         getPolygonText(minx, miny, maxx, maxy));
 
                 // batch commit
                 preparedStmt.addBatch();
-                if ((j + 1) % Config.bboxBatchSize == 0)
+                insertCount ++;
+                if ((insertCount + 1) % Config.bboxBatchSize == 0)
                     preparedStmt.executeBatch();
             }
             preparedStmt.executeBatch();
@@ -153,6 +172,10 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         // commit & close connections
         bboxStmt.close();
         DbConnector.closeConnection(Config.databaseName);
+
+        // release R-tree objects
+        for (int i = 0; i < numLevels; i ++)
+            Rtrees.set(i, null);
     }
 
     private void createMVForLevel(int level, int autoDDIndex) throws SQLException, ClassNotFoundException {
@@ -175,43 +198,36 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             ArrayList<String> curRawRow = new ArrayList<>();
             for (int i = 1; i <= numRawColumns; i ++)
                 curRawRow.add(rs.getString(i));
-            curRawRow.add("0");
+            curRawRow.add("0"); // place holder for cluster num field
 
-            // get bbox info for this tuple
+            // centroid of this tuple
             double cx = autoDD.getCanvasCoordinate(level, rs.getDouble(autoDD.getXColId() + 1), true);
             double cy = autoDD.getCanvasCoordinate(level, rs.getDouble(autoDD.getYColId() + 1), false);
-            double minx = cx - autoDD.getBboxW() / 2;
-            double miny = cy - autoDD.getBboxH() / 2;
-            double maxx = cx + autoDD.getBboxW() / 2;
-            double maxy = cy + autoDD.getBboxH() / 2;
 
-            // check overlap  TODO: use in memory R-tree
-            boolean isAddingCurNewObject = true;
-            ArrayList<ArrayList<String>> curSamples = samples.get(level);
-            for (int i = 0; i < curSamples.size(); i ++) {
-                double curCx = Double.valueOf(curSamples.get(i).get(numRawColumns + 1));
-                double curCy = Double.valueOf(curSamples.get(i).get(numRawColumns + 2));
-                if (Math.abs(curCx - cx) / (double) autoDD.getBboxW() < overlappingThreshold &&
-                        Math.abs(curCy - cy) / (double) autoDD.getBboxH() < overlappingThreshold) {
-                    isAddingCurNewObject = false;
-                    break;
-                }
-            }
-            if (! isAddingCurNewObject)
+            // check overlap
+            double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2 ;
+            double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
+            double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
+            double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
+            Iterable<Entry<ArrayList<String>, Rectangle>> overlappingSamples = Rtrees.get(level)
+                    .search(Geometries.rectangle(minx, miny, maxx, maxy))
+                    .toBlocking().toIterable();
+            if (overlappingSamples.iterator().hasNext())
                 continue;
 
             // sample this object, insert to all levels below this level
             for (int i = level; i < numLevels; i ++) {
-                ArrayList<String> curRow = new ArrayList<>(curRawRow);
-                curRow.add(String.valueOf(cx)); curRow.add(String.valueOf(cy));
-                curRow.add(String.valueOf(minx)); curRow.add(String.valueOf(miny));
-                curRow.add(String.valueOf(maxx)); curRow.add(String.valueOf(maxy));
-                samples.get(i).add(curRow);
-                cx *= zoomFactor; cy *= zoomFactor;
+                cx = autoDD.getCanvasCoordinate(i, Double.valueOf(curRawRow.get(autoDD.getXColId())), true);
+                cy = autoDD.getCanvasCoordinate(i, Double.valueOf(curRawRow.get(autoDD.getYColId())), false);
                 minx = cx - autoDD.getBboxW() / 2;
                 miny = cy - autoDD.getBboxH() / 2;
                 maxx = cx + autoDD.getBboxW() / 2;
                 maxy = cy + autoDD.getBboxH() / 2;
+                ArrayList<String> curRow = new ArrayList<>(curRawRow);
+                curRow.add(String.valueOf(cx)); curRow.add(String.valueOf(cy));
+                curRow.add(String.valueOf(minx)); curRow.add(String.valueOf(miny));
+                curRow.add(String.valueOf(maxx)); curRow.add(String.valueOf(maxy));
+                Rtrees.set(i, Rtrees.get(i).add(curRow, Geometries.rectangle(minx, miny, maxx, maxy)));
             }
         }
         rs.close();
