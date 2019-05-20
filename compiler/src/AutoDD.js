@@ -10,8 +10,8 @@ function AutoDD(args) {
         args = {};
 
     // check required args
-    var requiredArgs = ["query", "db", "xCol", "yCol", "bboxW", "bboxH"];
-    var requiredArgsTypes = ["string", "string", "string", "string", "number", "number"];
+    var requiredArgs = ["query", "db", "xCol", "yCol"];
+    var requiredArgsTypes = ["string", "string", "string", "string"];
     for (var i = 0; i < requiredArgs.length; i ++) {
         if (! (requiredArgs[i] in args))
             throw new Error("Constructing AutoDD: " + requiredArgs[i] + " missing.");
@@ -22,7 +22,15 @@ function AutoDD(args) {
                 throw new Error("Constructing AutoDD: " + requiredArgs[i] + " cannot be an empty string.");
     }
 
+    // circle agg rendering
+    if (! ("rendering" in args)) {
+        args["clusterNum"] = true;
+        args["bboxW"] = args["bboxH"] = 100;
+    }
+
     // other constraints
+    if ("rendering" in args && (!("bboxW" in args) || !("bboxH" in args)))
+        throw new Error("Constructing AutoDD: sizes of object bounding box are not specified.");
     if (args["bboxW"] <= 0 || args["bboxH"] <= 0)
         throw new Error("Constructing AutoDD: non-positive bbox size.");
     if ("axis" in args && (! "loX" in args || ! "loY" in args || ! "hiX" in args || ! "hiY" in args))
@@ -51,9 +59,15 @@ function AutoDD(args) {
 // get object rendering function
 function getObjectRenderer(udfRenderer, hasClusterNum) {
 
-    // TODO: add default circle-based renderer
+    if (udfRenderer == null) { // TODO: add default circle-based renderer
+        var circleAggRenderer = function () {
+            
+        };
+        return circleAggRenderer;
+    }
+
     var renderFuncBody = (udfRenderer == null ? "" : "(" + udfRenderer.toString() + ")(svg, data, args);") + "\n";
-    if (hasClusterNum)
+    if (udfRenderer != null && hasClusterNum)
         renderFuncBody += "var g = svg.select(\"g:last-of-type\");" +
             "g.selectAll(\".clusternum\")" +
             ".data(data)" +
