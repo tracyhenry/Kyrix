@@ -60,43 +60,45 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             createMVForLevel(i, autoDDIndex);
 
         // compute cluster number
-        for (int i = numLevels - 1; i > 0; i --) {
-            Iterable<Entry<ArrayList<String>, Rectangle>> curSamples = Rtrees.get(i).entries()
-                    .toBlocking().toIterable();
-            for (Entry<ArrayList<String>, Rectangle> o : curSamples) {
-                ArrayList<String> curRow = o.value();
-                // boundary case: last level
-                if (i == numLevels - 1)
-                    curRow.set(numRawColumns, "1");
+        if (autoDD.isClusterNum()) {
+            for (int i = numLevels - 1; i > 0; i --) {
+                Iterable<Entry<ArrayList<String>, Rectangle>> curSamples = Rtrees.get(i).entries()
+                        .toBlocking().toIterable();
+                for (Entry<ArrayList<String>, Rectangle> o : curSamples) {
+                    ArrayList<String> curRow = o.value();
+                    // boundary case: last level
+                    if (i == numLevels - 1)
+                        curRow.set(numRawColumns, "1");
 
-                // find its nearest neighbor in one level up
-                // using binary search + Rtree
-                double minDistance = Double.MAX_VALUE;
-                ArrayList<String> nearestNeighbor = null;
-                double cx = autoDD.getCanvasCoordinate(i - 1, Double.valueOf(curRow.get(autoDD.getXColId())), true);
-                double cy = autoDD.getCanvasCoordinate(i - 1, Double.valueOf(curRow.get(autoDD.getYColId())), false);
-                double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2 ;
-                double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
-                double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
-                double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
-                Iterable<Entry<ArrayList<String>, Rectangle>> neighbors = Rtrees.get(i - 1)
+                    // find its nearest neighbor in one level up
+                    // using binary search + Rtree
+                    double minDistance = Double.MAX_VALUE;
+                    ArrayList<String> nearestNeighbor = null;
+                    double cx = autoDD.getCanvasCoordinate(i - 1, Double.valueOf(curRow.get(autoDD.getXColId())), true);
+                    double cy = autoDD.getCanvasCoordinate(i - 1, Double.valueOf(curRow.get(autoDD.getYColId())), false);
+                    double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2 ;
+                    double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
+                    double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
+                    double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
+                    Iterable<Entry<ArrayList<String>, Rectangle>> neighbors = Rtrees.get(i - 1)
                             .search(Geometries.rectangle(minx, miny, maxx, maxy))
                             .toBlocking().toIterable();
-                for (Entry<ArrayList<String>, Rectangle> nb : neighbors) {
-                    ArrayList<String> curNeighbor = nb.value();
-                    double curCx = autoDD.getCanvasCoordinate(i - 1, Double.valueOf(curNeighbor.get(autoDD.getXColId())), true);
-                    double curCy = autoDD.getCanvasCoordinate(i - 1, Double.valueOf(curNeighbor.get(autoDD.getYColId())), false);
-                    double curDistance = (cx - curCx) * (cx - curCx) + (cy - curCy) * (cy - curCy);
-                    if (curDistance < minDistance) {
-                        minDistance = curDistance;
-                        nearestNeighbor = curNeighbor;
+                    for (Entry<ArrayList<String>, Rectangle> nb : neighbors) {
+                        ArrayList<String> curNeighbor = nb.value();
+                        double curCx = autoDD.getCanvasCoordinate(i - 1, Double.valueOf(curNeighbor.get(autoDD.getXColId())), true);
+                        double curCy = autoDD.getCanvasCoordinate(i - 1, Double.valueOf(curNeighbor.get(autoDD.getYColId())), false);
+                        double curDistance = (cx - curCx) * (cx - curCx) + (cy - curCy) * (cy - curCy);
+                        if (curDistance < minDistance) {
+                            minDistance = curDistance;
+                            nearestNeighbor = curNeighbor;
+                        }
                     }
-                }
 
-                // increment the cluster number of the NN
-                int clusterNumBeforeIncrement = Integer.valueOf(nearestNeighbor.get(numRawColumns));
-                int clusterNumAfterIncrement = clusterNumBeforeIncrement + Integer.valueOf(curRow.get(numRawColumns));
-                nearestNeighbor.set(numRawColumns, String.valueOf(clusterNumAfterIncrement));
+                    // increment the cluster number of the NN
+                    int clusterNumBeforeIncrement = Integer.valueOf(nearestNeighbor.get(numRawColumns));
+                    int clusterNumAfterIncrement = clusterNumBeforeIncrement + Integer.valueOf(curRow.get(numRawColumns));
+                    nearestNeighbor.set(numRawColumns, String.valueOf(clusterNumAfterIncrement));
+                }
             }
         }
 

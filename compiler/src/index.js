@@ -3,6 +3,7 @@ const fs = require("fs");
 const mysql = require("mysql");
 const psql = require("pg");
 const http = require("http");
+const AutoDD = require("./AutoDD");
 const Canvas = require("./Canvas").Canvas;
 const View = require("./View").View;
 const Jump = require("./Jump").Jump;
@@ -169,30 +170,13 @@ function addAutoDD(autoDD, isInNewView) {
         curLayer.addPlacement({"centroid_x" : "con:0", "centroid_y" : "con:0", "width" : "con:0", "height" : "con:0"});
 
         // construct rendering function
-        var udfRenderer = autoDD.rendering;
-        var renderFuncBody = (udfRenderer == null ? "" : "(" + udfRenderer.toString() + ")(svg, data, args);") + "\n";
-        renderFuncBody += "var g = svg.select(\"g:last-of-type\"); g.selectAll(\".clusternum\").data(data).enter().append(\"text\")" +
-            ".text(function(d) {return d.cluster_num;}).attr(\"x\", function(d) {return +d.cx;})" +
-            ".attr(\"y\", function(d) {return +d.miny;}).attr(\"dy\", \".35em\").attr(\"font-size\", 20)" +
-            ".attr(\"text-anchor\", \"middle\").attr(\"fill\", \"#f47142\").style(\"fill-opacity\", 1);";
-        var renderFunc = new Function("svg", "data", "args", renderFuncBody);
-        curLayer.addRenderingFunc(new Function("svg", "data", "args", renderFuncBody));
-        // TODO: add default circle-based renderer
+        curLayer.addRenderingFunc(AutoDD.getObjectRenderer(autoDD.rendering, autoDD.clusterNum));
 
         // axes
         if (autoDD.axis) {
             var axesOffsetX = autoDD.bboxW / 2 * Math.pow(autoDD.zoomFactor, i);
             var axesOffsetY = autoDD.bboxH / 2 * Math.pow(autoDD.zoomFactor, i);
-            var axesFuncBody = "var cWidth = args.canvasW, cHeight = args.canvasH; var axes = [];\n" +
-                "//x \nvar x = d3.scaleLinear().domain([" + autoDD.loX + ", " + autoDD.hiX + "]).range([" + axesOffsetX + ", cWidth - " + axesOffsetX + "]);\n" +
-                "var xAxis = d3.axisTop().tickSize(-cHeight); " +
-                "axes.push({\"dim\": \"x\", \"scale\": x, \"axis\": xAxis, \"translate\": [0, 0]});\n" +
-                "//y \nvar y = d3.scaleLinear().domain([" + autoDD.loY + ", " + autoDD.hiY + "]).range([" + axesOffsetY + ", cHeight - " + axesOffsetY + "]);\n" +
-                "var yAxis = d3.axisLeft().tickSize(-cWidth); " +
-                "axes.push({\"dim\": \"y\", \"scale\": y, \"axis\": yAxis, \"translate\": [0, 0]});\n" +
-                "return axes;";
-            var axesFunc = new Function("args", axesFuncBody);
-            curCanvas.addAxes(axesFunc);
+            curCanvas.addAxes(AutoDD.getAxesRenderer(autoDD.loX, autoDD.loY, autoDD.hiX, autoDD.hiY, axesOffsetX, axesOffsetY));
         }
     }
 

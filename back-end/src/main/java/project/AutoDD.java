@@ -15,6 +15,7 @@ public class AutoDD {
     private String xCol, yCol;
     private int bboxW, bboxH;
     private String rendering;
+    boolean clusterNum;
     private ArrayList<String> columnNames, queriedColumnNames = null;
     private int numLevels, topLevelWidth, topLevelHeight;
     private double zoomFactor;
@@ -43,6 +44,10 @@ public class AutoDD {
 
     public int getBboxH() {
         return bboxH;
+    }
+
+    public boolean isClusterNum() {
+        return clusterNum;
     }
 
     public String getRendering() {
@@ -149,6 +154,7 @@ public class AutoDD {
                 ", yCol='" + yCol + '\'' +
                 ", bboxW=" + bboxW +
                 ", bboxH=" + bboxH +
+                ", clusterNum='" + clusterNum + '\'' +
                 ", rendering='" + rendering + '\'' +
                 ", columnNames=" + columnNames +
                 ", numLevels=" + numLevels +
@@ -157,4 +163,5 @@ public class AutoDD {
                 ", zoomFactor=" + zoomFactor +
                 '}';
     }
+
 }

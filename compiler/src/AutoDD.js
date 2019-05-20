@@ -35,6 +35,7 @@ function AutoDD(args) {
     for (var i = 0; i < requiredArgs.length; i ++)
         this[requiredArgs[i]] = args[requiredArgs[i]];
     this.rendering = ("rendering" in args ? args.rendering : null);
+    this.clusterNum = ("clusterNum" in args ? args.clusterNum : false);
     this.columnNames = ("columnNames" in args ? args.columnNames : []);
     this.numLevels = ("numLevels" in args ? args.numLevels : 5);
     this.topLevelWidth = ("topLevelWidth" in args ? args.topLevelWidth : 1000);
@@ -47,7 +48,50 @@ function AutoDD(args) {
     this.hiY = ("hiY" in args ? args.hiY : null);
 };
 
+// get object rendering function
+function getObjectRenderer(udfRenderer, hasClusterNum) {
+
+    // TODO: add default circle-based renderer
+    var renderFuncBody = (udfRenderer == null ? "" : "(" + udfRenderer.toString() + ")(svg, data, args);") + "\n";
+    if (hasClusterNum)
+        renderFuncBody += "var g = svg.select(\"g:last-of-type\");" +
+            "g.selectAll(\".clusternum\")" +
+            ".data(data)" +
+            ".enter()" +
+            ".append(\"text\")" +
+            ".text(function(d) {return d.cluster_num;})" +
+            ".attr(\"x\", function(d) {return +d.cx;})" +
+            ".attr(\"y\", function(d) {return +d.miny;})" +
+            ".attr(\"dy\", \".35em\")" +
+            ".attr(\"font-size\", 20)" +
+            ".attr(\"text-anchor\", \"middle\")" +
+            ".attr(\"fill\", \"#f47142\")" +
+            ".style(\"fill-opacity\", 1);";
+    return new Function("svg", "data", "args", renderFuncBody);
+}
+
+function getAxesRenderer(loX, loY, hiX, hiY, xOffset, yOffset) {
+
+    var axesFuncBody = "var cWidth = args.canvasW, cHeight = args.canvasH, axes = [];\n" +
+        "//x \n" +
+        "var x = d3.scaleLinear()" +
+        "   .domain([" + loX + ", " + hiX + "])" +
+        "   .range([" + xOffset + ", cWidth - " + xOffset + "]);\n" +
+        "var xAxis = d3.axisTop().tickSize(-cHeight); " +
+        "axes.push({\"dim\": \"x\", \"scale\": x, \"axis\": xAxis, \"translate\": [0, 0]});\n" +
+        "//y \n" +
+        "var y = d3.scaleLinear()" +
+        "   .domain([" + loY + ", " + hiY + "])" +
+        "   .range([" + yOffset + ", cHeight - " + yOffset + "]);\n" +
+        "var yAxis = d3.axisLeft().tickSize(-cWidth); " +
+        "axes.push({\"dim\": \"y\", \"scale\": y, \"axis\": yAxis, \"translate\": [0, 0]});\n" +
+        "return axes;";
+    return new Function("args", axesFuncBody);
+}
+
 // exports
 module.exports = {
-    AutoDD : AutoDD
+    AutoDD : AutoDD,
+    getObjectRenderer : getObjectRenderer,
+    getAxesRenderer : getAxesRenderer
 };
