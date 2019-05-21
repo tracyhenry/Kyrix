@@ -134,7 +134,6 @@ public class PsqlTileIndexer extends Indexer {
             if (rowCount % Config.bboxBatchSize == 0) {
                 bboxInsSqlBuilder.append(";");
                 bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
-                DbConnector.commitConnection(Config.databaseName);
                 bboxInsSqlBuilder = new StringBuilder("insert into " + bboxTableName + " values");
             }
 
@@ -165,7 +164,6 @@ public class PsqlTileIndexer extends Indexer {
                         if (mappingCount % Config.tileBatchSize== 0) {
                             tileInsSqlBuilder.append(";");
                             tileStmt.executeUpdate(tileInsSqlBuilder.toString());
-                            DbConnector.commitConnection(Config.databaseName);
                             tileInsSqlBuilder = new StringBuilder("insert into " + tileTableName + " values");
                         }
                     }
@@ -179,12 +177,10 @@ public class PsqlTileIndexer extends Indexer {
         if (rowCount % Config.bboxBatchSize != 0) {
             bboxInsSqlBuilder.append(";");
             bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
-            DbConnector.commitConnection(Config.databaseName);
         }
         if (mappingCount % Config.tileBatchSize != 0) {
             tileInsSqlBuilder.append(";");
             tileStmt.executeUpdate(tileInsSqlBuilder.toString());
-            DbConnector.commitConnection(Config.databaseName);
         }
 
         // clustering
@@ -196,11 +192,11 @@ public class PsqlTileIndexer extends Indexer {
         tileStmt.executeUpdate(sql);
         sql = "cluster " + tileTableName + " using tile_idx_" + tileTableName + ";";
         tileStmt.executeUpdate(sql);
-        DbConnector.commitConnection(Config.databaseName);
 
         // close db connections
         bboxStmt.close();
         tileStmt.close();
+        DbConnector.closeConnection(Config.databaseName);
     }
 
     @Override
