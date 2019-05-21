@@ -88,7 +88,6 @@ public class PsqlNativeBoxIndexer extends Indexer {
         sql += "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)";
         System.out.println(sql);
         dropCreateStmt.executeUpdate(sql);
-        DbConnector.commitConnection(Config.databaseName);
         dropCreateStmt.close();
         
         // if this is an empty layer, return
@@ -183,7 +182,6 @@ public class PsqlNativeBoxIndexer extends Indexer {
             System.out.println(sql);
             long startTs = (new Date()).getTime();
             setGeomFieldStmt.executeUpdate(sql);
-            DbConnector.commitConnection(Config.databaseName);
             setGeomFieldStmt.close();
             long currTs = (new Date()).getTime();
             System.out.println( ((currTs-startTs)/1000) + " secs for setting geom field" + (isCitus?" in parallel":""));
@@ -195,7 +193,6 @@ public class PsqlNativeBoxIndexer extends Indexer {
             sql = "CREATE INDEX sp_" + bboxTableName + " ON " + bboxTableName + " USING gist (geom);";
             System.out.println(sql);
             createIndexStmt.executeUpdate(sql);
-            DbConnector.commitConnection(Config.databaseName);
             createIndexStmt.close();
             currTs = (new Date()).getTime();
             System.out.println( ((currTs-startTs)/1000) + " secs for CREATE INDEX sp_"+bboxTableName+" ON "+bboxTableName + (isCitus?" in parallel":""));
@@ -284,7 +281,6 @@ public class PsqlNativeBoxIndexer extends Indexer {
                 }
                 if (rowCount % batchsize == 0) {
                     long rows = ((PGConnection) dbConn).getCopyAPI().copyIn(copySql, new StringReader(copybuffer.toString()));
-                    DbConnector.commitConnection(Config.databaseName);
                     //System.out.println("successfully bulk loaded "+String.valueOf(rows)+" rows.");
                     copybuffer.setLength(0);
                 }
@@ -298,7 +294,6 @@ public class PsqlNativeBoxIndexer extends Indexer {
                 preparedStmt.addBatch();
                 if (rowCount % batchsize == 0) {
                     preparedStmt.executeBatch();
-                    DbConnector.commitConnection(Config.databaseName);
                 }
             }
 
@@ -318,11 +313,9 @@ public class PsqlNativeBoxIndexer extends Indexer {
         if (rowCount % batchsize != 0) {
             if (useCopyFrom) {                                                                            
                 long rows = ((PGConnection) dbConn).getCopyAPI().copyIn(copySql, new StringReader(copybuffer.toString()));
-                DbConnector.commitConnection(Config.databaseName);
             } else {
                 preparedStmt.executeBatch();
             }
-            DbConnector.commitConnection(Config.databaseName);
         }
         if (useCopyFrom) {                                                                            
             copyFromStmt.close();
@@ -345,13 +338,11 @@ public class PsqlNativeBoxIndexer extends Indexer {
             sql = "SELECT create_distributed_table('"+bboxTableName+"', 'citus_distribution_id');";
             System.out.println(sql);
             distributeStmt.executeQuery(sql);
-            DbConnector.commitConnection(Config.databaseName);
 
             // citus leaves leftover data on master when distributing non-empty tables - who knows why?
             sql = "BEGIN; SET LOCAL citus.enable_ddl_propagation TO off; TRUNCATE "+bboxTableName+"; END;";
             System.out.println(sql);
             distributeStmt.executeUpdate(sql);
-            DbConnector.commitConnection(Config.databaseName);
             distributeStmt.close();
 
             currTs = (new Date()).getTime();
@@ -364,7 +355,6 @@ public class PsqlNativeBoxIndexer extends Indexer {
         sql = "UPDATE "+bboxTableName+" SET geom=box( point(minx,miny), point(maxx,maxy) );";
         System.out.println(sql);
         setGeomFieldStmt.executeUpdate(sql);
-        DbConnector.commitConnection(Config.databaseName);
         setGeomFieldStmt.close();
 
         currTs = (new Date()).getTime();
@@ -377,7 +367,6 @@ public class PsqlNativeBoxIndexer extends Indexer {
         sql = "CREATE INDEX sp_" + bboxTableName + " ON " + bboxTableName + " USING gist (geom);";
         System.out.println(sql);
         createIndexStmt.executeUpdate(sql);
-        DbConnector.commitConnection(Config.databaseName);
         createIndexStmt.close();
 
         currTs = (new Date()).getTime();
@@ -388,7 +377,6 @@ public class PsqlNativeBoxIndexer extends Indexer {
         //sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
         //System.out.println(sql);
         //bboxStmt.executeUpdate(sql);
-        //DbConnector.commitConnection(Config.databaseName);
     }
 
     @Override
