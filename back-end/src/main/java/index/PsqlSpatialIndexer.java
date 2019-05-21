@@ -1,5 +1,6 @@
 package index;
 
+import box.Box;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import main.Config;
 import main.DbConnector;
@@ -174,7 +175,7 @@ public class PsqlSpatialIndexer extends Indexer {
     }
 
     @Override
-    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate)
+    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox)
             throws Exception {
 
         // get column list string

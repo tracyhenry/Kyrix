@@ -26,14 +26,7 @@ public abstract class Indexer implements Serializable {
 
     // abstract methods
     public abstract void createMV(Canvas c, int layerId) throws Exception;
-    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception {
-        // cannot be abstract because of the override below
-        throw new Exception("getDataFromRegion not implemented?!");
-    }
-    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox) throws Exception {
-        // for backwards compatibility, just drop the boxes and call the underlying
-        return getDataFromRegion(c, layerId, regionWKT, predicate);
-    }
+    public abstract ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox) throws Exception;
     public abstract ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate) throws Exception;
 
     // associate each layer with a proper indexer

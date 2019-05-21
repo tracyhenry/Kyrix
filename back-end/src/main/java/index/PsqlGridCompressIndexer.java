@@ -264,7 +264,7 @@ public class PsqlGridCompressIndexer extends Indexer {
     }
 
     @Override
-    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception {
+    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox) throws Exception {
 
         // construct range query
         String sql = "select compressed_blob from bbox_" + Main.getProject().getName() + "_"
