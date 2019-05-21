@@ -104,7 +104,7 @@ public class PsqlNativeBoxIndexer extends Indexer {
             String transformResultType = bboxTableName+"_transform_response_type";
             String transformFuncName = bboxTableName+"_transform_func";
             String bboxFuncName = bboxTableName+"_bbox_func";
-            java.util.function.UnaryOperator<String> tsql = (sqlstr) -> {
+            UnaryOperator<String> tsql = (sqlstr) -> {
                 return (sqlstr.replaceAll("transtype", transformResultType).replaceAll("transfunc", transformFuncName).
                         replaceAll("bboxfunc", bboxFuncName).replaceAll("bboxtbl", bboxTableName).
                         replaceAll("dbsource", trans.getDbsource()).

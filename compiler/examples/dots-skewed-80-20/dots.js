@@ -6,9 +6,9 @@ const Layer = require("../../src/Layer").Layer;
 const View = require("../../src/View").View;
 
 // project components
-const renderers = require("./renderers");
+const renderers = require("../dots-uniform/renderers");
 const transforms = require("./transforms");
-const placements = require("./placements");
+const placements = require("../dots-uniform/placements");
 
 // construct a project
 var p = new Project("dots_skewed_80_20", "../../../config.txt");
