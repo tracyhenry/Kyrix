@@ -15,8 +15,6 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.File;
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,19 +44,19 @@ public abstract class Indexer implements Serializable {
                 if (Config.database == Config.Database.PSQL ||
                     Config.database == Config.Database.CITUS) {
                     boolean isCitus = (Config.database == Config.Database.CITUS);
-                    if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
+                    if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
                         indexer = PsqlSpatialIndexer.getInstance(isCitus);
                     else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
                         indexer = PsqlTileIndexer.getInstance(isCitus);
-                    else if (Config.indexingScheme == Config.IndexingScheme.NATIVEBOX_INDEX)
+                    else if (Config.indexingScheme == Config.IndexingScheme.PSQL_NATIVEBOX_INDEX)
                         indexer = PsqlNativeBoxIndexer.getInstance(isCitus);
                 }
                 else if (Config.database == Config.Database.MYSQL) {
-                    if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
+                    if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
                         indexer = MysqlSpatialIndexer.getInstance();
                     else if (Config.indexingScheme == Config.indexingScheme.TILE_INDEX)
                         indexer = MysqlTileIndexer.getInstance();
-                    else if (Config.indexingScheme == Config.IndexingScheme.NATIVEBOX_INDEX)
+                    else if (Config.indexingScheme == Config.IndexingScheme.PSQL_NATIVEBOX_INDEX)
                         throw new Exception("NATIVEBOX_INDEX not supported for dbtype MYSQL");
                 }
                 c.getLayers().get(layerId).setIndexer(indexer);
