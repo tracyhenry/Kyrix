@@ -12,9 +12,7 @@ import project.Canvas;
 import project.View;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -102,7 +100,7 @@ public class BoxRequestHandler  implements HttpHandler {
         respMap.put("renderData", BoxandData.getDictionaryFromData(data.data, c));
         respMap.put("minx", data.box.getMinx());
         respMap.put("miny", data.box.getMiny());
-        respMap.put("boxH", data.box.getHight());
+        respMap.put("boxH", data.box.getHeight());
         respMap.put("boxW", data.box.getWidth());
         respMap.put("canvasId", canvasId);
         response = gson.toJson(respMap);

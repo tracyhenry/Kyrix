@@ -390,7 +390,8 @@ public class PsqlNativeBoxIndexer extends Indexer {
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
             + c.getId() + "layer" + layerId + " where ";
         sql += "geom && box('"+newBox.getCSV()+"')";
-        sql += "and not (geom && box('"+oldBox.getCSV()+"') )";
+        if (oldBox.getWidth() > 0) // when there is not an old box, oldBox is set to -1e5, -1e5,...
+            sql += "and not (geom && box('"+oldBox.getCSV()+"') )";
         if (predicate.length() > 0)
             sql += " and " + predicate + ";";
         System.out.println(sql);

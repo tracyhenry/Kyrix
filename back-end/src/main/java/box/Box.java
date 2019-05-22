@@ -15,7 +15,7 @@ public class Box {
         return maxx - minx;
     }
 
-    public double getHight() {
+    public double getHeight() {
         return maxy - miny;
     }
 
