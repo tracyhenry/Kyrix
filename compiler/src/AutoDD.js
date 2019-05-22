@@ -9,9 +9,26 @@ function AutoDD(args) {
     if (args == null)
         args = {};
 
+    // renderingMode: object only, object+clusternum, circle+object, circle only
+    if (! ("renderingMode" in args))
+        throw new Error("Constructing AutoDD: renderingMode missing.");
+    var allRenderingModes = new Set(["object only", "object+clusternum", "circle+object", "circle only"]);
+    if (! allRenderingModes.has(args.renderingMode))
+        throw new Error("Constructing AutoDD: unsupported rendering mode.");
+
+    // check constraints according to rendering mode
+    this.circleMinSize = 30;
+    this.circleMaxSize = 70;
+    if (args.renderingMode == "circle only" || args.renderingMode == "circle+object")
+        args.bboxW = args.bboxH = this.circleMaxSize * 2;
+    if ((args.renderingMode == "object only" ||
+         args.renderingMode == "object+clusternum" ||
+         args.renderingMode == "circle+object") && ! ("rendering" in args))
+        throw new Error("Constructing AutoDD: object renderer missing.");
+
     // check required args
-    var requiredArgs = ["query", "db", "xCol", "yCol"];
-    var requiredArgsTypes = ["string", "string", "string", "string"];
+    var requiredArgs = ["query", "db", "xCol", "yCol", "renderingMode", "bboxW", "bboxH"];
+    var requiredArgsTypes = ["string", "string", "string", "string", "string", "number", "number"];
     for (var i = 0; i < requiredArgs.length; i ++) {
         if (! (requiredArgs[i] in args))
             throw new Error("Constructing AutoDD: " + requiredArgs[i] + " missing.");
@@ -22,16 +39,10 @@ function AutoDD(args) {
                 throw new Error("Constructing AutoDD: " + requiredArgs[i] + " cannot be an empty string.");
     }
 
-    // circle agg rendering
-    if (! ("rendering" in args)) {
-        args["clusterNum"] = true;
-        args["bboxW"] = args["bboxH"] = 100;
-    }
-
     // other constraints
     if ("rendering" in args && (!("bboxW" in args) || !("bboxH" in args)))
         throw new Error("Constructing AutoDD: sizes of object bounding box are not specified.");
-    if (args["bboxW"] <= 0 || args["bboxH"] <= 0)
+    if (args.bboxW <= 0 || args.bboxH <= 0)
         throw new Error("Constructing AutoDD: non-positive bbox size.");
     if ("axis" in args && (! "loX" in args || ! "loY" in args || ! "hiX" in args || ! "hiY" in args))
         throw new Error("Constructing AutoDD: raw data domain needs to be specified for rendering an axis.");
@@ -43,7 +54,6 @@ function AutoDD(args) {
     for (var i = 0; i < requiredArgs.length; i ++)
         this[requiredArgs[i]] = args[requiredArgs[i]];
     this.rendering = ("rendering" in args ? args.rendering : null);
-    this.clusterNum = ("clusterNum" in args ? args.clusterNum : false);
     this.columnNames = ("columnNames" in args ? args.columnNames : []);
     this.numLevels = ("numLevels" in args ? args.numLevels : 5);
     this.topLevelWidth = ("topLevelWidth" in args ? args.topLevelWidth : 1000);
@@ -56,34 +66,87 @@ function AutoDD(args) {
     this.hiY = ("hiY" in args ? args.hiY : null);
 };
 
-// get object rendering function
-function getObjectRenderer(udfRenderer, hasClusterNum) {
+/**
+ * get rendering function for an autodd layer based on rendering mode
+ * @param renderingMode
+ * @param objectRenderer - user specified object renderer
+ * @returns {Function}
+ */
+function getLayerRenderer(renderingMode, objectRenderer) {
 
-    if (udfRenderer == null) { // TODO: add default circle-based renderer
-        var circleAggRenderer = function () {
-            
-        };
-        return circleAggRenderer;
+    if (renderingMode == "circle only" || renderingMode == "circle+object") {
+        var renderFuncBody = "var objectRenderer = " + objectRenderer.toString() + ";\n";
+        renderFuncBody += "var params = args.renderingParams;\n" +
+            "var circleSizeInterpolator = d3.scaleLinear()\n" +
+            "       .domain([1, 3])\n" +   // TODO: let user specify N
+            "       .range([params.circleMinSize, params.circleMaxSize]);\n" +
+            "var g = svg.append(\"g\");\n" +
+            "g.selectAll(\"circle\")\n" +
+            "   .data(data)\n" +
+            "   .enter()\n" +
+            "   .append(\"circle\")\n" +
+            "   .attr(\"r\", function (d) {\n" +
+            "           return circleSizeInterpolator(d.cluster_num.length);\n" +
+            "   })\n" +
+            "   .attr(\"cx\", function (d) {return d.cx;})\n" +
+            "   .attr(\"cy\", function (d) {return d.cy;})\n" +
+            "   .style(\"fill-opacity\", .25)\n" +
+            "   .attr(\"fill\", \"honeydew\")\n" +
+            "   .attr(\"stroke\", \"#ADADAD\")\n" +
+            "   .style(\"stroke-width\", \"1px\")\n" +
+            "   .on(\"mouseover\", function (d) {\n" +  //TODO: find ways to rescale the object, right now it's magnified when zoom in
+            "        objectRenderer(svg, [d], args);\n" +
+            "        svg.select(\"g:last-of-type\")\n" +
+            "            .attr(\"id\", \"autodd_tooltip\")\n" +
+            "            .style(\"opacity\", 0.8)\n" +
+            "            .style(\"pointer-events\", \"none\");\n" +
+            "    })\n" +
+            "    .on(\"mouseleave\", function() {\n" +
+            "        d3.select(\"#autodd_tooltip\")\n" +
+            "           .remove();\n" +
+            "    });\n" +
+            "    g.selectAll(\"text\")\n" +
+            "        .data(data)\n" +
+            "        .enter()\n" +
+            "        .append(\"text\")\n" +
+            "        .attr(\"dy\", \"0.3em\")\n" +
+            "        .text(function (d) {return d.cluster_num.toString();})\n" +
+            "        .attr(\"font-size\", function (d) {\n" +
+            "           return circleSizeInterpolator(d.cluster_num.length) / 2;\n" +
+            "        })\n" +
+            "        .attr(\"x\", function(d) {return d.cx;})\n" +
+            "        .attr(\"y\", function(d) {return d.cy;})\n" +
+            "        .attr(\"dy\", \".35em\")\n" +
+            "        .attr(\"text-anchor\", \"middle\")\n" +
+            "        .style(\"fill-opacity\", 1)\n" +
+            "        .style(\"fill\", \"navy\")\n" +
+            "        .style(\"pointer-events\", \"none\")" +
+            "        .each(function (d) {\n" +
+            "            params.textwrap(d3.select(this), circleSizeInterpolator(d.cluster_num.length) * 1.5);\n" +
+            "        });";
+        return new Function("svg", "data", "args", renderFuncBody);
     }
-
-    var renderFuncBody = (udfRenderer == null ? "" : "(" + udfRenderer.toString() + ")(svg, data, args);") + "\n";
-    if (udfRenderer != null && hasClusterNum)
-        renderFuncBody += "var g = svg.select(\"g:last-of-type\");" +
-            "g.selectAll(\".clusternum\")" +
-            ".data(data)" +
-            ".enter()" +
-            ".append(\"text\")" +
-            ".text(function(d) {return d.cluster_num;})" +
-            ".attr(\"x\", function(d) {return +d.cx;})" +
-            ".attr(\"y\", function(d) {return +d.miny;})" +
-            ".attr(\"dy\", \".35em\")" +
-            ".attr(\"font-size\", 20)" +
-            ".attr(\"text-anchor\", \"middle\")" +
-            ".attr(\"fill\", \"#f47142\")" +
-            ".style(\"fill-opacity\", 1);";
-    return new Function("svg", "data", "args", renderFuncBody);
+    else if (renderingMode == "object only" || renderingMode == "object+clusternum") {
+        var renderFuncBody = "(" + objectRenderer.toString() + ")(svg, data, args);\n";
+        if (renderingMode == "object+clusternum")
+            renderFuncBody += "var g = svg.select(\"g:last-of-type\");" +
+                "g.selectAll(\".clusternum\")" +
+                ".data(data)" +
+                ".enter()" +
+                ".append(\"text\")" +
+                ".text(function(d) {return d.cluster_num;})" +
+                ".attr(\"x\", function(d) {return +d.cx;})" +
+                ".attr(\"y\", function(d) {return +d.miny;})" +
+                ".attr(\"dy\", \".35em\")" +
+                ".attr(\"font-size\", 20)" +
+                ".attr(\"text-anchor\", \"middle\")" +
+                ".attr(\"fill\", \"#f47142\")" +
+                ".style(\"fill-opacity\", 1);";
+        return new Function("svg", "data", "args", renderFuncBody);
+    }
 }
 
+// get axes renderer
 function getAxesRenderer(loX, loY, hiX, hiY, xOffset, yOffset) {
 
     var axesFuncBody = "var cWidth = args.canvasW, cHeight = args.canvasH, axes = [];\n" +
@@ -106,6 +169,6 @@ function getAxesRenderer(loX, loY, hiX, hiY, xOffset, yOffset) {
 // exports
 module.exports = {
     AutoDD : AutoDD,
-    getObjectRenderer : getObjectRenderer,
+    getLayerRenderer : getLayerRenderer,
     getAxesRenderer : getAxesRenderer
 };

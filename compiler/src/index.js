@@ -143,6 +143,11 @@ function addAutoDD(autoDD, isInNewView) {
     // add to project
     this.autoDDs.push(autoDD);
 
+    // add stuff to renderingParam for circle agg rendering
+    this.addRenderingParams({"textwrap" : require("./RendererTemplates").textwrap,
+                             "circleMinSize" : autoDD.circleMinSize,
+                             "circleMaxSize" : autoDD.circleMaxSize});
+
     // construct canvases
     var canvasNamePrefix = "autodd" + (this.autoDDs.length - 1) + "_";
     var autoDDCanvases = [];
@@ -170,7 +175,7 @@ function addAutoDD(autoDD, isInNewView) {
         curLayer.addPlacement({"centroid_x" : "con:0", "centroid_y" : "con:0", "width" : "con:0", "height" : "con:0"});
 
         // construct rendering function
-        curLayer.addRenderingFunc(AutoDD.getObjectRenderer(autoDD.rendering, autoDD.clusterNum));
+        curLayer.addRenderingFunc(AutoDD.getLayerRenderer(autoDD.renderingMode, autoDD.rendering));
 
         // axes
         if (autoDD.axis) {
@@ -199,7 +204,9 @@ function addRenderingParams(renderingParams) {
 
     if (renderingParams == null)
         return ;
-    this.renderingParams = JSON.stringify(renderingParams, function (key, value) {
+    // merge with old dictionary
+    var newRenderingParam = Object.assign({}, JSON.parse(this.renderingParams), renderingParams);
+    this.renderingParams = JSON.stringify(newRenderingParam, function (key, value) {
         if (typeof value === 'function')
             return value.toString();
         return value;

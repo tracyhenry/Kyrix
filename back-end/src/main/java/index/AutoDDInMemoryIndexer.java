@@ -21,7 +21,7 @@ import java.util.ArrayList;
 public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
     private static AutoDDInMemoryIndexer instance = null;
-    private double overlappingThreshold = 1.2;
+    private double overlappingThreshold = 1.0;  //TODO: decide this automatically
 
     // One Rtree per level to store samples
     // https://github.com/davidmoten/rtree
@@ -60,7 +60,9 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             createMVForLevel(i, autoDDIndex);
 
         // compute cluster number
-        if (autoDD.isClusterNum()) {
+        if (autoDD.getRenderingMode().equals("object+clusternum") ||
+            autoDD.getRenderingMode().equals("circle only") ||
+            autoDD.getRenderingMode().equals("circle+object")) {
             for (int i = numLevels - 1; i > 0; i --) {
                 Iterable<Entry<ArrayList<String>, Rectangle>> curSamples = Rtrees.get(i).entries()
                         .toBlocking().toIterable();
