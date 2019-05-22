@@ -39,7 +39,7 @@ Kyrix serving is not parallelized at this time, and indeed the system overhead o
 
 Parallel Kyrix is implemented using [Kubernetes on Google Cloud](https://cloud.google.com/kubernetes-engine/) for orchestration and the [Citus Postgres extension](https://citusdata.com) to provide parallel query/update/DDL. It would be straightforward to port this to other Kubernetes providers. To execute the JavaScript transform function inside Postgres (and avoid bottlenecking on the Kyrix middleware), we use [plv8](https://www.google.com/search?q=plv8), though you could (in theory) run multiple Kyrix middleware servers.
 
-To use parallel Kyrix, you will need a Kubernetes cluster provider - these instructions are for Google Cloud.
+To use parallel Kyrix, you will need a Kubernetes cluster provider - these instructions are for Google Cloud and assume your client is running on Ubuntu 18.04.
 
 1. install kubectl  (e.g. `sudo snap install kubectl --classic` - [kubectl docs](https://kubernetes.io/docs/tasks/tools/install-kubectl/))
 2. setup kubectl to the given cluster (e.g. `gcloud container clusters get-credentials <cluster name>` - [gcloud install instructions](https://cloud.google.com/sdk/docs/downloads-apt-get))
