@@ -1,18 +1,14 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-KV=${1:-adsah/kyrix:latest}
+KV=${1:-asah/kyrix:latest}
 
 sudo docker build . -f Dockerfile-kyrix-alpine -t $KV
 sudo docker push $KV
 
-echo "updating kyrix-deployment.yaml"
+#escaping / in $KV
+KV=${KV//\//\\\/};
 
-# https://stackoverflow.com/questions/3466166/how-to-check-if-running-in-cygwin-mac-or-linux
-# https://ed.gs/2016/01/26/os-x-sed-invalid-command-code/
-if [ "$(uname)" == "Darwin" ]; then
-    sed -i "" "s@image:.*@image: $KV@" kyrix-deployment.yaml
-else
-    sed -i "s@image:.*@image: $KV@" kyrix-deployment.yaml
-fi
+echo "updating kyrix-deployment.yaml"
+perl -pi -e "s/image:.*/image: $KV/g" kyrix-deployment.yaml
 
 echo "build done: to redeploy, run './redeploy-kyrix-server'"
