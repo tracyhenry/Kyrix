@@ -6,7 +6,7 @@ TAG=${1:-asah/pg11_postgis25_citus811_plv8:latest}
 sudo docker build . -f Dockerfile-citus-debian -t $TAG
 sudo docker push $TAG
 
-#escaping / in $KV
+#escaping / in $TAG
 TAG=${TAG//\//\\\/};
 
 # updating yaml files

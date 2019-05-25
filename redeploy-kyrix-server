@@ -50,13 +50,3 @@ if [ "x$DEV" = "x1" ]; then
 fi
 
 DATA=$DATA ./restart-kyrix-server.sh &
-
-# wait for external IP then export vars
-while [ 1 ]; do ip=`kubectl get services -o wide | grep kyrixserver | awk '{print $4}'`; if [ $ip != '<pending>' ]; then break; fi; spin "waiting for external IP"; done
-source setup-kyrix-vars.env > /dev/null
-
-while [ 1 ]; do started=`kubectl exec -it $KYRIX -- sh -c "cat /kyrix-started | tr -d '\n' "`; if [ "x$started" == 'xyes' ]; then break; fi; spin "waiting for kyrix to start"; done
-
-echo "Kyrix running; run 'source setup-kyrix-vars.env' for convenience scripts/functions or visit http://$KYRIX_IP:8000/"
-
-exit 0
