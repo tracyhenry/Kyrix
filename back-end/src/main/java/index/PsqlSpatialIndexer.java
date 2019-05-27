@@ -150,6 +150,8 @@ public class PsqlSpatialIndexer extends Indexer {
         // get column list string
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
 
+
+        System.out.println("in pql spatial indexer");
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
                 + c.getId() + "layer" + layerId + " where ST_Intersects(st_GeomFromText";

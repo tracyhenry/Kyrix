@@ -58,10 +58,12 @@ public abstract class BoxGetter {
         double newMaxx = newBox.getMaxx(), newMaxy = newBox.getMaxy();
         double oldMinx = oldBox.getMinx(), oldMiny = oldBox.getMiny();
         double oldMaxx = oldBox.getMaxx(), oldMaxy = oldBox.getMaxy();
+        double xCanvasIndex = newMinx + newMiny + c.getNumericId();
+        double yCanvasIndex = newMaxx + newMaxy + c.getNumericId();
 
         String cubeNew = "cube (" + 
-            "array[" + newMinx + ", " + newMiny + ", " + c.getNumericId() + "], " +
-            "array[" + newMaxx + ", " + newMaxy + ", " + c.getNumericId() + "])";
+            "array[" + newMinx + ", " + newMiny + ", " + xCanvasIndex + "], " +
+            "array[" + newMaxx + ", " + newMaxy + ", " + yCanvasIndex + "])";
         
         // loop through each layer
         for (int i = 0; i < c.getLayers().size(); i ++) {
@@ -71,7 +73,7 @@ public abstract class BoxGetter {
                 data.add(new ArrayList<>());
             else
                 data.add(curLayer.getIndexer().getDataFromRegion(c, i, cubeNew, predicates.get(i)));
-                System.out.println("intersecting cube data: " + data.get(data.size()-1));
+                // System.out.println("intersecting cube data: " + data.get(data.size()-1));
         }
         return data;
 

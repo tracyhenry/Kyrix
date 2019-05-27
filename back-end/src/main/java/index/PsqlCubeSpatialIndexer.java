@@ -158,6 +158,8 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         // get column list string
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
 
+
+        System.out.println("in psql cube spatial indexer");
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName()
                 + " where v && ";
@@ -168,17 +170,14 @@ public class PsqlCubeSpatialIndexer extends Indexer {
             sql += ";";
         System.out.println(sql);
 
-        System.out.println("get data from region is called with canvas: " + c.getId());
-        // return
-        int numIntersected = 0;
+        
         ArrayList<ArrayList<String>> queryResult = DbConnector.getQueryResult(Config.databaseName, sql);
-        for (int i = 0; i < queryResult.size(); i++) 
-            numIntersected += queryResult.get(i).size();
                 
-        rowsFetched.add(numIntersected);
+        rowsFetched.add(queryResult.size());
         if (rowsFetched.size() % 5 == 0 && rowsFetched.size() > 0) 
             System.out.println("writing intersecting rows json");
             JsonWriter.writeJSON("intersectingRows", rowsFetched);
+
         return queryResult;
     }
 

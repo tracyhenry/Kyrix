@@ -54,6 +54,8 @@ public abstract class Indexer implements Serializable {
     // precompute
     public static void precompute() throws Exception {
 
+        // return; 
+
         System.out.println("Precomputing...");
 
         associateIndexer();
@@ -217,10 +219,12 @@ public abstract class Indexer implements Serializable {
         //         + "array[" + String.valueOf(maxx) + ", " + String.valueOf(maxy) + ", "
         //         + String.valueOf(canvasId) + "]";
         // cubeText += "))";
+        double minCanvasIdNum = minx + miny + canvasId;
+        double maxCanvasIdNum = maxx + maxy + canvasId;
         cubeText += "(" + String.valueOf(minx) + ", " + String.valueOf(miny) + ", "
-                + String.valueOf(canvasId) + "), "
+                + String.valueOf(minCanvasIdNum) + "), "
                 + "(" + String.valueOf(maxx) + ", " + String.valueOf(maxy) + ", "
-                + String.valueOf(canvasId) + ")";
+                + String.valueOf(maxCanvasIdNum) + ")";
 
         return cubeText;
     }

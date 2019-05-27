@@ -13,6 +13,7 @@ public class BoxandData {
 
         this.box = box;
         this.data = data;
+
     }
 
     // Render data used to be stored in a three-dimenson array (layer, row, field).
@@ -22,6 +23,7 @@ public class BoxandData {
 
         ArrayList<ArrayList<HashMap<String, String>>> ret = new ArrayList<>();
         int numLayers = data.size();
+        System.out.println("number layers: " + numLayers);
         for (int i = 0; i < numLayers; i ++) {
             ret.add(new ArrayList<>());
             int numRows = data.get(i).size();

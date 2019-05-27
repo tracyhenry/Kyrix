@@ -9,8 +9,11 @@ import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import main.Main;
+import main.DbConnector;
 import project.Canvas;
 import project.View;
+import main.Config;
+import main.DbConnector;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -20,19 +23,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 
 public class BoxRequestHandler  implements HttpHandler {
 
     // gson builder
     private final Gson gson;
-    private TDBoxGetter boxGetter;
+    // private TDBoxGetter boxGetter;
+    private MikeBoxGetter boxGetter;
     private List<Double> fetchTimes;
 
     public BoxRequestHandler() {
 
         gson = new GsonBuilder().create();
-        // boxGetter = new MikeBoxGetter();
-        boxGetter = new TDBoxGetter();
+        boxGetter = new MikeBoxGetter();
+        // boxGetter = new TDBoxGetter();
         fetchTimes = new ArrayList<>();
     }
     @Override
@@ -100,12 +106,29 @@ public class BoxRequestHandler  implements HttpHandler {
             e.printStackTrace();
         }
         double fetchTime = System.currentTimeMillis() - st;
-        System.out.println("Fetch data time: " + fetchTime + "ms.");
-        fetchTimes.add(fetchTime);
-        if (fetchTimes.size() % 5 == 0 && fetchTimes.size() > 0) {
-            System.out.println("writing fetch data");
-            JsonWriter.writeJSON("fetchTimes", fetchTimes);
+        int intersectingRows = 0;
+        for (int i=0; i<data.data.size(); i++) {
+            intersectingRows += data.data.get(i).size();
         }
+        System.out.println("Fetch data time: " + fetchTime + "ms.");
+        System.out.println("number of intersecting rows in result: " + intersectingRows);
+        System.out.println("existing canvas id is: " + c.getId());
+        System.out.println("get data from region is called with canvas: " + canvasId);
+        if (oldBox.getHight()==-100000 && oldBox.getWidth()==-100000) {
+            sendStats("zoom", fetchTime, intersectingRows);
+        } else {
+            sendStats("pan", fetchTime, intersectingRows);
+        }
+        
+
+        // fetchTimes.add(fetchTime);
+        // if (fetchTimes.size() % 5 == 0 && fetchTimes.size() > 0) {
+        //     System.out.println("writing fetch data");
+        //     JsonWriter.writeJSON("fetchTimes", fetchTimes);
+        // }
+
+
+
 
         //send data and box back
         Map<String, Object> respMap = new HashMap<>();
@@ -141,4 +164,18 @@ public class BoxRequestHandler  implements HttpHandler {
         // check passed
         return "";
     }
+
+    private void sendStats(String queryType, double seconds, int fetchedRows) {
+        String sql = "insert into stats (querytype, milliseconds, rowsFetched) values ('" + queryType +   "'," + seconds + ","  + fetchedRows + ");";
+        System.out.println("stats sql: " + sql);
+        
+        try {
+            DbConnector.executeUpdate(Config.databaseName, sql);
+            DbConnector.commitConnection(Config.databaseName);
+        } catch (Exception e) {
+            System.out.println("couldn't write stats to the stats table");
+        }
+    }
+     
+        
 }

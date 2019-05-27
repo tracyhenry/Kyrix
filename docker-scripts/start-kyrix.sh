@@ -1,6 +1,7 @@
 #!/bin/sh
 
-KYRIX_DB=dots
+# KYRIX_DB=dots
+KYRIX_DB=nba
 PGHOST=${PGHOST:-db}  # db is the default used in docker-compose.yml
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-kyrixftw}
 USER_NAME=${USER_NAME:-kyrix}
@@ -35,10 +36,10 @@ psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARC
 psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
 
 
-psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE DOTS (id int, x int, y int);"
+# psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE IF NOT EXISTS DOTS (id int, x int, y int);"
+# psql $PGCONN_STRING_USER/$KYRIX_DB -c "copy dots from '/dots.csv' delimiter E'\t' csv header;"
 
-psql $PGCONN_STRING_USER/$KYRIX_DB -c "copy dots from '/dotsbig.csv' delimiter E'\t' csv header;"
-
+psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS stats (ID serial PRIMARY KEY, queryType TEXT, milliseconds NUMERIC, rowsFetched INT);"
 
 cd /kyrix/back-end
 
@@ -65,6 +66,7 @@ fi
 
 echo "*** starting backend server..."
 cd /kyrix/back-end
+mvn compile
 mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn exec:java -Dexec.mainClass="main.Main" | stdbuf -oL grep -v Downloading: | tee mvn-exec.out &
 touch mvn-exec.out
 while [ -z "$(egrep 'Done precomputing|Backend server started' mvn-exec.out)" ]; do echo "waiting for backend server"; sleep 5; done
@@ -73,8 +75,8 @@ echo "*** (re)configuring for NBA examples to ensure backend server recomputes..
 
 cd /kyrix/compiler
 npm rebuild | egrep -v '(@[0-9.]+ /kyrix/compiler/node_modules/)'
-cd /kyrix/compiler/examples/dots
-node dots.js | egrep -i "error|connected" || true
+cd /kyrix/compiler/examples/nba
+node nba.js | egrep -i "error|connected" || true
 
 echo "*** done! Kyrix ready at: http://<host>:8000/  (may need a minute to recompute indexes - watch this log for messages)"
 
