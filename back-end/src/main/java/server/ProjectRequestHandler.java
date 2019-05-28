@@ -66,9 +66,9 @@ public class ProjectRequestHandler implements HttpHandler {
             }
             else {
                 Indexer.associateIndexer();
+                Main.setProjectClean();
                 System.out.println("The diff does not require recompute. Refresh your web page now!");
             }
-            Main.setProjectClean();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -103,6 +103,7 @@ public class ProjectRequestHandler implements HttpHandler {
                     if (oldCanvas.getW() != newCanvas.getW() || ! oldCanvas.getwSql().equals(newCanvas.getwSql())
                             || ! oldCanvas.getwLayerId().equals(newCanvas.getwLayerId()))
                         return true;
+
                     if (oldCanvas.getH() != newCanvas.getH() || ! oldCanvas.gethSql().equals(newCanvas.gethSql())
                             || ! oldCanvas.gethLayerId().equals(newCanvas.gethLayerId()))
                         return true;
@@ -118,6 +119,7 @@ public class ProjectRequestHandler implements HttpHandler {
 
                         Layer oldLayer = oldLayers.get(i);
                         Layer newLayer = newLayers.get(i);
+
                         // see if the same layer remains the same
                         if (! (oldLayer.isStatic() == newLayer.isStatic()))
                             return true;

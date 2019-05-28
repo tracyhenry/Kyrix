@@ -40,8 +40,11 @@ public class PsqlTileIndexer extends Indexer {
         bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
         tileStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
+        // set up query iterator
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
+        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb()));
+        ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
 
         // step 0: create tables for storing bboxes and tiles
         String bboxTableName = "bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
@@ -78,12 +81,11 @@ public class PsqlTileIndexer extends Indexer {
 
         // step 2: looping through query results
         // TODO: distinguish between separable and non-separable cases
-        Statement rawDBStmt = DbConnector.getStmtByDbName(trans.getDb());
-        ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery());
-        int numColumn = rs.getMetaData().getColumnCount();
-        int rowCount = 0, mappingCount = 0;
         StringBuilder bboxInsSqlBuilder = new StringBuilder("insert into " + bboxTableName + " values");
         StringBuilder tileInsSqlBuilder = new StringBuilder("insert into " + tileTableName + " values");
+
+        int rowCount = 0, mappingCount = 0;
+        int numColumn = rs.getMetaData().getColumnCount();
         while (rs.next()) {
 
             // count log
@@ -104,7 +106,7 @@ public class PsqlTileIndexer extends Indexer {
                 transformedRow = curRawRow;
 
             // step 4: get bounding boxes coordinates
-            ArrayList<Double> curBbox = Indexer.getBboxCoordinates(c, l, transformedRow);
+            ArrayList<Double> curBbox = Indexer.getBboxCoordinates(l, transformedRow);
 
             // insert into bbox table
             if (bboxInsSqlBuilder.charAt(bboxInsSqlBuilder.length() - 1) == ')')
@@ -120,7 +122,6 @@ public class PsqlTileIndexer extends Indexer {
             if (rowCount % Config.bboxBatchSize == 0) {
                 bboxInsSqlBuilder.append(";");
                 bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
-                DbConnector.commitConnection(Config.databaseName);
                 bboxInsSqlBuilder = new StringBuilder("insert into " + bboxTableName + " values");
             }
 
@@ -148,7 +149,6 @@ public class PsqlTileIndexer extends Indexer {
                         if (mappingCount % Config.tileBatchSize== 0) {
                             tileInsSqlBuilder.append(";");
                             tileStmt.executeUpdate(tileInsSqlBuilder.toString());
-                            DbConnector.commitConnection(Config.databaseName);
                             tileInsSqlBuilder = new StringBuilder("insert into " + tileTableName + " values");
                         }
                     }
@@ -162,12 +162,10 @@ public class PsqlTileIndexer extends Indexer {
         if (rowCount % Config.bboxBatchSize != 0) {
             bboxInsSqlBuilder.append(";");
             bboxStmt.executeUpdate(bboxInsSqlBuilder.toString());
-            DbConnector.commitConnection(Config.databaseName);
         }
         if (mappingCount % Config.tileBatchSize != 0) {
             tileInsSqlBuilder.append(";");
             tileStmt.executeUpdate(tileInsSqlBuilder.toString());
-            DbConnector.commitConnection(Config.databaseName);
         }
 
         // clustering
@@ -179,11 +177,11 @@ public class PsqlTileIndexer extends Indexer {
         tileStmt.executeUpdate(sql);
         sql = "cluster " + tileTableName + " using tile_idx_" + tileTableName + ";";
         tileStmt.executeUpdate(sql);
-        DbConnector.commitConnection(Config.databaseName);
 
         // close db connections
         bboxStmt.close();
         tileStmt.close();
+        DbConnector.closeConnection(Config.databaseName);
     }
 
     @Override

@@ -51,9 +51,11 @@ public class PsqlGridCompressIndexer extends Indexer {
         psql = "CREATE EXTENSION if not exists postgis_topology;";
         bboxStmt.executeUpdate(psql);
 
-        // get layer object
+        // set up query iterator
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
+        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb()));
+        ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
 
         // step 0: create tables for storing upgrouped grids
         String ungroupedTableName = "bbox_ungrouped_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
@@ -66,7 +68,7 @@ public class PsqlGridCompressIndexer extends Indexer {
                 + "maxx double precision, maxy double precision);";
         bboxStmt.executeUpdate(sql);
 
-        // if this is an empty layer, continue
+        // if this is an empty layer, return
         if (trans.getDb().equals(""))
             return ;
 
@@ -87,13 +89,12 @@ public class PsqlGridCompressIndexer extends Indexer {
         HashMap<String, Box> boxes = new HashMap<>();
 
         // fetch query result
-        Statement rawDBStmt = DbConnector.getStmtByDbName(trans.getDb());
-        ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery());
-        int rowCount = 0, insCount;
-        int numColumn = rs.getMetaData().getColumnCount();
         long st = System.currentTimeMillis();
         long lastBatchSt = st;
         System.out.println("\nConstructing ungrouped table...");
+
+        int rowCount = 0, insCount;
+        int numColumn = rs.getMetaData().getColumnCount();
         while (true) {
 
             // count log
@@ -128,7 +129,6 @@ public class PsqlGridCompressIndexer extends Indexer {
                 }
                 System.out.println("Insertion count: " + insCount);
                 insPrepStmt.executeBatch();
-                DbConnector.commitConnection(Config.databaseName);
                 blobs.clear();
                 boxes.clear();
                 lastBatchSt = System.currentTimeMillis();
@@ -149,7 +149,7 @@ public class PsqlGridCompressIndexer extends Indexer {
                 transformedRow = curRawRow;
 
             // step 4: calculate bounding boxes
-            ArrayList<Double> bbox = getBboxCoordinates(c, l, transformedRow);
+            ArrayList<Double> bbox = getBboxCoordinates(l, transformedRow);
             double minx, miny, maxx, maxy;
             minx = bbox.get(2);
             miny = bbox.get(3);
@@ -248,7 +248,6 @@ public class PsqlGridCompressIndexer extends Indexer {
         }
         rs.close();
         insPrepStmt.executeBatch();
-        DbConnector.commitConnection(Config.databaseName);
         insPrepStmt.close();
         System.out.println("Constructing grouped table: " + (System.currentTimeMillis() - st) / 1000.0 + "s.");
 
@@ -258,10 +257,10 @@ public class PsqlGridCompressIndexer extends Indexer {
         bboxStmt.executeUpdate(sql);
         sql = "cluster " + groupedTableName + " using sp_" + groupedTableName + ";";
         bboxStmt.executeUpdate(sql);
-        DbConnector.commitConnection(Config.databaseName);
         System.out.println("Indexing: " + (System.currentTimeMillis() - st) / 1000.0 + "s.");
         System.out.println();
         bboxStmt.close();
+        DbConnector.closeConnection(Config.databaseName);
     }
 
     @Override

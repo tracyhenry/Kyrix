@@ -1,5 +1,5 @@
 // parameters
-param = {};
+var param = {};
 
 // animation durations, delays
 param.enteringDelta = 0.5;
@@ -36,7 +36,7 @@ param.extraTiles = 0;
 param.viewPadding = 50;
 
 // whether retain size when literal zooming
-param.retainSizeZoom = false;
+param.retainSizeZoom = true;
 
 // jump types
 param.semanticZoom = "semantic_zoom";

@@ -160,6 +160,7 @@ mgh_config.txt
 back-end/lib
 .DS_Store
 test.html
+renderer_test.html
 zoomable.html
 favicon.ico
 flare.json
@@ -172,6 +173,7 @@ compiler/examples/dots/datagen/dots.csv
 compiler/examples/dots/datagen/dots_big.csv
 compiler/examples/dots/datagen/gen_fast
 compiler/examples/nameBubbles
+compiler/examples/twitter_hashtag
 front-end/static/images/
 dots.txt
 dots_small.txt
@@ -179,3 +181,5 @@ log.txt
 gen
 *.csv
 .vscode
+front-end/js/embed/all.js
+front-end/js/embed/bundle.js

@@ -1,6 +1,9 @@
 // setting up global variables
 var globalVar = {};
 
+// kyrix backend url
+globalVar.serverAddr = "N/A";
+
 // tile width and tile height
 globalVar.tileW = 0;
 globalVar.tileH = 0;

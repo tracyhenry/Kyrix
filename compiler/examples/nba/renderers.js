@@ -89,8 +89,8 @@ var teamTimelineRendering = function (svg, data, args) {
         .data(data)
         .enter()
         .append("rect")
-        .attr("x", function (d) {return +d.x - rectWidth / 2;})
-        .attr("y", function (d) {return +d.y - d2Delta - rectHeight / 2;})
+        .attr("x", function (d) {return +d.cx - rectWidth / 2;})
+        .attr("y", function (d) {return +d.cy - d2Delta - rectHeight / 2;})
         .attr("rx", 10)
         .attr("ry", 10)
         .attr("width", rectWidth)
@@ -104,8 +104,8 @@ var teamTimelineRendering = function (svg, data, args) {
         .data(data)
         .enter()
         .append("image")
-        .attr("x", function (d) {return +d.x - logoXDelta;})
-        .attr("y", function (d) {return +d.y - d2Delta - logoYDelta - logoSize;})
+        .attr("x", function (d) {return +d.cx - logoXDelta;})
+        .attr("y", function (d) {return +d.cy - d2Delta - logoYDelta - logoSize;})
         .attr("width", logoSize)
         .attr("height", logoSize)
         .attr("xlink:href", function (d) {return "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + d.home_team + ".svg";});
@@ -115,8 +115,8 @@ var teamTimelineRendering = function (svg, data, args) {
         .data(data)
         .enter()
         .append("image")
-        .attr("x", function (d) {return +d.x - logoXDelta;})
-        .attr("y", function (d) {return +d.y - d2Delta + logoYDelta;})
+        .attr("x", function (d) {return +d.cx - logoXDelta;})
+        .attr("y", function (d) {return +d.cy - d2Delta + logoYDelta;})
         .attr("width", logoSize)
         .attr("height", logoSize)
         .attr("xlink:href", function (d) {return "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + d.away_team + ".svg";});
@@ -127,8 +127,8 @@ var teamTimelineRendering = function (svg, data, args) {
         .enter()
         .append("text")
         .text(function(d) {return d.home_score})
-        .attr("x", function(d) {return +d.x + scoreXDelta;})
-        .attr("y", function(d) {return +d.y - d2Delta - scoreYDelta;})
+        .attr("x", function(d) {return +d.cx + scoreXDelta;})
+        .attr("y", function(d) {return +d.cy - d2Delta - scoreYDelta;})
         .attr("font-size", scoreFontSize)
         .attr("dy", ".35em")
         .attr("text-anchor", "end")
@@ -140,8 +140,8 @@ var teamTimelineRendering = function (svg, data, args) {
         .enter()
         .append("text")
         .text(function(d) {return d.away_score})
-        .attr("x", function(d) {return +d.x + scoreXDelta;})
-        .attr("y", function(d) {return +d.y - d2Delta + scoreYDelta;})
+        .attr("x", function(d) {return +d.cx + scoreXDelta;})
+        .attr("y", function(d) {return +d.cy - d2Delta + scoreYDelta;})
         .attr("font-size", scoreFontSize)
         .attr("dy", ".35em")
         .attr("text-anchor", "end")
@@ -153,8 +153,8 @@ var teamTimelineRendering = function (svg, data, args) {
         .enter()
         .append("text")
         .text(function (d) {return d3.timeFormat("%B %d, %Y")(new Date(+d.year, +d.month - 1, +d.day));})
-        .attr("x", function (d) {return +d.x;})
-        .attr("y", function (d) {return +d.y - d2Delta + rectHeight / 2 + dateYDelta;})
+        .attr("x", function (d) {return +d.cx;})
+        .attr("y", function (d) {return +d.cy - d2Delta + rectHeight / 2 + dateYDelta;})
         .attr("dy", ".35em")
         .attr("text-anchor", "middle")
         .style("fill-opacity", 1);
@@ -164,12 +164,12 @@ var teamTimelineRendering = function (svg, data, args) {
         .data(data)
         .enter()
         .append("line")
-        .attr("x1", function (d) {return +d.x;})
-        .attr("x2", function (d) {return +d.x;})
+        .attr("x1", function (d) {return +d.cx;})
+        .attr("x2", function (d) {return +d.cx;})
         .attr("y1", 625)
         .attr("y2", function (d) {
-            if (+d.y == params.timelineUpperY) return +d.y - d2Delta + rectHeight / 2 + dateHeight;
-            return +d.y - d2Delta - rectHeight / 2;
+            if (+d.cy == params.timelineUpperY) return +d.cy - d2Delta + rectHeight / 2 + dateHeight;
+            return +d.cy - d2Delta - rectHeight / 2;
         })
         .style("stroke", "#CCC")
         .style("stroke-width", 3);
@@ -530,9 +530,9 @@ var boxscorePkRendering = function (svg, data, args) {
             return firstRowHeight + (i + 0.5) * params.cellHeight - params.playerphotoradius;
         })
         .attr("xlink:href", function (d) {
-            if (d.PLAYER_ID == "None")
-                return "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + d.TEAM_ABBR + ".svg";
-            return "http://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/" + d.PLAYER_ID + ".png";
+            if (d.player_id == "None")
+                return "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + d.team_abbr + ".svg";
+            return "http://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/" + d.player_id + ".png";
         })
         .style("mask", "url(#circlemask)");
 
@@ -541,8 +541,9 @@ var boxscorePkRendering = function (svg, data, args) {
         .data(data)
         .enter()
         .append("text")
-        .text(function(d) {return d.PLAYER_NAME;})
-        .attr("x", function (){
+        .text(function(d) {return d.player_name;})
+        .attr("x", function() {
+            //console.log(d);
             var textLeft = params.playerphotoleftmargin + params.playerphotoradius * 2;
             //return (params.playerNameCellWidth - textLeft) / 2 + textLeft;
             return textLeft + 15;
@@ -577,7 +578,7 @@ var boxscorePkRendering = function (svg, data, args) {
             .attr("y", startHeight + params.cellHeight / 2 - params.teamlogoradius)
             .attr("width", params.teamlogoradius * 2)
             .attr("height", params.teamlogoradius * 2)
-            .attr("xlink:href", "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + data[0].TEAM_ABBR + ".svg");
+            .attr("xlink:href", "https://i.cdn.turner.com/nba/nba/assets/logos/teams/secondary/web/" + data[0].team_abbr + ".svg");
     }
 
     // shadow rect
@@ -600,7 +601,7 @@ var boxscoreStatsRendering = function (svg, data, args) {
     var headerStartHeight = height / 2 - ((data.length + 1) * params.cellHeight + params.headerHeight) / 2;
     var firstRowHeight = headerStartHeight + params.headerHeight;
     var avg_fields = ["FG_PCT", "FG3_PCT", "FT_PCT"];
-    var fields = ['id', 'GAME_ID', 'TEAM_ID', 'TEAM_ABBR', 'TEAM_CITY', 'PLAYER_ID', 'PLAYER_NAME', 'POS', 'MIN', 'PTS', 'FGM', 'FGA', 'FG_PCT', 'FG3M', 'FG3A', 'FG3_PCT', 'FTM', 'FTA', 'FT_PCT', 'OREB', 'DREB', 'REB', 'AST', 'STL', 'BLK', 'TURNOVER', 'PF', 'PLUS_MINUS'];
+    var fields = ['id', 'game_id', 'team_id', 'team_abbr', 'team_city', 'player_id', 'player_name', 'start_position', 'min', 'pts', 'fgm', 'fga', 'fg_pct', 'fg3m', 'fg3a', 'fg3_pct', 'ftm', 'fta', 'ft_pct', 'oreb', 'dreb', 'reb', 'ast', 'stl', 'blk', 'turnover', 'pf', 'plus_minus'];
 
     // loop over stats
     var curLeft = params.playerNameCellWidth;
@@ -612,7 +613,9 @@ var boxscoreStatsRendering = function (svg, data, args) {
             precision = 2;
 
         // display name of the current field
-        var displayName = (fields[i] == 'TURNOVER' ? 'TO' : (fields[i] == 'PLUS_MINUS' ? '+/-' : fields[i]));
+        var displayName = (fields[i] == 'turnover' ? 'TO' :
+            (fields[i] == 'plus_minus' ? '+/-' :
+                (fields[i] == "start_position" ? "POS" : fields[i].toUpperCase())));
 
         var curColumnWidth = Math.min(displayName.length * params.avgcharwidth, params.statsCellMaxWidth);
         // stats header bkg rect
@@ -656,7 +659,7 @@ var boxscoreStatsRendering = function (svg, data, args) {
             .enter()
             .append("text")
             .text(function (d) {
-                return (fields[i] == 'POS' ? d[fields[i]] : (+d[fields[i]]).toFixed(precision));
+                return (fields[i] == 'start_position' ? d[fields[i]] : (+d[fields[i]]).toFixed(precision));
             })
             .attr("x", curLeft + curColumnWidth / 2)
             .attr("y", function (d, i) {
@@ -680,7 +683,7 @@ var boxscoreStatsRendering = function (svg, data, args) {
             .style("fill", (data.length % 2 == 0 ? params.evenrowcolor : params.oddrowcolor));
 
         // team stats text
-        if (fields[i] != 'POS') {
+        if (fields[i] != 'start_position') {
             var overall = 0;
             for (var j = 0; j < data.length; j ++)
                 overall += +data[j][fields[i]];

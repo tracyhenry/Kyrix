@@ -4,7 +4,9 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import index.Indexer;
 import main.Config;
+import main.Main;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -40,6 +42,7 @@ public class Server {
         }
         Server.stopServer();
         Indexer.precompute();
+        Main.setProjectClean();
         System.out.println("Completed recomputing indexes. Server restarting...");
         Server.startServer(Config.portNumber);
     }
@@ -80,6 +83,14 @@ public class Server {
     // send response using string
     public static void sendResponse(HttpExchange httpExchange, int responseCode, String response) throws IOException {
 
+        //https://stackoverflow.com/questions/35313180/cors-with-com-sun-net-httpserver
+        httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        if (httpExchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
+            httpExchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
+            httpExchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
+            httpExchange.sendResponseHeaders(HttpsURLConnection.HTTP_NO_CONTENT, -1);
+            return;
+        }
         sendResponse(httpExchange, responseCode, response.getBytes(), response.getBytes().length);
     }
 

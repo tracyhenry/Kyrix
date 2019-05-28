@@ -1,0 +1,49 @@
+<html>
+<body>
+<br>
+<br>
+<div>
+    Filter team that starts with: <input type="text" id="test_input" name="filter" value=""><br>
+</div>
+</body>
+<head>
+    <script src = "https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src = "https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.min.js"></script>
+    <script src = "https://d3js.org/d3.v5.min.js"></script>
+    <script src = "http://128.52.164.24:8000/kyrix.js"></script>
+    <script>
+        // TODO: change the address where the kyrix backend is running, has to start with http://
+        var serverAddr = "http://127.0.0.1:8000";
+
+        // initializeApp() loads kyrix vis into a div, and returns this div
+        kyrix.initializeApp(serverAddr);
+
+        //--------------------------NBA-------------------------
+        // filter data upon input change -- this will filter all teams that start with the input letters
+        // and filtering is done only when the current canvas is teamlogo
+        $("#test_input").keyup(function (e) {
+
+            // if current canvas is not logo, do nothing
+            if (kyrix.getCurrentCanvasId("nba") != "teamlogo")
+                return ;
+
+            // filter logos
+            var filterValue = $(this).val();
+            var visibleLogos = kyrix.displayOnlyFilteredNodes("nba", 0, function (d) {
+                if (d.abbr.toLowerCase().startsWith(filterValue.toLowerCase()))
+                    return true;
+                else
+                    return false;
+            });
+
+            // trigger jump upon hitting enter -- if there are multiple teams visible, do the first one
+            if (e.which == 13)
+                kyrix.triggerJump("nba", visibleLogos[0], 0, 0);
+        });
+    </script>
+
+    <link rel = "stylesheet" type = "text/css" href = "../../static/css/main.css">
+    <link rel = "stylesheet" type = "text/css" href = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Source Serif Pro" rel="stylesheet">
+</head>
+</html>

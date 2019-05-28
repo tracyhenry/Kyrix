@@ -20,7 +20,7 @@ var teamLogoTransform = new Transform("select * from teams;",
     ["id", "x", "y", "team_id", "city", "name", "abbr"],
     true);
 
-var teamTimelineTransform = new Transform("select game_id, year, month, day, team1.abbr as home_team, team2.abbr as away_team, home_score, away_score, tier "
+var teamTimelineTransform = new Transform("select game_id, year, month, day, team1.abbr as home_team, team2.abbr as away_team, home_score, away_score "
     + "from games, teams as team1, teams as team2 "
     + "where games.home_team = team1.abbr and games.away_team = team2.abbr;",
     "nba",
@@ -40,18 +40,18 @@ var teamTimelineTransform = new Transform("select game_id, year, month, day, tea
         ret.push(daysPassed % 2 == 0 ? renderParams.timelineUpperY : renderParams.timelineLowerY);
 
         // rest of the attributes
-        for (var i = 1; i <= 8; i ++)
+        for (var i = 1; i <= 7; i ++)
             ret.push(row[i]);
 
         return Java.to(ret ,"java.lang.String[]");
     },
-    ["game_id", "x", "y", "year", "month", "day", "home_team", "away_team", "home_score", "away_score", "tier"],
+    ["game_id", "x", "y", "year", "month", "day", "home_team", "away_team", "home_score", "away_score"],
     true);
 
 var teamTimelineStaticTransform = new Transform("select city, name, abbr from teams;",
     "nba",
     "",
-    ["city", "name", "abbr"],
+    [],
     true);
 
 var playByPlayTransform = new Transform("select games.game_id, period, qtr_time, score, margin, home_desc, away_desc, home_team, away_team, play_id, h_player_id, a_player_id"
@@ -89,16 +89,16 @@ var playByPlayTransform = new Transform("select games.game_id, period, qtr_time,
     ["game_id", "y", "period", "qtr_time", "score", "margin", "home_desc", "away_desc", "home_team", "away_team", "h_player_id", "a_player_id"],
     true);
 
-var playByPlayStaticTransform = new Transform("select team1.abbr, team2.abbr from teams as team1, teams as team2;",
+var playByPlayStaticTransform = new Transform("select team1.abbr as abbr1, team2.abbr as abbr2 from teams as team1, teams as team2;",
     "nba",
     "",
-    ["abbr1", "abbr2"],
+    [],
     true);
 
-var boxscoreTransform = new Transform("select * from player_boxscore",
+var boxscoreTransform = new Transform("select * from player_boxscore;",
     "nba",
     "",
-    ['id', 'GAME_ID', 'TEAM_ID', 'TEAM_ABBR', 'TEAM_CITY', 'PLAYER_ID', 'PLAYER_NAME', 'POS', 'MIN', 'PTS', 'FGM', 'FGA', 'FG_PCT', 'FG3M', 'FG3A', 'FG3_PCT', 'FTM', 'FTA', 'FT_PCT', 'OREB', 'DREB', 'REB', 'AST', 'STL', 'BLK', 'TURNOVER', 'PF', 'PLUS_MINUS'],
+    [],
     true);
 
 module.exports = {
