@@ -111,7 +111,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
                 transformedRow = curRawRow;
 
             // step 4: calculate bounding boxes
-            ArrayList<Double> curBbox = getBboxCoordinates(c, l, transformedRow);
+            ArrayList<Double> curBbox = getBboxCoordinates(l, transformedRow);
 
             // insert into bbox table
             for (int i = 0; i < transformedRow.size(); i ++)
@@ -173,10 +173,6 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         
         ArrayList<ArrayList<String>> queryResult = DbConnector.getQueryResult(Config.databaseName, sql);
                 
-        rowsFetched.add(queryResult.size());
-        if (rowsFetched.size() % 5 == 0 && rowsFetched.size() > 0) 
-            System.out.println("writing intersecting rows json");
-            JsonWriter.writeJSON("intersectingRows", rowsFetched);
 
         return queryResult;
     }

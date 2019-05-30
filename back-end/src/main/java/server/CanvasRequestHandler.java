@@ -120,10 +120,10 @@ public class CanvasRequestHandler implements HttpHandler {
             String colListStr = c.getLayers().get(i).getTransform().getColStr("");
 
             // construct range query
-            String sql = "select " + colListStr + " from bbox_" + Config.projectName + "_"
-                    + c.getId() + "layer" + i;
+            // String sql = "select " + colListStr + " from bbox_" + Config.projectName + "_"
+            //         + c.getId() + "layer" + i;
 
-            // String sql = "select " + colListStr + " from bbox_" + Config.projectName;
+            String sql = "select " + colListStr + " from bbox_" + Config.projectName;
             if (predicates.get(i).length() > 0)
                 sql += " where " + predicates.get(i);
             sql += ";";

@@ -49,7 +49,7 @@ public class Config {
 
     // tile indexing scheme
     public enum IndexingScheme {TILE_INDEX, SPATIAL_INDEX, CUBE_INDEX};
-    public static IndexingScheme indexingScheme = IndexingScheme.SPATIAL_INDEX;
+    public static IndexingScheme indexingScheme = IndexingScheme.CUBE_INDEX;
 
     // underlying database
     public enum Database {MYSQL, PSQL};

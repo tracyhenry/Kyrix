@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# KYRIX_DB=dots
-KYRIX_DB=nba
+KYRIX_DB=dots
+# KYRIX_DB=nba
 PGHOST=${PGHOST:-db}  # db is the default used in docker-compose.yml
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-kyrixftw}
 USER_NAME=${USER_NAME:-kyrix}
@@ -36,8 +36,8 @@ psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARC
 psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
 
 
-# psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE IF NOT EXISTS DOTS (id int, x int, y int);"
-# psql $PGCONN_STRING_USER/$KYRIX_DB -c "copy dots from '/dots.csv' delimiter E'\t' csv header;"
+psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE IF NOT EXISTS DOTS (id int, x int, y int);"
+psql $PGCONN_STRING_USER/$KYRIX_DB -c "copy dots from '/dots.csv' delimiter E'\t' csv header;"
 
 psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS stats (ID serial PRIMARY KEY, queryType TEXT, milliseconds NUMERIC, rowsFetched INT);"
 
@@ -45,24 +45,24 @@ cd /kyrix/back-end
 
 
 
-plays_exists=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select exists(select 1 from information_schema.tables where table_schema='public' and table_name='plays');" || true)
-if [ "$plays_exists" = "t" ]; then
-    plays=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select count(*)>500000 from plays;" || true)
-else
-    plays=f
-fi
-if [ "$plays" = "t" ]; then
-    # if you want to force a reload, the easiest way is to dropdb, e.g.
-    #   docker exec -u postgres -it kyrix_db_1 sh -c "dropdb nba"
-    # note: requires the database to be running, i.e. let docker-compose finish starting up.
-    echo "NBA data found - skipping reload to avoid duplicate records."
-else
-    # TODO: prints ugly error message the first time
-    echo "NBA data not found - loading..."
-    cat nba_db_psql.sql | grep -v idle_in_transaction_session_timeout | psql $PGCONN_STRING_USER/$KYRIX_DB | egrep -i 'error' || true
-    numplays=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select count(*) from plays;" || true)
-    echo "numplays loaded: $numplays"
-fi
+# plays_exists=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select exists(select 1 from information_schema.tables where table_schema='public' and table_name='plays');" || true)
+# if [ "$plays_exists" = "t" ]; then
+#     plays=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select count(*)>500000 from plays;" || true)
+# else
+#     plays=f
+# fi
+# if [ "$plays" = "t" ]; then
+#     # if you want to force a reload, the easiest way is to dropdb, e.g.
+#     #   docker exec -u postgres -it kyrix_db_1 sh -c "dropdb nba"
+#     # note: requires the database to be running, i.e. let docker-compose finish starting up.
+#     echo "NBA data found - skipping reload to avoid duplicate records."
+# else
+#     # TODO: prints ugly error message the first time
+#     echo "NBA data not found - loading..."
+#     cat nba_db_psql.sql | grep -v idle_in_transaction_session_timeout | psql $PGCONN_STRING_USER/$KYRIX_DB | egrep -i 'error' || true
+#     numplays=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select count(*) from plays;" || true)
+#     echo "numplays loaded: $numplays"
+# fi
 
 echo "*** starting backend server..."
 cd /kyrix/back-end
@@ -75,8 +75,8 @@ echo "*** (re)configuring for NBA examples to ensure backend server recomputes..
 
 cd /kyrix/compiler
 npm rebuild | egrep -v '(@[0-9.]+ /kyrix/compiler/node_modules/)'
-cd /kyrix/compiler/examples/nba
-node nba.js | egrep -i "error|connected" || true
+cd /kyrix/compiler/examples/dots
+node dots.js | egrep -i "error|connected" || true
 
 echo "*** done! Kyrix ready at: http://<host>:8000/  (may need a minute to recompute indexes - watch this log for messages)"
 

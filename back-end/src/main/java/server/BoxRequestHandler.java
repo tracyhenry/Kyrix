@@ -30,14 +30,14 @@ public class BoxRequestHandler  implements HttpHandler {
 
     // gson builder
     private final Gson gson;
-    // private TDBoxGetter boxGetter;
-    private MikeBoxGetter boxGetter;
+    private TDBoxGetter boxGetter;
+    // private MikeBoxGetter boxGetter;
     private List<Double> fetchTimes;
 
     public BoxRequestHandler() {
 
         gson = new GsonBuilder().create();
-        boxGetter = new MikeBoxGetter();
+        boxGetter = new TDBoxGetter();
         // boxGetter = new TDBoxGetter();
         fetchTimes = new ArrayList<>();
     }
@@ -119,16 +119,6 @@ public class BoxRequestHandler  implements HttpHandler {
         } else {
             sendStats("pan", fetchTime, intersectingRows);
         }
-        
-
-        // fetchTimes.add(fetchTime);
-        // if (fetchTimes.size() % 5 == 0 && fetchTimes.size() > 0) {
-        //     System.out.println("writing fetch data");
-        //     JsonWriter.writeJSON("fetchTimes", fetchTimes);
-        // }
-
-
-
 
         //send data and box back
         Map<String, Object> respMap = new HashMap<>();
