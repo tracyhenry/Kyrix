@@ -165,7 +165,6 @@ public class BoxRequestHandler  implements HttpHandler {
         
         try {
             DbConnector.executeUpdate(Config.databaseName, sql);
-            DbConnector.commitConnection(Config.databaseName);
         } catch (Exception e) {
             System.out.println("couldn't write stats to the stats table: ");
             System.out.println(e);

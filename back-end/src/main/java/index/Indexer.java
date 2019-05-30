@@ -70,12 +70,6 @@ public abstract class Indexer implements Serializable {
             }
         }
 
-        if (Config.indexingScheme == Config.IndexingScheme.CUBE_INDEX) {
-            System.out.println("[Indexer] Indexing cube data!");
-            PsqlCubeSpatialIndexer indexer = PsqlCubeSpatialIndexer.getInstance();
-            indexer.indexData();
-        }
-
         System.out.println("Indexing took: " + (System.currentTimeMillis() - indexingStartTime) / 1000 + "s.");
         System.out.println("Done precomputing!");
     }
@@ -209,27 +203,5 @@ public abstract class Indexer implements Serializable {
         return polygonText;
     }
 
-    protected static String getCubeText(double minx, double miny, double maxx, double maxy, int canvasId) {
-
-        String cubeText = "";
-        /*
-        sql:
-        insert into tbl_cube select id, cube ( array[minx, miny, canvasid], array[minx, maxy, canvasid], array[maxx, maxy, canvasid])
-        */
-        // cubeText += "cube (array[" + String.valueOf(minx) + ", " + String.valueOf(miny) + ", "
-        //         + String.valueOf(canvasId) + "], "
-        //         + "array[" + String.valueOf(minx) + ", " + String.valueOf(maxy) + ", "
-        //         + String.valueOf(canvasId) + "], "
-        //         + "array[" + String.valueOf(maxx) + ", " + String.valueOf(maxy) + ", "
-        //         + String.valueOf(canvasId) + "]";
-        // cubeText += "))";
-        double minCanvasIdNum = minx + miny + canvasId;
-        double maxCanvasIdNum = maxx + maxy + canvasId;
-        cubeText += "(" + String.valueOf(minx) + ", " + String.valueOf(miny) + ", "
-                + String.valueOf(minCanvasIdNum) + "), "
-                + "(" + String.valueOf(maxx) + ", " + String.valueOf(maxy) + ", "
-                + String.valueOf(maxCanvasIdNum) + ")";
-
-        return cubeText;
-    }
+    
 }

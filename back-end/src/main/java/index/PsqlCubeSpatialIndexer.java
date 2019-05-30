@@ -7,6 +7,7 @@ import main.Main;
 import project.Canvas;
 import project.Layer;
 import project.Transform;
+import project.Project;
 import server.JsonWriter;
 
 import java.sql.Connection;
@@ -133,7 +134,6 @@ public class PsqlCubeSpatialIndexer extends Indexer {
 
             if (rowCount % Config.bboxBatchSize == 0) {
                 preparedStmt.executeBatch();
-                DbConnector.commitConnection(Config.databaseName);
             }
         }
         rs.close();
@@ -143,10 +143,20 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         // insert tail stuff
         if (rowCount % Config.bboxBatchSize != 0) {
             preparedStmt.executeBatch();
-            DbConnector.commitConnection(Config.databaseName);
         }
         preparedStmt.close();
 
+        // index on inserted data if the canvas is the bottom-most canvas
+        Project proj = Main.getProject();
+        ArrayList<Canvas> canvases = proj.getCanvases();
+        Canvas bottomCanvas = canvases.get(canvases.size() - 1);
+        if (c.getId() == bottomCanvas.getId())
+            /*
+            sql:
+                create index idx_tbl_cube_1 on tbl_cube using gist (v);
+            */
+            sql = "create index cube_idx_" + bboxTableName + " on " + bboxTableName + " using gist (v);";
+            bboxStmt.executeUpdate(sql);
         
         bboxStmt.close();
     }
@@ -172,7 +182,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
 
         
         ArrayList<ArrayList<String>> queryResult = DbConnector.getQueryResult(Config.databaseName, sql);
-                
+        
 
         return queryResult;
     }
@@ -203,22 +213,21 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         return DbConnector.getQueryResult(Config.databaseName, sql);
     }
 
-    public void indexData () throws Exception {
-        Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
-        Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
-        String bboxTableName = "bbox_" + Main.getProject().getName();
+    private static String getCubeText(double minx, double miny, double maxx, double maxy, int canvasId) {
 
-        // create index
-
+        String cubeText = "";
         /*
         sql:
-            create index idx_tbl_cube_1 on tbl_cube using gist (v);
+        insert into tbl_cube select id, cube ( array[minx, miny, canvasid], array[minx, maxy, canvasid], array[maxx, maxy, canvasid])
         */
+        double minCanvasIdNum = minx + miny + canvasId;
+        double maxCanvasIdNum = maxx + maxy + canvasId;
+        cubeText += "(" + String.valueOf(minx) + ", " + String.valueOf(miny) + ", "
+                + String.valueOf(minCanvasIdNum) + "), "
+                + "(" + String.valueOf(maxx) + ", " + String.valueOf(maxy) + ", "
+                + String.valueOf(maxCanvasIdNum) + ")";
 
-        String sql = "create index cube_idx_" + bboxTableName + " on " + bboxTableName + " using gist (v);";
-        bboxStmt.executeUpdate(sql);
-        DbConnector.commitConnection(Config.databaseName);
-        bboxStmt.close();
+        return cubeText;
     }
 
 }

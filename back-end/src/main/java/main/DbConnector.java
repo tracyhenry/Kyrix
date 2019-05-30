@@ -17,10 +17,6 @@ public class DbConnector {
         // get connection
         Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
 
-        // set autocommit
-        if (Config.database == Config.Database.PSQL)
-            conn.setAutoCommit(false);
-
         // get statement
         Statement retStmt = null;
         if (Config.database == Config.Database.PSQL)
@@ -98,16 +94,6 @@ public class DbConnector {
         }
         connections.put(dbName, dbConn);
         return dbConn;
-    }
-
-    public static void commitConnection(String dbName) throws SQLException, ClassNotFoundException{
-
-        // mysql uses autocommit
-        if (Config.database == Config.Database.MYSQL)
-            return ;
-
-        Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
-        conn.commit();
     }
 
     public static void closeConnection(String dbName) throws SQLException {
