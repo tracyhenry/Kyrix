@@ -76,7 +76,6 @@ public class DbConnector {
         Statement stmt = DbConnector.getStmtByDbName(dbName);
         stmt.executeUpdate(sql);
         stmt.close();
-        closeConnection(dbName);
     }
 
     public static Connection getDbConn(String dbServer, String dbName, String userName, String password)

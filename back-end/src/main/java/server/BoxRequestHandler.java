@@ -16,6 +16,8 @@ import main.Config;
 import main.DbConnector;
 
 import javax.net.ssl.HttpsURLConnection;
+
+import java.awt.Taskbar.State;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 
 public class BoxRequestHandler  implements HttpHandler {
 
@@ -158,12 +161,14 @@ public class BoxRequestHandler  implements HttpHandler {
     private void sendStats(String queryType, double seconds, int fetchedRows) {
         String sql = "insert into stats (querytype, milliseconds, rowsFetched) values ('" + queryType +   "'," + seconds + ","  + fetchedRows + ");";
         System.out.println("stats sql: " + sql);
+        System.out.println("database name is: " + Config.databaseName);
         
         try {
             DbConnector.executeUpdate(Config.databaseName, sql);
             DbConnector.commitConnection(Config.databaseName);
         } catch (Exception e) {
-            System.out.println("couldn't write stats to the stats table");
+            System.out.println("couldn't write stats to the stats table: ");
+            System.out.println(e);
         }
     }
      
