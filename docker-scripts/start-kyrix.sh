@@ -37,7 +37,7 @@ psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE IF NOT EXISTS project (name 
 
 
 psql $PGCONN_STRING_USER/$KYRIX_DB -c "CREATE TABLE IF NOT EXISTS DOTS (id int, x int, y int);"
-psql $PGCONN_STRING_USER/$KYRIX_DB -c "copy dots from '/dots.csv' delimiter E'\t' csv header;"
+psql $PGCONN_STRING_USER/$KYRIX_DB -c "copy dots from '/dotsbig.csv' delimiter E'\t' csv header;"
 
 psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS stats (ID serial PRIMARY KEY, queryType TEXT, milliseconds NUMERIC, rowsFetched INT);"
 

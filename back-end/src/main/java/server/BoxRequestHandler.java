@@ -41,7 +41,7 @@ public class BoxRequestHandler  implements HttpHandler {
 
         gson = new GsonBuilder().create();
         boxGetter = new TDBoxGetter();
-        // boxGetter = new TDBoxGetter();
+        // boxGetter = new MikeBoxGetter();
         fetchTimes = new ArrayList<>();
     }
     @Override
