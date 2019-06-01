@@ -63,8 +63,6 @@ public abstract class Indexer implements Serializable {
         associateIndexer();
         long indexingStartTime = System.currentTimeMillis();
         for (Canvas c : Main.getProject().getCanvases()) {
-            System.out.println("indexing canvas with id: " + c.getId());
-            System.out.println("canvas has num id: " + c.getNumericId());
             for (int layerId = 0; layerId < c.getLayers().size(); layerId ++) {
                 c.getLayers().get(layerId).getIndexer().createMV(c, layerId);
             }

@@ -7,6 +7,8 @@ import org.locationtech.jts.io.WKTWriter;
 import project.Canvas;
 import project.Layer;
 import project.View;
+import project.Project;
+import main.Main;
 
 import java.util.ArrayList;
 
@@ -52,18 +54,19 @@ public abstract class BoxGetter {
             throws Exception {
 
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
+        Project proj = Main.getProject();
 
         // coordinates
         double newMinx = newBox.getMinx(), newMiny = newBox.getMiny();
         double newMaxx = newBox.getMaxx(), newMaxy = newBox.getMaxy();
         double oldMinx = oldBox.getMinx(), oldMiny = oldBox.getMiny();
         double oldMaxx = oldBox.getMaxx(), oldMaxy = oldBox.getMaxy();
-        double xCanvasIndex = newMinx + newMiny + c.getNumericId();
-        double yCanvasIndex = newMaxx + newMaxy + c.getNumericId();
+
+        int canvasNumId = proj.getCanvasNumId(c.getId());
 
         String cubeNew = "cube (" + 
-            "array[" + newMinx + ", " + newMiny + ", " + xCanvasIndex + "], " +
-            "array[" + newMaxx + ", " + newMaxy + ", " + yCanvasIndex + "])";
+            "array[" + newMinx + ", " + newMiny + ", " + canvasNumId + "], " +
+            "array[" + newMaxx + ", " + newMaxy + ", " + canvasNumId + "])";
         
         // loop through each layer
         for (int i = 0; i < c.getLayers().size(); i ++) {

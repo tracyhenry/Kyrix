@@ -16,6 +16,7 @@ public class Project {
     // private variables
     private boolean mapInitialized = false;
     private Map<String, Canvas> canvasMap;
+    private Map<String, Integer> canvasIdMap;
     private Map<String, View> viewMap;
 
     // JSON fields
@@ -43,6 +44,19 @@ public class Project {
 
     public String getRenderingParams() {
         return renderingParams;
+    }
+
+    public Integer getCanvasNumId(String canvasId) {
+
+        // safe to assume that they are already initialized?
+        if (! mapInitialized) {
+            mapInitialized = true;
+            initializeMaps();
+        }
+        if (canvasIdMap.containsKey(canvasId))
+            return canvasIdMap.get(canvasId);
+        else
+            return null;
     }
 
     public Canvas getCanvas(String canvasId) {
@@ -75,6 +89,16 @@ public class Project {
         canvasMap = new HashMap<>();
         for (Canvas c : canvases)
             canvasMap.put(c.getId(), c);
+
+        // initialize numeric canvas ids
+        canvasIdMap = new HashMap<>();
+        int canvasId = 0;
+        for (Canvas c : canvases) {
+            // can change this based on the separation we want between 3d rtrees 
+            // or whatever else is affected by num ids
+            canvasId += 1000000;
+            canvasIdMap.put(c.getId(), canvasId);
+        }
 
         // initialize view map
         viewMap = new HashMap<>();

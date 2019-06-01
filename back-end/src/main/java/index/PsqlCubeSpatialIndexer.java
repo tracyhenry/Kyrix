@@ -43,8 +43,6 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
 
         Layer l = c.getLayers().get(layerId);
-        // assume that canvas id is an int, not sure if that is part of spec...
-        int canvasId = c.getNumericId();
         Transform trans = l.getTransform();
         ArrayList colNames = trans.getColumnNames();
 
@@ -129,7 +127,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
             
             preparedStmt.setString(transformedRow.size() + 7,
                     // getPolygonText(minx, miny, maxx, maxy));
-                    getCubeText(minx, miny, maxx, maxy, canvasId));
+                    getCubeText(minx, miny, maxx, maxy, c.getId()));
             preparedStmt.addBatch();
 
             if (rowCount % Config.bboxBatchSize == 0) {
@@ -193,11 +191,13 @@ public class PsqlCubeSpatialIndexer extends Indexer {
 
         // get column list string
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
+        Project proj = Main.getProject();
+        int canvasNumId = proj.getCanvasNumId(c.getId());
         
         // make bounding box cube to intersect with
         String tileCube = "cube (" + 
-            "(" + minx + ", " + miny + ", " + c.getNumericId() + "), " +
-            "(" + (minx + Config.tileW) + ", " + (miny + Config.tileH) + ", " + c.getNumericId() + "))";
+            "(" + minx + ", " + miny + ", " + canvasNumId + "), " +
+            "(" + (minx + Config.tileW) + ", " + (miny + Config.tileH) + ", " + canvasNumId + "))";
         
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName()
@@ -207,25 +207,26 @@ public class PsqlCubeSpatialIndexer extends Indexer {
             sql += " and " + predicate + ";";
         else
             sql += ";";
-        System.out.println(minx + " " + miny + " " + c.getNumericId() + " : " + sql);
 
         // return
         return DbConnector.getQueryResult(Config.databaseName, sql);
     }
 
-    private static String getCubeText(double minx, double miny, double maxx, double maxy, int canvasId) {
+    private static String getCubeText(double minx, double miny, double maxx, double maxy, String canvasId) {
 
         String cubeText = "";
+        Project proj = Main.getProject();
+
         /*
         sql:
         insert into tbl_cube select id, cube ( array[minx, miny, canvasid], array[minx, maxy, canvasid], array[maxx, maxy, canvasid])
         */
-        double minCanvasIdNum = minx + miny + canvasId;
-        double maxCanvasIdNum = maxx + maxy + canvasId;
+        
+        int canvasIdNum = proj.getCanvasNumId(canvasId);
         cubeText += "(" + String.valueOf(minx) + ", " + String.valueOf(miny) + ", "
-                + String.valueOf(minCanvasIdNum) + "), "
+                + String.valueOf(canvasIdNum) + "), "
                 + "(" + String.valueOf(maxx) + ", " + String.valueOf(maxy) + ", "
-                + String.valueOf(maxCanvasIdNum) + ")";
+                + String.valueOf(canvasIdNum) + ")";
 
         return cubeText;
     }
