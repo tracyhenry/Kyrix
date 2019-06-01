@@ -83,7 +83,7 @@ public class CanvasRequestHandler implements HttpHandler {
         // get static data
         ArrayList<ArrayList<ArrayList<String>>> staticData = null;
         try {
-            staticData = Indexer.getAnyStaticData(c, predicates);
+            staticData = getStaticData(c, predicates);
         } catch (Exception e) {
             e.printStackTrace();
         }
