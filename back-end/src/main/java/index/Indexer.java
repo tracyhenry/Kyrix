@@ -30,7 +30,7 @@ public abstract class Indexer implements Serializable {
     public abstract void createMV(Canvas c, int layerId) throws Exception;
     public abstract ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception;
     public abstract ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate) throws Exception;
-    public abstract ArrayList<ArrayList<ArrayList<String>>> getStaticData(Canvas c, ArrayList<String> predicates) throws SQLException, ClassNotFoundException;
+    public abstract String getStaticDataQuery(Canvas c, Layer l, int i, ArrayList<String> predicates);
 
     // associate each layer with a proper indexer
     public static void associateIndexer() {
@@ -53,25 +53,6 @@ public abstract class Indexer implements Serializable {
                 }
                 c.getLayers().get(layerId).setIndexer(indexer);
             }
-    }
-
-    public static ArrayList<ArrayList<ArrayList<String>>> getAnyStaticData(Canvas c, ArrayList<String> predicates) throws SQLException, ClassNotFoundException {
-        Indexer indexer = null;
-        if (Config.database == Config.Database.PSQL) {
-            if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
-                indexer = PsqlSpatialIndexer.getInstance();
-            else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
-                indexer = PsqlTileIndexer.getInstance();
-            else if (Config.indexingScheme == Config.IndexingScheme.CUBE_INDEX)
-                indexer = PsqlCubeSpatialIndexer.getInstance();
-        }
-        else if (Config.database == Config.Database.MYSQL) {
-            if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
-                indexer = MysqlSpatialIndexer.getInstance();
-            else if (Config.indexingScheme == Config.indexingScheme.TILE_INDEX)
-                indexer = MysqlTileIndexer.getInstance();
-        }
-        return indexer.getStaticData(c, predicates);
     }
 
     // precompute

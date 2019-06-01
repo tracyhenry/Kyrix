@@ -9,6 +9,7 @@ import main.Config;
 import main.DbConnector;
 import main.Main;
 import project.Canvas;
+import project.Layer;
 import index.Indexer;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -102,5 +103,32 @@ public class CanvasRequestHandler implements HttpHandler {
         return Integer.valueOf(DbConnector.getQueryResult(db, sql).get(0).get(0));
     }
 
+    public ArrayList<ArrayList<ArrayList<String>>> getStaticData(Canvas c, ArrayList<String> predicates)
+            throws SQLException, ClassNotFoundException {
+
+        // container for data
+        ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
+
+        // loop over layers
+        for (int i = 0; i < c.getLayers().size(); i ++) {
+
+            Layer l = c.getLayers().get(i);
+
+            // add an empty placeholder for static layers
+            if (! l.isStatic()) {
+                data.add(new ArrayList<>());
+                continue;
+            }
+
+            Indexer indexer = l.getIndexer();
+            String sql = indexer.getStaticDataQuery(c, l, i, predicates);
+
+            
+            // run query, add to response
+            data.add(DbConnector.getQueryResult(Config.databaseName, sql));
+        }
+
+        return data;
+    }
     
 }

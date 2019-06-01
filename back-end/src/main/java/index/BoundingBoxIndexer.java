@@ -24,36 +24,20 @@ import java.util.Map;
 public abstract class BoundingBoxIndexer extends Indexer {
 
     @Override
-    public ArrayList<ArrayList<ArrayList<String>>> getStaticData(Canvas c, ArrayList<String> predicates)
-            throws SQLException, ClassNotFoundException {
+    public String getStaticDataQuery(Canvas c, Layer l, int i, ArrayList<String> predicates) {
+        // get column list string
+        String colListStr = l.getTransform().getColStr("");
 
-        // container for data
-        ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
 
-        // loop over layers
-        for (int i = 0; i < c.getLayers().size(); i ++) {
+        // construct range query
+        String sql = "select " + colListStr + " from bbox_" + Config.projectName + "_"
+                + c.getId() + "layer" + i;
 
-            // add an empty placeholder for static layers
-            if (! c.getLayers().get(i).isStatic()) {
-                data.add(new ArrayList<>());
-                continue;
-            }
+        if (predicates.get(i).length() > 0)
+            sql += " where " + predicates.get(i);
+        sql += ";";
 
-            // get column list string
-            String colListStr = c.getLayers().get(i).getTransform().getColStr("");
+        return sql;
 
-            // construct range query
-            String sql = "select " + colListStr + " from bbox_" + Config.projectName + "_"
-                    + c.getId() + "layer" + i;
-
-            if (predicates.get(i).length() > 0)
-                sql += " where " + predicates.get(i);
-            sql += ";";
-
-            // run query, add to response
-            data.add(DbConnector.getQueryResult(Config.databaseName, sql));
-        }
-
-        return data;
     }
 }
