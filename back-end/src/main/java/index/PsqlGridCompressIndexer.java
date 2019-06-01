@@ -20,7 +20,7 @@ import java.util.HashMap;
 /**
  * Created by wenbo on 12/30/18.
  */
-public class PsqlGridCompressIndexer extends Indexer {
+public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
 
     private static PsqlGridCompressIndexer instance = null;
     private final int gridW = 1000;

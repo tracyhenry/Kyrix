@@ -17,7 +17,7 @@ import java.util.ArrayList;
 /**
  * Created by wenbo on 12/31/18.
  */
-public class PsqlTileIndexer extends Indexer {
+public class PsqlTileIndexer extends BoundingBoxIndexer {
 
     private static PsqlTileIndexer instance = null;
 

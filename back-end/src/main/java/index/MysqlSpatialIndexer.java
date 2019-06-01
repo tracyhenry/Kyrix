@@ -15,7 +15,7 @@ import java.util.ArrayList;
 /**
  * Created by wenbo on 12/31/18.
  */
-public class MysqlSpatialIndexer extends Indexer {
+public class MysqlSpatialIndexer extends BoundingBoxIndexer {
 
     private static MysqlSpatialIndexer instance = null;
 

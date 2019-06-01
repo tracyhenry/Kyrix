@@ -16,6 +16,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.SQLException;
 
 public class PsqlCubeSpatialIndexer extends Indexer {
 
@@ -212,6 +213,39 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         return DbConnector.getQueryResult(Config.databaseName, sql);
     }
 
+    @Override
+    public ArrayList<ArrayList<ArrayList<String>>> getStaticData(Canvas c, ArrayList<String> predicates)
+            throws SQLException, ClassNotFoundException {
+    
+          // container for data
+          ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
+
+          // loop over layers
+          for (int i = 0; i < c.getLayers().size(); i ++) {
+  
+              // add an empty placeholder for static layers
+              if (! c.getLayers().get(i).isStatic()) {
+                  data.add(new ArrayList<>());
+                  continue;
+              }
+  
+              // get column list string
+              String colListStr = c.getLayers().get(i).getTransform().getColStr("");
+  
+              // construct range query
+              String sql = "select " + colListStr + " from bbox_" + Config.projectName;
+              if (predicates.get(i).length() > 0)
+                  sql += " where " + predicates.get(i);
+              sql += ";";
+  
+              // run query, add to response
+              data.add(DbConnector.getQueryResult(Config.databaseName, sql));
+          }
+  
+          return data;
+
+    }
+
     private static String getCubeText(double minx, double miny, double maxx, double maxy, String canvasId) {
 
         String cubeText = "";
@@ -230,5 +264,6 @@ public class PsqlCubeSpatialIndexer extends Indexer {
 
         return cubeText;
     }
+
 
 }
