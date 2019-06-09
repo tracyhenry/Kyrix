@@ -1,4 +1,1 @@
 FROM kartoza/postgis:11.0-2.5
-
-COPY ./dotsbig.csv /
-COPY ./dots.csv /

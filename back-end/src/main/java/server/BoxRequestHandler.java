@@ -17,7 +17,6 @@ import main.DbConnector;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import java.awt.Taskbar.State;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
