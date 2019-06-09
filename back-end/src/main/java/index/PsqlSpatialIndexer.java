@@ -36,7 +36,6 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
     public void createMV(Canvas c, int layerId) throws Exception {
 
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
-        Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
 
         // create postgis extension if not existed
         String psql = "CREATE EXTENSION if not exists postgis;";
@@ -47,7 +46,7 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
         // set up query iterator
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
-        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb()));
+        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb(), true));
         ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
 
         // step 0: create tables for storing bboxes and tiles
@@ -79,7 +78,7 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
         for (int i = 0; i < trans.getColumnNames().size() + 6; i ++)
             insertSql += "?, ";
         insertSql += "ST_GeomFromText(?));";
-        PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
+        PreparedStatement preparedStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
 
         int rowCount = 0;
         int numColumn = rs.getMetaData().getColumnCount();

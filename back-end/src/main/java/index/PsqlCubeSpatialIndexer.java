@@ -40,7 +40,6 @@ public class PsqlCubeSpatialIndexer extends Indexer {
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
-        Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
 
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
@@ -79,7 +78,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
 
         // step 2: looping through query results
         // what's difference btwn separable and non-separable cases?
-        Statement rawDBStmt = DbConnector.getStmtByDbName(trans.getDb());
+        Statement rawDBStmt = DbConnector.getStmtByDbName(trans.getDb(), true);
         ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery());
         int numColumn = rs.getMetaData().getColumnCount();
         int rowCount = 0;
@@ -89,7 +88,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
             insertSql += "?, ";
         }
         insertSql += "?::cube);";
-        PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
+        PreparedStatement preparedStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
         while (rs.next()) {
 
             // count log
