@@ -7,8 +7,6 @@ import org.locationtech.jts.io.WKTWriter;
 import project.Canvas;
 import project.Layer;
 import project.View;
-import project.Project;
-import main.Main;
 
 import java.util.ArrayList;
 

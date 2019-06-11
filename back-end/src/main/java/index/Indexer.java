@@ -200,5 +200,5 @@ public abstract class Indexer implements Serializable {
         polygonText += "))";
 
         return polygonText;
-    }    
+    }
 }

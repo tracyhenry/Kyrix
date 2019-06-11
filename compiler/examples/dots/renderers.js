@@ -1,5 +1,3 @@
-var renderingParams = {};
-
 var dotsRendering = function (svg, data) {
     g = svg.append("g");
     g.selectAll("circle")
@@ -13,6 +11,5 @@ var dotsRendering = function (svg, data) {
 };
 
 module.exports = {
-    dotsRendering: dotsRendering,
-    renderingParams: renderingParams
+    dotsRendering: dotsRendering
 };

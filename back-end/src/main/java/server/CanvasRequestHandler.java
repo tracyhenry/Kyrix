@@ -103,7 +103,7 @@ public class CanvasRequestHandler implements HttpHandler {
         return Integer.valueOf(DbConnector.getQueryResult(db, sql).get(0).get(0));
     }
 
-    public ArrayList<ArrayList<ArrayList<String>>> getStaticData(Canvas c, ArrayList<String> predicates)
+    private ArrayList<ArrayList<ArrayList<String>>> getStaticData(Canvas c, ArrayList<String> predicates)
             throws SQLException, ClassNotFoundException {
 
         // container for data

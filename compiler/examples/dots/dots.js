@@ -12,7 +12,6 @@ const placements = require("./placements");
 
 // construct a project
 var p = new Project("dots", "../../../config.txt");
-p.addRenderingParams(renderers.renderingParams);
 
 // ================== top zoom level ===================
 var topWidth = 1000000, topHeight = 1000000;
@@ -38,7 +37,6 @@ p.setInitialStates(view, topCanvas, 5000, 5000);
 // ================== Zooms ===================
 p.addJump(new Jump(topCanvas, bottomCanvas, "literal_zoom_in"));
 p.addJump(new Jump(bottomCanvas, topCanvas, "literal_zoom_out"));
-
 
 // save to db
 p.saveProject();

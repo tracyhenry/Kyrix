@@ -109,7 +109,7 @@ public class DbConnector {
                             "/" + dbName + "?sendStringParametersAsUnicode=false",
                     userName, password);
         }
-        // to enable fetching data in batch, autocommit must be set to false
+        // to enable fetching data in batch in Postgres, autocommit must be set to false
         if (isBatch && Config.database == Config.Database.PSQL)
             dbConn.setAutoCommit(false);
         connections.put(dbName, dbConn);
