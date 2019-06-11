@@ -24,17 +24,18 @@ import java.util.Map;
 public abstract class BoundingBoxIndexer extends Indexer {
 
     @Override
-    public String getStaticDataQuery(Canvas c, Layer l, int i, ArrayList<String> predicates) {
+    public String getStaticDataQuery(Canvas c, int layerId, ArrayList<String> predicates) {
+
+        Layer l = c.getLayers().get(layerId);
         // get column list string
         String colListStr = l.getTransform().getColStr("");
 
-
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Config.projectName + "_"
-                + c.getId() + "layer" + i;
+                + c.getId() + "layer" + layerId;
 
-        if (predicates.get(i).length() > 0)
-            sql += " where " + predicates.get(i);
+        if (predicates.get(layerId).length() > 0)
+            sql += " where " + predicates.get(layerId);
         sql += ";";
 
         return sql;
