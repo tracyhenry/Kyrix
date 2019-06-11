@@ -57,7 +57,7 @@ fi
 
 echo "*** starting backend server..."
 cd /kyrix/back-end
-mvn compile
+
 mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn exec:java -Dexec.mainClass="main.Main" | stdbuf -oL grep -v Downloading: | tee mvn-exec.out &
 touch mvn-exec.out
 while [ -z "$(egrep 'Done precomputing|Backend server started' mvn-exec.out)" ]; do echo "waiting for backend server"; sleep 5; done

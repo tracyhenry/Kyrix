@@ -1,5 +1,6 @@
 package index;
 
+import box.Box;
 import com.coveo.nashorn_modules.FilesystemFolder;
 import com.coveo.nashorn_modules.Require;
 import jdk.nashorn.api.scripting.JSObject;
@@ -28,7 +29,7 @@ public abstract class Indexer implements Serializable {
 
     // abstract methods
     public abstract void createMV(Canvas c, int layerId) throws Exception;
-    public abstract ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception;
+    public abstract ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox) throws Exception;
     public abstract ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate) throws Exception;
     public abstract String getStaticDataQuery(Canvas c, Layer l, int i, ArrayList<String> predicates);
 
@@ -57,8 +58,6 @@ public abstract class Indexer implements Serializable {
 
     // precompute
     public static void precompute() throws Exception {
-
-        // return; 
 
         System.out.println("Precomputing...");
 

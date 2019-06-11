@@ -45,41 +45,9 @@ public abstract class BoxGetter {
             if (curLayer.isStatic())
                 data.add(new ArrayList<>());
             else
-                data.add(curLayer.getIndexer().getDataFromRegion(c, i, deltaWkt, predicates.get(i)));
+                data.add(curLayer.getIndexer().getDataFromRegion(c, i, deltaWkt, predicates.get(i), newBox, oldBox));
         }
         return data;
-    }
-
-    public ArrayList<ArrayList<ArrayList<String>>> fetchCubeData(Canvas c, Box newBox, Box oldBox, ArrayList<String> predicates)
-            throws Exception {
-
-        ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
-        Project proj = Main.getProject();
-
-        // coordinates
-        double newMinx = newBox.getMinx(), newMiny = newBox.getMiny();
-        double newMaxx = newBox.getMaxx(), newMaxy = newBox.getMaxy();
-        double oldMinx = oldBox.getMinx(), oldMiny = oldBox.getMiny();
-        double oldMaxx = oldBox.getMaxx(), oldMaxy = oldBox.getMaxy();
-
-        int canvasNumId = proj.getCanvasNumId(c.getId());
-
-        String cubeNew = "cube (" + 
-            "array[" + newMinx + ", " + newMiny + ", " + canvasNumId + "], " +
-            "array[" + newMaxx + ", " + newMaxy + ", " + canvasNumId + "])";
-        
-        // loop through each layer
-        for (int i = 0; i < c.getLayers().size(); i ++) {
-            Layer curLayer = c.getLayers().get(i);
-            // if this layer is static, add an empty placeholder
-            if (curLayer.isStatic())
-                data.add(new ArrayList<>());
-            else
-                data.add(curLayer.getIndexer().getDataFromRegion(c, i, cubeNew, predicates.get(i)));
-                // System.out.println("intersecting cube data: " + data.get(data.size()-1));
-        }
-        return data;
-
     }
 
     public abstract BoxandData getBox(Canvas c, View v, double mx, double my, Box oldBox, ArrayList<String> predicates)

@@ -1,5 +1,6 @@
 package index;
 
+import box.Box;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import main.Config;
 import main.DbConnector;
@@ -141,14 +142,13 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
     }
 
     @Override
-    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate)
+    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox)
             throws Exception {
 
         // get column list string
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
 
-
-        System.out.println("in pql spatial indexer");
+        System.out.println("in psql spatial indexer");
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
                 + c.getId() + "layer" + layerId + " where ST_Intersects(st_GeomFromText";

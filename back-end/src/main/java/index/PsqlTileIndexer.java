@@ -1,5 +1,6 @@
 package index;
 
+import box.Box;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import main.Config;
 import main.DbConnector;
@@ -185,7 +186,7 @@ public class PsqlTileIndexer extends BoundingBoxIndexer {
     }
 
     @Override
-    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception {
+    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox) throws Exception {
         throw new Exception("Spatial data fetching is not available with tile indexes.");
     }
 

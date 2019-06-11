@@ -1,5 +1,6 @@
 package index;
 
+import box.Box;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import main.Config;
 import main.DbConnector;
@@ -40,10 +41,13 @@ public class PsqlCubeSpatialIndexer extends Indexer {
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
-
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
         ArrayList colNames = trans.getColumnNames();
+        Project proj = Main.getProject();
+        ArrayList<Canvas> canvases = proj.getCanvases();
+        Canvas topCanvas = canvases.get(0);
+        Canvas bottomCanvas = canvases.get(canvases.size() - 1);
 
         // step 0: create tables for storing bboxes and tiles
         // put all canvases and layers in same table
@@ -58,32 +62,33 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         // bboxStmt.executeUpdate(sql);
 
         // create the bbox table
-        String sql = "create table if not exists " + bboxTableName + " (";
-        for (int i = 0; i < colNames.size(); i++) {
-            sql += colNames.get(i) + " text, ";
+        String sql = "";
+        if (c.getId().equals(topCanvas.getId())) {
+            sql = "drop table if exists " + bboxTableName + ";";
+            bboxStmt.executeUpdate(sql);
+            sql = "create table " + bboxTableName + " (";
+            for (int i = 0; i < colNames.size(); i++)
+                sql += colNames.get(i) + " text, ";
+            // need to add value based on canvas id and layer id
+            sql += "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, v cube);";
+            bboxStmt.executeUpdate(sql);
         }
-
-        // need to add value based on canvas id and layer id
-        sql += "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, v cube);";
-        bboxStmt.executeUpdate(sql);
 
         // if this is an empty layer, return
         if (trans.getDb().equals(""))
             return ;
 
-        // step 1: set up nashorn environment -- what is nashorn??
+        // step 1: set up nashorn environment
         NashornScriptEngine engine = null;
         if (! trans.getTransformFunc().equals(""))
             engine = setupNashorn(trans.getTransformFunc());
 
         // step 2: looping through query results
-        // what's difference btwn separable and non-separable cases?
         Statement rawDBStmt = DbConnector.getStmtByDbName(trans.getDb(), true);
         ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery());
         int numColumn = rs.getMetaData().getColumnCount();
         int rowCount = 0;
         String insertSql = "insert into " + bboxTableName + " values (";
-        // where does the 6 come from?
         for (int i = 0; i < colNames.size() + 6; i ++) {
             insertSql += "?, ";
         }
@@ -113,8 +118,8 @@ public class PsqlCubeSpatialIndexer extends Indexer {
 
             // insert into bbox table
             for (int i = 0; i < transformedRow.size(); i ++)
-                // preparedStmt.setString(i + 1, transformedRow.get(i).replaceAll("\'", "\'\'"));
-                preparedStmt.setString(i + 1, transformedRow.get(i));
+                preparedStmt.setString(i + 1, transformedRow.get(i).replaceAll("\'", "\'\'"));
+                //preparedStmt.setString(i + 1, transformedRow.get(i));
             for (int i = 0; i < 6; i ++)
                 preparedStmt.setDouble(transformedRow.size() + i + 1, curBbox.get(i));
 
@@ -124,9 +129,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
             maxx = curBbox.get(4);
             maxy = curBbox.get(5);
             
-            preparedStmt.setString(transformedRow.size() + 7,
-                    // getPolygonText(minx, miny, maxx, maxy));
-                    getCubeText(minx, miny, maxx, maxy, c.getId()));
+            preparedStmt.setString(transformedRow.size() + 7, getCubeText(minx, miny, maxx, maxy, c.getId()));
             preparedStmt.addBatch();
 
             if (rowCount % Config.bboxBatchSize == 0) {
@@ -144,42 +147,44 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         preparedStmt.close();
 
         // index on inserted data if the canvas is the bottom-most canvas
-        Project proj = Main.getProject();
-        ArrayList<Canvas> canvases = proj.getCanvases();
-        Canvas bottomCanvas = canvases.get(canvases.size() - 1);
-        if (c.getId() == bottomCanvas.getId())
+        if (c.getId().equals(bottomCanvas.getId())) {
             /*
-            sql:
-                create index idx_tbl_cube_1 on tbl_cube using gist (v);
+            sql: create index idx_tbl_cube_1 on tbl_cube using gist (v);
             */
             sql = "create index cube_idx_" + bboxTableName + " on " + bboxTableName + " using gist (v);";
             bboxStmt.executeUpdate(sql);
-        
+        }
         bboxStmt.close();
     }
 
     @Override
-    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate)
+    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox)
             throws Exception {
-        
+
+
+        double minx = newBox.getMinx(), miny = newBox.getMiny();
+        double maxx = newBox.getMaxx(), maxy = newBox.getMaxy();
+        int canvasNumId = Main.getProject().getCanvasNumId(c.getId());
+
+        String cubeNew = "cube (" +
+                "array[" + minx + ", " + miny + ", " + canvasNumId + "], " +
+                "array[" + maxx + ", " + maxy + ", " + canvasNumId + "])";
+
         // get column list string
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
-
 
         System.out.println("in psql cube spatial indexer");
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName()
                 + " where v && ";
-        sql += regionWKT;
+        sql += cubeNew;
         if (predicate.length() > 0) 
             sql += " and " + predicate + ";";
         else
             sql += ";";
         System.out.println(sql);
 
-        
         ArrayList<ArrayList<String>> queryResult = DbConnector.getQueryResult(Config.databaseName, sql);
-        
 
         return queryResult;
     }
@@ -230,14 +235,10 @@ public class PsqlCubeSpatialIndexer extends Indexer {
     private static String getCubeText(double minx, double miny, double maxx, double maxy, String canvasId) {
 
         String cubeText = "";
-        Project proj = Main.getProject();
-
         /*
-        sql:
-        insert into tbl_cube select id, cube ( array[minx, miny, canvasid], array[minx, maxy, canvasid], array[maxx, maxy, canvasid])
+        sql: insert into tbl_cube select id, cube ( array[minx, miny, canvasid], array[minx, maxy, canvasid], array[maxx, maxy, canvasid])
         */
-        
-        int canvasIdNum = proj.getCanvasNumId(canvasId);
+        int canvasIdNum = Main.getProject().getCanvasNumId(canvasId);
         cubeText += "(" + String.valueOf(minx) + ", " + String.valueOf(miny) + ", "
                 + String.valueOf(canvasIdNum) + "), "
                 + "(" + String.valueOf(maxx) + ", " + String.valueOf(maxy) + ", "
@@ -245,6 +246,5 @@ public class PsqlCubeSpatialIndexer extends Indexer {
 
         return cubeText;
     }
-
 
 }

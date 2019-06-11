@@ -3,7 +3,6 @@ package server;
 import box.Box;
 import box.BoxandData;
 import box.MikeBoxGetter;
-import box.TDBoxGetter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
@@ -13,36 +12,27 @@ import main.DbConnector;
 import project.Canvas;
 import project.View;
 import main.Config;
-import main.DbConnector;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
 
 public class BoxRequestHandler  implements HttpHandler {
 
     // gson builder
     private final Gson gson;
-    private TDBoxGetter boxGetter;
-    // private MikeBoxGetter boxGetter;
-    private List<Double> fetchTimes;
+    private MikeBoxGetter boxGetter;
 
     public BoxRequestHandler() {
 
         gson = new GsonBuilder().create();
-        boxGetter = new TDBoxGetter();
-        // boxGetter = new MikeBoxGetter();
-        fetchTimes = new ArrayList<>();
+        boxGetter = new MikeBoxGetter();
     }
+
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
 
@@ -116,11 +106,12 @@ public class BoxRequestHandler  implements HttpHandler {
         System.out.println("number of intersecting rows in result: " + intersectingRows);
         System.out.println("existing canvas id is: " + c.getId());
         System.out.println("get data from region is called with canvas: " + canvasId);
+        /* TODO: stats table not created
         if (oldBox.getHight()==-100000 && oldBox.getWidth()==-100000) {
             sendStats("zoom", fetchTime, intersectingRows);
         } else {
             sendStats("pan", fetchTime, intersectingRows);
-        }
+        }*/
 
         //send data and box back
         Map<String, Object> respMap = new HashMap<>();
@@ -169,6 +160,4 @@ public class BoxRequestHandler  implements HttpHandler {
             System.out.println(e);
         }
     }
-     
-        
 }
