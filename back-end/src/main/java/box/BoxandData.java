@@ -22,6 +22,7 @@ public class BoxandData {
 
         ArrayList<ArrayList<HashMap<String, String>>> ret = new ArrayList<>();
         int numLayers = data.size();
+System.out.println("in box and data");
         for (int i = 0; i < numLayers; i ++) {
             ret.add(new ArrayList<>());
             int numRows = data.get(i).size();
@@ -32,12 +33,12 @@ public class BoxandData {
                 HashMap<String, String> rowDict = new HashMap<>();
                 for (int k = 0; k < numFields; k ++)
                     rowDict.put(fields.get(k), rowArray.get(k));
-                rowDict.put("cx", rowArray.get(numFields));
-                rowDict.put("cy", rowArray.get(numFields + 1));
-                rowDict.put("minx", rowArray.get(numFields + 2));
-                rowDict.put("miny", rowArray.get(numFields + 3));
-                rowDict.put("maxx", rowArray.get(numFields + 4));
-                rowDict.put("maxy", rowArray.get(numFields + 5));
+                rowDict.put("cx", rowArray.get(numFields-1));
+                rowDict.put("cy", rowArray.get(5));
+                rowDict.put("minx", rowArray.get(numFields - 1));
+                rowDict.put("miny", rowArray.get(5));
+                rowDict.put("maxx", rowArray.get(numFields - 1));
+                rowDict.put("maxy", rowArray.get(5));
                 ret.get(i).add(rowDict);
             }
         }

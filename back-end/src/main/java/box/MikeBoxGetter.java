@@ -12,7 +12,7 @@ public class MikeBoxGetter extends BoxGetter {
             throws Exception {
 
         ArrayList<ArrayList<ArrayList<String>>> data;
-
+System.out.println("in Mikeboxgetter");
         int vpW = v.getWidth();
         int vpH = v.getHeight();
         double wrapLength = 0.5;

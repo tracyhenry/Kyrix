@@ -22,7 +22,7 @@ public abstract class BoxGetter {
         double newMaxx = newBox.getMaxx(), newMaxy = newBox.getMaxy();
         double oldMinx = oldBox.getMinx(), oldMiny = oldBox.getMiny();
         double oldMaxx = oldBox.getMaxx(), oldMaxy = oldBox.getMaxy();
-
+System.out.println("newminx " + newMinx+" newMaxx " + newMaxx+ " oldMinx " + oldMinx + " oldMaxx" + oldMaxx); 
         // calculate delta area
         GeometryFactory fact = new GeometryFactory();
         WKTReader wktRdr = new WKTReader(fact);
@@ -35,7 +35,7 @@ public abstract class BoxGetter {
         Geometry deltaGeom = newBoxGeom.difference(oldBoxGeom);
         WKTWriter wktWtr = new WKTWriter();
         String deltaWkt = wktWtr.write(deltaGeom);
-
+System.out.println("delta: "+ deltaWkt);
         // loop through each layer
         for (int i = 0; i < c.getLayers().size(); i ++) {
             Layer curLayer = c.getLayers().get(i);

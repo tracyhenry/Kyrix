@@ -3,6 +3,8 @@ function renderStaticLayers(viewId) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
 
+    renderAxes(viewId, 0 , 0, gvd.viewportWidth, gvd.viewportHeight);
+
     // number of layers
     var numLayers = gvd.curCanvas.layers.length;
 

@@ -269,7 +269,7 @@ function renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs
                         .selectAll("*")
                         .filter(function (d) {
                             if (d == null) return false; // requiring all non-def stuff to be bound to data
-                            if (+d.maxx < x || +d.minx > (x + response.boxW)
+                            if (+d.maxx < x*250 || +d.minx > (x + response.boxW)*250
                                 || +d.maxy < y || +d.miny > (y + response.boxH))
                                 return true;
                             else
@@ -294,7 +294,7 @@ function renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs
                         mp[JSON.stringify(d)] = true;
                     });
                     renderData[i] = renderData[i].filter(function (d) {
-                        if (+d.maxx < x || +d.minx > (x + response.boxW)
+                        if (+d.maxx < x*250 || +d.minx > (x + response.boxW)*250
                             || +d.maxy < y || +d.miny > (y + response.boxH))
                             return false;
                         if (mp.hasOwnProperty(JSON.stringify(d)))
@@ -308,7 +308,7 @@ function renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs
                         // add data from intersection w/ old box data
                         for (var j = 0; j < gvd.renderData[i].length; j++) {
                             var d = gvd.renderData[i][j];
-                            if (!(+d.maxx < x || +d.minx > (x + response.boxW)
+                            if (!(+d.maxx < x*250 || +d.minx > (x + response.boxW)*250
                                     || +d.maxy < y || +d.miny > (y + response.boxH)))
                                 newLayerData.push(d);
                         }

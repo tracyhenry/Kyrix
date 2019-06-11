@@ -19,6 +19,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.rosuda.REngine.Rserve.RConnection;
+import org.rosuda.REngine.REXP;
+import org.rosuda.REngine.RList;
+
 /**
  * Created by wenbo on 1/8/18.
  */
@@ -91,7 +95,7 @@ public class CanvasRequestHandler implements HttpHandler {
         respMap.put("canvas", c);
         respMap.put("staticData", BoxandData.getDictionaryFromData(staticData, c));
         String response = gson.toJson(respMap);
-
+System.out.println("send response back");
         // send the response back
         Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
     }
@@ -102,34 +106,49 @@ public class CanvasRequestHandler implements HttpHandler {
     }
 
     private ArrayList<ArrayList<ArrayList<String>>> getStaticData(Canvas c, ArrayList<String> predicates)
-            throws SQLException, ClassNotFoundException {
-
+            throws SQLException, ClassNotFoundException, Exception {
+        long start = System.currentTimeMillis();
         // container for data
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
-
-        // loop over layers
-        for (int i = 0; i < c.getLayers().size(); i ++) {
+        for (int k = 0; k < c.getLayers().size(); k ++) {
 
             // add an empty placeholder for static layers
-            if (! c.getLayers().get(i).isStatic()) {
+            if (! c.getLayers().get(k).isStatic()) {
                 data.add(new ArrayList<>());
                 continue;
             }
-
-            // get column list string
-            String colListStr = c.getLayers().get(i).getTransform().getColStr("");
-
-            // construct range query
-            String sql = "select " + colListStr + " from bbox_" + Config.projectName + "_"
-                    + c.getId() + "layer" + i;
-            if (predicates.get(i).length() > 0)
-                sql += " where " + predicates.get(i);
-            sql += ";";
-
-            // run query, add to response
-            data.add(DbConnector.getQueryResult(Config.databaseName, sql));
+        String filePath = "/home/scidb/biobank/phege/lib/data_access_helpers.R";
+        RConnection rc = new RConnection();
+        rc.assign("filepath", filePath);
+        rc.eval("source(filepath)");
+        rc.eval("namespace <- \"RIVAS\"");
+        rc.eval("association_set = \"RIVAS_ASSOC\"");
+        rc.eval("variants_namespace = \"UK_BIOBANK\"");
+        rc.eval("bb <- get_scidb_biobank_connection(username = \"scidbadmin\", password = \"Paradigm4\")");
+        rc.eval("phenotypes <- get_phenotypes(bb,association_namespace = namespace,association_set_name = association_set)");
+        rc.eval("pheno <- phenotypes[as.integer(1), ]");
+        rc.parseAndEval("REGION_TAB_ADDITIONAL_VARIANT_FIELD_NAME = c(\"genes\", \"consequence\")");
+System.out.println("in get static data");
+        rc.parseAndEval("result <- get_associations_for_phenotype_tab(bb, variants_namespace = variants_namespace, association_namespace = namespace, association_set = association_set, phenotypes = pheno, additional_variant_field_names = REGION_TAB_ADDITIONAL_VARIANT_FIELD_NAME)");
+//transforming xpos
+        rc.eval("result$xpos <- result$pos");
+System.out.println("get result");
+        rc.eval("for (chrom in chroms_all_but_first[chroms_all_but_first %in% PHEGE_CONFIG$CHROMOSOME_SELECTION]) result$xpos[result$chrom == chrom] <- (result$xpos[result$chrom == chrom] + sum(chromosome_lengths[1:chrom - 1]))");
+        RList x = rc.eval("result").asList();
+        String[] keys = x.keys();
+        ArrayList<ArrayList<String>> result = new ArrayList<>();
+        for(int i=0;i<5000;i++){
+            ArrayList<String> curRow = new ArrayList<>();
+            for(String key : keys){
+            String[] s = x.at(key).asStrings();
+            curRow.add(s[i]);
+            }
+            result.add(curRow);
         }
-
+rc.close();
+        data.add(result);
+System.out.println("data returned in " + (System.currentTimeMillis() - start) / 1000.0 + "s.");
+        }
         return data;
     }
 }
