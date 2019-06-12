@@ -34,5 +34,9 @@ var view = new View("dotview", 0, 0, 1000, 1000);
 p.addView(view);
 p.setInitialStates(view, topCanvas, 5000, 5000);
 
+// ================== Zooms ===================
+p.addJump(new Jump(topCanvas, bottomCanvas, "literal_zoom_in"));
+p.addJump(new Jump(bottomCanvas, topCanvas, "literal_zoom_out"));
+
 // save to db
 p.saveProject();

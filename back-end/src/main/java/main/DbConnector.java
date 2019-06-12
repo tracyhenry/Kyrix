@@ -12,10 +12,11 @@ public class DbConnector {
 
     private static Map<String, Connection> connections = new HashMap<>();
 
-    public static Statement getStmtByDbName(String dbName) throws SQLException, ClassNotFoundException {
+    // isbatch must be specified if fetching a lot of data
+    public static Statement getStmtByDbName(String dbName, boolean isBatch) throws SQLException, ClassNotFoundException {
 
         // get connection
-        Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password);
+        Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password, isBatch);
 
         // get statement
         Statement retStmt = null;
@@ -32,6 +33,19 @@ public class DbConnector {
             retStmt.setFetchSize(Config.iteratorfetchSize);
 
         return retStmt;
+    }
+
+    public static Statement getStmtByDbName(String dbName) throws SQLException, ClassNotFoundException {
+
+        return getStmtByDbName(dbName, false);
+    }
+
+    // get prepared statement for an update query
+    public static PreparedStatement getPreparedStatement(String dbName, String sql) throws SQLException, ClassNotFoundException {
+
+        // get connection
+        Connection conn = getDbConn(Config.dbServer, dbName, Config.userName, Config.password, false);
+        return conn.prepareStatement(sql);
     }
 
     private static ArrayList<ArrayList<String>> getQueryResult(Statement stmt, String sql)
@@ -72,14 +86,16 @@ public class DbConnector {
         Statement stmt = DbConnector.getStmtByDbName(dbName);
         stmt.executeUpdate(sql);
         stmt.close();
-        closeConnection(dbName);
     }
 
-    public static Connection getDbConn(String dbServer, String dbName, String userName, String password)
+    private static Connection getDbConn(String dbServer, String dbName, String userName, String password, boolean isBatch)
             throws SQLException, ClassNotFoundException {
 
-        if (connections.containsKey(dbName))
-            return connections.get(dbName);
+        String key = dbName;
+        if (Config.database == Config.Database.PSQL)
+            key += " " + String.valueOf(isBatch);
+        if (connections.containsKey(key))
+            return connections.get(key);
         Connection dbConn = null;
         if (Config.database == Config.Database.PSQL) {
             Class.forName("org.postgresql.Driver");
@@ -93,6 +109,9 @@ public class DbConnector {
                             "/" + dbName + "?sendStringParametersAsUnicode=false",
                     userName, password);
         }
+        // to enable fetching data in batch in Postgres, autocommit must be set to false
+        if (isBatch && Config.database == Config.Database.PSQL)
+            dbConn.setAutoCommit(false);
         connections.put(dbName, dbConn);
         return dbConn;
     }

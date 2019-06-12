@@ -1,5 +1,6 @@
 package index;
 
+import box.Box;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import main.Config;
 import main.DbConnector;
@@ -17,7 +18,7 @@ import java.util.ArrayList;
 /**
  * Created by wenbo on 12/30/18.
  */
-public class PsqlSpatialIndexer extends Indexer {
+public class PsqlSpatialIndexer extends BoundingBoxIndexer {
 
     private static PsqlSpatialIndexer instance = null;
 
@@ -36,7 +37,6 @@ public class PsqlSpatialIndexer extends Indexer {
     public void createMV(Canvas c, int layerId) throws Exception {
 
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
-        Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
 
         // create postgis extension if not existed
         String psql = "CREATE EXTENSION if not exists postgis;";
@@ -47,7 +47,7 @@ public class PsqlSpatialIndexer extends Indexer {
         // set up query iterator
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
-        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb()));
+        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb(), true));
         ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
 
         // step 0: create tables for storing bboxes and tiles
@@ -79,7 +79,7 @@ public class PsqlSpatialIndexer extends Indexer {
         for (int i = 0; i < trans.getColumnNames().size() + 6; i ++)
             insertSql += "?, ";
         insertSql += "ST_GeomFromText(?));";
-        PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
+        PreparedStatement preparedStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
 
         int rowCount = 0;
         int numColumn = rs.getMetaData().getColumnCount();
@@ -142,12 +142,13 @@ public class PsqlSpatialIndexer extends Indexer {
     }
 
     @Override
-    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate)
+    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox)
             throws Exception {
 
         // get column list string
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
 
+        System.out.println("in psql spatial indexer");
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
                 + c.getId() + "layer" + layerId + " where ST_Intersects(st_GeomFromText";

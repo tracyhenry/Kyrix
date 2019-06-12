@@ -6,7 +6,7 @@ var dotsRendering = function (svg, data) {
         .append("circle")
         .attr("cx", function (d) {return d.x;})
         .attr("cy", function (d) {return d.y;})
-        .attr("r", 2)
+        .attr("r", 10)
         .attr("fill", "#145bce");
 };
 

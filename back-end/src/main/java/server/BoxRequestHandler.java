@@ -8,13 +8,14 @@ import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import main.Main;
+import main.DbConnector;
 import project.Canvas;
 import project.View;
+import main.Config;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
+
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,8 +30,8 @@ public class BoxRequestHandler  implements HttpHandler {
 
         gson = new GsonBuilder().create();
         boxGetter = new MikeBoxGetter();
-
     }
+
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
 
@@ -95,7 +96,20 @@ public class BoxRequestHandler  implements HttpHandler {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Fetch data time: " + (System.currentTimeMillis() - st) + "ms.");
+        double fetchTime = System.currentTimeMillis() - st;
+        int intersectingRows = 0;
+        for (int i=0; i<data.data.size(); i++) {
+            intersectingRows += data.data.get(i).size();
+        }
+        System.out.println("Fetch data time: " + fetchTime + "ms.");
+        System.out.println("number of intersecting rows in result: " + intersectingRows);
+        System.out.println("current canvas id is: " + c.getId());
+        /* TODO: stats table not created. Also, will an insert query be too much overhead?
+        if (oldBox.getHight()==-100000 && oldBox.getWidth()==-100000) {
+            sendStats("zoom", fetchTime, intersectingRows);
+        } else {
+            sendStats("pan", fetchTime, intersectingRows);
+        }*/
 
         //send data and box back
         Map<String, Object> respMap = new HashMap<>();
@@ -130,5 +144,18 @@ public class BoxRequestHandler  implements HttpHandler {
 
         // check passed
         return "";
+    }
+
+    private void sendStats(String queryType, double seconds, int fetchedRows) {
+        String sql = "insert into stats (querytype, milliseconds, rowsFetched) values ('" + queryType +   "'," + seconds + ","  + fetchedRows + ");";
+        System.out.println("stats sql: " + sql);
+        System.out.println("database name is: " + Config.databaseName);
+        
+        try {
+            DbConnector.executeUpdate(Config.databaseName, sql);
+        } catch (Exception e) {
+            System.out.println("couldn't write stats to the stats table: ");
+            System.out.println(e);
+        }
     }
 }
