@@ -104,7 +104,7 @@ public class BoxRequestHandler  implements HttpHandler {
         System.out.println("Fetch data time: " + fetchTime + "ms.");
         System.out.println("number of intersecting rows in result: " + intersectingRows);
         System.out.println("current canvas id is: " + c.getId());
-        /* TODO: stats table not created
+        /* TODO: stats table not created. Also, will an insert query be too much overhead?
         if (oldBox.getHight()==-100000 && oldBox.getWidth()==-100000) {
             sendStats("zoom", fetchTime, intersectingRows);
         } else {
