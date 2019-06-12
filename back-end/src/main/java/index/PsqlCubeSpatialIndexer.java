@@ -10,23 +10,18 @@ import project.Layer;
 import project.Transform;
 import project.Project;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.List;
-import java.sql.SQLException;
+import java.util.Random;
 
-public class PsqlCubeSpatialIndexer extends Indexer {
+public class PsqlCubeSpatialIndexer extends BoundingBoxIndexer {
 
     private static PsqlCubeSpatialIndexer instance = null;
+    private static final double zIntervalLen = 1e18;
 
-    private List<Integer> rowsFetched;
-
-    private PsqlCubeSpatialIndexer() {
-        rowsFetched = new ArrayList<>();
-    }
+    private PsqlCubeSpatialIndexer() {}
 
     public static synchronized PsqlCubeSpatialIndexer getInstance() {
         if (instance == null)
@@ -129,7 +124,7 @@ public class PsqlCubeSpatialIndexer extends Indexer {
             maxx = curBbox.get(4);
             maxy = curBbox.get(5);
             
-            preparedStmt.setString(transformedRow.size() + 7, getCubeText(minx, miny, maxx, maxy, c.getId()));
+            preparedStmt.setString(transformedRow.size() + 7, getCubeText(minx, miny, maxx, maxy, c));
             preparedStmt.addBatch();
 
             if (rowCount % Config.bboxBatchSize == 0) {
@@ -164,11 +159,12 @@ public class PsqlCubeSpatialIndexer extends Indexer {
 
         double minx = newBox.getMinx(), miny = newBox.getMiny();
         double maxx = newBox.getMaxx(), maxy = newBox.getMaxy();
-        int canvasNumId = Main.getProject().getCanvasNumId(c.getId());
+        double minz = getMinZ(c);
+        double maxz = minz + zIntervalLen - 100;
 
         String cubeNew = "cube (" +
-                "array[" + minx + ", " + miny + ", " + canvasNumId + "], " +
-                "array[" + maxx + ", " + maxy + ", " + canvasNumId + "])";
+                "array[" + minx + ", " + miny + ", " + minz + "], " +
+                "array[" + maxx + ", " + maxy + ", " + maxz + "])";
 
         // get column list string
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
@@ -195,13 +191,13 @@ public class PsqlCubeSpatialIndexer extends Indexer {
 
         // get column list string
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
-        Project proj = Main.getProject();
-        int canvasNumId = proj.getCanvasNumId(c.getId());
-        
+
         // make bounding box cube to intersect with
+        double minz = getMinZ(c);
+        double maxz = minz + zIntervalLen - 100;
         String tileCube = "cube (" + 
-            "(" + minx + ", " + miny + ", " + canvasNumId + "), " +
-            "(" + (minx + Config.tileW) + ", " + (miny + Config.tileH) + ", " + canvasNumId + "))";
+            "(" + minx + ", " + miny + ", " + minz + "), " +
+            "(" + (minx + Config.tileW) + ", " + (miny + Config.tileH) + ", " + maxz + "))";
         
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName()
@@ -216,35 +212,34 @@ public class PsqlCubeSpatialIndexer extends Indexer {
         return DbConnector.getQueryResult(Config.databaseName, sql);
     }
 
-    @Override
-    public String getStaticDataQuery(Canvas c, Layer l, int i, ArrayList<String> predicates) {
-
-        // get column list string
-        String colListStr = l.getTransform().getColStr("");
-
-        // construct range query
-        String sql = "select " + colListStr + " from bbox_" + Config.projectName;
-        if (predicates.get(i).length() > 0)
-            sql += " where " + predicates.get(i);
-        sql += ";";
-
-        return sql;
-
-    }
-
-    private static String getCubeText(double minx, double miny, double maxx, double maxy, String canvasId) {
+    private static String getCubeText(double minx, double miny, double maxx, double maxy, Canvas c) {
 
         String cubeText = "";
         /*
-        sql: insert into tbl_cube select id, cube ( array[minx, miny, canvasid], array[minx, maxy, canvasid], array[maxx, maxy, canvasid])
+        sql: insert into tbl_cube select id, cube ( array[minx, miny, z], array[maxx, maxy, z])
         */
-        int canvasIdNum = Main.getProject().getCanvasNumId(canvasId);
+        double minz = getMinZ(c);
+        double maxz = minz + zIntervalLen - 100;
+        Random r = new Random();
+        double zCoordinate = minz + (maxz - minz) * r.nextDouble();
         cubeText += "(" + String.valueOf(minx) + ", " + String.valueOf(miny) + ", "
-                + String.valueOf(canvasIdNum) + "), "
+                + String.valueOf(zCoordinate) + "), "
                 + "(" + String.valueOf(maxx) + ", " + String.valueOf(maxy) + ", "
-                + String.valueOf(canvasIdNum) + ")";
+                + String.valueOf(zCoordinate) + ")";
 
         return cubeText;
+    }
+
+    private static double getMinZ(Canvas c) {
+
+        // the z interval for the i-th canvas is [i * zIntervalLen, (i + 1) * zIntervalLen)
+        // the z coordinate for objects on the i-th canvas is randomly distributed in this interval
+        ArrayList<Canvas> allCanvases = Main.getProject().getCanvases();
+        for (int i = 0; i < allCanvases.size(); i ++)
+            if (allCanvases.get(i).getId().equals(c.getId()))
+                return i * zIntervalLen;
+
+        return 0;
     }
 
 }

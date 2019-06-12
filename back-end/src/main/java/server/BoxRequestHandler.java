@@ -103,8 +103,7 @@ public class BoxRequestHandler  implements HttpHandler {
         }
         System.out.println("Fetch data time: " + fetchTime + "ms.");
         System.out.println("number of intersecting rows in result: " + intersectingRows);
-        System.out.println("existing canvas id is: " + c.getId());
-        System.out.println("get data from region is called with canvas: " + canvasId);
+        System.out.println("current canvas id is: " + c.getId());
         /* TODO: stats table not created
         if (oldBox.getHight()==-100000 && oldBox.getWidth()==-100000) {
             sendStats("zoom", fetchTime, intersectingRows);

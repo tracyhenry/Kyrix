@@ -31,7 +31,7 @@ public abstract class Indexer implements Serializable {
     public abstract void createMV(Canvas c, int layerId) throws Exception;
     public abstract ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox) throws Exception;
     public abstract ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate) throws Exception;
-    public abstract String getStaticDataQuery(Canvas c, int layerId, ArrayList<String> predicates);
+    public abstract String getStaticDataQuery(Canvas c, int layerId, String predicate);
 
     // associate each layer with a proper indexer
     public static void associateIndexer() {
