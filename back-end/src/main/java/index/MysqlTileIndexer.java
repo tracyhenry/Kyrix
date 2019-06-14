@@ -16,7 +16,7 @@ import java.util.ArrayList;
 /**
  * Created by wenbo on 12/31/18.
  */
-public class MysqlTileIndexer extends Indexer {
+public class MysqlTileIndexer extends BoundingBoxIndexer {
 
     private static MysqlTileIndexer instance = null;
 

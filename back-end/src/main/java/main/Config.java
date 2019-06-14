@@ -48,10 +48,8 @@ public class Config {
     public static int tileBatchSize = 10000;
 
     // tile indexing scheme
-    public enum IndexingScheme {TILE_INDEX, POSTGIS_SPATIAL_INDEX, PSQL_NATIVEBOX_INDEX
-    };
+    public enum IndexingScheme {TILE_INDEX, POSTGIS_SPATIAL_INDEX, PSQL_NATIVEBOX_INDEX, PSQL_NATIVECUBE_INDEX};
     public static IndexingScheme indexingScheme = IndexingScheme.PSQL_NATIVEBOX_INDEX;
-//    public static IndexingScheme indexingScheme = IndexingScheme.POSTGIS_SPATIAL_INDEX;
 
     // underlying database
     public enum Database {MYSQL, PSQL, CITUS};

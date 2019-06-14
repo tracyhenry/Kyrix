@@ -19,7 +19,7 @@ import java.util.Date;
 /**
  * Created by wenbo on 12/30/18.
  */
-public class PsqlSpatialIndexer extends Indexer {
+public class PsqlSpatialIndexer extends BoundingBoxIndexer {
 
     private static PsqlSpatialIndexer instance = null;
     private static boolean isCitus = false;
@@ -39,7 +39,6 @@ public class PsqlSpatialIndexer extends Indexer {
     public void createMV(Canvas c, int layerId) throws Exception {
 
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
-        Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
 
         // create postgis extension if not existed
         System.out.println("running create extension for postgis/postgis_topology");
@@ -51,7 +50,7 @@ public class PsqlSpatialIndexer extends Indexer {
         // set up query iterator
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
-        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb()));
+        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb(), true));
         ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
 
         // step 0: create tables for storing bboxes and tiles
@@ -97,8 +96,9 @@ public class PsqlSpatialIndexer extends Indexer {
             insertSql += "?, ";
         }
         insertSql += "ST_GeomFromText(?));";
+
         System.out.println(insertSql);
-        PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
+        PreparedStatement preparedStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
         long startTs = (new Date()).getTime();
         long lastTs = startTs;
         int rowCount = 0;
@@ -181,6 +181,7 @@ public class PsqlSpatialIndexer extends Indexer {
         // get column list string
         String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
 
+        System.out.println("in psql spatial indexer");
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
                 + c.getId() + "layer" + layerId + " where ST_Intersects(st_GeomFromText";

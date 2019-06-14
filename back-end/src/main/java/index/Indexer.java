@@ -1,5 +1,6 @@
 package index;
 
+import box.Box;
 import com.coveo.nashorn_modules.FilesystemFolder;
 import com.coveo.nashorn_modules.Require;
 import jdk.nashorn.api.scripting.JSObject;
@@ -9,7 +10,6 @@ import main.Main;
 import project.Canvas;
 import project.Layer;
 import project.Placement;
-import box.Box;
 
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -28,6 +28,7 @@ public abstract class Indexer implements Serializable {
     public abstract void createMV(Canvas c, int layerId) throws Exception;
     public abstract ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox) throws Exception;
     public abstract ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate) throws Exception;
+    public abstract String getStaticDataQuery(Canvas c, int layerId, String predicate);
 
     // associate each layer with a proper indexer
     public static void associateIndexer() throws Exception {
@@ -43,6 +44,8 @@ public abstract class Indexer implements Serializable {
                         indexer = PsqlTileIndexer.getInstance(isCitus);
                     else if (Config.indexingScheme == Config.IndexingScheme.PSQL_NATIVEBOX_INDEX)
                         indexer = PsqlNativeBoxIndexer.getInstance(isCitus);
+                    else if (Config.indexingScheme == Config.IndexingScheme.PSQL_NATIVECUBE_INDEX)
+                        indexer = PsqlCubeSpatialIndexer.getInstance();
                 }
                 else if (Config.database == Config.Database.MYSQL) {
                     if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
@@ -63,9 +66,11 @@ public abstract class Indexer implements Serializable {
 
         associateIndexer();
         long indexingStartTime = System.currentTimeMillis();
-        for (Canvas c : Main.getProject().getCanvases())
-            for (int layerId = 0; layerId < c.getLayers().size(); layerId ++)
+        for (Canvas c : Main.getProject().getCanvases()) {
+            for (int layerId = 0; layerId < c.getLayers().size(); layerId ++) {
                 c.getLayers().get(layerId).getIndexer().createMV(c, layerId);
+            }
+        }
 
         System.out.println("Indexing took: " + (System.currentTimeMillis() - indexingStartTime) / 1000 + "s.");
         System.out.println("Done precomputing!");

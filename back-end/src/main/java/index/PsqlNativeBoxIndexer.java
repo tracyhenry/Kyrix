@@ -9,25 +9,17 @@ import project.Layer;
 import project.Transform;
 import box.Box;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
-import org.postgresql.PGConnection;
-import org.postgresql.copy.CopyManager;
-import java.io.StringReader;
 import java.util.function.*;
 
-/**
- * Created by wenbo on 12/30/18.
- */
-public class PsqlNativeBoxIndexer extends Indexer {
+public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
 
     private static PsqlNativeBoxIndexer instance = null;
     private static boolean isCitus = false;
-    private static boolean useCopyFrom = false;
 
     // singleton pattern to ensure only one instance existed
     private PsqlNativeBoxIndexer(boolean isCitus) { this.isCitus = isCitus; }
@@ -60,10 +52,6 @@ public class PsqlNativeBoxIndexer extends Indexer {
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
 
-        Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
-        if (! (dbConn instanceof PGConnection)) {
-            throw new Exception("PsqlNativeBoxIndexer.createMV(): expected DbConnector.getDbConn() to return a PGConnection.");
-        }
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
 
@@ -215,29 +203,23 @@ public class PsqlNativeBoxIndexer extends Indexer {
         ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, transQuery);
         int numColumn = rs.getMetaData().getColumnCount();
         int rowCount = 0;
-        String copySql = "COPY " + bboxTableName + "(";
         String insertSql = "INSERT INTO " + bboxTableName + " VALUES (";
         // for debugging, vary number of spaces after the commas
         for (int i = 0; i < trans.getColumnNames().size(); i ++) {
             insertSql += "?,";
-            copySql += trans.getColumnNames().get(i) + ",";
         }
         if (isCitus) insertSql += "?,";
         insertSql += "?,?,?,?,?,?)";
-        copySql += "citus_distribution_id,cx,cy,minx,miny,maxx,maxy) FROM STDIN;\n";
-        System.out.println(useCopyFrom ? copySql : insertSql);
-        PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
-        Statement copyFromStmt = DbConnector.getStmtByDbName(Config.databaseName);
+        System.out.println(insertSql);
+        PreparedStatement preparedStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
         long startTs = (new Date()).getTime();
         long lastTs = startTs;
         long currTs = 0;
         long secs = 0;
         int numcols = 0;
-        // much larger batch sizes for COPY FROM
-        int batchsize = useCopyFrom ? Config.bboxBatchSize*2 : Config.bboxBatchSize;
+        int batchsize = Config.bboxBatchSize;
         boolean isNullTransform = trans.getTransformFunc().equals("");
         System.out.println("batchsize="+String.valueOf(batchsize)+"  numColumn=" + String.valueOf(numColumn));
-        StringBuffer copybuffer = new StringBuffer(batchsize * 40);
         while (rs.next()) {
 
             // count log - important to increment early so modulo-zero doesn't trigger on first iteration
@@ -259,44 +241,16 @@ public class PsqlNativeBoxIndexer extends Indexer {
                 numcols = trans.getColumnNames().size();
                 System.out.println("numcols=" + String.valueOf(numcols));
             }
-            if (useCopyFrom) {
-                // TODO: for performance, disallow tabs and newlines during input
-                for (int i = 0; i < numcols; i++) {
-                    copybuffer.append(transformedRow.get(i).replaceAll("\t", "\\t").replaceAll("\n", "\\n"));
-                    copybuffer.append("\t");
-                }
-                // String.valueOf is fast + portable: https://stackoverflow.com/a/654049
-                if (isCitus) {
-                    copybuffer.append(String.valueOf(rowCount));
-                    copybuffer.append("\t");
-                }
-                copybuffer.append(String.valueOf(curBbox.get(0)));
-                for (int i = 1; i < 6; i ++) {
-                    copybuffer.append("\t");
-                    copybuffer.append(String.valueOf(String.valueOf(curBbox.get(i))));
-                }
-                copybuffer.append("\n");
-                if (rowCount == 10) {
-                    System.out.println(copySql + copybuffer);
-                }
-                if (rowCount % batchsize == 0) {
-                    long rows = ((PGConnection) dbConn).getCopyAPI().copyIn(copySql, new StringReader(copybuffer.toString()));
-                    //System.out.println("successfully bulk loaded "+String.valueOf(rows)+" rows.");
-                    copybuffer.setLength(0);
-                }
-            } else {
-                int pscol = 1;
-                for (int i = 0; i < numcols; i++)
-                    preparedStmt.setString(pscol++, transformedRow.get(i).replaceAll("\'", "\'\'"));
-                if (isCitus)
-                    preparedStmt.setDouble(pscol++, rowCount);
-                for (int i = 0; i < 6; i ++) preparedStmt.setDouble(pscol++, curBbox.get(i));
-                preparedStmt.addBatch();
-                if (rowCount % batchsize == 0) {
-                    preparedStmt.executeBatch();
-                }
+            int pscol = 1;
+            for (int i = 0; i < numcols; i++)
+                preparedStmt.setString(pscol++, transformedRow.get(i).replaceAll("\'", "\'\'"));
+            if (isCitus)
+                preparedStmt.setDouble(pscol++, rowCount);
+            for (int i = 0; i < 6; i ++) preparedStmt.setDouble(pscol++, curBbox.get(i));
+            preparedStmt.addBatch();
+            if (rowCount % batchsize == 0) {
+                preparedStmt.executeBatch();
             }
-
             if (rowCount % 1000 == 0) {   // perf: only measure to the nearest 1K recs/sec (getTime() is expensive)
                 currTs = (new Date()).getTime();
                 if (currTs/10000 > lastTs/10000) { // print every N=10 seconds
@@ -311,17 +265,9 @@ public class PsqlNativeBoxIndexer extends Indexer {
 
         // insert tail stuff
         if (rowCount % batchsize != 0) {
-            if (useCopyFrom) {                                                                            
-                long rows = ((PGConnection) dbConn).getCopyAPI().copyIn(copySql, new StringReader(copybuffer.toString()));
-            } else {
                 preparedStmt.executeBatch();
-            }
         }
-        if (useCopyFrom) {                                                                            
-            copyFromStmt.close();
-        } else {
-            preparedStmt.close();
-        }
+        preparedStmt.close();
 
         // close reader connection
         rs.close();

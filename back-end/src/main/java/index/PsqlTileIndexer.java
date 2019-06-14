@@ -18,7 +18,7 @@ import java.util.ArrayList;
 /**
  * Created by wenbo on 12/31/18.
  */
-public class PsqlTileIndexer extends Indexer {
+public class PsqlTileIndexer extends BoundingBoxIndexer {
 
     private static PsqlTileIndexer instance = null;
     private static boolean isCitus = false;
@@ -45,7 +45,7 @@ public class PsqlTileIndexer extends Indexer {
         // set up query iterator
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
-        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb()));
+        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb(), true));
         ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
 
         // step 0: create tables for storing bboxes and tiles
