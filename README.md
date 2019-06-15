@@ -43,10 +43,10 @@ To use parallel Kyrix, you will need a Kubernetes cluster provider - these instr
 
 1. install kubectl  (e.g. `sudo snap install kubectl --classic` - [kubectl docs](https://kubernetes.io/docs/tasks/tools/install-kubectl/))
 2. setup kubectl to the given cluster (e.g. `gcloud container clusters get-credentials <cluster name>` - [gcloud install instructions](https://cloud.google.com/sdk/docs/downloads-apt-get))
-3. run `./redeploy-citus; ./redeploy-kyrix-server` then wait for "Backend server started..." (see above)
-4. look for "Kyrix running; run 'source setup-kyrix-vars.env' for convenience scripts/functions or visit http://<ipaddr>:8000/
+3. run `./cluster-scripts/redeploy-citus; ./cluster-scripts/redeploy-kyrix-server` then wait for "Backend server started..." (see above)
+4. look for "Kyrix running; run 'source cluster-scripts/setup-kyrix-vars.env' for convenience scripts/functions or visit http://<ipaddr>:8000/
 5. point a browser at this URL - for most kubernetes providers, no firewall changes should be required.
-6. to load the larger 'dots' dataset, run a command like this: SCALE=1 KYRIX_DB_RELOAD_FORCE=1  DATA=dots-pushdown-uniform ./restart-kyrix-server.sh
+6. to load the larger 'dots' dataset, run a command like this: SCALE=1 KYRIX_DB_RELOAD_FORCE=1  DATA=dots-pushdown-uniform ./cluster-scripts/restart-kyrix-server.sh
 (SCALE multiplies the dataset by this amount - start with SCALE=1, then try SCALE=10 etc)
 7. reload your browser, you should see dots.  If you don't, it could be that the density is too low - either increase SCALE or modify dots.js to reduce the canvas size.
 

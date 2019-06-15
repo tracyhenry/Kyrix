@@ -2,27 +2,25 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   annotations:
-    com.citusdata.role: Master
+    com.citusdata.role: Worker
     kompose.cmd: ./kompose convert
     kompose.version: 1.17.0 (a74acad)
   creationTimestamp: null
   labels:
-    io.kompose.service: master
-  name: master
+    io.kompose.service: worker
+  name: worker
 spec:
-  replicas: 1
+  replicas: 3
   strategy: {}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        io.kompose.service: master
+        io.kompose.service: worker
     spec:
       containers:
-      - image: asah/pg11_postgis25_citus811_plv8:latest
-        name: citus-master
-        ports:
-        - containerPort: 5432
+      - image: tracyhenry/pg11_postgis25_citus811_plv8:latest
+        name: worker
         resources: {}
       restartPolicy: Always
 status: {}

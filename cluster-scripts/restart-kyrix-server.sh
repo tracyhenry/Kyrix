@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source setup-kyrix-vars.env > /dev/null
-source docker-scripts/spinner.sh
+source ../docker-scripts/spinner.sh
 
 DATA=${DATA:-nba}
 KYRIX_DB_RELOAD_FORCE=${KYRIX_DB_RELOAD_FORCE:-0}
@@ -56,6 +56,6 @@ source setup-kyrix-vars.env > /dev/null
 
 while [ 1 ]; do started=`kubectl exec -it $KYRIX -- sh -c "cat /kyrix-started | tr -d '\n' "`; if [ "x$started" == 'xyes' ]; then break; fi; spin "waiting for kyrix to start"; done
 
-echo "Kyrix running; run 'source setup-kyrix-vars.env' for convenience scripts/functions or visit http://$KYRIX_IP:8000/"
+echo "Kyrix running; run 'source cluster-scripts/setup-kyrix-vars.env' for convenience scripts/functions or visit http://$KYRIX_IP:8000/"
 
 exit 0

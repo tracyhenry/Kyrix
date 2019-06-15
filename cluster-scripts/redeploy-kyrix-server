@@ -1,6 +1,6 @@
 #!/bin/bash
 # Google GCP note: to run, you must first create a kubernetes cluster with plenty of RAM - we use n1-standard-2 (7.5GB)
-source docker-scripts/spinner.sh
+source ../docker-scripts/spinner.sh
 
 DATA=${DATA:-nba}
 
@@ -36,8 +36,8 @@ if [ "x$DEV_NBA" = "x1" ]; then
 fi
 if [ "x$DEV_COMPILER" = "x1" ]; then
     echo "copying back-end server code..."
-    cat docker-scripts/start-kyrix.sh | kubectl exec -i $KYRIX -- sh -c "cat > /start-kyrix.sh; chmod 755 /start-kyrix.sh"
-    tar cf - back-end/src | kubectl exec -it $KYRIX -- sh -c "cd ..; tar xvf -"
+    cat ../docker-scripts/start-kyrix.sh | kubectl exec -i $KYRIX -- sh -c "cat > /start-kyrix.sh; chmod 755 /start-kyrix.sh"
+    tar cf - ../back-end/src | kubectl exec -it $KYRIX -- sh -c "cd ..; tar xvf -"
     echo "recompiling back-end server code..."
     kubectl exec -it $KYRIX -- bash -c 'cd /kyrix/back-end; mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out >/dev/null 2>&1'
     export DEV=1
@@ -46,7 +46,7 @@ if [ "x$DEV" = "x1" ]; then
     echo "adding dev tools (telnet, ping, emacs, etc) on the kyrix server..."
     kubectl exec -it $KYRIX -- apk add -y bash busybox-extras emacs > /dev/null 2>&1
     echo "re-copying local start-kyrix.sh..."
-    kubectl cp docker-scripts/start-kyrix.sh $KYRIX:/
+    kubectl cp ../docker-scripts/start-kyrix.sh $KYRIX:/
 fi
 
 DATA=$DATA ./restart-kyrix-server.sh &
