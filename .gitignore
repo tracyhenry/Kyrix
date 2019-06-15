@@ -171,6 +171,7 @@ compiler/examples/lZoomScatterPlot
 compiler/examples/lZoomScatterPlotSingleAxis
 compiler/examples/dots-uniform/datagen/
 compiler/examples/nameBubbles
+compiler/examples/test
 compiler/examples/twitter_hashtag
 front-end/static/images/
 dots.txt
