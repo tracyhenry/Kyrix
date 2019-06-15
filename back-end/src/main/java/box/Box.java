@@ -15,7 +15,7 @@ public class Box {
         return maxx - minx;
     }
 
-    public double getHight() {
+    public double getHeight() {
         return maxy - miny;
     }
 
@@ -33,5 +33,9 @@ public class Box {
 
     public double getMiny() {
         return miny;
+    }
+
+    public String getCSV() {
+        return minx + "," + miny + "," + maxx + "," + maxy;
     }
 }

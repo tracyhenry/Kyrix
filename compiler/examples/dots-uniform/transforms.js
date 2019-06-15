@@ -1,7 +1,7 @@
 const Transform = require("../../src/Transform").Transform;
 
-var dotsTransform = new Transform("select * from dots;",
-    "dots",
+var dotsTransform = new Transform("select * from dots_uniform;",
+    "dots_uniform",
     function (row, width, height) {
         var ret = [];
         ret.push(row[0]);

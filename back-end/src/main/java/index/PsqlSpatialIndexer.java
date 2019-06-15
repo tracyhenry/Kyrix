@@ -14,6 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * Created by wenbo on 12/30/18.
@@ -21,15 +22,16 @@ import java.util.ArrayList;
 public class PsqlSpatialIndexer extends BoundingBoxIndexer {
 
     private static PsqlSpatialIndexer instance = null;
+    private static boolean isCitus = false;
 
     // singleton pattern to ensure only one instance existed
-    private PsqlSpatialIndexer() {}
+    private PsqlSpatialIndexer(boolean isCitus) { this.isCitus = isCitus; }
 
     // thread-safe instance getter
-    public static synchronized PsqlSpatialIndexer getInstance() {
+    public static synchronized PsqlSpatialIndexer getInstance(boolean isCitus) {
 
         if (instance == null)
-            instance = new PsqlSpatialIndexer();
+            instance = new PsqlSpatialIndexer(isCitus);
         return instance;
     }
 
@@ -39,6 +41,7 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
         // create postgis extension if not existed
+        System.out.println("running create extension for postgis/postgis_topology");
         String psql = "CREATE EXTENSION if not exists postgis;";
         bboxStmt.executeUpdate(psql);
         psql = "CREATE EXTENSION if not exists postgis_topology;";
@@ -55,20 +58,31 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
 
         // drop table if exists
         String sql = "drop table if exists " + bboxTableName + ";";
+        System.out.println(sql);
         bboxStmt.executeUpdate(sql);
 
         // create the bbox table
         sql = "create table " + bboxTableName + " (";
         for (int i = 0; i < trans.getColumnNames().size(); i ++)
             sql += trans.getColumnNames().get(i) + " text, ";
+        if (isCitus) {
+            sql += "citus_distribution_id int, ";
+        }
         sql += "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom geometry(polygon));";
+        System.out.println(sql);
         bboxStmt.executeUpdate(sql);
 
+        if (isCitus) {
+            sql = "SELECT create_distributed_table('"+bboxTableName+"', 'citus_distribution_id');";
+            System.out.println(sql);
+            bboxStmt.executeQuery(sql);
+        }
+        
         // if this is an empty layer, return
         if (trans.getDb().isEmpty())
             return ;
 
-        // step 1: set up nashorn environment
+        // step 1: set up nashorn environment for running javascript code
         NashornScriptEngine engine = null;
         if (! trans.getTransformFunc().isEmpty())
             engine = setupNashorn(trans.getTransformFunc());
@@ -78,17 +92,31 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
         String insertSql = "insert into " + bboxTableName + " values (";
         for (int i = 0; i < trans.getColumnNames().size() + 6; i ++)
             insertSql += "?, ";
+        if (isCitus) {
+            insertSql += "?, ";
+        }
         insertSql += "ST_GeomFromText(?));";
-        PreparedStatement preparedStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
 
+        System.out.println(insertSql);
+        PreparedStatement preparedStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
+        long startTs = (new Date()).getTime();
+        long lastTs = startTs;
         int rowCount = 0;
         int numColumn = rs.getMetaData().getColumnCount();
         while (rs.next()) {
 
             // count log
             rowCount ++;
-            if (rowCount % 1000000 == 0)
-                System.out.println(rowCount);
+            if (rowCount % 1000 == 0) {
+                long currTs = (new Date()).getTime();
+                if (currTs/5000 > lastTs/5000) {
+                    lastTs = currTs;
+                    long secs = (currTs-startTs)/1000;
+                    if (secs > 0) {
+                        System.out.println(secs + " secs: "+rowCount+" records inserted. "+(rowCount/secs)+" recs/sec.");
+                    }
+                }
+            }
 
             // get raw row
             ArrayList<String> curRawRow = new ArrayList<>();
@@ -106,17 +134,22 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
             ArrayList<Double> curBbox = getBboxCoordinates(l, transformedRow);
 
             // insert into bbox table
+            int pscol = 1;
             for (int i = 0; i < transformedRow.size(); i ++)
-                preparedStmt.setString(i + 1, transformedRow.get(i).replaceAll("\'", "\'\'"));
+                preparedStmt.setString(pscol++, transformedRow.get(i).replaceAll("\'", "\'\'"));
+            if (isCitus) {
+                // row number is a fine distribution key (for now) - round robin across the cluster
+                preparedStmt.setInt(pscol++, rowCount);
+            }
             for (int i = 0; i < 6; i ++)
-                preparedStmt.setDouble(transformedRow.size() + i + 1, curBbox.get(i));
+                preparedStmt.setDouble(pscol++, curBbox.get(i));
 
             double minx, miny, maxx, maxy;
             minx = curBbox.get(2);
             miny = curBbox.get(3);
             maxx = curBbox.get(4);
             maxy = curBbox.get(5);
-            preparedStmt.setString(transformedRow.size() + 7,
+            preparedStmt.setString(pscol++,
                     getPolygonText(minx, miny, maxx, maxy));
             preparedStmt.addBatch();
 

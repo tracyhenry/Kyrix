@@ -11,7 +11,7 @@ const transforms = require("./transforms");
 const placements = require("./placements");
 
 // construct a project
-var p = new Project("dots", "../../../config.txt");
+var p = new Project("dots_uniform", "../../../config.txt");
 
 // ================== top zoom level ===================
 var topWidth = 1000000, topHeight = 1000000;

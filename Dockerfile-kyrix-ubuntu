@@ -8,8 +8,8 @@
 #
 
 # 18.04 works too, but is even larger
-#FROM ubuntu:18.04
-FROM ubuntu:16.04
+FROM ubuntu:18.04
+#FROM ubuntu:16.04
 
 # update Ubuntu and adding basic packages
 ENV DEBIAN_FRONTEND noninteractive
@@ -31,6 +31,10 @@ WORKDIR /kyrix/compiler
 RUN rm -fr /kyrix/compiler/node_modules && npm install
 RUN sed -i 's/\(.\+\equest\)/\/\/\1/' node_modules/d3/build/d3.node.js
 
+# TODO(asah): is this needed?
+#cd /kyrix/compiler
+#npm rebuild | egrep -v '(@[0-9.]+ /kyrix/compiler/node_modules/)'
+
 COPY docker-scripts/wait-for-postgres docker-scripts/start-kyrix.sh /
 RUN chmod 755 /wait-for-postgres /start-kyrix.sh
 
@@ -39,8 +43,5 @@ EXPOSE 8000
 # setup backend server
 WORKDIR /kyrix/back-end
 RUN mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out
-
-# download NBA example
-RUN wget -q -O nba_db_psql.sql 'https://www.dropbox.com/s/baqb01thxvfthk5/nba_db_psql.sql?dl=1'
 
 ENTRYPOINT sh -c 'sleep 5; /wait-for-postgres ${PGHOST}:5432 -t 60 -- /start-kyrix.sh'

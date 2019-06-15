@@ -10,7 +10,7 @@ metadata:
     io.kompose.service: worker
   name: worker
 spec:
-  replicas: 7
+  replicas: 3
   strategy: {}
   template:
     metadata:
@@ -19,7 +19,7 @@ spec:
         io.kompose.service: worker
     spec:
       containers:
-      - image: asah/pg11_postgis25_citus811:1.4
+      - image: tracyhenry/pg11_postgis25_citus811_plv8:latest
         name: worker
         resources: {}
       restartPolicy: Always

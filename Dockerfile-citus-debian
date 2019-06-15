@@ -1,20 +1,16 @@
+FROM asah/pg11-plv8 as plv8
+
 FROM postgres:11
-ARG VERSION=8.1.1
 
-LABEL maintainer="Citus Data https://citusdata.com" \
-      org.label-schema.name="Citus" \
-      org.label-schema.description="Scalable PostgreSQL for multi-tenant and real-time workloads" \
-      org.label-schema.url="https://www.citusdata.com" \
-      org.label-schema.vcs-url="https://github.com/citusdata/citus" \
-      org.label-schema.vendor="Citus Data, Inc." \
-      org.label-schema.version=${VERSION} \
-      org.label-schema.schema-version="1.0"
-
-ENV CITUS_VERSION ${VERSION}.citus-1
 ARG DEBIAN_FRONTEND=noninteractive
 
+ARG CITUS_VERSION=8.1.1
+ENV CITUS_VERSION ${CITUS_VERSION}.citus-1
+
+#
 # install postgis
-# PG_MAJOR from postgres docker base
+#
+ARG PG_MAJOR=11
 ARG POSTGIS_MAJOR=2.5
 ENV LANG en_ZA.UTF-8
 ENV LANGUAGE en_ZA.UTF-8
@@ -28,14 +24,15 @@ RUN apt-get update \
     && echo 'LANG="en_ZA.UTF-8"'>/etc/default/locale \
     && dpkg-reconfigure locales \
     && update-locale LANG=en_ZA.UTF-8 \
-    && dpkg-reconfigure locales \
-    && rm -rf /var/lib/apt/lists/*
+    && dpkg-reconfigure locales
+    
+#    && rm -rf /var/lib/apt/lists/*
 
+#
 # install Citus
+#
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-       ca-certificates \
-       curl \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
     && curl -s https://install.citusdata.com/community/deb.sh | bash \
     && apt-get install -y postgresql-$PG_MAJOR-citus-8.1=$CITUS_VERSION \
                           postgresql-$PG_MAJOR-hll=2.12.citus-1 \
@@ -60,3 +57,36 @@ COPY docker-scripts/000-configure-stats.sh docker-scripts/001-create-citus-exten
 COPY docker-scripts/pg_healthcheck /
 
 HEALTHCHECK --interval=4s --start-period=6s CMD ./pg_healthcheck
+
+#
+# plv8
+#
+# plv8 is dynamically linked
+RUN apt-get update -qq && apt-get install -qq --no-install-recommends  libc++1 && \
+    rm -rf /var/lib/apt/lists/* && apt-get -y autoremove && apt-get clean
+COPY --from=plv8 /usr/share/postgresql/11/extension/plcoffee* /usr/share/postgresql/11/extension/
+COPY --from=plv8 /usr/share/postgresql/11/extension/plls* /usr/share/postgresql/11/extension/
+COPY --from=plv8 /usr/share/postgresql/11/extension/plv8* /usr/share/postgresql/11/extension/
+COPY --from=plv8 /usr/lib/postgresql/11/lib/plv8*.so /usr/lib/postgresql/11/lib/
+COPY --from=plv8 /var/lib/postgresql/plv8-modules /var/lib/postgresql/plv8-modules
+RUN chmod 644 /usr/share/postgresql/11/extension/plcoffee* \
+    && chmod 644 /usr/share/postgresql/11/extension/plls* \
+    && chmod 644 /usr/share/postgresql/11/extension/plv8* \
+    && chmod 755 /usr/lib/postgresql/11/lib/plv8*.so
+
+#COPY ./initdb.sh /docker-entrypoint-initdb.d/postgis.sh
+
+#
+# install d3 - requires postgres startup script
+#
+RUN apt-get -qq update && apt-get install -qq curl && curl -sL https://deb.nodesource.com/setup_11.x | bash - && \
+    apt-get install -qq --no-install-recommends nodejs && \
+    su - postgres -c "npm install d3" && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get -y autoremove && apt-get clean
+    
+ADD docker-scripts/plv8_add_module_simple /var/lib/postgresql/plv8-modules/bin/add_module_simple
+ADD docker-scripts/install-d3.sh /var/lib/postgresql
+
+# copied from postgres, since it got flattened
+#CMD su - postgres -c "/usr/lib/postgresql/11/bin/initdb -D /var/lib/postgresql/data; /usr/lib/postgresql/11/bin/postgres -D /var/lib/postgresql/data"

@@ -169,9 +169,7 @@ compiler/examples/USMap/preprocessing/
 compiler/examples/flare/preprocessing/
 compiler/examples/lZoomScatterPlot
 compiler/examples/lZoomScatterPlotSingleAxis
-compiler/examples/dots/datagen/dots.csv
-compiler/examples/dots/datagen/dots_big.csv
-compiler/examples/dots/datagen/gen_fast
+compiler/examples/dots-uniform/datagen/
 compiler/examples/nameBubbles
 compiler/examples/twitter_hashtag
 front-end/static/images/

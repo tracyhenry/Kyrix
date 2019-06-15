@@ -1,0 +1,76 @@
+#!/usr/bin/env node
+
+var argv = require('yargs')
+    .usage('Install CommonJS Module.\nUsage: $0')
+    .demand('database')
+    .alias('database', 'd')
+    .describe('database', 'Database to be installed in')
+    .default('host', 'localhost')
+    .alias('host', 'h')
+    .describe('host', 'Database host')
+    .default('password', 'password')
+    .alias('password', 'p')
+    .describe('password', 'Database password')
+    .describe('user', 'User')
+    .default('user', 'postgres')
+    .alias('user', 'u')
+    .alias('module', 'm')
+    .boolean('simple')
+    .default('simple', undefined)
+    .describe('name', 'Name')
+    .demand('name')
+    .alias('name', 'n')
+    .describe('path', 'Module path')
+    .demand('path')
+    .argv,
+    pg   = require('pg'),
+    fs   = require('fs');
+
+
+var dependencies = require('../lib/dependencies');
+
+var entry = argv.simple ? argv.path : dependencies.get_entrypoint(__dirname + "/../" + argv.path);
+var module_data;
+
+try {
+  var module_path = argv.simple ? entry : (__dirname + "/../" + argv.path + '/' + entry);
+  console.log("module_path: " + module_path)
+  module_data = fs.readFileSync(module_path);
+} catch (err) {
+  return console.log("Unable to read module", err);
+}
+
+dependencies.get_tree(__dirname + "/../" + argv.path + '/' + entry, function (err, data) {
+  console.log(data);
+});
+
+var conString = "postgres://" + argv.u + ":" + argv.p + "@" + argv.h + "/" + argv.d;
+console.log(conString);
+// verify connectivity
+var client = new pg.Client(conString);
+client.connect(function (err) {
+  if (err) {
+    return console.error('could not connect to postgres', err.toString());
+  }
+
+  client.query('SELECT NOW() AS "theTime"', function(err, result) {
+    if (err) {
+      return console.error('error running query', err);
+    }
+
+    addModule(client, module_data, argv.name);
+  });
+});
+
+function addModule (client, module, name) {
+  console.log("Applying " + name);
+
+  var sql = "INSERT INTO commonjs.plv8_modules (module, code) VALUES ($1, $2)";
+  client.query(sql, [ name, module ], function (err, result) {
+    if (err) {
+      console.log("Error: " + err);
+    } else {
+      client.end();
+    }
+  });
+}

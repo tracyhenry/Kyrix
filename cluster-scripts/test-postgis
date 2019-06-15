@@ -1,0 +1,11 @@
+#!/bin/bash
+# Google GCP note: to run, you must first create a kubernetes cluster with plenty of RAM - we use n1-standard-2 (7.5GB)
+
+source setup-db-vars.env
+source setup-citus-vars.env
+
+# test postgis
+res=$(kubectl exec -it $MASTER -- su - postgres -c "psql $DBNAME -t -c \"SELECT num, street FROM parse_address('1 Devonshire Place PH301, Boston, MA 02109');\"" | grep -c 'Devonshire')
+if [ "x$res" != "x1" ]; then echo "error executing citus test function: master missing postgis"; exit 1; fi
+res=$(kubectl exec -it $FIRST_WORKER -- su - postgres -c "psql $DBNAME -t -c \"SELECT num, street FROM parse_address('1 Devonshire Place PH301, Boston, MA 02109');\"" | grep -c 'Devonshire')
+if [ "x$res" != "x1" ]; then echo "error executing citus test function: worker(s) missing postgis"; exit 1; fi

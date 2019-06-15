@@ -7,7 +7,6 @@ import jdk.nashorn.api.scripting.JSObject;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import main.Config;
 import main.Main;
-import main.DbConnector;
 import project.Canvas;
 import project.Layer;
 import project.Placement;
@@ -16,8 +15,6 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.File;
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,23 +31,29 @@ public abstract class Indexer implements Serializable {
     public abstract String getStaticDataQuery(Canvas c, int layerId, String predicate);
 
     // associate each layer with a proper indexer
-    public static void associateIndexer() {
+    public static void associateIndexer() throws Exception {
         for (Canvas c : Main.getProject().getCanvases())
             for (int layerId = 0; layerId < c.getLayers().size(); layerId ++) {
                 Indexer indexer = null;
-                if (Config.database == Config.Database.PSQL) {
-                    if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
-                        indexer = PsqlSpatialIndexer.getInstance();
+                if (Config.database == Config.Database.PSQL ||
+                    Config.database == Config.Database.CITUS) {
+                    boolean isCitus = (Config.database == Config.Database.CITUS);
+                    if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
+                        indexer = PsqlSpatialIndexer.getInstance(isCitus);
                     else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
-                        indexer = PsqlTileIndexer.getInstance();
-                    else if (Config.indexingScheme == Config.IndexingScheme.CUBE_INDEX)
+                        indexer = PsqlTileIndexer.getInstance(isCitus);
+                    else if (Config.indexingScheme == Config.IndexingScheme.PSQL_NATIVEBOX_INDEX)
+                        indexer = PsqlNativeBoxIndexer.getInstance(isCitus);
+                    else if (Config.indexingScheme == Config.IndexingScheme.PSQL_NATIVECUBE_INDEX)
                         indexer = PsqlCubeSpatialIndexer.getInstance();
                 }
                 else if (Config.database == Config.Database.MYSQL) {
-                    if (Config.indexingScheme == Config.IndexingScheme.SPATIAL_INDEX)
+                    if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
                         indexer = MysqlSpatialIndexer.getInstance();
                     else if (Config.indexingScheme == Config.indexingScheme.TILE_INDEX)
                         indexer = MysqlTileIndexer.getInstance();
+                    else if (Config.indexingScheme == Config.IndexingScheme.PSQL_NATIVEBOX_INDEX)
+                        throw new Exception("NATIVEBOX_INDEX not supported for dbtype MYSQL");
                 }
                 c.getLayers().get(layerId).setIndexer(indexer);
             }
@@ -136,7 +139,7 @@ public abstract class Indexer implements Serializable {
             else if (centroid_x.substring(0, 3).equals("con"))
                 centroid_x_dbl = Double.parseDouble(centroid_x.substring(4));
             else {
-                String curColName = centroid_x.substring(4);
+                String curColName = centroid_x.substring(4); // col:<name>
                 int curColId = colName2Id.get(curColName);
                 centroid_x_dbl = Double.parseDouble(row.get(curColId));
             }
@@ -175,20 +178,50 @@ public abstract class Indexer implements Serializable {
             }
 
             // get bounding box
-            bbox.add(centroid_x_dbl);	// cx
-            bbox.add(centroid_y_dbl);	// cy
-            bbox.add(centroid_x_dbl - width_dbl / 2.0);	// min x
-            bbox.add(centroid_y_dbl - height_dbl / 2.0);	// min y
-            bbox.add(centroid_x_dbl + width_dbl / 2.0);	// max x
-            bbox.add(centroid_y_dbl + height_dbl / 2.0);	// max y
+            bbox.add(centroid_x_dbl);  // cx
+            bbox.add(centroid_y_dbl);  // cy
+            bbox.add(centroid_x_dbl - width_dbl / 2.0);        // min x
+            bbox.add(centroid_y_dbl - height_dbl / 2.0);       // min y
+            bbox.add(centroid_x_dbl + width_dbl / 2.0);        // max x
+            bbox.add(centroid_y_dbl + height_dbl / 2.0);       // max y
         }
         else
             for (int i = 0; i < 6; i ++)
                 bbox.add(0.0);
-
         return bbox;
     }
 
+    // WORK IN PROGRESS
+    // return a String expression suitable for pushing into javascript or SQL.
+    // note: may refer to column names coming from the outut of the transform func
+    protected static String getBboxCoordinatesFunc(Layer l) {
+
+        if (l.isStatic()) {
+            return "{cx:0.0, cy:0.0, minx:0.0, miny:0.0, maxx:0.0, maxy:0.0}";
+        }
+        
+        Placement p = l.getPlacement();
+        String centroid_x = p.getCentroid_x();
+        String centroid_y = p.getCentroid_y();
+        String width_func = p.getWidth();
+        String height_func = p.getHeight();
+
+        // substring(4) handles both col:name or con:value
+        String centroid_x_str = (centroid_x.substring(0, 4).equals("full")) ? "0" : centroid_x.substring(4);
+        String centroid_y_str = (centroid_y.substring(0, 4).equals("full")) ? "0" : centroid_y.substring(4);
+        String width_str = (width_func.substring(0, 4).equals("full")) ? String.valueOf(Double.MAX_VALUE) : width_func.substring(4);
+        String height_str = (height_func.substring(0, 4).equals("full")) ? String.valueOf(Double.MAX_VALUE) : height_func.substring(4);
+        
+        return ("{ cx: centroid_x_str," +
+                "cy: centroid_y_str," +
+                "minx: centroid_x_str - width_str / 2.0,"+ // may include column name
+                "miny: centroid_y_str - height_str / 2.0,"+
+                "maxx: centroid_x_str + width_str / 2.0,"+
+                "maxy: centroid_y_str + height_str / 2.0 }"
+                ).replaceAll("centroid_x_str", centroid_x_str).replaceAll("centroid_y_str", centroid_y_str).
+            replaceAll("width_str", width_str).replaceAll("height_str", height_str);
+    }
+    
     protected static String getPolygonText(double minx, double miny, double maxx, double maxy) {
 
         String polygonText = "Polygon((";

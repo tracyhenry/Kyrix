@@ -14,7 +14,6 @@ import project.View;
 import main.Config;
 
 import javax.net.ssl.HttpsURLConnection;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -103,7 +102,6 @@ public class BoxRequestHandler  implements HttpHandler {
         }
         System.out.println("Fetch data time: " + fetchTime + "ms.");
         System.out.println("number of intersecting rows in result: " + intersectingRows);
-        System.out.println("current canvas id is: " + c.getId());
         /* TODO: stats table not created. Also, will an insert query be too much overhead?
         if (oldBox.getHight()==-100000 && oldBox.getWidth()==-100000) {
             sendStats("zoom", fetchTime, intersectingRows);
@@ -116,7 +114,7 @@ public class BoxRequestHandler  implements HttpHandler {
         respMap.put("renderData", BoxandData.getDictionaryFromData(data.data, c));
         respMap.put("minx", data.box.getMinx());
         respMap.put("miny", data.box.getMiny());
-        respMap.put("boxH", data.box.getHight());
+        respMap.put("boxH", data.box.getHeight());
         respMap.put("boxW", data.box.getWidth());
         respMap.put("canvasId", canvasId);
         response = gson.toJson(respMap);

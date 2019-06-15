@@ -36,7 +36,7 @@ param.extraTiles = 0;
 param.viewPadding = 50;
 
 // whether retain size when literal zooming
-param.retainSizeZoom = true;
+param.retainSizeZoom = false;
 
 // jump types
 param.semanticZoom = "semantic_zoom";

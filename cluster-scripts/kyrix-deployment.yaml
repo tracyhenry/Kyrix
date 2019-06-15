@@ -15,7 +15,7 @@ spec:
         io.kompose.service: kyrix
     spec:
       containers:
-      - image: asah/kyrix:1.8
+      - image: tracyhenry/kyrix:latest
         name: kyrix
         ports:
         - containerPort: 8000

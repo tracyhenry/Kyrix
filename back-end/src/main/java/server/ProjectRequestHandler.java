@@ -33,34 +33,40 @@ public class ProjectRequestHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
 
-        System.out.println("\n\nServing /project\n New project definition coming...");
-
-        // check if this is a POST request
-        if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
-            return;
-        }
-
-        // extract project object
-        InputStreamReader isr =  new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
-        BufferedReader br = new BufferedReader(isr);
-        String projectJSON = br.readLine();
-        Project newProject = gson.fromJson(projectJSON, Project.class);
-        if (! newProject.getName().equals(Config.projectName)) {
-            System.out.println("system thinks new proj is: " + Config.projectName);
-            System.out.println("incoming proj name is: " + newProject.getName());
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Not main project.");
-            System.out.println("Not the main project... doing nothing");
-            return ;
-        }
-
-        Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Good, updating main project.");
-
-        // diff between old and new
-        Project oldProject = Main.getProject();
-        Main.setProject(newProject);
         try {
-            if (needsReIndex(oldProject, newProject)) {
+            System.out.println("\n\nServing /project\n New project definition coming...");
+
+            // check if this is a POST request
+            if (! httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
+                Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
+                return;
+            }
+
+            // extract project object
+            InputStreamReader isr =  new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
+            BufferedReader br = new BufferedReader(isr);
+            String projectJSON = br.readLine();
+            Project newProject = gson.fromJson(projectJSON, Project.class);
+            if (! newProject.getName().equals(Config.projectName)) {
+                System.out.println("system thinks new proj is: " + Config.projectName);
+                System.out.println("incoming proj name is: " + newProject.getName());
+                Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Not main project.");
+                System.out.println("Not the main project... doing nothing (config="+Config.projectName+
+                                   "  new="+newProject.getName()+")");
+                return;
+            }
+            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Good, updating main project.");
+
+            // diff between old and new
+            String forceRecomputeStr = httpExchange.getRequestHeaders().getFirst("X-Kyrix-Force-Recompute");
+            boolean forceRecompute = (forceRecomputeStr == null) ? false : forceRecomputeStr.equals("1");
+            Project oldProject = Main.getProject();
+            Main.setProject(newProject);
+            if (forceRecompute) {
+                System.out.println("Requesting force-recompute, Ignoring diff, and shutting down server and recomputing...");
+                Server.terminate();
+            }
+            else if (needsReIndex(oldProject, newProject)) {
                 System.out.println("There is diff that requires recomputing indexes. Shutting down server and recomputing...");
                 Server.terminate();
             }
@@ -94,18 +100,18 @@ public class ProjectRequestHandler implements HttpHandler {
         // for every old canvas, find a match
         for (Canvas oldCanvas : oldCanvases) {
             boolean matchFound = false;
-            for (Canvas newCanvas : newCanvases)
+            for (Canvas newCanvas : newCanvases) {
                 if (oldCanvas.getId().equals(newCanvas.getId())) {
                     // found a match
                     matchFound = true;
 
                     // if size is different, recalculate.
                     if (oldCanvas.getW() != newCanvas.getW() || ! oldCanvas.getwSql().equals(newCanvas.getwSql())
-                            || ! oldCanvas.getwLayerId().equals(newCanvas.getwLayerId()))
+                        || ! oldCanvas.getwLayerId().equals(newCanvas.getwLayerId()))
                         return true;
 
                     if (oldCanvas.getH() != newCanvas.getH() || ! oldCanvas.gethSql().equals(newCanvas.gethSql())
-                            || ! oldCanvas.gethLayerId().equals(newCanvas.gethLayerId()))
+                        || ! oldCanvas.gethLayerId().equals(newCanvas.gethLayerId()))
                         return true;
 
                     // if there's different number of layers, re-index is for sure needed
@@ -133,6 +139,7 @@ public class ProjectRequestHandler implements HttpHandler {
                             return true;
                     }
                 }
+            }
             if (! matchFound)
                 return true;
         }

@@ -178,7 +178,7 @@ function setInitialStates(viewObj, canvasObj, viewportX, viewportY, predicates) 
     viewObj.initialPredicates = JSON.stringify(predicates);
 }
 
-function sendProjectRequestToBackend(portNumber, projectJSON) {
+function sendProjectRequestToBackend(portNumber, projectJSON, force_recompute=false) {
 
     // set up http post connections
     var post_options = {
@@ -188,6 +188,10 @@ function sendProjectRequestToBackend(portNumber, projectJSON) {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     };
+    if (force_recompute || process.env.FORCE == "1") {  // FORCE=1 node foo.js
+        console.log("forcing recompute via HTTP header X-Kyrix-Force-Recompute: 1");
+        post_options['headers']['X-Kyrix-Force-Recompute'] = '1';
+    }
     console.log(post_options);
     var post_req = http.request(post_options, function(res) {
         res.setEncoding('utf8');
@@ -302,16 +306,16 @@ function saveProject()
         // end connection
         dbConn.end();
     }
-    else if (config.database == "psql") {
+    else if (config.database == "psql" || config.database == "citus") {
 
         var createDbQuery = "CREATE DATABASE \"" + config.kyrixDbName + "\"";
         var useDbQuery = "USE \"" + config.kyrixDbName + "\";";
 
         // construct a connection to the postgres db to create Kyrix db
         var postgresConn = new psql.Client({host : config.serverName,
-            user : config.userName,
-            password : config.password,
-            database : "postgres"});
+					    user : config.userName,
+					    password : config.password,
+					    database : "postgres"});
 
         // create Kyrix DB and ignore error
         postgresConn.connect(function (err) {
@@ -330,28 +334,46 @@ function saveProject()
                         console.error('connection error', err.stack);
                     else
                         console.log('connected');
-
                     if (err) throw err;
 
                     // create a table and ignore the error
                     dbConn.query(createTableQuery, function (err) {
 
+			if (err)
+                            console.error('error with CREATE TABLE', err.stack);
+			else
+                            console.log('table created');
+			if (err) throw err;
+
                         // delete the project if exists
                         dbConn.query(deleteProjQuery, function (err) {
 
+			    if (err)
+				console.error('error with delete project', err.stack);
+			    else
+				console.log('old project record deleted');
+			    if (err) throw err;
+
                             // insert the JSON blob into the project table
-                            dbConn.query(insertProjQueryPSQL,
-                                function (err) {
-                                    if (err) throw err;
-                                    sendProjectRequestToBackend(config.serverPortNumber, projectJSON);
-                                    dbConn.end();
-                                    postgresConn.end();
-                                });
+                            dbConn.query(insertProjQueryPSQL, function (err) {				  
+
+				if (err)
+				    console.error('error with insert project', err.stack);
+				else
+				    console.log('new project record inserted');
+				if (err) throw err;
+				
+                                sendProjectRequestToBackend(config.serverPortNumber, projectJSON);
+                                dbConn.end();
+                                postgresConn.end();
+                            });
                         });
                     });
                 });
             });
         });
+    } else {
+        console.error('unknown database type', config.database);
     }
 }
 
