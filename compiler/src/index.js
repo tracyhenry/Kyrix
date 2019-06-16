@@ -178,7 +178,7 @@ function setInitialStates(viewObj, canvasObj, viewportX, viewportY, predicates) 
     viewObj.initialPredicates = JSON.stringify(predicates);
 }
 
-function sendProjectRequestToBackend(portNumber, projectJSON, force_recompute=false) {
+function sendProjectRequestToBackend(portNumber, projectJSON) {
 
     // set up http post connections
     var post_options = {
@@ -188,9 +188,15 @@ function sendProjectRequestToBackend(portNumber, projectJSON, force_recompute=fa
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     };
-    if (force_recompute || process.env.FORCE == "1") {  // FORCE=1 node foo.js
+    if (process.argv.length == 3 && process.argv[2] == "-f") {
+        // node app.js -f
         console.log("forcing recompute via HTTP header X-Kyrix-Force-Recompute: 1");
         post_options['headers']['X-Kyrix-Force-Recompute'] = '1';
+    }
+    if (process.argv.length == 3 && process.argv[2] == "-s") {
+        // node app.js -s
+        console.log("skipping recompute via HTTP header X-Kyrix-Skip-Recompute: 1");
+        post_options['headers']['X-Kyrix-Skip-Recompute'] = '1';
     }
     console.log(post_options);
     var post_req = http.request(post_options, function(res) {
@@ -244,6 +250,11 @@ function saveProject()
             }
         }
     }
+    // check argv
+    if (process.argv.length > 3)
+        throw new Error("more than 1 command line arguments");
+    if (process.argv.length == 3 && process.argv[2] !== "-f" && process.argv[2] != "-s")
+        throw new Error("unrecognized argument: " + process.argv[2]);
 
     // prepare project definition JSON strings
     var projectJSON = JSON.stringify(this, function (key, value) {

@@ -60,6 +60,8 @@ public class ProjectRequestHandler implements HttpHandler {
             // diff between old and new
             String forceRecomputeStr = httpExchange.getRequestHeaders().getFirst("X-Kyrix-Force-Recompute");
             boolean forceRecompute = (forceRecomputeStr == null) ? false : forceRecomputeStr.equals("1");
+            String skipRecomputeStr = httpExchange.getRequestHeaders().getFirst("X-Kyrix-Skip-Recompute");
+            boolean skipRecompute = (skipRecomputeStr == null) ? false : skipRecomputeStr.equals("1");
             Project oldProject = Main.getProject();
             Main.setProject(newProject);
             if (forceRecompute) {
@@ -73,7 +75,10 @@ public class ProjectRequestHandler implements HttpHandler {
             else {
                 Indexer.associateIndexer();
                 Main.setProjectClean();
-                System.out.println("The diff does not require recompute. Refresh your web page now!");
+                if (skipRecompute)
+                    System.out.println("Requesting skip-recompute. Project definition updated. Refresh your web page now!");
+                else
+                    System.out.println("The diff does not require recompute. Refresh your web page now!");
             }
         } catch (Exception e) {
             e.printStackTrace();
