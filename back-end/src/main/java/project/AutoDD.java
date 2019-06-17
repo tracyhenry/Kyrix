@@ -86,11 +86,12 @@ public class AutoDD {
         if (queriedColumnNames == null)
             try {
                 queriedColumnNames = new ArrayList<>();
-                Statement rawDBStmt = DbConnector.getStmtByDbName(this.getDb());
+                Statement rawDBStmt = DbConnector.getStmtByDbName(this.getDb(), true);
                 ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, this.getQuery());
                 int colCount = rs.getMetaData().getColumnCount();
                 for (int i = 1; i <= colCount; i ++)
                     queriedColumnNames.add(rs.getMetaData().getColumnName(i));
+                DbConnector.closeConnection(this.getDb());
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -124,7 +125,7 @@ public class AutoDD {
             loX = loY = Double.MAX_VALUE;
             hiX = hiY = Double.MIN_VALUE;
             try {
-                Statement rawDBStmt = DbConnector.getStmtByDbName(this.getDb());
+                Statement rawDBStmt = DbConnector.getStmtByDbName(this.getDb(), true);
                 ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, this.getQuery());
                 while (rs.next()) {
                     double cx = rs.getDouble(this.getXColId() + 1);
@@ -133,6 +134,7 @@ public class AutoDD {
                     loY = Math.min(loY, cy); hiY = Math.max(hiY, cy);
                 }
                 rawDBStmt.close();
+                DbConnector.closeConnection(this.getDb());
             }
             catch (Exception e)
             {
