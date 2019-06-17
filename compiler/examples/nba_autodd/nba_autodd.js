@@ -18,7 +18,7 @@ var args = {query : query, db : "nba",
     loX : 69, hiX : 149, loY : 69, hiY : 148,
     bboxW : 162, bboxH : 132,
     axis : true, zoomFactor : 1.5, numLevels : 9,
-    renderingMode: "circle+object",
+    renderingMode: "object+clusternum",
     rendering : renderers.teamTimelineRendering};
 
 p.addAutoDD(new AutoDD(args), true);

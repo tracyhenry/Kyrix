@@ -16,7 +16,9 @@ public class Transform implements Serializable {
     private String id;
     private String query;
     private String db;
+    private String dbsource;
     private String transformFunc;
+    private String transformFuncBody;
     private ArrayList<String> columnNames, queriedColumnNames = null;
     private boolean separable;
 
@@ -32,8 +34,16 @@ public class Transform implements Serializable {
         return db;
     }
 
+    public String getDbsource() {
+        return dbsource;
+    }
+
     public String getTransformFunc() {
         return transformFunc;
+    }
+
+    public String getTransformFuncBody() {
+        return transformFuncBody;
     }
 
     public ArrayList<String> getColumnNames() {

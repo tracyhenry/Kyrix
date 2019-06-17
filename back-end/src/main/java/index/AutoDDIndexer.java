@@ -87,7 +87,6 @@ public class AutoDDIndexer extends PsqlSpatialIndexer {
         System.out.println("Algorithm: direct density check...");
 
         AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
-        Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
         double zoomFactor = autoDD.getZoomFactor();
         int numLevels = autoDD.getNumLevels();
 
@@ -108,7 +107,7 @@ public class AutoDDIndexer extends PsqlSpatialIndexer {
             for (int j = 0; j < autoDD.getColumnNames().size() + 6; j ++)
                 insertSql += "?, ";
             insertSql += "ST_GeomFromText(?));";
-            PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
+            PreparedStatement preparedStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
             preparedStmts.add(preparedStmt);
         }
 

@@ -1,5 +1,6 @@
 package index;
 
+import box.Box;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import main.Config;
 import main.DbConnector;
@@ -17,18 +18,19 @@ import java.util.ArrayList;
 /**
  * Created by wenbo on 12/31/18.
  */
-public class PsqlTileIndexer extends Indexer {
+public class PsqlTileIndexer extends BoundingBoxIndexer {
 
     private static PsqlTileIndexer instance = null;
+    private static boolean isCitus = false;
 
     // singleton pattern to ensure only one instance existed
-    private PsqlTileIndexer() {}
+    private PsqlTileIndexer(boolean isCitus) { this.isCitus = isCitus; }
 
     // thread-safe instance getter
-    public static synchronized PsqlTileIndexer getInstance() {
+    public static synchronized PsqlTileIndexer getInstance(boolean isCitus) {
 
         if (instance == null)
-            instance = new PsqlTileIndexer();
+            instance = new PsqlTileIndexer(isCitus);
         return instance;
     }
 
@@ -43,7 +45,7 @@ public class PsqlTileIndexer extends Indexer {
         // set up query iterator
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
-        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb()));
+        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb(), true));
         ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
 
         // step 0: create tables for storing bboxes and tiles
@@ -62,12 +64,19 @@ public class PsqlTileIndexer extends Indexer {
         sql = "create table " + bboxTableName + " (";
         for (int i = 0; i < trans.getColumnNames().size(); i ++)
                 sql += trans.getColumnNames().get(i) + " text, ";
+        if (isCitus) {
+            sql += "citus_distribution_id int, ";
+        }
         sql += "tuple_id int, cx double precision, cy double precision, minx double " +
                 "precision, miny double precision, maxx double precision, maxy double precision);";
         bboxStmt.executeUpdate(sql);
 
         // create tile table
-        sql = "create table " + tileTableName + " (tuple_id int, tile_id varchar(50));";
+        sql = "create table " + tileTableName + " ("+
+            "tuple_id int, " +
+            (isCitus ? "citus_distribution_id int, " : "") + 
+            "tile_id varchar(50)" +
+            ");";
         tileStmt.executeUpdate(sql);
 
         // if this is an empty layer, continue
@@ -115,6 +124,10 @@ public class PsqlTileIndexer extends Indexer {
                 bboxInsSqlBuilder.append(" (");
             for (int i = 0; i < transformedRow.size(); i ++)
                 bboxInsSqlBuilder.append("'" + transformedRow.get(i).replaceAll("\'", "\'\'") + "', ");
+            if (isCitus) {
+                // row number is a fine distribution key (for now) - round robin across the cluster
+                bboxInsSqlBuilder.append(rowCount);
+            }
             bboxInsSqlBuilder.append(String.valueOf(rowCount));
             for (int i = 0; i < 6; i ++)
                 bboxInsSqlBuilder.append(", " + String.valueOf(curBbox.get(i)));
@@ -145,7 +158,10 @@ public class PsqlTileIndexer extends Indexer {
                             tileInsSqlBuilder.append(",(");
                         else
                             tileInsSqlBuilder.append(" (");
-                        tileInsSqlBuilder.append(rowCount + ", " + "'" + tileId + "')");
+                        tileInsSqlBuilder.append(rowCount + ", " +
+                                                 // rownum is a fine distrib key (for now) - round robin across the cluster
+                                                 (isCitus ? (rowCount + ", ") : "") +
+                                                 "'" + tileId + "')");
                         if (mappingCount % Config.tileBatchSize== 0) {
                             tileInsSqlBuilder.append(";");
                             tileStmt.executeUpdate(tileInsSqlBuilder.toString());
@@ -185,7 +201,7 @@ public class PsqlTileIndexer extends Indexer {
     }
 
     @Override
-    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception {
+    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox) throws Exception {
         throw new Exception("Spatial data fetching is not available with tile indexes.");
     }
 

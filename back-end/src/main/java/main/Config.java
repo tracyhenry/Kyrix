@@ -23,9 +23,8 @@ public class Config {
     public static int d3DirRow = 7;
     public static int cacheSize = 10;
 
-    // config varaibles, will be at runtime
-    public static String projectName;
-    public  static String dbServer;
+    // config variables
+    public static String dbServer;
     public static String userName;
     public static String password;
     public static int portNumber;
@@ -48,11 +47,11 @@ public class Config {
     public static int tileBatchSize = 10000;
 
     // tile indexing scheme
-    public enum IndexingScheme {TILE_INDEX, SPATIAL_INDEX};
-    public static IndexingScheme indexingScheme = IndexingScheme.SPATIAL_INDEX;
+    public enum IndexingScheme {TILE_INDEX, POSTGIS_SPATIAL_INDEX, PSQL_NATIVEBOX_INDEX, PSQL_NATIVECUBE_INDEX};
+    public static IndexingScheme indexingScheme = IndexingScheme.PSQL_NATIVEBOX_INDEX;
 
     // underlying database
-    public enum Database {MYSQL, PSQL};
+    public enum Database {MYSQL, PSQL, CITUS};
     public static Database database;
 
     // database iterator fetch size

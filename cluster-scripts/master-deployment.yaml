@@ -19,7 +19,7 @@ spec:
         io.kompose.service: master
     spec:
       containers:
-      - image: asah/pg11_postgis25_citus811:1.4
+      - image: tracyhenry/pg11_postgis25_citus811_plv8:latest
         name: citus-master
         ports:
         - containerPort: 5432

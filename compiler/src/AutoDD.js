@@ -94,7 +94,9 @@ function getLayerRenderer(renderingMode, objectRenderer) {
             "   .attr(\"fill\", \"honeydew\")\n" +
             "   .attr(\"stroke\", \"#ADADAD\")\n" +
             "   .style(\"stroke-width\", \"1px\")\n" +
-            "   .on(\"mouseover\", function (d) {\n" +  //TODO: find ways to rescale the object, right now it's magnified when zoom in
+            // TODO: find ways to rescale the object, right now it's magnified when zoom in
+            // TODO: disable hover for "circle only"
+            "   .on(\"mouseover\", function (d) {\n" +
             "        objectRenderer(svg, [d], args);\n" +
             "        svg.select(\"g:last-of-type\")\n" +
             "            .attr(\"id\", \"autodd_tooltip\")\n" +

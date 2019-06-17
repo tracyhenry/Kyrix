@@ -128,7 +128,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         }
 
         // insert samples
-        Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
         for (int i = 0; i < numLevels; i ++) {
 
             String bboxTableName = getAutoDDBboxTableName(autoDDIndex, i);
@@ -136,7 +135,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             for (int j = 0; j < numRawColumns + 7; j ++)
                 insertSql += "?, ";
             insertSql += "ST_GeomFromText(?));";
-            PreparedStatement preparedStmt = dbConn.prepareStatement(insertSql);
+            PreparedStatement preparedStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
             int insertCount = 0;
             Iterable<Entry<ArrayList<String>, Rectangle>> samples = Rtrees.get(i).entries()
                     .toBlocking().toIterable();

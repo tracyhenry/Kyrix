@@ -1,0 +1,52 @@
+#!/bin/bash
+# Google GCP note: to run, you must first create a kubernetes cluster with plenty of RAM - we use n1-standard-2 (7.5GB)
+source ../docker-scripts/spinner.sh
+
+DATA=${DATA:-nba}
+
+echo "checking for Citus-on-Kubernetes and gathering connection info..."
+source setup-citus-vars.env > /dev/null
+source setup-bastion-vars.env > /dev/null
+if [ "x$MASTER" = "x" ]; then
+    echo "please run redeploy-citus to bring up the database. exiting..."
+    exit 1
+fi
+
+echo "deleting existing deployment..."   # skip if not running
+active=`kubectl get -o name pods,deployments,services,pvc | grep 'kyrix' | xargs echo`
+for elem in $active; do
+    if ((`echo $active | grep -c $elem` > 0 )); then echo "deleting $elem..."; kubectl delete $elem; fi
+done
+while [ 1 ]; do w=`kubectl get -o name pods,deployments,services,pvc | egrep kyrix|wc -l`; if [ $w = 0 ]; then break; fi; spin "waiting for $w kubernetes resources (pods, etc) to shut down"; done
+
+kubectl create -f kyrix-deployment.yaml
+
+while [ 1 ]; do w=`kubectl get pods -o wide | egrep "kyrix.+Running" |wc -l`; if [ $w = 1 ]; then break; fi; spin "waiting for kyrix kubernetes pod to start"; done
+
+source setup-kyrix-vars.env > /dev/null
+
+# expose early because it takes a while to allocate an external IP address
+kubectl expose replicaset.apps/$RS_KYRIX --type=LoadBalancer --name=kyrixserver --port=8000 --target-port=8000
+
+# development
+if [ "x$DEV_NBA" = "x1" ]; then
+    echo "recreating nba db..."
+    recreatedb-kyrix nba
+    export DEV=1
+fi
+if [ "x$DEV_COMPILER" = "x1" ]; then
+    echo "copying back-end server code..."
+    cat ../docker-scripts/start-kyrix.sh | kubectl exec -i $KYRIX -- sh -c "cat > /start-kyrix.sh; chmod 755 /start-kyrix.sh"
+    tar cf - ../back-end/src | kubectl exec -it $KYRIX -- sh -c "cd ..; tar xvf -"
+    echo "recompiling back-end server code..."
+    kubectl exec -it $KYRIX -- bash -c 'cd /kyrix/back-end; mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out >/dev/null 2>&1'
+    export DEV=1
+fi
+if [ "x$DEV" = "x1" ]; then
+    echo "adding dev tools (telnet, ping, emacs, etc) on the kyrix server..."
+    kubectl exec -it $KYRIX -- apk add -y bash busybox-extras emacs > /dev/null 2>&1
+    echo "re-copying local start-kyrix.sh..."
+    kubectl cp ../docker-scripts/start-kyrix.sh $KYRIX:/
+fi
+
+DATA=$DATA ./restart-kyrix-server.sh &

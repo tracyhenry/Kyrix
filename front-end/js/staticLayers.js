@@ -3,6 +3,10 @@ function renderStaticLayers(viewId) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
 
+    // if no dynamic layers, render axes
+    if (d3.select(viewClass + ".mainsvg:not(.static)").size() == 0)
+        renderAxes(viewId, 0, 0, gvd.viewportWidth, gvd.viewportHeight);
+
     // number of layers
     var numLayers = gvd.curCanvas.layers.length;
 

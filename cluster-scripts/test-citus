@@ -1,0 +1,60 @@
+#!/bin/bash
+
+source setup-db-vars.env
+source setup-citus-vars.env
+
+echo "testing citus..."
+
+num_citus_tbls=$(kubectl exec -i $MASTER -- su - postgres -c "psql $DBNAME -q -t -c \"select 1 from information_schema.tables where table_schema='public' and table_name in ('ltowns','dtowns','rtowns');\""|wc -l)
+if [ "x$FORCE_CITUS_TABLES" != "x" ] || [ "x$num_citus_tbls" != "x4" ]; then
+    echo "citus test tables not found: installing...  (ltown: local, dtowns: distributed/sharded, rtowns: reference/replicated)"
+    kubectl exec -i $MASTER -- su - postgres -c "psql -q $DBNAME" < ../docker-scripts/citus-test.sql > /dev/null
+else
+    echo "citus test tables found: skipping installation... use  (ltown: local, dtowns: distributed/sharded, rtowns: reference/replicated)"
+fi
+echo "   (use 'FORCE_CITUS_TABLES=1 $0' to force reinstallation)"
+
+res=$(kubectl exec -i $MASTER -- su - postgres -c "psql $DBNAME -q -t -c \"explain select count(1) from dtowns;\"" | grep -c 'Citus')
+
+# Aggregate  (cost=0.00..0.00 rows=0 width=0)
+#   ->  Custom Scan (Citus Real-Time)  (cost=0.00..0.00 rows=0 width=0)
+#         Task Count: 32
+#         Tasks Shown: One of 32
+#         ->  Task
+#               Node: host=10.48.0.17 port=5432 dbname=kyrix
+#               ->  Aggregate  (cost=2094.09..2094.10 rows=1 width=8)
+#                     ->  Seq Scan on dtowns_102008 dtowns  (cost=0.00..1898.67 rows=78167 width=0)
+echo "testing parallel aggregates and scans on distributed tables..."
+res=$(kubectl exec -i $MASTER -- su - postgres -c "psql $DBNAME -q -t -c \"explain select count(1) from dtowns;\"" | grep -c 'Citus')
+if [ "x$res" != "x1" ]; then echo "error executing citus test function: dtowns missing Citus"; exit 1; fi
+res=$(kubectl exec -i $MASTER -- su - postgres -c "psql $DBNAME -q -t -c \"explain select count(1) from dtowns;\"" | egrep -c 'Task Count: [0-9]+')
+if [ "x$res" != "x1" ]; then echo "error executing citus test function: dtowns missing Task Count"; exit 1; fi
+res=$(kubectl exec -i $MASTER -- su - postgres -c "psql $DBNAME -q -t -c \"explain select count(1) from dtowns;\"" | egrep -c 'Task Count: (0|1)')
+if [ "x$res" != "x0" ]; then echo "error executing citus test function: dtowns Task Count 0 or 1, should be larger "; exit 1; fi
+
+# Finalize Aggregate  (cost=49735.99..49736.00 rows=1 width=8)
+#   ->  Gather  (cost=49735.78..49735.99 rows=2 width=8)
+#         Workers Planned: 2
+#         ->  Partial Aggregate  (cost=48735.78..48735.79 rows=1 width=8)
+#               ->  Parallel Seq Scan on ltowns  (cost=0.00..46131.62 rows=1041662 width=0)
+echo "testing parallel scans on local tables..."
+res=$(kubectl exec -i $MASTER -- su - postgres -c "psql $DBNAME -q -t -c \"explain select count(1) from ltowns;\"" | grep -c 'Citus')
+if [ "x$res" != "x0" ]; then echo "error executing citus test function: ltowns contains Citus"; exit 1; fi
+res=$(kubectl exec -i $MASTER -- su - postgres -c "psql $DBNAME -q -t -c \"explain select count(1) from ltowns;\"" | grep -c 'Parallel Seq Scan on ltowns')
+if [ "x$res" != "x1" ]; then echo "error executing citus test function: ltowns missing Parallel Seq Scan"; exit 1; fi
+
+# Custom Scan (Citus Router)  (cost=0.00..0.00 rows=0 width=0)
+#   Task Count: 1
+#   Tasks Shown: All
+#   ->  Task
+#         Node: host=10.48.6.22 port=5432 dbname=kyrix
+#         ->  Finalize Aggregate  (cost=49736.31..49736.32 rows=1 width=8)
+#               ->  Gather  (cost=49736.10..49736.31 rows=2 width=8)
+#                     Workers Planned: 2
+#                     ->  Partial Aggregate  (cost=48736.10..48736.11 rows=1 width=8)
+#                           ->  Parallel Seq Scan on rtowns_102040 rtowns  (cost=0.00..46131.88 rows=1041688 width=0)
+echo "testing parallel aggregates and scans on replicated tables..."
+res=$(kubectl exec -i $MASTER -- su - postgres -c "psql $DBNAME -q -t -c \"explain select count(1) from rtowns;\"" | grep -c 'Task Count: 1')
+if [ "x$res" != "x1" ]; then echo "error executing citus test function: rtowns missing Task Count: 1"; exit 1; fi
+res=$(kubectl exec -i $MASTER -- su - postgres -c "psql $DBNAME -q -t -c \"explain select count(1) from rtowns;\"" | grep -c 'Parallel Seq Scan on rtowns')
+if [ "x$res" != "x1" ]; then echo "error executing citus test function: rtowns missing Parallel Seq Scan"; exit 1; fi

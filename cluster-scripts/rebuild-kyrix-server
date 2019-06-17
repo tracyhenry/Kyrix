@@ -1,0 +1,14 @@
+#!/bin/bash
+
+KV=${1:-asah/kyrix:latest}
+
+sudo docker build ../ -f ../Dockerfile-kyrix-alpine -t $KV
+sudo docker push $KV
+
+#escaping / in $KV
+KV=${KV//\//\\\/};
+
+echo "updating kyrix-deployment.yaml"
+perl -pi -e "s/image:.*/image: $KV/g" kyrix-deployment.yaml
+
+echo "build done: to redeploy, run './redeploy-kyrix-server'"

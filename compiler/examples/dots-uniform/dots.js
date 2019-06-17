@@ -11,7 +11,7 @@ const transforms = require("./transforms");
 const placements = require("./placements");
 
 // construct a project
-var p = new Project("dots", "../../../config.txt");
+var p = new Project("dots_uniform", "../../../config.txt");
 
 // ================== top zoom level ===================
 var topWidth = 1000000, topHeight = 1000000;
@@ -33,6 +33,10 @@ bottomCanvas.addLayer(dotsLayer);
 var view = new View("dotview", 0, 0, 1000, 1000);
 p.addView(view);
 p.setInitialStates(view, topCanvas, 5000, 5000);
+
+// ================== Zooms ===================
+p.addJump(new Jump(topCanvas, bottomCanvas, "literal_zoom_in"));
+p.addJump(new Jump(bottomCanvas, topCanvas, "literal_zoom_out"));
 
 // save to db
 p.saveProject();

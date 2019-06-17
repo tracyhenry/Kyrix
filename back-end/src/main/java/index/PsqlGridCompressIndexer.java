@@ -20,7 +20,7 @@ import java.util.HashMap;
 /**
  * Created by wenbo on 12/30/18.
  */
-public class PsqlGridCompressIndexer extends Indexer {
+public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
 
     private static PsqlGridCompressIndexer instance = null;
     private final int gridW = 1000;
@@ -43,7 +43,6 @@ public class PsqlGridCompressIndexer extends Indexer {
     public void createMV(Canvas c, int layerId) throws Exception  {
 
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
-        Connection dbConn = DbConnector.getDbConn(Config.dbServer, Config.databaseName, Config.userName, Config.password);
 
         // create postgis extension if not existed
         String psql = "CREATE EXTENSION if not exists postgis;";
@@ -54,7 +53,7 @@ public class PsqlGridCompressIndexer extends Indexer {
         // set up query iterator
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
-        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb()));
+        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb(), true));
         ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
 
         // step 0: create tables for storing upgrouped grids
@@ -82,7 +81,7 @@ public class PsqlGridCompressIndexer extends Indexer {
 
         // prepared statements
         String insertSql = "insert into " + ungroupedTableName + " values (?, ?, ?, ?, ?, ?, ?);";
-        PreparedStatement insPrepStmt = dbConn.prepareStatement(insertSql);
+        PreparedStatement insPrepStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
 
         // in-memory structures to maintain for each batch of records
         HashMap<String, StringBuilder> blobs = new HashMap<>();
@@ -203,7 +202,7 @@ public class PsqlGridCompressIndexer extends Indexer {
 
         // prepared statements
         insertSql = "insert into " + groupedTableName + " values (?, ST_GeomFromText(?));";
-        insPrepStmt = dbConn.prepareStatement(insertSql);
+        insPrepStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
 
         // info of current group
         int curGridX = -1, curGridY = -1;
@@ -212,7 +211,8 @@ public class PsqlGridCompressIndexer extends Indexer {
 
         // read from upgrouped table and construct the grouped table
         sql = "select * from " + ungroupedTableName + " order by grid_x asc, grid_y asc;";
-        rs = DbConnector.getQueryResultIterator(bboxStmt, sql);
+        Statement ungroupedStmt = DbConnector.getStmtByDbName(Config.databaseName, true);
+        rs = DbConnector.getQueryResultIterator(ungroupedStmt, sql);
         rowCount = insCount = 0;
         System.out.println("\nConstructing grouped table...");
         while (rs.next()) {
@@ -247,6 +247,7 @@ public class PsqlGridCompressIndexer extends Indexer {
             }
         }
         rs.close();
+        ungroupedStmt.close();
         insPrepStmt.executeBatch();
         insPrepStmt.close();
         System.out.println("Constructing grouped table: " + (System.currentTimeMillis() - st) / 1000.0 + "s.");
@@ -264,7 +265,7 @@ public class PsqlGridCompressIndexer extends Indexer {
     }
 
     @Override
-    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate) throws Exception {
+    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox) throws Exception {
 
         // construct range query
         String sql = "select compressed_blob from bbox_" + Main.getProject().getName() + "_"

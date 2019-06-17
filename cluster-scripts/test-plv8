@@ -1,0 +1,10 @@
+#!/bin/bash
+
+source setup-db-vars.env
+source setup-citus-vars.env
+
+echo "testing plv8..."
+res=$(kubectl exec -it $MASTER -- su - postgres -c "psql $DBNAME -q -t -c \"DO \\\$\\\$ plv8.elog(NOTICE, 42); \\\$\\\$ LANGUAGE plv8;\""|grep -c 42)
+if [ "x$res" != "x1" ]; then echo "error executing plv8 test function."; exit 1; fi
+res=$(kubectl exec -it $FIRST_WORKER -- su - postgres -c "psql $DBNAME -q -t -c \"DO \\\$\\\$ plv8.elog(NOTICE, 42); \\\$\\\$ LANGUAGE plv8;\""|grep -c 42)
+if [ "x$res" != "x1" ]; then echo "error executing plv8 test function."; exit 1; fi

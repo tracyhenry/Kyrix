@@ -144,6 +144,12 @@ buildNumber.properties
 # Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
 !/.mvn/wrapper/maven-wrapper.jar
 
+################# vscode java #################
+back-end/.classpath
+back-end/.project
+back-end/.settings/
+back-end/bin/
+
 ################# emacs #################
 *~
 [#]*
@@ -163,12 +169,16 @@ compiler/examples/USMap/preprocessing/
 compiler/examples/flare/preprocessing/
 compiler/examples/lZoomScatterPlot
 compiler/examples/lZoomScatterPlotSingleAxis
+compiler/examples/dots-uniform/datagen/
 compiler/examples/nameBubbles
+compiler/examples/test
 compiler/examples/twitter_hashtag
 front-end/static/images/
 dots.txt
 dots_small.txt
 log.txt
 gen
+*.csv
+.vscode
 front-end/js/embed/all.js
 front-end/js/embed/bundle.js
