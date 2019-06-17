@@ -9,7 +9,7 @@ if [ ! -x $PSQL ]; then echo "$0: $PSQL not found - consider setting PSQL to the
 # download NBA example data
 if [ ! -f nba_db_psql.sql ]; then
     echo "downloading NBA dataset..."
-    wget -q -O nba_db_psql.sql 'https://www.dropbox.com/s/o1ne7x2gq4u5zn7/nba_db_psql_v2.sql?dl=0' > /dev/null
+    wget -q -O nba_db_psql.sql 'https://www.dropbox.com/s/cz8wa7xvw18mpvo/nba_db_psql_v2.sql?dl=1' > /dev/null
 fi
 
 echo "dropping NBA source tables..."
