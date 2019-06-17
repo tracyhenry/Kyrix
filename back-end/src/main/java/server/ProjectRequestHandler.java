@@ -17,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by wenbo on 7/12/18.
@@ -24,11 +25,29 @@ import java.util.ArrayList;
 public class ProjectRequestHandler implements HttpHandler {
 
     private final Gson gson;
+    private static HashMap<String, ArrayList<Project>> projects = new HashMap<>();
 
     public ProjectRequestHandler() {
 
         gson = new GsonBuilder().create();
     };
+
+    private Project getLastProjectObject(String projectName) {
+
+        if (! projects.containsKey(projectName))
+            return null;
+        ArrayList<Project> projectsOfSameName = projects.get(projectName);
+        return projectsOfSameName.get(projectsOfSameName.size() - 1);
+    }
+
+    private void addProjectObject(Project proj) {
+
+        String projName = proj.getName();
+        if (! projects.containsKey(projName))
+            projects.put(projName, new ArrayList<>());
+
+        projects.get(projName).add(proj);
+    }
 
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
@@ -42,43 +61,40 @@ public class ProjectRequestHandler implements HttpHandler {
                 return;
             }
 
-            // extract project object
-            InputStreamReader isr =  new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
+            // extract project object & headers
+            InputStreamReader isr = new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
             BufferedReader br = new BufferedReader(isr);
             String projectJSON = br.readLine();
             Project newProject = gson.fromJson(projectJSON, Project.class);
-            if (! newProject.getName().equals(Config.projectName)) {
-                System.out.println("system thinks new proj is: " + Config.projectName);
-                System.out.println("incoming proj name is: " + newProject.getName());
-                Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Not main project.");
-                System.out.println("Not the main project... doing nothing (config="+Config.projectName+
-                                   "  new="+newProject.getName()+")");
-                return;
-            }
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Good, updating main project.");
-
-            // diff between old and new
             String forceRecomputeStr = httpExchange.getRequestHeaders().getFirst("X-Kyrix-Force-Recompute");
             boolean forceRecompute = (forceRecomputeStr == null) ? false : forceRecomputeStr.equals("1");
             String skipRecomputeStr = httpExchange.getRequestHeaders().getFirst("X-Kyrix-Skip-Recompute");
             boolean skipRecompute = (skipRecomputeStr == null) ? false : skipRecomputeStr.equals("1");
-            Project oldProject = Main.getProject();
+            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, "Good, updating main project.");
+
+            // set current project
             Main.setProject(newProject);
+
+            // diff between old and new
+            Project oldProject = getLastProjectObject(newProject.getName());
+            addProjectObject(newProject);
             if (forceRecompute) {
-                System.out.println("Requesting force-recompute, Ignoring diff, and shutting down server and recomputing...");
+                System.out.println("Requesting force-recompute, ignoring diff, shutting down server and recomputing...");
                 Server.terminate();
+            }
+            else if (skipRecompute) {
+                System.out.println("Requesting skip-recompute. Project definition updated. Refresh your web page now!");
+                Indexer.associateIndexer();
+                Main.setProjectClean();
             }
             else if (needsReIndex(oldProject, newProject)) {
                 System.out.println("There is diff that requires recomputing indexes. Shutting down server and recomputing...");
                 Server.terminate();
             }
             else {
+                System.out.println("The diff does not require recompute. Refresh your web page now!");
                 Indexer.associateIndexer();
                 Main.setProjectClean();
-                if (skipRecompute)
-                    System.out.println("Requesting skip-recompute. Project definition updated. Refresh your web page now!");
-                else
-                    System.out.println("The diff does not require recompute. Refresh your web page now!");
             }
         } catch (Exception e) {
             e.printStackTrace();

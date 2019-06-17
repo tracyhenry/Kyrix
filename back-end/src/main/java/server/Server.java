@@ -36,6 +36,8 @@ public class Server {
         terminated = false;
         server.start();
         System.out.println("Backend server started...");
+        if (Main.getProject() == null)
+            System.out.println("Waiting for project definition...");
         synchronized (terminationLock) {
             while (!terminated)
                 terminationLock.wait();

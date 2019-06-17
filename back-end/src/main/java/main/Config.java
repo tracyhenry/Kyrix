@@ -23,9 +23,8 @@ public class Config {
     public static int d3DirRow = 7;
     public static int cacheSize = 10;
 
-    // config varaibles, will be at runtime
-    public static String projectName;
-    public  static String dbServer;
+    // config variables
+    public static String dbServer;
     public static String userName;
     public static String password;
     public static int portNumber;

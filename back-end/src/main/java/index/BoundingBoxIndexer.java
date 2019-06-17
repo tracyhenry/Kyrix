@@ -31,7 +31,7 @@ public abstract class BoundingBoxIndexer extends Indexer {
         String colListStr = l.getTransform().getColStr("");
 
         // construct static query
-        String sql = "select " + colListStr + " from bbox_" + Config.projectName + "_"
+        String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
                 + c.getId() + "layer" + layerId;
         if (predicate.length() > 0)
             sql += " where " + predicate;

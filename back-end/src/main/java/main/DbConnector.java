@@ -92,8 +92,8 @@ public class DbConnector {
             throws SQLException, ClassNotFoundException {
 
         String key = dbName;
-        if (Config.database == Config.Database.PSQL)
-            key += " " + String.valueOf(isBatch);
+        if (Config.database == Config.Database.PSQL && isBatch)
+            key += "_batch";
         if (connections.containsKey(key))
             return connections.get(key);
         Connection dbConn = null;
@@ -112,7 +112,7 @@ public class DbConnector {
         // to enable fetching data in batch in Postgres, autocommit must be set to false
         if (isBatch && Config.database == Config.Database.PSQL)
             dbConn.setAutoCommit(false);
-        connections.put(dbName, dbConn);
+        connections.put(key, dbConn);
         return dbConn;
     }
 
@@ -121,6 +121,10 @@ public class DbConnector {
         if (connections.containsKey(dbName)) {
             connections.get(dbName).close();
             connections.remove(dbName);
+        }
+        if (connections.containsKey(dbName + "_batch")) {
+            connections.get(dbName + "_batch").close();
+            connections.remove(dbName + "_batch");
         }
     }
 }
