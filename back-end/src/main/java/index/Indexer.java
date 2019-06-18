@@ -53,7 +53,9 @@ public abstract class Indexer implements Serializable {
                         throw new Exception("Index type " + Config.indexingScheme.toString() + " not supported for PSQL.");
                 }
                 else if (Config.database == Config.Database.MYSQL) {
-                    if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
+                    if (c.getLayers().get(layerId).isAutoDDLayer())
+                        throw new Exception("AutoDD is not supported by MySQL indexers.");
+                    if (Config.indexingScheme == Config.IndexingScheme.MYSQL_SPATIAL_INDEX)
                         indexer = MysqlSpatialIndexer.getInstance();
                     else if (Config.indexingScheme == Config.indexingScheme.TILE_INDEX)
                         indexer = MysqlTileIndexer.getInstance();
