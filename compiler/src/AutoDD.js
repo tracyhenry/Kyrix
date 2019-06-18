@@ -93,20 +93,24 @@ function getLayerRenderer(renderingMode, objectRenderer) {
             "   .style(\"fill-opacity\", .25)\n" +
             "   .attr(\"fill\", \"honeydew\")\n" +
             "   .attr(\"stroke\", \"#ADADAD\")\n" +
-            "   .style(\"stroke-width\", \"1px\")\n" +
+            "   .style(\"stroke-width\", \"1px\")\n";
+        if (renderingMode == "circle+object")
+            renderFuncBody +=
             // TODO: find ways to rescale the object, right now it's magnified when zoom in
-            // TODO: disable hover for "circle only"
-            "   .on(\"mouseover\", function (d) {\n" +
-            "        objectRenderer(svg, [d], args);\n" +
-            "        svg.select(\"g:last-of-type\")\n" +
-            "            .attr(\"id\", \"autodd_tooltip\")\n" +
-            "            .style(\"opacity\", 0.8)\n" +
-            "            .style(\"pointer-events\", \"none\");\n" +
-            "    })\n" +
-            "    .on(\"mouseleave\", function() {\n" +
-            "        d3.select(\"#autodd_tooltip\")\n" +
-            "           .remove();\n" +
-            "    });\n" +
+                "   .on(\"mouseover\", function (d) {\n" +
+                "        objectRenderer(svg, [d], args);\n" +
+                "        svg.select(\"g:last-of-type\")\n" +
+                "            .attr(\"id\", \"autodd_tooltip\")\n" +
+                "            .style(\"opacity\", 0.8)\n" +
+                "            .style(\"pointer-events\", \"none\");\n" +
+                "    })\n" +
+                "    .on(\"mouseleave\", function() {\n" +
+                "        d3.select(\"#autodd_tooltip\")\n" +
+                "           .remove();\n" +
+                "    });\n";
+        else
+            renderFuncBody += ";";
+        renderFuncBody +=
             "    g.selectAll(\"text\")\n" +
             "        .data(data)\n" +
             "        .enter()\n" +
