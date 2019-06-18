@@ -330,8 +330,7 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
             throws Exception {
 
         // get column list string
-        Layer curLayer = c.getLayers().get(layerId);
-        String colListStr = curLayer.getColStr("");
+        String colListStr = c.getLayers().get(layerId).getColStr("");
 
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
@@ -352,8 +351,7 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
             throws Exception {
 
         // get column list string
-        Layer curLayer = c.getLayers().get(layerId);
-        String colListStr = curLayer.getColStr("");
+        String colListStr = c.getLayers().get(layerId).getColStr("");
 
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"

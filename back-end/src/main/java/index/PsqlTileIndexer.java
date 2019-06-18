@@ -208,9 +208,8 @@ public class PsqlTileIndexer extends BoundingBoxIndexer {
     @Override
     public ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate) throws SQLException, ClassNotFoundException {
 
-        Layer curLayer = c.getLayers().get(layerId);
         // get column list string
-        String colListStr = curLayer.getColStr("bbox");
+        String colListStr = c.getLayers().get(layerId).getColStr("bbox");
 
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"

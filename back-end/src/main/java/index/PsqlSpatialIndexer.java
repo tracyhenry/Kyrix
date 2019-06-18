@@ -179,9 +179,8 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
     public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox)
             throws Exception {
 
-        Layer curLayer = c.getLayers().get(layerId);
         // get column list string
-        String colListStr = curLayer.getColStr("");
+        String colListStr = c.getLayers().get(layerId).getColStr("");
 
         System.out.println("in psql spatial indexer");
         // construct range query
@@ -201,8 +200,7 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
             throws Exception {
 
         // get column list string
-        Layer curLayer = c.getLayers().get(layerId);
-        String colListStr = curLayer.getColStr("");
+        String colListStr = c.getLayers().get(layerId).getColStr("");
 
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
