@@ -72,17 +72,6 @@ public class Transform implements Serializable {
         return queriedColumnNames;
     }
 
-    public String getColStr(String tableName, boolean isAutoDD) {
-
-        String colListStr = "";
-        for (String col : this.getColumnNames())
-            colListStr += (tableName.isEmpty() ? "" : tableName + ".") + col + ", ";
-        if (isAutoDD)
-            colListStr += "cluster_num, ";
-        colListStr += "cx, cy, minx, miny, maxx, maxy";
-        return colListStr;
-    }
-
     public boolean isSeparable() {
         return separable;
     }

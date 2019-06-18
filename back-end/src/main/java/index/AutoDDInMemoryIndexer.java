@@ -208,7 +208,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             double cy = autoDD.getCanvasCoordinate(level, rs.getDouble(autoDD.getYColId() + 1), false);
 
             // check overlap
-            double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2 ;
+            double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
             double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
             double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
             double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;

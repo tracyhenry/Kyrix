@@ -181,7 +181,7 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
 
         Layer curLayer = c.getLayers().get(layerId);
         // get column list string
-        String colListStr = curLayer.getTransform().getColStr("", curLayer.isAutoDDLayer());
+        String colListStr = curLayer.getColStr("");
 
         System.out.println("in psql spatial indexer");
         // construct range query
@@ -202,7 +202,7 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
 
         // get column list string
         Layer curLayer = c.getLayers().get(layerId);
-        String colListStr = curLayer.getTransform().getColStr("", curLayer.isAutoDDLayer());
+        String colListStr = curLayer.getColStr("");
 
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"

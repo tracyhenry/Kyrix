@@ -168,7 +168,7 @@ public class PsqlCubeSpatialIndexer extends BoundingBoxIndexer {
 
         // get column list string
         Layer curLayer = c.getLayers().get(layerId);
-        String colListStr = curLayer.getTransform().getColStr("", curLayer.isAutoDDLayer());
+        String colListStr = curLayer.getColStr("");
 
         System.out.println("in psql cube spatial indexer");
         // construct range query
@@ -192,7 +192,7 @@ public class PsqlCubeSpatialIndexer extends BoundingBoxIndexer {
 
         // get column list string
         Layer curLayer = c.getLayers().get(layerId);
-        String colListStr = curLayer.getTransform().getColStr("", curLayer.isAutoDDLayer());
+        String colListStr = curLayer.getColStr("");
 
         // make bounding box cube to intersect with
         double minz = getMinZ(c);

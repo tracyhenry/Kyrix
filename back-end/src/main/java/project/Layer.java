@@ -49,6 +49,18 @@ public class Layer implements Serializable {
         return retainSizeZoom;
     }
 
+    public String getColStr(String tableName) {
+
+        String colListStr = "";
+        for (String col : transform.getColumnNames())
+            colListStr += (tableName.isEmpty() ? "" : tableName + ".") + col + ", ";
+        if (isAutoDDLayer)
+            colListStr += "cluster_num, ";
+        colListStr += "cx, cy, minx, miny, maxx, maxy";
+        return colListStr;
+    }
+
+
     @Override
     public String toString() {
         return "Layer{" +

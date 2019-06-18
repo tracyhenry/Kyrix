@@ -210,7 +210,7 @@ public class PsqlTileIndexer extends BoundingBoxIndexer {
 
         Layer curLayer = c.getLayers().get(layerId);
         // get column list string
-        String colListStr = curLayer.getTransform().getColStr("bbox", false);
+        String colListStr = curLayer.getColStr("bbox");
 
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
