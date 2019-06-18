@@ -28,14 +28,29 @@ function renderAxes(viewId, viewportX, viewportY, vWidth, vHeight) {
         var newScale = axes[i].scale.copy();
         var newRange = [];
         if (axes[i].dim == "x") {
-            newRange.push(viewportX), newRange.push(viewportX + vWidth);
-            newScale.range([0, gvd.viewportWidth]);
+            // get visible canvas range
+            var lo = Math.max(viewportX, axes[i].scale.range()[0]);
+            var hi = Math.min(viewportX + vWidth, axes[i].scale.range()[1]);
+
+            // get visible viewport range
+            var t = d3.scaleLinear()
+                .domain([viewportX, viewportX + vWidth])
+                .range([0, gvd.viewportWidth]);
+            newScale.range([t(lo), t(hi)]);
+            newScale.domain([lo, hi].map(axes[i].scale.invert));
         }
         else {
-            newRange.push(viewportY), newRange.push(viewportY + vHeight);
-            newScale.range([0, gvd.viewportHeight]);
+            // get visible canvas range
+            var lo = Math.max(viewportY, axes[i].scale.range()[0]);
+            var hi = Math.min(viewportY + vHeight, axes[i].scale.range()[1]);
+
+            // get visible viewport range
+            var t = d3.scaleLinear()
+                .domain([viewportY, viewportY + vHeight])
+                .range([0, gvd.viewportHeight]);
+            newScale.range([t(lo), t(hi)]);
+            newScale.domain([lo, hi].map(axes[i].scale.invert));
         }
-        newScale.domain(newRange.map(axes[i].scale.invert));
 
         // call axis function
         curg.call(axes[i].axis.scale(newScale));
