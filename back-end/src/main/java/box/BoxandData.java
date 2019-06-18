@@ -28,8 +28,9 @@ public class BoxandData {
             int numRows = data.get(i).size();
             Layer curLayer = c.getLayers().get(i);
             ArrayList<String> fields = curLayer.getTransform().getColumnNames();
+            int numFields = fields.size();
+
             for (int j = 0; j < numRows; j ++) {
-                int numFields = fields.size();
                 //raw data fields
                 ArrayList<String> rowArray = data.get(i).get(j);
                 HashMap<String, String> rowDict = new HashMap<>();

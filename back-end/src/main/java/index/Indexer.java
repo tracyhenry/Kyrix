@@ -35,7 +35,6 @@ public abstract class Indexer implements Serializable {
         for (Canvas c : Main.getProject().getCanvases())
             for (int layerId = 0; layerId < c.getLayers().size(); layerId ++) {
                 Indexer indexer = null;
-
                 if (Config.database == Config.Database.PSQL ||
                     Config.database == Config.Database.CITUS) {
                     boolean isCitus = (Config.database == Config.Database.CITUS);

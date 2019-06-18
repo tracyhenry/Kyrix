@@ -60,7 +60,6 @@ public class Layer implements Serializable {
         return colListStr;
     }
 
-
     @Override
     public String toString() {
         return "Layer{" +
