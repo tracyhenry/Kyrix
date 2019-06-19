@@ -175,13 +175,11 @@ function addAutoDD(autoDD, isInNewView) {
         curLayer.addPlacement({"centroid_x" : "con:0", "centroid_y" : "con:0", "width" : "con:0", "height" : "con:0"});
 
         // construct rendering function
-        curLayer.addRenderingFunc(AutoDD.getLayerRenderer(autoDD.renderingMode, autoDD.rendering));
+        curLayer.addRenderingFunc(autoDD.getLayerRenderer());
 
         // axes
         if (autoDD.axis) {
-            var axesOffsetX = autoDD.bboxW / 2 * Math.pow(autoDD.zoomFactor, i);
-            var axesOffsetY = autoDD.bboxH / 2 * Math.pow(autoDD.zoomFactor, i);
-            curCanvas.addAxes(AutoDD.getAxesRenderer(autoDD.loX, autoDD.loY, autoDD.hiX, autoDD.hiY, axesOffsetX, axesOffsetY));
+            curCanvas.addAxes(autoDD.getAxesRenderer(i));
         }
     }
 

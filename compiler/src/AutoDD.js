@@ -25,6 +25,9 @@ function AutoDD(args) {
          args.renderingMode == "object+clusternum" ||
          args.renderingMode == "circle+object") && ! ("rendering" in args))
         throw new Error("Constructing AutoDD: object renderer missing.");
+    if ((args.renderingMode == "circle+object" ||
+         args.renderingMode == "circle only") && ! ("roughN" in args))
+        throw new Error("Constructing AutoDD: A rough estimate of total objects (roughN) is missing for circle rendering modes.");
 
     // check required args
     var requiredArgs = ["query", "db", "xCol", "yCol", "renderingMode", "bboxW", "bboxH"];
@@ -59,6 +62,7 @@ function AutoDD(args) {
     this.topLevelWidth = ("topLevelWidth" in args ? args.topLevelWidth : 1000);
     this.topLevelHeight = ("topLevelHeight" in args ? args.topLevelHeight : 1000);
     this.zoomFactor = ("zoomFactor" in args ? args.zoomFactor : 2);
+    this.roughN = ("roughN" in args ? args.roughN : null);
     this.axis = ("axis" in args ? args.axis : false);
     this.loX = ("loX" in args ? args.loX : null);
     this.loY = ("loY" in args ? args.loY : null);
@@ -72,13 +76,14 @@ function AutoDD(args) {
  * @param objectRenderer - user specified object renderer
  * @returns {Function}
  */
-function getLayerRenderer(renderingMode, objectRenderer) {
+function getLayerRenderer() {
 
-    if (renderingMode == "circle only" || renderingMode == "circle+object") {
-        var renderFuncBody = "var objectRenderer = " + objectRenderer.toString() + ";\n";
+    if (this.renderingMode == "circle only" || this.renderingMode == "circle+object") {
+        var maxCircleDigit = this.roughN.toString().length;
+        var renderFuncBody = "var objectRenderer = " + this.rendering.toString() + ";\n";
         renderFuncBody += "var params = args.renderingParams;\n" +
             "var circleSizeInterpolator = d3.scaleLinear()\n" +
-            "       .domain([1, 3])\n" +   // TODO: let user specify N
+            "       .domain([1, " + maxCircleDigit + "])\n" +
             "       .range([params.circleMinSize, params.circleMaxSize]);\n" +
             "var g = svg.append(\"g\");\n" +
             "g.selectAll(\"circle\")\n" +
@@ -93,9 +98,9 @@ function getLayerRenderer(renderingMode, objectRenderer) {
             "   .style(\"fill-opacity\", .25)\n" +
             "   .attr(\"fill\", \"honeydew\")\n" +
             "   .attr(\"stroke\", \"#ADADAD\")\n" +
-            "   .style(\"stroke-width\", \"1px\")\n";
-        if (renderingMode == "circle+object")
-            renderFuncBody +=
+            "   .style(\"stroke-width\", \"1px\")";
+        if (this.renderingMode == "circle+object")
+            renderFuncBody += "\n" +
             // TODO: find ways to rescale the object, right now it's magnified when zoom in
                 "   .on(\"mouseover\", function (d) {\n" +
                 "        objectRenderer(svg, [d], args);\n" +
@@ -109,7 +114,7 @@ function getLayerRenderer(renderingMode, objectRenderer) {
                 "           .remove();\n" +
                 "    });\n";
         else
-            renderFuncBody += ";";
+            renderFuncBody += ";\n";
         renderFuncBody +=
             "    g.selectAll(\"text\")\n" +
             "        .data(data)\n" +
@@ -132,9 +137,9 @@ function getLayerRenderer(renderingMode, objectRenderer) {
             "        });";
         return new Function("svg", "data", "args", renderFuncBody);
     }
-    else if (renderingMode == "object only" || renderingMode == "object+clusternum") {
-        var renderFuncBody = "(" + objectRenderer.toString() + ")(svg, data, args);\n";
-        if (renderingMode == "object+clusternum")
+    else if (this.renderingMode == "object only" || this.renderingMode == "object+clusternum") {
+        var renderFuncBody = "(" + this.rendering.toString() + ")(svg, data, args);\n";
+        if (this.renderingMode == "object+clusternum")
             renderFuncBody += "var g = svg.select(\"g:last-of-type\");" +
                 "g.selectAll(\".clusternum\")" +
                 ".data(data)" +
@@ -153,24 +158,32 @@ function getLayerRenderer(renderingMode, objectRenderer) {
 }
 
 // get axes renderer
-function getAxesRenderer(loX, loY, hiX, hiY, xOffset, yOffset) {
+function getAxesRenderer(level) {
 
+    var xOffset = this.bboxW / 2 * Math.pow(this.zoomFactor, level);
+    var yOffset = this.bboxH / 2 * Math.pow(this.zoomFactor, level);
     var axesFuncBody = "var cWidth = args.canvasW, cHeight = args.canvasH, axes = [];\n" +
         "//x \n" +
         "var x = d3.scaleLinear()" +
-        "   .domain([" + loX + ", " + hiX + "])" +
+        "   .domain([" + this.loX + ", " + this.hiX + "])" +
         "   .range([" + xOffset + ", cWidth - " + xOffset + "]);\n" +
         "var xAxis = d3.axisTop().tickSize(-cHeight); " +
         "axes.push({\"dim\": \"x\", \"scale\": x, \"axis\": xAxis, \"translate\": [0, 0]});\n" +
         "//y \n" +
         "var y = d3.scaleLinear()" +
-        "   .domain([" + loY + ", " + hiY + "])" +
+        "   .domain([" + this.loY + ", " + this.hiY + "])" +
         "   .range([" + yOffset + ", cHeight - " + yOffset + "]);\n" +
         "var yAxis = d3.axisLeft().tickSize(-cWidth); " +
         "axes.push({\"dim\": \"y\", \"scale\": y, \"axis\": yAxis, \"translate\": [0, 0]});\n" +
         "return axes;";
     return new Function("args", axesFuncBody);
 }
+
+//define prototype
+AutoDD.prototype = {
+    getLayerRenderer : getLayerRenderer,
+    getAxesRenderer : getAxesRenderer
+};
 
 // exports
 module.exports = {
