@@ -56,11 +56,8 @@ function renderAxes(viewId, viewportX, viewportY, vWidth, vHeight) {
         curg.call(axes[i].axis.scale(newScale));
 
         // styling for autodd
-        if (gvd.curCanvasId.startsWith("autodd")) {
-            curg.selectAll(".tick line").attr("stroke", "#777").attr("stroke-dasharray", "3,10");
-            curg.style("font", "20px arial");
-            curg.selectAll("path").remove();
-        }
+        if ("styling" in axes[i])
+            axes[i].styling(curg);
     }
 };
 

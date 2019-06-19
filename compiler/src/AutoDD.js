@@ -163,18 +163,23 @@ function getAxesRenderer(level) {
     var xOffset = this.bboxW / 2 * Math.pow(this.zoomFactor, level);
     var yOffset = this.bboxH / 2 * Math.pow(this.zoomFactor, level);
     var axesFuncBody = "var cWidth = args.canvasW, cHeight = args.canvasH, axes = [];\n" +
+        "var styling = function (axesg) {\n" +
+        "   axesg.selectAll(\".tick line\").attr(\"stroke\", \"#777\").attr(\"stroke-dasharray\", \"3,10\");\n" +
+        "   axesg.style(\"font\", \"20px arial\");\n" +
+        "   axesg.selectAll(\"path\").remove();\n" +
+        "};\n" +
         "//x \n" +
         "var x = d3.scaleLinear()" +
         "   .domain([" + this.loX + ", " + this.hiX + "])" +
         "   .range([" + xOffset + ", cWidth - " + xOffset + "]);\n" +
         "var xAxis = d3.axisTop().tickSize(-cHeight); " +
-        "axes.push({\"dim\": \"x\", \"scale\": x, \"axis\": xAxis, \"translate\": [0, 0]});\n" +
+        "axes.push({\"dim\": \"x\", \"scale\": x, \"axis\": xAxis, \"translate\": [0, 0], \"styling\": styling});\n" +
         "//y \n" +
         "var y = d3.scaleLinear()" +
         "   .domain([" + this.loY + ", " + this.hiY + "])" +
         "   .range([" + yOffset + ", cHeight - " + yOffset + "]);\n" +
-        "var yAxis = d3.axisLeft().tickSize(-cWidth); " +
-        "axes.push({\"dim\": \"y\", \"scale\": y, \"axis\": yAxis, \"translate\": [0, 0]});\n" +
+        "var yAxis = d3.axisLeft().tickSize(-cWidth);\n" +
+        "axes.push({\"dim\": \"y\", \"scale\": y, \"axis\": yAxis, \"translate\": [0, 0], \"styling\": styling});\n" +
         "return axes;";
     return new Function("args", axesFuncBody);
 }
