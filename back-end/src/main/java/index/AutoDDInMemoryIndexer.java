@@ -3,8 +3,6 @@ package index;
 import com.github.davidmoten.rtree.Entry;
 import com.github.davidmoten.rtree.RTree;
 import com.github.davidmoten.rtree.geometry.Geometries;
-import com.github.davidmoten.rtree.geometry.Geometry;
-import com.github.davidmoten.rtree.geometry.Point;
 import com.github.davidmoten.rtree.geometry.Rectangle;
 import main.Config;
 import main.DbConnector;
@@ -26,6 +24,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     // One Rtree per level to store samples
     // https://github.com/davidmoten/rtree
     private ArrayList<RTree<ArrayList<String>, Rectangle>> Rtrees;
+    private ArrayList<ArrayList<String>> rawRows;
 
     // singleton pattern to ensure only one instance existed
     private AutoDDInMemoryIndexer() {}
@@ -52,6 +51,9 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         int numLevels = autoDD.getNumLevels();
         int numRawColumns = autoDD.getColumnNames().size();
 
+        // store raw query results into memory
+        rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
+
         // sample for each level
         Rtrees = new ArrayList<>();
         for (int i = 0; i < numLevels; i ++)
@@ -63,13 +65,24 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         if (autoDD.getRenderingMode().equals("object+clusternum") ||
             autoDD.getRenderingMode().equals("circle only") ||
             autoDD.getRenderingMode().equals("circle+object")) {
-            for (int i = numLevels - 1; i > 0; i --) {
+
+            // a fake bottom level for non-sampled objects
+            Rtrees.add(RTree.create());
+            for (ArrayList<String> rawRow : rawRows) {
+                ArrayList<String> bboxRow = new ArrayList<>();
+                for (int i = 0; i < rawRow.size(); i ++)
+                    bboxRow.add(rawRow.get(i));
+                bboxRow.add("0");
+                Rtrees.set(numLevels, Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
+            }
+
+            for (int i = numLevels; i > 0; i --) {
                 Iterable<Entry<ArrayList<String>, Rectangle>> curSamples = Rtrees.get(i).entries()
                         .toBlocking().toIterable();
                 for (Entry<ArrayList<String>, Rectangle> o : curSamples) {
                     ArrayList<String> curRow = o.value();
-                    // boundary case: last level
-                    if (i == numLevels - 1)
+                    // boundary case: bottom level
+                    if (i == numLevels)
                         curRow.set(numRawColumns, "1");
 
                     // find its nearest neighbor in one level up
@@ -177,7 +190,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         DbConnector.closeConnection(Config.databaseName);
 
         // release R-tree objects
-        for (int i = 0; i < numLevels; i ++)
+        for (int i = 0; i < Rtrees.size(); i ++)
             Rtrees.set(i, null);
     }
 
@@ -187,25 +200,18 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
         AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
         int numLevels = autoDD.getNumLevels();
-        double zoomFactor = autoDD.getZoomFactor();
-
-        // set up query iterator
-        Statement rawDBStmt = DbConnector.getStmtByDbName(autoDD.getDb());
-        ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, autoDD.getQuery());
 
         // loop through raw query results, sample one by one.
-        int numRawColumns = rs.getMetaData().getColumnCount();
-        while (rs.next()) {
+        for (ArrayList<String> rawRow : rawRows) {
 
-            // get raw row
-            ArrayList<String> curRawRow = new ArrayList<>();
-            for (int i = 1; i <= numRawColumns; i ++)
-                curRawRow.add(rs.getString(i));
-            curRawRow.add("0"); // place holder for cluster num field
+            ArrayList<String> bboxRow = new ArrayList<>();
+            for (int i = 0; i < rawRow.size(); i ++)
+                bboxRow.add(rawRow.get(i));
+            bboxRow.add("0"); // place holder for cluster num field
 
             // centroid of this tuple
-            double cx = autoDD.getCanvasCoordinate(level, rs.getDouble(autoDD.getXColId() + 1), true);
-            double cy = autoDD.getCanvasCoordinate(level, rs.getDouble(autoDD.getYColId() + 1), false);
+            double cx = autoDD.getCanvasCoordinate(level, Double.valueOf(rawRow.get(autoDD.getXColId())), true);
+            double cy = autoDD.getCanvasCoordinate(level, Double.valueOf(rawRow.get(autoDD.getYColId())), false);
 
             // check overlap
             double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
@@ -220,22 +226,19 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
             // sample this object, insert to all levels below this level
             for (int i = level; i < numLevels; i ++) {
-                cx = autoDD.getCanvasCoordinate(i, Double.valueOf(curRawRow.get(autoDD.getXColId())), true);
-                cy = autoDD.getCanvasCoordinate(i, Double.valueOf(curRawRow.get(autoDD.getYColId())), false);
+                cx = autoDD.getCanvasCoordinate(i, Double.valueOf(bboxRow.get(autoDD.getXColId())), true);
+                cy = autoDD.getCanvasCoordinate(i, Double.valueOf(bboxRow.get(autoDD.getYColId())), false);
                 minx = cx - autoDD.getBboxW() / 2;
                 miny = cy - autoDD.getBboxH() / 2;
                 maxx = cx + autoDD.getBboxW() / 2;
                 maxy = cy + autoDD.getBboxH() / 2;
-                ArrayList<String> curRow = new ArrayList<>(curRawRow);
+                ArrayList<String> curRow = new ArrayList<>(bboxRow);
                 curRow.add(String.valueOf(cx)); curRow.add(String.valueOf(cy));
                 curRow.add(String.valueOf(minx)); curRow.add(String.valueOf(miny));
                 curRow.add(String.valueOf(maxx)); curRow.add(String.valueOf(maxy));
                 Rtrees.set(i, Rtrees.get(i).add(curRow, Geometries.rectangle(minx, miny, maxx, maxy)));
             }
         }
-        rs.close();
-        rawDBStmt.close();
-        DbConnector.closeConnection(autoDD.getDb());
     }
 
     private String getAutoDDBboxTableName(int autoDDIndex, int level) {

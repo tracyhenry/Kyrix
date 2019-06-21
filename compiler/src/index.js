@@ -116,7 +116,7 @@ function addJump(jump) {
         // check whether zoom factor is the same for x & y
         if (destCanvas.w != sourceCanvas.w &&
             destCanvas.h != sourceCanvas.h &&
-            destCanvas.w / sourceCanvas.w != destCanvas.h / sourceCanvas.h)
+            Math.abs(destCanvas.w / sourceCanvas.w - destCanvas.h / sourceCanvas.h) > 1e-3)
             throw new Error("Constructing jump: cannot infer literal zoom factor.");
 
         // assign zoom factor to the source canvas
