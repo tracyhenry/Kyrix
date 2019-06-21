@@ -99,15 +99,16 @@ function getLayerRenderer() {
             "   .attr(\"fill\", \"honeydew\")\n" +
             "   .attr(\"stroke\", \"#ADADAD\")\n" +
             "   .style(\"stroke-width\", \"1px\")";
-        if (this.renderingMode == "circle+object")
+        if (this.renderingMode == "circle+object")  // set onhover listeners for circles
             renderFuncBody += "\n" +
-            // TODO: find ways to rescale the object, right now it's magnified when zoom in
                 "   .on(\"mouseover\", function (d) {\n" +
                 "        objectRenderer(svg, [d], args);\n" +
-                "        svg.select(\"g:last-of-type\")\n" +
+                "        svg.selectAll(\"g:last-of-type\")\n" +
                 "            .attr(\"id\", \"autodd_tooltip\")\n" +
                 "            .style(\"opacity\", 0.8)\n" +
-                "            .style(\"pointer-events\", \"none\");\n" +
+                "            .style(\"pointer-events\", \"none\")\n" +
+                "            .selectAll(\"*\")\n" +
+                "            .each(function() {zoomRescale(\"" + this.viewId + "\", this);});\n" +
                 "    })\n" +
                 "    .on(\"mouseleave\", function() {\n" +
                 "        d3.select(\"#autodd_tooltip\")\n" +

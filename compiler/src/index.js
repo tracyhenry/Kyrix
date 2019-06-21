@@ -138,7 +138,7 @@ function addJump(jump) {
 }
 
 // Add an autoDD to a project, this will create a hierarchy of canvases that form a pyramid shape
-function addAutoDD(autoDD, isInNewView) {
+function addAutoDD(autoDD) {
 
     // add to project
     this.autoDDs.push(autoDD);
@@ -147,6 +147,12 @@ function addAutoDD(autoDD, isInNewView) {
     this.addRenderingParams({"textwrap" : require("./RendererTemplates").textwrap,
                              "circleMinSize" : autoDD.circleMinSize,
                              "circleMaxSize" : autoDD.circleMaxSize});
+
+    // new view
+    var viewId = "autodd" + (this.autoDDs.length - 1);
+    autoDD.viewId = viewId;
+    var view = new View(viewId, 0, 0, autoDD.topLevelWidth, autoDD.topLevelHeight);
+    this.addView(view);
 
     // construct canvases
     var canvasNamePrefix = "autodd" + (this.autoDDs.length - 1) + "_";
@@ -189,11 +195,7 @@ function addAutoDD(autoDD, isInNewView) {
         this.addJump(new Jump(autoDDCanvases[i + 1], autoDDCanvases[i], "literal_zoom_out"));
     }
 
-    // add a view
-    if (! isInNewView)
-        return ;
-    var view = new View("autodd" + (this.autoDDs.length - 1), 0, 0, autoDD.topLevelWidth, autoDD.topLevelHeight);
-    this.addView(view);
+    // initial canvas
     this.setInitialStates(view, autoDDCanvases[0], 0, 0);
 }
 

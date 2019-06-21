@@ -19,9 +19,9 @@ var args = {query : query, db : "nba",
     bboxW : 162, bboxH : 132,
     axis : true, zoomFactor : 1.5, numLevels : 9,
     roughN : 999,
-    renderingMode: "circle only",
+    renderingMode: "circle+object",
     rendering : renderers.teamTimelineRendering};
 
-p.addAutoDD(new AutoDD(args), true);
+p.addAutoDD(new AutoDD(args));
 
 p.saveProject();
