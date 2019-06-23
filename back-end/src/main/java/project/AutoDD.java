@@ -18,6 +18,8 @@ public class AutoDD {
     private String renderingMode;
     private ArrayList<String> columnNames, queriedColumnNames = null;
     private int numLevels, topLevelWidth, topLevelHeight;
+    private int roughN;
+    private boolean overlap;
     private double zoomFactor;
     private int xColId = -1, yColId = -1;
     private double loX = Double.NaN, loY, hiX, hiY;
@@ -52,6 +54,14 @@ public class AutoDD {
 
     public String getRendering() {
         return rendering;
+    }
+
+    public int getRoughN() {
+        return roughN;
+    }
+
+    public boolean getOverlap() {
+        return overlap;
     }
 
     public int getXColId() {
@@ -156,14 +166,15 @@ public class AutoDD {
                 ", yCol='" + yCol + '\'' +
                 ", bboxW=" + bboxW +
                 ", bboxH=" + bboxH +
-                ", renderingMode='" + renderingMode + '\'' +
                 ", rendering='" + rendering + '\'' +
+                ", renderingMode='" + renderingMode + '\'' +
                 ", columnNames=" + columnNames +
                 ", numLevels=" + numLevels +
                 ", topLevelWidth=" + topLevelWidth +
                 ", topLevelHeight=" + topLevelHeight +
+                ", roughN=" + roughN +
+                ", overlap=" + overlap +
                 ", zoomFactor=" + zoomFactor +
                 '}';
     }
-
 }

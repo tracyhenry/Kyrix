@@ -63,6 +63,7 @@ function AutoDD(args) {
     this.topLevelHeight = ("topLevelHeight" in args ? args.topLevelHeight : 1000);
     this.zoomFactor = ("zoomFactor" in args ? args.zoomFactor : 2);
     this.roughN = ("roughN" in args ? args.roughN : null);
+    this.overlap = ("overlap" in args ? (args.overlap ? true : false) : false);
     this.axis = ("axis" in args ? args.axis : false);
     this.loX = ("loX" in args ? args.loX : null);
     this.loY = ("loY" in args ? args.loY : null);

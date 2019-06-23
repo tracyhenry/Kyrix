@@ -19,7 +19,8 @@ import java.util.ArrayList;
 public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
     private static AutoDDInMemoryIndexer instance = null;
-    private double overlappingThreshold = 1.0;  //TODO: decide this automatically
+    private final int objectNumLimit = 2000;  // in a 1k by 1k region
+    private double overlappingThreshold = 1.0;
 
     // One Rtree per level to store samples
     // https://github.com/davidmoten/rtree
@@ -40,7 +41,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
 
-        // create MV for all layers at once
+        // create MV for all autoDD layers at once
         int curLevel = Integer.valueOf(c.getId().substring(c.getId().indexOf("level") + 5));
         if (curLevel > 0)
             return ;
@@ -50,6 +51,12 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
         int numLevels = autoDD.getNumLevels();
         int numRawColumns = autoDD.getColumnNames().size();
+
+        // calculate overlapping threshold
+        overlappingThreshold = Math.max(0.5, Math.sqrt(4e6 / objectNumLimit / autoDD.getBboxH() / autoDD.getBboxW()) - 1);
+        if (! autoDD.getOverlap())
+            overlappingThreshold = Math.max(overlappingThreshold, 1);
+        System.out.println("Overlapping threshold: " + overlappingThreshold);
 
         // store raw query results into memory
         rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
