@@ -25,7 +25,6 @@ c1AnimalLayer.setRetainSizeZoom(true);
 c1AnimalLayer.addPlacement(placements.c1AnimalPlacement);
 c1AnimalLayer.addRenderingFunc(renderers.animalCircleRendering);
 
-
 // bg layer
 var c1BackgroundLayer = new Layer(transforms.c1BackgroundTransform, false);
 c1BackgroundCanvas.addLayer(c1BackgroundLayer);
