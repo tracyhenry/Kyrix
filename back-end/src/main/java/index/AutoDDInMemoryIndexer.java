@@ -196,9 +196,9 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         bboxStmt.close();
         DbConnector.closeConnection(Config.databaseName);
 
-        // release R-tree objects
-        for (int i = 0; i < Rtrees.size(); i ++)
-            Rtrees.set(i, null);
+        // release memory
+        Rtrees = null;
+        rawRows = null;
     }
 
     private void createMVForLevel(int level, int autoDDIndex) throws SQLException, ClassNotFoundException {
