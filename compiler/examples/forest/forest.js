@@ -21,6 +21,7 @@ p.addCanvas(c1BackgroundCanvas);
 // animal layer
 var c1AnimalLayer = new Layer(transforms.c1AnimalTransform, false);
 c1BackgroundCanvas.addLayer(c1AnimalLayer);
+c1AnimalLayer.setRetainSizeZoom(true);
 c1AnimalLayer.addPlacement(placements.c1AnimalPlacement);
 c1AnimalLayer.addRenderingFunc(renderers.animalCircleRendering);
 
@@ -37,6 +38,7 @@ p.addCanvas(c2BackgroundCanvas);
 // animal layer
 var c2AnimalLayer = new Layer(transforms.c2AnimalTransform, false);
 c2BackgroundCanvas.addLayer(c2AnimalLayer);
+c2AnimalLayer.setRetainSizeZoom(true);
 c2AnimalLayer.addPlacement(placements.c2AnimalPlacement);
 c2AnimalLayer.addRenderingFunc(renderers.animalCircleRendering);
 
@@ -53,6 +55,7 @@ p.addCanvas(c3BackgroundCanvas);
 // animal layer
 var c3AnimalLayer = new Layer(transforms.c3AnimalTransform, false);
 c3BackgroundCanvas.addLayer(c3AnimalLayer);
+c3AnimalLayer.setRetainSizeZoom(true);
 c3AnimalLayer.addPlacement(placements.c3BackgroundPlacement);
 c3AnimalLayer.addRenderingFunc(renderers.animalIconRendering);
 

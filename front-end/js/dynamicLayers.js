@@ -28,17 +28,36 @@ function renderAxes(viewId, viewportX, viewportY, vWidth, vHeight) {
         var newScale = axes[i].scale.copy();
         var newRange = [];
         if (axes[i].dim == "x") {
-            newRange.push(viewportX), newRange.push(viewportX + vWidth);
-            newScale.range([0, gvd.viewportWidth]);
+            // get visible canvas range
+            var lo = Math.max(viewportX, axes[i].scale.range()[0]);
+            var hi = Math.min(viewportX + vWidth, axes[i].scale.range()[1]);
+
+            // get visible viewport range
+            var t = d3.scaleLinear()
+                .domain([viewportX, viewportX + vWidth])
+                .range([0, gvd.viewportWidth]);
+            newScale.range([t(lo), t(hi)]);
+            newScale.domain([lo, hi].map(axes[i].scale.invert));
         }
         else {
-            newRange.push(viewportY), newRange.push(viewportY + vHeight);
-            newScale.range([0, gvd.viewportHeight]);
+            // get visible canvas range
+            var lo = Math.max(viewportY, axes[i].scale.range()[0]);
+            var hi = Math.min(viewportY + vHeight, axes[i].scale.range()[1]);
+
+            // get visible viewport range
+            var t = d3.scaleLinear()
+                .domain([viewportY, viewportY + vHeight])
+                .range([0, gvd.viewportHeight]);
+            newScale.range([t(lo), t(hi)]);
+            newScale.domain([lo, hi].map(axes[i].scale.invert));
         }
-        newScale.domain(newRange.map(axes[i].scale.invert));
 
         // call axis function
         curg.call(axes[i].axis.scale(newScale));
+
+        // styling for autodd
+        if ("styling" in axes[i])
+            axes[i].styling(curg);
     }
 };
 
@@ -188,6 +207,15 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
 
                     // highlight
                     highlightLowestSvg(viewId, tileSvg, i);
+
+                    // rescale
+                    if (gvd.curCanvas.layers[i].retainSizeZoom) {
+                        tileSvg.select("g:last-of-type")
+                            .selectAll("*")
+                            .each(function () {
+                                zoomRescale(viewId, this);
+                            });
+                    }
                 }
             }
         });
@@ -324,6 +352,15 @@ function renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs
 
                     // highlight
                     highlightLowestSvg(viewId, dboxSvg, i);
+
+                    // rescale
+                    if (gvd.curCanvas.layers[i].retainSizeZoom) {
+                        dboxSvg.select("g:last-of-type")
+                            .selectAll("*")
+                            .each(function () {
+                                zoomRescale(viewId, this);
+                            });
+                    }
                 }
 
                 // modify global var
@@ -377,21 +414,36 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
         .attr("viewBox", viewportX + " " + viewportY + " " + vpW + " " + vpH);
 
     // check if there is literal zooming going on
-    // if yes, rescale the objects if asked
+    // if yes, rescale the objects
+    // do it both here and upon data return
     if (d3.event != null && d3.event.transform.k != 1) {
-        // apply additional zoom transforms
-        if (param.retainSizeZoom)
-            d3.selectAll(viewClass + ".lowestsvg:not(.static)")
+
+        // rescale only if there is zoom
+        var numLayer = gvd.curCanvas.layers.length;
+        for (var i = 0; i < numLayer; i ++) {
+            if (! gvd.curCanvas.layers[i].retainSizeZoom)
+                continue;
+            // check if this is just a pan
+            objectSelection = d3.selectAll(viewClass + ".layerg.layer" + i)
+                .selectAll(".lowestsvg:not(.static)")
                 .selectAll("g")
-                .selectAll("*")
-                .each(function () {
+                .selectAll("*");
+            if (! objectSelection.empty()) {
+                var transformStr = objectSelection.attr("transform");
+                var match = /.*scale\(([\d.]+), ([\d.]+)\)/g.exec(transformStr);
+                var scaleX = parseFloat(match[1]);
+                var scaleY = parseFloat(match[2]);
+            }
+            if (Math.abs(Math.max(scaleX, scaleY) * d3.event.transform.k - 1) > param.eps)
+                objectSelection.each(function () {
                     zoomRescale(viewId, this);
                 });
+        }
     }
-    else {
-        if (param.fetchingScheme == "tiling")
-            renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);
-        else if (param.fetchingScheme == "dbox")
-            renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);
-    }
+
+    // fetch data
+    if (param.fetchingScheme == "tiling")
+        renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);
+    else if (param.fetchingScheme == "dbox")
+        renderDynamicBoxes(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);
 };

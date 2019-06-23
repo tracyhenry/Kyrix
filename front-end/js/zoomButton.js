@@ -148,7 +148,7 @@ function backspace(viewId) {
     // start a exit & fade transition
     if (fadingAnimation)
         d3.transition("fadeTween_" + viewId)
-            .duration(param.enteringDuration)
+            .duration(param.semanticZoomEnteringDuration)
             .tween("fadeTween", function() {
 
                 return function(t) {fadeAndExit(d3.easeCircleOut(1 - t));};
@@ -166,7 +166,7 @@ function backspace(viewId) {
 
         // schedule a zoom back transition
         var zoomDuration = d3.interpolateZoom(curHistory.endView, curHistory.startView).duration;
-        var enteringDelay = Math.max(Math.round(zoomDuration * param.enteringDelta) + param.enteringDuration - zoomDuration,
+        var enteringDelay = Math.max(Math.round(zoomDuration * param.semanticZoomEnteringDelta) + param.semanticZoomEnteringDuration - zoomDuration,
             param.axesOutDuration);
         if (! fadingAnimation)
             enteringDelay = 0;
@@ -252,7 +252,7 @@ function literalZoomIn(viewId) {
     var gvd = globalVar.views[viewId];
 
     startLiteralZoomTransition(viewId, [gvd.viewportWidth / 2, gvd.viewportHeight / 2],
-        gvd.maxScale, gvd.maxScale / 2 * param.literalZoomDuration);
+        param.literalZoomFactorPerStep, param.literalZoomDuration);
 };
 
 // handler for zoom out button
@@ -261,5 +261,5 @@ function literalZoomOut(viewId) {
     var gvd = globalVar.views[viewId];
 
     startLiteralZoomTransition(viewId, [gvd.viewportWidth / 2, gvd.viewportHeight / 2],
-        gvd.minScale, 1 / gvd.minScale/ 2 * param.literalZoomDuration);
+        -param.literalZoomFactorPerStep, param.literalZoomDuration);
 };

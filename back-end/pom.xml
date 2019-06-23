@@ -64,5 +64,11 @@
             <artifactId>jts-core</artifactId>
             <version>1.16.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.github.davidmoten</groupId>
+            <artifactId>rtree</artifactId>
+            <version>0.8-RC10</version>
+        </dependency>
     </dependencies>
 </project>

@@ -17,9 +17,9 @@ function zoomRescale(viewId, ele) {
         scaleY = 1;
     var tx = -cx * (scaleX - 1);
     var ty = -cy * (scaleY - 1);
-    var translatestr = tx + ',' + ty;
+    var translateStr = tx + ',' + ty;
     d3.select(ele).attr("transform","translate("
-        + translatestr + ") scale("
+        + translateStr + ") scale("
         + scaleX + ", " + scaleY + ")");
 };
 
@@ -32,71 +32,60 @@ function setupZoom(viewId, initialScale) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
 
-    // calculate minScale, maxScale
-    gvd.minScale = Math.min(gvd.curCanvas.zoomOutFactorX,
-        gvd.curCanvas.zoomOutFactorY, 1);
+    // calculate maxScale
     gvd.maxScale = Math.max(gvd.curCanvas.zoomInFactorX,
         gvd.curCanvas.zoomInFactorY, 1);
 
     // set up zoom
     gvd.zoom = d3.zoom()
-        .scaleExtent([gvd.minScale, gvd.maxScale])
+        .scaleExtent([1 - param.eps, gvd.maxScale])
         .on("zoom", function() {zoomed(viewId);});
 
     // set up zooms
     d3.select(viewClass + ".maing")
         .call(gvd.zoom)
-        .on("wheel.zoom", null)
         .on("dblclick.zoom", function () {
 
             var mousePos = d3.mouse(this);
             event.preventDefault();
             event.stopImmediatePropagation();
-            var finalK = (event.shiftKey ? gvd.minScale : gvd.maxScale);
-            var duration = (event.shiftKey ? 1 / finalK  / 2 : finalK / 2) * param.literalZoomDuration;
-            startLiteralZoomTransition(viewId, mousePos, finalK, duration);
+            var zoomFactor = param.literalZoomFactorPerStep * (event.shiftKey ? -1 : 1);
+            startLiteralZoomTransition(viewId, mousePos, zoomFactor, param.literalZoomDuration);
         })
         .call(gvd.zoom.transform, d3.zoomIdentity.scale(initialScale));
 };
 
 function startLiteralZoomTransition(viewId, center, scale, duration) {
 
-    if (1 - 1e-6 <= scale && scale <= 1 + 1e-6)
-        return ;
-
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
+    var curSelection = d3.select(viewClass + ".maing");
 
     // remove popovers
     removePopoversSmooth(viewId);
 
     // disable cursor pointers, buttons and onclick listeners
-    var curSelection = d3.select(viewClass + ".maing");
-    d3.select(viewClass + ".viewsvg")
-        .selectAll("*")
-        .style("cursor", "auto")
-        .on("click", null);
-    d3.selectAll("button" + viewClass)
-        .attr("disabled", true);
-    curSelection.on(".zoom", null);
+    var previousTick = 0;
 
     // start transition
-    gvd.animation = true;
-    var initialZoomTransform = d3.zoomTransform(curSelection.node());
     d3.transition("literalTween_" + viewId)
         .duration(duration)
+        .ease(d3.easeLinear)
         .tween("literalTween", function() {
-            var i = d3.interpolateNumber(1, scale);
             return function (t) {
-                var curK = i(t);
-                var curTX = center[0] + curK * (-center[0] + initialZoomTransform.x);
-                var curTY = center[1] + curK * (-center[1] + initialZoomTransform.y);
+                var curZoomFactor = Math.pow(Math.abs(scale), t - previousTick);
+                if (scale < 0)
+                    curZoomFactor = 1 / curZoomFactor;
+                previousTick = t;
+                var initialZoomTransform = d3.zoomTransform(curSelection.node());
+                if (initialZoomTransform.k >= gvd.maxScale && scale > 0) return;
+                if (initialZoomTransform.k <= 1 - param.eps && scale < 0) return;
+                var curK = initialZoomTransform.k * curZoomFactor;
+                var curTX = center[0] + curZoomFactor * (-center[0] + initialZoomTransform.x);
+                var curTY = center[1] + curZoomFactor * (-center[1] + initialZoomTransform.y);
                 var curZoomTransform = d3.zoomIdentity.translate(curTX, curTY).scale(curK);
                 curSelection.call(gvd.zoom.transform, curZoomTransform);
             };
-        })
-        .on("end", function () {
-            gvd.animation = false;
         });
 }
 
@@ -127,7 +116,7 @@ function completeZoom(viewId, zoomType, oldZoomFactorX, oldZoomFactorY) {
         renderStaticLayers(viewId);
 
         // post animation
-        postJump(viewId);
+        postJump(viewId, zoomType);
     });
 };
 
@@ -209,8 +198,8 @@ function zoomed(viewId) {
         completeZoom(viewId, "literal_zoom_in", zoomInFactorX, zoomInFactorY);
 
     // check if zoom scale reaches zoomOutFactor
-    if ((zoomOutFactorX < 1 && scaleX <= gvd.minScale) ||
-        (zoomOutFactorY < 1 && scaleY <= gvd.minScale))
+    if ((zoomOutFactorX < 1 && scaleX <= 1 - param.eps) ||
+        (zoomOutFactorY < 1 && scaleY <= 1 - param.eps))
         completeZoom(viewId, "literal_zoom_out", zoomOutFactorX, zoomOutFactorY);
 
     // call onPan & onZoom handlers

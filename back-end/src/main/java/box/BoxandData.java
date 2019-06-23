@@ -1,6 +1,7 @@
 package box;
 
 import project.Canvas;
+import project.Layer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,13 +26,24 @@ public class BoxandData {
         for (int i = 0; i < numLayers; i ++) {
             ret.add(new ArrayList<>());
             int numRows = data.get(i).size();
-            ArrayList<String> fields = c.getLayers().get(i).getTransform().getColumnNames();
-            int numFields = fields.size();
+            Layer curLayer = c.getLayers().get(i);
+            ArrayList<String> fields = curLayer.getTransform().getColumnNames();
+
             for (int j = 0; j < numRows; j ++) {
+                int numFields = fields.size();
+                //raw data fields
                 ArrayList<String> rowArray = data.get(i).get(j);
                 HashMap<String, String> rowDict = new HashMap<>();
                 for (int k = 0; k < numFields; k ++)
                     rowDict.put(fields.get(k), rowArray.get(k));
+
+                // cluster number field for autodd layer
+                if (curLayer.isAutoDDLayer()) {
+                    rowDict.put("cluster_num", rowArray.get(numFields));
+                    numFields ++;
+                }
+
+                // bounding box fields
                 rowDict.put("cx", rowArray.get(numFields));
                 rowDict.put("cy", rowArray.get(numFields + 1));
                 rowDict.put("minx", rowArray.get(numFields + 2));

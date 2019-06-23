@@ -7,10 +7,7 @@ import com.sun.net.httpserver.HttpHandler;
 import index.Indexer;
 import main.Config;
 import main.Main;
-import project.Canvas;
-import project.Layer;
-import project.Project;
-import project.Transform;
+import project.*;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
@@ -101,6 +98,7 @@ public class ProjectRequestHandler implements HttpHandler {
         }
     }
 
+    // simple check for the need of reindexing. A more sophisticated checker/partial reindexing are worth researching
     private boolean needsReIndex(Project oldProject, Project newProject) {
 
         if (oldProject == null)

@@ -34,11 +34,15 @@ public abstract class Indexer implements Serializable {
     public static void associateIndexer() throws Exception {
         for (Canvas c : Main.getProject().getCanvases())
             for (int layerId = 0; layerId < c.getLayers().size(); layerId ++) {
+
+                // determine indexer for this layer
                 Indexer indexer = null;
                 if (Config.database == Config.Database.PSQL ||
                     Config.database == Config.Database.CITUS) {
                     boolean isCitus = (Config.database == Config.Database.CITUS);
-                    if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
+                    if (c.getLayers().get(layerId).isAutoDDLayer())
+                        indexer = AutoDDInMemoryIndexer.getInstance();
+                    else if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
                         indexer = PsqlSpatialIndexer.getInstance(isCitus);
                     else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
                         indexer = PsqlTileIndexer.getInstance(isCitus);
@@ -46,16 +50,26 @@ public abstract class Indexer implements Serializable {
                         indexer = PsqlNativeBoxIndexer.getInstance(isCitus);
                     else if (Config.indexingScheme == Config.IndexingScheme.PSQL_NATIVECUBE_INDEX)
                         indexer = PsqlCubeSpatialIndexer.getInstance();
+                    else
+                        throw new Exception("Index type " + Config.indexingScheme.toString() + " not supported for PSQL.");
                 }
                 else if (Config.database == Config.Database.MYSQL) {
-                    if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
+                    if (c.getLayers().get(layerId).isAutoDDLayer())
+                        throw new Exception("AutoDD is not supported by MySQL indexers.");
+                    if (Config.indexingScheme == Config.IndexingScheme.MYSQL_SPATIAL_INDEX)
                         indexer = MysqlSpatialIndexer.getInstance();
                     else if (Config.indexingScheme == Config.indexingScheme.TILE_INDEX)
                         indexer = MysqlTileIndexer.getInstance();
-                    else if (Config.indexingScheme == Config.IndexingScheme.PSQL_NATIVEBOX_INDEX)
-                        throw new Exception("NATIVEBOX_INDEX not supported for dbtype MYSQL");
+                    else
+                        throw new Exception("Index type " + Config.indexingScheme.toString() + "not supported for MySQL.");
                 }
-                c.getLayers().get(layerId).setIndexer(indexer);
+
+                // associate indexer
+                Layer l = c.getLayers().get(layerId);
+                l.setIndexer(indexer);
+
+                // pre-run getColumnNames, see issue #84: github.com/tracyhenry/kyrix/issues/84
+                l.getTransform().getColumnNames();
             }
     }
 

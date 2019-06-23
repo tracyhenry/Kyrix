@@ -18,40 +18,7 @@ var renderingParams = {
     "teamlogoradius" : 24,
     "avgcharwidth" : 20,
     "shadowrectwidth" : 5,
-    "textwrap" : function textwrap(text, width) {
-        text.each(function() {
-            var text = d3.select(this),
-                words = text.text().split(/\s+/).reverse(),
-                word,
-                line = [],
-                lineNumber = 0,
-                lineHeight = 1.3, // ems
-                x = text.attr("x"),
-                y = text.attr("y"),
-                dy = parseFloat(text.attr("dy")),
-                tspan = text.text(null).append("tspan").attr("x", x).attr("y", y);
-
-            while (word = words.pop()) {
-                line.push(word);
-                tspan.text(line.join(" "));
-                if (tspan.node().getComputedTextLength() > width) {
-                    line.pop();
-                    tspan.text(line.join(" "));
-                    line = [word];
-                    tspan = text.append("tspan").attr("x", x).attr("y", y).text(word);
-                }
-            }
-            var tspans = text.selectAll("tspan"), num_tspans = tspans.size();
-            var firstY;
-            if (num_tspans % 2 == 0)
-                firstY = - (num_tspans / 2 - 0.5) * lineHeight;
-            else
-                firstY = - Math.floor(num_tspans / 2) * lineHeight;
-            tspans.attr("dy", function (d, i) {
-                return (firstY + lineHeight * i) + 0.35 + "em";
-            });
-        });
-    }
+    "textwrap" : require("../../src/RendererTemplates").textwrap
 };
 
 var teamLogoRendering = function (svg, data) {
@@ -160,6 +127,7 @@ var teamTimelineRendering = function (svg, data, args) {
         .style("fill-opacity", 1);
 
     // line
+    if (data.length > 0 && "timeline" in data[0])
     g.selectAll("line")
         .data(data)
         .enter()

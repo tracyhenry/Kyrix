@@ -2,13 +2,13 @@
 var param = {};
 
 // animation durations, delays
-param.enteringDelta = 0.5;
-param.enteringDuration = 1300;
-param.literalZoomDuration = 300;
+param.semanticZoomEnteringDelta = 0.5;
+param.semanticZoomEnteringDuration = 1300;
+param.literalZoomDuration = 500;
 param.oldRemovalDelay = 100;
 
-// zoom scale factor
-param.zoomScaleFactor = 4;
+// semantic zoom scale factor
+param.semanticZoomScaleFactor = 4;
 
 // entering initial scale factor
 param.enteringScaleFactor = 2.5;
@@ -26,6 +26,9 @@ param.staticTrimInDuration = 500;
 param.staticTrimOutDuration = 500;
 param.popoverOutDuration = 200;
 
+// zoom factor per step (double click, zoom buttons)
+param.literalZoomFactorPerStep = 2;
+
 // for coordinated highlighting - dim opacity
 param.dimOpacity = 0.4;
 
@@ -35,10 +38,9 @@ param.extraTiles = 0;
 // padding for the container svg
 param.viewPadding = 50;
 
-// whether retain size when literal zooming
-param.retainSizeZoom = false;
-
 // jump types
+param.literalZoomIn = "literal_zoom_in";
+param.literalZoomOut = "literal_zoom_out";
 param.semanticZoom = "semantic_zoom";
 param.geometricSemanticZoom = "geometric_semantic_zoom";
 param.load = "load";
@@ -49,3 +51,6 @@ param.fetchingScheme = "dbox";
 
 // whether use delta box
 param.deltaBox = true;
+
+// epsilon
+param.eps = 1e-5;

@@ -59,26 +59,18 @@ public class Transform implements Serializable {
         // otherwise the transform func is empty, fetch the schema from DB
         if (queriedColumnNames == null)
             try {
-            queriedColumnNames = new ArrayList<>();
-            Statement rawDBStmt = DbConnector.getStmtByDbName(this.getDb());
-            ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, this.getQuery());
-            int colCount = rs.getMetaData().getColumnCount();
-            for (int i = 1; i <= colCount; i ++)
-                queriedColumnNames.add(rs.getMetaData().getColumnName(i));
+                queriedColumnNames = new ArrayList<>();
+                Statement rawDBStmt = DbConnector.getStmtByDbName(this.getDb(), true);
+                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, this.getQuery());
+                int colCount = rs.getMetaData().getColumnCount();
+                for (int i = 1; i <= colCount; i ++)
+                    queriedColumnNames.add(rs.getMetaData().getColumnName(i));
+                DbConnector.closeConnection(this.getDb());
             }
             catch (Exception e) {
                 e.printStackTrace();
             }
         return queriedColumnNames;
-    }
-
-    public String getColStr(String tableName) {
-
-        String colListStr = "";
-        for (String col : this.getColumnNames())
-            colListStr += (tableName.isEmpty() ? "" : tableName + ".") + col + ", ";
-        colListStr += "cx, cy, minx, miny, maxx, maxy";
-        return colListStr;
     }
 
     public boolean isSeparable() {

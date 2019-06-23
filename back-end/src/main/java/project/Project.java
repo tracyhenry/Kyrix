@@ -23,6 +23,7 @@ public class Project {
     private ArrayList<View> views;
     private ArrayList<Canvas> canvases;
     private ArrayList<Jump> jumps;
+    private ArrayList<AutoDD> autoDDs;
     private String renderingParams;
 
     public String getName() {
@@ -39,6 +40,10 @@ public class Project {
 
     public ArrayList<Jump> getJumps() {
         return jumps;
+    }
+
+    public ArrayList<AutoDD> getAutoDDs() {
+        return autoDDs;
     }
 
     public String getRenderingParams() {
@@ -89,6 +94,7 @@ public class Project {
                 ", views=" + views +
                 ", canvases=" + canvases +
                 ", jumps=" + jumps +
+                ", autoDDs=" + autoDDs +
                 ", renderingParams='" + renderingParams + '\'' +
                 '}';
     }

@@ -19,6 +19,8 @@ function Layer(transform, isStatic) {
         this.isStatic = false;
     else
         this.isStatic = isStatic;
+    this.isAutoDDLayer = false;
+    this.retainSizeZoom = false;
 };
 
 /**
@@ -51,10 +53,30 @@ function addRenderingFunc(rendering) {
     this.rendering = rendering;
 };
 
+/**
+ * set isAutoDD, which tells the backend that this layer should use the autodd indexer
+ * @param isAutoDD
+ */
+function setIsAutoDD(isAutoDD) {
+
+    this.isAutoDDLayer = isAutoDD;
+}
+
+/**
+ * set retainSizeZoom,
+ * @param retainSizeZoom
+ */
+function setRetainSizeZoom(retainSizeZoom) {
+
+    this.retainSizeZoom = retainSizeZoom;
+}
+
 // define prototype
 Layer.prototype = {
     addPlacement: addPlacement,
-    addRenderingFunc: addRenderingFunc
+    addRenderingFunc: addRenderingFunc,
+    setIsAutoDD : setIsAutoDD,
+    setRetainSizeZoom : setRetainSizeZoom
 };
 
 // exports

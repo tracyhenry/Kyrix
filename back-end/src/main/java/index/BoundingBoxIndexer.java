@@ -28,7 +28,7 @@ public abstract class BoundingBoxIndexer extends Indexer {
 
         Layer l = c.getLayers().get(layerId);
         // get column list string
-        String colListStr = l.getTransform().getColStr("");
+        String colListStr = l.getColStr("");
 
         // construct static query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"

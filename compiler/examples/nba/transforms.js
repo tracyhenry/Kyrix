@@ -20,9 +20,7 @@ var teamLogoTransform = new Transform("select * from teams;",
     ["id", "x", "y", "team_id", "city", "name", "abbr"],
     true);
 
-var teamTimelineTransform = new Transform("select game_id, year, month, day, team1.abbr as home_team, team2.abbr as away_team, home_score, away_score "
-    + "from games, teams as team1, teams as team2 "
-    + "where games.home_team = team1.abbr and games.away_team = team2.abbr;",
+var teamTimelineTransform = new Transform("select game_id, year, month, day, home_team, away_team, home_score, away_score, 1 from games;",
     "nba",
     function (row, width, height, renderParams) {
         var ret = [];
@@ -40,12 +38,12 @@ var teamTimelineTransform = new Transform("select game_id, year, month, day, tea
         ret.push(daysPassed % 2 == 0 ? renderParams.timelineUpperY : renderParams.timelineLowerY);
 
         // rest of the attributes
-        for (var i = 1; i <= 7; i ++)
+        for (var i = 1; i <= 8; i ++)
             ret.push(row[i]);
 
         return Java.to(ret ,"java.lang.String[]");
     },
-    ["game_id", "x", "y", "year", "month", "day", "home_team", "away_team", "home_score", "away_score"],
+    ["game_id", "x", "y", "year", "month", "day", "home_team", "away_team", "home_score", "away_score", "timeline"],
     true);
 
 var teamTimelineStaticTransform = new Transform("select city, name, abbr from teams;",

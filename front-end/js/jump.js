@@ -60,7 +60,10 @@ function postJump(viewId, zoomType) {
     function postOldLayerRemoval() {
 
         // set up zoom
-        setupZoom(viewId, 1);
+        if (zoomType == param.literalZoomOut)
+            setupZoom(viewId, Math.max(gvd.curCanvas.zoomInFactorX, gvd.curCanvas.zoomInFactorY) - param.eps);
+        else
+            setupZoom(viewId, 1);
 
         // set up button states
         setButtonState(viewId);
@@ -89,9 +92,6 @@ function postJump(viewId, zoomType) {
         }
     };
 
-    if (zoomType == null)
-        zoomType = param.semanticZoom;
-
     // set the viewBox & opacity of the new .mainsvgs
     // because d3 tween does not get t to 1.0
     d3.selectAll(viewClass + ".mainsvg:not(.static)")
@@ -112,7 +112,7 @@ function postJump(viewId, zoomType) {
 
     // use a d3 transition to remove things based on zoom type
     var removalDelay = 0;
-    if (zoomType != param.semanticZoom)
+    if (zoomType == param.geometricSemanticZoom)
         removalDelay = param.oldRemovalDelay;
     var numOldLayer = d3.selectAll(viewClass + ".oldlayerg").size();
     d3.selectAll(viewClass + ".oldlayerg")
@@ -205,13 +205,13 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     var startView = [curViewport[2] / 2.0, curViewport[3] / 2.0, curViewport[2]];
     var endView = [minx + (maxx - minx) / 2.0 - curViewport[0],
         miny + (maxy - miny) / 2.0 - curViewport[1],
-        (maxx - minx) / (enteringAnimation ? param.zoomScaleFactor : 1)];
+        (maxx - minx) / (enteringAnimation ? param.semanticZoomScaleFactor : 1)];
     gvd.history[gvd.history.length - 1].startView = startView;
     gvd.history[gvd.history.length - 1].endView = endView;
 
     // set up zoom transitions
     param.zoomDuration = d3.interpolateZoom(startView, endView).duration;
-    param.enteringDelay = Math.round(param.zoomDuration * param.enteringDelta);
+    param.enteringDelay = Math.round(param.zoomDuration * param.semanticZoomEnteringDelta);
     d3.transition("zoomInTween_" + viewId)
         .duration(param.zoomDuration)
         .tween("zoomInTween", function() {
@@ -225,7 +225,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
             if (enteringAnimation)
                 d3.transition("enterTween_" + viewId)
                     .delay(param.enteringDelay)
-                    .duration(param.enteringDuration)
+                    .duration(param.semanticZoomEnteringDuration)
                     .tween("enterTween", function() {
 
                         return function(t) {enterAndScale(d3.easeCircleOut(t));};

@@ -3,6 +3,12 @@ const fs = require("fs");
 const mysql = require("mysql");
 const psql = require("pg");
 const http = require("http");
+const AutoDD = require("./AutoDD");
+const Canvas = require("./Canvas").Canvas;
+const View = require("./View").View;
+const Jump = require("./Jump").Jump;
+const Layer = require("./Layer").Layer;
+const Transform = require("./Transform").Transform;
 
 /**
  *
@@ -31,8 +37,11 @@ function Project(name, configFile) {
     // set of canvases
     this.canvases = [];
 
-    // the set of jump transitions
+    // set of jump transitions
     this.jumps = [];
+
+    // set of autoDDs
+    this.autoDDs = [];
 
     // rendering parameters
     this.renderingParams = "{}";
@@ -107,7 +116,7 @@ function addJump(jump) {
         // check whether zoom factor is the same for x & y
         if (destCanvas.w != sourceCanvas.w &&
             destCanvas.h != sourceCanvas.h &&
-            destCanvas.w / sourceCanvas.w != destCanvas.h / sourceCanvas.h)
+            Math.abs(destCanvas.w / sourceCanvas.w - destCanvas.h / sourceCanvas.h) > 1e-3)
             throw new Error("Constructing jump: cannot infer literal zoom factor.");
 
         // assign zoom factor to the source canvas
@@ -128,12 +137,76 @@ function addJump(jump) {
     this.jumps.push(jump);
 }
 
+// Add an autoDD to a project, this will create a hierarchy of canvases that form a pyramid shape
+function addAutoDD(autoDD) {
+
+    // add to project
+    this.autoDDs.push(autoDD);
+
+    // add stuff to renderingParam for circle agg rendering
+    this.addRenderingParams({"textwrap" : require("./RendererTemplates").textwrap,
+                             "circleMinSize" : autoDD.circleMinSize,
+                             "circleMaxSize" : autoDD.circleMaxSize});
+
+    // new view
+    var viewId = "autodd" + (this.autoDDs.length - 1);
+    autoDD.viewId = viewId;
+    var view = new View(viewId, 0, 0, autoDD.topLevelWidth, autoDD.topLevelHeight);
+    this.addView(view);
+
+    // construct canvases
+    var canvasNamePrefix = "autodd" + (this.autoDDs.length - 1) + "_";
+    var autoDDCanvases = [];
+    var transform = new Transform(autoDD.query, autoDD.db, "", [], true);
+    for (var i = 0; i < autoDD.numLevels; i ++) {
+        var width = autoDD.topLevelWidth * Math.pow(autoDD.zoomFactor, i) | 0;
+        var height = autoDD.topLevelHeight * Math.pow(autoDD.zoomFactor, i) | 0;
+
+        // construct a new canvas
+        var curCanvas = new Canvas(canvasNamePrefix + "level" + i, width, height);
+        autoDDCanvases.push(curCanvas);
+        this.addCanvas(curCanvas);
+
+        // create one layer
+        var curLayer = new Layer(transform, false);
+        curCanvas.addLayer(curLayer);
+
+        // set isAutoDD
+        curLayer.setIsAutoDD(true);
+
+        // set retainSizeZoom
+        curLayer.setRetainSizeZoom(true);
+
+        // dummy placement
+        curLayer.addPlacement({"centroid_x" : "con:0", "centroid_y" : "con:0", "width" : "con:0", "height" : "con:0"});
+
+        // construct rendering function
+        curLayer.addRenderingFunc(autoDD.getLayerRenderer());
+
+        // axes
+        if (autoDD.axis) {
+            curCanvas.addAxes(autoDD.getAxesRenderer(i));
+        }
+    }
+
+    // literal zooms
+    for (var i = 0; i + 1 < autoDD.numLevels; i ++) {
+        this.addJump(new Jump(autoDDCanvases[i], autoDDCanvases[i + 1], "literal_zoom_in"));
+        this.addJump(new Jump(autoDDCanvases[i + 1], autoDDCanvases[i], "literal_zoom_out"));
+    }
+
+    // initial canvas
+    this.setInitialStates(view, autoDDCanvases[0], 0, 0);
+}
+
 // Add a rendering parameter object
 function addRenderingParams(renderingParams) {
 
     if (renderingParams == null)
         return ;
-    this.renderingParams = JSON.stringify(renderingParams, function (key, value) {
+    // merge with old dictionary
+    var newRenderingParam = Object.assign({}, JSON.parse(this.renderingParams), renderingParams);
+    this.renderingParams = JSON.stringify(newRenderingParam, function (key, value) {
         if (typeof value === 'function')
             return value.toString();
         return value;
@@ -214,7 +287,11 @@ function sendProjectRequestToBackend(portNumber, projectJSON) {
 // save the current project, and send it to backend server
 function saveProject()
 {
+    var config = this.config;
+
     // final checks before saving
+    if (this.autoDDs.length > 0 && config.database == "mysql")
+        throw new Error("Auto drill down for MySQL is not supported right now.");
     for (var i = 0; i < this.canvases.length; i ++) {
         // a canvas should have at least one layer
         if (this.canvases[i].layers.length == 0)
@@ -239,7 +316,7 @@ function saveProject()
                     placementColNames.push(curPlacement.width.substr(4));
                 if (curPlacement.height.startsWith("col"))
                     placementColNames.push(curPlacement.height.substr(4));
-                for (var k = 0; k < placementColNames.length; k++) {
+                for (var k = 0; k < placementColNames.length; k ++) {
                     var exist = false;
                     for (var p = 0; p < curTransform.columnNames.length; p++)
                         if (placementColNames[k] == curTransform.columnNames[p])
@@ -283,7 +360,6 @@ function saveProject()
         this.name + "\', \'" + projectJSONEscapedPSQL + "\', 1);";
 
     // connect to databases
-    var config = this.config;
     if (config.database == "mysql") {
 
         var createDbQuery = "CREATE DATABASE " + config.kyrixDbName;
@@ -324,9 +400,9 @@ function saveProject()
 
         // construct a connection to the postgres db to create Kyrix db
         var postgresConn = new psql.Client({host : config.serverName,
-					    user : config.userName,
-					    password : config.password,
-					    database : "postgres"});
+                                            user : config.userName,
+                                            password : config.password,
+                                            qdatabase : "postgres"});
 
         // create Kyrix DB and ignore error
         postgresConn.connect(function (err) {
@@ -350,30 +426,29 @@ function saveProject()
                     // create a table and ignore the error
                     dbConn.query(createTableQuery, function (err) {
 
-			if (err)
+                        if (err)
                             console.error('error with CREATE TABLE', err.stack);
-			else
+                        else
                             console.log('table created');
-			if (err) throw err;
+                        if (err) throw err;
 
                         // delete the project if exists
                         dbConn.query(deleteProjQuery, function (err) {
-
-			    if (err)
-				console.error('error with delete project', err.stack);
-			    else
-				console.log('old project record deleted');
-			    if (err) throw err;
+                            if (err)
+                                console.error('error with delete project', err.stack);
+                            else
+                                console.log('old project record deleted');
+                            if (err) throw err;
 
                             // insert the JSON blob into the project table
                             dbConn.query(insertProjQueryPSQL, function (err) {				  
 
-				if (err)
-				    console.error('error with insert project', err.stack);
-				else
-				    console.log('new project record inserted');
-				if (err) throw err;
-				
+                                if (err)
+                                    console.error('error with insert project', err.stack);
+                                else
+                                    console.log('new project record inserted');
+                                if (err) throw err;
+
                                 sendProjectRequestToBackend(config.serverPortNumber, projectJSON);
                                 dbConn.end();
                                 postgresConn.end();
@@ -393,9 +468,10 @@ Project.prototype = {
     addView : addView,
     addCanvas : addCanvas,
     addJump : addJump,
+    addAutoDD : addAutoDD,
+    addRenderingParams : addRenderingParams,
     setInitialStates : setInitialStates,
-    saveProject : saveProject,
-    addRenderingParams : addRenderingParams
+    saveProject : saveProject
 };
 
 // exports

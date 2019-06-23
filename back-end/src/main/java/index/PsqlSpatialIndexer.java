@@ -25,6 +25,7 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
     private static boolean isCitus = false;
 
     // singleton pattern to ensure only one instance existed
+    protected PsqlSpatialIndexer() {}
     private PsqlSpatialIndexer(boolean isCitus) { this.isCitus = isCitus; }
 
     // thread-safe instance getter
@@ -179,7 +180,7 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
             throws Exception {
 
         // get column list string
-        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
+        String colListStr = c.getLayers().get(layerId).getColStr("");
 
         System.out.println("in psql spatial indexer");
         // construct range query
@@ -199,7 +200,7 @@ public class PsqlSpatialIndexer extends BoundingBoxIndexer {
             throws Exception {
 
         // get column list string
-        String colListStr = c.getLayers().get(layerId).getTransform().getColStr("");
+        String colListStr = c.getLayers().get(layerId).getColStr("");
 
         // construct range query
         String sql = "select " + colListStr + " from bbox_" + Main.getProject().getName() + "_"
