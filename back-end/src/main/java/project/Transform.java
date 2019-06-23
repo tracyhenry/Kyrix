@@ -60,11 +60,12 @@ public class Transform implements Serializable {
         if (queriedColumnNames == null)
             try {
                 queriedColumnNames = new ArrayList<>();
-                Statement rawDBStmt = DbConnector.getStmtByDbName(this.getDb());
+                Statement rawDBStmt = DbConnector.getStmtByDbName(this.getDb(), true);
                 ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, this.getQuery());
                 int colCount = rs.getMetaData().getColumnCount();
                 for (int i = 1; i <= colCount; i ++)
                     queriedColumnNames.add(rs.getMetaData().getColumnName(i));
+                DbConnector.closeConnection(this.getDb());
             }
             catch (Exception e) {
                 e.printStackTrace();

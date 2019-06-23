@@ -34,6 +34,8 @@ public abstract class Indexer implements Serializable {
     public static void associateIndexer() throws Exception {
         for (Canvas c : Main.getProject().getCanvases())
             for (int layerId = 0; layerId < c.getLayers().size(); layerId ++) {
+
+                // determine indexer for this layer
                 Indexer indexer = null;
                 if (Config.database == Config.Database.PSQL ||
                     Config.database == Config.Database.CITUS) {
@@ -61,7 +63,13 @@ public abstract class Indexer implements Serializable {
                     else
                         throw new Exception("Index type " + Config.indexingScheme.toString() + "not supported for MySQL.");
                 }
-                c.getLayers().get(layerId).setIndexer(indexer);
+
+                // associate indexer
+                Layer l = c.getLayers().get(layerId);
+                l.setIndexer(indexer);
+
+                // pre-run getColumnNames, see issue #84: github.com/tracyhenry/kyrix/issues/84
+                l.getTransform().getColumnNames();
             }
     }
 
