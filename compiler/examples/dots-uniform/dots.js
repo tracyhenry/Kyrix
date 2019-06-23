@@ -16,6 +16,7 @@ var p = new Project("dots_uniform", "../../../config.txt");
 // ================== top zoom level ===================
 var topWidth = 1000000, topHeight = 1000000;
 var topCanvas = new Canvas("top", topWidth, topHeight);
+topCanvas.addAxes(renderers.dotsAxes);
 p.addCanvas(topCanvas);
 
 // dots layer
@@ -26,6 +27,7 @@ dotsLayer.addRenderingFunc(renderers.dotsRendering);
 
 // ================== bottom zoom level ===================
 var bottomCanvas = new Canvas("bottom", topWidth * 2, topHeight * 2);
+bottomCanvas.addAxes(renderers.dotsAxes);
 p.addCanvas(bottomCanvas);
 bottomCanvas.addLayer(dotsLayer);
 
