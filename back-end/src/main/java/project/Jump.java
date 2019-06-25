@@ -1,8 +1,6 @@
 package project;
 
-/**
- * Created by wenbo on 1/4/18.
- */
+/** Created by wenbo on 1/4/18. */
 public class Jump {
 
     private String sourceId, destId;
@@ -48,16 +46,34 @@ public class Jump {
 
     @Override
     public String toString() {
-        return "Jump{" +
-                "sourceId='" + sourceId + '\'' +
-                ", destId='" + destId + '\'' +
-                ", type='" + type + '\'' +
-                ", selector='" + selector + '\'' +
-                ", viewport='" + viewport + '\'' +
-                ", predicates='" + predicates + '\'' +
-                ", name='" + name + '\'' +
-                ", sourceViewId='" + sourceViewId + '\'' +
-                ", destViewId='" + destViewId + '\'' +
-                '}';
+        return "Jump{"
+                + "sourceId='"
+                + sourceId
+                + '\''
+                + ", destId='"
+                + destId
+                + '\''
+                + ", type='"
+                + type
+                + '\''
+                + ", selector='"
+                + selector
+                + '\''
+                + ", viewport='"
+                + viewport
+                + '\''
+                + ", predicates='"
+                + predicates
+                + '\''
+                + ", name='"
+                + name
+                + '\''
+                + ", sourceViewId='"
+                + sourceViewId
+                + '\''
+                + ", destViewId='"
+                + destViewId
+                + '\''
+                + '}';
     }
 }

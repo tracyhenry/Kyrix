@@ -1,16 +1,12 @@
 package project;
 
-import main.DbConnector;
-
 import java.io.Serializable;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import main.DbConnector;
 
-/**
- * Created by wenbo on 4/3/18.
- */
+/** Created by wenbo on 4/3/18. */
 public class Transform implements Serializable {
 
     private String id;
@@ -49,12 +45,10 @@ public class Transform implements Serializable {
     public ArrayList<String> getColumnNames() {
 
         // if it is specified already, return
-        if (columnNames.size() > 0)
-            return columnNames;
+        if (columnNames.size() > 0) return columnNames;
 
         // if it is an empty transform, return an empty array
-        if (this.getDb().isEmpty())
-            return columnNames;
+        if (this.getDb().isEmpty()) return columnNames;
 
         // otherwise the transform func is empty, fetch the schema from DB
         if (queriedColumnNames == null)
@@ -63,11 +57,10 @@ public class Transform implements Serializable {
                 Statement rawDBStmt = DbConnector.getStmtByDbName(this.getDb(), true);
                 ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, this.getQuery());
                 int colCount = rs.getMetaData().getColumnCount();
-                for (int i = 1; i <= colCount; i ++)
+                for (int i = 1; i <= colCount; i++)
                     queriedColumnNames.add(rs.getMetaData().getColumnName(i));
                 DbConnector.closeConnection(this.getDb());
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         return queriedColumnNames;
@@ -79,13 +72,23 @@ public class Transform implements Serializable {
 
     @Override
     public String toString() {
-        return "Transform{" +
-                "id='" + id + '\'' +
-                ", query='" + query + '\'' +
-                ", db='" + db + '\'' +
-                ", transformFunc='" + transformFunc + '\'' +
-                ", columnNames=" + columnNames +
-                ", separable=" + separable +
-                '}';
+        return "Transform{"
+                + "id='"
+                + id
+                + '\''
+                + ", query='"
+                + query
+                + '\''
+                + ", db='"
+                + db
+                + '\''
+                + ", transformFunc='"
+                + transformFunc
+                + '\''
+                + ", columnNames="
+                + columnNames
+                + ", separable="
+                + separable
+                + '}';
     }
 }

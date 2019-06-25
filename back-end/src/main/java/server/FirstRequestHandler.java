@@ -4,18 +4,15 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import javax.net.ssl.HttpsURLConnection;
 import main.Config;
 import main.Main;
 import project.Project;
 
-import javax.net.ssl.HttpsURLConnection;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * Created by wenbo on 1/2/18.
- */
+/** Created by wenbo on 1/2/18. */
 public class FirstRequestHandler implements HttpHandler {
 
     // gson builder
@@ -31,7 +28,7 @@ public class FirstRequestHandler implements HttpHandler {
         System.out.println("Serving /first");
 
         // check if this is a POST request
-        if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
+        if (!httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
             return;
         }

@@ -19,11 +19,11 @@ public class Box {
         return maxy - miny;
     }
 
-    public double getMaxx(){
+    public double getMaxx() {
         return maxx;
     }
 
-    public double getMaxy(){
+    public double getMaxy() {
         return maxy;
     }
 

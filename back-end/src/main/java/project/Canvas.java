@@ -3,9 +3,7 @@ package project;
 import java.io.*;
 import java.util.ArrayList;
 
-/**
- * Created by wenbo on 1/4/18.
- */
+/** Created by wenbo on 1/4/18. */
 public class Canvas implements Serializable {
 
     private String id;
@@ -95,28 +93,44 @@ public class Canvas implements Serializable {
 
     public String getDbByLayerId(String layerId) {
 
-        return this.getLayers()
-                .get(Integer.valueOf(layerId))
-                .getTransform()
-                .getDb();
+        return this.getLayers().get(Integer.valueOf(layerId)).getTransform().getDb();
     }
 
     @Override
     public String toString() {
-        return "Canvas{" +
-                "id='" + id + '\'' +
-                ", w=" + w +
-                ", h=" + h +
-                ", wSql='" + wSql + '\'' +
-                ", hSql='" + hSql + '\'' +
-                ", wLayerId='" + wLayerId + '\'' +
-                ", hLayerId='" + hLayerId + '\'' +
-                ", zoomInFactorX=" + zoomInFactorX +
-                ", zoomInFactorY=" + zoomInFactorY +
-                ", zoomOutFactorX=" + zoomOutFactorX +
-                ", zoomOutFactorY=" + zoomOutFactorY +
-                ", layers=" + layers +
-                ", axes='" + axes + '\'' +
-                '}';
+        return "Canvas{"
+                + "id='"
+                + id
+                + '\''
+                + ", w="
+                + w
+                + ", h="
+                + h
+                + ", wSql='"
+                + wSql
+                + '\''
+                + ", hSql='"
+                + hSql
+                + '\''
+                + ", wLayerId='"
+                + wLayerId
+                + '\''
+                + ", hLayerId='"
+                + hLayerId
+                + '\''
+                + ", zoomInFactorX="
+                + zoomInFactorX
+                + ", zoomInFactorY="
+                + zoomInFactorY
+                + ", zoomOutFactorX="
+                + zoomOutFactorX
+                + ", zoomOutFactorY="
+                + zoomOutFactorY
+                + ", layers="
+                + layers
+                + ", axes='"
+                + axes
+                + '\''
+                + '}';
     }
 }

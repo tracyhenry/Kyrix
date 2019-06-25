@@ -1,8 +1,6 @@
 package project;
 
-/**
- * Created by wenbo on 1/29/19.
- */
+/** Created by wenbo on 1/29/19. */
 public class View {
 
     private String id;
@@ -50,15 +48,25 @@ public class View {
 
     @Override
     public String toString() {
-        return "View{" +
-                "minx=" + minx +
-                ", miny=" + miny +
-                ", width=" + width +
-                ", height=" + height +
-                ", initialCanvasId='" + initialCanvasId + '\'' +
-                ", initialViewportX=" + initialViewportX +
-                ", initialViewportY=" + initialViewportY +
-                ", initialPredicates='" + initialPredicates + '\'' +
-                '}';
+        return "View{"
+                + "minx="
+                + minx
+                + ", miny="
+                + miny
+                + ", width="
+                + width
+                + ", height="
+                + height
+                + ", initialCanvasId='"
+                + initialCanvasId
+                + '\''
+                + ", initialViewportX="
+                + initialViewportX
+                + ", initialViewportY="
+                + initialViewportY
+                + ", initialPredicates='"
+                + initialPredicates
+                + '\''
+                + '}';
     }
 }

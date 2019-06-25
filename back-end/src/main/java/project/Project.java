@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by wenbo on 1/4/18.
- */
+/** Created by wenbo on 1/4/18. */
 public class Project {
 
     public Project() {
@@ -52,50 +50,52 @@ public class Project {
 
     public Canvas getCanvas(String canvasId) {
 
-        if (! mapInitialized) {
+        if (!mapInitialized) {
             mapInitialized = true;
             initializeMaps();
         }
-        if (canvasMap.containsKey(canvasId))
-            return canvasMap.get(canvasId);
-        else
-            return null;
+        if (canvasMap.containsKey(canvasId)) return canvasMap.get(canvasId);
+        else return null;
     }
 
     public View getView(String viewId) {
 
-        if (! mapInitialized) {
+        if (!mapInitialized) {
             mapInitialized = true;
             initializeMaps();
         }
-        if (viewMap.containsKey(viewId))
-            return viewMap.get(viewId);
-        else
-            return null;
+        if (viewMap.containsKey(viewId)) return viewMap.get(viewId);
+        else return null;
     }
 
     private void initializeMaps() {
 
         // initialize canvas map
         canvasMap = new HashMap<>();
-        for (Canvas c : canvases)
-            canvasMap.put(c.getId(), c);
+        for (Canvas c : canvases) canvasMap.put(c.getId(), c);
 
         // initialize view map
         viewMap = new HashMap<>();
-        for (View v : views)
-            viewMap.put(v.getId(), v);
+        for (View v : views) viewMap.put(v.getId(), v);
     }
 
     @Override
     public String toString() {
-        return "Project{" +
-                "name='" + name + '\'' +
-                ", views=" + views +
-                ", canvases=" + canvases +
-                ", jumps=" + jumps +
-                ", autoDDs=" + autoDDs +
-                ", renderingParams='" + renderingParams + '\'' +
-                '}';
+        return "Project{"
+                + "name='"
+                + name
+                + '\''
+                + ", views="
+                + views
+                + ", canvases="
+                + canvases
+                + ", jumps="
+                + jumps
+                + ", autoDDs="
+                + autoDDs
+                + ", renderingParams='"
+                + renderingParams
+                + '\''
+                + '}';
     }
 }

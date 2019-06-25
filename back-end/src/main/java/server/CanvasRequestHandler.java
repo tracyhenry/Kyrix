@@ -5,25 +5,20 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import index.Indexer;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import javax.net.ssl.HttpsURLConnection;
 import main.Config;
 import main.DbConnector;
 import main.Main;
 import project.Canvas;
 import project.Layer;
-import index.Indexer;
 
-import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * Created by wenbo on 1/8/18.
- */
+/** Created by wenbo on 1/8/18. */
 public class CanvasRequestHandler implements HttpHandler {
 
     private final Gson gson;
@@ -39,7 +34,7 @@ public class CanvasRequestHandler implements HttpHandler {
         System.out.println("Serving /canvas");
 
         // check if this is a POST request
-        if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
+        if (!httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
             return;
         }
@@ -59,7 +54,7 @@ public class CanvasRequestHandler implements HttpHandler {
 
         // list of predicates
         ArrayList<String> predicates = new ArrayList<>();
-        for (int i = 0; i < c.getLayers().size(); i ++)
+        for (int i = 0; i < c.getLayers().size(); i++)
             predicates.add(queryMap.get("predicate" + i));
 
         // calculate w or h if they are not pre-determined
@@ -69,7 +64,8 @@ public class CanvasRequestHandler implements HttpHandler {
             String db = c.getDbByLayerId(c.getwLayerId());
             try {
                 c.setW(getWidthOrHeightBySql(sql, db));
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
         if (c.gethSql().length() > 0) {
             String predicate = queryMap.get("predicate" + c.gethLayerId());
@@ -77,7 +73,8 @@ public class CanvasRequestHandler implements HttpHandler {
             String db = c.getDbByLayerId(c.gethLayerId());
             try {
                 c.setH(getWidthOrHeightBySql(sql, db));
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
 
         // get static data
@@ -98,24 +95,25 @@ public class CanvasRequestHandler implements HttpHandler {
         Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
     }
 
-    private int getWidthOrHeightBySql(String sql, String db) throws SQLException, ClassNotFoundException {
+    private int getWidthOrHeightBySql(String sql, String db)
+            throws SQLException, ClassNotFoundException {
 
         return Integer.valueOf(DbConnector.getQueryResult(db, sql).get(0).get(0));
     }
 
-    private ArrayList<ArrayList<ArrayList<String>>> getStaticData(Canvas c, ArrayList<String> predicates)
-            throws SQLException, ClassNotFoundException {
+    private ArrayList<ArrayList<ArrayList<String>>> getStaticData(
+            Canvas c, ArrayList<String> predicates) throws SQLException, ClassNotFoundException {
 
         // container for data
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
 
         // loop over layers
-        for (int i = 0; i < c.getLayers().size(); i ++) {
+        for (int i = 0; i < c.getLayers().size(); i++) {
 
             Layer l = c.getLayers().get(i);
 
             // add an empty placeholder for static layers
-            if (! l.isStatic()) {
+            if (!l.isStatic()) {
                 data.add(new ArrayList<>());
                 continue;
             }
@@ -129,5 +127,4 @@ public class CanvasRequestHandler implements HttpHandler {
 
         return data;
     }
-    
 }

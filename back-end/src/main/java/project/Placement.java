@@ -2,9 +2,7 @@ package project;
 
 import java.io.Serializable;
 
-/**
- * Created by wenbo on 1/12/18.
- */
+/** Created by wenbo on 1/12/18. */
 public class Placement implements Serializable {
 
     private String centroid_x;
@@ -30,11 +28,19 @@ public class Placement implements Serializable {
 
     @Override
     public String toString() {
-        return "Placement{" +
-                "centroid_x='" + centroid_x + '\'' +
-                ", centroid_y='" + centroid_y + '\'' +
-                ", width='" + width + '\'' +
-                ", height='" + height + '\'' +
-                '}';
+        return "Placement{"
+                + "centroid_x='"
+                + centroid_x
+                + '\''
+                + ", centroid_y='"
+                + centroid_y
+                + '\''
+                + ", width='"
+                + width
+                + '\''
+                + ", height='"
+                + height
+                + '\''
+                + '}';
     }
 }

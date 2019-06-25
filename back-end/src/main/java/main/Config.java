@@ -1,8 +1,6 @@
 package main;
 
-/**
- * Created by wenbo on 1/2/18.
- */
+/** Created by wenbo on 1/2/18. */
 public class Config {
 
     // front-end root and file name
@@ -47,11 +45,23 @@ public class Config {
     public static int tileBatchSize = 10000;
 
     // tile indexing scheme
-    public enum IndexingScheme {TILE_INDEX, POSTGIS_SPATIAL_INDEX, PSQL_NATIVEBOX_INDEX, PSQL_NATIVECUBE_INDEX, MYSQL_SPATIAL_INDEX};
+    public enum IndexingScheme {
+        TILE_INDEX,
+        POSTGIS_SPATIAL_INDEX,
+        PSQL_NATIVEBOX_INDEX,
+        PSQL_NATIVECUBE_INDEX,
+        MYSQL_SPATIAL_INDEX
+    };
+
     public static IndexingScheme indexingScheme = IndexingScheme.PSQL_NATIVEBOX_INDEX;
 
     // underlying database
-    public enum Database {MYSQL, PSQL, CITUS};
+    public enum Database {
+        MYSQL,
+        PSQL,
+        CITUS
+    };
+
     public static Database database;
 
     // database iterator fetch size

@@ -1,19 +1,14 @@
 package main;
 
 import cache.TileCache;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import index.Indexer;
-import project.Project;
-import server.Server;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.lang.*;
+import project.Project;
+import server.Server;
 
 public class Main {
 
@@ -50,7 +45,14 @@ public class Main {
 
     public static void setProjectClean() throws SQLException, ClassNotFoundException {
 
-        String sql = "update " + Config.projectTableName + " set dirty = " + 0 + " where name = \'" + project.getName() + "\';";
+        String sql =
+                "update "
+                        + Config.projectTableName
+                        + " set dirty = "
+                        + 0
+                        + " where name = \'"
+                        + project.getName()
+                        + "\';";
         DbConnector.executeUpdate(Config.databaseName, sql);
     }
 
@@ -60,14 +62,14 @@ public class Main {
         BufferedReader br = new BufferedReader(new FileReader(Config.configFileName));
         String line;
         List<String> inputStrings = new ArrayList<>();
-        while ((line = br.readLine()) != null)
-            inputStrings.add(line);
+        while ((line = br.readLine()) != null) inputStrings.add(line);
 
         Config.portNumber = Integer.valueOf(inputStrings.get(Config.portNumberRow));
         String dbStr = inputStrings.get(Config.dbRow).toLowerCase();
-        Config.database = (dbStr.equals("mysql") ? Config.Database.MYSQL :
-                           dbStr.equals("psql") ? Config.Database.PSQL :
-                           Config.Database.CITUS);
+        Config.database =
+                (dbStr.equals("mysql")
+                        ? Config.Database.MYSQL
+                        : dbStr.equals("psql") ? Config.Database.PSQL : Config.Database.CITUS);
         System.out.println("dbtype: " + dbStr + "  Config.database=" + Config.database);
         Config.dbServer = inputStrings.get(Config.dbServerRow);
         Config.userName = inputStrings.get(Config.userNameRow);

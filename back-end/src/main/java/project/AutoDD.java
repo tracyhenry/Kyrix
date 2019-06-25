@@ -1,14 +1,11 @@
 package project;
 
-import main.DbConnector;
-
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import main.DbConnector;
 
-/**
- * Created by wenbo on 3/31/19.
- */
+/** Created by wenbo on 3/31/19. */
 public class AutoDD {
 
     private String query, db;
@@ -68,9 +65,7 @@ public class AutoDD {
 
         if (xColId < 0) {
             ArrayList<String> colNames = this.getColumnNames();
-            for (int i = 0; i < colNames.size(); i ++)
-                if (colNames.get(i).equals(xCol))
-                    xColId = i;
+            for (int i = 0; i < colNames.size(); i++) if (colNames.get(i).equals(xCol)) xColId = i;
         }
         return xColId;
     }
@@ -79,9 +74,7 @@ public class AutoDD {
 
         if (yColId < 0) {
             ArrayList<String> colNames = this.getColumnNames();
-            for (int i = 0; i < colNames.size(); i ++)
-                if (colNames.get(i).equals(yCol))
-                    yColId = i;
+            for (int i = 0; i < colNames.size(); i++) if (colNames.get(i).equals(yCol)) yColId = i;
         }
         return yColId;
     }
@@ -89,8 +82,7 @@ public class AutoDD {
     public ArrayList<String> getColumnNames() {
 
         // if it is specified already, return
-        if (columnNames.size() > 0)
-            return columnNames;
+        if (columnNames.size() > 0) return columnNames;
 
         // otherwise fetch the schema from DB
         if (queriedColumnNames == null)
@@ -99,11 +91,10 @@ public class AutoDD {
                 Statement rawDBStmt = DbConnector.getStmtByDbName(this.getDb(), true);
                 ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, this.getQuery());
                 int colCount = rs.getMetaData().getColumnCount();
-                for (int i = 1; i <= colCount; i ++)
+                for (int i = 1; i <= colCount; i++)
                     queriedColumnNames.add(rs.getMetaData().getColumnName(i));
                 DbConnector.closeConnection(this.getDb());
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         return queriedColumnNames;
@@ -140,41 +131,64 @@ public class AutoDD {
                 while (rs.next()) {
                     double cx = rs.getDouble(this.getXColId() + 1);
                     double cy = rs.getDouble(this.getYColId() + 1);
-                    loX = Math.min(loX, cx); hiX = Math.max(hiX, cx);
-                    loY = Math.min(loY, cy); hiY = Math.max(hiY, cy);
+                    loX = Math.min(loX, cx);
+                    hiX = Math.max(hiX, cx);
+                    loY = Math.min(loY, cy);
+                    hiY = Math.max(hiY, cy);
                 }
                 rawDBStmt.close();
                 DbConnector.closeConnection(this.getDb());
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
         if (isX)
-            return ((topLevelWidth - bboxW) * (v - loX) / (hiX - loX) + bboxW / 2.0) * Math.pow(zoomFactor, level);
+            return ((topLevelWidth - bboxW) * (v - loX) / (hiX - loX) + bboxW / 2.0)
+                    * Math.pow(zoomFactor, level);
         else
-            return ((topLevelHeight - bboxH) * (v - loY) / (hiY - loY) + bboxH / 2.0) * Math.pow(zoomFactor, level);
+            return ((topLevelHeight - bboxH) * (v - loY) / (hiY - loY) + bboxH / 2.0)
+                    * Math.pow(zoomFactor, level);
     }
 
     @Override
     public String toString() {
-        return "AutoDD{" +
-                "query='" + query + '\'' +
-                ", db='" + db + '\'' +
-                ", xCol='" + xCol + '\'' +
-                ", yCol='" + yCol + '\'' +
-                ", bboxW=" + bboxW +
-                ", bboxH=" + bboxH +
-                ", rendering='" + rendering + '\'' +
-                ", renderingMode='" + renderingMode + '\'' +
-                ", columnNames=" + columnNames +
-                ", numLevels=" + numLevels +
-                ", topLevelWidth=" + topLevelWidth +
-                ", topLevelHeight=" + topLevelHeight +
-                ", roughN=" + roughN +
-                ", overlap=" + overlap +
-                ", zoomFactor=" + zoomFactor +
-                '}';
+        return "AutoDD{"
+                + "query='"
+                + query
+                + '\''
+                + ", db='"
+                + db
+                + '\''
+                + ", xCol='"
+                + xCol
+                + '\''
+                + ", yCol='"
+                + yCol
+                + '\''
+                + ", bboxW="
+                + bboxW
+                + ", bboxH="
+                + bboxH
+                + ", rendering='"
+                + rendering
+                + '\''
+                + ", renderingMode='"
+                + renderingMode
+                + '\''
+                + ", columnNames="
+                + columnNames
+                + ", numLevels="
+                + numLevels
+                + ", topLevelWidth="
+                + topLevelWidth
+                + ", topLevelHeight="
+                + topLevelHeight
+                + ", roughN="
+                + roughN
+                + ", overlap="
+                + overlap
+                + ", zoomFactor="
+                + zoomFactor
+                + '}';
     }
 }

@@ -1,6 +1,12 @@
 package index;
 
 import box.Box;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import main.Config;
 import main.DbConnector;
@@ -9,17 +15,7 @@ import project.Canvas;
 import project.Layer;
 import project.Transform;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-
-/**
- * Created by wenbo on 12/30/18.
- */
+/** Created by wenbo on 12/30/18. */
 public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
 
     private static PsqlGridCompressIndexer instance = null;
@@ -34,13 +30,12 @@ public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
     // thread-safe instance getter
     public static synchronized PsqlGridCompressIndexer getInstance() {
 
-        if (instance == null)
-            instance = new PsqlGridCompressIndexer();
+        if (instance == null) instance = new PsqlGridCompressIndexer();
         return instance;
     }
 
     @Override
-    public void createMV(Canvas c, int layerId) throws Exception  {
+    public void createMV(Canvas c, int layerId) throws Exception {
 
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
@@ -53,35 +48,47 @@ public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
         // set up query iterator
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
-        Statement rawDBStmt = (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb(), true));
-        ResultSet rs = (trans.getDb().isEmpty() ? null : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
+        Statement rawDBStmt =
+                (trans.getDb().isEmpty() ? null : DbConnector.getStmtByDbName(trans.getDb(), true));
+        ResultSet rs =
+                (trans.getDb().isEmpty()
+                        ? null
+                        : DbConnector.getQueryResultIterator(rawDBStmt, trans.getQuery()));
 
         // step 0: create tables for storing upgrouped grids
-        String ungroupedTableName = "bbox_ungrouped_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
+        String ungroupedTableName =
+                "bbox_ungrouped_"
+                        + Main.getProject().getName()
+                        + "_"
+                        + c.getId()
+                        + "layer"
+                        + layerId;
         // drop table if exists
         String sql = "drop table if exists " + ungroupedTableName + ";";
         bboxStmt.executeUpdate(sql);
         // create the bbox table
-        sql = "create table " + ungroupedTableName + " (grid_x int, grid_y int, compressed_blob text, "
-                + "minx double precision, miny double precision, "
-                + "maxx double precision, maxy double precision);";
+        sql =
+                "create table "
+                        + ungroupedTableName
+                        + " (grid_x int, grid_y int, compressed_blob text, "
+                        + "minx double precision, miny double precision, "
+                        + "maxx double precision, maxy double precision);";
         bboxStmt.executeUpdate(sql);
 
         // if this is an empty layer, return
-        if (trans.getDb().equals(""))
-            return ;
+        if (trans.getDb().equals("")) return;
 
         // step 1: set up nashorn environment, prepared statement, column name to id mapping
         NashornScriptEngine engine = null;
-        if (! trans.getTransformFunc().equals(""))
-            engine = setupNashorn(trans.getTransformFunc());
+        if (!trans.getTransformFunc().equals("")) engine = setupNashorn(trans.getTransformFunc());
 
         // step 2: looping through query results
         // TODO: distinguish between separable and non-separable cases
 
         // prepared statements
         String insertSql = "insert into " + ungroupedTableName + " values (?, ?, ?, ?, ?, ?, ?);";
-        PreparedStatement insPrepStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
+        PreparedStatement insPrepStmt =
+                DbConnector.getPreparedStatement(Config.databaseName, insertSql);
 
         // in-memory structures to maintain for each batch of records
         HashMap<String, StringBuilder> blobs = new HashMap<>();
@@ -98,11 +105,14 @@ public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
 
             // count log
             boolean hasNext = rs.next();
-            rowCount ++;
+            rowCount++;
 
             // flush stuff in blobs and boxes to the database
-            if (rowCount % batchSize == 0 || ! hasNext) {
-                System.out.println("In-memory processing for this batch: " + (System.currentTimeMillis() - lastBatchSt) / 1000.0 + "s.");
+            if (rowCount % batchSize == 0 || !hasNext) {
+                System.out.println(
+                        "In-memory processing for this batch: "
+                                + (System.currentTimeMillis() - lastBatchSt) / 1000.0
+                                + "s.");
                 System.out.println(rowCount);
                 insCount = 0;
                 for (String gridKey : blobs.keySet()) {
@@ -119,12 +129,13 @@ public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
                     insPrepStmt.setInt(1, gridX);
                     insPrepStmt.setInt(2, gridY);
                     insPrepStmt.setString(3, curBlob.toString());
-                    insPrepStmt.setDouble(4, curBbox.getMinx()); insPrepStmt.setDouble(5, curBbox.getMiny());
-                    insPrepStmt.setDouble(6, curBbox.getMaxx()); insPrepStmt.setDouble(7, curBbox.getMaxy());
+                    insPrepStmt.setDouble(4, curBbox.getMinx());
+                    insPrepStmt.setDouble(5, curBbox.getMiny());
+                    insPrepStmt.setDouble(6, curBbox.getMaxx());
+                    insPrepStmt.setDouble(7, curBbox.getMaxy());
                     insPrepStmt.addBatch();
-                    insCount ++;
-                    if (insCount % updBatchSize == 0)
-                        insPrepStmt.executeBatch();
+                    insCount++;
+                    if (insCount % updBatchSize == 0) insPrepStmt.executeBatch();
                 }
                 System.out.println("Insertion count: " + insCount);
                 insPrepStmt.executeBatch();
@@ -132,20 +143,17 @@ public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
                 boxes.clear();
                 lastBatchSt = System.currentTimeMillis();
             }
-            if (! hasNext)
-                break;
+            if (!hasNext) break;
 
             // get raw row
             ArrayList<String> curRawRow = new ArrayList<>();
-            for (int i = 1; i <= numColumn; i ++)
-                curRawRow.add(rs.getString(i));
+            for (int i = 1; i <= numColumn; i++) curRawRow.add(rs.getString(i));
 
             // step 3: run transform function on this tuple
             ArrayList<String> transformedRow;
-            if (! trans.getTransformFunc().equals(""))
+            if (!trans.getTransformFunc().equals(""))
                 transformedRow = getTransformedRow(c, curRawRow, engine);
-            else
-                transformedRow = curRawRow;
+            else transformedRow = curRawRow;
 
             // step 4: calculate bounding boxes
             ArrayList<Double> bbox = getBboxCoordinates(l, transformedRow);
@@ -161,20 +169,17 @@ public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
             String gridKey = String.valueOf(gridX) + "_" + String.valueOf(gridY);
 
             // update blob
-            if (! blobs.containsKey(gridKey))
-                blobs.put(gridKey, new StringBuilder());
+            if (!blobs.containsKey(gridKey)) blobs.put(gridKey, new StringBuilder());
             StringBuilder curBlob = blobs.get(gridKey);
-            if (curBlob.length() > 0)
-                curBlob.append("__");
+            if (curBlob.length() > 0) curBlob.append("__");
             curBlob.append(transformedRow.get(0));
-            for (int i = 1; i < transformedRow.size(); i ++)
+            for (int i = 1; i < transformedRow.size(); i++)
                 curBlob.append("&&" + transformedRow.get(i));
-            for (int i = 0; i < bbox.size(); i ++)
+            for (int i = 0; i < bbox.size(); i++)
                 curBlob.append("&&" + String.valueOf(bbox.get(i)));
 
             // update bounding box
-            if (! boxes.containsKey(gridKey))
-                boxes.put(gridKey, new Box(minx, miny, maxx, maxy));
+            if (!boxes.containsKey(gridKey)) boxes.put(gridKey, new Box(minx, miny, maxx, maxy));
             else {
                 Box curBox = boxes.get(gridKey);
                 minx = Math.min(minx, curBox.getMinx());
@@ -188,16 +193,23 @@ public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
         rawDBStmt.close();
         DbConnector.closeConnection(trans.getDb());
         insPrepStmt.close();
-        System.out.println("Constructing ungrouped table: " + (System.currentTimeMillis() - st) / 1000.0 + "s.");
+        System.out.println(
+                "Constructing ungrouped table: "
+                        + (System.currentTimeMillis() - st) / 1000.0
+                        + "s.");
 
         // create another table storing grouped grids
         st = System.currentTimeMillis();
-        String groupedTableName = "bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
+        String groupedTableName =
+                "bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
         // drop table if exists
         sql = "drop table if exists " + groupedTableName + ";";
         bboxStmt.executeUpdate(sql);
         // create the bbox table
-        sql = "create table " + groupedTableName + " (compressed_blob text, geom geometry(polygon));";
+        sql =
+                "create table "
+                        + groupedTableName
+                        + " (compressed_blob text, geom geometry(polygon));";
         bboxStmt.executeUpdate(sql);
 
         // prepared statements
@@ -216,9 +228,8 @@ public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
         rowCount = insCount = 0;
         System.out.println("\nConstructing grouped table...");
         while (rs.next()) {
-            rowCount ++;
-            if (rowCount % 1000000 == 0)
-                System.out.println(rowCount);
+            rowCount++;
+            if (rowCount % 1000000 == 0) System.out.println(rowCount);
             int gridX = rs.getInt(1);
             int gridY = rs.getInt(2);
             if (gridX != curGridX || gridY != curGridY) {
@@ -227,16 +238,17 @@ public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
                     insPrepStmt.setString(1, curBlob.toString());
                     insPrepStmt.setString(2, getPolygonText(curMinX, curMinY, curMaxX, curMaxY));
                     insPrepStmt.addBatch();
-                    insCount ++;
-                    if (insCount % updBatchSize == 0)
-                        insPrepStmt.executeBatch();
+                    insCount++;
+                    if (insCount % updBatchSize == 0) insPrepStmt.executeBatch();
                 }
-                curGridX = gridX; curGridY = gridY;
-                curMinX = rs.getDouble(4); curMinY = rs.getDouble(5);
-                curMaxX = rs.getDouble(6); curMaxY = rs.getDouble(7);
+                curGridX = gridX;
+                curGridY = gridY;
+                curMinX = rs.getDouble(4);
+                curMinY = rs.getDouble(5);
+                curMaxX = rs.getDouble(6);
+                curMaxY = rs.getDouble(7);
                 curBlob = new StringBuilder(rs.getString(3));
-            }
-            else {
+            } else {
                 // merge
                 curBlob.append("__");
                 curBlob.append(rs.getString(3));
@@ -250,11 +262,17 @@ public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
         ungroupedStmt.close();
         insPrepStmt.executeBatch();
         insPrepStmt.close();
-        System.out.println("Constructing grouped table: " + (System.currentTimeMillis() - st) / 1000.0 + "s.");
+        System.out.println(
+                "Constructing grouped table: " + (System.currentTimeMillis() - st) / 1000.0 + "s.");
 
         // create index
         st = System.currentTimeMillis();
-        sql = "create index sp_" + groupedTableName + " on " + groupedTableName + " using gist (geom);";
+        sql =
+                "create index sp_"
+                        + groupedTableName
+                        + " on "
+                        + groupedTableName
+                        + " using gist (geom);";
         bboxStmt.executeUpdate(sql);
         sql = "cluster " + groupedTableName + " using sp_" + groupedTableName + ";";
         bboxStmt.executeUpdate(sql);
@@ -265,20 +283,28 @@ public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
     }
 
     @Override
-    public ArrayList<ArrayList<String>> getDataFromRegion(Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox) throws Exception {
+    public ArrayList<ArrayList<String>> getDataFromRegion(
+            Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox)
+            throws Exception {
 
         // construct range query
-        String sql = "select compressed_blob from bbox_" + Main.getProject().getName() + "_"
-                + c.getId() + "layer" + layerId + " where ST_Intersects(st_GeomFromText";
+        String sql =
+                "select compressed_blob from bbox_"
+                        + Main.getProject().getName()
+                        + "_"
+                        + c.getId()
+                        + "layer"
+                        + layerId
+                        + " where ST_Intersects(st_GeomFromText";
         sql += "('" + regionWKT + "'), geom)";
-        if (predicate.length() > 0)
-            sql += " and " + predicate + ";";
+        if (predicate.length() > 0) sql += " and " + predicate + ";";
         System.out.println(sql);
 
         // get compressed tuples
-        ArrayList<ArrayList<String>> compressedTuples = DbConnector.getQueryResult(Config.databaseName, sql);
+        ArrayList<ArrayList<String>> compressedTuples =
+                DbConnector.getQueryResult(Config.databaseName, sql);
         ArrayList<ArrayList<String>> ret = new ArrayList<>();
-        for (int i = 0; i < compressedTuples.size(); i ++) {
+        for (int i = 0; i < compressedTuples.size(); i++) {
             String tupleBlob = compressedTuples.get(i).get(0);
             String[] tupleStrs = tupleBlob.split("__");
             for (String tupleStr : tupleStrs)
@@ -289,7 +315,8 @@ public class PsqlGridCompressIndexer extends BoundingBoxIndexer {
     }
 
     @Override
-    public ArrayList<ArrayList<String>> getDataFromTile(Canvas c, int layerId, int minx, int miny, String predicate) throws Exception {
+    public ArrayList<ArrayList<String>> getDataFromTile(
+            Canvas c, int layerId, int minx, int miny, String predicate) throws Exception {
         return null;
     }
 }

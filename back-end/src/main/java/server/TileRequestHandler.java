@@ -6,21 +6,16 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import javax.net.ssl.HttpsURLConnection;
 import main.Config;
 import main.Main;
 import project.Canvas;
 
-import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * Created by wenbo on 1/2/18.
- */
+/** Created by wenbo on 1/2/18. */
 public class TileRequestHandler implements HttpHandler {
 
     // gson builder
@@ -44,7 +39,7 @@ public class TileRequestHandler implements HttpHandler {
         ArrayList<ArrayList<ArrayList<String>>> data = null;
 
         // check if this is a POST request
-        if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
+        if (!httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
             return;
         }
@@ -53,8 +48,7 @@ public class TileRequestHandler implements HttpHandler {
         String query = httpExchange.getRequestURI().getQuery();
         Map<String, String> queryMap = Server.queryToMap(query);
         // print
-        for (String s : queryMap.keySet())
-            System.out.println(s + " : " + queryMap.get(s));
+        for (String s : queryMap.keySet()) System.out.println(s + " : " + queryMap.get(s));
 
         // check parameters, if not pass, send a bad request response
         response = checkParameters(queryMap);
@@ -69,7 +63,7 @@ public class TileRequestHandler implements HttpHandler {
         miny = Integer.valueOf(queryMap.get("y"));
         Canvas c = Main.getProject().getCanvas(canvasId);
         ArrayList<String> predicates = new ArrayList<>();
-        for (int i = 0; i < c.getLayers().size(); i ++)
+        for (int i = 0; i < c.getLayers().size(); i++)
             predicates.add(queryMap.get("predicate" + i));
 
         try {
@@ -94,10 +88,8 @@ public class TileRequestHandler implements HttpHandler {
     private String checkParameters(Map<String, String> queryMap) {
 
         // check fields
-        if (! queryMap.containsKey("id"))
-            return "canvas id missing.";
-        if (! queryMap.containsKey("x") || ! queryMap.containsKey("y"))
-            return "x or y missing.";
+        if (!queryMap.containsKey("id")) return "canvas id missing.";
+        if (!queryMap.containsKey("x") || !queryMap.containsKey("y")) return "x or y missing.";
 
         String canvasId = queryMap.get("id");
         int minx = Integer.valueOf(queryMap.get("x"));

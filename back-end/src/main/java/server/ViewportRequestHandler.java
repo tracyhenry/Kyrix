@@ -4,25 +4,20 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import main.Config;
-import main.DbConnector;
-import main.Main;
-import project.Canvas;
-
-import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import javax.net.ssl.HttpsURLConnection;
+import main.Config;
+import main.DbConnector;
+import main.Main;
+import project.Canvas;
 
-/**
- * Created by wenbo on 2/14/18.
- */
+/** Created by wenbo on 2/14/18. */
 public class ViewportRequestHandler implements HttpHandler {
 
     private final Gson gson;
@@ -45,7 +40,7 @@ public class ViewportRequestHandler implements HttpHandler {
         ArrayList<String> data = null;
 
         // check if this is a POST request
-        if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
+        if (!httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
             return;
         }
@@ -54,10 +49,8 @@ public class ViewportRequestHandler implements HttpHandler {
         String query = httpExchange.getRequestURI().getQuery();
         Map<String, String> queryMap = Server.queryToMap(query);
         // print
-        for (String s : queryMap.keySet())
-            System.out.println(s + " : " + queryMap.get(s));
+        for (String s : queryMap.keySet()) System.out.println(s + " : " + queryMap.get(s));
         System.out.println();
-
 
         // check parameters, if not pass, send a bad request response
         response = checkParameters(queryMap);
@@ -69,7 +62,7 @@ public class ViewportRequestHandler implements HttpHandler {
         // get data
         canvasId = queryMap.get("canvasId");
         Canvas c = Main.getProject().getCanvas(canvasId);
-        for (int i = 0; i < c.getLayers().size(); i ++)
+        for (int i = 0; i < c.getLayers().size(); i++)
             predicates.add(queryMap.get("predicate" + i));
         try {
             data = getData(canvasId, predicates);
@@ -77,10 +70,10 @@ public class ViewportRequestHandler implements HttpHandler {
             e.printStackTrace();
         }
 
-        if (data == null)
-        {
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicates.");
-            return ;
+        if (data == null) {
+            Server.sendResponse(
+                    httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicates.");
+            return;
         }
 
         // construct response
@@ -96,8 +89,7 @@ public class ViewportRequestHandler implements HttpHandler {
     private String checkParameters(Map<String, String> queryMap) {
 
         // check fields
-        if (! queryMap.containsKey("canvasId"))
-            return "canvas id missing.";
+        if (!queryMap.containsKey("canvasId")) return "canvas id missing.";
 
         String canvasId = queryMap.get("canvasId");
 
@@ -106,9 +98,8 @@ public class ViewportRequestHandler implements HttpHandler {
             return "Canvas " + canvasId + " does not exist!";
 
         Canvas c = Main.getProject().getCanvas(canvasId);
-        for (int i = 0; i < c.getLayers().size(); i ++)
-            if (! queryMap.containsKey("predicate" + i))
-                return "predicate" + i + " missing.";
+        for (int i = 0; i < c.getLayers().size(); i++)
+            if (!queryMap.containsKey("predicate" + i)) return "predicate" + i + " missing.";
 
         // check passed
         return "";
@@ -119,11 +110,9 @@ public class ViewportRequestHandler implements HttpHandler {
 
         // check if only one non-empty predicate
         int nonEmptyCount = 0;
-        for (int i = 0; i < predicates.size(); i ++)
-            if (! predicates.get(i).isEmpty())
-                nonEmptyCount ++;
-        if (nonEmptyCount != 1)
-            return null;
+        for (int i = 0; i < predicates.size(); i++)
+            if (!predicates.get(i).isEmpty()) nonEmptyCount++;
+        if (nonEmptyCount != 1) return null;
 
         ArrayList<String> data = new ArrayList<>();
 
@@ -133,29 +122,34 @@ public class ViewportRequestHandler implements HttpHandler {
         // get db connector
         Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
 
-        for (int i = 0; i < predicates.size(); i ++) {
+        for (int i = 0; i < predicates.size(); i++) {
 
-            if (predicates.get(i).isEmpty())
-                continue;
+            if (predicates.get(i).isEmpty()) continue;
             // construct range query
-            String sql = "select cx, cy from bbox_" + Main.getProject().getName() + "_"
-                    + curCanvas.getId() + "layer" + i + " where "
-                    + predicates.get(i) + ";";
+            String sql =
+                    "select cx, cy from bbox_"
+                            + Main.getProject().getName()
+                            + "_"
+                            + curCanvas.getId()
+                            + "layer"
+                            + i
+                            + " where "
+                            + predicates.get(i)
+                            + ";";
 
             // run query
             ResultSet rs = stmt.executeQuery(sql);
             int rowCount = 0;
             String cx = "", cy = "";
             while (rs.next()) {
-                rowCount ++;
+                rowCount++;
                 cx = rs.getString(1);
                 cy = rs.getString(2);
             }
 
             System.out.println(rowCount);
             // not a predicate that uniquely determines a tuple
-            if (rowCount != 1)
-                return null;
+            if (rowCount != 1) return null;
 
             // return cx & cy
             data.add(cx);

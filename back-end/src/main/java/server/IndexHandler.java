@@ -2,15 +2,12 @@ package server;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import main.Config;
-
-import javax.net.ssl.HttpsURLConnection;
 import java.io.FileInputStream;
 import java.io.IOException;
+import javax.net.ssl.HttpsURLConnection;
+import main.Config;
 
-/**
- * Created by wenbo on 1/2/18.
- */
+/** Created by wenbo on 1/2/18. */
 public class IndexHandler implements HttpHandler {
 
     @Override
@@ -20,14 +17,13 @@ public class IndexHandler implements HttpHandler {
         System.out.println(httpExchange.getRequestURI().getPath());
 
         // check if it is GET request
-        if (! httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
+        if (!httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
             return;
         }
 
         String path = httpExchange.getRequestURI().getPath();
-        if (path.equals("/"))
-            path = "/" + Config.indexFileName;
+        if (path.equals("/")) path = "/" + Config.indexFileName;
 
         // read the frontend file and return
         FileInputStream fs = new FileInputStream(Config.webRoot + path);
@@ -35,13 +31,15 @@ public class IndexHandler implements HttpHandler {
         int len = fs.read(content);
 
         // send back a ok response
-        if (path.contains(".svg")) //todo: better file checking for the index handler
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/svg+xml");
+        if (path.contains(".svg")) // todo: better file checking for the index handler
+        Server.sendResponse(
+                    httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/svg+xml");
         else if (path.contains(".png"))
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/png");
+            Server.sendResponse(
+                    httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/png");
         else if (path.contains(".jpg"))
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/jpg");
-        else
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len);
+            Server.sendResponse(
+                    httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/jpg");
+        else Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len);
     }
 }

@@ -1,14 +1,14 @@
 package box;
 
+import java.util.ArrayList;
 import project.Canvas;
 import project.View;
 
-import java.util.ArrayList;
-
 public class MikeBoxGetter extends BoxGetter {
     @Override
-    //get box with fixed size which is two times larger than the viewport
-    public BoxandData getBox(Canvas c, View v, double mx, double my, Box oldBox, ArrayList<String> predicates)
+    // get box with fixed size which is two times larger than the viewport
+    public BoxandData getBox(
+            Canvas c, View v, double mx, double my, Box oldBox, ArrayList<String> predicates)
             throws Exception {
 
         ArrayList<ArrayList<ArrayList<String>>> data;
