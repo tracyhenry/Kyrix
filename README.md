@@ -15,7 +15,7 @@ Kyrix is a system that facilitates the creation of data visualizations with deta
 
 In visualizations of such, the underlying dataset is often large. To deal with large data, Kyrix is focused on optimizing two goals: 1) usable declarative API library for visualization developers and 2) 500ms response time to user interactions, which is required to enable interactive browsing. See our [EuroVis paper](http://web.mit.edu/wenbo/www/kyrix_eurovis.pdf) for more technical details. 
 
-We are working with users from MGH ([30T data vis demo](https://youtu.be/fZ32cE8KEi0)), Agero and Recorded Futures to get feedback from serious real-world applications. We look forward to your feedback as well. Take a look at the instructions below to get started and let us know what you think!
+We are working with users from MGH ([30T data vis demo](https://youtu.be/fZ32cE8KEi0)), Paradigm 4, Agero and Recorded Futures to get feedback from serious real-world applications. We look forward to your feedback as well. Take a look at the instructions below to get started and let us know what you think!
 
 ## Installation instructions for the impatient
 
