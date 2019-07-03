@@ -1,0 +1,52 @@
+# Formatter for Java
+# From https://github.com/a1exsh/google-java-format-git-pre-commit-hook
+#!/bin/bash
+
+mkdir -p $GIT_DIR/.cache
+if [[ ! -f $GIT_DIR/.cache/google-java-format-1.6-all-deps.jar ]]
+then
+    cd $GIT_DIR/.cache && curl -LJO "https://github.com/google/google-java-format/releases/download/google-java-format-1.6/google-java-format-1.6-all-deps.jar"
+    cd ../../
+fi
+
+changed_java_files=$(git diff --cached --name-only --diff-filter=ACMR | grep ".*java$" || true)
+if [[ -n "$changed_java_files" ]]
+then
+    if ! java -jar $GIT_DIR/.cache/google-java-format-1.6-all-deps.jar \
+         --aosp \
+         --replace \
+         --set-exit-if-changed \
+         $changed_java_files
+    then
+        echo "Java formatting issues detected, aborting commit! Please run 'git diff' to inspect corrections." >&2
+        exit 1
+    else
+        echo "No Java formatting issues detected."
+    fi
+fi
+
+# Now formatting for Javascript
+# From https://github.com/prettier/prettier
+
+# installing standard globally if not exists
+npm list --depth 1 -g prettier > /dev/null
+
+if [[ $? -ne 0 ]]; then
+    echo "Prettier formatter not found, installing it as a global npm package..."
+    npm install prettier --global
+fi
+
+cd $GIT_DIR/../
+FILES=$(git diff --cached --name-only --diff-filter=ACM "*.js" "*.jsx" "*.html" "*.css" | sed 's| |\\ |g')
+[ -z "$FILES" ] && exit 0
+
+# Prettify all selected files
+echo "$FILES" | xargs prettier --no-bracket-spacing --tab-width 4 --check > /dev/null 2>&1
+
+if [[ $? -ne 0 ]]; then
+    echo "$FILES" | xargs prettier --no-bracket-spacing --tab-width 4 --write > /dev/null 2>&1
+    echo "Javascript formatting issues detected, aborting commit! Please run 'git diff' to inspect corrections."
+    exit 1
+else
+    echo "No Javascript formatting issues detected."
+fi
