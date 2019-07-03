@@ -1,4 +1,3 @@
 // definition of placement objects...
 
-module.exports = {
-};
+module.exports = {};

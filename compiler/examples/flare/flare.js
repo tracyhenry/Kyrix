@@ -25,36 +25,38 @@ flarePackLayer.addRenderingFunc(renderers.flarePackRendering);
 // ================== Views ===================
 var view = new View("flare", 0, 0, 1000, 1000);
 p.addView(view);
-p.setInitialStates(view, flareCanvas, 0, 0, {"layer0" : {
-        "OR" : [
-            {"==" : ["id", "1"]},
-            {"==" : ["parent_id", "1"]}
-        ]
-    }});
+p.setInitialStates(view, flareCanvas, 0, 0, {
+    layer0: {
+        OR: [{"==": ["id", "1"]}, {"==": ["parent_id", "1"]}]
+    }
+});
 
 // ================== self jump ===================
-var selector = function () {
+var selector = function() {
     return true;
 };
 
-var newViewport = function () {
-    return {"constant" : [0, 0]};
+var newViewport = function() {
+    return {constant: [0, 0]};
 };
 
-var newPredicate = function (row) {
-    var pred = {"OR" : [
-            {"==" : ["id", row.id]},
-            {"==" : ["parent_id", row.id]}
-        ]};
-    return {"layer0" : pred};
+var newPredicate = function(row) {
+    var pred = {OR: [{"==": ["id", row.id]}, {"==": ["parent_id", row.id]}]};
+    return {layer0: pred};
 };
 
-var jumpName = function (row) {
+var jumpName = function(row) {
     return row.name;
 };
 
-p.addJump(new Jump(flareCanvas, flareCanvas, "semantic_zoom", {selector : selector,
-    viewport : newViewport, predicates : newPredicate, name : jumpName}));
+p.addJump(
+    new Jump(flareCanvas, flareCanvas, "semantic_zoom", {
+        selector: selector,
+        viewport: newViewport,
+        predicates: newPredicate,
+        name: jumpName
+    })
+);
 
 // save to db
 p.saveProject();

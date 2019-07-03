@@ -1,8 +1,9 @@
 const Transform = require("../../src/Transform").Transform;
 
-var teamLogoTransform = new Transform("select * from teams;",
+var teamLogoTransform = new Transform(
+    "select * from teams;",
     "nba",
-    function (row){
+    function(row) {
         var id = parseInt(row[0]);
         var y = Math.floor(id / 6);
         var x = id - y * 6;
@@ -15,48 +16,74 @@ var teamLogoTransform = new Transform("select * from teams;",
         ret.push(row[3]);
         ret.push(row[4]);
 
-        return Java.to(ret ,"java.lang.String[]");
+        return Java.to(ret, "java.lang.String[]");
     },
     ["id", "x", "y", "team_id", "city", "name", "abbr"],
-    true);
+    true
+);
 
-var teamTimelineTransform = new Transform("select game_id, year, month, day, home_team, away_team, home_score, away_score, 1 from games;",
+var teamTimelineTransform = new Transform(
+    "select game_id, year, month, day, home_team, away_team, home_score, away_score, 1 from games;",
     "nba",
-    function (row, width, height, renderParams) {
+    function(row, width, height, renderParams) {
         var ret = [];
         // id
         ret.push(row[0]);
         // x
         var curDate = new Date(row[1], row[2] - 1, row[3]);
-        ret.push(d3.scaleTime()
-            .domain([new Date(2017, 9, 17), new Date(2018, 3, 11)])
-            .range([82, width - 82])(curDate));
+        ret.push(
+            d3
+                .scaleTime()
+                .domain([new Date(2017, 9, 17), new Date(2018, 3, 11)])
+                .range([82, width - 82])(curDate)
+        );
         // y
         var beginDate = new Date(2000, 0, 1);
         var oneDay = 24 * 60 * 60 * 1000;
-        var daysPassed = Math.round(Math.abs((curDate.getTime() - beginDate.getTime())/(oneDay)));
-        ret.push(daysPassed % 2 == 0 ? renderParams.timelineUpperY : renderParams.timelineLowerY);
+        var daysPassed = Math.round(
+            Math.abs((curDate.getTime() - beginDate.getTime()) / oneDay)
+        );
+        ret.push(
+            daysPassed % 2 == 0
+                ? renderParams.timelineUpperY
+                : renderParams.timelineLowerY
+        );
 
         // rest of the attributes
-        for (var i = 1; i <= 8; i ++)
-            ret.push(row[i]);
+        for (var i = 1; i <= 8; i++) ret.push(row[i]);
 
-        return Java.to(ret ,"java.lang.String[]");
+        return Java.to(ret, "java.lang.String[]");
     },
-    ["game_id", "x", "y", "year", "month", "day", "home_team", "away_team", "home_score", "away_score", "timeline"],
-    true);
+    [
+        "game_id",
+        "x",
+        "y",
+        "year",
+        "month",
+        "day",
+        "home_team",
+        "away_team",
+        "home_score",
+        "away_score",
+        "timeline"
+    ],
+    true
+);
 
-var teamTimelineStaticTransform = new Transform("select city, name, abbr from teams;",
+var teamTimelineStaticTransform = new Transform(
+    "select city, name, abbr from teams;",
     "nba",
     "",
     [],
-    true);
+    true
+);
 
-var playByPlayTransform = new Transform("select games.game_id, period, qtr_time, score, margin, home_desc, away_desc, home_team, away_team, play_id, h_player_id, a_player_id"
-    + " from plays, games"
-    + " where plays.game_id = games.game_id;",
+var playByPlayTransform = new Transform(
+    "select games.game_id, period, qtr_time, score, margin, home_desc, away_desc, home_team, away_team, play_id, h_player_id, a_player_id" +
+        " from plays, games" +
+        " where plays.game_id = games.game_id;",
     "nba",
-    function (row) {
+    function(row) {
         var ret = [];
         // game_id
         ret.push(row[0]);
@@ -69,41 +96,61 @@ var playByPlayTransform = new Transform("select games.game_id, period, qtr_time,
         ret.push(row[2]);
 
         // reverse score
-        if (row[3] == "None")
-            ret.push("")
+        if (row[3] == "None") ret.push("");
         else {
             var scores = row[3].split("-");
-            ret.push(scores[1].replace(/\s+/, "") + " - " + scores[0].replace(/\s+/, ""));
+            ret.push(
+                scores[1].replace(/\s+/, "") +
+                    " - " +
+                    scores[0].replace(/\s+/, "")
+            );
         }
 
         // rest of the attributes
-        for (var i = 4; i <= 8; i ++)
-            ret.push(row[i]);
+        for (var i = 4; i <= 8; i++) ret.push(row[i]);
         ret.push(row[10]);
         ret.push(row[11]);
 
-        return Java.to(ret ,"java.lang.String[]");
+        return Java.to(ret, "java.lang.String[]");
     },
-    ["game_id", "y", "period", "qtr_time", "score", "margin", "home_desc", "away_desc", "home_team", "away_team", "h_player_id", "a_player_id"],
-    true);
+    [
+        "game_id",
+        "y",
+        "period",
+        "qtr_time",
+        "score",
+        "margin",
+        "home_desc",
+        "away_desc",
+        "home_team",
+        "away_team",
+        "h_player_id",
+        "a_player_id"
+    ],
+    true
+);
 
-var playByPlayStaticTransform = new Transform("select team1.abbr as abbr1, team2.abbr as abbr2 from teams as team1, teams as team2;",
+var playByPlayStaticTransform = new Transform(
+    "select team1.abbr as abbr1, team2.abbr as abbr2 from teams as team1, teams as team2;",
     "nba",
     "",
     [],
-    true);
+    true
+);
 
-var boxscoreTransform = new Transform("select * from player_boxscore;",
+var boxscoreTransform = new Transform(
+    "select * from player_boxscore;",
     "nba",
     "",
     [],
-    true);
+    true
+);
 
 module.exports = {
-    teamLogoTransform : teamLogoTransform,
-    teamTimelineTransform : teamTimelineTransform,
-    teamTimelineStaticTransform : teamTimelineStaticTransform,
-    playByPlayTransform : playByPlayTransform,
-    playByPlayStaticTransform : playByPlayStaticTransform,
-    boxscoreTransform : boxscoreTransform
+    teamLogoTransform: teamLogoTransform,
+    teamTimelineTransform: teamTimelineTransform,
+    teamTimelineStaticTransform: teamTimelineStaticTransform,
+    playByPlayTransform: playByPlayTransform,
+    playByPlayStaticTransform: playByPlayStaticTransform,
+    boxscoreTransform: boxscoreTransform
 };

@@ -1,21 +1,21 @@
 // simple parse JS function for its parameters - note that it only works in simple cases, like ours
 // https://stackoverflow.com/a/9924463
-var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm;
 var ARGUMENT_NAMES = /([^\s,]+)/g;
 function getFuncParamNames(func) {
-  var fnStr = func.toString().replace(STRIP_COMMENTS, '');
-  var result = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
-  if(result === null)
-     result = [];
-  return result;
+    var fnStr = func.toString().replace(STRIP_COMMENTS, "");
+    var result = fnStr
+        .slice(fnStr.indexOf("(") + 1, fnStr.indexOf(")"))
+        .match(ARGUMENT_NAMES);
+    if (result === null) result = [];
+    return result;
 }
 function getFuncBody(func) {
-  var fnStr = func.toString().replace(STRIP_COMMENTS, '');
-  //fnStr="function foo(x){ ..body..{...if...} }"; fnStr.slice(fnStr.indexOf('{')+1, fnStr.lastIndexOf('}'));
-  var result = fnStr.slice(fnStr.indexOf('{')+1, fnStr.lastIndexOf('}'));
-  if(result === null)
-     result = "";
-  return result;
+    var fnStr = func.toString().replace(STRIP_COMMENTS, "");
+    //fnStr="function foo(x){ ..body..{...if...} }"; fnStr.slice(fnStr.indexOf('{')+1, fnStr.lastIndexOf('}'));
+    var result = fnStr.slice(fnStr.indexOf("{") + 1, fnStr.lastIndexOf("}"));
+    if (result === null) result = "";
+    return result;
 }
 
 /**
@@ -28,43 +28,69 @@ function getFuncBody(func) {
  * @constructor
  */
 function Transform(query, db, transformFunc, columnNames, separable) {
-
     if (typeof query == "object") {
         if (arguments.length > 1)
-            throw new Error("Constructing Transform: object-style construction may only have one argument");
+            throw new Error(
+                "Constructing Transform: object-style construction may only have one argument"
+            );
         this.v2obj = query;
-        this.transformFunc = query['transformFunc']
-        if (typeof this.transformFunc !== "function") throw new Error("Constructing Transform: transformFunc required and must be a JavaScript function");
+        this.transformFunc = query["transformFunc"];
+        if (typeof this.transformFunc !== "function")
+            throw new Error(
+                "Constructing Transform: transformFunc required and must be a JavaScript function"
+            );
         this.params = getFuncParamNames(this.transformFunc);
         this.transformFuncBody = getFuncBody(this.transformFunc);
-        if (this.params.length == 0) throw new Error("Constructing Transform: transformFunc must take parameters (whose names match the dbsource output)");
+        if (this.params.length == 0)
+            throw new Error(
+                "Constructing Transform: transformFunc must take parameters (whose names match the dbsource output)"
+            );
         transformFuncSource = this.transformFunc.toString();
-        matches = transformFuncSource.match(/\/\/ *@result: *([a-zA-Z_][a-zA-Z0-9_]*)/g);
-        if (!matches || matches.length==0) throw new Error("Constructing Transform: transformFunc must specify output column names with @result.");
-        this.columnNames = matches.join(",").replace(/\/\/ *@result: */g, '').split(','); // safe bec we restricted the charset above
-        console.log("columnNames="+this.columnNames);
-        this.dbsource = query['dbsource']
+        matches = transformFuncSource.match(
+            /\/\/ *@result: *([a-zA-Z_][a-zA-Z0-9_]*)/g
+        );
+        if (!matches || matches.length == 0)
+            throw new Error(
+                "Constructing Transform: transformFunc must specify output column names with @result."
+            );
+        this.columnNames = matches
+            .join(",")
+            .replace(/\/\/ *@result: */g, "")
+            .split(","); // safe bec we restricted the charset above
+        console.log("columnNames=" + this.columnNames);
+        this.dbsource = query["dbsource"];
         this.db = "src_db_same_as_kyrix";
-        if (typeof this.dbsource !== "string") throw new Error("Constructing Transform: dbsource required and must be a string");
-        if (this.dbsource.toUpperCase().startsWith('SELECT ')) {
+        if (typeof this.dbsource !== "string")
+            throw new Error(
+                "Constructing Transform: dbsource required and must be a string"
+            );
+        if (this.dbsource.toUpperCase().startsWith("SELECT ")) {
             this.query = this.dbsource;
         } else {
             // should be a table or view name - simple regexp checker...
             var tblviewRx = /^([a-z_][a-z0-9_]*[.])?[a-z_][a-z0-9_]*$/i;
-            if (!this.dbsource.toUpperCase().match(tblviewRx)) throw new Error("Constructing Transform: illegal table/view name - letters, numbers, underscores only");
-            this.query = "SELECT "+this.params.join(",")+" FROM "+this.dbsource;
+            if (!this.dbsource.toUpperCase().match(tblviewRx))
+                throw new Error(
+                    "Constructing Transform: illegal table/view name - letters, numbers, underscores only"
+                );
+            this.query =
+                "SELECT " + this.params.join(",") + " FROM " + this.dbsource;
             console.log(this.query);
         }
-        this.separable = query['separable'] || true;
+        this.separable = query["separable"] || true;
         return;
     }
 
     if (typeof separable !== "boolean")
         throw new Error("Constructing Transform: separable must be boolean.");
-    if (! Array.isArray(columnNames))
-        throw new Error("Constructing Transform: column names must be an array.");
+    if (!Array.isArray(columnNames))
+        throw new Error(
+            "Constructing Transform: column names must be an array."
+        );
     if (columnNames.length == 0 && transformFunc != "")
-        throw new Error("Constructing Transform: column names must be provided if transform function exists.");
+        throw new Error(
+            "Constructing Transform: column names must be provided if transform function exists."
+        );
 
     // assign fields
     this.query = query;
@@ -72,12 +98,12 @@ function Transform(query, db, transformFunc, columnNames, separable) {
     this.columnNames = columnNames;
     this.transformFunc = transformFunc;
     this.separable = separable;
-};
+}
 
 defaultEmptyTransform = new Transform("", "", "", [], true);
 
 // exports
 module.exports = {
-    Transform : Transform,
-    defaultEmptyTransform : defaultEmptyTransform
+    Transform: Transform,
+    defaultEmptyTransform: defaultEmptyTransform
 };

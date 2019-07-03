@@ -8,9 +8,7 @@
  * @constructor
  */
 function View(viewId, minx, miny, width, height) {
-
-    if (viewId == null)
-        throw new Error("Constructing View: invalid view Id");
+    if (viewId == null) throw new Error("Constructing View: invalid view Id");
     if (minx == null || minx < 0)
         throw new Error("Constructing View: invalid minx.");
     if (minx == null || miny < 0)
@@ -29,9 +27,9 @@ function View(viewId, minx, miny, width, height) {
     this.initialViewportX = -1;
     this.initialViewportY = -1;
     this.initialPredicates = "{}";
-};
+}
 
 // exports
 module.exports = {
-    View : View
+    View: View
 };

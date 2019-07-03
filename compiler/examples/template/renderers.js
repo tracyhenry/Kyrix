@@ -4,5 +4,5 @@ var renderingParams = {};
 // rendering functions...
 
 module.exports = {
-    renderingParams : renderingParams
+    renderingParams: renderingParams
 };

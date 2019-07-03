@@ -9,9 +9,12 @@
  * @param width
  */
 function textwrap(text, width) {
-    text.each(function () {
+    text.each(function() {
         var text = d3.select(this),
-            words = text.text().split(/(?=[A-Z])/).reverse(),
+            words = text
+                .text()
+                .split(/(?=[A-Z])/)
+                .reverse(),
             word,
             line = [],
             lineNumber = 0,
@@ -22,9 +25,12 @@ function textwrap(text, width) {
             tspan = null;
 
         text.text(null);
-        while (word = words.pop()) {
+        while ((word = words.pop())) {
             if (line.length == 0)
-                tspan = text.append("tspan").attr("x", x).attr("y", y);
+                tspan = text
+                    .append("tspan")
+                    .attr("x", x)
+                    .attr("y", y);
             line.push(word);
             tspan.text(line.join(""));
             if (tspan.node().getComputedTextLength() > width) {
@@ -36,23 +42,25 @@ function textwrap(text, width) {
                 tspan.text(line.join(""));
                 if (popped) {
                     line = [word];
-                    tspan = text.append("tspan").attr("x", x).attr("y", y).text(word);
-                }
-                else line = [];
+                    tspan = text
+                        .append("tspan")
+                        .attr("x", x)
+                        .attr("y", y)
+                        .text(word);
+                } else line = [];
             }
         }
-        var tspans = text.selectAll("tspan"), num_tspans = tspans.size();
+        var tspans = text.selectAll("tspan"),
+            num_tspans = tspans.size();
         var firstY;
-        if (num_tspans % 2 == 0)
-            firstY = -(num_tspans / 2 - 0.5) * lineHeight;
-        else
-            firstY = -Math.floor(num_tspans / 2) * lineHeight;
-        tspans.attr("dy", function (d, i) {
-            return (firstY + lineHeight * i) + 0.3 + "em";
+        if (num_tspans % 2 == 0) firstY = -(num_tspans / 2 - 0.5) * lineHeight;
+        else firstY = -Math.floor(num_tspans / 2) * lineHeight;
+        tspans.attr("dy", function(d, i) {
+            return firstY + lineHeight * i + 0.3 + "em";
         });
     });
 }
 
 module.exports = {
-    textwrap : textwrap
+    textwrap: textwrap
 };

@@ -49,7 +49,13 @@ var wString = "";
 var hString = "0:select (max(play_id) + 2) * 160 from plays;"; // todo: the "where" clause is assumed to be at the end right now
 
 // construct a new canvas
-var playByPlayCanvas = new Canvas("playbyplay", width, height, wString, hString);
+var playByPlayCanvas = new Canvas(
+    "playbyplay",
+    width,
+    height,
+    wString,
+    hString
+);
 p.addCanvas(playByPlayCanvas);
 
 // pannable play by play layer
@@ -88,92 +94,121 @@ p.addView(view);
 p.setInitialStates(view, teamLogoCanvas, 0, 0);
 
 // ================== teamlogo -> teamtimeline ===================
-var selector = function () {
+var selector = function() {
     return true;
 };
 
-var newViewport = function () {
-    return {"constant" : [0, 0]};
+var newViewport = function() {
+    return {constant: [0, 0]};
 };
 
-var newPredicate = function (row) {
-    var pred0 = {"OR" : [
-            {"==" : ["home_team", row.abbr]},
-            {"==" : ["away_team", row.abbr]}
-        ]};
-    var pred1 = {"==" : ["abbr", row.abbr]};
-    return {"layer0" : pred0, "layer1" : pred1};
+var newPredicate = function(row) {
+    var pred0 = {
+        OR: [{"==": ["home_team", row.abbr]}, {"==": ["away_team", row.abbr]}]
+    };
+    var pred1 = {"==": ["abbr", row.abbr]};
+    return {layer0: pred0, layer1: pred1};
 };
 
-var jumpName = function (row) {
+var jumpName = function(row) {
     return "2017~2018 Regular Season Games of\n" + row.city + " " + row.name;
 };
 
-p.addJump(new Jump(teamLogoCanvas, teamTimelineCanvas, "semantic_zoom", {selector : selector,
-    viewport : newViewport, predicates : newPredicate, name : jumpName}));
+p.addJump(
+    new Jump(teamLogoCanvas, teamTimelineCanvas, "semantic_zoom", {
+        selector: selector,
+        viewport: newViewport,
+        predicates: newPredicate,
+        name: jumpName
+    })
+);
 
 // ================== teamtimeline -> playbyplay ===================
-var selector = function (row, args) {
-    return (args.layerId == 0);
+var selector = function(row, args) {
+    return args.layerId == 0;
 };
 
-var newViewport = function () {
-    return {"constant" : [0, 0]};
+var newViewport = function() {
+    return {constant: [0, 0]};
 };
 
-var newPredicate = function (row) {
-    var pred0 = {"==" : ["game_id", row.game_id]};
-    var pred1 = {"AND" : [
-            {"==" : ["abbr1", row.home_team]},
-            {"==" : ["abbr2", row.away_team]}
-        ]};
-    return {"layer0" : pred0, "layer1" : pred1};
+var newPredicate = function(row) {
+    var pred0 = {"==": ["game_id", row.game_id]};
+    var pred1 = {
+        AND: [
+            {"==": ["abbr1", row.home_team]},
+            {"==": ["abbr2", row.away_team]}
+        ]
+    };
+    return {layer0: pred0, layer1: pred1};
 };
 
-var jumpName = function (row) {
+var jumpName = function(row) {
     return "Play-by-Play of " + row.away_team + "@" + row.home_team;
 };
 
-p.addJump(new Jump(teamTimelineCanvas, playByPlayCanvas, "semantic_zoom", {selector : selector,
-    viewport : newViewport, predicates : newPredicate, name : jumpName}));
+p.addJump(
+    new Jump(teamTimelineCanvas, playByPlayCanvas, "semantic_zoom", {
+        selector: selector,
+        viewport: newViewport,
+        predicates: newPredicate,
+        name: jumpName
+    })
+);
 
 // ================== teamtimeline -> boxscore ===================
-var selector = function (row, args) {
-    return (args.layerId == 0);
+var selector = function(row, args) {
+    return args.layerId == 0;
 };
 
-var newViewport = function () {
-    return {"constant" : [0, 0]};
+var newViewport = function() {
+    return {constant: [0, 0]};
 };
 
-var newPredicateHome = function (row) {
-    var pred = {"AND" : [
-            {"==" : ["GAME_ID", row.game_id]},
-            {"==" : ["TEAM_ABBR", row.home_team]}
-        ]};
-    return {"layer0" : pred, "layer1" : pred};
+var newPredicateHome = function(row) {
+    var pred = {
+        AND: [
+            {"==": ["GAME_ID", row.game_id]},
+            {"==": ["TEAM_ABBR", row.home_team]}
+        ]
+    };
+    return {layer0: pred, layer1: pred};
 };
 
-var newPredicateAway = function (row) {
-    var pred = {"AND" : [
-            {"==" : ["GAME_ID", row.game_id]},
-            {"==" : ["TEAM_ABBR", row.away_team]}
-        ]};
-    return {"layer0" : pred, "layer1" : pred};
+var newPredicateAway = function(row) {
+    var pred = {
+        AND: [
+            {"==": ["GAME_ID", row.game_id]},
+            {"==": ["TEAM_ABBR", row.away_team]}
+        ]
+    };
+    return {layer0: pred, layer1: pred};
 };
 
-var jumpNameHome = function (row) {
+var jumpNameHome = function(row) {
     return "Box score of " + row.home_team;
 };
 
-var jumpNameAway = function (row) {
+var jumpNameAway = function(row) {
     return "Box score of " + row.away_team;
 };
 
-p.addJump(new Jump(teamTimelineCanvas, boxscoreCanvas, "semantic_zoom", {selector : selector,
-    viewport : newViewport, predicates : newPredicateHome, name : jumpNameHome}));
-p.addJump(new Jump(teamTimelineCanvas, boxscoreCanvas, "semantic_zoom", {selector : selector,
-    viewport : newViewport, predicates : newPredicateAway, name : jumpNameAway}));
+p.addJump(
+    new Jump(teamTimelineCanvas, boxscoreCanvas, "semantic_zoom", {
+        selector: selector,
+        viewport: newViewport,
+        predicates: newPredicateHome,
+        name: jumpNameHome
+    })
+);
+p.addJump(
+    new Jump(teamTimelineCanvas, boxscoreCanvas, "semantic_zoom", {
+        selector: selector,
+        viewport: newViewport,
+        predicates: newPredicateAway,
+        name: jumpNameAway
+    })
+);
 
 // save to db
 p.saveProject();

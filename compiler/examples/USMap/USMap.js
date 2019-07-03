@@ -39,10 +39,15 @@ countyMapCanvas.addLayer(countyMapLegendLayer);
 countyMapLegendLayer.addRenderingFunc(renderers.countyMapLegendRendering);
 
 // thick state boundary layer
-var countyMapStateBoundaryLayer = new Layer(transforms.countyMapStateBoundaryTransform, false);
+var countyMapStateBoundaryLayer = new Layer(
+    transforms.countyMapStateBoundaryTransform,
+    false
+);
 countyMapCanvas.addLayer(countyMapStateBoundaryLayer);
 countyMapStateBoundaryLayer.addPlacement(placements.countyMapPlacement);
-countyMapStateBoundaryLayer.addRenderingFunc(renderers.countyMapStateBoundaryRendering);
+countyMapStateBoundaryLayer.addRenderingFunc(
+    renderers.countyMapStateBoundaryRendering
+);
 
 // county boundary layer
 var countyBoundaryLayer = new Layer(transforms.countyMapTransform, false);
@@ -56,24 +61,30 @@ p.addView(view);
 p.setInitialStates(view, stateMapCanvas, 0, 0);
 
 // ================== state -> county ===================
-var selector = function (row, args) {
-    return (args.layerId == 1);
+var selector = function(row, args) {
+    return args.layerId == 1;
 };
 
-var newPredicates = function () {
+var newPredicates = function() {
     return {};
 };
 
-var newViewport = function (row) {
-    return {"constant" : [row.bbox_x * 5 - 1000, row.bbox_y * 5 - 500]};
+var newViewport = function(row) {
+    return {constant: [row.bbox_x * 5 - 1000, row.bbox_y * 5 - 500]};
 };
 
-var jumpName = function (row) {
+var jumpName = function(row) {
     return "County map of " + row.name;
 };
 
-p.addJump(new Jump(stateMapCanvas, countyMapCanvas, "geometric_semantic_zoom", {selector : selector,
-    viewport : newViewport, predicates : newPredicates, name : jumpName}));
+p.addJump(
+    new Jump(stateMapCanvas, countyMapCanvas, "geometric_semantic_zoom", {
+        selector: selector,
+        viewport: newViewport,
+        predicates: newPredicates,
+        name: jumpName
+    })
+);
 
 // save to db
 p.saveProject();
