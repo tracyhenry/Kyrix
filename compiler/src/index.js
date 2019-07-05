@@ -3,7 +3,7 @@ const fs = require("fs");
 const mysql = require("mysql");
 const psql = require("pg");
 const http = require("http");
-const AutoDD = require("./AutoDD");
+const AutoDD = require("./template-api/AutoDD");
 const Canvas = require("./Canvas").Canvas;
 const View = require("./View").View;
 const Jump = require("./Jump").Jump;
@@ -188,7 +188,7 @@ function addAutoDD(autoDD) {
 
     // add stuff to renderingParam for circle agg rendering
     this.addRenderingParams({
-        textwrap: require("./RendererTemplates").textwrap,
+        textwrap: require("./template-api/Renderers").textwrap,
         circleMinSize: autoDD.circleMinSize,
         circleMaxSize: autoDD.circleMaxSize
     });

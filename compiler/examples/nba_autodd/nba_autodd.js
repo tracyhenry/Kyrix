@@ -1,6 +1,6 @@
 // libraries
 const Project = require("../../src/index").Project;
-const AutoDD = require("../../src/AutoDD").AutoDD;
+const AutoDD = require("../../src/template-api/AutoDD").AutoDD;
 const renderers = require("../nba/renderers");
 
 // construct a project

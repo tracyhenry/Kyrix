@@ -18,7 +18,7 @@ var renderingParams = {
     teamlogoradius: 24,
     avgcharwidth: 20,
     shadowrectwidth: 5,
-    textwrap: require("../../src/RendererTemplates").textwrap
+    textwrap: require("../../src/template-api/Renderers").textwrap
 };
 
 var teamLogoRendering = function(svg, data) {
