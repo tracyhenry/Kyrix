@@ -131,74 +131,122 @@ function AutoDD(args) {
  * @returns {Function}
  */
 function getLayerRenderer() {
+    function renderCircleBody() {
+        var objectRenderer = REPLACE_ME_this_rendering;
+        var params = args.renderingParams;
+        var circleSizeInterpolator = d3
+            .scaleLinear()
+            .domain([1, REPLACE_ME_maxCircleDigit])
+            .range([params.circleMinSize, params.circleMaxSize]);
+        var g = svg.append("g");
+        g.selectAll("circle")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("r", function(d) {
+                return circleSizeInterpolator(d.cluster_num.length);
+            })
+            .attr("cx", function(d) {
+                return d.cx;
+            })
+            .attr("cy", function(d) {
+                return d.cy;
+            })
+            .style("fill-opacity", 0.25)
+            .attr("fill", "honeydew")
+            .attr("stroke", "#ADADAD")
+            .style("stroke-width", "1px");
+        g.selectAll("text")
+            .data(data)
+            .enter()
+            .append("text")
+            .attr("dy", "0.3em")
+            .text(function(d) {
+                return d.cluster_num.toString();
+            })
+            .attr("font-size", function(d) {
+                return circleSizeInterpolator(d.cluster_num.length) / 2;
+            })
+            .attr("x", function(d) {
+                return d.cx;
+            })
+            .attr("y", function(d) {
+                return d.cy;
+            })
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .style("fill-opacity", 1)
+            .style("fill", "navy")
+            .style("pointer-events", "none")
+            .each(function(d) {
+                params.textwrap(
+                    d3.select(this),
+                    circleSizeInterpolator(d.cluster_num.length) * 1.5
+                );
+            });
+    }
+
+    function objectOnHoverBody() {
+        g.selectAll("circle")
+            .on("mouseover", function(d) {
+                objectRenderer(svg, [d], args);
+                svg.selectAll("g:last-of-type")
+                    .attr("id", "autodd_tooltip")
+                    .style("opacity", 0.8)
+                    .style("pointer-events", "none")
+                    .selectAll("*")
+                    .each(function() {
+                        zoomRescale("REPLACE_ME_this_viewId", this);
+                    });
+            })
+            .on("mouseleave", function() {
+                d3.select("#autodd_tooltip").remove();
+            });
+    }
+
+    function renderObjectClusterNumBody() {
+        var g = svg.select("g:last-of-type");
+        g.selectAll(".clusternum")
+            .data(data)
+            .enter()
+            .append("text")
+            .text(function(d) {
+                return d.cluster_num;
+            })
+            .attr("x", function(d) {
+                return +d.cx;
+            })
+            .attr("y", function(d) {
+                return +d.miny;
+            })
+            .attr("dy", ".35em")
+            .attr("font-size", 20)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#f47142")
+            .style("fill-opacity", 1);
+    }
+
     if (
         this.renderingMode == "circle only" ||
         this.renderingMode == "circle+object"
     ) {
+        // render circle
         var maxCircleDigit = this.roughN.toString().length;
-        var renderFuncBody =
-            "var objectRenderer = " + this.rendering.toString() + ";\n";
-        renderFuncBody +=
-            "var params = args.renderingParams;\n" +
-            "var circleSizeInterpolator = d3.scaleLinear()\n" +
-            "       .domain([1, " +
-            maxCircleDigit +
-            "])\n" +
-            "       .range([params.circleMinSize, params.circleMaxSize]);\n" +
-            'var g = svg.append("g");\n' +
-            'g.selectAll("circle")\n' +
-            "   .data(data)\n" +
-            "   .enter()\n" +
-            '   .append("circle")\n' +
-            '   .attr("r", function (d) {\n' +
-            "           return circleSizeInterpolator(d.cluster_num.length);\n" +
-            "   })\n" +
-            '   .attr("cx", function (d) {return d.cx;})\n' +
-            '   .attr("cy", function (d) {return d.cy;})\n' +
-            '   .style("fill-opacity", .25)\n' +
-            '   .attr("fill", "honeydew")\n' +
-            '   .attr("stroke", "#ADADAD")\n' +
-            '   .style("stroke-width", "1px")';
+        var renderFuncBody = getBodyStringOfFunction(renderCircleBody);
+        renderFuncBody = renderFuncBody.replace(
+            /REPLACE_ME_this_rendering/g,
+            this.rendering.toString()
+        );
+        renderFuncBody = renderFuncBody.replace(
+            /REPLACE_ME_maxCircleDigit/g,
+            maxCircleDigit
+        );
+
+        // set onhover listeners for "circle+object"
         if (this.renderingMode == "circle+object")
-            // set onhover listeners for circles
-            renderFuncBody +=
-                "\n" +
-                '   .on("mouseover", function (d) {\n' +
-                "        objectRenderer(svg, [d], args);\n" +
-                '        svg.selectAll("g:last-of-type")\n' +
-                '            .attr("id", "autodd_tooltip")\n' +
-                '            .style("opacity", 0.8)\n' +
-                '            .style("pointer-events", "none")\n' +
-                '            .selectAll("*")\n' +
-                '            .each(function() {zoomRescale("' +
-                this.viewId +
-                '", this);});\n' +
-                "    })\n" +
-                '    .on("mouseleave", function() {\n' +
-                '        d3.select("#autodd_tooltip")\n' +
-                "           .remove();\n" +
-                "    });\n";
-        else renderFuncBody += ";\n";
-        renderFuncBody +=
-            '    g.selectAll("text")\n' +
-            "        .data(data)\n" +
-            "        .enter()\n" +
-            '        .append("text")\n' +
-            '        .attr("dy", "0.3em")\n' +
-            "        .text(function (d) {return d.cluster_num.toString();})\n" +
-            '        .attr("font-size", function (d) {\n' +
-            "           return circleSizeInterpolator(d.cluster_num.length) / 2;\n" +
-            "        })\n" +
-            '        .attr("x", function(d) {return d.cx;})\n' +
-            '        .attr("y", function(d) {return d.cy;})\n' +
-            '        .attr("dy", ".35em")\n' +
-            '        .attr("text-anchor", "middle")\n' +
-            '        .style("fill-opacity", 1)\n' +
-            '        .style("fill", "navy")\n' +
-            '        .style("pointer-events", "none")' +
-            "        .each(function (d) {\n" +
-            "            params.textwrap(d3.select(this), circleSizeInterpolator(d.cluster_num.length) * 1.5);\n" +
-            "        });";
+            renderFuncBody += getBodyStringOfFunction(
+                objectOnHoverBody
+            ).replace(/REPLACE_ME_this_viewId/g, this.viewId);
         return new Function("svg", "data", "args", renderFuncBody);
     } else if (
         this.renderingMode == "object only" ||
@@ -207,65 +255,73 @@ function getLayerRenderer() {
         var renderFuncBody =
             "(" + this.rendering.toString() + ")(svg, data, args);\n";
         if (this.renderingMode == "object+clusternum")
-            renderFuncBody +=
-                'var g = svg.select("g:last-of-type");' +
-                'g.selectAll(".clusternum")' +
-                ".data(data)" +
-                ".enter()" +
-                '.append("text")' +
-                ".text(function(d) {return d.cluster_num;})" +
-                '.attr("x", function(d) {return +d.cx;})' +
-                '.attr("y", function(d) {return +d.miny;})' +
-                '.attr("dy", ".35em")' +
-                '.attr("font-size", 20)' +
-                '.attr("text-anchor", "middle")' +
-                '.attr("fill", "#f47142")' +
-                '.style("fill-opacity", 1);';
+            renderFuncBody += getBodyStringOfFunction(
+                renderObjectClusterNumBody
+            );
         return new Function("svg", "data", "args", renderFuncBody);
     }
 }
 
 // get axes renderer
 function getAxesRenderer(level) {
+    function axesRendererBodyTemplate() {
+        var cWidth = args.canvasW,
+            cHeight = args.canvasH,
+            axes = [];
+        var styling = function(axesg) {
+            axesg
+                .selectAll(".tick line")
+                .attr("stroke", "#777")
+                .attr("stroke-dasharray", "3,10");
+            axesg.style("font", "20px arial");
+            axesg.selectAll("path").remove();
+        };
+        //x
+        var x = d3
+            .scaleLinear()
+            .domain([REPLACE_ME_this_loX, REPLACE_ME_this_hiX])
+            .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);
+        var xAxis = d3.axisTop().tickSize(-cHeight);
+        axes.push({
+            dim: "x",
+            scale: x,
+            axis: xAxis,
+            translate: [0, 0],
+            styling: styling
+        });
+        //y
+        var y = d3
+            .scaleLinear()
+            .domain([REPLACE_ME_this_loY, REPLACE_ME_this_hiY])
+            .range([REPLACE_ME_yOffset, cHeight - REPLACE_ME_yOffset]);
+        var yAxis = d3.axisLeft().tickSize(-cWidth);
+        axes.push({
+            dim: "y",
+            scale: y,
+            axis: yAxis,
+            translate: [0, 0],
+            styling: styling
+        });
+        return axes;
+    }
+
     var xOffset = (this.bboxW / 2) * Math.pow(this.zoomFactor, level);
     var yOffset = (this.bboxH / 2) * Math.pow(this.zoomFactor, level);
-    var axesFuncBody =
-        "var cWidth = args.canvasW, cHeight = args.canvasH, axes = [];\n" +
-        "var styling = function (axesg) {\n" +
-        '   axesg.selectAll(".tick line").attr("stroke", "#777").attr("stroke-dasharray", "3,10");\n' +
-        '   axesg.style("font", "20px arial");\n' +
-        '   axesg.selectAll("path").remove();\n' +
-        "};\n" +
-        "//x \n" +
-        "var x = d3.scaleLinear()" +
-        "   .domain([" +
-        this.loX +
-        ", " +
-        this.hiX +
-        "])" +
-        "   .range([" +
-        xOffset +
-        ", cWidth - " +
-        xOffset +
-        "]);\n" +
-        "var xAxis = d3.axisTop().tickSize(-cHeight); " +
-        'axes.push({"dim": "x", "scale": x, "axis": xAxis, "translate": [0, 0], "styling": styling});\n' +
-        "//y \n" +
-        "var y = d3.scaleLinear()" +
-        "   .domain([" +
-        this.loY +
-        ", " +
-        this.hiY +
-        "])" +
-        "   .range([" +
-        yOffset +
-        ", cHeight - " +
-        yOffset +
-        "]);\n" +
-        "var yAxis = d3.axisLeft().tickSize(-cWidth);\n" +
-        'axes.push({"dim": "y", "scale": y, "axis": yAxis, "translate": [0, 0], "styling": styling});\n' +
-        "return axes;";
+    var axesFuncBody = getBodyStringOfFunction(axesRendererBodyTemplate);
+    axesFuncBody = axesFuncBody.replace(/REPLACE_ME_this_loX/g, this.loX);
+    axesFuncBody = axesFuncBody.replace(/REPLACE_ME_this_hiX/g, this.hiX);
+    axesFuncBody = axesFuncBody.replace(/REPLACE_ME_this_loY/g, this.loY);
+    axesFuncBody = axesFuncBody.replace(/REPLACE_ME_this_hiY/g, this.hiY);
+    axesFuncBody = axesFuncBody.replace(/REPLACE_ME_xOffset/g, xOffset);
+    axesFuncBody = axesFuncBody.replace(/REPLACE_ME_yOffset/g, yOffset);
     return new Function("args", axesFuncBody);
+}
+
+function getBodyStringOfFunction(func) {
+    var funcStr = func.toString();
+    const bodyStart = funcStr.indexOf("{") + 1;
+    const bodyEnd = funcStr.lastIndexOf("}");
+    return "\n" + funcStr.substring(bodyStart, bodyEnd) + "\n";
 }
 
 //define prototype
