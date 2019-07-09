@@ -125,15 +125,9 @@ function AutoDD(args) {
     this.hiY = "hiY" in args ? args.hiY : null;
 }
 
-/**
- * get rendering function for an autodd layer based on rendering mode
- * @param renderingMode
- * @param objectRenderer - user specified object renderer
- * @returns {Function}
- */
+// get rendering function for an autodd layer based on rendering mode
 function getLayerRenderer() {
     function renderCircleBody() {
-        var objectRenderer = REPLACE_ME_this_rendering;
         var params = args.renderingParams;
         var circleSizeInterpolator = d3
             .scaleLinear()
@@ -188,6 +182,7 @@ function getLayerRenderer() {
     }
 
     function objectOnHoverBody() {
+        var objectRenderer = REPLACE_ME_this_rendering;
         g.selectAll("circle")
             .on("mouseover", function(d) {
                 objectRenderer(svg, [d], args);

@@ -434,6 +434,42 @@ function saveProject() {
             }
         }
     }
+
+    // calculate zoom level for canvases
+    for (var i = 0; i < this.canvases.length; i++) {
+        var curCanvas = this.canvases[i];
+        var hasAncestor = false;
+        for (var j = 0; j < this.jumps.length; j++) {
+            if (
+                this.jumps[j].destId == curCanvas.id &&
+                this.jumps[j].type == "literal_zoom_in"
+            ) {
+                hasAncestor = true;
+                break;
+            }
+        }
+        if (hasAncestor) continue;
+        curCanvas.pyramidLevel = 0; // top zoom level
+        while (true) {
+            var successor = null;
+            for (var j = 0; j < this.jumps.length; j++) {
+                if (
+                    this.jumps[j].sourceId == curCanvas.id &&
+                    this.jumps[j].type == "literal_zoom_in"
+                ) {
+                    successor = this.jumps[j].destId;
+                    break;
+                }
+            }
+            if (successor == null) break;
+            for (var j = 0; j < this.canvases.length; j++)
+                if (this.canvases[j].id == successor) {
+                    this.canvases[j].pyramidLevel = curCanvas.pyramidLevel + 1;
+                    curCanvas = this.canvases[j];
+                }
+        }
+    }
+
     // check argv
     if (process.argv.length > 3)
         throw new Error("more than 1 command line arguments");
