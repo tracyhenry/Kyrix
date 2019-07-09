@@ -202,10 +202,16 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     if (tileSvg.empty()) return;
 
                     // draw current layer
+                    var optionalArgsWithTileXY = Object.assign(
+                        {},
+                        optionalArgs
+                    );
+                    optionalArgsWithTileXY["tileX"] = x;
+                    optionalArgsWithTileXY["tileY"] = y;
                     curLayer.rendering.parseFunction()(
                         tileSvg,
                         renderData[i],
-                        optionalArgs
+                        optionalArgsWithTileXY
                     );
 
                     tileSvg

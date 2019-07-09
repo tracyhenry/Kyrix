@@ -223,24 +223,13 @@ function getLayerRenderer() {
     }
 
     function renderContourBody() {
-        const color = d3
-            .scaleSequential(d3.interpolateViridis)
-            .domain([
-                1e-4,
-                0.01 /
-                    Math.pow(
-                        2.4,
-                        +globalVar.views["autodd0"].curCanvasId.substring(13)
-                    )
-            ]);
-
         var bandwidth = REPLACE_ME_bandwidth;
         var radius = REPLACE_ME_radius;
-        // HACK: get tile sizes and position through DOM
-        // should been done by getting things from args
-        var tileSize = +svg.attr("width");
-        var x = +svg.attr("x");
-        var y = +svg.attr("y");
+        var decayRate = 2.4;
+        var tileW = +args.tileW;
+        var tileH = +args.tileH;
+        var x = +args.tileX;
+        var y = +args.tileY;
         var translatedData = data.map(d => ({
             x: d.cx - (x - radius),
             y: d.cy - (y - radius),
@@ -252,28 +241,14 @@ function getLayerRenderer() {
             .x(d => d.x)
             .y(d => d.y)
             .weight(d => d.w)
-            .size([tileSize + radius * 2, tileSize + radius * 2])
+            .size([tileW + radius * 2, tileH + radius * 2])
             .bandwidth(bandwidth)
             .thresholds(function(v) {
-                var step =
-                    0.05 /
-                    Math.pow(
-                        2.3,
-                        +globalVar.views["autodd0"].curCanvasId.substring(13)
-                    );
+                var step = 0.05 / Math.pow(decayRate, +args.pyramidLevel);
                 var stop = d3.max(v);
-                console.log(stop);
-                console.log(d3.range(0, 1, step).filter(d => d <= stop));
                 return d3.range(1e-4, 1, step).filter(d => d <= stop);
             });
         contours = contoursGenerator(translatedData);
-        //        console.log(contours.map(c => c.value));
-        //        console.log(contoursGenerator.thresholds());
-        //        console.log(data.map(d => ({x: d.cx - x, y: d.cy - y})));
-        //        console.log(translatedData);
-
-        //        console.log(x + " " + y + ": ");
-
         /*        svg.selectAll("circle")
             .data(data)
             .enter().append("circle")
@@ -296,6 +271,10 @@ function getLayerRenderer() {
             })
             .attr("dy", ".35em")
             .attr("text-anchor", "middle");*/
+
+        const color = d3
+            .scaleSequential(d3.interpolateViridis)
+            .domain([1e-4, 0.01 / Math.pow(decayRate, +args.pyramidLevel)]);
 
         var g = svg
             .append("g")
