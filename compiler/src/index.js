@@ -231,7 +231,9 @@ function addAutoDD(autoDD) {
         curLayer.setIsAutoDD(true);
 
         // set retainSizeZoom
-        curLayer.setRetainSizeZoom(true);
+        curLayer.setRetainSizeZoom(
+            autoDD.renderingMode == "contour" ? false : true
+        );
 
         // dummy placement
         curLayer.addPlacement({

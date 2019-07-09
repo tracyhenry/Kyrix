@@ -14,7 +14,8 @@ function AutoDD(args) {
         "object only",
         "object+clusternum",
         "circle+object",
-        "circle only"
+        "circle only",
+        "contour"
     ]);
     if (!allRenderingModes.has(args.renderingMode))
         throw new Error("Constructing AutoDD: unsupported rendering mode.");
@@ -22,11 +23,17 @@ function AutoDD(args) {
     // check constraints according to rendering mode
     this.circleMinSize = 30;
     this.circleMaxSize = 70;
+    this.contourBandwidth = 30;
     if (
         args.renderingMode == "circle only" ||
         args.renderingMode == "circle+object"
-    )
+    ) {
         args.bboxW = args.bboxH = this.circleMaxSize * 2;
+        if (!("roughN" in args))
+            throw new Error(
+                "Constructing AutoDD: A rough estimate of total objects (roughN) is missing for circle rendering modes."
+            );
+    }
     if (
         (args.renderingMode == "object only" ||
             args.renderingMode == "object+clusternum" ||
@@ -34,14 +41,8 @@ function AutoDD(args) {
         !("rendering" in args)
     )
         throw new Error("Constructing AutoDD: object renderer missing.");
-    if (
-        (args.renderingMode == "circle+object" ||
-            args.renderingMode == "circle only") &&
-        !("roughN" in args)
-    )
-        throw new Error(
-            "Constructing AutoDD: A rough estimate of total objects (roughN) is missing for circle rendering modes."
-        );
+    if (args.renderingMode == "contour")
+        args.bboxW = args.bboxH = this.contourBandwidth * 8; // as what's implemented by d3-contour
 
     // check required args
     var requiredArgs = [
@@ -226,13 +227,117 @@ function getLayerRenderer() {
             .style("fill-opacity", 1);
     }
 
+    function renderContourBody() {
+        const color = d3
+            .scaleSequential(d3.interpolateViridis)
+            .domain([
+                1e-4,
+                0.01 /
+                    Math.pow(
+                        2.4,
+                        +globalVar.views["autodd0"].curCanvasId.substring(13)
+                    )
+            ]);
+
+        var bandwidth = REPLACE_ME_bandwidth;
+        var radius = REPLACE_ME_radius;
+        // HACK: get tile sizes and position through DOM
+        // should been done by getting things from args
+        var tileSize = +svg.attr("width");
+        var x = +svg.attr("x");
+        var y = +svg.attr("y");
+        var translatedData = data.map(d => ({
+            x: d.cx - (x - radius),
+            y: d.cy - (y - radius),
+            w: +d.cluster_num
+        }));
+
+        contoursGenerator = d3
+            .contourDensity()
+            .x(d => d.x)
+            .y(d => d.y)
+            .weight(d => d.w)
+            .size([tileSize + radius * 2, tileSize + radius * 2])
+            .bandwidth(bandwidth)
+            .thresholds(function(v) {
+                var step =
+                    0.05 /
+                    Math.pow(
+                        2.3,
+                        +globalVar.views["autodd0"].curCanvasId.substring(13)
+                    );
+                var stop = d3.max(v);
+                console.log(stop);
+                console.log(d3.range(0, 1, step).filter(d => d <= stop));
+                return d3.range(1e-4, 1, step).filter(d => d <= stop);
+            });
+        contours = contoursGenerator(translatedData);
+        //        console.log(contours.map(c => c.value));
+        //        console.log(contoursGenerator.thresholds());
+        //        console.log(data.map(d => ({x: d.cx - x, y: d.cy - y})));
+        //        console.log(translatedData);
+
+        //        console.log(x + " " + y + ": ");
+
+        /*        svg.selectAll("circle")
+            .data(data)
+            .enter().append("circle")
+            .attr("cx", d => d.cx)
+            .attr("cy", d => d.cy)
+            .attr("r", 3);*/
+        /*        svg.selectAll("text")
+            .data(data)
+            .enter().append("text")
+            .attr("dy", "0.3em")
+            .text(function(d) {
+                return d.cluster_num.toString();
+            })
+            .attr("font-size", 20)
+            .attr("x", function(d) {
+                return d.cx;
+            })
+            .attr("y", function(d) {
+                return d.cy;
+            })
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle");*/
+
+        var g = svg
+            .append("g")
+            .attr(
+                "transform",
+                "translate(" + (x - radius) + " " + (y - radius) + ")"
+            );
+        g.attr("fill", "none")
+            .attr("stroke", "black")
+            .attr("stroke-opacity", 0)
+            .attr("stroke-linejoin", "round")
+            .selectAll("path")
+            .data(contours)
+            .enter()
+            .append("path")
+            .attr("d", d3.geoPath())
+            .style("fill", d => color(d.value));
+    }
+
+    var renderFuncBody;
     if (
+        this.renderingMode == "object only" ||
+        this.renderingMode == "object+clusternum"
+    ) {
+        renderFuncBody =
+            "(" + this.rendering.toString() + ")(svg, data, args);\n";
+        if (this.renderingMode == "object+clusternum")
+            renderFuncBody += getBodyStringOfFunction(
+                renderObjectClusterNumBody
+            );
+    } else if (
         this.renderingMode == "circle only" ||
         this.renderingMode == "circle+object"
     ) {
         // render circle
         var maxCircleDigit = this.roughN.toString().length;
-        var renderFuncBody = getBodyStringOfFunction(renderCircleBody);
+        renderFuncBody = getBodyStringOfFunction(renderCircleBody);
         renderFuncBody = renderFuncBody.replace(
             /REPLACE_ME_this_rendering/g,
             this.rendering.toString()
@@ -247,19 +352,12 @@ function getLayerRenderer() {
             renderFuncBody += getBodyStringOfFunction(
                 objectOnHoverBody
             ).replace(/REPLACE_ME_this_viewId/g, this.viewId);
-        return new Function("svg", "data", "args", renderFuncBody);
-    } else if (
-        this.renderingMode == "object only" ||
-        this.renderingMode == "object+clusternum"
-    ) {
-        var renderFuncBody =
-            "(" + this.rendering.toString() + ")(svg, data, args);\n";
-        if (this.renderingMode == "object+clusternum")
-            renderFuncBody += getBodyStringOfFunction(
-                renderObjectClusterNumBody
-            );
-        return new Function("svg", "data", "args", renderFuncBody);
+    } else if (this.renderingMode == "contour") {
+        renderFuncBody = getBodyStringOfFunction(renderContourBody)
+            .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)
+            .replace(/REPLACE_ME_radius/g, this.bboxH / 2);
     }
+    return new Function("svg", "data", "args", renderFuncBody);
 }
 
 // get axes renderer
@@ -308,12 +406,13 @@ function getAxesRenderer(level) {
     var xOffset = (this.bboxW / 2) * Math.pow(this.zoomFactor, level);
     var yOffset = (this.bboxH / 2) * Math.pow(this.zoomFactor, level);
     var axesFuncBody = getBodyStringOfFunction(axesRendererBodyTemplate);
-    axesFuncBody = axesFuncBody.replace(/REPLACE_ME_this_loX/g, this.loX);
-    axesFuncBody = axesFuncBody.replace(/REPLACE_ME_this_hiX/g, this.hiX);
-    axesFuncBody = axesFuncBody.replace(/REPLACE_ME_this_loY/g, this.loY);
-    axesFuncBody = axesFuncBody.replace(/REPLACE_ME_this_hiY/g, this.hiY);
-    axesFuncBody = axesFuncBody.replace(/REPLACE_ME_xOffset/g, xOffset);
-    axesFuncBody = axesFuncBody.replace(/REPLACE_ME_yOffset/g, yOffset);
+    axesFuncBody = axesFuncBody
+        .replace(/REPLACE_ME_this_loX/g, this.loX)
+        .replace(/REPLACE_ME_this_hiX/g, this.hiX)
+        .replace(/REPLACE_ME_this_loY/g, this.loY)
+        .replace(/REPLACE_ME_this_hiY/g, this.hiY)
+        .replace(/REPLACE_ME_xOffset/g, xOffset)
+        .replace(/REPLACE_ME_yOffset/g, yOffset);
     return new Function("args", axesFuncBody);
 }
 

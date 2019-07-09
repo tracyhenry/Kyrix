@@ -23,13 +23,14 @@ var args = {
     hiX: 149,
     loY: 69,
     hiY: 148,
-    bboxW: 162,
-    bboxH: 132,
+    //    bboxW: 162,
+    //    bboxH: 132,
     axis: true,
     numLevels: 9,
-    roughN: 999,
-    renderingMode: "object+clusternum",
-    rendering: renderers.teamTimelineRendering
+    //    roughN: 999,
+    overlap: true,
+    renderingMode: "contour"
+    //    rendering: renderers.teamTimelineRendering
 };
 
 p.addAutoDD(new AutoDD(args));
