@@ -39,11 +39,12 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     public void createMV(Canvas c, int layerId) throws Exception {
 
         // create MV for all autoDD layers at once
-        int curLevel = Integer.valueOf(c.getId().substring(c.getId().indexOf("level") + 5));
-        if (curLevel > 0) return;
+        String autoDDId = c.getLayers().get(layerId).getAutoDDId();
+        int levelId = Integer.valueOf(autoDDId.substring(autoDDId.indexOf("_") + 1));
+        if (levelId > 0) return;
 
         // get current AutoDD object
-        int autoDDIndex = Integer.valueOf(c.getId().substring(6, c.getId().indexOf("_")));
+        int autoDDIndex = Integer.valueOf(autoDDId.substring(0, autoDDId.indexOf("_")));
         AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
         int numLevels = autoDD.getNumLevels();
         int numRawColumns = autoDD.getColumnNames().size();
@@ -293,12 +294,21 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
     private String getAutoDDBboxTableName(int autoDDIndex, int level) {
 
-        return "bbox_"
-                + Main.getProject().getName()
-                + "_autodd"
-                + autoDDIndex
-                + "_level"
-                + level
-                + "layer0";
+        String autoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(level);
+        for (Canvas c : Main.getProject().getCanvases()) {
+            int numLayers = c.getLayers().size();
+            for (int layerId = 0; layerId < numLayers; layerId++) {
+                String curAutoDDId = c.getLayers().get(layerId).getAutoDDId();
+                if (curAutoDDId == null) continue;
+                if (curAutoDDId.equals(autoDDId))
+                    return "bbox_"
+                            + Main.getProject().getName()
+                            + "_"
+                            + c.getId()
+                            + "layer"
+                            + layerId;
+            }
+        }
+        return "";
     }
 }

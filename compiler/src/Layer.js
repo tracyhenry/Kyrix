@@ -68,6 +68,14 @@ function setIsAutoDD(isAutoDD) {
 }
 
 /**
+ * set autoDD ID
+ * @param autoDDId
+ */
+function setAutoDDId(autoDDId) {
+    this.autoDDId = autoDDId;
+}
+
+/**
  * set retainSizeZoom,
  * @param retainSizeZoom
  */
@@ -80,6 +88,7 @@ Layer.prototype = {
     addPlacement: addPlacement,
     addRenderingFunc: addRenderingFunc,
     setIsAutoDD: setIsAutoDD,
+    setAutoDDId: setAutoDDId,
     setRetainSizeZoom: setRetainSizeZoom
 };
 

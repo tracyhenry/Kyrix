@@ -58,7 +58,7 @@ function renderAxes(viewId, viewportX, viewportY, vWidth, vHeight) {
         // call axis function
         curg.call(axes[i].axis.scale(newScale));
 
-        // styling for autodd
+        // styling
         if ("styling" in axes[i]) axes[i].styling(curg);
     }
 }

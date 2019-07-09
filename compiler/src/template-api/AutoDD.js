@@ -192,7 +192,7 @@ function getLayerRenderer() {
                     .style("pointer-events", "none")
                     .selectAll("*")
                     .each(function() {
-                        zoomRescale("REPLACE_ME_this_viewId", this);
+                        zoomRescale(args.viewId, this);
                     });
             })
             .on("mouseleave", function() {
@@ -318,12 +318,9 @@ function getLayerRenderer() {
 
         // set onhover listeners for "circle+object"
         if (this.renderingMode == "circle+object")
-            renderFuncBody += getBodyStringOfFunction(objectOnHoverBody)
-                .replace(/REPLACE_ME_this_viewId/g, this.viewId)
-                .replace(
-                    /REPLACE_ME_this_rendering/g,
-                    this.rendering.toString()
-                );
+            renderFuncBody += getBodyStringOfFunction(
+                objectOnHoverBody
+            ).replace(/REPLACE_ME_this_rendering/g, this.rendering.toString());
     } else if (this.renderingMode == "contour") {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
             .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)

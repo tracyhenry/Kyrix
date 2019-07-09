@@ -44,6 +44,7 @@ function getOptionalArgs(viewId) {
         predicates: predicateDict,
         tileW: globalVar.tileW,
         tileH: globalVar.tileH,
+        viewId: viewId,
         renderingParams: globalVar.renderingParams
     };
 

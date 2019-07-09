@@ -180,8 +180,13 @@ function addJump(jump) {
     this.jumps.push(jump);
 }
 
-// Add an autoDD to a project, this will create a hierarchy of canvases that form a pyramid shape
-function addAutoDD(autoDD) {
+/**
+ * //Add an autoDD to a project, this will create a hierarchy of canvases that form a pyramid shape
+ * @param autoDD an AutoDD object
+ * @param args an dictionary that contains customization parameters, see doc
+ * @returns {Array} an array of canvas objects that correspond to the hierarchy
+ */
+function addAutoDD(autoDD, args) {
     // add to project
     this.autoDDs.push(autoDD);
 
@@ -190,42 +195,44 @@ function addAutoDD(autoDD) {
         textwrap: require("./template-api/Renderers").textwrap
     });
 
-    // new view
-    var viewId = "autodd" + (this.autoDDs.length - 1);
-    autoDD.viewId = viewId;
-    var view = new View(
-        viewId,
-        0,
-        0,
-        autoDD.topLevelWidth,
-        autoDD.topLevelHeight
-    );
-    this.addView(view);
-
     // construct canvases
-    var canvasNamePrefix = "autodd" + (this.autoDDs.length - 1) + "_";
     var autoDDCanvases = [];
     var transform = new Transform(autoDD.query, autoDD.db, "", [], true);
-    for (var i = 0; i < autoDD.numLevels; i++) {
+    var numLevels = Math.min(
+        autoDD.numLevels,
+        args != null && "canvases" in args ? args.canvases.length : 1e10
+    );
+    for (var i = 0; i < numLevels; i++) {
         var width = (autoDD.topLevelWidth * Math.pow(autoDD.zoomFactor, i)) | 0;
         var height =
             (autoDD.topLevelHeight * Math.pow(autoDD.zoomFactor, i)) | 0;
 
         // construct a new canvas
-        var curCanvas = new Canvas(
-            canvasNamePrefix + "level" + i,
-            width,
-            height
-        );
+        var curCanvas;
+        if (args != null && "canvases" in args) {
+            curCanvas = args.canvases[i];
+            if (
+                Math.abs(curCanvas.width - width) > 1e-3 ||
+                Math.abs(curCanvas.height - height) > 1e-3
+            )
+                throw new Error("Adding AutoDD: Canvas sizes do not match.");
+        } else {
+            curCanvas = new Canvas(
+                "autodd" + (this.autoDDs.length - 1) + "_" + "level" + i,
+                width,
+                height
+            );
+            this.addCanvas(curCanvas);
+        }
         autoDDCanvases.push(curCanvas);
-        this.addCanvas(curCanvas);
 
         // create one layer
         var curLayer = new Layer(transform, false);
         curCanvas.addLayer(curLayer);
 
-        // set isAutoDD
+        // set isAutoDD and autoDD ID
         curLayer.setIsAutoDD(true);
+        curLayer.setAutoDDId(this.autoDDs.length - 1 + "_" + i);
 
         // set retainSizeZoom
         curLayer.setRetainSizeZoom(
@@ -251,24 +258,65 @@ function addAutoDD(autoDD) {
 
     // literal zooms
     for (var i = 0; i + 1 < autoDD.numLevels; i++) {
-        this.addJump(
-            new Jump(
-                autoDDCanvases[i],
-                autoDDCanvases[i + 1],
-                "literal_zoom_in"
-            )
-        );
-        this.addJump(
-            new Jump(
-                autoDDCanvases[i + 1],
-                autoDDCanvases[i],
-                "literal_zoom_out"
-            )
-        );
+        var hasLiteralZoomIn = false;
+        var hasLiteralZoomOut = false;
+        for (var j = 0; j < this.jumps.length; j++) {
+            if (
+                this.jumps[j].sourceId == autoDDCanvases[i].id &&
+                this.jumps[j].type == "literal_zoom_in"
+            ) {
+                if (this.jumps[j].destId != autoDDCanvases[i + 1].id)
+                    throw new Error(
+                        "Adding AutoDD: argument canvases do not form a literal zoom pyramid."
+                    );
+                hasLiteralZoomIn = true;
+            }
+            if (
+                this.jumps[j].sourceId == autoDDCanvases[i + 1].id &&
+                this.jumps[j].type == "literal_zoom_out"
+            ) {
+                if (this.jumps[j].destId != autoDDCanvases[i].id)
+                    throw new Error(
+                        "Adding AutoDD: argument canvases do not form a literal zoom pyramid."
+                    );
+                hasLiteralZoomOut = true;
+            }
+        }
+        if (!hasLiteralZoomIn)
+            this.addJump(
+                new Jump(
+                    autoDDCanvases[i],
+                    autoDDCanvases[i + 1],
+                    "literal_zoom_in"
+                )
+            );
+        if (!hasLiteralZoomOut)
+            this.addJump(
+                new Jump(
+                    autoDDCanvases[i + 1],
+                    autoDDCanvases[i],
+                    "literal_zoom_out"
+                )
+            );
     }
 
-    // initial canvas
-    this.setInitialStates(view, autoDDCanvases[0], 0, 0);
+    // by default, we create a new view unless specified
+    if (args == null || !"newView" in args || args.newView) {
+        var viewId = "autodd" + (this.autoDDs.length - 1);
+        var view = new View(
+            viewId,
+            0,
+            0,
+            autoDD.topLevelWidth,
+            autoDD.topLevelHeight
+        );
+        this.addView(view);
+
+        // initialize view
+        this.setInitialStates(view, autoDDCanvases[0], 0, 0);
+    }
+
+    return autoDDCanvases;
 }
 
 // Add a rendering parameter object
