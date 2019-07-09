@@ -16,7 +16,8 @@ import project.Canvas;
 public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
     private static AutoDDInMemoryIndexer instance = null;
-    private final int objectNumLimit = 2000; // in a 1k by 1k region
+    private final int objectNumLimit = 4000; // in a 1k by 1k region
+    private final int virtualViewportSize = 1000;
     private double overlappingThreshold = 1.0;
 
     // One Rtree per level to store samples
@@ -50,8 +51,14 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         // calculate overlapping threshold
         overlappingThreshold =
                 Math.max(
-                        0.5,
-                        Math.sqrt(4e6 / objectNumLimit / autoDD.getBboxH() / autoDD.getBboxW())
+                        0.2,
+                        Math.sqrt(
+                                        4
+                                                * (virtualViewportSize + autoDD.getBboxW() * 2)
+                                                * (virtualViewportSize + autoDD.getBboxH() * 2)
+                                                / objectNumLimit
+                                                / autoDD.getBboxH()
+                                                / autoDD.getBboxW())
                                 - 1);
         if (!autoDD.getOverlap()) overlappingThreshold = Math.max(overlappingThreshold, 1);
         System.out.println("Overlapping threshold: " + overlappingThreshold);
@@ -67,7 +74,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         // compute cluster number
         if (autoDD.getRenderingMode().equals("object+clusternum")
                 || autoDD.getRenderingMode().equals("circle only")
-                || autoDD.getRenderingMode().equals("circle+object")) {
+                || autoDD.getRenderingMode().equals("circle+object")
+                || autoDD.getRenderingMode().equals("contour")) {
 
             // a fake bottom level for non-sampled objects
             Rtrees.add(RTree.create());
@@ -273,6 +281,10 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 curRow.add(String.valueOf(miny));
                 curRow.add(String.valueOf(maxx));
                 curRow.add(String.valueOf(maxy));
+                minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
+                miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
+                maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
+                maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
                 Rtrees.set(
                         i, Rtrees.get(i).add(curRow, Geometries.rectangle(minx, miny, maxx, maxy)));
             }
