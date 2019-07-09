@@ -132,7 +132,7 @@ function getLayerRenderer() {
         var circleSizeInterpolator = d3
             .scaleLinear()
             .domain([1, REPLACE_ME_maxCircleDigit])
-            .range([params.circleMinSize, params.circleMaxSize]);
+            .range([REPLACE_ME_circleMinSize, REPLACE_ME_circleMaxSize]);
         var g = svg.append("g");
         g.selectAll("circle")
             .data(data)
@@ -311,21 +311,19 @@ function getLayerRenderer() {
     ) {
         // render circle
         var maxCircleDigit = this.roughN.toString().length;
-        renderFuncBody = getBodyStringOfFunction(renderCircleBody);
-        renderFuncBody = renderFuncBody.replace(
-            /REPLACE_ME_this_rendering/g,
-            this.rendering.toString()
-        );
-        renderFuncBody = renderFuncBody.replace(
-            /REPLACE_ME_maxCircleDigit/g,
-            maxCircleDigit
-        );
+        renderFuncBody = getBodyStringOfFunction(renderCircleBody)
+            .replace(/REPLACE_ME_maxCircleDigit/g, maxCircleDigit)
+            .replace(/REPLACE_ME_circleMinSize/g, this.circleMinSize)
+            .replace(/REPLACE_ME_circleMaxSize/g, this.circleMaxSize);
 
         // set onhover listeners for "circle+object"
         if (this.renderingMode == "circle+object")
-            renderFuncBody += getBodyStringOfFunction(
-                objectOnHoverBody
-            ).replace(/REPLACE_ME_this_viewId/g, this.viewId);
+            renderFuncBody += getBodyStringOfFunction(objectOnHoverBody)
+                .replace(/REPLACE_ME_this_viewId/g, this.viewId)
+                .replace(
+                    /REPLACE_ME_this_rendering/g,
+                    this.rendering.toString()
+                );
     } else if (this.renderingMode == "contour") {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
             .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)
