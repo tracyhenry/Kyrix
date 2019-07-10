@@ -387,7 +387,11 @@ function renderDynamicBoxes(
                             +d.miny > y + response.boxH
                         )
                             return false;
-                        if (mp.hasOwnProperty(JSON.stringify(d))) return false;
+                        if (
+                            param.deltaBox &&
+                            mp.hasOwnProperty(JSON.stringify(d))
+                        )
+                            return false;
                         return true;
                     });
 
@@ -413,10 +417,18 @@ function renderDynamicBoxes(
                     gvd.renderData[i] = newLayerData;
 
                     // draw current layer
+                    var optionalArgsWithBoxWHXY = Object.assign(
+                        {},
+                        optionalArgs
+                    );
+                    optionalArgsWithBoxWHXY["boxX"] = x;
+                    optionalArgsWithBoxWHXY["boxY"] = y;
+                    optionalArgsWithBoxWHXY["boxW"] = response.boxW;
+                    optionalArgsWithBoxWHXY["boxH"] = response.boxH;
                     curLayer.rendering.parseFunction()(
                         dboxSvg,
                         renderData[i],
-                        optionalArgs
+                        optionalArgsWithBoxWHXY
                     );
 
                     // register jumps

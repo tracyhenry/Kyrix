@@ -28,7 +28,6 @@ var args = {
     axis: true,
     numLevels: 9,
     //    roughN: 999,
-    overlap: true,
     renderingMode: "contour"
     //    rendering: renderers.teamTimelineRendering
 };

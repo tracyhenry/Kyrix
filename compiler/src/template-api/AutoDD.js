@@ -117,7 +117,14 @@ function AutoDD(args) {
     this.topLevelHeight = "topLevelHeight" in args ? args.topLevelHeight : 1000;
     this.zoomFactor = "zoomFactor" in args ? args.zoomFactor : 2;
     this.roughN = "roughN" in args ? args.roughN : null;
-    this.overlap = "overlap" in args ? (args.overlap ? true : false) : false;
+    this.overlap =
+        "overlap" in args
+            ? args.overlap
+                ? true
+                : false
+            : this.renderingMode == "contour"
+            ? true
+            : false;
     this.axis = "axis" in args ? args.axis : false;
     this.loX = "loX" in args ? args.loX : null;
     this.loY = "loY" in args ? args.loY : null;
@@ -226,56 +233,43 @@ function getLayerRenderer() {
         var bandwidth = REPLACE_ME_bandwidth;
         var radius = REPLACE_ME_radius;
         var decayRate = 2.4;
-        var tileW = +args.tileW;
-        var tileH = +args.tileH;
-        var x = +args.tileX;
-        var y = +args.tileY;
+        var contourWidth, contourHeight, x, y;
+        if ("tileX" in args) {
+            // tiling
+            contourWidth = +args.tileW + radius * 2;
+            contourHeight = +args.tileH + radius * 2;
+            x = +args.tileX;
+            y = +args.tileY;
+        } else {
+            // dynamic boxes
+            contourWidth = +args.boxW + radius * 2;
+            contourHeight = +args.boxH + radius * 2;
+            x = +args.boxX;
+            y = +args.boxY;
+        }
         var translatedData = data.map(d => ({
             x: d.cx - (x - radius),
             y: d.cy - (y - radius),
             w: +d.cluster_num
         }));
-
-        contoursGenerator = d3
+        contours = d3
             .contourDensity()
             .x(d => d.x)
             .y(d => d.y)
             .weight(d => d.w)
-            .size([tileW + radius * 2, tileH + radius * 2])
+            .size([contourWidth, contourHeight])
             .bandwidth(bandwidth)
             .thresholds(function(v) {
                 var step = 0.05 / Math.pow(decayRate, +args.pyramidLevel);
                 var stop = d3.max(v);
                 return d3.range(1e-4, 1, step).filter(d => d <= stop);
-            });
-        contours = contoursGenerator(translatedData);
-        /*        svg.selectAll("circle")
-            .data(data)
-            .enter().append("circle")
-            .attr("cx", d => d.cx)
-            .attr("cy", d => d.cy)
-            .attr("r", 3);*/
-        /*        svg.selectAll("text")
-            .data(data)
-            .enter().append("text")
-            .attr("dy", "0.3em")
-            .text(function(d) {
-                return d.cluster_num.toString();
-            })
-            .attr("font-size", 20)
-            .attr("x", function(d) {
-                return d.cx;
-            })
-            .attr("y", function(d) {
-                return d.cy;
-            })
-            .attr("dy", ".35em")
-            .attr("text-anchor", "middle");*/
+            })(translatedData);
 
         const color = d3
             .scaleSequential(d3.interpolateViridis)
             .domain([1e-4, 0.01 / Math.pow(decayRate, +args.pyramidLevel)]);
 
+        svg.selectAll("*").remove();
         var g = svg
             .append("g")
             .attr(
@@ -324,7 +318,7 @@ function getLayerRenderer() {
     } else if (this.renderingMode == "contour") {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
             .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)
-            .replace(/REPLACE_ME_radius/g, this.bboxH / 2);
+            .replace(/REPLACE_ME_radius/g, this.bboxH);
     }
     return new Function("svg", "data", "args", renderFuncBody);
 }
