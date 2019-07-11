@@ -1,6 +1,6 @@
+#!/bin/bash
 # Formatter for Java
 # From https://github.com/a1exsh/google-java-format-git-pre-commit-hook
-#!/bin/bash
 
 mkdir -p $GIT_DIR/.cache
 if [[ ! -f $GIT_DIR/.cache/google-java-format-1.6-all-deps.jar ]]

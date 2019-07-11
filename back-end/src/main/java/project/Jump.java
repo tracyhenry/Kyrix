@@ -7,6 +7,7 @@ public class Jump {
     private String type;
     private String selector, viewport, predicates, name;
     private String sourceViewId, destViewId;
+    private Boolean noPrefix;
 
     public String getSourceId() {
         return sourceId;
@@ -44,6 +45,10 @@ public class Jump {
         return destViewId;
     }
 
+    public Boolean getNoPrefix() {
+        return noPrefix;
+    }
+
     @Override
     public String toString() {
         return "Jump{"
@@ -73,6 +78,9 @@ public class Jump {
                 + '\''
                 + ", destViewId='"
                 + destViewId
+                + '\''
+                + ", noPrefix='"
+                + noPrefix
                 + '\''
                 + '}';
     }
