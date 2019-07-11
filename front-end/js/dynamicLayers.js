@@ -58,7 +58,7 @@ function renderAxes(viewId, viewportX, viewportY, vWidth, vHeight) {
         // call axis function
         curg.call(axes[i].axis.scale(newScale));
 
-        // styling for autodd
+        // styling
         if ("styling" in axes[i]) axes[i].styling(curg);
     }
 }
@@ -202,10 +202,16 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     if (tileSvg.empty()) return;
 
                     // draw current layer
+                    var optionalArgsWithTileXY = Object.assign(
+                        {},
+                        optionalArgs
+                    );
+                    optionalArgsWithTileXY["tileX"] = x;
+                    optionalArgsWithTileXY["tileY"] = y;
                     curLayer.rendering.parseFunction()(
                         tileSvg,
                         renderData[i],
-                        optionalArgs
+                        optionalArgsWithTileXY
                     );
 
                     tileSvg
@@ -381,7 +387,11 @@ function renderDynamicBoxes(
                             +d.miny > y + response.boxH
                         )
                             return false;
-                        if (mp.hasOwnProperty(JSON.stringify(d))) return false;
+                        if (
+                            param.deltaBox &&
+                            mp.hasOwnProperty(JSON.stringify(d))
+                        )
+                            return false;
                         return true;
                     });
 
@@ -407,10 +417,18 @@ function renderDynamicBoxes(
                     gvd.renderData[i] = newLayerData;
 
                     // draw current layer
+                    var optionalArgsWithBoxWHXY = Object.assign(
+                        {},
+                        optionalArgs
+                    );
+                    optionalArgsWithBoxWHXY["boxX"] = x;
+                    optionalArgsWithBoxWHXY["boxY"] = y;
+                    optionalArgsWithBoxWHXY["boxW"] = response.boxW;
+                    optionalArgsWithBoxWHXY["boxH"] = response.boxH;
                     curLayer.rendering.parseFunction()(
                         dboxSvg,
                         renderData[i],
-                        optionalArgs
+                        optionalArgsWithBoxWHXY
                     );
 
                     // register jumps

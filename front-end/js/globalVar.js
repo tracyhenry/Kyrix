@@ -38,9 +38,13 @@ function getOptionalArgs(viewId) {
     var optionalArgs = {
         canvasW: gvd.curCanvas.w,
         canvasH: gvd.curCanvas.h,
+        pyramidLevel: gvd.curCanvas.pyramidLevel,
         viewportW: gvd.viewportWidth,
         viewportH: gvd.viewportHeight,
         predicates: predicateDict,
+        tileW: globalVar.tileW,
+        tileH: globalVar.tileH,
+        viewId: viewId,
         renderingParams: globalVar.renderingParams
     };
 

@@ -1,6 +1,6 @@
 // libraries
 const Project = require("../../src/index").Project;
-const AutoDD = require("../../src/AutoDD").AutoDD;
+const AutoDD = require("../../src/template-api/AutoDD").AutoDD;
 const renderers = require("../nba/renderers");
 
 // construct a project
@@ -14,7 +14,7 @@ var query =
     "where games.home_team = team1.abbr and games.away_team = team2.abbr " +
     "order by agg_rank;";
 
-var args = {
+var autoDD = {
     query: query,
     db: "nba",
     xCol: "home_score",
@@ -23,15 +23,15 @@ var args = {
     hiX: 149,
     loY: 69,
     hiY: 148,
-    bboxW: 162,
-    bboxH: 132,
+    //    bboxW: 162,
+    //    bboxH: 132,
     axis: true,
     numLevels: 9,
     roughN: 999,
-    renderingMode: "object+clusternum",
-    rendering: renderers.teamTimelineRendering
+    renderingMode: "contour"
+    //    rendering: renderers.teamTimelineRendering
 };
 
-p.addAutoDD(new AutoDD(args));
+p.addAutoDD(new AutoDD(autoDD), {newPyramid: true, newView: true});
 
 p.saveProject();

@@ -16,7 +16,8 @@ import project.Canvas;
 public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
     private static AutoDDInMemoryIndexer instance = null;
-    private final int objectNumLimit = 2000; // in a 1k by 1k region
+    private final int objectNumLimit = 4000; // in a 1k by 1k region
+    private final int virtualViewportSize = 1000;
     private double overlappingThreshold = 1.0;
 
     // One Rtree per level to store samples
@@ -38,11 +39,12 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     public void createMV(Canvas c, int layerId) throws Exception {
 
         // create MV for all autoDD layers at once
-        int curLevel = Integer.valueOf(c.getId().substring(c.getId().indexOf("level") + 5));
-        if (curLevel > 0) return;
+        String autoDDId = c.getLayers().get(layerId).getAutoDDId();
+        int levelId = Integer.valueOf(autoDDId.substring(autoDDId.indexOf("_") + 1));
+        if (levelId > 0) return;
 
         // get current AutoDD object
-        int autoDDIndex = Integer.valueOf(c.getId().substring(6, c.getId().indexOf("_")));
+        int autoDDIndex = Integer.valueOf(autoDDId.substring(0, autoDDId.indexOf("_")));
         AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
         int numLevels = autoDD.getNumLevels();
         int numRawColumns = autoDD.getColumnNames().size();
@@ -50,8 +52,14 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         // calculate overlapping threshold
         overlappingThreshold =
                 Math.max(
-                        0.5,
-                        Math.sqrt(4e6 / objectNumLimit / autoDD.getBboxH() / autoDD.getBboxW())
+                        0.2,
+                        Math.sqrt(
+                                        4
+                                                * (virtualViewportSize + autoDD.getBboxW() * 2)
+                                                * (virtualViewportSize + autoDD.getBboxH() * 2)
+                                                / objectNumLimit
+                                                / autoDD.getBboxH()
+                                                / autoDD.getBboxW())
                                 - 1);
         if (!autoDD.getOverlap()) overlappingThreshold = Math.max(overlappingThreshold, 1);
         System.out.println("Overlapping threshold: " + overlappingThreshold);
@@ -67,7 +75,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         // compute cluster number
         if (autoDD.getRenderingMode().equals("object+clusternum")
                 || autoDD.getRenderingMode().equals("circle only")
-                || autoDD.getRenderingMode().equals("circle+object")) {
+                || autoDD.getRenderingMode().equals("circle+object")
+                || autoDD.getRenderingMode().equals("contour")) {
 
             // a fake bottom level for non-sampled objects
             Rtrees.add(RTree.create());
@@ -273,6 +282,10 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 curRow.add(String.valueOf(miny));
                 curRow.add(String.valueOf(maxx));
                 curRow.add(String.valueOf(maxy));
+                minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
+                miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
+                maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
+                maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
                 Rtrees.set(
                         i, Rtrees.get(i).add(curRow, Geometries.rectangle(minx, miny, maxx, maxy)));
             }
@@ -281,12 +294,21 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
     private String getAutoDDBboxTableName(int autoDDIndex, int level) {
 
-        return "bbox_"
-                + Main.getProject().getName()
-                + "_autodd"
-                + autoDDIndex
-                + "_level"
-                + level
-                + "layer0";
+        String autoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(level);
+        for (Canvas c : Main.getProject().getCanvases()) {
+            int numLayers = c.getLayers().size();
+            for (int layerId = 0; layerId < numLayers; layerId++) {
+                String curAutoDDId = c.getLayers().get(layerId).getAutoDDId();
+                if (curAutoDDId == null) continue;
+                if (curAutoDDId.equals(autoDDId))
+                    return "bbox_"
+                            + Main.getProject().getName()
+                            + "_"
+                            + c.getId()
+                            + "layer"
+                            + layerId;
+            }
+        }
+        return "";
     }
 }
