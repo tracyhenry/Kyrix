@@ -191,25 +191,25 @@ function getLayerRenderer() {
                     circleSizeInterpolator(d.cluster_num.length) * 1.5
                 );
             });
-    }
-
-    function objectOnHoverBody() {
-        var objectRenderer = REPLACE_ME_this_rendering;
-        g.selectAll("circle")
-            .on("mouseover", function(d) {
-                objectRenderer(svg, [d], args);
-                svg.selectAll("g:last-of-type")
-                    .attr("id", "autodd_tooltip")
-                    .style("opacity", 0.8)
-                    .style("pointer-events", "none")
-                    .selectAll("*")
-                    .each(function() {
-                        zoomRescale(args.viewId, this);
-                    });
-            })
-            .on("mouseleave", function() {
-                d3.select("#autodd_tooltip").remove();
-            });
+        var isObjectOnHover = REPLACE_ME_is_object_onhover;
+        if (isObjectOnHover) {
+            var objectRenderer = REPLACE_ME_this_rendering;
+            g.selectAll("circle")
+                .on("mouseover", function(d) {
+                    objectRenderer(svg, [d], args);
+                    svg.selectAll("g:last-of-type")
+                        .attr("id", "autodd_tooltip")
+                        .style("opacity", 0.8)
+                        .style("pointer-events", "none")
+                        .selectAll("*")
+                        .each(function() {
+                            zoomRescale(args.viewId, this);
+                        });
+                })
+                .on("mouseleave", function() {
+                    d3.select("#autodd_tooltip").remove();
+                });
+        }
     }
 
     function renderObjectClusterNumBody() {
@@ -324,13 +324,12 @@ function getLayerRenderer() {
         renderFuncBody = getBodyStringOfFunction(renderCircleBody)
             .replace(/REPLACE_ME_maxCircleDigit/g, maxCircleDigit)
             .replace(/REPLACE_ME_circleMinSize/g, this.circleMinSize)
-            .replace(/REPLACE_ME_circleMaxSize/g, this.circleMaxSize);
-
-        // set onhover listeners for "circle+object"
-        if (this.renderingMode == "circle+object")
-            renderFuncBody += getBodyStringOfFunction(
-                objectOnHoverBody
-            ).replace(/REPLACE_ME_this_rendering/g, this.rendering.toString());
+            .replace(/REPLACE_ME_circleMaxSize/g, this.circleMaxSize)
+            .replace(/REPLACE_ME_this_rendering/g, this.rendering.toString())
+            .replace(
+                /REPLACE_ME_is_object_on_hover/g,
+                this.renderingMode == "circle+object"
+            );
     } else if (this.renderingMode == "contour") {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
             .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)
