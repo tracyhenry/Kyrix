@@ -41,8 +41,13 @@ function AutoDD(args) {
         !("rendering" in args)
     )
         throw new Error("Constructing AutoDD: object renderer missing.");
-    if (args.renderingMode == "contour")
+    if (args.renderingMode == "contour") {
+        if (!("roughN" in args))
+            throw new Error(
+                "Constructing AutoDD: A rough estimate of total objects (roughN) is missing for KDE rendering modes."
+            );
         args.bboxW = args.bboxH = this.contourBandwidth * 8; // as what's implemented by d3-contour
+    }
 
     // check required args
     var requiredArgs = [
@@ -232,6 +237,7 @@ function getLayerRenderer() {
     function renderContourBody() {
         var bandwidth = REPLACE_ME_bandwidth;
         var radius = REPLACE_ME_radius;
+        var roughN = REPLACE_ME_roughN;
         var decayRate = 2.4;
         var contourWidth, contourHeight, x, y;
         if ("tileX" in args) {
@@ -260,14 +266,24 @@ function getLayerRenderer() {
             .size([contourWidth, contourHeight])
             .bandwidth(bandwidth)
             .thresholds(function(v) {
-                var step = 0.05 / Math.pow(decayRate, +args.pyramidLevel);
-                var stop = d3.max(v);
-                return d3.range(1e-4, 1, step).filter(d => d <= stop);
+                //                var step = 0.05 / Math.pow(decayRate, +args.pyramidLevel) * 6;
+                //                var stop = d3.max(v);
+                var eMax =
+                    (0.25 * roughN) /
+                    1000 /
+                    Math.pow(decayRate, +args.pyramidLevel);
+                return d3.range(1e-4, eMax, eMax / 6);
             })(translatedData);
 
         const color = d3
             .scaleSequential(d3.interpolateViridis)
-            .domain([1e-4, 0.01 / Math.pow(decayRate, +args.pyramidLevel)]);
+            .domain([
+                1e-4,
+                (0.2 * roughN) /
+                    1000 /
+                    Math.pow(decayRate, +args.pyramidLevel) /
+                    16
+            ]);
 
         svg.selectAll("*").remove();
         var g = svg
@@ -318,7 +334,8 @@ function getLayerRenderer() {
     } else if (this.renderingMode == "contour") {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
             .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)
-            .replace(/REPLACE_ME_radius/g, this.bboxH);
+            .replace(/REPLACE_ME_radius/g, this.bboxH)
+            .replace(/REPLACE_ME_roughN/g, this.roughN.toString());
     }
     return new Function("svg", "data", "args", renderFuncBody);
 }

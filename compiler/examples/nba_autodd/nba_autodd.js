@@ -27,7 +27,7 @@ var args = {
     //    bboxH: 132,
     axis: true,
     numLevels: 9,
-    //    roughN: 999,
+    roughN: 999,
     renderingMode: "contour"
     //    rendering: renderers.teamTimelineRendering
 };
