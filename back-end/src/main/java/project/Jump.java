@@ -7,7 +7,7 @@ public class Jump {
     private String type;
     private String selector, viewport, predicates, name;
     private String sourceViewId, destViewId;
-    private String noPrefix;
+    private Boolean noPrefix;
 
     public String getSourceId() {
         return sourceId;
@@ -45,7 +45,7 @@ public class Jump {
         return destViewId;
     }
 
-    public String getNoPrefix() {
+    public Boolean getNoPrefix() {
         return noPrefix;
     }
 

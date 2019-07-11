@@ -552,7 +552,7 @@ function registerJumps(viewId, svg, layerId) {
                 else if (jumps[k].type == param.highlight)
                     optionText =
                         "<b>HIGHLIGHT in " + jumps[k].destViewId + " VIEW </b>";
-                if (jumps[k].noPrefix == "true") {
+                if (jumps[k].noPrefix == true) {
                     optionText = "";
                 }
                 optionText +=
