@@ -325,9 +325,14 @@ function getLayerRenderer() {
             .replace(/REPLACE_ME_maxCircleDigit/g, maxCircleDigit)
             .replace(/REPLACE_ME_circleMinSize/g, this.circleMinSize)
             .replace(/REPLACE_ME_circleMaxSize/g, this.circleMaxSize)
-            .replace(/REPLACE_ME_this_rendering/g, this.rendering.toString())
             .replace(
-                /REPLACE_ME_is_object_on_hover/g,
+                /REPLACE_ME_this_rendering/g,
+                this.renderingMode == "circle+object"
+                    ? this.rendering.toString()
+                    : "null;"
+            )
+            .replace(
+                /REPLACE_ME_is_object_onhover/g,
                 this.renderingMode == "circle+object"
             );
     } else if (this.renderingMode == "contour") {

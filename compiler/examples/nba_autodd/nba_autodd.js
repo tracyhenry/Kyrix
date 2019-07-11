@@ -14,7 +14,7 @@ var query =
     "where games.home_team = team1.abbr and games.away_team = team2.abbr " +
     "order by agg_rank;";
 
-var args = {
+var autoDD = {
     query: query,
     db: "nba",
     xCol: "home_score",
@@ -32,6 +32,6 @@ var args = {
     //    rendering: renderers.teamTimelineRendering
 };
 
-p.addAutoDD(new AutoDD(args));
+p.addAutoDD(new AutoDD(autoDD), {newPyramid: true, newView: true});
 
 p.saveProject();

@@ -46,6 +46,9 @@ function Project(name, configFile) {
 
     // rendering parameters
     this.renderingParams = "{}";
+
+    // pyramids
+    this.pyramids = [];
 }
 
 // Add a view to a project.
@@ -181,12 +184,14 @@ function addJump(jump) {
 }
 
 /**
- * //Add an autoDD to a project, this will create a hierarchy of canvases that form a pyramid shape
+ * Add an autoDD to a project, this will create a hierarchy of canvases that form a pyramid shape
  * @param autoDD an AutoDD object
  * @param args an dictionary that contains customization parameters, see doc
  * @returns {Array} an array of canvas objects that correspond to the hierarchy
  */
 function addAutoDD(autoDD, args) {
+    if (args == null) args = {};
+
     // add to project
     this.autoDDs.push(autoDD);
 
@@ -195,12 +200,17 @@ function addAutoDD(autoDD, args) {
         textwrap: require("./template-api/Renderers").textwrap
     });
 
+    // add one pyramid placeholder if specified
+    if (args.newPyramid) this.pyramids.push([]);
+    else if (this.pyramids.length == 0)
+        throw new Error("Adding autoDD: no pyramid available.");
+
     // construct canvases
     var autoDDCanvases = [];
     var transform = new Transform(autoDD.query, autoDD.db, "", [], true);
     var numLevels = Math.min(
         autoDD.numLevels,
-        args != null && "canvases" in args ? args.canvases.length : 1e10
+        args.newPyramid ? 1e10 : this.pyramids[this.pyramids.length - 1].length
     );
     for (var i = 0; i < numLevels; i++) {
         var width = (autoDD.topLevelWidth * Math.pow(autoDD.zoomFactor, i)) | 0;
@@ -209,8 +219,8 @@ function addAutoDD(autoDD, args) {
 
         // construct a new canvas
         var curCanvas;
-        if (args != null && "canvases" in args) {
-            curCanvas = args.canvases[i];
+        if (!args.newPyramid) {
+            curCanvas = this.pyramids[this.pyramids.length - 1][i];
             if (
                 Math.abs(curCanvas.width - width) > 1e-3 ||
                 Math.abs(curCanvas.height - height) > 1e-3
@@ -218,7 +228,7 @@ function addAutoDD(autoDD, args) {
                 throw new Error("Adding AutoDD: Canvas sizes do not match.");
         } else {
             curCanvas = new Canvas(
-                "autodd" + (this.autoDDs.length - 1) + "_" + "level" + i,
+                "pyramid" + (this.pyramids.length - 1) + "_" + "level" + i,
                 width,
                 height
             );
@@ -300,8 +310,11 @@ function addAutoDD(autoDD, args) {
             );
     }
 
-    // by default, we create a new view unless specified
-    if (args == null || !"newView" in args || args.newView) {
+    // populate the new pyramid if specified
+    if (args.newPyramid)
+        this.pyramids[this.pyramids.length - 1] = autoDDCanvases;
+    // create a new view if specified
+    if (args.newView) {
         var viewId = "autodd" + (this.autoDDs.length - 1);
         var view = new View(
             viewId,
@@ -316,7 +329,7 @@ function addAutoDD(autoDD, args) {
         this.setInitialStates(view, autoDDCanvases[0], 0, 0);
     }
 
-    return autoDDCanvases;
+    return this;
 }
 
 // Add a rendering parameter object
