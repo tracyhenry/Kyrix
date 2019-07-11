@@ -277,7 +277,7 @@ function addAutoDD(autoDD, args) {
             ) {
                 if (this.jumps[j].destId != autoDDCanvases[i + 1].id)
                     throw new Error(
-                        "Adding AutoDD: argument canvases do not form a literal zoom pyramid."
+                        "Adding AutoDD: malformed literal zoom pyramid."
                     );
                 hasLiteralZoomIn = true;
             }
@@ -287,7 +287,7 @@ function addAutoDD(autoDD, args) {
             ) {
                 if (this.jumps[j].destId != autoDDCanvases[i].id)
                     throw new Error(
-                        "Adding AutoDD: argument canvases do not form a literal zoom pyramid."
+                        "Adding AutoDD: malformed literal zoom pyramid."
                     );
                 hasLiteralZoomOut = true;
             }
