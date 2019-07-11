@@ -1,3 +1,4 @@
+#!/bin/bash
 # Formatter for Java
 # From https://github.com/a1exsh/google-java-format-git-pre-commit-hook
 #!/bin/bash
