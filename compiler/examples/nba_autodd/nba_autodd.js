@@ -28,7 +28,7 @@ var autoDD = {
     axis: true,
     numLevels: 9,
     roughN: 999,
-    renderingMode: "contour"
+    renderingMode: "contour only"
     //    rendering: renderers.teamTimelineRendering
 };
 

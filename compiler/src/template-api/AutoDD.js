@@ -15,7 +15,8 @@ function AutoDD(args) {
         "object+clusternum",
         "circle+object",
         "circle only",
-        "contour"
+        "contour only",
+        "contour+object"
     ]);
     if (!allRenderingModes.has(args.renderingMode))
         throw new Error("Constructing AutoDD: unsupported rendering mode.");
@@ -37,11 +38,15 @@ function AutoDD(args) {
     if (
         (args.renderingMode == "object only" ||
             args.renderingMode == "object+clusternum" ||
-            args.renderingMode == "circle+object") &&
+            args.renderingMode == "circle+object" ||
+            args.renderingMode == "contour+object") &&
         !("rendering" in args)
     )
         throw new Error("Constructing AutoDD: object renderer missing.");
-    if (args.renderingMode == "contour") {
+    if (
+        args.renderingMode == "contour only" ||
+        args.renderingMode == "contour+object"
+    ) {
         if (!("roughN" in args))
             throw new Error(
                 "Constructing AutoDD: A rough estimate of total objects (roughN) is missing for KDE rendering modes."
@@ -127,7 +132,8 @@ function AutoDD(args) {
             ? args.overlap
                 ? true
                 : false
-            : this.renderingMode == "contour"
+            : this.renderingMode == "contour only" ||
+              this.renderingMode == "contour+object"
             ? true
             : false;
     this.axis = "axis" in args ? args.axis : false;
@@ -302,6 +308,36 @@ function getLayerRenderer() {
             .append("path")
             .attr("d", d3.geoPath())
             .style("fill", d => color(d.value));
+
+        var isObjectOnHover = REPLACE_ME_is_object_onhover;
+        if (isObjectOnHover) {
+            var objectRenderer = REPLACE_ME_this_rendering;
+            var hiddenRectSize = 100;
+            svg.append("g")
+                .selectAll("rect")
+                .data(data)
+                .enter()
+                .append("rect")
+                .attr("x", d => d.cx - hiddenRectSize / 2)
+                .attr("y", d => d.cy - hiddenRectSize / 2)
+                .attr("width", hiddenRectSize)
+                .attr("height", hiddenRectSize)
+                .attr("fill-opacity", 0)
+                .on("mouseover", function(d) {
+                    objectRenderer(svg, [d], args);
+                    svg.selectAll("g:last-of-type")
+                        .attr("id", "autodd_tooltip")
+                        .style("opacity", 0.8)
+                        .style("pointer-events", "none")
+                        .selectAll("*")
+                        .each(function() {
+                            zoomRescale(args.viewId, this);
+                        });
+                })
+                .on("mouseleave", function() {
+                    d3.select("#autodd_tooltip").remove();
+                });
+        }
     }
 
     var renderFuncBody;
@@ -335,11 +371,24 @@ function getLayerRenderer() {
                 /REPLACE_ME_is_object_onhover/g,
                 this.renderingMode == "circle+object"
             );
-    } else if (this.renderingMode == "contour") {
+    } else if (
+        this.renderingMode == "contour only" ||
+        this.renderingMode == "contour+object"
+    ) {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
             .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)
             .replace(/REPLACE_ME_radius/g, this.bboxH)
-            .replace(/REPLACE_ME_roughN/g, this.roughN.toString());
+            .replace(/REPLACE_ME_roughN/g, this.roughN.toString())
+            .replace(
+                /REPLACE_ME_this_rendering/g,
+                this.renderingMode == "contour+object"
+                    ? this.rendering.toString()
+                    : "null;"
+            )
+            .replace(
+                /REPLACE_ME_is_object_onhover/g,
+                this.renderingMode == "contour+object"
+            );
     }
     return new Function("svg", "data", "args", renderFuncBody);
 }
