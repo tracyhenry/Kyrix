@@ -100,6 +100,16 @@ function processRenderingParams() {
     }
 }
 
+// add the styles to the document
+function processStyles() {
+    var styles = d3
+        .select("head")
+        .append("style")
+        .classed("kyrixstyles", true)
+        .attr("type", "text/css")
+        .html(globalVar.styles);
+}
+
 // set up page
 function pageOnLoad(serverAddr) {
     // this function can only be called once
@@ -133,6 +143,10 @@ function pageOnLoad(serverAddr) {
                 globalVar.project.renderingParams
             );
             processRenderingParams();
+
+            // process user-defined CSS styles
+            globalVar.styles = globalVar.project.styles;
+            processStyles();
 
             // remove all jump option popovers when the window is resized
             d3.select(window).on("resize.popover", removePopovers);
