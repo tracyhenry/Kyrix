@@ -210,5 +210,8 @@ p.addJump(
     })
 );
 
+// seperate CSS file
+p.addStyles("./nba.css");
+
 // save to db
 p.saveProject();
