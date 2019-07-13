@@ -1,0 +1,77 @@
+.maing g {
+    fill-opacity: 1;
+    text-anchor: middle;
+}
+
+g.teamTimeline rect {
+}
+
+g.teamTimeline .rect_background {
+    fill: #fff;
+    stroke: #ccc;
+    stroke-width: 3;
+}
+
+g.teamTimeline .homescore {
+    text-anchor: end;
+}
+
+g.teamTimeline .awayscore {
+    text-anchor: end;
+}
+
+g.teamTimeline .date {
+    text-anchor: middle;
+}
+
+g.teamTimeline line {
+    stroke: #ccc;
+    stroke-width: 3;
+}
+
+g.playbyplay {
+}
+
+g.playbyplay .homeframe {
+    fill: white;
+    stroke: #ccc;
+    stroke-width: 1.5;
+}
+
+g.playbyplay .awayframe {
+    fill: white;
+    stroke: #ccc;
+    stroke-width: 1.5;
+}
+
+g.playbyplay #circlemask {
+    fill: white;
+}
+
+g.playbyplay .centerrect {
+    fill: white;
+}
+
+g.playbyplay .qtrtext {
+    font-weight: bolder;
+}
+
+g.playbyplay .qtrtime {
+    fill: #eac43c;
+}
+
+g.playbyplay .score {
+    fill: #4144e2;
+}
+
+g.playbyplay .homeframecircle {
+    fill: #221f56;
+}
+
+g.playbyplay .awayframecircle {
+    fill: #221f56;
+}
+
+g.boxscorePk .playername {
+    text-anchor: start;
+}

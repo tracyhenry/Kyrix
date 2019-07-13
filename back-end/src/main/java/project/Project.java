@@ -23,6 +23,7 @@ public class Project {
     private ArrayList<Jump> jumps;
     private ArrayList<AutoDD> autoDDs;
     private String renderingParams;
+    private String styles;
 
     public String getName() {
         return name;
@@ -46,6 +47,10 @@ public class Project {
 
     public String getRenderingParams() {
         return renderingParams;
+    }
+
+    public String getStyles() {
+        return styles;
     }
 
     public Canvas getCanvas(String canvasId) {
@@ -95,6 +100,9 @@ public class Project {
                 + autoDDs
                 + ", renderingParams='"
                 + renderingParams
+                + '\''
+                + ", styles='"
+                + styles
                 + '\''
                 + '}';
     }

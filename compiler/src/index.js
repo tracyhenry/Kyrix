@@ -47,6 +47,9 @@ function Project(name, configFile) {
     // rendering parameters
     this.renderingParams = "{}";
 
+    // style sheets
+    this.styles = "";
+
     // pyramids
     this.pyramids = [];
 }
@@ -351,6 +354,15 @@ function addRenderingParams(renderingParams) {
         if (typeof value === "function") return value.toString();
         return value;
     });
+}
+
+// adding a static CSS string
+function addStyles(filepath) {
+    if (filepath == null) return;
+    var rules = fs.readFileSync(filepath).toString();
+
+    // merge with current CSS
+    this.styles += rules;
 }
 
 /**
@@ -693,6 +705,7 @@ Project.prototype = {
     addView: addView,
     addCanvas: addCanvas,
     addJump: addJump,
+    addStyles: addStyles,
     addAutoDD: addAutoDD,
     addRenderingParams: addRenderingParams,
     setInitialStates: setInitialStates,

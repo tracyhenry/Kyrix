@@ -57,7 +57,7 @@ var teamTimelineRendering = function(svg, data, args) {
     var dateHeight = 30;
     var d2Delta = 15;
 
-    g = svg.append("g");
+    g = svg.append("g").classed("teamTimeline", true);
     var params = args.renderingParams;
 
     // rect background
@@ -65,6 +65,7 @@ var teamTimelineRendering = function(svg, data, args) {
         .data(data)
         .enter()
         .append("rect")
+        .classed("rect_background", true)
         .attr("x", function(d) {
             return +d.cx - rectWidth / 2;
         })
@@ -74,10 +75,7 @@ var teamTimelineRendering = function(svg, data, args) {
         .attr("rx", 10)
         .attr("ry", 10)
         .attr("width", rectWidth)
-        .attr("height", rectHeight + dateHeight)
-        .style("fill", "#FFF")
-        .style("stroke", "#CCC")
-        .style("stroke-width", 3);
+        .attr("height", rectHeight + dateHeight);
 
     // home logo
     g.selectAll(".homeimage")
@@ -126,6 +124,7 @@ var teamTimelineRendering = function(svg, data, args) {
         .data(data)
         .enter()
         .append("text")
+        .classed("homescore", true)
         .text(function(d) {
             return d.home_score;
         })
@@ -136,15 +135,14 @@ var teamTimelineRendering = function(svg, data, args) {
             return +d.cy - d2Delta - scoreYDelta;
         })
         .attr("font-size", scoreFontSize)
-        .attr("dy", ".35em")
-        .attr("text-anchor", "end")
-        .style("fill-opacity", 1);
+        .attr("dy", ".35em");
 
     // away score
     g.selectAll(".awayscore")
         .data(data)
         .enter()
         .append("text")
+        .classed("awayscore", true)
         .text(function(d) {
             return d.away_score;
         })
@@ -155,15 +153,14 @@ var teamTimelineRendering = function(svg, data, args) {
             return +d.cy - d2Delta + scoreYDelta;
         })
         .attr("font-size", scoreFontSize)
-        .attr("dy", ".35em")
-        .attr("text-anchor", "end")
-        .style("fill-opacity", 1);
+        .attr("dy", ".35em");
 
     // date
     g.selectAll(".date")
         .data(data)
         .enter()
         .append("text")
+        .classed("date", true)
         .text(function(d) {
             return d3.timeFormat(
                 "%B %d, %Y"
@@ -175,9 +172,7 @@ var teamTimelineRendering = function(svg, data, args) {
         .attr("y", function(d) {
             return +d.cy - d2Delta + rectHeight / 2 + dateYDelta;
         })
-        .attr("dy", ".35em")
-        .attr("text-anchor", "middle")
-        .style("fill-opacity", 1);
+        .attr("dy", ".35em");
 
     // line
     if (data.length > 0 && "timeline" in data[0])
@@ -196,9 +191,7 @@ var teamTimelineRendering = function(svg, data, args) {
                 if (+d.cy == params.timelineUpperY)
                     return +d.cy - d2Delta + rectHeight / 2 + dateHeight;
                 return +d.cy - d2Delta - rectHeight / 2;
-            })
-            .style("stroke", "#CCC")
-            .style("stroke-width", 3);
+            });
 };
 
 var playByPlayRendering = function(svg, data, args) {
@@ -231,7 +224,7 @@ var playByPlayRendering = function(svg, data, args) {
         "OT 6"
     ];
 
-    var g = svg.append("g");
+    var g = svg.append("g").classed("playbyplay", true);
     var params = args.renderingParams;
     var height = args.canvasH;
 
@@ -248,6 +241,7 @@ var playByPlayRendering = function(svg, data, args) {
         .data(homePlays)
         .enter()
         .append("path")
+        .classed("homeframe", true)
         .attr("d", function(d) {
             var path = "M " + (500 - centerTextWidth / 2) + " " + d.y;
             path += " l " + -triangleWidth + " " + -radius;
@@ -263,16 +257,14 @@ var playByPlayRendering = function(svg, data, args) {
             path += " h " + descBoxWidth;
             path += " z";
             return path;
-        })
-        .attr("fill", "white")
-        .style("stroke", "#CCC")
-        .style("stroke-width", 1.5);
+        });
 
     // away event frame
     g.selectAll(".awayframe")
         .data(awayPlays)
         .enter()
         .append("path")
+        .classed("awayframe", true)
         .attr("d", function(d) {
             var path = "M " + (500 + centerTextWidth / 2) + " " + d.y;
             path += " l " + triangleWidth + " " + -radius;
@@ -288,10 +280,7 @@ var playByPlayRendering = function(svg, data, args) {
             path += " h " + -descBoxWidth;
             path += " z";
             return path;
-        })
-        .attr("fill", "white")
-        .style("stroke", "#CCC")
-        .style("stroke-width", 1.5);
+        });
 
     // image mask
     g.append("defs")
@@ -302,8 +291,7 @@ var playByPlayRendering = function(svg, data, args) {
         .append("circle")
         .attr("cx", "0.5")
         .attr("cy", "0.5")
-        .attr("r", "0.5")
-        .attr("fill", "white");
+        .attr("r", "0.5");
 
     // home event image
     g.selectAll(".homeimage")
@@ -396,8 +384,6 @@ var playByPlayRendering = function(svg, data, args) {
         })
         .attr("font-size", descFontSize)
         .attr("dy", ".35em")
-        .attr("text-anchor", "middle")
-        .style("fill-opacity", 1)
         .call(params.textwrap, descBoxWidth - 100);
 
     // away event description
@@ -421,8 +407,6 @@ var playByPlayRendering = function(svg, data, args) {
         })
         .attr("font-size", descFontSize)
         .attr("dy", ".35em")
-        .attr("text-anchor", "middle")
-        .style("fill-opacity", 1)
         .call(params.textwrap, descBoxWidth - 100);
 
     // center rectangle
@@ -430,19 +414,20 @@ var playByPlayRendering = function(svg, data, args) {
         .data(data)
         .enter()
         .append("rect")
+        .classed("centerrect", true)
         .attr("width", centerTextWidth)
         .attr("height", centerTextHeight)
         .attr("x", 500 - centerTextWidth / 2)
         .attr("y", function(d) {
             return +d.y - centerTextHeight / 2;
-        })
-        .attr("fill", "white");
+        });
 
     // center text
     g.selectAll(".qtrtext")
         .data(data)
         .enter()
         .append("text")
+        .classed("qtrtext", true)
         .text(function(d) {
             return qtr_text[+d.period - 1];
         })
@@ -451,14 +436,12 @@ var playByPlayRendering = function(svg, data, args) {
             return +d.y - qtrTextYDelta;
         })
         .attr("font-size", qtrTextFontSize)
-        .attr("dy", ".35em")
-        .attr("text-anchor", "middle")
-        .style("fill-opacity", 1)
-        .style("font-weight", "bolder");
+        .attr("dy", ".35em");
     g.selectAll(".qtrtime")
         .data(data)
         .enter()
         .append("text")
+        .classed("qtrtime", true)
         .text(function(d) {
             return d.qtr_time;
         })
@@ -467,14 +450,12 @@ var playByPlayRendering = function(svg, data, args) {
             return +d.y;
         })
         .attr("font-size", qtrTimeFontSize)
-        .attr("dy", ".35em")
-        .attr("text-anchor", "middle")
-        .attr("fill", "#eac43c")
-        .style("fill-opacity", 1);
+        .attr("dy", ".35em");
     g.selectAll(".score")
         .data(data)
         .enter()
         .append("text")
+        .classed("score", true)
         .text(function(d) {
             return d.score;
         })
@@ -483,33 +464,30 @@ var playByPlayRendering = function(svg, data, args) {
             return +d.y + scoreYDelta;
         })
         .attr("font-size", scoreFontSize)
-        .attr("dy", ".35em")
-        .attr("text-anchor", "middle")
-        .attr("fill", "#4144e2")
-        .style("fill-opacity", 1);
+        .attr("dy", ".35em");
 
     // frame circles
     g.selectAll(".homeframecircle")
         .data(homePlays)
         .enter()
         .append("circle")
+        .classed("homeframecircle", true)
         .attr("cx", 500 - centerTextWidth / 2)
         .attr("cy", function(d) {
             return +d.y;
         })
-        .attr("r", frameCircleR)
-        .style("fill", "#221f56");
+        .attr("r", frameCircleR);
 
     g.selectAll(".awayframecircle")
         .data(awayPlays)
         .enter()
         .append("circle")
+        .classed("awayframecircle", true)
         .attr("cx", 500 + centerTextWidth / 2)
         .attr("cy", function(d) {
             return +d.y;
         })
-        .attr("r", frameCircleR)
-        .style("fill", "#221f56");
+        .attr("r", frameCircleR);
 };
 
 var teamTimelineStaticBkg = function(svg, data) {
@@ -598,7 +576,7 @@ var playByPlayStaticBkg = function(svg, data) {
 
 var boxscorePkRendering = function(svg, data, args) {
     // create a new g
-    var g = svg.append("g");
+    var g = svg.append("g").classed("boxscorePk", true);
     var height = args.viewportH;
     var params = args.renderingParams;
 
@@ -697,6 +675,7 @@ var boxscorePkRendering = function(svg, data, args) {
         .data(data)
         .enter()
         .append("text")
+        .classed("playername", true)
         .text(function(d) {
             return d.player_name;
         })
@@ -712,7 +691,6 @@ var boxscorePkRendering = function(svg, data, args) {
         })
         .attr("dy", ".35em")
         .attr("font-size", params.playernamefontsize)
-        .attr("text-anchor", "left")
         .style("fill-opacity", 1)
         .style("fill", params.bodyfontcolor)
         .call(
