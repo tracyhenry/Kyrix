@@ -259,6 +259,7 @@ function getLayerRenderer() {
             x = +args.boxX;
             y = +args.boxY;
         }
+        console.log(contourWidth + " " + contourHeight + " " + x + " " + y);
         var translatedData = data.map(d => ({
             x: d.cx - (x - radius),
             y: d.cy - (y - radius),

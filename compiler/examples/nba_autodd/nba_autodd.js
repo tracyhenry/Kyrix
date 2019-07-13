@@ -28,8 +28,8 @@ var autoDD = {
     axis: true,
     numLevels: 9,
     roughN: 999,
-    renderingMode: "contour only"
-    //    rendering: renderers.teamTimelineRendering
+    renderingMode: "contour only",
+    rendering: renderers.teamTimelineRendering
 };
 
 p.addAutoDD(new AutoDD(autoDD), {newPyramid: true, newView: true});
