@@ -72,6 +72,6 @@ g.playbyplay .awayframecircle {
     fill: #221f56;
 }
 
-.playername {
-    text-anchor: left;
+g.boxscorePk .playername {
+    text-anchor: start;
 }

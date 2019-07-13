@@ -576,7 +576,7 @@ var playByPlayStaticBkg = function(svg, data) {
 
 var boxscorePkRendering = function(svg, data, args) {
     // create a new g
-    var g = svg.append("g");
+    var g = svg.append("g").classed("boxscorePk", true);
     var height = args.viewportH;
     var params = args.renderingParams;
 
@@ -691,7 +691,6 @@ var boxscorePkRendering = function(svg, data, args) {
         })
         .attr("dy", ".35em")
         .attr("font-size", params.playernamefontsize)
-        .attr("text-anchor", "left")
         .style("fill-opacity", 1)
         .style("fill", params.bodyfontcolor)
         .call(
