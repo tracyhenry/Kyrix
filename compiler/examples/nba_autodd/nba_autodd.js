@@ -6,6 +6,7 @@ const renderers = require("../nba/renderers");
 // construct a project
 var p = new Project("nba_autodd", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
+p.addStyles("../nba/nba.css");
 
 // set up auto drill down
 var query =

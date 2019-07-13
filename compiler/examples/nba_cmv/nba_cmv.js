@@ -13,6 +13,7 @@ const placements = require("../nba/placements");
 // construct a project
 var p = new Project("nba", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
+p.addStyles("../nba/nba.css");
 
 // ================== Canvas teamlogo ===================
 var teamLogoCanvas = new Canvas("teamlogo", 1000, 1000);
