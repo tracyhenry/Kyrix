@@ -14,6 +14,9 @@ globalVar.cachedCanvases = {};
 // global rendering params (specified by the developer)
 globalVar.renderingParams = null;
 
+// global style rules (specified by the developer)
+globalVar.styles = "";
+
 // global var dictionaries for views
 globalVar.views = {};
 
