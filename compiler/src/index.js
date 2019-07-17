@@ -362,6 +362,10 @@ function addStyles(filepath) {
     this.styles += rules;
 }
 
+function addTable(table) {
+    
+}
+
 /**
  * Set the initial states for a view object
  * @param {object} canvasObj - a canvas object representing the initial canvas
