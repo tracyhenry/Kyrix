@@ -362,8 +362,11 @@ function addStyles(filepath) {
     this.styles += rules;
 }
 
-function addTable(table) {
-    
+function addTable(table, canvas) {
+    if (!canvas) {
+        // var tableCanvas = new Canvas()
+    }
+    canvas.addLayer(table);
 }
 
 /**
@@ -707,6 +710,7 @@ Project.prototype = {
     addCanvas: addCanvas,
     addJump: addJump,
     addStyles: addStyles,
+    addTable: addTable,
     addAutoDD: addAutoDD,
     addRenderingParams: addRenderingParams,
     setInitialStates: setInitialStates,
