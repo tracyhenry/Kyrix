@@ -245,6 +245,7 @@ function getLayerRenderer() {
         var radius = REPLACE_ME_radius;
         var roughN = REPLACE_ME_roughN;
         var decayRate = 2.4;
+        var cellSize = 2;
         var contourWidth, contourHeight, x, y;
         if ("tileX" in args) {
             // tiling
@@ -259,7 +260,7 @@ function getLayerRenderer() {
             x = +args.boxX;
             y = +args.boxY;
         }
-        console.log(contourWidth + " " + contourHeight + " " + x + " " + y);
+
         var translatedData = data.map(d => ({
             x: d.cx - (x - radius),
             y: d.cy - (y - radius),
@@ -271,12 +272,13 @@ function getLayerRenderer() {
             .y(d => d.y)
             .weight(d => d.w)
             .size([contourWidth, contourHeight])
+            .cellSize(cellSize)
             .bandwidth(bandwidth)
             .thresholds(function(v) {
                 //                var step = 0.05 / Math.pow(decayRate, +args.pyramidLevel) * 6;
                 //                var stop = d3.max(v);
                 var eMax =
-                    (0.25 * roughN) /
+                    (0.07 * roughN) /
                     1000 /
                     Math.pow(decayRate, +args.pyramidLevel);
                 return d3.range(1e-4, eMax, eMax / 6);
@@ -286,10 +288,11 @@ function getLayerRenderer() {
             .scaleSequential(d3.interpolateViridis)
             .domain([
                 1e-4,
-                (0.2 * roughN) /
+                (0.04 * roughN) /
                     1000 /
                     Math.pow(decayRate, +args.pyramidLevel) /
-                    16
+                    cellSize /
+                    cellSize
             ]);
 
         svg.selectAll("*").remove();
@@ -299,6 +302,8 @@ function getLayerRenderer() {
                 "transform",
                 "translate(" + (x - radius) + " " + (y - radius) + ")"
             );
+
+        /*        // SVG
         g.attr("fill", "none")
             .attr("stroke", "black")
             .attr("stroke-opacity", 0)
@@ -309,7 +314,26 @@ function getLayerRenderer() {
             .append("path")
             .attr("d", d3.geoPath())
             .style("fill", d => color(d.value));
-
+*/
+        var canvas = document.createElement("canvas");
+        var ctx = canvas.getContext("2d");
+        (canvas.width = contourWidth), (canvas.height = contourHeight);
+        g.append("foreignObject")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", contourWidth)
+            .attr("height", contourHeight)
+            .node()
+            .appendChild(canvas);
+        var path = d3.geoPath().context(ctx);
+        for (var i = 0; i < contours.length; i++) {
+            var contour = contours[i];
+            var threshold = contour.value;
+            ctx.beginPath(),
+                (ctx.fillStyle = color(threshold)),
+                path(contour),
+                ctx.fill();
+        }
         var isObjectOnHover = REPLACE_ME_is_object_onhover;
         if (isObjectOnHover) {
             var objectRenderer = REPLACE_ME_this_rendering;
