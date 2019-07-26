@@ -303,38 +303,40 @@ function getLayerRenderer() {
                 "translate(" + (x - radius) + " " + (y - radius) + ")"
             );
 
-        /*        // SVG
-        g.attr("fill", "none")
-            .attr("stroke", "black")
-            .attr("stroke-opacity", 0)
-            .attr("stroke-linejoin", "round")
-            .selectAll("path")
-            .data(contours)
-            .enter()
-            .append("path")
-            .attr("d", d3.geoPath())
-            .style("fill", d => color(d.value));
-*/
-        var canvas = document.createElement("canvas");
-        var ctx = canvas.getContext("2d");
-        (canvas.width = contourWidth), (canvas.height = contourHeight);
-        g.append("foreignObject")
-            .attr("x", 0)
-            .attr("y", 0)
-            .attr("width", contourWidth)
-            .attr("height", contourHeight)
-            .node()
-            .appendChild(canvas);
-        var path = d3.geoPath().context(ctx);
-        for (var i = 0; i < contours.length; i++) {
-            var contour = contours[i];
-            var threshold = contour.value;
-            ctx.beginPath(),
-                (ctx.fillStyle = color(threshold)),
-                path(contour),
-                ctx.fill();
-        }
         var isObjectOnHover = REPLACE_ME_is_object_onhover;
+        if (isObjectOnHover) {
+            g.attr("fill", "none")
+                .attr("stroke", "black")
+                .attr("stroke-opacity", 0)
+                .attr("stroke-linejoin", "round")
+                .selectAll("path")
+                .data(contours)
+                .enter()
+                .append("path")
+                .attr("d", d3.geoPath())
+                .style("fill", d => color(d.value));
+        } else {
+            var canvas = document.createElement("canvas");
+            var ctx = canvas.getContext("2d");
+            (canvas.width = contourWidth), (canvas.height = contourHeight);
+            g.append("foreignObject")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", contourWidth)
+                .attr("height", contourHeight)
+                .style("overflow", "auto")
+                .node()
+                .appendChild(canvas);
+            var path = d3.geoPath().context(ctx);
+            for (var i = 0; i < contours.length; i++) {
+                var contour = contours[i];
+                var threshold = contour.value;
+                ctx.beginPath(),
+                    (ctx.fillStyle = color(threshold)),
+                    path(contour),
+                    ctx.fill();
+            }
+        }
         if (isObjectOnHover) {
             var objectRenderer = REPLACE_ME_this_rendering;
             var hiddenRectSize = 100;
@@ -349,8 +351,12 @@ function getLayerRenderer() {
                 .attr("height", hiddenRectSize)
                 .attr("fill-opacity", 0)
                 .on("mouseover", function(d) {
-                    objectRenderer(svg, [d], args);
-                    svg.selectAll("g:last-of-type")
+                    var svgParent = d3.select(svg.node().parentNode);
+                    objectRenderer(svgParent, [d], args);
+                    var lastG = svgParent.node().childNodes[
+                        svgParent.node().childElementCount - 1
+                    ];
+                    d3.select(lastG)
                         .attr("id", "autodd_tooltip")
                         .style("opacity", 0.8)
                         .style("pointer-events", "none")
