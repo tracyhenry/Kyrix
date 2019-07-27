@@ -4,12 +4,12 @@
  * @constructor
  */
 function AutoDD(args) {
-    // query, db, xCol, yCol, bboxW, bboxH
     if (args == null) args = {};
 
-    // renderingMode: object only, object+clusternum, circle+object, circle only
-    if (!("renderingMode" in args))
-        throw new Error("Constructing AutoDD: renderingMode missing.");
+    if (!("rendering" in args) || !("mode" in args.rendering))
+        throw new Error(
+            "Constructing AutoDD: rendering mode (rendering.mode) missing."
+        );
     var allRenderingModes = new Set([
         "object only",
         "object+clusternum",
@@ -18,7 +18,7 @@ function AutoDD(args) {
         "contour only",
         "contour+object"
     ]);
-    if (!allRenderingModes.has(args.renderingMode))
+    if (!allRenderingModes.has(args.rendering.mode))
         throw new Error("Constructing AutoDD: unsupported rendering mode.");
 
     // check constraints according to rendering mode
@@ -26,121 +26,158 @@ function AutoDD(args) {
     this.circleMaxSize = 70;
     this.contourBandwidth = 30;
     if (
-        args.renderingMode == "circle only" ||
-        args.renderingMode == "circle+object"
+        args.rendering.mode == "circle only" ||
+        args.rendering.mode == "circle+object"
     ) {
-        args.bboxW = args.bboxH = this.circleMaxSize * 2;
-        if (!("roughN" in args))
+        args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
+            this.circleMaxSize * 2;
+        if (!("roughN" in args.rendering))
             throw new Error(
-                "Constructing AutoDD: A rough estimate of total objects (roughN) is missing for circle rendering modes."
+                "Constructing AutoDD: A rough estimate of total objects (rendering.roughN) is missing for circle rendering modes."
             );
     }
     if (
-        (args.renderingMode == "object only" ||
-            args.renderingMode == "object+clusternum" ||
-            args.renderingMode == "circle+object" ||
-            args.renderingMode == "contour+object") &&
-        !("rendering" in args)
+        (args.rendering.mode == "object only" ||
+            args.rendering.mode == "object+clusternum" ||
+            args.rendering.mode == "circle+object" ||
+            args.rendering.mode == "contour+object") &&
+        (!("obj" in args.rendering) || !("renderer" in args.rendering.obj))
     )
-        throw new Error("Constructing AutoDD: object renderer missing.");
+        throw new Error(
+            "Constructing AutoDD: object renderer (rendering.obj.renderer) missing."
+        );
     if (
-        args.renderingMode == "contour only" ||
-        args.renderingMode == "contour+object"
+        args.rendering.mode == "contour only" ||
+        args.rendering.mode == "contour+object"
     ) {
-        if (!("roughN" in args))
+        if (!("roughN" in args.rendering))
             throw new Error(
-                "Constructing AutoDD: A rough estimate of total objects (roughN) is missing for KDE rendering modes."
+                "Constructing AutoDD: A rough estimate of total objects (rendering.roughN) is missing for KDE rendering modes."
             );
-        args.bboxW = args.bboxH = this.contourBandwidth * 8; // as what's implemented by d3-contour
+        args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
+            this.contourBandwidth * 8; // as what's implemented by d3-contour
     }
 
     // check required args
     var requiredArgs = [
-        "query",
-        "db",
-        "xCol",
-        "yCol",
-        "renderingMode",
-        "bboxW",
-        "bboxH"
+        ["data", "query"],
+        ["data", "db"],
+        ["x", "col"],
+        ["x", "range"],
+        ["y", "col"],
+        ["y", "range"],
+        ["rendering", "mode"],
+        ["rendering", "obj", "bboxW"],
+        ["rendering", "obj", "bboxH"]
     ];
     var requiredArgsTypes = [
         "string",
         "string",
         "string",
+        "object",
         "string",
+        "object",
         "string",
         "number",
         "number"
     ];
     for (var i = 0; i < requiredArgs.length; i++) {
-        if (!(requiredArgs[i] in args))
-            throw new Error(
-                "Constructing AutoDD: " + requiredArgs[i] + " missing."
-            );
-        if (typeof args[requiredArgs[i]] !== requiredArgsTypes[i])
+        var curObj = args;
+        for (var j = 0; j < requiredArgs[i].length; j++)
+            if (!(requiredArgs[i][j] in curObj))
+                throw new Error(
+                    "Constructing AutoDD: " +
+                        requiredArgs[i].join(".") +
+                        " missing."
+                );
+            else curObj = curObj[requiredArgs[i][j]];
+        if (typeof curObj !== requiredArgsTypes[i])
             throw new Error(
                 "Constructing AutoDD: " +
-                    requiredArgs[i] +
-                    " must be " +
+                    requiredArgs[i].join(".") +
+                    " must be typed " +
                     requiredArgsTypes[i] +
                     "."
             );
         if (requiredArgsTypes[i] == "string")
-            if (args[requiredArgs[i]].length == 0)
+            if (curObj.length == 0)
                 throw new Error(
                     "Constructing AutoDD: " +
-                        requiredArgs[i] +
+                        requiredArgs[i].join(".") +
                         " cannot be an empty string."
                 );
     }
 
     // other constraints
-    if ("rendering" in args && (!("bboxW" in args) || !("bboxH" in args)))
-        throw new Error(
-            "Constructing AutoDD: sizes of object bounding box are not specified."
-        );
-    if (args.bboxW <= 0 || args.bboxH <= 0)
+    if (args.rendering.obj.bboxW <= 0 || args.rendering.obj.bboxH <= 0)
         throw new Error("Constructing AutoDD: non-positive bbox size.");
     if (
-        "axis" in args &&
-        (!"loX" in args || !"loY" in args || !"hiX" in args || !"hiY" in args)
+        args.x.range != null &&
+        (!Array.isArray(args.x.range) ||
+            args.x.range.length != 2 ||
+            typeof args.x.range[0] != "number" ||
+            typeof args.x.range[1] != "number")
+    )
+        throw new Error("Construcitn AutoDD: malformed x.range");
+    if (
+        args.y.range != null &&
+        (!Array.isArray(args.y.range) ||
+            args.y.range.length != 2 ||
+            typeof args.y.range[0] != "number" ||
+            typeof args.y.range[1] != "number")
+    )
+        throw new Error("Construcitn AutoDD: malformed y.range");
+    if (
+        "axis" in args.rendering &&
+        (args.x.range == null || args.y.range == null)
     )
         throw new Error(
             "Constructing AutoDD: raw data domain needs to be specified for rendering an axis."
         );
     if (
-        ("loX" in args || "loY" in args || "hiX" in args || "hiY" in args) &&
-        !("loX" in args && "loY" in args && "hiX" in args && "hiY" in args)
+        (args.x.range != null && args.y.range == null) ||
+        (args.x.range == null && args.y.range != null)
     )
         throw new Error(
-            "Constructing AutoDD: loX, loY, hiX, hiY must all be provided."
+            "Constructing AutoDD: x range and y range must both be provided."
         );
 
     // assign fields
-    for (var i = 0; i < requiredArgs.length; i++)
-        this[requiredArgs[i]] = args[requiredArgs[i]];
-    this.rendering = "rendering" in args ? args.rendering : null;
-    this.columnNames = "columnNames" in args ? args.columnNames : [];
-    this.numLevels = "numLevels" in args ? args.numLevels : 5;
-    this.topLevelWidth = "topLevelWidth" in args ? args.topLevelWidth : 1000;
-    this.topLevelHeight = "topLevelHeight" in args ? args.topLevelHeight : 1000;
-    this.zoomFactor = "zoomFactor" in args ? args.zoomFactor : 2;
-    this.roughN = "roughN" in args ? args.roughN : null;
+    this.query = args.data.query;
+    this.db = args.data.db;
+    this.xCol = args.x.col;
+    this.yCol = args.y.col;
+    this.bboxW = args.rendering.obj.bboxW;
+    this.bboxH = args.rendering.obj.bboxH;
+    this.renderingMode = args.rendering.mode;
+    this.rendering =
+        "renderer" in args.rendering.obj ? args.rendering.obj.renderer : null;
+    this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
+    this.numLevels =
+        "numLevels" in args.rendering ? args.rendering.numLevels : 10;
+    this.topLevelWidth =
+        "topLevelWidth" in args.rendering ? args.rendering.topLevelWidth : 1000;
+    this.topLevelHeight =
+        "topLevelHeight" in args.rendering
+            ? args.rendering.topLevelHeight
+            : 1000;
+    this.zoomFactor =
+        "zoomFactor" in args.rendering ? args.rendering.zoomFactor : 2;
+    this.roughN = "roughN" in args.rendering ? args.rendering.roughN : null;
     this.overlap =
-        "overlap" in args
-            ? args.overlap
+        "overlap" in args.rendering.obj
+            ? args.rendering.obj.overlap
                 ? true
                 : false
             : this.renderingMode == "contour only" ||
               this.renderingMode == "contour+object"
             ? true
             : false;
-    this.axis = "axis" in args ? args.axis : false;
-    this.loX = "loX" in args ? args.loX : null;
-    this.loY = "loY" in args ? args.loY : null;
-    this.hiX = "hiX" in args ? args.hiX : null;
-    this.hiY = "hiY" in args ? args.hiY : null;
+    this.axis = "axis" in args.rendering ? args.rendering.axis : false;
+    this.loX = args.x.range != null ? args.x.range[0] : null;
+    this.loY = args.y.range != null ? args.y.range[0] : null;
+    this.hiX = args.x.range != null ? args.x.range[1] : null;
+    this.hiY = args.y.range != null ? args.y.range[1] : null;
 }
 
 // get rendering function for an autodd layer based on rendering mode
