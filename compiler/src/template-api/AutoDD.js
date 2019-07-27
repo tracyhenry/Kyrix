@@ -174,6 +174,10 @@ function AutoDD(args) {
             ? true
             : false;
     this.axis = "axis" in args.rendering ? args.rendering.axis : false;
+    this.contourColorScheme =
+        "contourColorScheme" in args.rendering
+            ? args.rendering.contourColorScheme
+            : "interpolateViridis";
     this.loX = args.x.range != null ? args.x.range[0] : null;
     this.loY = args.y.range != null ? args.y.range[0] : null;
     this.hiX = args.x.range != null ? args.x.range[1] : null;
@@ -321,8 +325,8 @@ function getLayerRenderer() {
                 return d3.range(1e-4, eMax, eMax / 6);
             })(translatedData);
 
-        const color = d3
-            .scaleSequential(d3.interpolateViridis)
+        var color = d3
+            .scaleSequential(d3["REPLACE_ME_contour_colorScheme"])
             .domain([
                 1e-4,
                 (0.04 * roughN) /
@@ -447,6 +451,7 @@ function getLayerRenderer() {
             .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)
             .replace(/REPLACE_ME_radius/g, this.bboxH)
             .replace(/REPLACE_ME_roughN/g, this.roughN.toString())
+            .replace(/REPLACE_ME_contour_colorScheme/g, this.contourColorScheme)
             .replace(
                 /REPLACE_ME_this_rendering/g,
                 this.renderingMode == "contour+object"
