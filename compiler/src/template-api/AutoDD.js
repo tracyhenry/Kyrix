@@ -392,10 +392,13 @@ function getLayerRenderer() {
                 .attr("height", hiddenRectSize)
                 .attr("fill-opacity", 0)
                 .on("mouseover", function(d) {
-                    var svgParent = d3.select(svg.node().parentNode);
-                    objectRenderer(svgParent, [d], args);
-                    var lastG = svgParent.node().childNodes[
-                        svgParent.node().childElementCount - 1
+                    var svgNode;
+                    if ("tileX" in args)
+                        svgNode = d3.select(svg.node().parentNode);
+                    else svgNode = svg;
+                    objectRenderer(svgNode, [d], args);
+                    var lastG = svgNode.node().childNodes[
+                        svgNode.node().childElementCount - 1
                     ];
                     d3.select(lastG)
                         .attr("id", "autodd_tooltip")
