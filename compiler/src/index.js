@@ -249,7 +249,10 @@ function addAutoDD(autoDD, args) {
 
         // set retainSizeZoom
         curLayer.setRetainSizeZoom(
-            autoDD.renderingMode == "contour" ? false : true
+            autoDD.renderingMode == "contour only" ||
+                autoDD.renderingMode == "contour+object"
+                ? false
+                : true
         );
 
         // dummy placement
