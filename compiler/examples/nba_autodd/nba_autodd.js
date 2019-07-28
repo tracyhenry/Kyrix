@@ -31,7 +31,8 @@ var autoDD = {
     rendering: {
         mode: "contour+object",
         roughN: 999,
-        //axis: true,
+        axis: true,
+        contourColorScheme: "interpolateBlues",
         obj: {
             renderer: renderers.teamTimelineRendering,
             bboxW: 162,

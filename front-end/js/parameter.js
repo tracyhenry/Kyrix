@@ -50,7 +50,7 @@ param.highlight = "highlight";
 param.fetchingScheme = "dbox";
 
 // whether use delta box
-param.deltaBox = false;
+param.deltaBox = true;
 
 // epsilon
 param.eps = 1e-5;
