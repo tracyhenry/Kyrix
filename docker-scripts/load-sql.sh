@@ -13,7 +13,7 @@ if [ ! ${SQL_FILE: -4} == ".sql" ]; then
 fi
 
 
-# default db name and table name
+# default db name
 x="${SQL_FILE##*/}"
 if [[ $x == $SQL_FILE ]]; then
     DB_NAME=${SQL_FILE:0:$((${#SQL_FILE} - 4))}
@@ -22,6 +22,8 @@ else
     x=${SQL_FILE:$((${#SQL_FILE} - ${#x}))}
     DB_NAME=${x:0:$((${#x} - 4))}
 fi
+
+FILE_NAME=$DB_NAME
 
 while [[ $# -gt 0 ]]
 do
@@ -45,10 +47,10 @@ echo 'DB_NAME='$DB_NAME
 docker exec -it kyrix_db_1 psql postgresql://postgres:kyrixftw@localhost/postgres -c "CREATE DATABASE ${DB_NAME}";
 
 # copy file to kyrix_db_1
-docker cp $SQL_FILE kyrix_db_1:/$SQL_FILE
+docker cp $SQL_FILE kyrix_db_1:/$FILE_NAME
 
 # import sql file content into the selected database
-docker exec -it kyrix_db_1 /bin/sh -c "psql postgresql://postgres:kyrixftw@localhost/${DB_NAME} < ${SQL_FILE}"
+docker exec -it kyrix_db_1 /bin/sh -c "psql postgresql://postgres:kyrixftw@localhost/${DB_NAME} < ${FILE_NAME}"
 
 
 
