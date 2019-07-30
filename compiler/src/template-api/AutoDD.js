@@ -54,6 +54,7 @@ function AutoDD(args) {
             throw new Error(
                 "Constructing AutoDD: A rough estimate of total objects (rendering.roughN) is missing for KDE rendering modes."
             );
+        if (!("obj" in args.rendering)) args.rendering.obj = {};
         args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
             this.contourBandwidth * 8; // as what's implemented by d3-contour
     }
