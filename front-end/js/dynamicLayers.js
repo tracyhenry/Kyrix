@@ -347,6 +347,7 @@ function renderDynamicBoxes(
                         .selectAll("g")
                         .selectAll("*")
                         .filter(function(d) {
+                            if (!param.deltaBox) return true;
                             if (d == null) return false; // requiring all non-def stuff to be bound to data
                             if (
                                 +d.maxx < x ||
