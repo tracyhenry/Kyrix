@@ -179,6 +179,8 @@ function AutoDD(args) {
         "contourColorScheme" in args.rendering
             ? args.rendering.contourColorScheme
             : "interpolateViridis";
+    this.contourOpacity =
+        "contourOpacity" in args.rendering ? args.rendering.contourOpacity : 1;
     this.loX = args.x.range != null ? args.x.range[0] : null;
     this.loY = args.y.range != null ? args.y.range[0] : null;
     this.hiX = args.x.range != null ? args.x.range[1] : null;
@@ -356,7 +358,8 @@ function getLayerRenderer() {
                 .enter()
                 .append("path")
                 .attr("d", d3.geoPath())
-                .style("fill", d => color(d.value));
+                .style("fill", d => color(d.value))
+                .style("opacity", REPLACE_ME_CONTOUR_OPACITY);
         } else {
             var canvas = document.createElement("canvas");
             var ctx = canvas.getContext("2d");
@@ -369,6 +372,7 @@ function getLayerRenderer() {
                 .style("overflow", "auto")
                 .node()
                 .appendChild(canvas);
+            d3.select(canvas).style("opacity", REPLACE_ME_CONTOUR_OPACITY);
             var path = d3.geoPath().context(ctx);
             for (var i = 0; i < contours.length; i++) {
                 var contour = contours[i];
@@ -456,6 +460,7 @@ function getLayerRenderer() {
             .replace(/REPLACE_ME_radius/g, this.bboxH)
             .replace(/REPLACE_ME_roughN/g, this.roughN.toString())
             .replace(/REPLACE_ME_contour_colorScheme/g, this.contourColorScheme)
+            .replace(/REPLACE_ME_CONTOUR_OPACITY/g, this.contourOpacity)
             .replace(
                 /REPLACE_ME_this_rendering/g,
                 this.renderingMode == "contour+object"
