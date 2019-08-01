@@ -534,13 +534,13 @@ function getBodyStringOfFunction(func) {
 
 //define prototype
 AutoDD.prototype = {
-    getLayerRenderer: getLayerRenderer,
-    getAxesRenderer: getAxesRenderer
+    getLayerRenderer,
+    getAxesRenderer
 };
 
 // exports
 module.exports = {
-    AutoDD: AutoDD,
-    getLayerRenderer: getLayerRenderer,
-    getAxesRenderer: getAxesRenderer
+    AutoDD,
+    getLayerRenderer,
+    getAxesRenderer
 };

@@ -85,14 +85,14 @@ function setRetainSizeZoom(retainSizeZoom) {
 
 // define prototype
 Layer.prototype = {
-    addPlacement: addPlacement,
-    addRenderingFunc: addRenderingFunc,
-    setIsAutoDD: setIsAutoDD,
-    setAutoDDId: setAutoDDId,
-    setRetainSizeZoom: setRetainSizeZoom
+    addPlacement,
+    addRenderingFunc,
+    setIsAutoDD,
+    setAutoDDId,
+    setRetainSizeZoom
 };
 
 // exports
 module.exports = {
-    Layer: Layer
+    Layer
 };

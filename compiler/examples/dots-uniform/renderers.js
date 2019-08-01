@@ -58,6 +58,6 @@ var dotsAxes = function(args) {
 };
 
 module.exports = {
-    dotsRendering: dotsRendering,
-    dotsAxes: dotsAxes
+    dotsRendering,
+    dotsAxes
 };

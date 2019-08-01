@@ -702,17 +702,17 @@ function saveProject() {
 
 // define prototype functions
 Project.prototype = {
-    addView: addView,
-    addCanvas: addCanvas,
-    addJump: addJump,
-    addStyles: addStyles,
-    addAutoDD: addAutoDD,
-    addRenderingParams: addRenderingParams,
-    setInitialStates: setInitialStates,
-    saveProject: saveProject
+    addView,
+    addCanvas,
+    addJump,
+    addStyles,
+    addAutoDD,
+    addRenderingParams,
+    setInitialStates,
+    saveProject
 };
 
 // exports
 module.exports = {
-    Project: Project
+    Project
 };

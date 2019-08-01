@@ -152,10 +152,10 @@ var c3AnimalTransform = new Transform(
 );
 
 module.exports = {
-    c1BackgroundTransform: c1BackgroundTransform,
-    c2BackgroundTransform: c2BackgroundTransform,
-    c3BackgroundTransform: c3BackgroundTransform,
-    c1AnimalTransform: c1AnimalTransform,
-    c2AnimalTransform: c2AnimalTransform,
-    c3AnimalTransform: c3AnimalTransform
+    c1BackgroundTransform,
+    c2BackgroundTransform,
+    c3BackgroundTransform,
+    c1AnimalTransform,
+    c2AnimalTransform,
+    c3AnimalTransform
 };
