@@ -111,8 +111,8 @@ var animalIconRendering = function(svg, data) {
 };
 
 module.exports = {
-    renderingParams: renderingParams,
-    backgroundRendering: backgroundRendering,
-    animalCircleRendering: animalCircleRendering,
-    animalIconRendering: animalIconRendering
+    renderingParams,
+    backgroundRendering,
+    animalCircleRendering,
+    animalIconRendering
 };

@@ -9,5 +9,5 @@ var flareTransform = new Transform(
 );
 
 module.exports = {
-    flareTransform: flareTransform
+    flareTransform
 };

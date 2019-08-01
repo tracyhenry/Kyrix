@@ -271,10 +271,10 @@ var countyMapRendering = function(svg, data, args) {
 };
 
 module.exports = {
-    renderingParams: renderingParams,
-    stateMapRendering: stateMapRendering,
-    stateMapLegendRendering: stateMapLegendRendering,
-    countyMapRendering: countyMapRendering,
-    countyMapLegendRendering: countyMapLegendRendering,
-    countyMapStateBoundaryRendering: countyMapStateBoundaryRendering
+    renderingParams,
+    stateMapRendering,
+    stateMapLegendRendering,
+    countyMapRendering,
+    countyMapLegendRendering,
+    countyMapStateBoundaryRendering
 };

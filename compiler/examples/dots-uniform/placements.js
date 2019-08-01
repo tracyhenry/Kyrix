@@ -6,5 +6,5 @@ var dotsPlacement = {
 };
 
 module.exports = {
-    dotsPlacement: dotsPlacement
+    dotsPlacement
 };
