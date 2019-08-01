@@ -134,6 +134,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
         })
         .enter();
 
+    var numRenderedTiles = 0;
     newTiles.each(function(d) {
         // append tile svgs
         d3.selectAll(viewClass + ".mainsvg:not(.static)")
@@ -213,7 +214,6 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                         renderData[i],
                         optionalArgsWithTileXY
                     );
-
                     tileSvg
                         .transition()
                         .duration(param.tileEnteringDuration)
@@ -235,6 +235,11 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                             });
                     }
                 }
+
+                // remove old layers
+                numRenderedTiles++;
+                if (!gvd.animation && numRenderedTiles == tileIds.length)
+                    d3.selectAll(viewClass + ".oldlayerg").remove();
             }
         });
     });
@@ -431,6 +436,12 @@ function renderDynamicBoxes(
                         renderData[i],
                         optionalArgsWithBoxWHXY
                     );
+
+                    // remove old layers
+                    if (!gvd.animation)
+                        d3.selectAll(
+                            viewClass + ".oldlayerg.layer" + i
+                        ).remove();
 
                     // register jumps
                     if (!gvd.animation) registerJumps(viewId, dboxSvg, i);

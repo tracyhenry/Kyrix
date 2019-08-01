@@ -120,19 +120,15 @@ function postJump(viewId, zoomType) {
         .duration(param.axesInDuration)
         .style("opacity", 1);
 
-    // use a d3 transition to remove things based on zoom type
-    var removalDelay = 0;
+    // remove old layers if appropriate
     if (
-        zoomType == param.geometricSemanticZoom ||
-        zoomType == param.literalZoomIn ||
-        zoomType == param.literalZoomOut
+        !(
+            zoomType == param.geometricSemanticZoom ||
+            zoomType == param.literalZoomIn ||
+            zoomType == param.literalZoomOut
+        )
     )
-        removalDelay = param.oldRemovalDelay;
-    var numOldLayer = d3.selectAll(viewClass + ".oldlayerg").size();
-    d3.selectAll(viewClass + ".oldlayerg")
-        .transition()
-        .duration(removalDelay)
-        .remove();
+        d3.selectAll(viewClass + ".oldlayerg").remove();
     postOldLayerRemoval();
 }
 
