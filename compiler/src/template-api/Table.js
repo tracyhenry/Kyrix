@@ -7,36 +7,37 @@ const Layer = require("../Layer").Layer;
  * by xinli on 07/15/19
  */
 
-function Table(args, p) {
+function Table(args) {
     if (args == null) args = {};
 
-    if (!("name" in args) || !("db" in args) || !("fields" in args)) {
-        throw new Error(
-            "Constructing Table:\
-             malformed argument object"
-        );
+    // check required args
+    var requiredArgs = ["name", "db", "fields"];
+    var requiredArgsTypes = ["string", "string", "object"];
+    for (var i = 0; i < requiredArgs.length; i++) {
+        if (!(requiredArgs[i] in args))
+            throw new Error(
+                "Constructing Table: " + requiredArgs[i] + " missing."
+            );
+        if (typeof args[requiredArgs[i]] !== requiredArgsTypes[i])
+            throw new Error(
+                "Constructing Table: " +
+                    requiredArgs[i] +
+                    " must be " +
+                    requiredArgsTypes[i] +
+                    "."
+            );
+        if (requiredArgsTypes[i] == "string")
+            if (args[requiredArgs[i]].length == 0)
+                throw new Error(
+                    "Constructing Table: " +
+                        requiredArgs[i] +
+                        " cannot be an empty string."
+                );
     }
 
-    if (typeof args.fields === "object") {
-        var transform_func = function(row, w_canvas, h_canvas, renderParams) {
-            var ret = [];
-            // row: args.fields, rn_kyrix
-            var args = renderParams.table;
-            for (var i = 0; i < args.fields.length; i++) {
-                ret.push(row[i]);
-            }
-            ret.push(row[args.fields.length]);
-            var th_h = Number(args.heads.th_h) || 0;
+    var table_name = "table_" + args.name;
 
-            var centroid_y =
-                th_h +
-                Number(args.y) +
-                Number(args.cell_h) *
-                    Number(parseInt(row[args.fields.length]) - 0.5);
-            ret.push(centroid_y);
-            return Java.to(ret, "java.lang.String[]");
-        };
-    }
+    var transform_func = getTableTransformFunc(table_name);
 
     // schema and query first for buiding layer
     var schema = args.fields.concat(["rn", "y"]);
@@ -71,10 +72,8 @@ function Table(args, p) {
         centroid_x = this.x + sum_width / 2;
     } else {
         console.log("DEFAULT WIDTH");
-        // sum_width = 1000;
         sum_width = args.fields.length * 100;
         centroid_x = this.x + sum_width / 2;
-        // throw new Error("width type not supported");
     }
     this.width = sum_width;
 
@@ -89,14 +88,24 @@ function Table(args, p) {
             th_h: this.cell_h,
             names: args.fields
         };
+    } else if (!("th_h" in th_args || "names" in th_args)) {
+        throw new Error("in complete heading definition");
+    } else if (typeof th_args.th_h !== "number") {
+        throw new Error("heading height must be number");
+    } else if (
+        typeof th_args.names !== "object" ||
+        th_args.names.length != args.fields.length
+    ) {
+        throw new Error("fields and heads length not equal");
+    } else if (th_args.th_h <= 0) {
+        throw new Error("heading height must be positive");
     } else {
-        this.heads = args.heads;
+        this.heads = th_args;
     }
 
-    // var table_name = "table_" + args.name;
     var tableRenderingParams = {
         // table_name: {
-        table: {
+        [table_name]: {
             x: this.x,
             y: this.y,
             heads: this.heads,
@@ -105,7 +114,8 @@ function Table(args, p) {
             fields: args.fields
         }
     };
-    p.addRenderingParams(tableRenderingParams);
+
+    this.renderingParams = tableRenderingParams;
 
     var tablePlacement = {
         centroid_x: "con:" + centroid_x,
@@ -115,10 +125,95 @@ function Table(args, p) {
     };
     this.addPlacement(tablePlacement);
 
-    var tableRendering = function(svg, data, rend_args) {
-        var table_params = rend_args.renderingParams.table;
+    var tableRendering = getTableRenderer(table_name);
+
+    this.addRenderingFunc(tableRendering);
+
+    // generate query using user defined specifications
+    function genQuery() {
+        var ret = "select ";
+        for (key in args.fields) {
+            if (typeof args.fields[key] !== "string") {
+                throw new Error("fields must be string, at index:" + key);
+            }
+            ret += args.fields[key] + ", ";
+        }
+        ret += "row_number() over(";
+        if (args.order_by) {
+            ret += " order by ";
+            ret += args.order_by;
+            if (args.order == ("asc" || "ASC")) {
+                ret += " asc ) as rn_kyrix";
+            } else if (args.order == ("desc" || "DESC") || !args.order) {
+                ret += " desc ) as rn_kyrix";
+            } else {
+                throw new Error("unknown order");
+            }
+        } else {
+            ret += ")";
+        }
+        ret += " from ";
+        ret += args.table;
+        ret += ";";
+        console.log("table query:", ret);
+        return ret;
+    }
+}
+(function() {
+    // create a class with no instance method
+    var Super = function() {};
+    Super.prototype = Layer.prototype;
+    // use its instance as the prototype of Table
+    Table.prototype = new Super();
+})();
+
+function getTableTransformFunc(table_name) {
+    transformFuncBody = getBodyStringOfFunction(transform_function);
+    transformFuncBody = transformFuncBody.replace(
+        /REPLACE_ME_table_name/g,
+        table_name
+    );
+
+    return new Function(
+        "row",
+        "w_canvas",
+        "h_canvas",
+        "renderParams",
+        transformFuncBody
+    );
+
+    function transform_function(row, w_canvas, h_canvas, renderParams) {
+        var ret = [];
+        // row: args.fields, rn_kyrix
+        var args = renderParams["REPLACE_ME_table_name"];
+        for (var i = 0; i < args.fields.length; i++) {
+            ret.push(row[i]);
+        }
+        ret.push(row[args.fields.length]);
+        var th_h = Number(args.heads.th_h) || 0;
+
+        var centroid_y =
+            th_h +
+            Number(args.y) +
+            Number(args.cell_h) *
+                Number(parseInt(row[args.fields.length]) - 0.5);
+        ret.push(centroid_y);
+        return Java.to(ret, "java.lang.String[]");
+    }
+}
+
+function getTableRenderer(table_name) {
+    renderFuncBody = getBodyStringOfFunction(renderer);
+    renderFuncBody = renderFuncBody.replace(
+        /REPLACE_ME_table_name/g,
+        table_name
+    );
+
+    return new Function("svg", "data", "rend_args", renderFuncBody);
+
+    function renderer(svg, data, rend_args) {
+        var table_params = rend_args.renderingParams["REPLACE_ME_table_name"];
         var fields = table_params.fields;
-        console.log("data[0]", data[0]);
         var g = svg.append("g").attr("id", "gTable");
 
         var x = Number(table_params.x) || 0;
@@ -142,7 +237,6 @@ function Table(args, p) {
         var th_W = cell_W;
         var th_H = th_params.th_h;
         var th_Names = th_params.names || fields;
-        console.log("table_params", table_params);
 
         var table = g
             .append("g")
@@ -209,49 +303,15 @@ function Table(args, p) {
                 .attr("y", th_H / 2)
                 .attr("dy", "0.5em");
         }
-    };
-
-    this.addRenderingFunc(tableRendering);
-
-    // generate query using user defined specifications
-    function genQuery() {
-        var ret = "select ";
-        for (key in args.fields) {
-            if (typeof args.fields[key] !== "string") {
-                throw new Error("fields must be string, at index:" + key);
-            }
-            ret += args.fields[key] + ", ";
-        }
-        ret += "row_number() over(";
-        if (args.order_by) {
-            ret += " order by ";
-            ret += args.order_by;
-            if (args.order == ("asc" || "ASC")) {
-                ret += " asc ) as rn_kyrix";
-            } else if (args.order == ("desc" || "DESC") || !args.order) {
-                ret += " desc ) as rn_kyrix";
-            } else {
-                throw new Error("unknown order");
-            }
-        } else {
-            ret += ")";
-        }
-        ret += " from ";
-        ret += args.table;
-        ret += ";";
-        console.log("table query:", ret);
-        return ret;
     }
-
-    // body...
 }
-(function() {
-    // create a class with no instance method
-    var Super = function() {};
-    Super.prototype = Layer.prototype;
-    // use its instance as the prototype of Table
-    Table.prototype = new Super();
-})();
+
+function getBodyStringOfFunction(func) {
+    var funcStr = func.toString();
+    const bodyStart = funcStr.indexOf("{") + 1;
+    const bodyEnd = funcStr.lastIndexOf("}");
+    return "\n" + funcStr.substring(bodyStart, bodyEnd) + "\n";
+}
 
 module.exports = {
     Table: Table

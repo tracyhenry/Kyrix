@@ -364,9 +364,12 @@ function addStyles(filepath) {
 
 function addTable(table, canvas) {
     if (!canvas) {
-        // var tableCanvas = new Canvas()
+        canvas = new Canvas("Table", 1000, 1000);
+        this.addCanvas(canvas);
     }
+    this.addRenderingParams(table.renderingParams);
     canvas.addLayer(table);
+    return canvas;
 }
 
 /**
