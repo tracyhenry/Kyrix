@@ -51,7 +51,6 @@ function addPlacement(placement) {
  * @param rendering - a javascript function that adds an <g> element to an existing svg. See spec api for details on input/output.
  */
 function addRenderingFunc(rendering) {
-    console.log("rendering:", rendering);
     if (typeof rendering !== "function")
         throw new Error(
             "Constructing Layer: rendering must be a javascript function."
