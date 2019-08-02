@@ -29,6 +29,10 @@ function setupZoom(viewId, initialScale) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
 
+    // record initial scale, used to determine whether it's
+    // literal zoom in or literal zoom out
+    gvd.initialScale = initialScale;
+
     // calculate maxScale
     gvd.maxScale = Math.max(
         gvd.curCanvas.zoomInFactorX,
@@ -122,7 +126,7 @@ function completeZoom(viewId, zoomType, oldZoomFactorX, oldZoomFactorY) {
     gvd.initialViewportY = curViewport[1] * oldZoomFactorY;
 
     // pre animation
-    preJump(viewId);
+    preJump(viewId, zoomType);
 
     // get the canvas object
     var gotCanvas = getCurCanvas(viewId);
@@ -199,14 +203,18 @@ function zoomed(viewId) {
     curViewport[3] = vHeight / scaleY;
     d3.selectAll(viewClass + ".mainsvg:not(.static)").attr(
         "viewBox",
-        curViewport[0] +
+        viewportX +
             " " +
-            curViewport[1] +
+            viewportY +
             " " +
             curViewport[2] +
             " " +
             curViewport[3]
     );
+
+    // for old layer groups
+    if (!d3.selectAll(viewClass + ".oldmainsvg:not(.static)").empty()) {
+    }
 
     // get data
     RefreshDynamicLayers(viewId, viewportX, viewportY);
@@ -216,7 +224,7 @@ function zoomed(viewId) {
         (zoomInFactorX > 1 && scaleX >= gvd.maxScale) ||
         (zoomInFactorY > 1 && scaleY >= gvd.maxScale)
     )
-        completeZoom(viewId, "literal_zoom_in", zoomInFactorX, zoomInFactorY);
+        completeZoom(viewId, param.literalZoomIn, zoomInFactorX, zoomInFactorY);
 
     // check if zoom scale reaches zoomOutFactor
     if (
@@ -225,7 +233,7 @@ function zoomed(viewId) {
     )
         completeZoom(
             viewId,
-            "literal_zoom_out",
+            param.literalZoomOut,
             zoomOutFactorX,
             zoomOutFactorY
         );

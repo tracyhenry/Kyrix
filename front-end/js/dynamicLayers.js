@@ -238,7 +238,10 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
 
                 // remove old layers
                 numRenderedTiles++;
-                if (!gvd.animation && numRenderedTiles == tileIds.length)
+                if (
+                    gvd.animation != param.semanticZoom &&
+                    numRenderedTiles == tileIds.length
+                )
                     d3.selectAll(viewClass + ".oldlayerg").remove();
             }
         });
@@ -437,12 +440,6 @@ function renderDynamicBoxes(
                         optionalArgsWithBoxWHXY
                     );
 
-                    // remove old layers
-                    if (!gvd.animation)
-                        d3.selectAll(
-                            viewClass + ".oldlayerg.layer" + i
-                        ).remove();
-
                     // register jumps
                     if (!gvd.animation) registerJumps(viewId, dboxSvg, i);
 
@@ -459,6 +456,10 @@ function renderDynamicBoxes(
                             });
                     }
                 }
+
+                // remove old layers
+                if (gvd.animation != param.semanticZoom)
+                    d3.selectAll(viewClass + ".oldlayerg").remove();
 
                 // modify global var
                 gvd.boxH.push(response.boxH);
@@ -513,12 +514,6 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
     var optionalArgs = getOptionalArgs(viewId);
     optionalArgs["viewportX"] = viewportX;
     optionalArgs["viewportY"] = viewportY;
-
-    // set viewboxes
-    d3.selectAll(viewClass + ".mainsvg:not(.static)").attr(
-        "viewBox",
-        viewportX + " " + viewportY + " " + vpW + " " + vpH
-    );
 
     // check if there is literal zooming going on
     // if yes, rescale the objects

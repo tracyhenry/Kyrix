@@ -22,10 +22,6 @@ function renderStaticLayers(viewId) {
         var curSvg = d3.select(viewClass + ".layerg.layer" + i).select("svg");
         renderFunc(curSvg, gvd.curStaticData[i], getOptionalArgs(viewId));
 
-        // remove old layerg
-        if (!gvd.animation)
-            d3.select(viewClass + ".oldlayerg.layer" + i).remove();
-
         // register jump
         if (!gvd.animation) registerJumps(viewId, curSvg, i);
 

@@ -15,7 +15,7 @@ function removePopoversSmooth(viewId) {
 }
 
 // disable and remove stuff before jump
-function preJump(viewId) {
+function preJump(viewId, zoomType) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
 
@@ -44,7 +44,7 @@ function preJump(viewId) {
         .on("click", null);
     d3.selectAll("button" + viewClass).attr("disabled", true);
 
-    gvd.animation = true;
+    gvd.animation = zoomType;
 }
 
 function postJump(viewId, zoomType) {
@@ -121,6 +121,9 @@ function postJump(viewId, zoomType) {
         .style("opacity", 1);
 
     // remove old layers if appropriate
+    for (var i = 0; i < gvd.curCanvas.layers.length; i++)
+        if (gvd.curCanvas.layers[i].isStatic)
+            d3.selectAll(viewClass + ".oldlayerg" + ".layer" + i).remove();
     if (
         !(
             zoomType == param.geometricSemanticZoom ||
@@ -175,10 +178,10 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     }
 
     // disable stuff before animation
-    preJump(viewId);
+    var zoomType = gvd.history[gvd.history.length - 1].zoomType;
+    preJump(viewId, zoomType);
 
     // whether this semantic zoom is also geometric
-    var zoomType = gvd.history[gvd.history.length - 1].zoomType;
     var enteringAnimation = zoomType == param.semanticZoom ? true : false;
 
     // calculate tuple boundary
@@ -370,7 +373,7 @@ function load(predArray, newVpX, newVpY, jump) {
     gvd.history = [];
 
     // pre animation
-    preJump(destViewId);
+    preJump(destViewId, jump.type);
 
     // draw buttons because they were not created if it was an empty view
     drawZoomButtons(destViewId);
@@ -382,7 +385,7 @@ function load(predArray, newVpX, newVpY, jump) {
         renderStaticLayers(destViewId);
 
         // post animation
-        postJump(destViewId);
+        postJump(destViewId, jump.type);
     });
 }
 

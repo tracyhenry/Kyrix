@@ -131,7 +131,7 @@ function backspace(viewId) {
     var fadingAnimation = zoomType == param.semanticZoom ? true : false;
 
     // disable and remove stuff
-    preJump(viewId);
+    preJump(viewId, zoomType);
 
     // assign back global vars
     gvd.curCanvasId = curHistory.canvasId;
@@ -162,10 +162,9 @@ function backspace(viewId) {
             })
             .on("start", startZoomingBack);
     else {
-        d3.selectAll(viewClass + ".oldlayerg")
-            .transition()
-            .delay(param.oldRemovalDelay)
-            .remove();
+        for (var i = 0; i < gvd.curCanvas.layers.length; i++)
+            if (gvd.curCanvas.layers[i].isStatic)
+                d3.selectAll(viewClass + ".oldlayerg" + ".layer" + i).remove();
         startZoomingBack();
     }
 
@@ -209,7 +208,7 @@ function backspace(viewId) {
                 );
             })
             .on("end", function() {
-                postJump(viewId);
+                postJump(viewId, zoomType);
             });
     }
 
