@@ -247,7 +247,7 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
         String transDb = trans.getDb();
         String transQuery = trans.getQuery();
         System.out.println("db=" + transDb + " - query=" + transQuery);
-        Statement rawDBStmt = DbConnector.getStmtByDbName(transDb);
+        Statement rawDBStmt = DbConnector.getStmtByDbName(transDb, true);
         ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, transQuery);
         int numColumn = rs.getMetaData().getColumnCount();
         int rowCount = 0;

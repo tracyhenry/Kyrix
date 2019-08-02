@@ -31,5 +31,5 @@ function View(viewId, minx, miny, width, height) {
 
 // exports
 module.exports = {
-    View: View
+    View
 };

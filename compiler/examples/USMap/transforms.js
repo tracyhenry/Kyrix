@@ -110,7 +110,7 @@ var countyMapTransform = new Transform(
 );
 
 module.exports = {
-    stateMapTransform: stateMapTransform,
-    countyMapTransform: countyMapTransform,
-    countyMapStateBoundaryTransform: countyMapStateBoundaryTransform
+    stateMapTransform,
+    countyMapTransform,
+    countyMapStateBoundaryTransform
 };

@@ -16,21 +16,29 @@ var query =
     "order by agg_rank;";
 
 var autoDD = {
-    query: query,
-    db: "nba",
-    xCol: "home_score",
-    yCol: "away_score",
-    loX: 69,
-    hiX: 149,
-    loY: 69,
-    hiY: 148,
-    //    bboxW: 162,
-    //    bboxH: 132,
-    axis: true,
-    numLevels: 9,
-    roughN: 999,
-    renderingMode: "contour"
-    //    rendering: renderers.teamTimelineRendering
+    data: {
+        db: "nba",
+        query: query
+    },
+    x: {
+        col: "home_score",
+        range: [69, 149]
+    },
+    y: {
+        col: "away_score",
+        range: [69, 148]
+    },
+    rendering: {
+        mode: "contour+object",
+        roughN: 999,
+        axis: true,
+        contourColorScheme: "interpolateBlues",
+        obj: {
+            renderer: renderers.teamTimelineRendering,
+            bboxW: 162,
+            bboxH: 132
+        }
+    }
 };
 
 p.addAutoDD(new AutoDD(autoDD), {newPyramid: true, newView: true});

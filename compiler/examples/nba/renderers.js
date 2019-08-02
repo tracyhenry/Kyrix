@@ -907,12 +907,12 @@ var boxscoreStatsRendering = function(svg, data, args) {
 };
 
 module.exports = {
-    renderingParams: renderingParams,
-    teamLogoRendering: teamLogoRendering,
-    teamTimelineRendering: teamTimelineRendering,
-    teamTimelineStaticBkg: teamTimelineStaticBkg,
-    playByPlayRendering: playByPlayRendering,
-    playByPlayStaticBkg: playByPlayStaticBkg,
-    boxscorePkRendering: boxscorePkRendering,
-    boxscoreStatsRendering: boxscoreStatsRendering
+    renderingParams,
+    teamLogoRendering,
+    teamTimelineRendering,
+    teamTimelineStaticBkg,
+    playByPlayRendering,
+    playByPlayStaticBkg,
+    boxscorePkRendering,
+    boxscoreStatsRendering
 };

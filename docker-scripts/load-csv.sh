@@ -23,6 +23,7 @@ else
     x=${CSV_FILE:$((${#CSV_FILE} - ${#x}))}
     DB_NAME=${x:0:$((${#x} - 4))}
 fi
+FILE_NAME=$DB_NAME
 DB_TABLE=$DB_NAME
 
 while [[ $# -gt 0 ]]
@@ -60,7 +61,7 @@ docker exec -it kyrix_db_1 psql postgresql://postgres:kyrixftw@localhost/postgre
 docker exec -it kyrix_db_1 psql postgresql://postgres:kyrixftw@localhost/$DB_NAME -c "DROP TABLE IF EXISTS $DB_TABLE";
 
 # copy file to kyrix_db_1
-docker cp $CSV_FILE kyrix_db_1:/$CSV_FILE
+docker cp $CSV_FILE kyrix_db_1:/$FILE_NAME
 
 # run pgfutter to load csv into postgres table
-docker exec -it kyrix_db_1 ./pgfutter --dbname $DB_NAME --table $DB_TABLE --schema public --user postgres --pass kyrixftw csv -d $CSV_DELIMITER $CSV_FILE
+docker exec -it kyrix_db_1 ./pgfutter --dbname $DB_NAME --table $DB_TABLE --schema public --user postgres --pass kyrixftw csv -d $CSV_DELIMITER $FILE_NAME

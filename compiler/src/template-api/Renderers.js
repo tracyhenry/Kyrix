@@ -62,5 +62,5 @@ function textwrap(text, width) {
 }
 
 module.exports = {
-    textwrap: textwrap
+    textwrap
 };

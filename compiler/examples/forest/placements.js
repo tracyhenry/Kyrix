@@ -41,10 +41,10 @@ var c3AnimalPlacement = {
 };
 
 module.exports = {
-    c1BackgroundPlacement: c1BackgroundPlacement,
-    c2BackgroundPlacement: c2BackgroundPlacement,
-    c3BackgroundPlacement: c3BackgroundPlacement,
-    c1AnimalPlacement: c1AnimalPlacement,
-    c2AnimalPlacement: c2AnimalPlacement,
-    c3AnimalPlacement: c3AnimalPlacement
+    c1BackgroundPlacement,
+    c2BackgroundPlacement,
+    c3BackgroundPlacement,
+    c1AnimalPlacement,
+    c2AnimalPlacement,
+    c3AnimalPlacement
 };

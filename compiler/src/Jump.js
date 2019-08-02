@@ -58,5 +58,5 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
 
 // exports
 module.exports = {
-    Jump: Jump
+    Jump
 };

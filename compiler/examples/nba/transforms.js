@@ -147,10 +147,10 @@ var boxscoreTransform = new Transform(
 );
 
 module.exports = {
-    teamLogoTransform: teamLogoTransform,
-    teamTimelineTransform: teamTimelineTransform,
-    teamTimelineStaticTransform: teamTimelineStaticTransform,
-    playByPlayTransform: playByPlayTransform,
-    playByPlayStaticTransform: playByPlayStaticTransform,
-    boxscoreTransform: boxscoreTransform
+    teamLogoTransform,
+    teamTimelineTransform,
+    teamTimelineStaticTransform,
+    playByPlayTransform,
+    playByPlayStaticTransform,
+    boxscoreTransform
 };

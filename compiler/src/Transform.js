@@ -104,6 +104,6 @@ defaultEmptyTransform = new Transform("", "", "", [], true);
 
 // exports
 module.exports = {
-    Transform: Transform,
-    defaultEmptyTransform: defaultEmptyTransform
+    Transform,
+    defaultEmptyTransform
 };
