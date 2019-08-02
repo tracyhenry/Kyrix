@@ -214,6 +214,35 @@ function zoomed(viewId) {
 
     // for old layer groups
     if (!d3.selectAll(viewClass + ".oldmainsvg:not(.static)").empty()) {
+        //TODO: this won't work with geometric_semantic_zoom
+        var oldViewportX =
+            viewportX *
+            (gvd.initialScale == 1 ? zoomOutFactorX : zoomInFactorX);
+        var oldViewportY =
+            viewportY *
+            (gvd.initialScale == 1 ? zoomOutFactorY : zoomInFactorY);
+        var oldViewportW =
+            vWidth /
+            (scaleX *
+                (gvd.initialScale == 1
+                    ? 1 / zoomOutFactorX
+                    : 1 / zoomInFactorX));
+        var oldViewportH =
+            vHeight /
+            (scaleY *
+                (gvd.initialScale == 1
+                    ? 1 / zoomOutFactorY
+                    : 1 / zoomInFactorY));
+        d3.selectAll(viewClass + ".oldmainsvg:not(.static)").attr(
+            "viewBox",
+            oldViewportX +
+                " " +
+                oldViewportY +
+                " " +
+                oldViewportW +
+                " " +
+                oldViewportH
+        );
     }
 
     // get data
