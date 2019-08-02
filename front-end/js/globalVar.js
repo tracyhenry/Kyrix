@@ -53,23 +53,24 @@ function getOptionalArgs(viewId) {
 
 // get SQL predicates from a predicate dictionary
 function getSqlPredicate(p) {
-    if ("==" in p) return "(" + p["=="][0] + "='" + p["=="][1] + "')";
-    if ("AND" in p)
-        return (
-            "(" +
-            getSqlPredicate(p["AND"][0]) +
-            " AND " +
-            getSqlPredicate(p["AND"][1]) +
-            ")"
-        );
-    if ("OR" in p)
-        return (
-            "(" +
-            getSqlPredicate(p["OR"][0]) +
-            " OR " +
-            getSqlPredicate(p["OR"][1]) +
-            ")"
-        );
+    if ("==" in p) return " (" + p["=="][0] + "='" + p["=="][1] + "') ";
+    // to get the only operation from the predicate, and '==' case has already returned
+    if (Object.keys(p).length !== 1) {
+        throw new Error("Wrong predicate:", p);
+    } else {
+        var op = Object.keys(p)[0];
+        if (op == "AND" || op == "OR") {
+            var ret = "(";
+            for (x in p[op]) {
+                ret += getSqlPredicate(p[op][x]) + op;
+            }
+            return ret.replace(/(AND|OR)$/, ")");
+        }
+        return typeof p[op][1] == "string"
+            ? " (" + p[op][0] + op + "'" + p[op][1] + "') "
+            : " ( CAST(" + p[op][0] + " as NUMERIC)" + op + p[op][1] + ")";
+    }
+
     return "";
 }
 

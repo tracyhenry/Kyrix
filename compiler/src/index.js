@@ -48,7 +48,7 @@ function Project(name, configFile) {
     this.renderingParams = "{}";
 
     // style sheets
-    this.styles = "";
+    this.styles = [];
 
     // pyramids
     this.pyramids = [];
@@ -354,12 +354,31 @@ function addRenderingParams(renderingParams) {
 }
 
 // adding a static CSS string
-function addStyles(filepath) {
-    if (filepath == null) return;
-    var rules = fs.readFileSync(filepath).toString();
+function addStyles(styles) {
+    if (!styles || typeof styles != "string") return;
+
+    //match http:// and https://
+    if (styles.match(/https?:\/\//)) {
+        var rules = styles;
+    } else if (styles.match(".css")) {
+        var rules = fs.readFileSync(styles).toString();
+    } else {
+        console.log("STYLES NOT CSS FILE, BUT STRING", styles);
+        var rules = styles;
+    }
 
     // merge with current CSS
-    this.styles += rules;
+    this.styles.push(rules);
+}
+
+function addPie(pie, canvas) {
+    if (!canvas) {
+        canvas = new Canvas("pieCanvas_Kyrix", 1500, 1500);
+    }
+    this.addStyles(__dirname + "/template-api/css/pie.css");
+    this.addRenderingParams(pie.renderingParams);
+    canvas.addLayer(pie);
+    return canvas;
 }
 
 /**
@@ -699,17 +718,18 @@ function saveProject() {
 
 // define prototype functions
 Project.prototype = {
-    addView: addView,
-    addCanvas: addCanvas,
-    addJump: addJump,
-    addStyles: addStyles,
-    addAutoDD: addAutoDD,
-    addRenderingParams: addRenderingParams,
-    setInitialStates: setInitialStates,
-    saveProject: saveProject
+    addView,
+    addCanvas,
+    addJump,
+    addStyles,
+    addPie,
+    addAutoDD,
+    addRenderingParams,
+    setInitialStates,
+    saveProject
 };
 
 // exports
 module.exports = {
-    Project: Project
+    Project
 };
