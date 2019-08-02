@@ -515,36 +515,6 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
     optionalArgs["viewportX"] = viewportX;
     optionalArgs["viewportY"] = viewportY;
 
-    // check if there is literal zooming going on
-    // if yes, rescale the objects
-    // do it both here and upon data return
-    if (d3.event != null && d3.event.transform.k != 1) {
-        // rescale only if there is zoom
-        var numLayer = gvd.curCanvas.layers.length;
-        for (var i = 0; i < numLayer; i++) {
-            if (!gvd.curCanvas.layers[i].retainSizeZoom) continue;
-            // check if this is just a pan
-            objectSelection = d3
-                .selectAll(viewClass + ".layerg.layer" + i)
-                .selectAll(".lowestsvg:not(.static)")
-                .selectAll("g")
-                .selectAll("*");
-            if (!objectSelection.empty()) {
-                var transformStr = objectSelection.attr("transform");
-                var match = /.*scale\(([\d.]+), ([\d.]+)\)/g.exec(transformStr);
-                var scaleX = parseFloat(match[1]);
-                var scaleY = parseFloat(match[2]);
-            }
-            if (
-                Math.abs(Math.max(scaleX, scaleY) * d3.event.transform.k - 1) >
-                param.eps
-            )
-                objectSelection.each(function() {
-                    zoomRescale(viewId, this);
-                });
-        }
-    }
-
     // fetch data
     if (param.fetchingScheme == "tiling")
         renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs);

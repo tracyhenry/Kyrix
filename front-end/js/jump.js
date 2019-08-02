@@ -30,12 +30,13 @@ function preJump(viewId, zoomType) {
     removePopoversSmooth(viewId);
 
     // change .mainsvg to .oldmainsvg, and .layerg to .oldlayerg
-    d3.selectAll(viewClass + ".mainsvg")
-        .classed("mainsvg", false)
-        .classed("oldmainsvg", true);
     d3.selectAll(viewClass + ".layerg")
         .classed("layerg", false)
         .classed("oldlayerg", true);
+
+    d3.selectAll(viewClass + ".mainsvg")
+        .classed("mainsvg", false)
+        .classed("oldmainsvg", true);
 
     // remove cursor pointers and onclick listeners
     d3.select(viewClass + ".viewsvg")

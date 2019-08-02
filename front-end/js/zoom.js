@@ -1,9 +1,9 @@
-function zoomRescale(viewId, ele) {
+function zoomRescale(viewId, ele, oldGScaleX, oldGScaleY) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
 
     var cx = d3.select(ele).datum().cx;
-    cy = d3.select(ele).datum().cy; // finding center of element
+    var cy = d3.select(ele).datum().cy; // finding center of element
     var transform = d3.zoomTransform(d3.select(viewClass + ".maing").node());
     var scaleX = 1 / transform.k;
     var scaleY = 1 / transform.k;
@@ -12,6 +12,8 @@ function zoomRescale(viewId, ele) {
         scaleX = 1;
     if (gvd.curCanvas.zoomInFactorY <= 1 && gvd.curCanvas.zoomOutFactorY >= 1)
         scaleY = 1;
+    scaleX *= oldGScaleX ? oldGScaleX : 1;
+    scaleY *= oldGScaleY ? oldGScaleY : 1;
     var tx = -cx * (scaleX - 1);
     var ty = -cy * (scaleY - 1);
     var translateStr = tx + "," + ty;
@@ -194,27 +196,33 @@ function zoomed(viewId) {
         d3.event.transform.y = (iVY - viewportY) * scaleY;
     }
 
-    // set viewBox size && refresh canvas
+    // set viewBox
     var curViewport = d3
         .select(viewClass + ".mainsvg:not(.static)")
         .attr("viewBox")
         .split(" ");
-    curViewport[2] = vWidth / scaleX;
-    curViewport[3] = vHeight / scaleY;
     d3.selectAll(viewClass + ".mainsvg:not(.static)").attr(
         "viewBox",
         viewportX +
             " " +
             viewportY +
             " " +
-            curViewport[2] +
+            vWidth / scaleX +
             " " +
-            curViewport[3]
+            vHeight / scaleY
     );
 
     // for old layer groups
-    if (!d3.selectAll(viewClass + ".oldmainsvg:not(.static)").empty()) {
-        //TODO: this won't work with geometric_semantic_zoom
+    var jumps = gvd.curJump;
+    var zoomType =
+        gvd.initialScale == 1 ? param.literalZoomOut : param.literalZoomIn;
+    var oldCanvasId = "";
+    for (var i = 0; i < jumps.length; i++)
+        if (jumps[i].type == zoomType) oldCanvasId = jumps[i].destId;
+    if (
+        !d3.selectAll(viewClass + ".oldmainsvg:not(.static)").empty() &&
+        oldCanvasId != ""
+    ) {
         var oldViewportX =
             viewportX *
             (gvd.initialScale == 1 ? zoomOutFactorX : zoomInFactorX);
@@ -223,16 +231,10 @@ function zoomed(viewId) {
             (gvd.initialScale == 1 ? zoomOutFactorY : zoomInFactorY);
         var oldViewportW =
             vWidth /
-            (scaleX *
-                (gvd.initialScale == 1
-                    ? 1 / zoomOutFactorX
-                    : 1 / zoomInFactorX));
+            (scaleX / (gvd.initialScale == 1 ? zoomOutFactorX : zoomInFactorX));
         var oldViewportH =
             vHeight /
-            (scaleY *
-                (gvd.initialScale == 1
-                    ? 1 / zoomOutFactorY
-                    : 1 / zoomInFactorY));
+            (scaleY / (gvd.initialScale == 1 ? zoomOutFactorY : zoomInFactorY));
         d3.selectAll(viewClass + ".oldmainsvg:not(.static)").attr(
             "viewBox",
             oldViewportX +
@@ -243,6 +245,51 @@ function zoomed(viewId) {
                 " " +
                 oldViewportH
         );
+    }
+
+    // check if there is literal zooming going on
+    // if yes, rescale the objects
+    // do it both here and upon data return
+    var isZooming =
+        Math.abs(vWidth / scaleX - curViewport[2]) > param.eps ||
+        Math.abs(vHeight / scaleY - curViewport[3]) > param.eps;
+    if (isZooming) {
+        var numLayer = gvd.curCanvas.layers.length;
+        for (var i = 0; i < numLayer; i++) {
+            if (!gvd.curCanvas.layers[i].retainSizeZoom) continue;
+            d3.selectAll(viewClass + ".layerg.layer" + i)
+                .selectAll(".lowestsvg:not(.static)")
+                .selectAll("g")
+                .selectAll("*")
+                .each(function() {
+                    zoomRescale(viewId, this);
+                });
+        }
+
+        // for old layer groups
+        if (oldCanvasId != "") {
+            // proceed when it's indeed literal zoom (otherwise can only be geometric semantic zoom)
+            var oldCanvas = getCanvasById(oldCanvasId);
+            for (var i = 0; i < oldCanvas.layers.length; i++) {
+                if (!oldCanvas.layers[i].retainSizeZoom) continue;
+                d3.select(viewClass + ".oldlayerg.layer" + i)
+                    .selectAll(".lowestsvg:not(.static)")
+                    .selectAll("g")
+                    .selectAll("*")
+                    .each(function() {
+                        zoomRescale(
+                            viewId,
+                            this,
+                            gvd.initialScale == 1
+                                ? zoomOutFactorX
+                                : zoomInFactorX,
+                            gvd.initialScale == 1
+                                ? zoomOutFactorY
+                                : zoomInFactorY
+                        );
+                    });
+            }
+        }
     }
 
     // get data
