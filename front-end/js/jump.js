@@ -65,7 +65,7 @@ function postJump(viewId, zoomType) {
         else setupZoom(viewId, 1);
 
         // set up button states
-        setButtonState(viewId);
+        setBackButtonState(viewId);
 
         // animation stopped now
         gvd.animation = false;

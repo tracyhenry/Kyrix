@@ -264,7 +264,7 @@ function pageOnLoad(serverAddr) {
                                 setupZoom(viewId, 1);
 
                                 // set button state
-                                setButtonState(viewId);
+                                setBackButtonState(viewId);
                             };
                         })(viewId)
                     );

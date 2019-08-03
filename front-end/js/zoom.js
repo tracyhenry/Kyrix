@@ -212,7 +212,7 @@ function zoomed(viewId) {
             vHeight / scaleY
     );
 
-    // for old layer groups
+    // set viewboxes old layer groups
     var jumps = gvd.curJump;
     var zoomType =
         gvd.initialScale == 1 ? param.literalZoomOut : param.literalZoomIn;
@@ -291,6 +291,30 @@ function zoomed(viewId) {
             }
         }
     }
+
+    // set literal zoom button state
+    d3.select(viewClass + ".zoominbutton").attr("disabled", true);
+    d3.select(viewClass + ".zoomoutbutton").attr("disabled", true);
+    var jumps = gvd.curJump;
+    for (var i = 0; i < jumps.length; i++)
+        if (jumps[i].type == "literal_zoom_in")
+            d3.select(viewClass + ".zoominbutton")
+                .attr("disabled", null)
+                .on("click", function() {
+                    literalZoomIn(viewId);
+                });
+        else if (jumps[i].type == "literal_zoom_out")
+            d3.select(viewClass + ".zoomoutbutton")
+                .attr("disabled", null)
+                .on("click", function() {
+                    literalZoomOut(viewId);
+                });
+    if (scaleX > 1 || scaleY > 1)
+        d3.select(viewClass + ".zoomoutbutton")
+            .attr("disabled", null)
+            .on("click", function() {
+                literalZoomOut(viewId);
+            });
 
     // get data
     RefreshDynamicLayers(viewId, viewportX, viewportY);

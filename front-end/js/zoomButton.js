@@ -56,7 +56,7 @@ function drawZoomButtons(viewId) {
 }
 
 // called after a new canvas is completely rendered
-function setButtonState(viewId) {
+function setBackButtonState(viewId) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
 
@@ -68,24 +68,6 @@ function setButtonState(viewId) {
                 backspace(viewId);
             });
     else d3.select(viewClass + ".gobackbutton").attr("disabled", true);
-
-    // literal zoom buttons
-    d3.select(viewClass + ".zoominbutton").attr("disabled", true);
-    d3.select(viewClass + ".zoomoutbutton").attr("disabled", true);
-    var jumps = gvd.curJump;
-    for (var i = 0; i < jumps.length; i++)
-        if (jumps[i].type == "literal_zoom_in")
-            d3.select(viewClass + ".zoominbutton")
-                .attr("disabled", null)
-                .on("click", function() {
-                    literalZoomIn(viewId);
-                });
-        else if (jumps[i].type == "literal_zoom_out")
-            d3.select(viewClass + ".zoomoutbutton")
-                .attr("disabled", null)
-                .on("click", function() {
-                    literalZoomOut(viewId);
-                });
 }
 
 // called in completeZoom() and RegisterJump()
