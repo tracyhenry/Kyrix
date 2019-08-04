@@ -67,5 +67,5 @@ Canvas.prototype.addAxes = addAxes;
 
 // exports
 module.exports = {
-    Canvas: Canvas
+    Canvas
 };

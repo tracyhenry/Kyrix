@@ -20,7 +20,7 @@ var boxscorePlacement = {
 };
 
 module.exports = {
-    teamTimelinePlacement: teamTimelinePlacement,
-    playByPlayPlacement: playByPlayPlacement,
-    boxscorePlacement: boxscorePlacement
+    teamTimelinePlacement,
+    playByPlayPlacement,
+    boxscorePlacement
 };

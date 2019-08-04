@@ -87,6 +87,6 @@ var flarePackRendering = function(svg, data, args) {
 };
 
 module.exports = {
-    renderingParams: renderingParams,
-    flarePackRendering: flarePackRendering
+    renderingParams,
+    flarePackRendering
 };

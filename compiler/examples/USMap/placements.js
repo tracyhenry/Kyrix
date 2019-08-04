@@ -13,6 +13,6 @@ var countyMapPlacement = {
 };
 
 module.exports = {
-    stateMapPlacement: stateMapPlacement,
-    countyMapPlacement: countyMapPlacement
+    stateMapPlacement,
+    countyMapPlacement
 };

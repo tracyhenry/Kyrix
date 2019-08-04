@@ -249,7 +249,10 @@ function addAutoDD(autoDD, args) {
 
         // set retainSizeZoom
         curLayer.setRetainSizeZoom(
-            autoDD.renderingMode == "contour" ? false : true
+            autoDD.renderingMode == "contour only" ||
+                autoDD.renderingMode == "contour+object"
+                ? false
+                : true
         );
 
         // dummy placement
@@ -709,18 +712,18 @@ function saveProject() {
 
 // define prototype functions
 Project.prototype = {
-    addView: addView,
-    addCanvas: addCanvas,
-    addJump: addJump,
-    addStyles: addStyles,
-    addTable: addTable,
-    addAutoDD: addAutoDD,
-    addRenderingParams: addRenderingParams,
-    setInitialStates: setInitialStates,
-    saveProject: saveProject
+    addView,
+    addCanvas,
+    addJump,
+    addStyles,
+    addTable,
+    addAutoDD,
+    addRenderingParams,
+    setInitialStates,
+    saveProject
 };
 
 // exports
 module.exports = {
-    Project: Project
+    Project
 };

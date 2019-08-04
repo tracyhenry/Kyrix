@@ -182,3 +182,6 @@ gen
 .vscode
 front-end/js/embed/all.js
 front-end/js/embed/bundle.js
+compile.sh
+!docker-scripts/compile.sh
+*.sql

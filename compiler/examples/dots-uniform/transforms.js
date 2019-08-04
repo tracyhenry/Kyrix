@@ -25,5 +25,5 @@ var dotsTransform = new Transform(
 );
 
 module.exports = {
-    dotsTransform: dotsTransform
+    dotsTransform
 };

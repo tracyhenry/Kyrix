@@ -134,6 +134,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
         })
         .enter();
 
+    var numRenderedTiles = 0;
     newTiles.each(function(d) {
         // append tile svgs
         d3.selectAll(viewClass + ".mainsvg:not(.static)")
@@ -213,7 +214,6 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                         renderData[i],
                         optionalArgsWithTileXY
                     );
-
                     tileSvg
                         .transition()
                         .duration(param.tileEnteringDuration)
@@ -235,6 +235,14 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                             });
                     }
                 }
+
+                // remove old layers
+                numRenderedTiles++;
+                if (
+                    gvd.animation != param.semanticZoom &&
+                    numRenderedTiles == tileIds.length
+                )
+                    d3.selectAll(viewClass + ".oldlayerg").remove();
             }
         });
     });
@@ -347,6 +355,7 @@ function renderDynamicBoxes(
                         .selectAll("g")
                         .selectAll("*")
                         .filter(function(d) {
+                            if (!param.deltaBox) return true;
                             if (d == null) return false; // requiring all non-def stuff to be bound to data
                             if (
                                 +d.maxx < x ||
@@ -448,6 +457,10 @@ function renderDynamicBoxes(
                     }
                 }
 
+                // remove old layers
+                if (gvd.animation != param.semanticZoom)
+                    d3.selectAll(viewClass + ".oldlayerg").remove();
+
                 // modify global var
                 gvd.boxH.push(response.boxH);
                 gvd.boxW.push(response.boxW);
@@ -501,42 +514,6 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
     var optionalArgs = getOptionalArgs(viewId);
     optionalArgs["viewportX"] = viewportX;
     optionalArgs["viewportY"] = viewportY;
-
-    // set viewboxes
-    d3.selectAll(viewClass + ".mainsvg:not(.static)").attr(
-        "viewBox",
-        viewportX + " " + viewportY + " " + vpW + " " + vpH
-    );
-
-    // check if there is literal zooming going on
-    // if yes, rescale the objects
-    // do it both here and upon data return
-    if (d3.event != null && d3.event.transform.k != 1) {
-        // rescale only if there is zoom
-        var numLayer = gvd.curCanvas.layers.length;
-        for (var i = 0; i < numLayer; i++) {
-            if (!gvd.curCanvas.layers[i].retainSizeZoom) continue;
-            // check if this is just a pan
-            objectSelection = d3
-                .selectAll(viewClass + ".layerg.layer" + i)
-                .selectAll(".lowestsvg:not(.static)")
-                .selectAll("g")
-                .selectAll("*");
-            if (!objectSelection.empty()) {
-                var transformStr = objectSelection.attr("transform");
-                var match = /.*scale\(([\d.]+), ([\d.]+)\)/g.exec(transformStr);
-                var scaleX = parseFloat(match[1]);
-                var scaleY = parseFloat(match[2]);
-            }
-            if (
-                Math.abs(Math.max(scaleX, scaleY) * d3.event.transform.k - 1) >
-                param.eps
-            )
-                objectSelection.each(function() {
-                    zoomRescale(viewId, this);
-                });
-        }
-    }
 
     // fetch data
     if (param.fetchingScheme == "tiling")
