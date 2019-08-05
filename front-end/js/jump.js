@@ -208,11 +208,21 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
                 return d == tuple;
             })
             .each(function() {
-                var bbox = this.getBBox();
-                minx = Math.min(minx, bbox.x);
-                miny = Math.min(miny, bbox.y);
-                maxx = Math.max(maxx, bbox.x + bbox.width);
-                maxy = Math.max(maxy, bbox.y + bbox.height);
+                var ancestor = this.parentElement;
+                while (!ancestor.classList.contains("maing"))
+                    ancestor = ancestor.parentElement;
+                var thisbox = this.getBoundingClientRect();
+                var ancestorbox = ancestor.getBoundingClientRect();
+                minx = Math.min(minx, thisbox.x - ancestorbox.x);
+                miny = Math.min(miny, thisbox.y - ancestorbox.y);
+                maxx = Math.max(
+                    maxx,
+                    thisbox.x - ancestorbox.x + thisbox.width
+                );
+                maxy = Math.max(
+                    maxy,
+                    thisbox.y - ancestorbox.y + thisbox.height
+                );
             });
     } else {
         minx = +tuple.cx - tupleWidth / 2.0;
@@ -497,7 +507,7 @@ function registerJumps(viewId, svg, layerId) {
         d3.select(this).style("cursor", "zoom-in");
 
         // register onclick listener
-        d3.select(this).on("click", function(d) {
+        d3.select(this).on("click.popover", function(d) {
             // stop the click event from propagating up
             d3.event.stopPropagation();
 

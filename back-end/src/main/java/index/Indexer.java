@@ -45,7 +45,10 @@ public abstract class Indexer implements Serializable {
                     boolean isCitus = (Config.database == Config.Database.CITUS);
                     if (c.getLayers().get(layerId).isAutoDDLayer())
                         indexer = AutoDDInMemoryIndexer.getInstance();
-                    else if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
+                    else if (c.getLayers().get(layerId).isHierarchicalLayer()) {
+                        System.out.println("isHierarchicalLayer...!!!");
+                        indexer = PsqlHierarchicalIndexer.getInstance(isCitus);
+                    } else if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
                         indexer = PsqlSpatialIndexer.getInstance(isCitus);
                     else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
                         indexer = PsqlTileIndexer.getInstance(isCitus);

@@ -50,7 +50,8 @@ public class Config {
         POSTGIS_SPATIAL_INDEX,
         PSQL_NATIVEBOX_INDEX,
         PSQL_NATIVECUBE_INDEX,
-        MYSQL_SPATIAL_INDEX
+        MYSQL_SPATIAL_INDEX,
+        PSQL_HIERARCHY_INDEX
     };
 
     public static IndexingScheme indexingScheme = IndexingScheme.PSQL_NATIVEBOX_INDEX;

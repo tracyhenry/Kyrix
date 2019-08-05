@@ -2,6 +2,7 @@ package project;
 
 import index.Indexer;
 import java.io.Serializable;
+import java.util.ArrayList;
 
 /** Created by wenbo on 4/3/18. */
 public class Layer implements Serializable {
@@ -12,7 +13,9 @@ public class Layer implements Serializable {
     private String rendering;
     private Indexer indexer;
     private boolean isAutoDDLayer;
+    private boolean isHierarchicalLayer;
     private String autoDDId;
+    private ArrayList<ArrayList<String>> data;
     private boolean retainSizeZoom;
 
     public Transform getTransform() {
@@ -47,6 +50,14 @@ public class Layer implements Serializable {
         return autoDDId;
     }
 
+    public ArrayList<ArrayList<String>> getData() {
+        return data;
+    }
+
+    public boolean isHierarchicalLayer() {
+        return isHierarchicalLayer;
+    }
+
     public boolean isRetainSizeZoom() {
         return retainSizeZoom;
     }
@@ -77,6 +88,10 @@ public class Layer implements Serializable {
                 + isAutoDDLayer
                 + ", autoDDId="
                 + autoDDId
+                // + ", data="
+                // + data
+                + ", isHierarchicalLayer="
+                + isHierarchicalLayer
                 + ", retainSizeZoom="
                 + retainSizeZoom
                 + '}';
