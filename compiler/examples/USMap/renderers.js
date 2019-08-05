@@ -1,6 +1,6 @@
 var renderingParams = {
     stateMapScale: 2000,
-    countyMapScale: 10000,
+    countyMapScale: 12000,
     stateScaleRange: 550,
     stateScaleStep: 70,
     countyScaleRange: 2000,
