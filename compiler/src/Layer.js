@@ -19,6 +19,7 @@ function Layer(transform, isStatic) {
     if (isStatic == null) this.isStatic = false;
     else this.isStatic = isStatic;
     this.isAutoDDLayer = false;
+    this.isHierarchicalLayer = false;
     this.retainSizeZoom = false;
 }
 
@@ -51,6 +52,7 @@ function addPlacement(placement) {
  * @param rendering - a javascript function that adds an <g> element to an existing svg. See spec api for details on input/output.
  */
 function addRenderingFunc(rendering) {
+    console.log("rendering:", rendering);
     if (typeof rendering !== "function")
         throw new Error(
             "Constructing Layer: rendering must be a javascript function."
@@ -76,6 +78,14 @@ function setAutoDDId(autoDDId) {
 }
 
 /**
+ * set isHierarchicalLayer, which tells the backend that this layer should use the autodd indexer
+ * @param isHierarchicalLayer
+ */
+function setIsHierarchical(isHierarchicalLayer) {
+    this.isHierarchicalLayer = isHierarchicalLayer;
+}
+
+/**
  * set retainSizeZoom,
  * @param retainSizeZoom
  */
@@ -89,6 +99,7 @@ Layer.prototype = {
     addRenderingFunc,
     setIsAutoDD,
     setAutoDDId,
+    setIsHierarchical,
     setRetainSizeZoom
 };
 

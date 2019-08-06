@@ -283,6 +283,15 @@ public class PsqlHierarchicalIndexer extends BoundingBoxIndexer {
 
             // get raw row
             ArrayList<String> curRawRow = new ArrayList<>();
+
+            // hack depth
+            int pyramidLevel = c.getPyramidLevel();
+            int depth = Integer.parseInt(hierarchy.get(rowIndex).get(3));
+            if (depth > pyramidLevel + 2) {
+                System.out.println(pyramidLevel + "JUMP!" + depth + hierarchy.get(rowIndex));
+                continue;
+            }
+
             for (int i = 0; i < numColumn; i++) curRawRow.add(hierarchy.get(rowIndex).get(i));
 
             // step 3: run transform function on this tuple

@@ -1,5 +1,6 @@
 // imports
 const fs = require("fs");
+const d3 = require("d3");
 const mysql = require("mysql");
 const psql = require("pg");
 const http = require("http");
@@ -48,7 +49,7 @@ function Project(name, configFile) {
     this.renderingParams = "{}";
 
     // style sheets
-    this.styles = "";
+    this.styles = [];
 
     // pyramids
     this.pyramids = [];
@@ -338,6 +339,149 @@ function addAutoDD(autoDD, args) {
     return this;
 }
 
+/*
+ *
+ */
+function addTreemap(treemap) {
+    // this.addStyles(
+    //     "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    // );
+
+    var root = d3
+        .hierarchy(treemap.data, d => d[treemap.children])
+        // .children((d)=>{return d[treemap.children]})
+        .sum(d => {
+            return d[treemap.value];
+        })
+        .sort(function(a, b) {
+            return b.height - a.height || b.value - a.value;
+        });
+    console.log("root!!!!:", root);
+    var tree_height = root.height;
+
+    var treemapCanvases = [];
+
+    for (var i = 0; i < tree_height - 1; i++) {
+        var zoomFactor = treemap.zoomFactor * (i + 1);
+        var zoomFactor = 2 * (i + 1);
+        // console.log("zoomFactor:", zoomFactor)
+        var tm = d3
+            .treemap()
+            .size([treemap.width, treemap.height])
+            .paddingOuter(3)
+            .paddingTop(19 * 1)
+            .paddingInner(1 * 1)
+            .round(true);
+
+        var cooked = tm(root);
+        // throw new Error("manual stop")
+        // console.log("cooked:", cooked.children[0]);
+
+        var set = cooked.descendants().map(d => {
+            return [
+                d.data[treemap.label],
+                d.parent ? d.parent.data[treemap.label] : "None",
+                d.value,
+                d.depth,
+                d.height,
+                (0.5 * (+d.x0 + d.x1) + treemap.x) * zoomFactor,
+                (0.5 * (+d.y0 + d.y1) + treemap.y) * zoomFactor,
+                (+d.x1 - +d.x0) * zoomFactor,
+                (+d.y1 - +d.y0) * zoomFactor
+            ];
+        });
+
+        var query = "select * from treemap";
+
+        var db = "kyrix";
+        var transform_func = "";
+        var schema = [
+            "label",
+            "parent",
+            "value",
+            "depth",
+            "height",
+            "x",
+            "y",
+            "w",
+            "h"
+        ];
+
+        var transform = new Transform(query, db, transform_func, schema, true);
+        var treemapLayer = new Layer(transform, false);
+
+        treemapLayer.addPlacement(treemap.placement);
+        treemapLayer.addRenderingFunc(treemap.getRenderer());
+        treemapLayer.setIsHierarchical(true);
+        treemapLayer.data = set;
+
+        var treemapRetainLayer = new Layer(transform, false);
+        treemapRetainLayer.addPlacement(treemap.placement);
+        treemapRetainLayer.addRenderingFunc(
+            treemap.getRetainRenderer(zoomFactor)
+        );
+        treemapRetainLayer.setIsHierarchical(true);
+        treemapRetainLayer.setRetainSizeZoom(true);
+        treemapRetainLayer.data = set;
+
+        var treemapCanvas = new Canvas(
+            "treemap_" + i,
+            zoomFactor * (treemap.width + treemap.x),
+            zoomFactor * (treemap.height + treemap.y)
+        );
+        treemapCanvas.pyramidLevel = i;
+
+        treemapCanvas.addLayer(treemapRetainLayer);
+        treemapCanvas.addLayer(treemapLayer);
+        treemapCanvases.push(treemapCanvas);
+        this.addCanvas(treemapCanvas);
+    }
+
+    for (var i = 0; i < treemapCanvases.length - 1; i++) {
+        this.addJump(
+            new Jump(
+                treemapCanvases[i],
+                treemapCanvases[i + 1],
+                "literal_zoom_in"
+            )
+        );
+        this.addJump(
+            new Jump(
+                treemapCanvases[i + 1],
+                treemapCanvases[i],
+                "literal_zoom_out"
+            )
+        );
+    }
+
+    // console.log("set!:", set);
+
+    treemap.renderingParams[treemap.name].tree_height = tree_height;
+
+    this.addStyles(__dirname + "/template-api/css/treemap.css");
+
+    this.addRenderingParams(treemap.renderingParams);
+
+    // logo layer
+
+    // ================== Views ===================
+    var view = new View("treeemap_View", 0, 0, treemap.viewX, treemap.viewY);
+    this.addView(view);
+    this.setInitialStates(
+        view,
+        treemapCanvases[0],
+        treemap.x,
+        treemap.y
+        // {
+        //     layer0: {"OR": [
+        //         {"==":["depth", "0"]},
+        //         {"==":["depth", "1"]},
+        //         {"==":["depth", "2"]}
+        //     ]}
+        // }
+    );
+}
+
 // Add a rendering parameter object
 function addRenderingParams(renderingParams) {
     if (renderingParams == null) return;
@@ -357,12 +501,21 @@ function addRenderingParams(renderingParams) {
 }
 
 // adding a static CSS string
-function addStyles(filepath) {
-    if (filepath == null) return;
-    var rules = fs.readFileSync(filepath).toString();
+function addStyles(styles) {
+    if (!styles || typeof styles != "string") return;
+
+    //match http:// and https://
+    if (styles.match(/https?:\/\//)) {
+        var rules = styles;
+    } else if (styles.match(".css")) {
+        var rules = fs.readFileSync(styles).toString();
+    } else {
+        console.log("STYLES NOT CSS FILE, BUT STRING", styles);
+        var rules = styles;
+    }
 
     // merge with current CSS
-    this.styles += rules;
+    this.styles.push(rules);
 }
 
 /**
@@ -707,6 +860,7 @@ Project.prototype = {
     addJump,
     addStyles,
     addAutoDD,
+    addTreemap,
     addRenderingParams,
     setInitialStates,
     saveProject
