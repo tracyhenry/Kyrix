@@ -11,11 +11,11 @@ function AutoDD(args) {
             "Constructing AutoDD: rendering mode (rendering.mode) missing."
         );
     var allRenderingModes = new Set([
-        "object only",
+        "object",
         "object+clusternum",
+        "circle",
         "circle+object",
-        "circle only",
-        "contour only",
+        "contour",
         "contour+object"
     ]);
     if (!allRenderingModes.has(args.rendering.mode))
@@ -26,7 +26,7 @@ function AutoDD(args) {
     this.circleMaxSize = 70;
     this.contourBandwidth = 30;
     if (
-        args.rendering.mode == "circle only" ||
+        args.rendering.mode == "circle" ||
         args.rendering.mode == "circle+object"
     ) {
         args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
@@ -37,7 +37,7 @@ function AutoDD(args) {
             );
     }
     if (
-        (args.rendering.mode == "object only" ||
+        (args.rendering.mode == "object" ||
             args.rendering.mode == "object+clusternum" ||
             args.rendering.mode == "circle+object" ||
             args.rendering.mode == "contour+object") &&
@@ -47,7 +47,7 @@ function AutoDD(args) {
             "Constructing AutoDD: object renderer (rendering.obj.renderer) missing."
         );
     if (
-        args.rendering.mode == "contour only" ||
+        args.rendering.mode == "contour" ||
         args.rendering.mode == "contour+object"
     ) {
         if (!("roughN" in args.rendering))
@@ -170,7 +170,7 @@ function AutoDD(args) {
             ? args.rendering.obj.overlap
                 ? true
                 : false
-            : this.renderingMode == "contour only" ||
+            : this.renderingMode == "contour" ||
               this.renderingMode == "contour+object"
             ? true
             : false;
@@ -422,7 +422,7 @@ function getLayerRenderer() {
 
     var renderFuncBody;
     if (
-        this.renderingMode == "object only" ||
+        this.renderingMode == "object" ||
         this.renderingMode == "object+clusternum"
     ) {
         renderFuncBody =
@@ -432,7 +432,7 @@ function getLayerRenderer() {
                 renderObjectClusterNumBody
             );
     } else if (
-        this.renderingMode == "circle only" ||
+        this.renderingMode == "circle" ||
         this.renderingMode == "circle+object"
     ) {
         // render circle
@@ -452,7 +452,7 @@ function getLayerRenderer() {
                 this.renderingMode == "circle+object"
             );
     } else if (
-        this.renderingMode == "contour only" ||
+        this.renderingMode == "contour" ||
         this.renderingMode == "contour+object"
     ) {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)

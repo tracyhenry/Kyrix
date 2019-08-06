@@ -74,9 +74,9 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
         // compute cluster number
         if (autoDD.getRenderingMode().equals("object+clusternum")
-                || autoDD.getRenderingMode().equals("circle only")
+                || autoDD.getRenderingMode().equals("circle")
                 || autoDD.getRenderingMode().equals("circle+object")
-                || autoDD.getRenderingMode().equals("contour only")
+                || autoDD.getRenderingMode().equals("contour")
                 || autoDD.getRenderingMode().equals("contour+object")) {
 
             // a fake bottom level for non-sampled objects
