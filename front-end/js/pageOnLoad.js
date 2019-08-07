@@ -190,7 +190,7 @@ function pageOnLoad(serverAddr) {
                 gvd.viewportHeight = viewSpecs[i].height;
                 gvd.curCanvasId = viewSpecs[i].initialCanvasId;
                 gvd.renderData = null;
-                gvd.pendingBoxRequest = false;
+                gvd.pendingBoxRequest = null;
                 gvd.curCanvas = null;
                 gvd.curJump = null;
                 gvd.curStaticData = null;

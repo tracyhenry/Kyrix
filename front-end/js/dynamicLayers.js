@@ -200,7 +200,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
 
                     // it's possible when the tile data is delayed
                     // and this tile is already removed
-                    if (tileSvg.empty()) return;
+                    if (tileSvg.empty()) break;
 
                     // draw current layer
                     var optionalArgsWithTileXY = Object.assign(
@@ -214,10 +214,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                         renderData[i],
                         optionalArgsWithTileXY
                     );
-                    tileSvg
-                        .transition()
-                        .duration(param.tileEnteringDuration)
-                        .style("opacity", 1.0);
+                    tileSvg.style("opacity", 1.0);
 
                     // register jumps
                     if (!globalVar.animation) registerJumps(viewId, tileSvg, i);
@@ -260,7 +257,7 @@ function renderDynamicBoxes(
     var viewClass = ".view_" + viewId;
 
     // check if there is pending box requests
-    if (gvd.pendingBoxRequest) return;
+    if (gvd.pendingBoxRequest == gvd.curCanvasId) return;
 
     // check if the user has moved outside the current box
     var cBoxX = gvd.boxX[gvd.boxX.length - 1],
@@ -316,7 +313,7 @@ function renderDynamicBoxes(
             postData += "&canvasw=" + gvd.curCanvas.w;
         if (gvd.curCanvas.hSql.length > 0)
             postData += "&canvash=" + gvd.curCanvas.h;
-        gvd.pendingBoxRequest = true;
+        gvd.pendingBoxRequest = gvd.curCanvasId;
         $.ajax({
             type: "GET",
             url: globalVar.serverAddr + "/dbox",
@@ -331,10 +328,7 @@ function renderDynamicBoxes(
 
                 // check if this response is already outdated
                 // TODO: only checking canvasID might not be sufficient
-                if (canvasId != gvd.curCanvasId) {
-                    gvd.pendingBoxRequest = false;
-                    return;
-                }
+                if (canvasId != gvd.pendingBoxRequest) return;
 
                 // loop over every layer to render
                 var numLayers = gvd.curCanvas.layers.length;
@@ -466,7 +460,7 @@ function renderDynamicBoxes(
                 gvd.boxW.push(response.boxW);
                 gvd.boxX.push(x);
                 gvd.boxY.push(y);
-                gvd.pendingBoxRequest = false;
+                gvd.pendingBoxRequest = null;
 
                 // refresh dynamic layers again while panning (#37)
                 if (!gvd.animation) {

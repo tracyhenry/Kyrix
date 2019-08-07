@@ -370,7 +370,7 @@ function load(predArray, newVpX, newVpY, jump) {
     gvd.initialViewportX = newVpX;
     gvd.initialViewportY = newVpY;
     gvd.renderData = null;
-    gvd.pendingBoxRequest = false;
+    gvd.pendingBoxRequest = null;
     gvd.history = [];
 
     // pre animation
