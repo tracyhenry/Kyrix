@@ -203,16 +203,14 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     if (tileSvg.empty()) return;
 
                     // draw current layer
-                    var optionalArgsWithTileXY = Object.assign(
-                        {},
-                        optionalArgs
-                    );
-                    optionalArgsWithTileXY["tileX"] = x;
-                    optionalArgsWithTileXY["tileY"] = y;
+                    var optionalArgsMore = Object.assign({}, optionalArgs);
+                    optionalArgsMore["tileX"] = x;
+                    optionalArgsMore["tileY"] = y;
+                    optionalArgsMore["autoDDId"] = curLayer.autoDDId;
                     curLayer.rendering.parseFunction()(
                         tileSvg,
                         renderData[i],
-                        optionalArgsWithTileXY
+                        optionalArgsMore
                     );
                     tileSvg
                         .transition()
@@ -426,18 +424,16 @@ function renderDynamicBoxes(
                     gvd.renderData[i] = newLayerData;
 
                     // draw current layer
-                    var optionalArgsWithBoxWHXY = Object.assign(
-                        {},
-                        optionalArgs
-                    );
-                    optionalArgsWithBoxWHXY["boxX"] = x;
-                    optionalArgsWithBoxWHXY["boxY"] = y;
-                    optionalArgsWithBoxWHXY["boxW"] = response.boxW;
-                    optionalArgsWithBoxWHXY["boxH"] = response.boxH;
+                    var optionalArgsMore = Object.assign({}, optionalArgs);
+                    optionalArgsMore["boxX"] = x;
+                    optionalArgsMore["boxY"] = y;
+                    optionalArgsMore["boxW"] = response.boxW;
+                    optionalArgsMore["boxH"] = response.boxH;
+                    optionalArgsMore["autoDDId"] = curLayer.autoDDId;
                     curLayer.rendering.parseFunction()(
                         dboxSvg,
                         renderData[i],
-                        optionalArgsWithBoxWHXY
+                        optionalArgsMore
                     );
 
                     // register jumps

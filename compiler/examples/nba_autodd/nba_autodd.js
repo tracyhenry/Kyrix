@@ -29,10 +29,11 @@ var autoDD = {
         range: [69, 148]
     },
     rendering: {
-        mode: "contour+object",
+        //        mode: "contour+object",
+        mode: "heatmap",
         roughN: 999,
         axis: true,
-        contourColorScheme: "interpolateBlues",
+        //        contourColorScheme: "interpolateBlues",
         obj: {
             renderer: renderers.teamTimelineRendering,
             bboxW: 162,

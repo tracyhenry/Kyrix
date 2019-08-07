@@ -249,8 +249,10 @@ function addAutoDD(autoDD, args) {
 
         // set retainSizeZoom
         curLayer.setRetainSizeZoom(
-            autoDD.renderingMode == "contour only" ||
-                autoDD.renderingMode == "contour+object"
+            autoDD.renderingMode == "contour" ||
+                autoDD.renderingMode == "contour+object" ||
+                autoDD.renderingMode == "heatmap" ||
+                autoDD.renderingMode == "heatmap+object"
                 ? false
                 : true
         );
