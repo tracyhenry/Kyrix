@@ -69,7 +69,7 @@ function AutoDD(args) {
         // as what's implemented by d3-contour
         else
             args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
-                this.heatmapRadius * 2;
+                this.heatmapRadius * 2 + 1;
     }
 
     // check required args
@@ -535,7 +535,7 @@ function getLayerRenderer() {
         var gpu = new GPU({canvas, webGl: gl});
         const render = gpu
             .createKernel(function(imageData) {
-                var alpha =
+                const alpha =
                     imageData[
                         ((this.constants.height - this.thread.y) *
                             this.constants.width +
@@ -543,7 +543,7 @@ function getLayerRenderer() {
                             4 +
                             3
                     ];
-                var rgb = getColor(alpha / 255.0);
+                const rgb = getColor(alpha / 255.0);
                 this.color(
                     rgb[0] / 255.0,
                     rgb[1] / 255.0,

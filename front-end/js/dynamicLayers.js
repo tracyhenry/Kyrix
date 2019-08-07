@@ -200,7 +200,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
 
                     // it's possible when the tile data is delayed
                     // and this tile is already removed
-                    if (tileSvg.empty()) return;
+                    if (tileSvg.empty()) break;
 
                     // draw current layer
                     var optionalArgsMore = Object.assign({}, optionalArgs);
