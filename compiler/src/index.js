@@ -356,21 +356,22 @@ function addTreemap(treemap) {
         .sort(function(a, b) {
             return b.height - a.height || b.value - a.value;
         });
-    console.log("root!!!!:", root);
+    // console.log("root!!!!:", root);
     var tree_height = root.height;
 
     var treemapCanvases = [];
 
     for (var i = 0; i < tree_height - 1; i++) {
-        var zoomFactor = treemap.zoomFactor * (i + 1);
-        var zoomFactor = 2 * (i + 1);
-        // console.log("zoomFactor:", zoomFactor)
+        var zoomFactor = Math.pow(treemap.zoomFactor, i);
+        // var zoomFactor = Math.pow(2, i) ;
+        // var zoomFactor = 2 * (i+1);
+        console.log("zoomFactor!!!!!!!!:", zoomFactor);
         var tm = d3
             .treemap()
             .size([treemap.width, treemap.height])
-            .paddingOuter(3)
-            .paddingTop(19 * 1)
-            .paddingInner(1 * 1)
+            .paddingOuter(treemap.paddingOuter)
+            .paddingTop(treemap.paddingTop)
+            .paddingInner(treemap.paddingInner)
             .round(true);
 
         var cooked = tm(root);
@@ -380,7 +381,7 @@ function addTreemap(treemap) {
         var set = cooked.descendants().map(d => {
             return [
                 d.data[treemap.label],
-                d.parent ? d.parent.data[treemap.label] : "None",
+                d.parent ? d.parent.data[treemap.label] : "none",
                 d.value,
                 d.depth,
                 d.height,
@@ -465,7 +466,17 @@ function addTreemap(treemap) {
     // logo layer
 
     // ================== Views ===================
-    var view = new View("treeemap_View", 0, 0, treemap.viewX, treemap.viewY);
+    var view = new View("treeemap_View", 0, 0, treemap.viewW, treemap.viewH);
+
+    if (treemap.x < 0 || treemap.x + treemap.width < treemap.viewW)
+        throw new Error(
+            "Constructing Treemap: viewX out of range. canvas cannot be smaller than view"
+        );
+    if (treemap.y < 0 || treemap.y + treemap.height < treemap.viewH)
+        throw new Error(
+            "Constructing Treemap: viewY out of range. canvas cannot be smaller than view"
+        );
+
     this.addView(view);
     this.setInitialStates(
         view,

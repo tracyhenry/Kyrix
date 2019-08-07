@@ -46,46 +46,6 @@ function Treemap(args) {
     var id = 0;
     var set = [];
 
-    function deepTraversal(node, depth, parent_id) {
-        node.id = id++;
-        if (!node[children]) {
-            index =
-                set.push([
-                    node.id,
-                    node[label],
-                    parent_id,
-                    node[value],
-                    depth,
-                    0
-                ]) - 1;
-            // set[index].height = 0;
-            return index;
-        } else {
-            var indices = [];
-            // for (var i = node[children].length - 1; i >= 0; i--) {
-            //  indices.push(deepTraversal(node[children][i], depth+1, node.id))
-            // }
-            node[children].forEach(item => {
-                indices.push(deepTraversal(item, depth + 1, node.id));
-            });
-            var sum = 0;
-            var maxH = 0;
-            indices.forEach(i => {
-                sum += set[i][3];
-                if (maxH < set[i][5]) maxH = set[i][5];
-            });
-            index =
-                set.push([
-                    node.id,
-                    node[label],
-                    parent_id,
-                    sum,
-                    depth,
-                    maxH + 1
-                ]) - 1;
-            return index;
-        }
-    }
     // deepTraversal(data, 0, -1);
 
     // console.log(d3.hierarchy(data))
@@ -100,13 +60,22 @@ function Treemap(args) {
 
     this.x = args.x || 5;
     this.y = args.y || 5;
-    this.width = args.width || 500;
-    this.height = args.height || 500;
+    this.width = args.width || 1200;
+    this.height = args.height || 800;
     this.padding = args.padding || 5;
     this.children = children;
     this.label = label;
     this.value = value;
-    this.zoomFactor = 2;
+
+    this.zoomFactor = args.zoomFactor || 1.5;
+
+    // padding
+    this.paddingOuter = args.paddingOuter || 5;
+    this.paddingTop = args.paddingTop || 30;
+    this.paddingInner = args.paddingInner || 1;
+
+    this.viewW = args.viewW || 1200;
+    this.viewH = args.viewH || 700;
 
     // this.placement = {
     //     centroid_x: "con:" + (+this.x + +this.width * 0.5),
@@ -124,12 +93,10 @@ function Treemap(args) {
 
     this.renderingParams = {
         [this.name]: {
-            colorInterpolator: args.colorInterpolator || "Viridis"
+            colorInterpolator: args.colorInterpolator || "Warm"
+            // colorInterpolator: args.colorInterpolator || "Viridis"
         }
     };
-
-    this.viewX = args.viewX || 1000;
-    this.viewY = args.viewY || 1000;
 }
 
 function getTransformFunc(pie_name) {
@@ -174,6 +141,16 @@ function getRenderer() {
         var color = d3
             .scaleSequential(d3["interpolate" + params.colorInterpolator])
             .domain([0, params.tree_height]);
+        // .domain(['a'.charCodeAt(0) , 'z'.charCodeAt(0)]);
+
+        var opacity = d3
+            .scaleLinear()
+            .domain(d3.extent(d3.values(data.map(d => +d.value))))
+            .range([0.5, 1]);
+        // console.log(color('a'))
+        // console.log(color('abc'[1]))
+
+        // var color =
 
         data.sort((a, b) => {
             return b.height - a.height || b.value - a.value;
@@ -186,12 +163,25 @@ function getRenderer() {
             .classed("treemap node", true)
             .attr("transform", d => `translate(${d.minx},${d.miny})`);
 
+        var clipPaths = g
+            .selectAll("clipPath")
+            .data(data)
+            .join("clipPath")
+            .attr("id", d => d.label + "_clip")
+            .append("rect")
+            .attr("x", d => d.minx)
+            .attr("y", d => d.miny)
+            .attr("width", d => d.w)
+            .attr("height", d => d.h);
+
         var rects = nodes
             .append("rect")
             .attr("width", d => d.w)
             .attr("height", d => d.h)
             // .style("stroke", "black")
-            .style("fill", d => color(d.depth));
+            .style("fill", d => color(d.depth))
+            // .style("fill", (d)=> color(d.parent.toLowerCase().charCodeAt(0)))
+            .style("opacity", d => opacity(+d.value));
         // .style("fill", "#69b3a2");
 
         // var labels = nodes.append("text")
@@ -270,18 +260,30 @@ function getRetainRenderer(zoomFactor) {
         data.sort((a, b) => {
             return b.height - a.height || b.value - a.value;
         });
-        console.log("retain!!!:", data);
+        // console.log("retain!!!:", data);
 
-        var labels = g
-            .selectAll("text")
+        g.selectAll("text.name")
             .data(data)
             .join("text")
-            .classed("node label", true)
+            .classed("node name", true)
+            .attr("clip-path", d => `url(#${d.label}_clip)`)
             .attr("x", d => +d.minx)
             .attr("y", d => +d.miny)
-            .attr("dy", 15)
+            .attr("dy", 13)
             .attr("dx", 3)
-            .text(d => d.label + "\n" + d.value);
+            .text(d => d.label);
+        // labels
+        //     .append("tspan")
+        g.selectAll("text.value")
+            .data(data)
+            .join("text")
+            .classed("node value", true)
+            .attr("clip-path", d => `url(#${d.label}_clip)`)
+            .attr("x", d => +d.minx)
+            .attr("y", d => +d.miny)
+            .attr("dy", 28)
+            .attr("dx", 3)
+            .text(d => d.value);
     }
 }
 function getBodyStringOfFunction(func) {

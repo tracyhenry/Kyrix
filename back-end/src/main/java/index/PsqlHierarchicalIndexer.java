@@ -285,10 +285,14 @@ public class PsqlHierarchicalIndexer extends BoundingBoxIndexer {
             ArrayList<String> curRawRow = new ArrayList<>();
 
             // hack depth
+            // ["label", "parent", "value", "depth", "height", "x", "y", "w", "h"];
             int pyramidLevel = c.getPyramidLevel();
             int depth = Integer.parseInt(hierarchy.get(rowIndex).get(3));
-            if (depth > pyramidLevel + 2) {
-                System.out.println(pyramidLevel + "JUMP!" + depth + hierarchy.get(rowIndex));
+            int w = Integer.parseInt(hierarchy.get(rowIndex).get(7));
+            int h = Integer.parseInt(hierarchy.get(rowIndex).get(8));
+
+            if (w < 50 || h < 50) {
+                System.out.println(pyramidLevel + "JUMP!" + hierarchy.get(rowIndex));
                 continue;
             }
 
