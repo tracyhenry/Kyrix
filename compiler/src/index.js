@@ -354,14 +354,15 @@ function addTreemap(treemap) {
             return d[treemap.value];
         })
         .sort(function(a, b) {
-            return b.height - a.height || b.value - a.value;
+            return a.depth - b.depth || b.value - a.value;
         });
     // console.log("root!!!!:", root);
     var tree_height = root.height;
 
     var treemapCanvases = [];
+    var flag_no = true;
 
-    for (var i = 0; i < tree_height - 1; i++) {
+    for (var i = 0; flag_no; i++) {
         var zoomFactor = Math.pow(treemap.zoomFactor, i);
         // var zoomFactor = Math.pow(2, i) ;
         // var zoomFactor = 2 * (i+1);
@@ -392,6 +393,12 @@ function addTreemap(treemap) {
             ];
         });
 
+        flag_no = !set.every(d => {
+            // console.log("width:", d[5], "hea")
+            // console.log("d", d)
+            return !(d[7] < 30 && d[8] < 30);
+        });
+        // throw new Error("manual");
         var query = "select * from treemap";
 
         var db = "kyrix";

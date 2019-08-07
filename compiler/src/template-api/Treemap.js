@@ -75,7 +75,7 @@ function Treemap(args) {
     this.paddingInner = args.paddingInner || 1;
 
     this.viewW = args.viewW || 1200;
-    this.viewH = args.viewH || 700;
+    this.viewH = args.viewH || 800;
 
     // this.placement = {
     //     centroid_x: "con:" + (+this.x + +this.width * 0.5),
@@ -145,7 +145,7 @@ function getRenderer() {
 
         var opacity = d3
             .scaleLinear()
-            .domain(d3.extent(d3.values(data.map(d => +d.value))))
+            .domain(0, d3.extent(d3.values(data.map(d => +d.value)))[1])
             .range([0.5, 1]);
         // console.log(color('a'))
         // console.log(color('abc'[1]))
@@ -181,7 +181,8 @@ function getRenderer() {
             // .style("stroke", "black")
             .style("fill", d => color(d.depth))
             // .style("fill", (d)=> color(d.parent.toLowerCase().charCodeAt(0)))
-            .style("opacity", d => opacity(+d.value));
+            .style("opacity", 0.6);
+        // .style("opacity", d => opacity(+d.value));
         // .style("fill", "#69b3a2");
 
         // var labels = nodes.append("text")
@@ -258,7 +259,7 @@ function getRetainRenderer(zoomFactor) {
             d.cy = +d.miny;
         });
         data.sort((a, b) => {
-            return b.height - a.height || b.value - a.value;
+            return a.depth - b.depth || b.value - a.value;
         });
         // console.log("retain!!!:", data);
 

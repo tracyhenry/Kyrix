@@ -291,7 +291,7 @@ public class PsqlHierarchicalIndexer extends BoundingBoxIndexer {
             int w = Integer.parseInt(hierarchy.get(rowIndex).get(7));
             int h = Integer.parseInt(hierarchy.get(rowIndex).get(8));
 
-            if (w < 50 || h < 50) {
+            if (w < 30 || h < 30) {
                 System.out.println(pyramidLevel + "JUMP!" + hierarchy.get(rowIndex));
                 continue;
             }
