@@ -165,6 +165,8 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                 var response = JSON.parse(data);
                 var x = response.minx;
                 var y = response.miny;
+                var canvasId = response.canvasId;
+                if (canvasId != gvd.curCanvasId) return;
 
                 // remove tuples outside the viewport
                 // doing this because some backend indexers use compression
