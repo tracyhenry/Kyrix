@@ -27,7 +27,18 @@ var table_args = {
     table: table,
     fields: fields,
     db: db,
-    heads: "auto"
+    width: {
+        home_team: 150,
+        away_team: 150
+    },
+    // heads: "auto",
+    heads: {
+        height: 40,
+        names: {
+            home_team: "Home Team",
+            away_team: "Away Team"
+        }
+    }
     // order_by: "game_id",
     // order: "desc"
 };

@@ -380,7 +380,7 @@ function addTable(table, args) {
     if (args.canvas == "new" || !args.canvas) {
         console.log(table.width, table.height);
         // how to avoid hard coding the height?
-        var canvas = new Canvas(table.name, Math.ceil(table.width), 2000);
+        var canvas = new Canvas(table.name, Math.ceil(table.sum_width), 2000);
         this.addCanvas(canvas);
     } else if (!args.canvas instanceof Canvas) {
         throw new Error(
@@ -407,12 +407,12 @@ function addTable(table, args) {
     canvas.addLayer(tableLayer);
 
     if (args.view == "new" || !args.view) {
-        console.log(Math.floor(table.width));
+        console.log(Math.floor(table.sum_width));
         var tableView = new View(
             table.name + "_view",
             0,
             0,
-            Math.floor(table.width * 0.8),
+            Math.floor(table.sum_width * 0.8),
             700
         );
         this.addView(tableView);

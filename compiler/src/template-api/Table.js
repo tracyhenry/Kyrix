@@ -53,6 +53,7 @@ function Table(args) {
 
     var sum_width = 0;
     var centroid_x = 0;
+    var key_index = 0;
     if (typeof args.width === "number") {
         sum_width = args.width;
     } else if (typeof args.width === "object") {
@@ -70,42 +71,96 @@ function Table(args) {
                 }
                 sum_width += args.width[index];
             }
-        } else
-            throw new Error(
-                "Constructing Table: args.width must be number or array"
-            );
+        } else {
+            var widths = new Array(args.fields.length).fill(100);
+            for (var key in args.width) {
+                if (typeof key !== "string")
+                    throw new Error(
+                        "Constructing Table: width's key must be string"
+                    );
+                if (typeof args.width[key] !== "number")
+                    throw new Error(
+                        "Constructing Table: width's value must be number"
+                    );
+                key_index = args.fields.indexOf(key);
+                if (key_index >= 0) {
+                    widths[key_index] = args.width[key];
+                } else {
+                    throw new Error(
+                        "Constructing Table: width field not given in fields:",
+                        key
+                    );
+                }
+            }
+            sum_width = widths.reduce((prev, curr) => prev + curr, 0);
+        }
     } else {
         console.log("Constructing Table: DEFAULT WIDTH");
         sum_width = args.fields.length * 100;
     }
     centroid_x = this.x + sum_width / 2;
-    this.width = sum_width;
+    this.width = widths || sum_width;
+    this.sum_width = sum_width;
 
     var th_args = args.heads;
+
     if (!th_args) {
         this.heads = {
-            th_h: 0,
+            height: 0,
             names: []
         };
     } else if (th_args == "auto") {
         this.heads = {
-            th_h: this.cell_h,
+            height: this.cell_h,
             names: args.fields
         };
-    } else if (!("th_h" in th_args || "names" in th_args)) {
-        throw new Error("Constructing Table: in complete heading definition");
-    } else if (typeof th_args.th_h !== "number") {
-        throw new Error("Constructing Table: heading height must be number");
-    } else if (
-        typeof th_args.names !== "object" ||
-        th_args.names.length != args.fields.length
-    ) {
-        throw new Error(
-            "Constructing Table: fields and heads length not equal"
-        );
-    } else if (th_args.th_h <= 0) {
-        throw new Error("Constructing Table: heading height must be positive");
     } else {
+        th_args.height = args.heads.height || this.cell_h;
+        th_args.names = th_args.names || args.fields;
+        if (typeof th_args.height !== "number")
+            throw new Error(
+                "Constructing Table: heading height must be number"
+            );
+        if (typeof th_args.names !== "object")
+            throw new Error(
+                "Constructing Table: heading names must be an object"
+            );
+        if (
+            th_args.names.length != args.fields.length &&
+            Array.isArray(th_args.names)
+        )
+            throw new Error(
+                "Constructing Table: fields and heads length not equal"
+            );
+        if (th_args.height <= 0)
+            throw new Error(
+                "Constructing Table: heading height must be positive"
+            );
+
+        // deep copy of args.fields
+        if (!Array.isArray(args.heads.names)) {
+            var [...th_names] = args.fields;
+            for (var key in args.heads.names) {
+                if (typeof key !== "string")
+                    throw new Error(
+                        "Constructing Table: heads.names's key must be string"
+                    );
+                if (typeof args.heads.names[key] !== "string")
+                    throw new Error(
+                        "Constructing Table: heads.names's value must be string"
+                    );
+                key_index = args.fields.indexOf(key);
+                if (key_index >= 0) {
+                    th_names[key_index] = args.heads.names[key];
+                } else {
+                    throw new Error(
+                        "Constructing Table: heads.name field not given in fields:",
+                        key
+                    );
+                }
+            }
+            th_args.names = th_names;
+        }
         this.heads = th_args;
     }
 
@@ -185,10 +240,10 @@ function getTableTransformFunc() {
             ret.push(row[i]);
         }
         ret.push(row[args.fields.length]);
-        var th_h = Number(args.heads.th_h) || 0;
+        var head_height = Number(args.heads.height) || 0;
 
         var centroid_y =
-            th_h +
+            head_height +
             Number(args.y) +
             Number(args.cell_h) *
                 Number(parseInt(row[args.fields.length]) - 0.5);
@@ -207,7 +262,6 @@ function getTableRenderer() {
     return new Function("svg", "data", "rend_args", renderFuncBody);
 
     function renderer(svg, data, rend_args) {
-        console.log("raw:", data);
         var table_params = rend_args.renderingParams["REPLACE_ME_table_name"];
         var fields = table_params.fields;
         var g = svg.append("g").attr("id", "gTable");
@@ -231,7 +285,7 @@ function getTableRenderer() {
         var th_X = cell_X;
         var th_Y = y;
         var th_W = cell_W;
-        var th_H = th_params.th_h;
+        var th_H = th_params.height || 50;
         var th_Names = th_params.names || fields;
 
         var table = g
