@@ -61,6 +61,14 @@ function textwrap(text, width) {
     });
 }
 
+function getBodyStringOfFunction(func) {
+    var funcStr = func.toString();
+    const bodyStart = funcStr.indexOf("{") + 1;
+    const bodyEnd = funcStr.lastIndexOf("}");
+    return "\n" + funcStr.substring(bodyStart, bodyEnd) + "\n";
+}
+
 module.exports = {
-    textwrap
+    textwrap,
+    getBodyStringOfFunction
 };

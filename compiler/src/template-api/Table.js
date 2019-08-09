@@ -1,5 +1,5 @@
-const Transform = require("../Transform").Transform;
-const Layer = require("../Layer").Layer;
+const getBodyStringOfFunction = require("./Renderers").getBodyStringOfFunction;
+
 /*
  * Constructor of a table
  * @param args
@@ -289,13 +289,6 @@ function getTableRenderer() {
                 .attr("dy", "0.5em");
         }
     }
-}
-
-function getBodyStringOfFunction(func) {
-    var funcStr = func.toString();
-    const bodyStart = funcStr.indexOf("{") + 1;
-    const bodyEnd = funcStr.lastIndexOf("}");
-    return "\n" + funcStr.substring(bodyStart, bodyEnd) + "\n";
 }
 
 Table.prototype = {

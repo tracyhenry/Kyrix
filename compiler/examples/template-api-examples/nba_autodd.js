@@ -1,12 +1,12 @@
 // libraries
-const Project = require("../../../src/index").Project;
-const AutoDD = require("../../../src/template-api/AutoDD").AutoDD;
-const renderers = require("../../nba/renderers");
+const Project = require("../../src/index").Project;
+const AutoDD = require("../../src/template-api/AutoDD").AutoDD;
+const renderers = require("../nba/renderers");
 
 // construct a project
-var p = new Project("nba_autodd", "../../../../config.txt");
+var p = new Project("nba_autodd", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
-p.addStyles("../../nba/nba.css");
+p.addStyles("../nba/nba.css");
 
 // set up auto drill down
 var query =
