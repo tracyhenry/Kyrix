@@ -11,7 +11,7 @@ function Table(args) {
     if (args == null) args = {};
 
     // check required args
-    var requiredArgs = ["name", "db", "fields"];
+    var requiredArgs = ["table", "db", "fields"];
     var requiredArgsTypes = ["string", "string", "object"];
     for (var i = 0; i < requiredArgs.length; i++) {
         if (!(requiredArgs[i] in args))
@@ -34,25 +34,22 @@ function Table(args) {
                         " cannot be an empty string."
                 );
     }
+    var rand = Math.random()
+        .toString(36)
+        .substr(2)
+        .slice(0, 5);
 
-    var table_name = "table_" + args.name;
-
-    var transform_func = getTableTransformFunc(table_name);
+    this.name = "kyrix_table_" + rand;
 
     // schema and query first for buiding layer
-    var schema = args.fields.concat(["rn", "y"]);
-
-    var query = args.query || genQuery();
-
-    var transform = new Transform(query, args.db, transform_func, schema, true);
-
-    Layer.call(this, transform, false);
+    this.query = args.query || genQuery();
+    this.schema = args.fields.concat(["rn", "y"]);
+    this.db = args.db;
 
     // TODO: check the type of arguments
     this.cell_h = args.cell_h || 40;
     this.x = args.x || 0;
     this.y = args.y || 0;
-    this.db = args.db;
 
     var sum_width = 0;
     var centroid_x = 0;
@@ -104,8 +101,7 @@ function Table(args) {
     }
 
     var tableRenderingParams = {
-        // table_name: {
-        [table_name]: {
+        [this.name]: {
             x: this.x,
             y: this.y,
             heads: this.heads,
@@ -117,17 +113,12 @@ function Table(args) {
 
     this.renderingParams = tableRenderingParams;
 
-    var tablePlacement = {
+    this.placement = {
         centroid_x: "con:" + centroid_x,
         centroid_y: "col:y",
         width: "con:" + sum_width,
         height: "con:" + this.cell_h
     };
-    this.addPlacement(tablePlacement);
-
-    var tableRendering = getTableRenderer(table_name);
-
-    this.addRenderingFunc(tableRendering);
 
     // generate query using user defined specifications
     function genQuery() {
@@ -159,19 +150,12 @@ function Table(args) {
         return ret;
     }
 }
-(function() {
-    // create a class with no instance method
-    var Super = function() {};
-    Super.prototype = Layer.prototype;
-    // use its instance as the prototype of Table
-    Table.prototype = new Super();
-})();
 
-function getTableTransformFunc(table_name) {
+function getTableTransformFunc() {
     transformFuncBody = getBodyStringOfFunction(transform_function);
     transformFuncBody = transformFuncBody.replace(
         /REPLACE_ME_table_name/g,
-        table_name
+        this.name
     );
 
     return new Function(
@@ -202,16 +186,17 @@ function getTableTransformFunc(table_name) {
     }
 }
 
-function getTableRenderer(table_name) {
+function getTableRenderer() {
     renderFuncBody = getBodyStringOfFunction(renderer);
     renderFuncBody = renderFuncBody.replace(
         /REPLACE_ME_table_name/g,
-        table_name
+        this.name
     );
 
     return new Function("svg", "data", "rend_args", renderFuncBody);
 
     function renderer(svg, data, rend_args) {
+        console.log("raw:", data);
         var table_params = rend_args.renderingParams["REPLACE_ME_table_name"];
         var fields = table_params.fields;
         var g = svg.append("g").attr("id", "gTable");
@@ -313,6 +298,13 @@ function getBodyStringOfFunction(func) {
     return "\n" + funcStr.substring(bodyStart, bodyEnd) + "\n";
 }
 
+Table.prototype = {
+    getTableTransformFunc,
+    getTableRenderer
+};
+
 module.exports = {
-    Table: Table
+    Table: Table,
+    getTableTransformFunc,
+    getTableRenderer
 };

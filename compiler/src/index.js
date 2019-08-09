@@ -48,7 +48,7 @@ function Project(name, configFile) {
     this.renderingParams = "{}";
 
     // style sheets
-    this.styles = "";
+    this.styles = [];
 
     // pyramids
     this.pyramids = [];
@@ -357,22 +357,73 @@ function addRenderingParams(renderingParams) {
 }
 
 // adding a static CSS string
-function addStyles(filepath) {
-    if (filepath == null) return;
-    var rules = fs.readFileSync(filepath).toString();
+function addStyles(styles) {
+    if (!styles || typeof styles != "string") return;
 
+    //match http:// and https://
+    if (styles.match(/https?:\/\//)) {
+        var rules = styles;
+    } else if (styles.match(".css")) {
+        var rules = fs.readFileSync(styles).toString();
+    } else {
+        console.log("STYLES NOT CSS FILE, BUT STRING", styles);
+        var rules = styles;
+    }
+
+    this.styles.push(rules);
     // merge with current CSS
-    this.styles += rules;
 }
 
-function addTable(table, canvas) {
-    if (!canvas) {
-        canvas = new Canvas("Table", 1000, 1000);
+function addTable(table, args) {
+    if (args == null) args = {};
+
+    if (args.canvas == "new" || !args.canvas) {
+        console.log(table.width, table.height);
+        // how to avoid hard coding the height?
+        var canvas = new Canvas(table.name, Math.ceil(table.width), 2000);
         this.addCanvas(canvas);
+    } else if (!args.canvas instanceof Canvas) {
+        throw new Error(
+            "Constructing Table: canvas must be a canvas or 'new' "
+        );
+    } else {
+        var canvas = args.canvas;
     }
+    this.addStyles(__dirname + "/template-api/css/table.css");
     this.addRenderingParams(table.renderingParams);
-    canvas.addLayer(table);
-    return canvas;
+    var transform_func = table.getTableTransformFunc();
+    var tableTransform = new Transform(
+        table.query,
+        table.db,
+        transform_func,
+        table.schema,
+        true
+    );
+
+    var tableLayer = new Layer(tableTransform, false);
+    tableLayer.addPlacement(table.placement);
+    tableLayer.addRenderingFunc(table.getTableRenderer());
+
+    canvas.addLayer(tableLayer);
+
+    if (args.view == "new" || !args.view) {
+        console.log(Math.floor(table.width));
+        var tableView = new View(
+            table.name + "_view",
+            0,
+            0,
+            Math.floor(table.width * 0.8),
+            700
+        );
+        this.addView(tableView);
+        this.setInitialStates(tableView, canvas, 0, 0);
+    } else if (args.view instanceof View) {
+        this.setInitialStates(args.view, canvas, 0, 0);
+    } else {
+        throw new Error("Constructing Table: view must be a view, or 'new' ");
+    }
+
+    return this;
 }
 
 /**
