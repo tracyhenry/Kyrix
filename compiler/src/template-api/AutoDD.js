@@ -27,8 +27,7 @@ function AutoDD(args) {
     this.circleMinSize = 30;
     this.circleMaxSize = 70;
     this.contourBandwidth = 30;
-    this.heatmapRadius = 100;
-    this.heatmapBlur = 0.4;
+    this.heatmapRadius = 80;
     if (
         args.rendering.mode == "circle" ||
         args.rendering.mode == "circle+object"
@@ -400,47 +399,11 @@ function getLayerRenderer() {
                     ctx.fill();
             }
         }
-        if (isObjectOnHover) {
-            var objectRenderer = REPLACE_ME_this_rendering;
-            var hiddenRectSize = 100;
-            svg.append("g")
-                .selectAll("rect")
-                .data(data)
-                .enter()
-                .append("rect")
-                .attr("x", d => d.cx - hiddenRectSize / 2)
-                .attr("y", d => d.cy - hiddenRectSize / 2)
-                .attr("width", hiddenRectSize)
-                .attr("height", hiddenRectSize)
-                .attr("fill-opacity", 0)
-                .on("mouseover", function(d) {
-                    var svgNode;
-                    if ("tileX" in args)
-                        svgNode = d3.select(svg.node().parentNode);
-                    else svgNode = svg;
-                    objectRenderer(svgNode, [d], args);
-                    var lastG = svgNode.node().childNodes[
-                        svgNode.node().childElementCount - 1
-                    ];
-                    d3.select(lastG)
-                        .attr("id", "autodd_tooltip")
-                        .style("opacity", 0.8)
-                        .style("pointer-events", "none")
-                        .selectAll("*")
-                        .each(function() {
-                            zoomRescale(args.viewId, this);
-                        });
-                })
-                .on("mouseleave", function() {
-                    d3.select("#autodd_tooltip").remove();
-                });
-        }
     }
 
     function renderHeatmapBody() {
         var params = args.renderingParams;
         var radius = REPLACE_ME_radius;
-        var blur = REPLACE_ME_blur;
         var heatmapWidth, heatmapHeight, x, y;
         if ("tileX" in args) {
             // tiling
@@ -473,32 +436,18 @@ function getLayerRenderer() {
 
         // from heatmap.js
         // https://github.com/pa7/heatmap.js/blob/4e64f5ae5754c84fea363f0fcf24bea4795405ff/src/renderer/canvas2d.js#L23
-        var _getPointTemplate = function(radius, blurFactor) {
+        var _getPointTemplate = function(radius) {
             var tplCanvas = document.createElement("canvas");
             var tplCtx = tplCanvas.getContext("2d");
             var x = radius;
             var y = radius;
             tplCanvas.width = tplCanvas.height = radius * 2;
 
-            if (blurFactor == 1) {
-                tplCtx.beginPath();
-                tplCtx.arc(x, y, radius, 0, 2 * Math.PI, false);
-                tplCtx.fillStyle = "rgba(0,0,0,1)";
-                tplCtx.fill();
-            } else {
-                var gradient = tplCtx.createRadialGradient(
-                    x,
-                    y,
-                    radius * blurFactor,
-                    x,
-                    y,
-                    radius
-                );
-                gradient.addColorStop(0, "rgba(0,0,0,1)");
-                gradient.addColorStop(1, "rgba(0,0,0,0)");
-                tplCtx.fillStyle = gradient;
-                tplCtx.fillRect(0, 0, 2 * radius, 2 * radius);
-            }
+            var gradient = tplCtx.createRadialGradient(x, y, 5, x, y, radius);
+            gradient.addColorStop(0, "rgba(0,0,0,1)");
+            gradient.addColorStop(1, "rgba(0,0,0,0)");
+            tplCtx.fillStyle = gradient;
+            tplCtx.fillRect(0, 0, 2 * radius, 2 * radius);
             return tplCanvas;
         };
 
@@ -509,8 +458,8 @@ function getLayerRenderer() {
         var minWeight = params[args.autoDDId + "_minWeight"]; // set in the BGRP (back-end generated rendering params)
         var maxWeight = params[args.autoDDId + "_maxWeight"]; // set in the BGRP
         var alphaCtx = alphaCanvas.getContext("2d");
+        var tpl = _getPointTemplate(radius);
         for (var i = 0; i < translatedData.length; i++) {
-            var tpl = _getPointTemplate(radius, blur);
             var tplAlpha =
                 (translatedData[i].w - minWeight) / (maxWeight - minWeight);
             alphaCtx.globalAlpha = tplAlpha < 0.01 ? 0.01 : tplAlpha;
@@ -592,8 +541,9 @@ function getLayerRenderer() {
             .node()
             .appendChild(render.canvas);
         d3.select(render.canvas).style("opacity", REPLACE_ME_heatmap_opacity);
+    }
 
-        /*
+    function KDEObjectHoverBody() {
         var isObjectOnHover = REPLACE_ME_is_object_onhover;
         if (isObjectOnHover) {
             var objectRenderer = REPLACE_ME_this_rendering;
@@ -604,8 +554,8 @@ function getLayerRenderer() {
                 .enter()
                 .append("rect")
                 .attr("x", d => d.cx - hiddenRectSize / 2)
-        .attr("y", d => d.cy - hiddenRectSize / 2)
-        .attr("width", hiddenRectSize)
+                .attr("y", d => d.cy - hiddenRectSize / 2)
+                .attr("width", hiddenRectSize)
                 .attr("height", hiddenRectSize)
                 .attr("fill-opacity", 0)
                 .on("mouseover", function(d) {
@@ -615,8 +565,8 @@ function getLayerRenderer() {
                     else svgNode = svg;
                     objectRenderer(svgNode, [d], args);
                     var lastG = svgNode.node().childNodes[
-                    svgNode.node().childElementCount - 1
-                        ];
+                        svgNode.node().childElementCount - 1
+                    ];
                     d3.select(lastG)
                         .attr("id", "autodd_tooltip")
                         .style("opacity", 0.8)
@@ -630,7 +580,6 @@ function getLayerRenderer() {
                     d3.select("#autodd_tooltip").remove();
                 });
         }
-*/
     }
 
     var renderFuncBody;
@@ -675,33 +624,28 @@ function getLayerRenderer() {
             .replace(/REPLACE_ME_contour_colorScheme/g, this.contourColorScheme)
             .replace(/REPLACE_ME_CONTOUR_OPACITY/g, this.contourOpacity)
             .replace(
-                /REPLACE_ME_this_rendering/g,
-                this.renderingMode == "contour+object"
-                    ? this.rendering.toString()
-                    : "null;"
-            )
-            .replace(
                 /REPLACE_ME_is_object_onhover/g,
                 this.renderingMode == "contour+object"
             );
+        renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
+            .replace(
+                /REPLACE_ME_is_object_onhover/g,
+                this.renderingMode == "contour+object"
+            )
+            .replace(/REPLACE_ME_this_rendering/g, this.rendering.toString());
     } else if (
         this.renderingMode == "heatmap" ||
         this.renderingMode == "heatmap+object"
     ) {
         renderFuncBody = getBodyStringOfFunction(renderHeatmapBody)
             .replace(/REPLACE_ME_radius/g, this.heatmapRadius)
-            .replace(/REPLACE_ME_blur/g, this.heatmapBlur)
-            .replace(/REPLACE_ME_heatmap_opacity/g, this.heatmapOpacity)
-            .replace(
-                /REPLACE_ME_this_rendering/g,
-                this.renderingMode == "heatmap+object"
-                    ? this.rendering.toString()
-                    : "null;"
-            )
+            .replace(/REPLACE_ME_heatmap_opacity/g, this.heatmapOpacity);
+        renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
             .replace(
                 /REPLACE_ME_is_object_onhover/g,
                 this.renderingMode == "heatmap+object"
-            );
+            )
+            .replace(/REPLACE_ME_this_rendering/g, this.rendering.toString());
     }
     return new Function("svg", "data", "args", renderFuncBody);
 }
