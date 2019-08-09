@@ -56,17 +56,26 @@ function Table(args) {
     if (typeof args.width === "number") {
         sum_width = args.width;
     } else if (typeof args.width === "object") {
-        for (key in args.width) {
-            if (typeof args.width[key] !== "number") {
+        if (Array.isArray(args.width)) {
+            // ES6 grammer for array
+            if (args.width.length != args.fields.length)
                 throw new Error(
-                    "Error, \
-                    table.args.width with non-numeric object"
+                    "Constructing Table: incompatible length between width and fields"
                 );
+            for (var index of args.width) {
+                if (typeof args.width[index] !== "number") {
+                    throw new Error(
+                        "Constructing Table: table.args.width with non-numeric object"
+                    );
+                }
+                sum_width += args.width[index];
             }
-            sum_width += args.width[key];
-        }
+        } else
+            throw new Error(
+                "Constructing Table: args.width must be number or array"
+            );
     } else {
-        console.log("DEFAULT WIDTH");
+        console.log("Constructing Table: DEFAULT WIDTH");
         sum_width = args.fields.length * 100;
     }
     centroid_x = this.x + sum_width / 2;
@@ -84,16 +93,18 @@ function Table(args) {
             names: args.fields
         };
     } else if (!("th_h" in th_args || "names" in th_args)) {
-        throw new Error("in complete heading definition");
+        throw new Error("Constructing Table: in complete heading definition");
     } else if (typeof th_args.th_h !== "number") {
-        throw new Error("heading height must be number");
+        throw new Error("Constructing Table: heading height must be number");
     } else if (
         typeof th_args.names !== "object" ||
         th_args.names.length != args.fields.length
     ) {
-        throw new Error("fields and heads length not equal");
+        throw new Error(
+            "Constructing Table: fields and heads length not equal"
+        );
     } else if (th_args.th_h <= 0) {
-        throw new Error("heading height must be positive");
+        throw new Error("Constructing Table: heading height must be positive");
     } else {
         this.heads = th_args;
     }
@@ -123,7 +134,9 @@ function Table(args) {
         var ret = "select ";
         for (key in args.fields) {
             if (typeof args.fields[key] !== "string") {
-                throw new Error("fields must be string, at index:" + key);
+                throw new Error(
+                    "Constructing Table: fields must be string, at index:" + key
+                );
             }
             ret += args.fields[key] + ", ";
         }
@@ -136,7 +149,7 @@ function Table(args) {
             } else if (args.order == ("desc" || "DESC") || !args.order) {
                 ret += " desc ) as rn_kyrix";
             } else {
-                throw new Error("unknown order");
+                throw new Error("Constructing Table: unknown order");
             }
         } else {
             ret += ")";
@@ -144,7 +157,7 @@ function Table(args) {
         ret += " from ";
         ret += args.table;
         ret += ";";
-        console.log("table query:", ret);
+        console.log("Constructing Table: query-", ret);
         return ret;
     }
 }
