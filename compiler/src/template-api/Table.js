@@ -100,6 +100,7 @@ function Table(args) {
     }
     centroid_x = this.x + sum_width / 2;
     this.width = widths || sum_width;
+    this.height = args.height || 2000;
     this.sum_width = sum_width;
 
     var th_args = args.heads;
