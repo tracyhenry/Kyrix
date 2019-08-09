@@ -55,7 +55,6 @@ function Table(args) {
     var centroid_x = 0;
     if (typeof args.width === "number") {
         sum_width = args.width;
-        centroid_x = this.x + args.width / 2;
     } else if (typeof args.width === "object") {
         for (key in args.width) {
             if (typeof args.width[key] !== "number") {
@@ -66,12 +65,11 @@ function Table(args) {
             }
             sum_width += args.width[key];
         }
-        centroid_x = this.x + sum_width / 2;
     } else {
         console.log("DEFAULT WIDTH");
         sum_width = args.fields.length * 100;
-        centroid_x = this.x + sum_width / 2;
     }
+    centroid_x = this.x + sum_width / 2;
     this.width = sum_width;
 
     var th_args = args.heads;
