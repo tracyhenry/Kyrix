@@ -26,8 +26,12 @@ function AutoDD(args) {
     // check constraints according to rendering mode
     this.circleMinSize = 30;
     this.circleMaxSize = 70;
-    this.contourBandwidth = 30;
-    this.heatmapRadius = 80;
+    this.contourBandwidth =
+        "contourBandwidth" in args.rendering
+            ? args.rendering.countourBandwidth
+            : 30;
+    this.heatmapRadius =
+        "heatmapRadius" in args.rendering ? args.rendering.heatmapRadius : 80;
     if (
         args.rendering.mode == "circle" ||
         args.rendering.mode == "circle+object"
