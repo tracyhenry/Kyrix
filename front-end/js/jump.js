@@ -30,6 +30,7 @@ function preJump(viewId, zoomType) {
     removePopoversSmooth(viewId);
 
     // change .mainsvg to .oldmainsvg, and .layerg to .oldlayerg
+    d3.selectAll(viewClass + ".oldlayerg").remove();
     d3.selectAll(viewClass + ".layerg")
         .classed("layerg", false)
         .classed("oldlayerg", true);
@@ -370,7 +371,7 @@ function load(predArray, newVpX, newVpY, jump) {
     gvd.initialViewportX = newVpX;
     gvd.initialViewportY = newVpY;
     gvd.renderData = null;
-    gvd.pendingBoxRequest = false;
+    gvd.pendingBoxRequest = null;
     gvd.history = [];
 
     // pre animation
