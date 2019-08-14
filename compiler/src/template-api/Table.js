@@ -65,13 +65,13 @@ function Table(args) {
                 throw new Error(
                     "Constructing Table: incompatible length between width and fields"
                 );
-            for (var index of args.width) {
-                if (typeof index !== "number") {
+            for (var wi of args.width) {
+                if (typeof wi !== "number") {
                     throw new Error(
                         "Constructing Table: table.args.width with non-numeric object"
                     );
                 }
-                sum_width += args.width[index];
+                sum_width += wi;
             }
         } else {
             var widths = new Array(args.fields.length).fill(100);

@@ -402,7 +402,7 @@ function addTable(table, args) {
 
     canvas.addLayer(tableLayer);
 
-    if (args.view == "new" || !args.view) {
+    if (!args.view) {
         var tableView = new View(
             table.name + "_view",
             0,
@@ -412,13 +412,10 @@ function addTable(table, args) {
         );
         this.addView(tableView);
         this.setInitialStates(tableView, canvas, 0, 0);
-    } else if (args.view instanceof View) {
-        this.setInitialStates(args.view, canvas, 0, 0);
-    } else {
+    } else if (!(args.view instanceof View))
         throw new Error("Constructing Table: view must be a view, or 'new' ");
-    }
 
-    return this;
+    return {canvas, view: args.view ? args.view : tableView};
 }
 
 /**
@@ -629,7 +626,7 @@ function saveProject() {
         },
         4
     );
-    console.log(logJSON);
+    //console.log(logJSON);
 
     // add escape character to projectJSON
     var projectJSONEscapedMySQL = (projectJSON + "")
