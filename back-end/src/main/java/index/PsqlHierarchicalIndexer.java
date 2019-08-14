@@ -57,7 +57,7 @@ public class PsqlHierarchicalIndexer extends BoundingBoxIndexer {
         Transform trans = l.getTransform();
 
         ArrayList<ArrayList<String>> hierarchy = l.getData();
-        System.out.println(hierarchy);
+        // System.out.println(hierarchy);
 
         // step 0: create tables for storing bboxes and tiles
         String bboxTableName =
@@ -291,8 +291,12 @@ public class PsqlHierarchicalIndexer extends BoundingBoxIndexer {
             int w = Integer.parseInt(hierarchy.get(rowIndex).get(7));
             int h = Integer.parseInt(hierarchy.get(rowIndex).get(8));
 
-            if (w < 30 || h < 30) {
-                System.out.println(pyramidLevel + "JUMP!" + hierarchy.get(rowIndex));
+            if (Math.log(w) + Math.log(h) < Math.log(1000)) {
+                if (hierarchy.get(rowIndex).get(0) == "-"
+                        || hierarchy.get(rowIndex).get(1) == "-") {
+                    System.out.println(
+                            "Level:" + pyramidLevel + " JUMP! " + hierarchy.get(rowIndex));
+                }
                 continue;
             }
 
@@ -308,7 +312,7 @@ public class PsqlHierarchicalIndexer extends BoundingBoxIndexer {
             // insert into bbox table
             if (numcols == 0) {
                 numcols = trans.getColumnNames().size();
-                System.out.println("numcols=" + String.valueOf(numcols));
+                // System.out.println("numcols=" + String.valueOf(numcols));
             }
             int pscol = 1;
             for (int i = 0; i < numcols; i++)

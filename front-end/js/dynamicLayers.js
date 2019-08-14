@@ -227,6 +227,11 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                         tileSvg
                             .select("g:last-of-type")
                             .selectAll("*")
+                            .filter(function() {
+                                return (
+                                    !this.children || this.children.length === 0
+                                );
+                            })
                             .each(function() {
                                 zoomRescale(viewId, this);
                             });
@@ -445,6 +450,11 @@ function renderDynamicBoxes(
                         dboxSvg
                             .select("g:last-of-type")
                             .selectAll("*")
+                            .filter(function() {
+                                return (
+                                    !this.children || this.children.length === 0
+                                );
+                            })
                             .each(function() {
                                 zoomRescale(viewId, this);
                             });

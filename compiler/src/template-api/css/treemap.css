@@ -1,3 +1,30 @@
+body {
+    overflow: hidden;
+}
+
 text.node {
-    fill: white;
+    fill: black;
+    fill-opacity: 0.6;
+    pointer-events: none;
+}
+
+#overviewrect {
+    fill-opacity: 0;
+    stroke: #fffef8;
+    stroke-dasharray: 10, 5;
+    stroke-linecap: butt;
+    stroke-width: 3;
+    pointer-events: none;
+}
+
+button.zoomoutbutton {
+    visibility: hidden;
+}
+
+button.gobackbutton {
+    visibility: hidden;
+}
+
+button.zoominbutton {
+    visibility: hidden;
 }

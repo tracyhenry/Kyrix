@@ -15,10 +15,14 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
     if (
         (type == "literal_zoom_in" || type == "literal_zoom_out") &&
         optional != null
-    )
-        throw new Error(
-            "Constructing Jump: literal zooms do not need optional arguments."
-        );
+    ) {
+        var keys = Object.keys(optional);
+        if (keys.length > 1 || keys[0] != "overview") {
+            throw new Error(
+                "Constructing Jump: literal zooms do not need optional arguments."
+            );
+        }
+    }
     if (optional == null) optional = {};
     if (
         type == "semantic_zoom" ||
@@ -51,6 +55,14 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
     this.viewport = "viewport" in optional ? optional.viewport : "";
     this.predicates = "predicates" in optional ? optional.predicates : "";
     this.name = "name" in optional ? optional.name : destCanvas.id;
+    this.overview =
+        "overview" in optional
+            ? JSON.stringify(optional.overview, (key, value) => {
+                  if (typeof value === "function") return value.toString();
+                  return value;
+              })
+            : "";
+    // this.overview = "overview" in optional ? (optional.overview) : "";
     this.sourceViewId = "sourceView" in optional ? optional.sourceView.id : "";
     this.destViewId = "destView" in optional ? optional.destView.id : "";
     this.noPrefix = "noPrefix" in optional ? optional.noPrefix : false;

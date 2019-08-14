@@ -118,7 +118,6 @@ function processStyles() {
                 .attr("type", "text/css")
                 .html(globalVar.project.styles[i]);
         }
-        // globalVar.project.styles[i]
     }
 }
 
@@ -204,6 +203,7 @@ function pageOnLoad(serverAddr) {
                 gvd.curCanvas = null;
                 gvd.curJump = null;
                 gvd.curStaticData = null;
+                gvd.overView = null;
                 gvd.history = [];
                 gvd.animation = false;
                 gvd.predicates = [];

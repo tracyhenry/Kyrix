@@ -67,10 +67,10 @@ function addView(view) {
             view.miny > this.views[i].miny + this.views[i].height
         )
             continue;
-        else
-            throw new Error(
-                "Adding View: this view intersects with an existing view."
-            );
+        // else
+        // throw new Error(
+        //     "Adding View: this view intersects with an existing view."
+        // );
     }
     this.views.push(view);
 }
@@ -361,18 +361,20 @@ function addTreemap(treemap) {
 
     var treemapCanvases = [];
     var flag_no = true;
+    var zoomFactor = 1;
 
-    for (var i = 0; flag_no; i++) {
-        var zoomFactor = Math.pow(treemap.zoomFactor, i);
+    var genTreemapCanvas = function(i) {
+        zoomFactor = Math.pow(treemap.zoomFactor, i);
         // var zoomFactor = Math.pow(2, i) ;
         // var zoomFactor = 2 * (i+1);
         console.log("zoomFactor!!!!!!!!:", zoomFactor);
         var tm = d3
             .treemap()
-            .size([treemap.width, treemap.height])
-            .paddingOuter(treemap.paddingOuter)
-            .paddingTop(treemap.paddingTop)
-            .paddingInner(treemap.paddingInner)
+            .size([treemap.width * zoomFactor, treemap.height * zoomFactor])
+            // .padding(0)
+            .paddingOuter(treemap.paddingOuter * zoomFactor)
+            .paddingTop(treemap.paddingTop * zoomFactor)
+            .paddingInner(treemap.paddingInner * zoomFactor)
             .round(true);
 
         var cooked = tm(root);
@@ -381,22 +383,30 @@ function addTreemap(treemap) {
 
         var set = cooked.descendants().map(d => {
             return [
+                // label
                 d.data[treemap.label],
+                // parent
                 d.parent ? d.parent.data[treemap.label] : "none",
                 d.value,
                 d.depth,
                 d.height,
-                (0.5 * (+d.x0 + d.x1) + treemap.x) * zoomFactor,
-                (0.5 * (+d.y0 + d.y1) + treemap.y) * zoomFactor,
-                (+d.x1 - +d.x0) * zoomFactor,
-                (+d.y1 - +d.y0) * zoomFactor
+                // cx
+                0.5 * (+d.x0 + d.x1) + treemap.x * zoomFactor,
+                // cy
+                0.5 * (+d.y0 + d.y1) + treemap.y * zoomFactor,
+                // w
+                +d.x1 - +d.x0,
+                // h
+                +d.y1 - +d.y0
             ];
         });
 
         flag_no = !set.every(d => {
             // console.log("width:", d[5], "hea")
             // console.log("d", d)
-            return !(d[7] < 30 && d[8] < 30);
+            var flag = Math.log(d[7]) + Math.log(d[8]) < Math.log(800);
+            if (flag) console.log("small:", d);
+            return !flag;
         });
         // throw new Error("manual");
         var query = "select * from treemap";
@@ -419,48 +429,93 @@ function addTreemap(treemap) {
         var treemapLayer = new Layer(transform, false);
 
         treemapLayer.addPlacement(treemap.placement);
-        treemapLayer.addRenderingFunc(treemap.getRenderer());
+        treemapLayer.addRenderingFunc(treemap.getRenderer(i));
         treemapLayer.setIsHierarchical(true);
         treemapLayer.data = set;
 
         var treemapRetainLayer = new Layer(transform, false);
         treemapRetainLayer.addPlacement(treemap.placement);
         treemapRetainLayer.addRenderingFunc(
-            treemap.getRetainRenderer(zoomFactor)
+            treemap.getRetainRenderer(zoomFactor, i)
         );
         treemapRetainLayer.setIsHierarchical(true);
         treemapRetainLayer.setRetainSizeZoom(true);
         treemapRetainLayer.data = set;
 
         var treemapCanvas = new Canvas(
-            "treemap_" + i,
-            zoomFactor * (treemap.width + treemap.x),
-            zoomFactor * (treemap.height + treemap.y)
+            ("treemap_" + i).replace(/(\.|-)/g, "_"),
+            Math.floor(zoomFactor * (treemap.width + treemap.x)),
+            Math.floor(zoomFactor * (treemap.height + treemap.y))
         );
         treemapCanvas.pyramidLevel = i;
 
-        treemapCanvas.addLayer(treemapRetainLayer);
+        if (!(i < 0)) treemapCanvas.addLayer(treemapRetainLayer);
         treemapCanvas.addLayer(treemapLayer);
         treemapCanvases.push(treemapCanvas);
-        this.addCanvas(treemapCanvas);
+        return treemapCanvas;
+    };
+
+    // for (var i = 0; flag_no && zoomFactor < 3; i++) {
+    var minimap = genTreemapCanvas(-2);
+    this.addCanvas(minimap);
+    // for (var i = 0; flag_no; i++) {
+    for (var i = 0; flag_no && zoomFactor < 100; i++) {
+        var curLevelCanvas = genTreemapCanvas(i);
+        this.addCanvas(curLevelCanvas);
     }
 
-    for (var i = 0; i < treemapCanvases.length - 1; i++) {
+    var treemap_overview = function(zoomFactor) {
+        var destViewId = "treemap_View_2";
+        var sourceViewId = "treemap_View";
+        var scale = treemap.getOverviewScale(zoomFactor * 2);
+        return {sourceViewId, destViewId, scale};
+    };
+
+    // console.log("treemapCanvases:", treemapCanvases)
+    for (var i = 1; i < treemapCanvases.length - 1; i++) {
         this.addJump(
             new Jump(
                 treemapCanvases[i],
                 treemapCanvases[i + 1],
-                "literal_zoom_in"
+                "literal_zoom_in",
+                {
+                    overview: treemap_overview(
+                        Math.pow(treemap.zoomFactor, i + 1)
+                    )
+                }
             )
         );
         this.addJump(
             new Jump(
                 treemapCanvases[i + 1],
                 treemapCanvases[i],
-                "literal_zoom_out"
+                "literal_zoom_out",
+                {overview: treemap_overview(Math.pow(treemap.zoomFactor, i))}
             )
         );
     }
+
+    var selector = function() {
+        return true;
+    };
+
+    var newPredicate = function(row) {
+        return {};
+    };
+
+    var newViewport = function(row) {
+        return {constant: [row.x * 4, row.y * 4]};
+    };
+
+    var jumpName = function(row) {
+        var str = "see more around " + row.label + "";
+        return str;
+    };
+
+    // var tableTeamJump = new Jump(leagueTableCanvas, teamMatchCanvas, "load", {
+    //     selector : selector, viewport : newViewport, predicates : newPredicate,
+    //     name : jumpName, sourceView: leftView, destView: rightView, noPrefix: "true"
+    // });
 
     // console.log("set!:", set);
 
@@ -473,7 +528,13 @@ function addTreemap(treemap) {
     // logo layer
 
     // ================== Views ===================
-    var view = new View("treeemap_View", 0, 0, treemap.viewW, treemap.viewH);
+    var view = new View(
+        "treemap_View",
+        0,
+        (treemap.viewH * 0.75) | 0,
+        treemap.viewW / 4,
+        treemap.viewH / 4
+    );
 
     if (treemap.x < 0 || treemap.x + treemap.width < treemap.viewW)
         throw new Error(
@@ -484,10 +545,33 @@ function addTreemap(treemap) {
             "Constructing Treemap: viewY out of range. canvas cannot be smaller than view"
         );
 
+    var view_2 = new View("treemap_View_2", 0, 0, treemap.viewW, treemap.viewH);
+    var topJump = new Jump(minimap, treemapCanvases[2], "load", {
+        selector: selector,
+        viewport: newViewport,
+        predicates: newPredicate,
+        name: jumpName,
+        sourceView: view,
+        destView: view_2,
+        noPrefix: "true",
+        // overview: {
+        //     scale: overviewScale,
+        //     sourceViewId:"treemap_View",
+        //     destViewId:"treemap_View_2"
+        // }
+        overview: treemap_overview(treemap.zoomFactor * 2)
+    });
+    this.addView(view_2);
     this.addView(view);
+
+    this.addJump(topJump);
+    this.addStyles(
+        "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    );
+
     this.setInitialStates(
         view,
-        treemapCanvases[0],
+        minimap,
         treemap.x,
         treemap.y
         // {
@@ -737,7 +821,7 @@ function saveProject() {
         },
         4
     );
-    console.log(logJSON);
+    // console.log(logJSON);
 
     // add escape character to projectJSON
     var projectJSONEscapedMySQL = (projectJSON + "")

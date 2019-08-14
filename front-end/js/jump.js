@@ -302,6 +302,9 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
             }
         });
 
+    // handle overview, if not specified, nothing will happen
+    handleOverview(destViewId, jump);
+
     function zoomAndFade(t, v) {
         var vWidth = v[2];
         var vHeight = (gvd.viewportHeight / gvd.viewportWidth) * vWidth;
@@ -396,9 +399,72 @@ function load(predArray, newVpX, newVpY, jump) {
         // render static layers
         renderStaticLayers(destViewId);
 
+        // if "overview" is specified
+        handleOverview(destViewId, jump);
+
         // post animation
         postJump(destViewId, jump.type);
     });
+}
+
+function handleOverview(viewId, jump) {
+    // console.log("handleOverview:", viewId, jump);
+    var gvd = globalVar.views[viewId];
+    // if no overview specified
+    var overview;
+    if (jump && jump.overview) {
+        overview = JSON.parse(jump.overview, (key, value) => {
+            if (key == "scale") return value.parseFunction();
+            return value;
+        });
+        gvd.overview = overview;
+    }
+    if (!gvd.overview) {
+        if (!jump || !jump.overview) return;
+    }
+    overview = gvd.overview;
+
+    // console.log("overview:", overview, overview.scale.toString());
+    var selector = viewId => ".mainsvg.lowestsvg.view_" + viewId;
+    var sourceSVG = d3.select(selector(overview.sourceViewId));
+    var destVp = d3
+        .select(selector(overview.destViewId))
+        .attr("viewBox")
+        .split(" ")
+        .map(item => Number(item));
+    var leftTop = overview.scale(destVp[0], destVp[1]);
+    var rightBottom = overview.scale(
+        destVp[0] + destVp[2],
+        destVp[1] + destVp[3]
+    );
+
+    // console.log("destVp:", destVp);
+    // if(sourceSVG)
+    d3.select(".maing.view_" + overview.sourceViewId)
+        .select("rect")
+        .attr("style", "stroke:black;stroke-width:5");
+    // .style("stroke", function(){
+    //     console.log("this", this)
+    //     return "black"
+    // })
+    // .style("stroke-width", 5)
+
+    if (sourceSVG.select("#overviewrect").empty()) {
+        sourceSVG
+            .append("rect")
+            .attr("id", "overviewrect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", 400)
+            .attr("height", 200);
+    } else {
+        sourceSVG
+            .select("#overviewrect")
+            .attr("x", leftTop.x)
+            .attr("y", leftTop.y)
+            .attr("width", rightBottom.x - leftTop.x)
+            .attr("height", rightBottom.y - leftTop.y);
+    }
 }
 
 function highlight(predArray, jump) {
