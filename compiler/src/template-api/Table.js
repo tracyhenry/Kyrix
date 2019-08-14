@@ -64,7 +64,7 @@ function Table(args) {
                     "Constructing Table: incompatible length between width and fields"
                 );
             for (var index of args.width) {
-                if (typeof args.width[index] !== "number") {
+                if (typeof index !== "number") {
                     throw new Error(
                         "Constructing Table: table.args.width with non-numeric object"
                     );
