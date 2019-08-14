@@ -29,6 +29,7 @@ var table_args = {
     },
     // heads: "auto",
     heads: {
+        height: 70,
         names: {
             home_team: "Home Team",
             away_team: "Away Team"
