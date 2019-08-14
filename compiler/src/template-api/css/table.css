@@ -1,0 +1,18 @@
+body {
+    text-anchor: middle;
+    line-height: 50;
+}
+
+.th rect {
+    fill: #888888;
+    stroke: #c0c4c3;
+}
+
+.th text {
+    fill: #f8f4ed;
+}
+
+.td rect {
+    fill: #ebebeb;
+    stroke: #c0c4c3;
+}

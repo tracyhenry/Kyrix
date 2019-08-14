@@ -24,7 +24,7 @@ public class Project {
     private ArrayList<AutoDD> autoDDs;
     private String renderingParams;
     private String BGRP = "{}"; // Back-end Generated Rendering parameters
-    private String styles;
+    private ArrayList<String> styles;
 
     public String getName() {
         return name;
@@ -58,7 +58,7 @@ public class Project {
         this.BGRP = BGRP;
     }
 
-    public String getStyles() {
+    public ArrayList<String> getStyles() {
         return styles;
     }
 

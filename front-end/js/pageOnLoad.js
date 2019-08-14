@@ -102,14 +102,23 @@ function processRenderingParams() {
 
 // add the styles to the document
 function processStyles() {
-    if (globalVar.project.styles == "") return;
+    if (globalVar.project.styles.length <= 0) return;
 
-    var styles = d3
-        .select("head")
-        .append("style")
-        .classed("kyrixstyles", true)
-        .attr("type", "text/css")
-        .html(globalVar.project.styles);
+    for (var i = globalVar.project.styles.length - 1; i >= 0; i--) {
+        if (globalVar.project.styles[i].match(/https?:\/\//)) {
+            d3.select("head")
+                .append("link")
+                .attr("rel", "stylesheet")
+                .attr("type", "text/css")
+                .attr("href", globalVar.project.styles[i]);
+        } else {
+            d3.select("head")
+                .append("style")
+                .classed("kyrixstyles", true)
+                .attr("type", "text/css")
+                .html(globalVar.project.styles[i]);
+        }
+    }
 }
 
 // set up page
