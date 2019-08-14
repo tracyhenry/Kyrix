@@ -1,12 +1,8 @@
 // libraries
 const Project = require("../../src/index").Project;
-const Canvas = require("../../src/Canvas").Canvas;
-const Jump = require("../../src/Jump").Jump;
-const Layer = require("../../src/Layer").Layer;
-const View = require("../../src/View").View;
 const Table = require("../../src/template-api/Table").Table;
 
-var p = new Project("epl", "../../../config.txt");
+var p = new Project("table_nba_game", "../../../config.txt");
 
 var db = "nba";
 var fields = [
@@ -33,7 +29,6 @@ var table_args = {
     },
     // heads: "auto",
     heads: {
-        height: 40,
         names: {
             home_team: "Home Team",
             away_team: "Away Team"
