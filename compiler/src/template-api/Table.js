@@ -296,6 +296,12 @@ function getTableRenderer() {
 
         var ths = table
             .append("g")
+            .datum({
+                minx: 0,
+                maxx: data[0].maxx,
+                miny: 0,
+                maxy: data[0].miny
+            })
             .attr("class", "thead")
             .attr("transform", function(d, i) {
                 return "translate(0," + th_Y + ")";
