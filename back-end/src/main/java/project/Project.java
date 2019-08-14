@@ -23,7 +23,7 @@ public class Project {
     private ArrayList<Jump> jumps;
     private ArrayList<AutoDD> autoDDs;
     private String renderingParams;
-    private String styles;
+    private ArrayList<String> styles;
 
     public String getName() {
         return name;
@@ -49,7 +49,7 @@ public class Project {
         return renderingParams;
     }
 
-    public String getStyles() {
+    public ArrayList<String> getStyles() {
         return styles;
     }
 

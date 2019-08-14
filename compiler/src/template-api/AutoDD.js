@@ -1,3 +1,5 @@
+const getBodyStringOfFunction = require("./Renderers").getBodyStringOfFunction;
+
 /**
  * Constructor of an AutoDD object
  * @param args
@@ -529,13 +531,6 @@ function getAxesRenderer(level) {
         .replace(/REPLACE_ME_xOffset/g, xOffset)
         .replace(/REPLACE_ME_yOffset/g, yOffset);
     return new Function("args", axesFuncBody);
-}
-
-function getBodyStringOfFunction(func) {
-    var funcStr = func.toString();
-    const bodyStart = funcStr.indexOf("{") + 1;
-    const bodyEnd = funcStr.lastIndexOf("}");
-    return "\n" + funcStr.substring(bodyStart, bodyEnd) + "\n";
 }
 
 //define prototype

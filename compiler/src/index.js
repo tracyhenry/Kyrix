@@ -48,7 +48,7 @@ function Project(name, configFile) {
     this.renderingParams = "{}";
 
     // style sheets
-    this.styles = "";
+    this.styles = [];
 
     // pyramids
     this.pyramids = [];
@@ -357,12 +357,65 @@ function addRenderingParams(renderingParams) {
 }
 
 // adding a static CSS string
-function addStyles(filepath) {
-    if (filepath == null) return;
-    var rules = fs.readFileSync(filepath).toString();
+function addStyles(styles) {
+    if (!styles || typeof styles != "string") return;
 
+    //match http:// and https://
+    if (styles.match(/https?:\/\//)) {
+        var rules = styles;
+    } else if (styles.match(".css")) {
+        var rules = fs.readFileSync(styles).toString();
+    } else {
+        console.log("STYLES NOT CSS FILE, BUT STRING", styles);
+        var rules = styles;
+    }
+
+    this.styles.push(rules);
     // merge with current CSS
-    this.styles += rules;
+}
+
+function addTable(table, args) {
+    if (args == null) args = {};
+
+    var canvas = new Canvas(
+        table.name,
+        Math.ceil(table.sum_width),
+        0,
+        "",
+        `0:select count(*) * ${table.cell_h} + ${table.heads.height} from ${table.table}`
+    );
+    this.addCanvas(canvas);
+    this.addStyles(__dirname + "/template-api/css/table.css");
+    this.addRenderingParams(table.renderingParams);
+    var transform_func = table.getTableTransformFunc();
+    var tableTransform = new Transform(
+        table.query,
+        table.db,
+        transform_func,
+        table.schema,
+        true
+    );
+
+    var tableLayer = new Layer(tableTransform, false);
+    tableLayer.addPlacement(table.placement);
+    tableLayer.addRenderingFunc(table.getTableRenderer());
+
+    canvas.addLayer(tableLayer);
+
+    if (!args.view) {
+        var tableView = new View(
+            table.name + "_view",
+            0,
+            0,
+            Math.floor(table.sum_width * 0.8),
+            700
+        );
+        this.addView(tableView);
+        this.setInitialStates(tableView, canvas, 0, 0);
+    } else if (!(args.view instanceof View))
+        throw new Error("Constructing Table: view must be a View object");
+
+    return {canvas, view: args.view ? args.view : tableView};
 }
 
 /**
@@ -391,9 +444,16 @@ function setInitialStates(
         throw new Error("Initial canvas: unidentified canvasObj.");
 
     // check viewport range
-    if (viewportX < 0 || viewportX + viewObj.width > this.canvases[canvasId].w)
+    if (
+        this.canvases[canvasId].w > 0 &&
+        (viewportX < 0 || viewportX + viewObj.width > this.canvases[canvasId].w)
+    )
         throw new Error("Initial canvas: viewportX out of range.");
-    if (viewportY < 0 || viewportY + viewObj.height > this.canvases[canvasId].h)
+    if (
+        this.canvases[canvasId].h > 0 &&
+        (viewportY < 0 ||
+            viewportY + viewObj.height > this.canvases[canvasId].h)
+    )
         throw new Error("Initial canvas: viewportY out of range.");
 
     // check if the size of the predicates array equals the number of layers
@@ -566,7 +626,7 @@ function saveProject() {
         },
         4
     );
-    console.log(logJSON);
+    //console.log(logJSON);
 
     // add escape character to projectJSON
     var projectJSONEscapedMySQL = (projectJSON + "")
@@ -706,6 +766,7 @@ Project.prototype = {
     addCanvas,
     addJump,
     addStyles,
+    addTable,
     addAutoDD,
     addRenderingParams,
     setInitialStates,
