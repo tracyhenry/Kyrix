@@ -87,8 +87,8 @@ function Table(args) {
                     widths[key_index] = args.width[key];
                 } else {
                     throw new Error(
-                        "Constructing Table: width field not given in fields:",
-                        key
+                        "Constructing Table: width field not given in fields:" +
+                            key
                     );
                 }
             }
