@@ -377,22 +377,14 @@ function addStyles(styles) {
 function addTable(table, args) {
     if (args == null) args = {};
 
-    if (args.canvas == "new" || !args.canvas) {
-        console.log(table.width, table.height);
-        // how to avoid hard coding the height?
-        var canvas = new Canvas(
-            table.name,
-            Math.ceil(table.sum_width),
-            table.height || 2000
-        );
-        this.addCanvas(canvas);
-    } else if (!args.canvas instanceof Canvas) {
-        throw new Error(
-            "Constructing Table: canvas must be a canvas or 'new' "
-        );
-    } else {
-        var canvas = args.canvas;
-    }
+    var canvas = new Canvas(
+        table.name,
+        Math.ceil(table.sum_width),
+        0,
+        "",
+        `0:select count(*) * ${table.cell_h} + ${table.heads.height} from ${table.table}`
+    );
+    this.addCanvas(canvas);
     this.addStyles(__dirname + "/template-api/css/table.css");
     this.addRenderingParams(table.renderingParams);
     var transform_func = table.getTableTransformFunc();
@@ -411,7 +403,6 @@ function addTable(table, args) {
     canvas.addLayer(tableLayer);
 
     if (args.view == "new" || !args.view) {
-        console.log(Math.floor(table.sum_width));
         var tableView = new View(
             table.name + "_view",
             0,
@@ -456,9 +447,16 @@ function setInitialStates(
         throw new Error("Initial canvas: unidentified canvasObj.");
 
     // check viewport range
-    if (viewportX < 0 || viewportX + viewObj.width > this.canvases[canvasId].w)
+    if (
+        this.canvases[canvasId].w > 0 &&
+        (viewportX < 0 || viewportX + viewObj.width > this.canvases[canvasId].w)
+    )
         throw new Error("Initial canvas: viewportX out of range.");
-    if (viewportY < 0 || viewportY + viewObj.height > this.canvases[canvasId].h)
+    if (
+        this.canvases[canvasId].h > 0 &&
+        (viewportY < 0 ||
+            viewportY + viewObj.height > this.canvases[canvasId].h)
+    )
         throw new Error("Initial canvas: viewportY out of range.");
 
     // check if the size of the predicates array equals the number of layers

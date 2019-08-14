@@ -40,6 +40,7 @@ function Table(args) {
         .slice(0, 5);
 
     this.name = "kyrix_table_" + rand;
+    this.table = args.table;
 
     // schema and query first for buiding layer
     this.query = args.query || genQuery();
@@ -51,6 +52,7 @@ function Table(args) {
     this.x = args.x || 0;
     this.y = args.y || 0;
 
+    // get sum_width & width
     var sum_width = 0;
     var centroid_x = 0;
     var key_index = 0;
@@ -100,24 +102,23 @@ function Table(args) {
     }
     centroid_x = this.x + sum_width / 2;
     this.width = widths || sum_width;
-    this.height = args.height || 2000;
     this.sum_width = sum_width;
 
-    var th_args = args.heads;
-
-    if (!th_args) {
+    // get heads
+    if (!args.heads) {
         this.heads = {
             height: 0,
             names: []
         };
-    } else if (th_args == "auto") {
+    } else if (args.heads == "auto") {
         this.heads = {
             height: this.cell_h,
             names: args.fields
         };
     } else {
+        var th_args = args.heads;
         th_args.height = args.heads.height || this.cell_h;
-        th_args.names = th_args.names || args.fields;
+        th_args.names = args.heads.names || args.fields;
         if (typeof th_args.height !== "number")
             throw new Error(
                 "Constructing Table: heading height must be number"
@@ -127,8 +128,8 @@ function Table(args) {
                 "Constructing Table: heading names must be an object"
             );
         if (
-            th_args.names.length != args.fields.length &&
-            Array.isArray(th_args.names)
+            Array.isArray(th_args.names) &&
+            th_args.names.length != args.fields.length
         )
             throw new Error(
                 "Constructing Table: fields and heads length not equal"
@@ -139,20 +140,20 @@ function Table(args) {
             );
 
         // deep copy of args.fields
-        if (!Array.isArray(args.heads.names)) {
+        if (!Array.isArray(th_args.names)) {
             var [...th_names] = args.fields;
-            for (var key in args.heads.names) {
+            for (var key in th_args.names) {
                 if (typeof key !== "string")
                     throw new Error(
                         "Constructing Table: heads.names's key must be string"
                     );
-                if (typeof args.heads.names[key] !== "string")
+                if (typeof th_args.names[key] !== "string")
                     throw new Error(
                         "Constructing Table: heads.names's value must be string"
                     );
                 key_index = args.fields.indexOf(key);
                 if (key_index >= 0) {
-                    th_names[key_index] = args.heads.names[key];
+                    th_names[key_index] = th_args.names[key];
                 } else {
                     throw new Error(
                         "Constructing Table: heads.name field not given in fields:",
@@ -165,7 +166,7 @@ function Table(args) {
         this.heads = th_args;
     }
 
-    var tableRenderingParams = {
+    this.renderingParams = {
         [this.name]: {
             x: this.x,
             y: this.y,
@@ -175,8 +176,6 @@ function Table(args) {
             fields: args.fields
         }
     };
-
-    this.renderingParams = tableRenderingParams;
 
     this.placement = {
         centroid_x: "con:" + centroid_x,

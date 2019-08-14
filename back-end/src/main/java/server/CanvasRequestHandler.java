@@ -60,7 +60,7 @@ public class CanvasRequestHandler implements HttpHandler {
         // calculate w or h if they are not pre-determined
         if (c.getwSql().length() > 0) {
             String predicate = queryMap.get("predicate" + c.getwLayerId());
-            String sql = c.getwSql() + " and " + predicate;
+            String sql = c.getwSql() + (predicate.length() > 0 ? " and " + predicate : "");
             String db = c.getDbByLayerId(c.getwLayerId());
             try {
                 c.setW(getWidthOrHeightBySql(sql, db));
@@ -69,7 +69,7 @@ public class CanvasRequestHandler implements HttpHandler {
         }
         if (c.gethSql().length() > 0) {
             String predicate = queryMap.get("predicate" + c.gethLayerId());
-            String sql = c.gethSql() + " and " + predicate;
+            String sql = c.gethSql() + (predicate.length() > 0 ? " and " + predicate : "");
             String db = c.getDbByLayerId(c.gethLayerId());
             try {
                 c.setH(getWidthOrHeightBySql(sql, db));
