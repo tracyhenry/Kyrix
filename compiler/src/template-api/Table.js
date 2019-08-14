@@ -264,7 +264,7 @@ function getTableRenderer() {
     function renderer(svg, data, rend_args) {
         var table_params = rend_args.renderingParams["REPLACE_ME_table_name"];
         var fields = table_params.fields;
-        var g = svg.append("g").attr("id", "gTable");
+        var table = svg.append("g");
 
         var x = Number(table_params.x) || 0;
         var y = Number(table_params.y) || 0;
@@ -287,12 +287,6 @@ function getTableRenderer() {
         var th_W = cell_W;
         var th_H = th_params.height || 50;
         var th_Names = th_params.names || fields;
-
-        var table = g
-            .append("g")
-            .attr("width", table_params.width)
-            .attr("height", 500) //TODO: not hard code it
-            .attr("id", "kyrix_table");
 
         var ths = table
             .append("g")
