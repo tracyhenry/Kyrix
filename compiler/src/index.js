@@ -413,7 +413,7 @@ function addTable(table, args) {
         this.addView(tableView);
         this.setInitialStates(tableView, canvas, 0, 0);
     } else if (!(args.view instanceof View))
-        throw new Error("Constructing Table: view must be a view, or 'new' ");
+        throw new Error("Constructing Table: view must be a View object");
 
     return {canvas, view: args.view ? args.view : tableView};
 }
