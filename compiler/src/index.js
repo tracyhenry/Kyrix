@@ -266,7 +266,9 @@ function addAutoDD(autoDD, args) {
         });
 
         // construct rendering function
-        curLayer.addRenderingFunc(autoDD.getLayerRenderer());
+        curLayer.addRenderingFunc(
+            autoDD.getLayerRenderer(i, this.autoDDs.length - 1)
+        );
 
         // axes
         if (autoDD.axis) {

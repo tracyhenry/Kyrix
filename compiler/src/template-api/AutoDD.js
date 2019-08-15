@@ -210,7 +210,7 @@ function AutoDD(args) {
 }
 
 // get rendering function for an autodd layer based on rendering mode
-function getLayerRenderer() {
+function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
         var circleSizeInterpolator = d3
@@ -341,8 +341,8 @@ function getLayerRenderer() {
             .cellSize(cellSize)
             .bandwidth(bandwidth)
             .thresholds(function(v) {
-                //                var step = 0.05 / Math.pow(decayRate, +args.pyramidLevel) * 6;
-                //                var stop = d3.max(v);
+                // var step = 0.05 / Math.pow(decayRate, +args.pyramidLevel) * 6;
+                // var stop = d3.max(v);
                 var eMax =
                     (0.07 * roughN) /
                     1000 /
@@ -461,8 +461,8 @@ function getLayerRenderer() {
         var alphaCanvas = document.createElement("canvas");
         alphaCanvas.width = heatmapWidth;
         alphaCanvas.height = heatmapHeight;
-        var minWeight = params[args.autoDDId + "_minWeight"]; // set in the BGRP (back-end generated rendering params)
-        var maxWeight = params[args.autoDDId + "_maxWeight"]; // set in the BGRP
+        var minWeight = params["REPLACE_ME_autoDDId" + "_minWeight"]; // set in the BGRP (back-end generated rendering params)
+        var maxWeight = params["REPLACE_ME_autoDDId" + "_maxWeight"]; // set in the BGRP
         var alphaCtx = alphaCanvas.getContext("2d");
         var tpl = _getPointTemplate(radius);
         for (var i = 0; i < translatedData.length; i++) {
@@ -645,7 +645,8 @@ function getLayerRenderer() {
     ) {
         renderFuncBody = getBodyStringOfFunction(renderHeatmapBody)
             .replace(/REPLACE_ME_radius/g, this.heatmapRadius)
-            .replace(/REPLACE_ME_heatmap_opacity/g, this.heatmapOpacity);
+            .replace(/REPLACE_ME_heatmap_opacity/g, this.heatmapOpacity)
+            .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
         renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
             .replace(
                 /REPLACE_ME_is_object_onhover/g,
@@ -720,7 +721,5 @@ AutoDD.prototype = {
 
 // exports
 module.exports = {
-    AutoDD,
-    getLayerRenderer,
-    getAxesRenderer
+    AutoDD
 };
