@@ -74,10 +74,12 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
         // compute cluster number
         if (autoDD.getRenderingMode().equals("object+clusternum")
-                || autoDD.getRenderingMode().equals("circle only")
+                || autoDD.getRenderingMode().equals("circle")
                 || autoDD.getRenderingMode().equals("circle+object")
-                || autoDD.getRenderingMode().equals("contour only")
-                || autoDD.getRenderingMode().equals("contour+object")) {
+                || autoDD.getRenderingMode().equals("contour")
+                || autoDD.getRenderingMode().equals("contour+object")
+                || autoDD.getRenderingMode().equals("heatmap")
+                || autoDD.getRenderingMode().equals("heatmap+object")) {
 
             // a fake bottom level for non-sampled objects
             Rtrees.add(RTree.create());
@@ -90,13 +92,20 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                         Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
             }
 
-            for (int i = numLevels; i > 0; i--) {
+            for (int i = numLevels; i >= 0; i--) {
+                // all samples
                 Iterable<Entry<ArrayList<String>, Rectangle>> curSamples =
                         Rtrees.get(i).entries().toBlocking().toIterable();
+                // min clusternum && max clusternum
+                // for renderers
+                int minWeight = Integer.MAX_VALUE, maxWeight = Integer.MIN_VALUE;
                 for (Entry<ArrayList<String>, Rectangle> o : curSamples) {
                     ArrayList<String> curRow = o.value();
                     // boundary case: bottom level
                     if (i == numLevels) curRow.set(numRawColumns, "1");
+                    minWeight = Math.min(minWeight, Integer.valueOf(curRow.get(numRawColumns)));
+                    maxWeight = Math.max(maxWeight, Integer.valueOf(curRow.get(numRawColumns)));
+                    if (i == 0) continue;
 
                     // find its nearest neighbor in one level up
                     // using binary search + Rtree
@@ -143,6 +152,26 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     int clusterNumAfterIncrement =
                             clusterNumBeforeIncrement + Integer.valueOf(curRow.get(numRawColumns));
                     nearestNeighbor.set(numRawColumns, String.valueOf(clusterNumAfterIncrement));
+                }
+
+                // add min & max weight into rendering params
+                if (i < numLevels) {
+                    String BGRP = Main.getProject().getBGRP();
+                    BGRP = BGRP.substring(0, BGRP.length() - 1);
+                    autoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(i);
+                    if (BGRP.length() > 1) BGRP += ",";
+                    BGRP +=
+                            "\""
+                                    + autoDDId
+                                    + "_minWeight\": "
+                                    + String.valueOf(minWeight)
+                                    + ","
+                                    + "\""
+                                    + autoDDId
+                                    + "_maxWeight\": "
+                                    + String.valueOf(maxWeight)
+                                    + "}";
+                    Main.getProject().setBGRP(BGRP);
                 }
             }
         }

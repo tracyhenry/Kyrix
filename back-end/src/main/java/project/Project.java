@@ -23,6 +23,7 @@ public class Project {
     private ArrayList<Jump> jumps;
     private ArrayList<AutoDD> autoDDs;
     private String renderingParams;
+    private String BGRP = "{}"; // Back-end Generated Rendering parameters
     private ArrayList<String> styles;
 
     public String getName() {
@@ -47,6 +48,14 @@ public class Project {
 
     public String getRenderingParams() {
         return renderingParams;
+    }
+
+    public String getBGRP() {
+        return BGRP;
+    }
+
+    public void setBGRP(String BGRP) {
+        this.BGRP = BGRP;
     }
 
     public ArrayList<String> getStyles() {
@@ -100,6 +109,9 @@ public class Project {
                 + autoDDs
                 + ", renderingParams='"
                 + renderingParams
+                + '\''
+                + ", BGRP='"
+                + BGRP
                 + '\''
                 + ", styles='"
                 + styles

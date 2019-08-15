@@ -13,12 +13,14 @@ function AutoDD(args) {
             "Constructing AutoDD: rendering mode (rendering.mode) missing."
         );
     var allRenderingModes = new Set([
-        "object only",
+        "object",
         "object+clusternum",
+        "circle",
         "circle+object",
-        "circle only",
-        "contour only",
-        "contour+object"
+        "contour",
+        "contour+object",
+        "heatmap",
+        "heatmap+object"
     ]);
     if (!allRenderingModes.has(args.rendering.mode))
         throw new Error("Constructing AutoDD: unsupported rendering mode.");
@@ -26,9 +28,14 @@ function AutoDD(args) {
     // check constraints according to rendering mode
     this.circleMinSize = 30;
     this.circleMaxSize = 70;
-    this.contourBandwidth = 30;
+    this.contourBandwidth =
+        "contourBandwidth" in args.rendering
+            ? args.rendering.contourBandwidth
+            : 30;
+    this.heatmapRadius =
+        "heatmapRadius" in args.rendering ? args.rendering.heatmapRadius : 80;
     if (
-        args.rendering.mode == "circle only" ||
+        args.rendering.mode == "circle" ||
         args.rendering.mode == "circle+object"
     ) {
         args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
@@ -39,26 +46,35 @@ function AutoDD(args) {
             );
     }
     if (
-        (args.rendering.mode == "object only" ||
+        (args.rendering.mode == "object" ||
             args.rendering.mode == "object+clusternum" ||
             args.rendering.mode == "circle+object" ||
-            args.rendering.mode == "contour+object") &&
+            args.rendering.mode == "contour+object" ||
+            args.rendering.mode == "heatmap+object") &&
         (!("obj" in args.rendering) || !("renderer" in args.rendering.obj))
     )
         throw new Error(
             "Constructing AutoDD: object renderer (rendering.obj.renderer) missing."
         );
     if (
-        args.rendering.mode == "contour only" ||
-        args.rendering.mode == "contour+object"
+        args.rendering.mode == "contour" ||
+        args.rendering.mode == "contour+object" ||
+        args.rendering.mode == "heatmap" ||
+        args.rendering.mode == "heatmap+object"
     ) {
+        // TODO: roughN shouldn't be required for KDE rendering modes
         if (!("roughN" in args.rendering))
             throw new Error(
                 "Constructing AutoDD: A rough estimate of total objects (rendering.roughN) is missing for KDE rendering modes."
             );
         if (!("obj" in args.rendering)) args.rendering.obj = {};
-        args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
-            this.contourBandwidth * 8; // as what's implemented by d3-contour
+        if (args.rendering.mode.indexOf("contour") >= 0)
+            // as what's implemented by d3-contour
+            args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
+                this.contourBandwidth * 8;
+        else
+            args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
+                this.heatmapRadius * 2 + 1;
     }
 
     // check required args
@@ -121,7 +137,7 @@ function AutoDD(args) {
             typeof args.x.range[0] != "number" ||
             typeof args.x.range[1] != "number")
     )
-        throw new Error("Construcitn AutoDD: malformed x.range");
+        throw new Error("Constructing AutoDD: malformed x.range");
     if (
         args.y.range != null &&
         (!Array.isArray(args.y.range) ||
@@ -129,7 +145,7 @@ function AutoDD(args) {
             typeof args.y.range[0] != "number" ||
             typeof args.y.range[1] != "number")
     )
-        throw new Error("Construcitn AutoDD: malformed y.range");
+        throw new Error("Constructing AutoDD: malformed y.range");
     if (
         "axis" in args.rendering &&
         (args.x.range == null || args.y.range == null)
@@ -172,8 +188,10 @@ function AutoDD(args) {
             ? args.rendering.obj.overlap
                 ? true
                 : false
-            : this.renderingMode == "contour only" ||
-              this.renderingMode == "contour+object"
+            : this.renderingMode == "contour" ||
+              this.renderingMode == "contour+object" ||
+              this.renderingMode == "heatmap" ||
+              this.renderingMode == "heatmap+object"
             ? true
             : false;
     this.axis = "axis" in args.rendering ? args.rendering.axis : false;
@@ -183,6 +201,8 @@ function AutoDD(args) {
             : "interpolateViridis";
     this.contourOpacity =
         "contourOpacity" in args.rendering ? args.rendering.contourOpacity : 1;
+    this.heatmapOpacity =
+        "heatmapOpacity" in args.rendering ? args.rendering.heatmapOpacity : 1;
     this.loX = args.x.range != null ? args.x.range[0] : null;
     this.loY = args.y.range != null ? args.y.range[0] : null;
     this.hiX = args.x.range != null ? args.x.range[1] : null;
@@ -190,7 +210,7 @@ function AutoDD(args) {
 }
 
 // get rendering function for an autodd layer based on rendering mode
-function getLayerRenderer() {
+function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
         var circleSizeInterpolator = d3
@@ -321,8 +341,8 @@ function getLayerRenderer() {
             .cellSize(cellSize)
             .bandwidth(bandwidth)
             .thresholds(function(v) {
-                //                var step = 0.05 / Math.pow(decayRate, +args.pyramidLevel) * 6;
-                //                var stop = d3.max(v);
+                // var step = 0.05 / Math.pow(decayRate, +args.pyramidLevel) * 6;
+                // var stop = d3.max(v);
                 var eMax =
                     (0.07 * roughN) /
                     1000 /
@@ -385,6 +405,152 @@ function getLayerRenderer() {
                     ctx.fill();
             }
         }
+    }
+
+    function renderHeatmapBody() {
+        var params = args.renderingParams;
+        var radius = REPLACE_ME_radius;
+        var heatmapWidth, heatmapHeight, x, y;
+        if ("tileX" in args) {
+            // tiling
+            heatmapWidth = +args.tileW + radius * 2;
+            heatmapHeight = +args.tileH + radius * 2;
+            x = +args.tileX;
+            y = +args.tileY;
+        } else {
+            // dynamic boxes
+            heatmapWidth = +args.boxW + radius * 2;
+            heatmapHeight = +args.boxH + radius * 2;
+            x = +args.boxX;
+            y = +args.boxY;
+        }
+
+        var translatedData = data.map(d => ({
+            x: d.cx - (x - radius),
+            y: d.cy - (y - radius),
+            w: +d.cluster_num
+        }));
+
+        // render heatmap
+        svg.selectAll("*").remove();
+        var g = svg
+            .append("g")
+            .attr(
+                "transform",
+                "translate(" + (x - radius) + " " + (y - radius) + ")"
+            );
+
+        // from heatmap.js
+        // https://github.com/pa7/heatmap.js/blob/4e64f5ae5754c84fea363f0fcf24bea4795405ff/src/renderer/canvas2d.js#L23
+        var _getPointTemplate = function(radius) {
+            var tplCanvas = document.createElement("canvas");
+            var tplCtx = tplCanvas.getContext("2d");
+            var x = radius;
+            var y = radius;
+            tplCanvas.width = tplCanvas.height = radius * 2;
+
+            var gradient = tplCtx.createRadialGradient(x, y, 5, x, y, radius);
+            gradient.addColorStop(0, "rgba(0,0,0,1)");
+            gradient.addColorStop(1, "rgba(0,0,0,0)");
+            tplCtx.fillStyle = gradient;
+            tplCtx.fillRect(0, 0, 2 * radius, 2 * radius);
+            return tplCanvas;
+        };
+
+        // draw all data points in black circles
+        var alphaCanvas = document.createElement("canvas");
+        alphaCanvas.width = heatmapWidth;
+        alphaCanvas.height = heatmapHeight;
+        var minWeight = params["REPLACE_ME_autoDDId" + "_minWeight"]; // set in the BGRP (back-end generated rendering params)
+        var maxWeight = params["REPLACE_ME_autoDDId" + "_maxWeight"]; // set in the BGRP
+        var alphaCtx = alphaCanvas.getContext("2d");
+        var tpl = _getPointTemplate(radius);
+        for (var i = 0; i < translatedData.length; i++) {
+            var tplAlpha =
+                (translatedData[i].w - minWeight) / (maxWeight - minWeight);
+            alphaCtx.globalAlpha = tplAlpha < 0.01 ? 0.01 : tplAlpha;
+            alphaCtx.drawImage(
+                tpl,
+                translatedData[i].x - radius,
+                translatedData[i].y - radius
+            );
+        }
+
+        // colorize the black circles using GPU.js
+        var imageData = alphaCtx.getImageData(
+            0,
+            0,
+            heatmapWidth,
+            heatmapHeight
+        );
+        const canvas = document.createElement("canvas");
+        canvas.width = heatmapWidth;
+        canvas.height = heatmapHeight;
+        const gl = canvas.getContext("webgl2", {premultipliedAlpha: false});
+        var gpu = new GPU({canvas, webGl: gl});
+        const render = gpu
+            .createKernel(function(imageData) {
+                const alpha =
+                    imageData[
+                        ((this.constants.height - this.thread.y) *
+                            this.constants.width +
+                            this.thread.x) *
+                            4 +
+                            3
+                    ];
+                const rgb = getColor(alpha / 255.0);
+                this.color(
+                    rgb[0] / 255.0,
+                    rgb[1] / 255.0,
+                    rgb[2] / 255.0,
+                    alpha / 255.0
+                );
+            })
+            .setOutput([heatmapWidth, heatmapHeight])
+            .setGraphical(true)
+            .setFunctions([
+                function getColor(t) {
+                    // equivalent d3 color scale:
+                    // d3.scaleLinear()
+                    // .domain([0, 0.25, 0.55, 0.85, 1])
+                    // .range(["rgb(255,255,255)", "rgb(0,0,255)",
+                    // "rgb(0,255,0)", "rgb(255, 255, 0)", "rgb(255,0,0)"]);
+                    // hardcode here because we can't access d3 in GPU.js's kernel function
+                    if (t >= 0 && t <= 0.25)
+                        return [
+                            255 + ((0 - 255) * t) / 0.25,
+                            255 + ((0 - 255) * t) / 0.25,
+                            255
+                        ];
+                    if (t >= 0.25 && t <= 0.55)
+                        return [
+                            0,
+                            (255 * (t - 0.25)) / 0.3,
+                            255 + ((0 - 255) * (t - 0.25)) / 0.3
+                        ];
+                    if (t >= 0.55 && t <= 0.85)
+                        return [(255 * (t - 0.55)) / 0.3, 255, 0];
+                    if (t >= 0.85 && t <= 1)
+                        return [255, 255 + ((0 - 255) * (t - 0.85)) / 0.15, 0];
+                    return [255, 255, 255];
+                }
+            ])
+            .setConstants({width: heatmapWidth, height: heatmapHeight});
+        render(imageData.data);
+
+        g.append("foreignObject")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", heatmapWidth)
+            .attr("height", heatmapHeight)
+            .style("overflow", "auto")
+            .node()
+            .appendChild(render.canvas);
+        d3.select(render.canvas).style("opacity", REPLACE_ME_heatmap_opacity);
+    }
+
+    function KDEObjectHoverBody() {
+        var isObjectOnHover = REPLACE_ME_is_object_onhover;
         if (isObjectOnHover) {
             var objectRenderer = REPLACE_ME_this_rendering;
             var hiddenRectSize = 100;
@@ -424,7 +590,7 @@ function getLayerRenderer() {
 
     var renderFuncBody;
     if (
-        this.renderingMode == "object only" ||
+        this.renderingMode == "object" ||
         this.renderingMode == "object+clusternum"
     ) {
         renderFuncBody =
@@ -434,7 +600,7 @@ function getLayerRenderer() {
                 renderObjectClusterNumBody
             );
     } else if (
-        this.renderingMode == "circle only" ||
+        this.renderingMode == "circle" ||
         this.renderingMode == "circle+object"
     ) {
         // render circle
@@ -454,7 +620,7 @@ function getLayerRenderer() {
                 this.renderingMode == "circle+object"
             );
     } else if (
-        this.renderingMode == "contour only" ||
+        this.renderingMode == "contour" ||
         this.renderingMode == "contour+object"
     ) {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
@@ -464,15 +630,29 @@ function getLayerRenderer() {
             .replace(/REPLACE_ME_contour_colorScheme/g, this.contourColorScheme)
             .replace(/REPLACE_ME_CONTOUR_OPACITY/g, this.contourOpacity)
             .replace(
-                /REPLACE_ME_this_rendering/g,
-                this.renderingMode == "contour+object"
-                    ? this.rendering.toString()
-                    : "null;"
-            )
-            .replace(
                 /REPLACE_ME_is_object_onhover/g,
                 this.renderingMode == "contour+object"
             );
+        renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
+            .replace(
+                /REPLACE_ME_is_object_onhover/g,
+                this.renderingMode == "contour+object"
+            )
+            .replace(/REPLACE_ME_this_rendering/g, this.rendering.toString());
+    } else if (
+        this.renderingMode == "heatmap" ||
+        this.renderingMode == "heatmap+object"
+    ) {
+        renderFuncBody = getBodyStringOfFunction(renderHeatmapBody)
+            .replace(/REPLACE_ME_radius/g, this.heatmapRadius)
+            .replace(/REPLACE_ME_heatmap_opacity/g, this.heatmapOpacity)
+            .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
+        renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
+            .replace(
+                /REPLACE_ME_is_object_onhover/g,
+                this.renderingMode == "heatmap+object"
+            )
+            .replace(/REPLACE_ME_this_rendering/g, this.rendering.toString());
     }
     return new Function("svg", "data", "args", renderFuncBody);
 }
@@ -541,7 +721,5 @@ AutoDD.prototype = {
 
 // exports
 module.exports = {
-    AutoDD,
-    getLayerRenderer,
-    getAxesRenderer
+    AutoDD
 };

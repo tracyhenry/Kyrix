@@ -249,8 +249,10 @@ function addAutoDD(autoDD, args) {
 
         // set retainSizeZoom
         curLayer.setRetainSizeZoom(
-            autoDD.renderingMode == "contour only" ||
-                autoDD.renderingMode == "contour+object"
+            autoDD.renderingMode == "contour" ||
+                autoDD.renderingMode == "contour+object" ||
+                autoDD.renderingMode == "heatmap" ||
+                autoDD.renderingMode == "heatmap+object"
                 ? false
                 : true
         );
@@ -264,7 +266,9 @@ function addAutoDD(autoDD, args) {
         });
 
         // construct rendering function
-        curLayer.addRenderingFunc(autoDD.getLayerRenderer());
+        curLayer.addRenderingFunc(
+            autoDD.getLayerRenderer(i, this.autoDDs.length - 1)
+        );
 
         // axes
         if (autoDD.axis) {

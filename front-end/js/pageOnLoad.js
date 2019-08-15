@@ -150,8 +150,10 @@ function pageOnLoad(serverAddr) {
             globalVar.project = response.project;
             globalVar.tileW = +response.tileW;
             globalVar.tileH = +response.tileH;
-            globalVar.renderingParams = JSON.parse(
-                globalVar.project.renderingParams
+            globalVar.renderingParams = Object.assign(
+                {},
+                JSON.parse(globalVar.project.renderingParams),
+                JSON.parse(globalVar.project.BGRP)
             );
             processRenderingParams();
 

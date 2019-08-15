@@ -29,10 +29,9 @@ var autoDD = {
         range: [69, 148]
     },
     rendering: {
-        mode: "contour+object",
-        roughN: 999,
+        // mode: "object",
+        mode: "object+clusternum",
         axis: true,
-        contourColorScheme: "interpolateBlues",
         obj: {
             renderer: renderers.teamTimelineRendering,
             bboxW: 162,
@@ -42,5 +41,4 @@ var autoDD = {
 };
 
 p.addAutoDD(new AutoDD(autoDD), {newPyramid: true, newView: true});
-
 p.saveProject();
