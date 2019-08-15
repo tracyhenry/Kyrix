@@ -29,13 +29,13 @@ var autoDD = {
         range: [69, 148]
     },
     rendering: {
-        //  mode: "contour",
+        // mode: "contour",
         mode: "contour+object",
         roughN: 999,
         axis: true,
-        //                contourColorScheme: "interpolateBlues",
-        //        contourOpacity: 0.5,
-        //              contourBandwidth: 50,
+        // contourColorScheme: "interpolateBlues",
+        // contourOpacity: 0.5,
+        // contourBandwidth: 50,
         obj: {
             renderer: renderers.teamTimelineRendering,
             bboxW: 162,

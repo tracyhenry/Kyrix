@@ -29,7 +29,7 @@ var autoDD = {
         range: [69, 148]
     },
     rendering: {
-//         mode: "circle",
+        // mode: "circle",
         mode: "circle+object",
         roughN: 999,
         axis: true,

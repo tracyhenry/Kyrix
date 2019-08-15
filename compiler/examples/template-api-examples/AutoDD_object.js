@@ -29,7 +29,7 @@ var autoDD = {
         range: [69, 148]
     },
     rendering: {
-        //         mode: "object",
+        // mode: "object",
         mode: "object+clusternum",
         axis: true,
         obj: {
