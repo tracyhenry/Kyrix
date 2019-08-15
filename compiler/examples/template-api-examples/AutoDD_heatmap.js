@@ -29,11 +29,12 @@ var autoDD = {
         range: [69, 148]
     },
     rendering: {
-        //        mode: "contour+object",
-        mode: "heatmap",
+        //        mode: "heatmap",
+        mode: "heatmap+object",
         roughN: 999,
         axis: true,
-        //        contourColorScheme: "interpolateBlues",
+        //          heatmapRadius: 90,
+        //          heatmapOpacity: 0.5,
         obj: {
             renderer: renderers.teamTimelineRendering,
             bboxW: 162,
@@ -43,5 +44,4 @@ var autoDD = {
 };
 
 p.addAutoDD(new AutoDD(autoDD), {newPyramid: true, newView: true});
-
 p.saveProject();

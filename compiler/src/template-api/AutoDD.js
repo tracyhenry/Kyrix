@@ -30,7 +30,7 @@ function AutoDD(args) {
     this.circleMaxSize = 70;
     this.contourBandwidth =
         "contourBandwidth" in args.rendering
-            ? args.rendering.countourBandwidth
+            ? args.rendering.contourBandwidth
             : 30;
     this.heatmapRadius =
         "heatmapRadius" in args.rendering ? args.rendering.heatmapRadius : 80;
