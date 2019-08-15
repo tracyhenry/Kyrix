@@ -69,9 +69,9 @@ function AutoDD(args) {
             );
         if (!("obj" in args.rendering)) args.rendering.obj = {};
         if (args.rendering.mode.indexOf("contour") >= 0)
+            // as what's implemented by d3-contour
             args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
                 this.contourBandwidth * 8;
-        // as what's implemented by d3-contour
         else
             args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
                 this.heatmapRadius * 2 + 1;
