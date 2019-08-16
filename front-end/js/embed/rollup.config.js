@@ -1,7 +1,7 @@
 export default {
     input: "index.js",
     output: {
-        file: "bundle.js",
+        file: "kyrix.js",
         name: "kyrix",
         format: "umd"
     },
