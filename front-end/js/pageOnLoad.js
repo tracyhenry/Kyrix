@@ -27,6 +27,10 @@ function getCurCanvas(viewId) {
         data: postData,
         success: function(data) {
             gvd.curCanvas = JSON.parse(data).canvas;
+            if (gvd.curCanvas.w < gvd.viewportWidth)
+                gvd.curCanvas.w = gvd.viewportWidth;
+            if (gvd.curCanvas.h < gvd.viewportHeight)
+                gvd.curCanvas.h = gvd.viewportHeight;
             gvd.curStaticData = JSON.parse(data).staticData;
             setupLayerLayouts(viewId);
 

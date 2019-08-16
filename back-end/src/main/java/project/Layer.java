@@ -14,6 +14,7 @@ public class Layer implements Serializable {
     private boolean isAutoDDLayer;
     private String autoDDId;
     private boolean retainSizeZoom;
+    private boolean isPredicatedTable;
 
     public Transform getTransform() {
         return transform;
@@ -45,6 +46,10 @@ public class Layer implements Serializable {
 
     public String getAutoDDId() {
         return autoDDId;
+    }
+
+    public boolean isPredicatedTable() {
+        return isPredicatedTable;
     }
 
     public boolean isRetainSizeZoom() {

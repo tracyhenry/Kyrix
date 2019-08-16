@@ -44,6 +44,9 @@ function Project(name, configFile) {
     // set of autoDDs
     this.autoDDs = [];
 
+    // set of tables
+    this.tables = [];
+
     // rendering parameters
     this.renderingParams = "{}";
 
@@ -381,12 +384,29 @@ function addStyles(styles) {
 function addTable(table, args) {
     if (args == null) args = {};
 
+    this.tables.push(table);
+    table.name = "kyrix_table_" + (this.tables.length - 1);
+
+    table.renderingParams = {
+        [table.name]: {
+            x: table.x,
+            y: table.y,
+            heads: {
+                height: table.heads_height,
+                names: table.heads_names
+            },
+            width: table.width,
+            cell_height: table.cell_height,
+            fields: table.schema.slice(0, table.schema.indexOf("rn"))
+        }
+    };
+
     var canvas = new Canvas(
         table.name,
         Math.ceil(table.sum_width),
         0,
         "",
-        `0:select count(*) * ${table.cell_h} + ${table.heads.height} from ${table.table}`
+        `0:select count(*) * ${table.cell_height} + ${table.heads_height} from ${table.table}`
     );
     this.addCanvas(canvas);
     this.addStyles(__dirname + "/template-api/css/table.css");
@@ -403,7 +423,9 @@ function addTable(table, args) {
     var tableLayer = new Layer(tableTransform, false);
     tableLayer.addPlacement(table.placement);
     tableLayer.addRenderingFunc(table.getTableRenderer());
-
+    if (table.group_by.length > 0) {
+        tableLayer.setIsPredicatedTable(true);
+    }
     canvas.addLayer(tableLayer);
 
     if (!args.view) {
