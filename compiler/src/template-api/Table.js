@@ -35,17 +35,7 @@ function Table(args) {
                 );
     }
 
-    // if(typeof args.name === "string")
-    //     this.name = "kyrix_table_" + args.name
-    // else{
-    //      var rand = Math.random()
-    //         .toString(36)
-    //         .substr(2)
-    //         .slice(0, 5);
-    //     this.name = "kyrix_table_" + rand;
-    // }
     this.table = args.table;
-    // this.schema = ;
     this.db = args.db;
 
     this.group_by = [];
@@ -65,9 +55,9 @@ function Table(args) {
 
     var group_by = this.group_by;
     var fields = args.fields;
+    // schema and query first for buiding layer
     this.schema = genSchema();
     var schema = this.schema;
-    // schema and query first for buiding layer
     this.query = args.query || genQuery();
 
     // TODO: check the type of arguments

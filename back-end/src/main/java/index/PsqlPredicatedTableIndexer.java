@@ -25,7 +25,6 @@ class PredicatedTableIndexer extends PsqlNativeBoxIndexer {
 
     // thread-safe instance getter
     public static synchronized PredicatedTableIndexer getInstance() {
-
         if (instance == null) instance = new PredicatedTableIndexer();
         return instance;
     }
@@ -34,8 +33,10 @@ class PredicatedTableIndexer extends PsqlNativeBoxIndexer {
     public void createMV(Canvas c, int layerId) throws Exception {
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
+        HashMap<String, Integer> hashMap = new HashMap<>();
+
+        // this is used to find the correct table
         String tid = c.getId();
-        int tindex;
         Table t = null;
         ArrayList<Table> tables = Main.getProject().getTables();
         for (int i = 0; i < tables.size(); i++) {
@@ -45,13 +46,16 @@ class PredicatedTableIndexer extends PsqlNativeBoxIndexer {
                 break;
             }
         }
-        HashMap<String, Integer> hashMap = new HashMap<>();
 
         String transQuery = trans.getQuery();
+        // predicate columns are "group_by" in compiler
         ArrayList<String> predcols = t.getPredCols();
+        // predSchema is "fields" union "group_by" in compiler
         ArrayList<String> predSchema = t.getSchema();
 
+        // this is used for mapping pred col to index in result set
         ArrayList<Integer> indices = new ArrayList<Integer>();
+        // the index of ty is because "kyrix_ty" is not in the result set but in the pred Schema
         int index_of_ty = predSchema.indexOf("kyrix_ty");
         for (int i = 0; i < predcols.size(); i++) {
             int index = predSchema.indexOf(predcols.get(i));
@@ -72,6 +76,7 @@ class PredicatedTableIndexer extends PsqlNativeBoxIndexer {
         System.out.println("predSchema: " + predSchema);
         System.out.println("indices: " + indices);
         sql = "CREATE UNLOGGED TABLE " + bboxTableName + " (";
+        // predSchema: fields rn ty predicate
         for (int i = 0; i < predSchema.size(); i++) sql += predSchema.get(i) + " text, ";
         sql += "cx double precision, cy double precision, minx double precision, ";
         sql += "miny double precision, maxx double precision, maxy double precision, geom box)";
@@ -120,13 +125,16 @@ class PredicatedTableIndexer extends PsqlNativeBoxIndexer {
                 hashkeysb.append(rs.getString(i + 1));
             }
             String hashkey = hashkeysb.toString();
+            // get the row number of current row in current category
             int rn = hashMap.getOrDefault(hashkey, 0) + 1;
+            // update rn(row number)
             hashMap.put(hashkey, rn);
 
             double ty = y0 + heads_height + (rn - 0.5) * cell_height;
 
             // raw: fields, rn, groupby
             // transformed: fields, rn, ty, groupby
+            int pscol = 1;
             ArrayList<String> transformedRow = new ArrayList<>();
             for (int i = 0; i < numcols; i++) {
                 if (i < index_of_ty - 1) {
@@ -138,23 +146,21 @@ class PredicatedTableIndexer extends PsqlNativeBoxIndexer {
                 } else {
                     transformedRow.add(rs.getString(i));
                 }
+                // more compact this way, no need for the second looping
+                preparedStmt.setString(pscol++, transformedRow.get(i).replaceAll("\'", "\'\'"));
             }
 
             ArrayList<Double> curBbox = getBboxCoordinates(l, transformedRow);
-            int pscol = 1;
-            for (int i = 0; i < numcols; i++)
-                preparedStmt.setString(pscol++, transformedRow.get(i).replaceAll("\'", "\'\'"));
             for (int i = 0; i < 6; i++) preparedStmt.setDouble(pscol++, curBbox.get(i));
             preparedStmt.addBatch();
 
-            if (rowCount % 1000 == 0) {
-                System.out.println(
-                        "row " + rowCount + ": " + transformedRow + " rn:" + rn + " ty:" + ty);
-            }
             if (rowCount % batchsize == 0) {
                 preparedStmt.executeBatch();
             }
             if (rowCount % 1000 == 0) {
+                // see if the indexer is working as expected
+                System.out.println(
+                        "row " + rowCount + ": " + transformedRow + " rn:" + rn + " ty:" + ty);
                 // perf: only measure to the nearest 1K recs/sec
                 currTs = (new Date()).getTime();
                 if (currTs / 10000 > lastTs / 10000) { // print every N=10 seconds

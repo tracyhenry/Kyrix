@@ -39,7 +39,7 @@ var table_args = {
     group_by: "home_team",
 
     order_by: "game_id",
-    order: "desc"
+    order: "asc"
 };
 
 var leagueTable = new Table(table_args);

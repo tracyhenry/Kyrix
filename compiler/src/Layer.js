@@ -86,7 +86,7 @@ function setRetainSizeZoom(retainSizeZoom) {
 
 /**
  * set isPredicatedTable, which tells the backend that this layer should use the pred table indexer
- * @param setIsPredicatedTable
+ * @param isPredicatedTable
  */
 function setIsPredicatedTable(isPredicatedTable) {
     this.isPredicatedTable = isPredicatedTable;
