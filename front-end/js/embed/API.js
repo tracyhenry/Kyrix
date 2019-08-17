@@ -66,14 +66,31 @@ export function triggerPan(viewId, panX, panY) {
 
 export function getRenderData(viewId) {
     var gvd = globalVar.views[viewId];
-    var renderData = [];
-    var numLayers = gvd.curCanvas.layers.length;
-    for (var i = 0; i < numLayers; i++)
-        renderData.push(getRenderDataOfLayer(viewId, i));
-    return renderData;
+    var ret = [];
+    for (var i = 0; i < gvd.renderData.length; i++) {
+        if (gvd.curCanvas.layers[i].isStatic) ret.push(gvd.curStaticData[i]);
+        else ret.push(gvd.renderData[i]);
+    }
+    return ret;
 }
 
 export function getRenderDataOfLayer(viewId, layerId) {
+    var gvd = globalVar.views[viewId];
+    if (gvd.curCanvas.layers[layerId].isStatic)
+        return gvd.curStaticData[layerId];
+    else return gvd.renderData[layerId];
+}
+
+export function getObjectData(viewId) {
+    var gvd = globalVar.views[viewId];
+    var renderData = [];
+    var numLayers = gvd.curCanvas.layers.length;
+    for (var i = 0; i < numLayers; i++)
+        renderData.push(getObjectDataOfLayer(viewId, i));
+    return renderData;
+}
+
+export function getObjectDataOfLayer(viewId, layerId) {
     var viewClass = ".view_" + viewId;
     var curlayerData = [];
     var mp = {}; // hashset
