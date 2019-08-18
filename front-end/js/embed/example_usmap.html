@@ -86,7 +86,7 @@
                     kyrix.triggerJump("state", matchingStates[0], 1, 0);
             });
 
-            //onPan
+            //on pan
             var addRectToState = function() {
                 var svg = d3.select(kyrix.getMainSvg("state", 1));
                 var vp = kyrix.getCurrentViewport("county");
@@ -106,7 +106,7 @@
                     .attr("x", vp["vpX"] / 5)
                     .attr("y", vp["vpY"] / 5);
             };
-            kyrix.onPan("county", addRectToState);
+            kyrix.on("pan", "county", addRectToState);
 
             //change rendering color
             var colors = ["red", "green", "blue"];

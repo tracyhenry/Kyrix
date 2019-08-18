@@ -33,6 +33,11 @@
             // initializeApp() loads kyrix vis into a div, and returns this div
             kyrix.initializeApp(serverAddr);
 
+            // logs to console every time a jump is finished
+            kyrix.on("jump", "nba", function() {
+                console.log("Jump to " + kyrix.getCurrentCanvasId("nba"));
+            });
+
             //--------------------------NBA-------------------------
             // filter data upon input change -- this will filter all teams that start with the input letters
             // and filtering is done only when the current canvas is teamlogo

@@ -142,9 +142,31 @@ export function getCurrentViewport(viewId) {
     }
 }
 
-export function onPan(viewId, callback) {
+export function on(evt, viewId, callback) {
+    function throwError() {
+        throw new Error("kyrix.on: unrecognized Kyrix event type.");
+    }
     var gvd = globalVar.views[viewId];
-    gvd.onPanHandler = callback;
+    var evtTypes = ["pan", "zoom", "jump"];
+    for (var evtType of evtTypes)
+        if (evt.startsWith(evtType)) {
+            if (evt.length > evtType.length && evt[evtType.length] != ".")
+                throwError();
+            var gvdKey =
+                "on" +
+                evtType[0].toUpperCase() +
+                evtType.substring(1) +
+                "Handlers";
+            if (!gvd[gvdKey]) gvd[gvdKey] = {};
+            var subEvt = "";
+            if (evt.length > evtType.length)
+                subEvt = evt.substring(evtType.length + 1);
+            if (typeof callback == "undefined") return gvd[gvdKey][subEvt];
+            gvd[gvdKey][subEvt] = callback;
+
+            return;
+        }
+    throwError();
 }
 
 export function reRender(viewId, layerId, additionalArgs) {
@@ -198,4 +220,12 @@ export function addRenderingParameters(params) {
     var keys = Object.keys(params);
     for (var i = 0; i < keys.length; i++)
         globalVar.renderingParams[keys[i]] = params[keys[i]];
+}
+
+export function getRenderingParameters() {
+    return globalVar.renderingParams;
+}
+
+export function getGlobalVarDictionary(viewId) {
+    return globalVar.views[viewId];
 }
