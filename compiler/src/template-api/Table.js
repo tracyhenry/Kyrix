@@ -119,15 +119,15 @@ function Table(args) {
 
     // get heads
     var heads;
-    if (!args.heads) {
-        heads = {
-            height: 0,
-            names: []
-        };
-    } else if (args.heads == "auto") {
+    if (!args.heads || args.heads == "auto") {
         heads = {
             height: this.cell_height,
             names: args.fields
+        };
+    } else if (args.heads == "none") {
+        heads = {
+            height: 0,
+            names: []
         };
     } else {
         var th_args = args.heads;
@@ -309,10 +309,10 @@ function getTableRenderer() {
         var th_X = cell_X;
         var th_Y = y;
         var th_W = cell_W;
-        var th_H = th_params.height || 50;
+        var th_H = th_params.height;
         var th_Names = th_params.names || fields;
 
-        if (th_params.height > 0) {
+        if (th_H > 0) {
             var ths = table
                 .append("g")
                 .datum({
@@ -338,10 +338,22 @@ function getTableRenderer() {
             });
 
         for (var index = 0; index < fields.length; index++) {
-            var th = ths
-                .append("g")
-                .attr("class", "th " + th_Names[index])
-                .attr("transform", "translate(" + th_X[index] + ",0)");
+            if (th_H > 0) {
+                var th = ths
+                    .append("g")
+                    .attr("class", "th " + th_Names[index])
+                    .attr("transform", "translate(" + th_X[index] + ",0)");
+
+                th.append("rect")
+                    .attr("width", th_W[index])
+                    .attr("height", th_H);
+
+                th.append("text")
+                    .text(th_Names[index])
+                    .attr("dx", th_W[index] / 2)
+                    .attr("y", th_H / 2)
+                    .attr("dy", "0.5em");
+            }
 
             trs.each(function(d, i, nodes) {
                 var tr = d3.select(this);
@@ -368,16 +380,6 @@ function getTableRenderer() {
                     .attr("y", cell_H / 2)
                     .attr("dy", "0.5em");
             });
-
-            th.append("rect")
-                .attr("width", th_W[index])
-                .attr("height", th_H);
-
-            th.append("text")
-                .text(th_Names[index])
-                .attr("dx", th_W[index] / 2)
-                .attr("y", th_H / 2)
-                .attr("dy", "0.5em");
         }
     }
 }

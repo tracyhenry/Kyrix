@@ -46,7 +46,7 @@ public abstract class Indexer implements Serializable {
                     if (c.getLayers().get(layerId).isAutoDDLayer())
                         indexer = AutoDDInMemoryIndexer.getInstance();
                     else if (c.getLayers().get(layerId).isPredicatedTable())
-                        indexer = PredicatedTableIndexer.getInstance();
+                        indexer = PsqlPredicatedTableIndexer.getInstance();
                     else if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
                         indexer = PsqlSpatialIndexer.getInstance(isCitus);
                     else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)

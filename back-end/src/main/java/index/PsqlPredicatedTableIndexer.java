@@ -6,7 +6,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.function.*;
 import main.Config;
 import main.DbConnector;
 import main.Main;
@@ -16,16 +15,16 @@ import project.Table;
 import project.Transform;
 
 /** Created by xinli on 8/15/19. */
-class PredicatedTableIndexer extends PsqlNativeBoxIndexer {
+class PsqlPredicatedTableIndexer extends PsqlNativeBoxIndexer {
 
-    private static PredicatedTableIndexer instance = null;
+    private static PsqlPredicatedTableIndexer instance = null;
 
     // singleton pattern to ensure only one instance existed
-    private PredicatedTableIndexer() {}
+    private PsqlPredicatedTableIndexer() {}
 
     // thread-safe instance getter
-    public static synchronized PredicatedTableIndexer getInstance() {
-        if (instance == null) instance = new PredicatedTableIndexer();
+    public static synchronized PsqlPredicatedTableIndexer getInstance() {
+        if (instance == null) instance = new PsqlPredicatedTableIndexer();
         return instance;
     }
 
@@ -158,9 +157,6 @@ class PredicatedTableIndexer extends PsqlNativeBoxIndexer {
                 preparedStmt.executeBatch();
             }
             if (rowCount % 1000 == 0) {
-                // see if the indexer is working as expected
-                System.out.println(
-                        "row " + rowCount + ": " + transformedRow + " rn:" + rn + " ty:" + ty);
                 // perf: only measure to the nearest 1K recs/sec
                 currTs = (new Date()).getTime();
                 if (currTs / 10000 > lastTs / 10000) { // print every N=10 seconds
