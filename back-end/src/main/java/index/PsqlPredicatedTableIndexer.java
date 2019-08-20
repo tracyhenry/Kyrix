@@ -53,12 +53,12 @@ class PsqlPredicatedTableIndexer extends PsqlNativeBoxIndexer {
         ArrayList<String> predSchema = t.getSchema();
 
         // this is used for mapping pred col to index in result set
-        ArrayList<Integer> indices = new ArrayList<Integer>();
+        ArrayList<Integer> indices = new ArrayList<>();
         // the index of ty is because "kyrix_ty" is not in the result set but in the pred Schema
-        int index_of_ty = predSchema.indexOf("kyrix_ty");
+        int indexOfTy = predSchema.indexOf("kyrix_ty");
         for (int i = 0; i < predcols.size(); i++) {
             int index = predSchema.indexOf(predcols.get(i));
-            if (index > index_of_ty) indices.add(index - 1);
+            if (index > indexOfTy) indices.add(index - 1);
             else indices.add(index);
         }
 
@@ -112,11 +112,8 @@ class PsqlPredicatedTableIndexer extends PsqlNativeBoxIndexer {
                         + String.valueOf(numColumn));
         double heads_height = t.getHeadsHeight();
         double cell_height = t.getCellHeight();
-        double x0 = t.getX();
         double y0 = t.getY();
         while (rs.next()) {
-            // count log - important to increment early so modulo-zero doesn't trigger on first
-            // iteration
             rowCount++;
 
             StringBuilder hashkeysb = new StringBuilder();
@@ -136,11 +133,11 @@ class PsqlPredicatedTableIndexer extends PsqlNativeBoxIndexer {
             int pscol = 1;
             ArrayList<String> transformedRow = new ArrayList<>();
             for (int i = 0; i < numcols; i++) {
-                if (i < index_of_ty - 1) {
+                if (i < indexOfTy - 1) {
                     transformedRow.add(rs.getString(i + 1));
-                } else if (i == index_of_ty - 1) {
+                } else if (i == indexOfTy - 1) {
                     transformedRow.add(rn + "");
-                } else if (i == index_of_ty) {
+                } else if (i == indexOfTy) {
                     transformedRow.add(ty + "");
                 } else {
                     transformedRow.add(rs.getString(i));
@@ -199,7 +196,6 @@ class PsqlPredicatedTableIndexer extends PsqlNativeBoxIndexer {
         startTs = currTs;
 
         // create index - gist/spgist require logged table type
-        // TODO: consider sp-gist
         Statement createIndexStmt = DbConnector.getStmtByDbName(Config.databaseName);
         sql = "CREATE INDEX sp_" + bboxTableName + " ON " + bboxTableName + " USING gist (geom);";
         System.out.println(sql);
@@ -213,6 +209,5 @@ class PsqlPredicatedTableIndexer extends PsqlNativeBoxIndexer {
                         + bboxTableName
                         + " ON "
                         + bboxTableName);
-        startTs = currTs;
     }
 }
