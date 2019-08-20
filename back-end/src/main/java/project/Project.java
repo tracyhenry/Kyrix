@@ -22,6 +22,7 @@ public class Project {
     private ArrayList<Canvas> canvases;
     private ArrayList<Jump> jumps;
     private ArrayList<AutoDD> autoDDs;
+    private ArrayList<Table> tables;
     private String renderingParams;
     private String BGRP = "{}"; // Back-end Generated Rendering parameters
     private ArrayList<String> styles;
@@ -44,6 +45,10 @@ public class Project {
 
     public ArrayList<AutoDD> getAutoDDs() {
         return autoDDs;
+    }
+
+    public ArrayList<Table> getTables() {
+        return tables;
     }
 
     public String getRenderingParams() {
