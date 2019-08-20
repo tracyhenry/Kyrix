@@ -20,6 +20,8 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
     private static PsqlNativeBoxIndexer instance = null;
     private static boolean isCitus = false;
 
+    protected PsqlNativeBoxIndexer() {}
+
     // singleton pattern to ensure only one instance existed
     private PsqlNativeBoxIndexer(boolean isCitus) {
         this.isCitus = isCitus;

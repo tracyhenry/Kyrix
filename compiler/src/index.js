@@ -45,6 +45,9 @@ function Project(name, configFile) {
     // set of autoDDs
     this.autoDDs = [];
 
+    // set of Hierarchies
+    this.hierarchies = [];
+
     // rendering parameters
     this.renderingParams = "{}";
 
@@ -347,6 +350,8 @@ function addTreemap(treemap) {
     //     "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
     // );
 
+    this.hierarchies.push(treemap);
+
     var root = d3
         .hierarchy(treemap.data, d => d[treemap.children])
         // .children((d)=>{return d[treemap.children]})
@@ -362,6 +367,16 @@ function addTreemap(treemap) {
     var treemapCanvases = [];
     var flag_no = true;
     var zoomFactor = 1;
+
+    treemap.name = "treemap_" + (this.hierarchies.length - 1);
+
+    treemap.renderingParams = {
+        [treemap.name]: {
+            colorInterpolator: treemap.colorInterpolator || "Rainbow",
+            // colorInterpolator: args.colorInterpolator || "Viridis"
+            transitions: treemap.transitions || []
+        }
+    };
 
     var genTreemapCanvas = function(i) {
         zoomFactor = Math.pow(treemap.zoomFactor, i);
@@ -383,10 +398,10 @@ function addTreemap(treemap) {
 
         var set = cooked.descendants().map(d => {
             return [
-                // label
-                d.data[treemap.label],
+                // id
+                d.data[treemap.id],
                 // parent
-                d.parent ? d.parent.data[treemap.label] : "none",
+                d.parent ? d.parent.data[treemap.id] : "none",
                 d.value,
                 d.depth,
                 d.height,
@@ -414,7 +429,7 @@ function addTreemap(treemap) {
         var db = "kyrix";
         var transform_func = "";
         var schema = [
-            "label",
+            "id",
             "parent",
             "value",
             "depth",
@@ -432,6 +447,7 @@ function addTreemap(treemap) {
         treemapLayer.addRenderingFunc(treemap.getRenderer(i));
         treemapLayer.setIsHierarchical(true);
         treemapLayer.data = set;
+        // treemapLayer.id = treemap.name + "_" + i;
 
         var treemapRetainLayer = new Layer(transform, false);
         treemapRetainLayer.addPlacement(treemap.placement);
@@ -443,7 +459,7 @@ function addTreemap(treemap) {
         treemapRetainLayer.data = set;
 
         var treemapCanvas = new Canvas(
-            ("treemap_" + i).replace(/(\.|-)/g, "_"),
+            (treemap.name + "_" + i).replace(/(\.|-)/g, "_"),
             Math.floor(zoomFactor * (treemap.width + treemap.x)),
             Math.floor(zoomFactor * (treemap.height + treemap.y))
         );
@@ -508,7 +524,7 @@ function addTreemap(treemap) {
     };
 
     var jumpName = function(row) {
-        var str = "see more around " + row.label + "";
+        var str = "see more around " + row.id + "";
         return str;
     };
 
@@ -519,7 +535,8 @@ function addTreemap(treemap) {
 
     // console.log("set!:", set);
 
-    treemap.renderingParams[treemap.name].tree_height = tree_height;
+    // treemap.renderingParams[treemap.name].tree_height = tree_height;
+    // treemap.renderingParams[treemap.name].tree_height = tree_height;
 
     this.addStyles(__dirname + "/template-api/css/treemap.css");
 

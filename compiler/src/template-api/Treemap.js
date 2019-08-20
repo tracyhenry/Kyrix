@@ -12,16 +12,16 @@ function Treemap(args) {
     args = args || {};
 
     // check required args
-    var requiredArgs = ["data", "value", "children", "label"];
+    var requiredArgs = ["data", "value", "children", "id"];
     var requiredArgsTypes = ["string", "string", "string", "string"];
     for (var i = 0; i < requiredArgs.length; i++) {
         if (!(requiredArgs[i] in args))
             throw new Error(
-                "Constructing Pierarchy: " + requiredArgs[i] + " missing."
+                "Constructing Treemap: " + requiredArgs[i] + " missing."
             );
         if (typeof args[requiredArgs[i]] !== requiredArgsTypes[i])
             throw new Error(
-                "Constructing Pierarchy: " +
+                "Constructing Treemap: " +
                     requiredArgs[i] +
                     " must be " +
                     requiredArgsTypes[i] +
@@ -30,7 +30,7 @@ function Treemap(args) {
         if (requiredArgsTypes[i] == "string")
             if (args[requiredArgs[i]].length == 0)
                 throw new Error(
-                    "Constructing Pierarchy: " +
+                    "Constructing Treemap: " +
                         requiredArgs[i] +
                         " cannot be an empty string."
                 );
@@ -41,9 +41,9 @@ function Treemap(args) {
     var data = JSON.parse(fs.readFileSync(args.data));
     var name = args.name;
     var children = args.children;
-    var label = args.label;
+    var id = args.id;
     var value = args.value;
-    var id = 0;
+    // var id = 0;
     var set = [];
 
     // deepTraversal(data, 0, -1);
@@ -54,8 +54,9 @@ function Treemap(args) {
         .toString(36)
         .substr(2)
         .slice(0, 5);
-    this.name = "kyrix_treemap_" + rand;
+    // this.name = "kyrix_treemap_" + rand;
     this.data = data;
+    this.filepath = process.cwd() + args.data.replace("./", "/");
     // this.data = set;
 
     this.x = args.x || 0;
@@ -64,7 +65,7 @@ function Treemap(args) {
     this.height = args.height || 800;
     this.padding = args.padding || 5;
     this.children = children;
-    this.label = label;
+    this.id = id;
     this.value = value;
 
     this.zoomFactor = args.zoomFactor || 1.5;
@@ -91,13 +92,16 @@ function Treemap(args) {
         height: "col:h"
     };
 
-    this.renderingParams = {
-        [this.name]: {
-            colorInterpolator: args.colorInterpolator || "Rainbow",
-            // colorInterpolator: args.colorInterpolator || "Viridis"
-            transitions: args.transitions || []
-        }
-    };
+    this.transitions = args.transitions;
+    this.colorInterpolator = args.colorInterpolator || "Rainbow";
+
+    // this.renderingParams = {
+    //     [this.name]: {
+    //         colorInterpolator: args.colorInterpolator || "Rainbow",
+    //         // colorInterpolator: args.colorInterpolator || "Viridis"
+    //         transitions: args.transitions || []
+    //     }
+    // };
 }
 
 function getTransformFunc(pie_name) {
@@ -114,7 +118,7 @@ function getTransformFunc(pie_name) {
 
     function transform_function(row, w_canvas, h_canvas, renderParams) {
         var ret = [];
-        // row: value, (label),  rn_kyrix
+        // row: value, (id),  rn_kyrix
         var args = renderParams["REPLACE_ME_name"];
         for (var i = 0; i < row.length; i++) {
             ret.push(row[i]);
@@ -156,7 +160,7 @@ function getRenderer(level) {
         var root = d3
             .stratify()
             .id(function(d) {
-                return d.label;
+                return d.id;
             }) // Name of the entity (column name is name in csv)
             .parentId(function(d) {
                 if (d.parent == "none") return undefined;
@@ -167,7 +171,7 @@ function getRenderer(level) {
         );
 
         // data.forEach((d,i,nodes)=>{
-        //     d.node = findNode(root, d.label)
+        //     d.node = findNode(root, d.id)
         //     d.rex = +d.minx + +d.depth * 5
         //     d.rey = +d.miny + +d.depth * 5
         //     d.rew = d3.max([0, +d.w - 10 * +d.depth])
@@ -239,7 +243,7 @@ function getRenderer(level) {
             .selectAll("clipPath")
             .data(data)
             .join("clipPath")
-            .attr("id", d => d.label + "_clip_" + REPLACE_ME_level)
+            .attr("id", d => d.id + "_clip_" + REPLACE_ME_level)
             .append("rect")
             // .attr("x", d=>d.rex )
             // .attr("y", d=>d.rey )
@@ -378,7 +382,7 @@ function getRenderer(level) {
         }
 
         function addTooltip(d, i) {
-            var node = findNode(root, d.label);
+            var node = findNode(root, d.id);
             var ancestors = node.ancestors().reverse();
             // console.log("ancestors:", ancestors)
             var breadcrumb = ancestors
@@ -419,12 +423,12 @@ function getRenderer(level) {
                 .text(+d.value);
         }
 
-        function findNode(node, label) {
-            if (node.id == label) return node;
+        function findNode(node, id) {
+            if (node.id == id) return node;
             if (!node.children) return undefined;
             var ret;
             for (var child of node.children) {
-                ret = findNode(child, label);
+                ret = findNode(child, id);
                 if (ret) return ret;
             }
             return undefined;
@@ -463,7 +467,7 @@ function getRetainRenderer(zoomFactor, level) {
             .data(data)
             .join("g")
             .classed("node", true)
-            .attr("clip-path", d => `url(#${d.label}_clip_REPLACE_ME_level)`);
+            .attr("clip-path", d => `url(#${d.id}_clip_REPLACE_ME_level)`);
 
         // g.selectAll("text.name")
         //     .data(data)
@@ -471,7 +475,7 @@ function getRetainRenderer(zoomFactor, level) {
         heading
             .append("text")
             .classed("node name", true)
-            // .attr("clip-path", d => `url(#${d.label}_clip_REPLACE_ME_level)`)
+            // .attr("clip-path", d => `url(#${d.id}_clip_REPLACE_ME_level)`)
             .attr("x", d => d.rex)
             .attr("y", d => d.rey)
             .attr("width", d => d.rew)
@@ -480,7 +484,7 @@ function getRetainRenderer(zoomFactor, level) {
             .attr("y", d => +d.miny)
             .attr("dy", 13)
             .attr("dx", 3)
-            .text(d => d.label);
+            .text(d => d.id);
         // heading
         //     .append("tspan")
         // g.selectAll("text.value")
@@ -490,7 +494,7 @@ function getRetainRenderer(zoomFactor, level) {
         heading
             .append("text")
             .classed("node value", true)
-            // .attr("clip-path", d => `url(#${d.label}_clip)`)
+            // .attr("clip-path", d => `url(#${d.id}_clip)`)
             .attr("x", d => +d.minx)
             .attr("y", d => +d.miny)
             .attr("dy", 28)
@@ -500,7 +504,7 @@ function getRetainRenderer(zoomFactor, level) {
         var root = d3
             .stratify()
             .id(function(d) {
-                return d.label;
+                return d.id;
             }) // Name of the entity (column name is name in csv)
             .parentId(function(d) {
                 if (d.parent == "none") return undefined;
@@ -610,7 +614,7 @@ function getRetainRenderer(zoomFactor, level) {
         }
 
         function addTooltip(d, i) {
-            var node = findNode(root, d.label);
+            var node = findNode(root, d.id);
             var ancestors = node.ancestors().reverse();
             // console.log("ancestors:", ancestors)
             var breadcrumb = ancestors
@@ -651,12 +655,12 @@ function getRetainRenderer(zoomFactor, level) {
                 .text(+d.value);
         }
 
-        function findNode(node, label) {
-            if (node.id == label) return node;
+        function findNode(node, id) {
+            if (node.id == id) return node;
             if (!node.children) return undefined;
             var ret;
             for (var child of node.children) {
-                ret = findNode(child, label);
+                ret = findNode(child, id);
                 if (ret) return ret;
             }
             return undefined;

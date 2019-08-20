@@ -22,6 +22,7 @@ public class Project {
     private ArrayList<Canvas> canvases;
     private ArrayList<Jump> jumps;
     private ArrayList<AutoDD> autoDDs;
+    private ArrayList<Hierarchy> hierarchies;
     private String renderingParams;
     private String[] styles;
 
@@ -43,6 +44,10 @@ public class Project {
 
     public ArrayList<AutoDD> getAutoDDs() {
         return autoDDs;
+    }
+
+    public ArrayList<Hierarchy> getHierarchies() {
+        return hierarchies;
     }
 
     public String getRenderingParams() {

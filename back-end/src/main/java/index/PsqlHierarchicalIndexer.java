@@ -24,10 +24,17 @@ public class PsqlHierarchicalIndexer extends BoundingBoxIndexer {
         this.isCitus = isCitus;
     }
 
+    private PsqlHierarchicalIndexer() {}
+
     // thread-safe instance getter
     public static synchronized PsqlHierarchicalIndexer getInstance(boolean isCitus) {
 
         if (instance == null) instance = new PsqlHierarchicalIndexer(isCitus);
+        return instance;
+    }
+
+    public static Indexer getInstance() {
+        if (instance == null) instance = new PsqlHierarchicalIndexer();
         return instance;
     }
 
@@ -315,8 +322,11 @@ public class PsqlHierarchicalIndexer extends BoundingBoxIndexer {
                 // System.out.println("numcols=" + String.valueOf(numcols));
             }
             int pscol = 1;
-            for (int i = 0; i < numcols; i++)
+            for (int i = 0; i < numcols; i++) {
                 preparedStmt.setString(pscol++, transformedRow.get(i).replaceAll("\'", "\'\'"));
+                // System.out.println("i=" + String.valueOf(i));
+
+            }
             if (isCitus) preparedStmt.setDouble(pscol++, rowCount);
             for (int i = 0; i < 6; i++) preparedStmt.setDouble(pscol++, curBbox.get(i));
             preparedStmt.addBatch();
