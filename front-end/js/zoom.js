@@ -338,7 +338,17 @@ function zoomed(viewId) {
             zoomOutFactorY
         );
 
-    // call onPan & onZoom handlers
-    if (gvd.onPanHandler != null && typeof gvd.onPanHandler == "function")
-        gvd.onPanHandler();
+    // execute onPan & onZoom handlers
+    if (!isZooming && gvd.onPanHandlers != null) {
+        var subEvts = Object.keys(gvd.onPanHandlers);
+        for (var subEvt of subEvts)
+            if (typeof gvd.onPanHandlers[subEvt] == "function")
+                gvd.onPanHandlers[subEvt]();
+    }
+    if (isZooming && gvd.onZoomHandlers != null) {
+        var subEvts = Object.keys(gvd.onZoomHandlers);
+        for (var subEvt of subEvts)
+            if (typeof gvd.onZoomHandlers[subEvt] == "function")
+                gvd.onZoomHandlers[subEvt]();
+    }
 }

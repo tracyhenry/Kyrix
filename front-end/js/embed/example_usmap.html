@@ -1,10 +1,24 @@
 <html>
     <body></body>
     <head>
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="../../static/css/main.css"
+        />
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        />
+        <link
+            href="https://fonts.googleapis.com/css?family=Source Serif Pro"
+            rel="stylesheet"
+        />
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.min.js"></script>
         <script src="https://d3js.org/d3.v5.min.js"></script>
-        <script src="http://128.52.164.24:8000/kyrix.js"></script>
+        <script src="kyrix.js"></script>
         <script>
             // TODO: change the address where the kyrix backend is running, has to start with http://
             var serverAddr = "http://127.0.0.1:8000";
@@ -72,7 +86,7 @@
                     kyrix.triggerJump("state", matchingStates[0], 1, 0);
             });
 
-            //onPan
+            //on pan
             var addRectToState = function() {
                 var svg = d3.select(kyrix.getMainSvg("state", 1));
                 var vp = kyrix.getCurrentViewport("county");
@@ -92,7 +106,7 @@
                     .attr("x", vp["vpX"] / 5)
                     .attr("y", vp["vpY"] / 5);
             };
-            kyrix.onPan("county", addRectToState);
+            kyrix.on("pan", "county", addRectToState);
 
             //change rendering color
             var colors = ["red", "green", "blue"];
@@ -127,20 +141,5 @@
                     return d;
                 });
         </script>
-
-        <link
-            rel="stylesheet"
-            type="text/css"
-            href="../../static/css/main.css"
-        />
-        <link
-            rel="stylesheet"
-            type="text/css"
-            href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-        />
-        <link
-            href="https://fonts.googleapis.com/css?family=Source Serif Pro"
-            rel="stylesheet"
-        />
     </head>
 </html>
