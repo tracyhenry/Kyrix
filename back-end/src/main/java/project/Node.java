@@ -1,20 +1,26 @@
 package project;
 
-import com.google.gson.annotations.SerializedName;
-import java.util.ArrayList;
-
 public class Node {
-    @SerializedName("word")
     private String id;
-
     private int height;
     private int depth;
     private String parent;
-
-    @SerializedName("frequency")
     private double value;
 
-    private ArrayList<Node> children;
+    // private ArrayList<Node> children;
+
+    public Node() {
+        this.id = "";
+        this.parent = "";
+        this.depth = -1;
+        this.height = -1;
+        this.value = -1;
+    }
+
+    public Node(String id, String parent) {
+        this.id = id;
+        this.parent = parent;
+    }
 
     public void setId(String id) {
         this.id = id;
@@ -56,24 +62,25 @@ public class Node {
         return parent;
     }
 
-    public ArrayList<Node> getChildren() {
-        return children;
-    }
+    // public ArrayList<Node> getChildren() {
+    //     return children;
+    // }
 
     @Override
     public String toString() {
         return "Node{"
-                + "label='"
+                + "id:'"
                 + id
                 + '\''
-                + ", parent='"
+                + ", parent:'"
                 + parent
                 + '\''
-                + ", value='"
+                + ", value:"
                 + value
-                + '\''
-                + ", children='"
-                + children
+                + ", height:"
+                + height
+                + ", depth="
+                + depth
                 + "}";
     }
 }

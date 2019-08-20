@@ -7,6 +7,15 @@ public class Hierarchy {
     private String id;
     private String value;
     private String children;
+    private Boolean indexed;
+
+    public void setIndexed(Boolean indexed) {
+        this.indexed = indexed;
+    }
+
+    public Boolean getIndexed() {
+        return indexed;
+    }
 
     public void setChildren(String children) {
         this.children = children;

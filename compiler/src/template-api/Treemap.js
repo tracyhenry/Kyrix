@@ -44,8 +44,6 @@ function Treemap(args) {
     var id = args.id;
     var value = args.value;
     // var id = 0;
-    var set = [];
-
     // deepTraversal(data, 0, -1);
 
     // console.log(d3.hierarchy(data))
@@ -55,10 +53,8 @@ function Treemap(args) {
         .substr(2)
         .slice(0, 5);
     // this.name = "kyrix_treemap_" + rand;
-    this.data = data;
+    // this.data = data;
     this.filepath = process.cwd() + args.data.replace("./", "/");
-    // this.data = set;
-
     this.x = args.x || 0;
     this.y = args.y || 0;
     this.width = args.width || 1200;
@@ -67,6 +63,7 @@ function Treemap(args) {
     this.children = children;
     this.id = id;
     this.value = value;
+    this.indexed = false;
 
     this.zoomFactor = args.zoomFactor || 1.5;
 

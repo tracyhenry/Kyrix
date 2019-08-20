@@ -352,17 +352,17 @@ function addTreemap(treemap) {
 
     this.hierarchies.push(treemap);
 
-    var root = d3
-        .hierarchy(treemap.data, d => d[treemap.children])
-        // .children((d)=>{return d[treemap.children]})
-        .sum(d => {
-            return d[treemap.value];
-        })
-        .sort(function(a, b) {
-            return a.depth - b.depth || b.value - a.value;
-        });
-    // console.log("root!!!!:", root);
-    var tree_height = root.height;
+    // var root = d3
+    //     .hierarchy(treemap.data, d => d[treemap.children])
+    //     // .children((d)=>{return d[treemap.children]})
+    //     .sum(d => {
+    //         return d[treemap.value];
+    //     })
+    //     .sort(function(a, b) {
+    //         return a.depth - b.depth || b.value - a.value;
+    //     });
+    // // console.log("root!!!!:", root);
+    // var tree_height = root.height;
 
     var treemapCanvases = [];
     var flag_no = true;
@@ -383,46 +383,46 @@ function addTreemap(treemap) {
         // var zoomFactor = Math.pow(2, i) ;
         // var zoomFactor = 2 * (i+1);
         console.log("zoomFactor!!!!!!!!:", zoomFactor);
-        var tm = d3
-            .treemap()
-            .size([treemap.width * zoomFactor, treemap.height * zoomFactor])
-            // .padding(0)
-            .paddingOuter(treemap.paddingOuter * zoomFactor)
-            .paddingTop(treemap.paddingTop * zoomFactor)
-            .paddingInner(treemap.paddingInner * zoomFactor)
-            .round(true);
+        // var tm = d3
+        //     .treemap()
+        //     .size([treemap.width * zoomFactor, treemap.height * zoomFactor])
+        //     // .padding(0)
+        //     .paddingOuter(treemap.paddingOuter * zoomFactor)
+        //     .paddingTop(treemap.paddingTop * zoomFactor)
+        //     .paddingInner(treemap.paddingInner * zoomFactor)
+        //     .round(true);
 
-        var cooked = tm(root);
+        // var cooked = tm(root);
         // throw new Error("manual stop")
         // console.log("cooked:", cooked.children[0]);
 
-        var set = cooked.descendants().map(d => {
-            return [
-                // id
-                d.data[treemap.id],
-                // parent
-                d.parent ? d.parent.data[treemap.id] : "none",
-                d.value,
-                d.depth,
-                d.height,
-                // cx
-                0.5 * (+d.x0 + d.x1) + treemap.x * zoomFactor,
-                // cy
-                0.5 * (+d.y0 + d.y1) + treemap.y * zoomFactor,
-                // w
-                +d.x1 - +d.x0,
-                // h
-                +d.y1 - +d.y0
-            ];
-        });
+        // var set = cooked.descendants().map(d => {
+        //     return [
+        //         // id
+        //         d.data[treemap.id],
+        //         // parent
+        //         d.parent ? d.parent.data[treemap.id] : "none",
+        //         d.value,
+        //         d.depth,
+        //         d.height,
+        //         // cx
+        //         0.5 * (+d.x0 + d.x1) + treemap.x * zoomFactor,
+        //         // cy
+        //         0.5 * (+d.y0 + d.y1) + treemap.y * zoomFactor,
+        //         // w
+        //         +d.x1 - +d.x0,
+        //         // h
+        //         +d.y1 - +d.y0
+        //     ];
+        // });
 
-        flag_no = !set.every(d => {
-            // console.log("width:", d[5], "hea")
-            // console.log("d", d)
-            var flag = Math.log(d[7]) + Math.log(d[8]) < Math.log(800);
-            if (flag) console.log("small:", d);
-            return !flag;
-        });
+        // flag_no = !set.every(d => {
+        //     // console.log("width:", d[5], "hea")
+        //     // console.log("d", d)
+        //     var flag = Math.log(d[7]) + Math.log(d[8]) < Math.log(800);
+        //     if (flag) console.log("small:", d);
+        //     return !flag;
+        // });
         // throw new Error("manual");
         var query = "select * from treemap";
 
@@ -446,7 +446,6 @@ function addTreemap(treemap) {
         treemapLayer.addPlacement(treemap.placement);
         treemapLayer.addRenderingFunc(treemap.getRenderer(i));
         treemapLayer.setIsHierarchical(true);
-        treemapLayer.data = set;
         // treemapLayer.id = treemap.name + "_" + i;
 
         var treemapRetainLayer = new Layer(transform, false);
@@ -456,7 +455,9 @@ function addTreemap(treemap) {
         );
         treemapRetainLayer.setIsHierarchical(true);
         treemapRetainLayer.setRetainSizeZoom(true);
-        treemapRetainLayer.data = set;
+
+        // treemapLayer.data = set;
+        // treemapRetainLayer.data = set;
 
         var treemapCanvas = new Canvas(
             (treemap.name + "_" + i).replace(/(\.|-)/g, "_"),
@@ -475,7 +476,7 @@ function addTreemap(treemap) {
     var minimap = genTreemapCanvas(-2);
     this.addCanvas(minimap);
     // for (var i = 0; flag_no; i++) {
-    for (var i = 0; flag_no && zoomFactor < 100; i++) {
+    for (var i = 0; flag_no && zoomFactor < 10; i++) {
         var curLevelCanvas = genTreemapCanvas(i);
         this.addCanvas(curLevelCanvas);
     }
