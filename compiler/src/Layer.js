@@ -19,7 +19,6 @@ function Layer(transform, isStatic) {
     if (isStatic == null) this.isStatic = false;
     else this.isStatic = isStatic;
     this.isAutoDDLayer = false;
-    this.retainSizeZoom = false;
 }
 
 /**
@@ -75,21 +74,12 @@ function setAutoDDId(autoDDId) {
     this.autoDDId = autoDDId;
 }
 
-/**
- * set retainSizeZoom,
- * @param retainSizeZoom
- */
-function setRetainSizeZoom(retainSizeZoom) {
-    this.retainSizeZoom = retainSizeZoom;
-}
-
 // define prototype
 Layer.prototype = {
     addPlacement,
     addRenderingFunc,
     setIsAutoDD,
-    setAutoDDId,
-    setRetainSizeZoom
+    setAutoDDId
 };
 
 // exports

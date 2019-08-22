@@ -247,16 +247,6 @@ function addAutoDD(autoDD, args) {
         curLayer.setIsAutoDD(true);
         curLayer.setAutoDDId(this.autoDDs.length - 1 + "_" + i);
 
-        // set retainSizeZoom
-        curLayer.setRetainSizeZoom(
-            autoDD.renderingMode == "contour" ||
-                autoDD.renderingMode == "contour+object" ||
-                autoDD.renderingMode == "heatmap" ||
-                autoDD.renderingMode == "heatmap+object"
-                ? false
-                : true
-        );
-
         // dummy placement
         curLayer.addPlacement({
             centroid_x: "con:0",

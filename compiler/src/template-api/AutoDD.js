@@ -234,7 +234,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .style("fill-opacity", 0.25)
             .attr("fill", "honeydew")
             .attr("stroke", "#ADADAD")
-            .style("stroke-width", "1px");
+            .style("stroke-width", "1px")
+            .classed("kyrix-retainsizezoom", true);
         g.selectAll("text")
             .data(data)
             .enter()
@@ -257,6 +258,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .style("fill-opacity", 1)
             .style("fill", "navy")
             .style("pointer-events", "none")
+            .classed("kyrix-retainsizezoom", true)
             .each(function(d) {
                 params.textwrap(
                     d3.select(this),
@@ -274,6 +276,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                         .style("opacity", 0.8)
                         .style("pointer-events", "none")
                         .selectAll("*")
+                        .classed("kyrix-retainsizezoom", true)
                         .each(function() {
                             zoomRescale(args.viewId, this);
                         });
@@ -303,7 +306,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .attr("font-size", 20)
             .attr("text-anchor", "middle")
             .attr("fill", "#f47142")
-            .style("fill-opacity", 1);
+            .style("fill-opacity", 1)
+            .classed("kyrix-retainsizezoom", true);
     }
 
     function renderContourBody() {
@@ -578,6 +582,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                         .style("opacity", 0.8)
                         .style("pointer-events", "none")
                         .selectAll("*")
+                        .classed("kyrix-retainsizezoom", true)
                         .each(function() {
                             zoomRescale(args.viewId, this);
                         });

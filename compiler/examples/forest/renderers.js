@@ -57,7 +57,7 @@ var backgroundRendering = function(svg, data, args) {
 
 var animalCircleRendering = function(svg, data) {
     g = svg.append("g");
-    g.selectAll("animalcircle")
+    g.selectAll(".animalcircle")
         .data(data)
         .enter()
         .append("circle")
@@ -70,7 +70,8 @@ var animalCircleRendering = function(svg, data) {
         .attr("r", function(d) {
             return +d.r;
         })
-        .attr("fill", "white");
+        .attr("fill", "white")
+        .classed("kyrix-retainsizezoom", true);
 };
 
 var animalIconRendering = function(svg, data) {
@@ -91,7 +92,8 @@ var animalIconRendering = function(svg, data) {
         })
         .attr("xlink:href", function(d) {
             return d.url;
-        });
+        })
+        .classed("kyrix-retainsizezoom", true);
     g.selectAll("text")
         .data(data)
         .enter()
@@ -107,7 +109,8 @@ var animalIconRendering = function(svg, data) {
         })
         .attr("font-size", "20px")
         .attr("text-anchor", "middle")
-        .attr("fill", "white");
+        .attr("fill", "white")
+        .classed("kyrix-retainsizezoom", true);
 };
 
 module.exports = {

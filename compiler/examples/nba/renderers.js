@@ -75,7 +75,8 @@ var teamTimelineRendering = function(svg, data, args) {
         .attr("rx", 10)
         .attr("ry", 10)
         .attr("width", rectWidth)
-        .attr("height", rectHeight + dateHeight);
+        .attr("height", rectHeight + dateHeight)
+        .classed("kyrix-retainsizezoom", true); // for NBA autoDD
 
     // home logo
     g.selectAll(".homeimage")
@@ -96,7 +97,8 @@ var teamTimelineRendering = function(svg, data, args) {
                 d.home_team +
                 ".svg"
             );
-        });
+        })
+        .classed("kyrix-retainsizezoom", true); // for NBA autoDD
 
     // away logo
     g.selectAll(".awayimage")
@@ -117,7 +119,8 @@ var teamTimelineRendering = function(svg, data, args) {
                 d.away_team +
                 ".svg"
             );
-        });
+        })
+        .classed("kyrix-retainsizezoom", true); // for NBA autoDD
 
     // home score
     g.selectAll(".homescore")
@@ -135,7 +138,8 @@ var teamTimelineRendering = function(svg, data, args) {
             return +d.cy - d2Delta - scoreYDelta;
         })
         .attr("font-size", scoreFontSize)
-        .attr("dy", ".35em");
+        .attr("dy", ".35em")
+        .classed("kyrix-retainsizezoom", true); // for NBA autoDD
 
     // away score
     g.selectAll(".awayscore")
@@ -153,7 +157,8 @@ var teamTimelineRendering = function(svg, data, args) {
             return +d.cy - d2Delta + scoreYDelta;
         })
         .attr("font-size", scoreFontSize)
-        .attr("dy", ".35em");
+        .attr("dy", ".35em")
+        .classed("kyrix-retainsizezoom", true); // for NBA autoDD
 
     // date
     g.selectAll(".date")
@@ -172,9 +177,10 @@ var teamTimelineRendering = function(svg, data, args) {
         .attr("y", function(d) {
             return +d.cy - d2Delta + rectHeight / 2 + dateYDelta;
         })
-        .attr("dy", ".35em");
+        .attr("dy", ".35em")
+        .classed("kyrix-retainsizezoom", true); // for NBA autoDD
 
-    // line
+    // line -- for nba app, autodd doesn't need this
     if (data.length > 0 && "timeline" in data[0])
         g.selectAll("line")
             .data(data)

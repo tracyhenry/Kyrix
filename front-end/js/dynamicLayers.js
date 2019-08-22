@@ -271,14 +271,12 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     highlightLowestSvg(viewId, tileSvg, i);
 
                     // rescale
-                    if (gvd.curCanvas.layers[i].retainSizeZoom) {
-                        tileSvg
-                            .select("g:last-of-type")
-                            .selectAll("*")
-                            .each(function() {
-                                zoomRescale(viewId, this);
-                            });
-                    }
+                    tileSvg
+                        .select("g:last-of-type")
+                        .selectAll(".kyrix-retainsizezoom")
+                        .each(function() {
+                            zoomRescale(viewId, this);
+                        });
                 }
 
                 // remove old layers
@@ -489,14 +487,12 @@ function renderDynamicBoxes(
                     highlightLowestSvg(viewId, dboxSvg, i);
 
                     // rescale
-                    if (gvd.curCanvas.layers[i].retainSizeZoom) {
-                        dboxSvg
-                            .select("g:last-of-type")
-                            .selectAll("*")
-                            .each(function() {
-                                zoomRescale(viewId, this);
-                            });
-                    }
+                    dboxSvg
+                        .select("g:last-of-type")
+                        .selectAll(".kyrix-retainsizezoom")
+                        .each(function() {
+                            zoomRescale(viewId, this);
+                        });
                 }
 
                 // remove old layers
