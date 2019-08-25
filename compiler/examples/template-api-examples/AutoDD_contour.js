@@ -44,5 +44,5 @@ var autoDD = {
     }
 };
 
-p.addAutoDD(new AutoDD(autoDD), {newPyramid: true, newView: true});
+p.addAutoDD(new AutoDD(autoDD));
 p.saveProject();

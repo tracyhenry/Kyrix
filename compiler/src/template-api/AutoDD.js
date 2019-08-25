@@ -638,12 +638,16 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 /REPLACE_ME_is_object_onhover/g,
                 this.renderingMode == "contour+object"
             );
-        renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
-            .replace(
-                /REPLACE_ME_is_object_onhover/g,
-                this.renderingMode == "contour+object"
-            )
-            .replace(/REPLACE_ME_this_rendering/g, this.rendering.toString());
+        if (this.renderingMode == "contour+object")
+            renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
+                .replace(
+                    /REPLACE_ME_is_object_onhover/g,
+                    this.renderingMode == "contour+object"
+                )
+                .replace(
+                    /REPLACE_ME_this_rendering/g,
+                    this.rendering.toString()
+                );
     } else if (
         this.renderingMode == "heatmap" ||
         this.renderingMode == "heatmap+object"
@@ -652,12 +656,16 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .replace(/REPLACE_ME_radius/g, this.heatmapRadius)
             .replace(/REPLACE_ME_heatmap_opacity/g, this.heatmapOpacity)
             .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
-        renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
-            .replace(
-                /REPLACE_ME_is_object_onhover/g,
-                this.renderingMode == "heatmap+object"
-            )
-            .replace(/REPLACE_ME_this_rendering/g, this.rendering.toString());
+        if (this.renderingMode == "heatmap+object")
+            renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
+                .replace(
+                    /REPLACE_ME_is_object_onhover/g,
+                    this.renderingMode == "heatmap+object"
+                )
+                .replace(
+                    /REPLACE_ME_this_rendering/g,
+                    this.rendering.toString()
+                );
     }
     return new Function("svg", "data", "args", renderFuncBody);
 }
