@@ -19,6 +19,7 @@ function Layer(transform, isStatic) {
     if (isStatic == null) this.isStatic = false;
     else this.isStatic = isStatic;
     this.isAutoDDLayer = false;
+    this.isPredicatedTable = false;
 }
 
 /**
@@ -74,12 +75,21 @@ function setAutoDDId(autoDDId) {
     this.autoDDId = autoDDId;
 }
 
+/**
+ * set isPredicatedTable, which tells the backend that this layer should use the pred table indexer
+ * @param isPredicatedTable
+ */
+function setIsPredicatedTable(isPredicatedTable) {
+    this.isPredicatedTable = isPredicatedTable;
+}
+
 // define prototype
 Layer.prototype = {
     addPlacement,
     addRenderingFunc,
     setIsAutoDD,
-    setAutoDDId
+    setAutoDDId,
+    setIsPredicatedTable
 };
 
 // exports

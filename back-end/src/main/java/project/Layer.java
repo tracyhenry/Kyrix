@@ -13,6 +13,7 @@ public class Layer implements Serializable {
     private Indexer indexer;
     private boolean isAutoDDLayer;
     private String autoDDId;
+    private boolean isPredicatedTable;
 
     public Transform getTransform() {
         return transform;
@@ -44,6 +45,10 @@ public class Layer implements Serializable {
 
     public String getAutoDDId() {
         return autoDDId;
+    }
+
+    public boolean isPredicatedTable() {
+        return isPredicatedTable;
     }
 
     public String getColStr(String tableName) {

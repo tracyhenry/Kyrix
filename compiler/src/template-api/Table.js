@@ -34,21 +34,34 @@ function Table(args) {
                         " cannot be an empty string."
                 );
     }
-    var rand = Math.random()
-        .toString(36)
-        .substr(2)
-        .slice(0, 5);
 
-    this.name = "kyrix_table_" + rand;
     this.table = args.table;
-
-    // schema and query first for buiding layer
-    this.query = args.query || genQuery();
-    this.schema = args.fields.concat(["rn", "y"]);
     this.db = args.db;
 
+    this.group_by = [];
+    if (args.group_by) {
+        if (typeof args.group_by === "string") this.group_by = [args.group_by];
+        else {
+            try {
+                args.group_by.every(column => {
+                    return typeof column === "string";
+                });
+                this.group_by = args.group_by;
+            } catch (err) {
+                throw new Error("group_by must be string or array of strings");
+            }
+        }
+    }
+
+    var group_by = this.group_by;
+    var fields = args.fields;
+    // schema and query first for buiding layer
+    this.schema = genSchema();
+    var schema = this.schema;
+    this.query = args.query || genQuery();
+
     // TODO: check the type of arguments
-    this.cell_h = args.cell_h || 40;
+    this.cell_height = args.cell_height || 40;
     this.x = args.x || 0;
     this.y = args.y || 0;
 
@@ -105,19 +118,20 @@ function Table(args) {
     this.sum_width = sum_width;
 
     // get heads
-    if (!args.heads) {
-        this.heads = {
+    var heads;
+    if (!args.heads || args.heads == "auto") {
+        heads = {
+            height: this.cell_height,
+            names: args.fields
+        };
+    } else if (args.heads == "none") {
+        heads = {
             height: 0,
             names: []
         };
-    } else if (args.heads == "auto") {
-        this.heads = {
-            height: this.cell_h,
-            names: args.fields
-        };
     } else {
         var th_args = args.heads;
-        th_args.height = args.heads.height || this.cell_h;
+        th_args.height = args.heads.height || this.cell_height;
         th_args.names = args.heads.names || args.fields;
         if (typeof th_args.height !== "number")
             throw new Error(
@@ -163,26 +177,31 @@ function Table(args) {
             }
             th_args.names = th_names;
         }
-        this.heads = th_args;
+        heads = th_args;
     }
-
-    this.renderingParams = {
-        [this.name]: {
-            x: this.x,
-            y: this.y,
-            heads: this.heads,
-            width: this.width,
-            cell_h: this.cell_h,
-            fields: args.fields
-        }
-    };
+    this.heads_height = heads.height;
+    this.heads_names = heads.names;
 
     this.placement = {
         centroid_x: "con:" + centroid_x,
-        centroid_y: "col:y",
+        centroid_y: "col:kyrix_ty",
         width: "con:" + sum_width,
-        height: "con:" + this.cell_h
+        height: "con:" + this.cell_height
     };
+
+    function genSchema() {
+        if (!group_by || !group_by.length > 0)
+            return args.fields.concat(["rn", "kyrix_ty"]);
+        else {
+            var ret = args.fields.concat(["rn", "kyrix_ty"]);
+            for (var i = group_by.length - 1; i >= 0; i--) {
+                if (fields.indexOf(group_by[i]) < 0) {
+                    ret.push(group_by[i]);
+                }
+            }
+            return ret;
+        }
+    }
 
     // generate query using user defined specifications
     function genQuery() {
@@ -208,6 +227,9 @@ function Table(args) {
             }
         } else {
             ret += ")";
+        }
+        for (var i = schema.indexOf("kyrix_ty") + 1; i < schema.length; i++) {
+            ret += ", " + schema[i];
         }
         ret += " from ";
         ret += args.table;
@@ -245,7 +267,7 @@ function getTableTransformFunc() {
         var centroid_y =
             head_height +
             Number(args.y) +
-            Number(args.cell_h) *
+            Number(args.cell_height) *
                 Number(parseInt(row[args.fields.length]) - 0.5);
         ret.push(centroid_y);
         return Java.to(ret, "java.lang.String[]");
@@ -276,30 +298,34 @@ function getTableRenderer() {
                       table_params.width / fields.length
                   );
         var cell_X = [x];
+        var sum_width = cell_W[0];
         for (var i = 1; i < fields.length; i++) {
             cell_X.push(cell_X[i - 1] + cell_W[i - 1]);
+            sum_width += cell_W[i];
         }
-        var cell_H = table_params.cell_h;
+        var cell_H = table_params.cell_height;
 
         var th_params = table_params.heads;
         var th_X = cell_X;
         var th_Y = y;
         var th_W = cell_W;
-        var th_H = th_params.height || 50;
+        var th_H = th_params.height;
         var th_Names = th_params.names || fields;
 
-        var ths = table
-            .append("g")
-            .datum({
-                minx: 0,
-                maxx: data[0].maxx,
-                miny: 0,
-                maxy: data[0].miny
-            })
-            .attr("class", "thead")
-            .attr("transform", function(d, i) {
-                return "translate(0," + th_Y + ")";
-            });
+        if (th_H > 0) {
+            var ths = table
+                .append("g")
+                .datum({
+                    minx: 0,
+                    maxx: sum_width,
+                    miny: 0,
+                    maxy: th_H
+                })
+                .attr("class", "thead")
+                .attr("transform", function(d, i) {
+                    return "translate(0," + th_Y + ")";
+                });
+        }
 
         var trs = table
             .selectAll(".tr")
@@ -308,14 +334,26 @@ function getTableRenderer() {
             .append("g")
             .attr("class", "tr")
             .attr("transform", function(d) {
-                return "translate(0," + (d["y"] - cell_H / 2) + ")";
+                return `translate(0, ${d.miny} )`;
             });
 
         for (var index = 0; index < fields.length; index++) {
-            var th = ths
-                .append("g")
-                .attr("class", "th " + th_Names[index])
-                .attr("transform", "translate(" + th_X[index] + ",0)");
+            if (th_H > 0) {
+                var th = ths
+                    .append("g")
+                    .attr("class", "th " + th_Names[index])
+                    .attr("transform", "translate(" + th_X[index] + ",0)");
+
+                th.append("rect")
+                    .attr("width", th_W[index])
+                    .attr("height", th_H);
+
+                th.append("text")
+                    .text(th_Names[index])
+                    .attr("dx", th_W[index] / 2)
+                    .attr("y", th_H / 2)
+                    .attr("dy", "0.5em");
+            }
 
             trs.each(function(d, i, nodes) {
                 var tr = d3.select(this);
@@ -342,16 +380,6 @@ function getTableRenderer() {
                     .attr("y", cell_H / 2)
                     .attr("dy", "0.5em");
             });
-
-            th.append("rect")
-                .attr("width", th_W[index])
-                .attr("height", th_H);
-
-            th.append("text")
-                .text(th_Names[index])
-                .attr("dx", th_W[index] / 2)
-                .attr("y", th_H / 2)
-                .attr("dy", "0.5em");
         }
     }
 }
