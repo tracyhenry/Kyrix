@@ -37,14 +37,9 @@ function AutoDD(args) {
     if (
         args.rendering.mode == "circle" ||
         args.rendering.mode == "circle+object"
-    ) {
+    )
         args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
             this.circleMaxSize * 2;
-        if (!("roughN" in args.rendering))
-            throw new Error(
-                "Constructing AutoDD: A rough estimate of total objects (rendering.roughN) is missing for circle rendering modes."
-            );
-    }
     if (
         (args.rendering.mode == "object" ||
             args.rendering.mode == "object+clusternum" ||
@@ -62,11 +57,6 @@ function AutoDD(args) {
         args.rendering.mode == "heatmap" ||
         args.rendering.mode == "heatmap+object"
     ) {
-        // TODO: roughN shouldn't be required for KDE rendering modes
-        if (!("roughN" in args.rendering))
-            throw new Error(
-                "Constructing AutoDD: A rough estimate of total objects (rendering.roughN) is missing for KDE rendering modes."
-            );
         if (!("obj" in args.rendering)) args.rendering.obj = {};
         if (args.rendering.mode.indexOf("contour") >= 0)
             // as what's implemented by d3-contour
@@ -182,7 +172,6 @@ function AutoDD(args) {
             : 1000;
     this.zoomFactor =
         "zoomFactor" in args.rendering ? args.rendering.zoomFactor : 2;
-    this.roughN = "roughN" in args.rendering ? args.rendering.roughN : null;
     this.overlap =
         "overlap" in args.rendering.obj
             ? args.rendering.obj.overlap
@@ -215,7 +204,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var params = args.renderingParams;
         var circleSizeInterpolator = d3
             .scaleLinear()
-            .domain([1, REPLACE_ME_maxCircleDigit])
+            .domain([1, params.roughN.toString().length - 1])
             .range([REPLACE_ME_circleMinSize, REPLACE_ME_circleMaxSize]);
         var g = svg.append("g");
         g.selectAll("circle")
@@ -311,9 +300,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function renderContourBody() {
+        var roughN = args.renderingParams.roughN;
         var bandwidth = REPLACE_ME_bandwidth;
         var radius = REPLACE_ME_radius;
-        var roughN = REPLACE_ME_roughN;
         var decayRate = 2.4;
         var cellSize = 2;
         var contourWidth, contourHeight, x, y;
@@ -609,9 +598,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         this.renderingMode == "circle+object"
     ) {
         // render circle
-        var maxCircleDigit = this.roughN.toString().length;
         renderFuncBody = getBodyStringOfFunction(renderCircleBody)
-            .replace(/REPLACE_ME_maxCircleDigit/g, maxCircleDigit)
             .replace(/REPLACE_ME_circleMinSize/g, this.circleMinSize)
             .replace(/REPLACE_ME_circleMaxSize/g, this.circleMaxSize)
             .replace(
@@ -631,7 +618,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
             .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)
             .replace(/REPLACE_ME_radius/g, this.bboxH)
-            .replace(/REPLACE_ME_roughN/g, this.roughN.toString())
             .replace(/REPLACE_ME_contour_colorScheme/g, this.contourColorScheme)
             .replace(/REPLACE_ME_CONTOUR_OPACITY/g, this.contourOpacity)
             .replace(

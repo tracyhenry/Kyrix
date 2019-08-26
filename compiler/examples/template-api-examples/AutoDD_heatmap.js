@@ -31,7 +31,6 @@ var autoDD = {
     rendering: {
         // mode: "heatmap",
         mode: "heatmap+object",
-        roughN: 999,
         axis: true,
         // heatmapRadius: 90,
         // heatmapOpacity: 0.5,

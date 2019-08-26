@@ -31,7 +31,6 @@ var autoDD = {
     rendering: {
         // mode: "contour",
         mode: "contour+object",
-        roughN: 999,
         axis: true,
         // contourColorScheme: "interpolateBlues",
         // contourOpacity: 0.5,
