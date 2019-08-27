@@ -16,6 +16,8 @@ import main.Config;
 import main.DbConnector;
 import main.Main;
 import project.Canvas;
+import project.Hierarchy;
+import project.Treemap;
 import project.View;
 
 public class BoxRequestHandler implements HttpHandler {
@@ -26,7 +28,10 @@ public class BoxRequestHandler implements HttpHandler {
 
     public BoxRequestHandler() {
 
-        gson = new GsonBuilder().create();
+        final com.google.gson.typeadapters.RuntimeTypeAdapterFactory<Hierarchy> typeFactory =
+                com.google.gson.typeadapters.RuntimeTypeAdapterFactory.of(Hierarchy.class, "type")
+                        .registerSubtype(Treemap.class, "treemap");
+        gson = new GsonBuilder().registerTypeAdapterFactory(typeFactory).create();
         boxGetter = new MikeBoxGetter();
     }
 

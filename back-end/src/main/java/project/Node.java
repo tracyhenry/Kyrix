@@ -1,25 +1,41 @@
 package project;
 
 public class Node {
-    private String id;
-    private int height;
-    private int depth;
-    private String parent;
-    private double value;
+    protected String id;
+    protected String parent;
+    protected double value;
+    protected int depth;
+    protected int height;
 
-    // private ArrayList<Node> children;
+    // protected ArrayList<Node> children;
 
     public Node() {
         this.id = "";
         this.parent = "";
+        this.value = -1;
         this.depth = -1;
         this.height = -1;
-        this.value = -1;
     }
 
     public Node(String id, String parent) {
         this.id = id;
         this.parent = parent;
+    }
+
+    public Node(Node node) {
+        id = node.getId();
+        parent = node.getParent();
+        value = node.getValue();
+        depth = node.getDepth();
+        height = node.getHeight();
+    }
+
+    public Node(String _id, String _parent, double _value, int _depth, int _height) {
+        id = _id;
+        parent = _parent;
+        value = _value;
+        depth = _depth;
+        height = _height;
     }
 
     public void setId(String id) {

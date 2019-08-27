@@ -16,7 +16,9 @@ import main.Config;
 import main.DbConnector;
 import main.Main;
 import project.Canvas;
+import project.Hierarchy;
 import project.Layer;
+import project.Treemap;
 
 /** Created by wenbo on 1/8/18. */
 public class CanvasRequestHandler implements HttpHandler {
@@ -25,7 +27,10 @@ public class CanvasRequestHandler implements HttpHandler {
 
     public CanvasRequestHandler() {
 
-        gson = new GsonBuilder().create();
+        final com.google.gson.typeadapters.RuntimeTypeAdapterFactory<Hierarchy> typeFactory =
+                com.google.gson.typeadapters.RuntimeTypeAdapterFactory.of(Hierarchy.class, "type")
+                        .registerSubtype(Treemap.class, "treemap");
+        gson = new GsonBuilder().registerTypeAdapterFactory(typeFactory).create();
     }
 
     @Override

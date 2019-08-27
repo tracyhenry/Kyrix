@@ -476,7 +476,7 @@ function addTreemap(treemap) {
     var minimap = genTreemapCanvas(-2);
     this.addCanvas(minimap);
     // for (var i = 0; flag_no; i++) {
-    for (var i = 0; flag_no && zoomFactor < 10; i++) {
+    for (var i = 0; flag_no && zoomFactor < 3; i++) {
         var curLevelCanvas = genTreemapCanvas(i);
         this.addCanvas(curLevelCanvas);
     }

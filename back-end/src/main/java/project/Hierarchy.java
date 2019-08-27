@@ -1,13 +1,24 @@
 package project;
 
+import java.sql.SQLException;
+
 public class Hierarchy {
-    private String filepath;
-    private String type;
-    private String name;
-    private String id;
-    private String value;
-    private String children;
-    private Boolean indexed;
+    protected String filepath;
+    protected String type;
+    protected String name;
+    protected String id;
+    protected String value;
+    protected String children;
+    protected Boolean indexed;
+    protected double zoomFactor;
+
+    public void setZoomFactor(double zoomFactor) {
+        this.zoomFactor = zoomFactor;
+    }
+
+    public double getZoomFactor() {
+        return zoomFactor;
+    }
 
     public void setIndexed(Boolean indexed) {
         this.indexed = indexed;
@@ -63,5 +74,36 @@ public class Hierarchy {
 
     public String getName() {
         return name;
+    }
+
+    public void calcLayout(int level, String bboxTableName, Node root)
+            throws SQLException, ClassNotFoundException {
+        System.out.println("Calculating Layout, class = " + this.getClass().toString());
+        System.out.println("Calculating Layout, pyramid level = " + level);
+    }
+
+    @Override
+    public String toString() {
+        return "Hierarchy{"
+                + "filepath='"
+                + filepath
+                + '\''
+                + "type='"
+                + type
+                + '\''
+                + "id='"
+                + id
+                + '\''
+                + "value='"
+                + value
+                + '\''
+                + "children='"
+                + children
+                + '\''
+                + ", indexed="
+                + indexed
+                + ", zoomFactor="
+                + zoomFactor
+                + '}';
     }
 }

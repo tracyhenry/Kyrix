@@ -64,23 +64,34 @@ function Treemap(args) {
     this.id = id;
     this.value = value;
     this.indexed = false;
+    this.type = "treemap";
+    this.ratio = (1 + Math.sqrt(5)) / 2;
 
     this.zoomFactor = args.zoomFactor || 1.5;
 
     // padding
-    this.paddingOuter = args.paddingOuter || 1;
-    this.paddingTop = args.paddingTop || 30;
-    this.paddingInner = args.paddingInner || 1;
+    // this.paddingOuter = args.paddingOuter || 1;
+    this.paddingInner =
+        args.paddingInner == 0 ? 0 : args.paddingInner || args.padding || 1;
+    this.paddingTop =
+        args.paddingTop == 0
+            ? 0
+            : args.paddingTop || args.paddingOuter || args.padding || 30;
+    this.paddingBottom =
+        args.paddingBottom == 0
+            ? 0
+            : args.paddingBottom || args.paddingOuter || args.padding || 0;
+    this.paddingLeft =
+        args.paddingLeft == 0
+            ? 0
+            : args.paddingLeft || args.paddingOuter || args.padding || 0;
+    this.paddingRight =
+        args.paddingRight == 0
+            ? 0
+            : args.paddingRight || args.paddingOuter || args.padding || 0;
 
     this.viewW = args.viewW || 1200;
     this.viewH = args.viewH || 800;
-
-    // this.placement = {
-    //     centroid_x: "con:" + (+this.x + +this.width * 0.5),
-    //     centroid_y: "con:" + (+this.y + +this.height * 0.5),
-    //     width: "con:" + this.width,
-    //     height: "con:" + this.height
-    // };
 
     this.placement = {
         centroid_x: "col:x",
@@ -91,14 +102,6 @@ function Treemap(args) {
 
     this.transitions = args.transitions;
     this.colorInterpolator = args.colorInterpolator || "Rainbow";
-
-    // this.renderingParams = {
-    //     [this.name]: {
-    //         colorInterpolator: args.colorInterpolator || "Rainbow",
-    //         // colorInterpolator: args.colorInterpolator || "Viridis"
-    //         transitions: args.transitions || []
-    //     }
-    // };
 }
 
 function getTransformFunc(pie_name) {
@@ -142,7 +145,7 @@ function getRenderer(level) {
         .replace(/REPLACE_ME_name/g, this.name)
         .replace(/REPLACE_ME_w/g, this.width)
         .replace(/REPLACE_ME_h/g, this.height)
-        .replace(/REPLACE_ME_padding/g, this.padding)
+        // .replace(/REPLACE_ME_padding/g, this.padding)
         .replace(/REPLACE_ME_level/g, level)
         .replace(/REPLACE_ME_zoomFactor/g, this.zoomFactor);
 
@@ -438,7 +441,7 @@ function getRetainRenderer(zoomFactor, level) {
         .replace(/REPLACE_ME_name/g, this.name)
         .replace(/REPLACE_ME_w/g, this.width)
         .replace(/REPLACE_ME_h/g, this.height)
-        .replace(/REPLACE_ME_padding/g, this.padding)
+        // .replace(/REPLACE_ME_padding/g, this.padding)
         .replace(/REPLACE_ME_zoomFactor/g, zoomFactor)
         .replace(/REPLACE_ME_level/g, level);
 
