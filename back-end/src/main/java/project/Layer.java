@@ -13,7 +13,6 @@ public class Layer implements Serializable {
     private Indexer indexer;
     private boolean isAutoDDLayer;
     private String autoDDId;
-    private boolean retainSizeZoom;
     private boolean isPredicatedTable;
 
     public Transform getTransform() {
@@ -52,10 +51,6 @@ public class Layer implements Serializable {
         return isPredicatedTable;
     }
 
-    public boolean isRetainSizeZoom() {
-        return retainSizeZoom;
-    }
-
     public String getColStr(String tableName) {
 
         String colListStr = "";
@@ -82,8 +77,6 @@ public class Layer implements Serializable {
                 + isAutoDDLayer
                 + ", autoDDId="
                 + autoDDId
-                + ", retainSizeZoom="
-                + retainSizeZoom
                 + '}';
     }
 }

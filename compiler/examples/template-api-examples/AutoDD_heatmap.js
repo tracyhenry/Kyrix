@@ -31,7 +31,6 @@ var autoDD = {
     rendering: {
         // mode: "heatmap",
         mode: "heatmap+object",
-        roughN: 999,
         axis: true,
         // heatmapRadius: 90,
         // heatmapOpacity: 0.5,
@@ -43,5 +42,5 @@ var autoDD = {
     }
 };
 
-p.addAutoDD(new AutoDD(autoDD), {newPyramid: true, newView: true});
+p.addAutoDD(new AutoDD(autoDD));
 p.saveProject();

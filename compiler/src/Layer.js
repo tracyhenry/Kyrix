@@ -19,7 +19,6 @@ function Layer(transform, isStatic) {
     if (isStatic == null) this.isStatic = false;
     else this.isStatic = isStatic;
     this.isAutoDDLayer = false;
-    this.retainSizeZoom = false;
     this.isPredicatedTable = false;
 }
 
@@ -77,14 +76,6 @@ function setAutoDDId(autoDDId) {
 }
 
 /**
- * set retainSizeZoom,
- * @param retainSizeZoom
- */
-function setRetainSizeZoom(retainSizeZoom) {
-    this.retainSizeZoom = retainSizeZoom;
-}
-
-/**
  * set isPredicatedTable, which tells the backend that this layer should use the pred table indexer
  * @param isPredicatedTable
  */
@@ -98,8 +89,7 @@ Layer.prototype = {
     addRenderingFunc,
     setIsAutoDD,
     setAutoDDId,
-    setIsPredicatedTable,
-    setRetainSizeZoom
+    setIsPredicatedTable
 };
 
 // exports

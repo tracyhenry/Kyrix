@@ -66,6 +66,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
         // store raw query results into memory
         rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
+        // add row number as a BGRP
+        Main.getProject().addBGRP("roughN", String.valueOf(rawRows.size()));
 
         // sample for each level
         Rtrees = new ArrayList<>();
@@ -156,22 +158,9 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
                 // add min & max weight into rendering params
                 if (i < numLevels) {
-                    String BGRP = Main.getProject().getBGRP();
-                    BGRP = BGRP.substring(0, BGRP.length() - 1);
                     autoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(i);
-                    if (BGRP.length() > 1) BGRP += ",";
-                    BGRP +=
-                            "\""
-                                    + autoDDId
-                                    + "_minWeight\": "
-                                    + String.valueOf(minWeight)
-                                    + ","
-                                    + "\""
-                                    + autoDDId
-                                    + "_maxWeight\": "
-                                    + String.valueOf(maxWeight)
-                                    + "}";
-                    Main.getProject().setBGRP(BGRP);
+                    Main.getProject().addBGRP(autoDDId + "_minWeight", String.valueOf(minWeight));
+                    Main.getProject().addBGRP(autoDDId + "_maxWeight", String.valueOf(maxWeight));
                 }
             }
         }

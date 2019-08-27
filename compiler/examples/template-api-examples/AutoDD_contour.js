@@ -31,7 +31,6 @@ var autoDD = {
     rendering: {
         // mode: "contour",
         mode: "contour+object",
-        roughN: 999,
         axis: true,
         // contourColorScheme: "interpolateBlues",
         // contourOpacity: 0.5,
@@ -44,5 +43,5 @@ var autoDD = {
     }
 };
 
-p.addAutoDD(new AutoDD(autoDD), {newPyramid: true, newView: true});
+p.addAutoDD(new AutoDD(autoDD));
 p.saveProject();

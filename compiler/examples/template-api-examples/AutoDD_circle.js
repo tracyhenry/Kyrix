@@ -31,7 +31,6 @@ var autoDD = {
     rendering: {
         // mode: "circle",
         mode: "circle+object",
-        roughN: 999,
         axis: true,
         obj: {
             renderer: renderers.teamTimelineRendering,
@@ -41,5 +40,5 @@ var autoDD = {
     }
 };
 
-p.addAutoDD(new AutoDD(autoDD), {newPyramid: true, newView: true});
+p.addAutoDD(new AutoDD(autoDD));
 p.saveProject();
