@@ -238,6 +238,15 @@ function addAutoDD(autoDD, args) {
         var curLayer = new Layer(transform, false);
         curCanvas.addLayer(curLayer);
 
+        // set fetching scheme
+        if (
+            autoDD.renderingMode == "contour" ||
+            autoDD.renderingMode == "contour+object" ||
+            autoDD.renderingMode == "heatmap" ||
+            autoDD.renderingMode == "heatmap+object"
+        )
+            curLayer.setFetchingScheme("dbox", false);
+
         // set isAutoDD and autoDD ID
         curLayer.setIsAutoDD(true);
         curLayer.setAutoDDId(this.autoDDs.length - 1 + "_" + i);

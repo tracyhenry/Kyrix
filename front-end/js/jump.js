@@ -79,7 +79,7 @@ function postJump(viewId, zoomType) {
             var nViewClass = ".view_" + nViewId;
             for (var j = 0; j < nGvd.curCanvas.layers.length; j++) {
                 var curLayer = nGvd.curCanvas.layers[j];
-                if (!curLayer.isStatic && param.fetchingScheme == "tiling")
+                if (!curLayer.isStatic && curLayer.fetchingScheme == "tiling")
                     d3.select(nViewClass + ".layerg.layer" + j)
                         .select("svg")
                         .selectAll(".lowestsvg")

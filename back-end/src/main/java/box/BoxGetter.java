@@ -11,80 +11,40 @@ import project.View;
 
 public abstract class BoxGetter {
 
+    public final Box DUMMY_OLD_BOX = new Box(-1e5, -1e5, -1e5, -1e5);
+
     public ArrayList<ArrayList<ArrayList<String>>> fetchData(
             Canvas c, Box newBox, Box oldBox, ArrayList<String> predicates) throws Exception {
 
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
 
-        // coordinates
-        double newMinx = newBox.getMinx(), newMiny = newBox.getMiny();
-        double newMaxx = newBox.getMaxx(), newMaxy = newBox.getMaxy();
-        double oldMinx = oldBox.getMinx(), oldMiny = oldBox.getMiny();
-        double oldMaxx = oldBox.getMaxx(), oldMaxy = oldBox.getMaxy();
-
-        // calculate delta area
+        // WKT stuff for all layers
         GeometryFactory fact = new GeometryFactory();
         WKTReader wktRdr = new WKTReader(fact);
-        String wktNew =
-                "POLYGON(("
-                        + newMinx
-                        + " "
-                        + newMiny
-                        + ","
-                        + newMinx
-                        + " "
-                        + newMaxy
-                        + ","
-                        + newMaxx
-                        + " "
-                        + newMaxy
-                        + ","
-                        + newMaxx
-                        + " "
-                        + newMiny
-                        + ","
-                        + newMinx
-                        + " "
-                        + newMiny
-                        + "))";
-        String wktOld =
-                "POLYGON(("
-                        + oldMinx
-                        + " "
-                        + oldMiny
-                        + ","
-                        + oldMinx
-                        + " "
-                        + oldMaxy
-                        + ","
-                        + oldMaxx
-                        + " "
-                        + oldMaxy
-                        + ","
-                        + oldMaxx
-                        + " "
-                        + oldMiny
-                        + ","
-                        + oldMinx
-                        + " "
-                        + oldMiny
-                        + "))";
-        Geometry newBoxGeom = wktRdr.read(wktNew);
-        Geometry oldBoxGeom = wktRdr.read(wktOld);
-        Geometry deltaGeom = newBoxGeom.difference(oldBoxGeom);
         WKTWriter wktWtr = new WKTWriter();
-        String deltaWkt = wktWtr.write(deltaGeom);
+        String wktNew = newBox.getWKT();
+        Geometry newBoxGeom = wktRdr.read(wktNew);
 
         // loop through each layer
         for (int i = 0; i < c.getLayers().size(); i++) {
             Layer curLayer = c.getLayers().get(i);
             // if this layer is static, add an empty placeholder
-            if (curLayer.isStatic()) data.add(new ArrayList<>());
-            else
-                data.add(
-                        curLayer.getIndexer()
-                                .getDataFromRegion(
-                                        c, i, deltaWkt, predicates.get(i), newBox, oldBox));
+            if (curLayer.isStatic() || !curLayer.getFetchingScheme().equals("dbox")) {
+                data.add(new ArrayList<>());
+                continue;
+            }
+            // calculate delta area
+            Box curOldBox;
+            if (curLayer.isDeltaBox()) curOldBox = oldBox;
+            else curOldBox = DUMMY_OLD_BOX;
+            String wktOld = curOldBox.getWKT();
+            Geometry oldBoxGeom = wktRdr.read(wktOld);
+            Geometry deltaGeom = newBoxGeom.difference(oldBoxGeom);
+            String deltaWkt = wktWtr.write(deltaGeom);
+            data.add(
+                    curLayer.getIndexer()
+                            .getDataFromRegion(
+                                    c, i, deltaWkt, predicates.get(i), newBox, curOldBox));
         }
         return data;
     }
