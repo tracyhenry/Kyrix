@@ -161,6 +161,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
 
     // get new tiles
     var tilePromises = [];
+    var isPanning = Object.keys(gvd.tileRenderData).length === 0 ? false : true;
     tileDataJoins.enter().each(function(d) {
         // append tile svgs
         d3.selectAll(viewClass + ".mainsvg.tiling")
@@ -188,6 +189,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
         for (var i = 0; i < gvd.predicates.length; i++)
             postData +=
                 "&predicate" + i + "=" + getSqlPredicate(gvd.predicates[i]);
+        postData += "&isPanning=" + isPanning;
         var curTimePromise = $.ajax({
             type: "GET",
             url: globalVar.serverAddr + "/tile",
@@ -349,6 +351,7 @@ function renderDynamicBoxes(
             cBoxW +
             "&oboxh=" +
             cBoxH;
+        postData += "&isPanning=" + (cBoxX < -1e4 ? false : true);
         if (gvd.curCanvas.wSql.length > 0)
             postData += "&canvasw=" + gvd.curCanvas.w;
         if (gvd.curCanvas.hSql.length > 0)
