@@ -425,7 +425,7 @@ function handleOverview(viewId, jump) {
     overview = gvd.overview;
 
     // console.log("overview:", overview, overview.scale.toString());
-    var selector = viewId => ".mainsvg.lowestsvg.view_" + viewId;
+    var selector = viewId => ".mainsvg.view_" + viewId;
     var sourceSVG = d3.select(selector(overview.sourceViewId));
     var destVp = d3
         .select(selector(overview.destViewId))

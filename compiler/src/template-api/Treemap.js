@@ -38,7 +38,14 @@ function Treemap(args) {
     if (args.data.search(/(\.json)\s*$/) < 0)
         throw new Error("unsupported data file type");
 
-    var data = JSON.parse(fs.readFileSync(args.data));
+    // var data = JSON.parse(fs.readFileSync(args.data));
+    // var root = d3.hierarchy(data, d=>d.children).sum(d=>d.frequency);
+    // var arr = root.descendants();
+    // // console.log("arr:", arr);
+    // var extentValue = d3.extent(d3.values(arr.map(d => +d.value)));
+    // console.log("extentValue!!!!!!!!!!!!!!!!!!!!!!!!", extentValue)
+
+    // var descdants = root.descdants()
     var name = args.name;
     var children = args.children;
     var id = args.id;
@@ -72,23 +79,46 @@ function Treemap(args) {
     // padding
     // this.paddingOuter = args.paddingOuter || 1;
     this.paddingInner =
-        args.paddingInner == 0 ? 0 : args.paddingInner || args.padding || 1;
+        "paddingInner" in args
+            ? args.paddingInner
+            : "padding" in args
+            ? args.padding
+            : 4;
     this.paddingTop =
-        args.paddingTop == 0
-            ? 0
-            : args.paddingTop || args.paddingOuter || args.padding || 30;
+        "paddingTop" in args
+            ? args.paddingTop
+            : "paddingOuter" in args
+            ? args.paddingOuter
+            : "padding" in args
+            ? args.padding
+            : 30;
     this.paddingBottom =
-        args.paddingBottom == 0
-            ? 0
-            : args.paddingBottom || args.paddingOuter || args.padding || 0;
+        "paddingBottom" in args
+            ? args.paddingBottom
+            : "paddingOuter" in args
+            ? args.paddingOuter
+            : "padding" in args
+            ? args.padding
+            : 0;
     this.paddingLeft =
-        args.paddingLeft == 0
-            ? 0
-            : args.paddingLeft || args.paddingOuter || args.padding || 0;
+        "paddingLeft" in args
+            ? args.paddingLeft
+            : "paddingOuter" in args
+            ? args.paddingOuter
+            : "padding" in args
+            ? args.padding
+            : 0;
     this.paddingRight =
-        args.paddingRight == 0
-            ? 0
-            : args.paddingRight || args.paddingOuter || args.padding || 0;
+        "paddingRight" in args
+            ? args.paddingRight
+            : "paddingOuter" in args
+            ? args.paddingOuter
+            : "padding" in args
+            ? args.padding
+            : 0;
+
+    this.paddingExponent = "paddingExponent" in args ? args.paddingExponent : 1;
+    this.paddingCoef = "paddingCoef" in args ? args.paddingCoef : 1;
 
     this.viewW = args.viewW || 1200;
     this.viewH = args.viewH || 800;
@@ -163,7 +193,7 @@ function getRenderer(level) {
                 return d.id;
             }) // Name of the entity (column name is name in csv)
             .parentId(function(d) {
-                if (d.parent == "none") return undefined;
+                if (d.parent == "") return undefined;
                 return d.parent;
             })(
             // Name of the parent (column name is parent in csv)
@@ -220,14 +250,14 @@ function getRenderer(level) {
             .selectAll("rect")
             .data(data)
             .join("rect")
-            .attr("x", d => +d.minx - 0.3 * (+zoomFactor - 1))
-            .attr("y", d => +d.miny - 0.3 * (+zoomFactor - 1))
-            .attr("width", d => +d.w + 0.3 * (+zoomFactor * 2 - 2))
-            .attr("height", d => +d.h + 0.3 * (+zoomFactor * 2 - 2))
-            // .attr("x", d=>d.minx + (1 * +d.depth) * zoomFactor )
-            // .attr("y", d=>d.miny + (30 * +d.depth) * zoomFactor )
-            // .attr("width", d => d.w - (2 * +d.depth) * zoomFactor )
-            // .attr("height", d => d.h - (31 * +d.depth) * zoomFactor )
+            // .attr("x", d => +d.minx - 0.3 * (+zoomFactor - 1))
+            // .attr("y", d => +d.miny - 0.3 * (+zoomFactor - 1))
+            // .attr("width", d => +d.w + 0.3 * (+zoomFactor * 2 - 2))
+            // .attr("height", d => +d.h + 0.3 * (+zoomFactor * 2 - 2))
+            .attr("x", d => d.minx)
+            .attr("y", d => d.miny)
+            .attr("width", d => d.w)
+            .attr("height", d => d.h)
             .classed("treemap node", true)
             // .attr("x", d=>d.rex )
             // .attr("y", d=>d.rey )
@@ -321,8 +351,8 @@ function getRenderer(level) {
 
         var transitions = params.transitions;
         console.log("transitions:", transitions);
-        var si = preprocess(transitions[0]);
-        slowIn(si);
+        // var si = preprocess(transitions[0]);
+        // slowIn(si);
 
         var random = d3.randomUniform(0, data.length);
         function slowIn(tr) {
@@ -338,8 +368,9 @@ function getRenderer(level) {
                 })
                 .filter(
                     d =>
-                        Math.log(d.w) + Math.log(d.h) - Math.log(4) <
-                        Math.log(800)
+                        Math.log(d.w) + Math.log(d.h) - Math.log(4) < 6.5 ||
+                        d.w < 60 ||
+                        d.h < 60
                 );
 
             news.style("opacity", 0);
@@ -553,8 +584,8 @@ function getRetainRenderer(zoomFactor, level) {
 
         var transitions = params.transitions;
         console.log("transitions:", transitions);
-        var si = preprocess(transitions[0]);
-        slowIn(si);
+        // var si = preprocess(transitions[0]);
+        // slowIn(si);
 
         var random = d3.randomUniform(0, data.length);
         function slowIn(tr) {

@@ -14,8 +14,6 @@ import javax.net.ssl.HttpsURLConnection;
 import main.Config;
 import main.Main;
 import project.Canvas;
-import project.Hierarchy;
-import project.Treemap;
 
 /** Created by wenbo on 1/2/18. */
 public class TileRequestHandler implements HttpHandler {
@@ -24,11 +22,7 @@ public class TileRequestHandler implements HttpHandler {
     private final Gson gson;
 
     public TileRequestHandler() {
-
-        final com.google.gson.typeadapters.RuntimeTypeAdapterFactory<Hierarchy> typeFactory =
-                com.google.gson.typeadapters.RuntimeTypeAdapterFactory.of(Hierarchy.class, "type")
-                        .registerSubtype(Treemap.class, "treemap");
-        gson = new GsonBuilder().registerTypeAdapterFactory(typeFactory).create();
+        gson = new GsonBuilder().create();
     }
 
     @Override

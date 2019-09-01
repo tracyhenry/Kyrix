@@ -10,6 +10,7 @@ import java.util.Stack;
 import main.Config;
 import main.DbConnector;
 import main.Main;
+import server.Exclude;
 
 public class Treemap extends Hierarchy {
 
@@ -25,8 +26,14 @@ public class Treemap extends Hierarchy {
     private double paddingBottom;
     private double paddingRight;
 
-    private int rowCount;
-    private PreparedStatement insertStmt;
+    private double paddingExponent;
+    private double paddingCoef;
+
+    @Exclude private int rowCount;
+    @Exclude private PreparedStatement insertStmt;
+    @Exclude private String bboxTableName;
+    @Exclude private int zoomLevel;
+    @Exclude private Boolean flag;
 
     public void setRatio(double ratio) {
         this.ratio = ratio;
@@ -134,35 +141,54 @@ public class Treemap extends Hierarchy {
     }
 
     @Override
-    public void calcLayout(int pyramidLevel, String bboxTableName, Node rootNode)
+    public void calcLayout(int zoomLevel, String bboxTableName, Node rootNode)
             throws SQLException, ClassNotFoundException {
-        super.calcLayout(pyramidLevel, bboxTableName, rootNode);
-        System.out.println("level: " + pyramidLevel + "class: " + this.getClass().getName());
+        super.calcLayout(zoomLevel, bboxTableName, rootNode);
         String hierTableName = "hierarchy_" + Main.getProject().getName() + "_" + getName();
+        this.bboxTableName = bboxTableName;
+        this.zoomLevel = zoomLevel;
+        this.flag = true;
 
         // prepare the preparedstatement
-        // 11 cols: 5(id, parent, etc.) + 6(cx, cy, etc.)
-        String insertSql = "INSERT INTO " + bboxTableName + " VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+        // 15 cols: 5(id, parent, etc.) + 4(x, y, w, h) + 6(cx, cy, etc.)
+        String insertSql =
+                "INSERT INTO " + bboxTableName + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         System.out.println(insertSql);
         this.insertStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
         rowCount = 0;
 
-        double zoomFactor = Math.pow(this.getZoomFactor(), pyramidLevel);
+        double zoomFactor = Math.pow(this.getZoomFactor(), zoomLevel);
+        System.out.println(
+                " level: "
+                        + zoomLevel
+                        + " class: "
+                        + this.getClass().getName()
+                        + " zoomFactor: "
+                        + zoomFactor);
         // prepare the root node for the calculation
         TreemapNode root = new TreemapNode(rootNode);
         root.x0 = x * zoomFactor;
         root.x1 = (x + width) * zoomFactor;
         root.y0 = y * zoomFactor;
         root.y1 = (y + height) * zoomFactor;
+        double inf = Double.POSITIVE_INFINITY;
+        root.parentX0 = 0;
+        root.realX0 = -inf;
+        root.parentY0 = 0;
+        root.realY0 = -inf;
+        root.parentX1 = 0;
+        root.realX1 = inf;
+        root.parentY1 = 0;
+        root.realY1 = inf;
+
         Stack<TreemapNode> stack = new Stack<>();
         stack.push(root);
+
         TreemapNode node = root;
         while (!stack.empty()) {
             node = stack.pop();
             // the stack is sent to get pushed
-            positionNode(node, stack);
-            // System.out.println("stack:" +  stack);
-
+            positionNode(node, stack, zoomFactor);
         }
 
         // finish up on the tail nodes
@@ -171,39 +197,39 @@ public class Treemap extends Hierarchy {
             insertStmt.executeBatch();
         }
         insertStmt.close();
+        if (!flag) System.out.println("Some nodes are too small");
+        else System.out.println("All nodes are big enough");
     }
 
-    public void positionNode(TreemapNode node, Stack<TreemapNode> stack)
+    public void positionNode(TreemapNode node, Stack<TreemapNode> stack, double zoomFactor)
             throws SQLException, ClassNotFoundException {
+
         // step 1: take care of the node itself
-        double p = paddingInner / 2;
-        double x0 = node.x0 + p;
-        double y0 = node.y0 + p;
-        double x1 = node.x1 - p;
-        double y1 = node.y1 - p;
+        double x0 = node.x0;
+        double y0 = node.y0;
+        double x1 = node.x1;
+        double y1 = node.y1;
 
-        if (x1 < x0) x0 = x1 = (x0 + x1) / 2;
-        if (y1 < y0) y0 = y1 = (y0 + y1) / 2;
-        node.x0 = Math.round(x0);
-        node.y0 = Math.round(y0);
-        node.x1 = Math.round(x1);
-        node.y1 = Math.round(y1);
+        Boolean flag = insertNode(node, stack);
+        if (!flag) return;
 
-        // add the node to the database
-        insertNode(node);
-
-        // create the list for children
+        // step 2: create the list for children
         ArrayList<TreemapNode> children = new ArrayList<>();
-        if (node.height != 0) {
+        if (node.height > 0) {
             String hierTableName = "hierarchy_" + Main.getProject().getName() + "_" + getName();
             Statement getChildrenStmt = DbConnector.getStmtByDbName(Config.databaseName);
             String getChildrenQuery =
-                    "select * from " + hierTableName + " where parent = '" + node.getId() + "'";
+                    "select * from "
+                            + hierTableName
+                            + " where parent = '"
+                            + node.getId()
+                            + "' order by value desc";
             ResultSet rs = getChildrenStmt.executeQuery(getChildrenQuery);
             while (rs.next()) {
                 String childId = rs.getString(1);
                 // System.out.println("a row was returned. ID: " + childId);
                 double childV = rs.getDouble(3);
+                int childH = rs.getInt(5);
                 TreemapNode child =
                         new TreemapNode(
                                 new Node(
@@ -211,31 +237,28 @@ public class Treemap extends Hierarchy {
                                         node.getId(),
                                         childV,
                                         node.getDepth() + 1,
-                                        node.getHeight() - 1));
+                                        childH));
                 stack.push(child);
                 children.add(child);
             }
             rs.close();
 
-            x0 += paddingLeft - p;
-            y0 += paddingTop - p;
-            x1 -= paddingRight - p;
-            y1 -= paddingBottom - p;
             if (x1 < x0) x0 = x1 = (x0 + x1) / 2;
             if (y1 < y0) y0 = y1 = (y0 + y1) / 2;
-            tile(node, children, x0, x1, y0, y1);
+            // step 3: tile!
+            tile(node, children, x0, y0, x1, y1);
         }
     }
 
     private void tile(
-            TreemapNode node,
+            TreemapNode parent,
             ArrayList<TreemapNode> children,
             double x0,
-            double x1,
             double y0,
+            double x1,
             double y1) {
         int i0 = 0, i1 = 0, n = children.size();
-        double value = node.value,
+        double value = parent.value,
                 sumValue = 0,
                 dx,
                 dy,
@@ -252,8 +275,9 @@ public class Treemap extends Hierarchy {
             dy = y1 - y0;
 
             // Find the next non-empty node.
-            do sumValue = children.get(i1++).value;
-            while (sumValue <= 0 && i1 < n);
+            do {
+                sumValue = children.get(i1++).value;
+            } while (sumValue <= 0 && i1 < n);
             minValue = maxValue = sumValue;
             alpha = Math.max(dy / dx, dx / dy) / (value * ratio);
             beta = sumValue * sumValue * alpha;
@@ -275,6 +299,16 @@ public class Treemap extends Hierarchy {
 
             // Position and record the row orientation.
             row.setValue(sumValue);
+            // this is hack
+            row.sety0(parent.y0);
+            row.setx0(parent.x0);
+            row.setx1(parent.x1);
+            row.sety1(parent.y1);
+            row.realX0 = parent.realX0;
+            row.realY0 = parent.realY0;
+            row.realX1 = parent.realX1;
+            row.realY1 = parent.realY1;
+            // row.setParentY0(parent.parentY0);
             Boolean flag = dx < dy;
             List<TreemapNode> sublist = children.subList(i0, i1);
             // rows.push(row = {value: sumValue, dice: dx < dy, children: nodes.slice(i0, i1)});
@@ -289,14 +323,17 @@ public class Treemap extends Hierarchy {
             TreemapNode parent,
             List<TreemapNode> children,
             double x0,
-            double x1,
             double y0,
+            double x1,
             double y1) {
-        // var children = parent.children,
+
         TreemapNode node;
         int i = -1;
         int n = children.size();
-        double k = parent.getValue() == 0 ? parent.getValue() : (x1 - x0) / parent.getValue();
+        double k = 0;
+        if (parent.getValue() != 0 && (x1 - x0) / parent.getValue() != 0) {
+            k = (x1 - x0) / parent.getValue();
+        }
 
         while (++i < n) {
             node = children.get(i);
@@ -305,6 +342,14 @@ public class Treemap extends Hierarchy {
             node.x0 = x0;
             x0 += (node.getValue() * k);
             node.x1 = x0;
+            node.realY0 = parent.realY0;
+            node.parentY0 = parent.y0;
+            node.realX0 = parent.realX0;
+            node.parentX0 = parent.x0;
+            node.realX1 = parent.realX1;
+            node.parentX1 = parent.x1;
+            node.realY1 = parent.realY1;
+            node.parentY1 = parent.y1;
         }
     }
 
@@ -312,14 +357,17 @@ public class Treemap extends Hierarchy {
             TreemapNode parent,
             List<TreemapNode> children,
             double x0,
-            double x1,
             double y0,
+            double x1,
             double y1) {
-        // var children = parent.children,
+
         TreemapNode node;
         int i = -1;
         int n = children.size();
-        double k = parent.getValue() == 0 ? parent.getValue() : (y1 - y0) / parent.getValue();
+        double k = 0;
+        if (parent.getValue() != 0 && (y1 - y0) / parent.getValue() != 0) {
+            k = (y1 - y0) / parent.getValue();
+        }
 
         while (++i < n) {
             node = children.get(i);
@@ -328,13 +376,103 @@ public class Treemap extends Hierarchy {
             node.y0 = y0;
             y0 += (node.getValue() * k);
             node.y1 = y0;
+            node.realY0 = parent.realY0;
+            node.parentY0 = parent.y0;
+            node.realX0 = parent.realX0;
+            node.parentX0 = parent.x0;
+            node.realX1 = parent.realX1;
+            node.parentX1 = parent.x1;
+            node.realY1 = parent.realY1;
+            node.parentY1 = parent.y1;
         }
     }
 
-    private void insertNode(TreemapNode node) throws SQLException {
+    private Boolean insertNode(TreemapNode node, Stack<TreemapNode> stack)
+            throws SQLException, ClassNotFoundException {
+
+        double x0 = node.getx0();
+        double y0 = node.gety0();
+        double x1 = node.getx1();
+        double y1 = node.gety1();
+        int depth = node.getDepth();
+
+        double k = Math.max(1, paddingCoef * Math.pow(zoomLevel, paddingExponent));
+        double p = paddingInner / 2;
+
+        double supposedY0 = y0 + node.realY0 + k * paddingTop - node.parentY0;
+        double supposedX0 = x0 + node.realX0 + k * paddingLeft - node.parentX0;
+        double supposedX1 = x1 + node.realX1 - k * paddingRight - node.parentX1;
+        double supposedY1 = y1 + node.realY1 - k * paddingBottom - node.parentY1;
+        // if(node.parent.equals("AA") )
+        //     System.out.println("before:" + node);
+        if (y0 <= node.realY0 + k * paddingTop) {
+            y0 = supposedY0;
+            // if(node.parent.equals("AA") )
+            //     System.out.println(node + "adjustment made here, y0:" + y0 + " paddingTop: " +
+            // paddingTop);
+        }
+        if (x0 <= node.realX0 + k * paddingLeft) {
+            x0 = supposedX0;
+        }
+        if (x1 >= node.realX1 - k * paddingRight) {
+            x1 = supposedX1;
+        }
+        if (y1 >= node.realY1 - k * paddingBottom) {
+            y1 = supposedY1;
+        }
+
+        x0 += k * p;
+        x1 -= k * p;
+        y0 += k * p;
+        y1 -= k * p;
+
+        // double supposedY0 = y0 + node.realY0 + paddingTop - node.parentY0 - p;
+        // double supposedX0 = x0 + node.realX0 + paddingLeft - node.parentX0 - p;
+        // double supposedX1 = x1 + node.realX1 - paddingRight - node.parentX1 + p;
+        // double supposedY1 = y1 + node.realY1 - paddingBottom - node.parentY1 + p;
+        // if (y0 <= node.realY0 + paddingTop ){
+        //     y0 = supposedY0;
+        // }
+        // if (x0 <= node.realX0 + paddingLeft ){
+        //     x0 = supposedX0;
+        // }
+        // if (x1 >= node.realX1 - paddingRight ){
+        //     x1 = supposedX1;
+        // }
+        // if (y1 >= node.realY1 - paddingBottom ){
+        //     y1 = supposedY1;
+        // }
+
+        // x0 += p;
+        // x1 -= p;
+        // y0 += p;
+        // y1 -= p;
+
+        if (x1 < x0) x0 = x1 = (x0 + x1) / 2;
+        if (y1 < y0) y0 = y1 = (y0 + y1) / 2;
+
+        x0 = Math.round(x0);
+        y0 = Math.round(y0);
+        x1 = Math.round(x1);
+        y1 = Math.round(y1);
+
+        node.realX0 = x0;
+        node.realY0 = y0;
+        node.realX1 = x1;
+        node.realY1 = y1;
+
+        // add the node to the database
+        double w = x1 - x0;
+        double h = y1 - y0;
+        if (Math.log(w) + Math.log(h) < 6.5) {
+            this.flag = false;
+            return false;
+        }
+
         int batchsize = Config.bboxBatchSize;
-        double cx = (node.x0 + node.x1) / 2;
-        double cy = (node.y0 + node.y1) / 2;
+        double cy = (y0 + y1) / 2;
+        double cx = (x0 + x1) / 2;
+
         insertStmt.setString(1, node.getId());
         insertStmt.setString(2, node.getParent());
         insertStmt.setDouble(3, node.getValue());
@@ -342,17 +480,23 @@ public class Treemap extends Hierarchy {
         insertStmt.setInt(5, node.getHeight());
         insertStmt.setDouble(6, cx);
         insertStmt.setDouble(7, cy);
-        insertStmt.setDouble(8, node.getx0());
-        insertStmt.setDouble(9, node.gety0());
-        insertStmt.setDouble(10, node.getx1());
-        insertStmt.setDouble(11, node.gety1());
+        insertStmt.setDouble(8, w);
+        insertStmt.setDouble(9, h);
+        insertStmt.setDouble(10, cx);
+        insertStmt.setDouble(11, cy);
+        insertStmt.setDouble(12, x0);
+        insertStmt.setDouble(13, y0);
+        insertStmt.setDouble(14, x1);
+        insertStmt.setDouble(15, y1);
         insertStmt.addBatch();
 
         rowCount++;
         if (rowCount % batchsize == 0) {
-            System.out.println(rowCount + " Rows! Stack ");
+            System.out.println(rowCount + " Rows!");
+            System.out.println("stack: " + stack);
             insertStmt.executeBatch();
         }
+        return true;
     }
 
     class TreemapNode extends Node {
@@ -360,6 +504,31 @@ public class Treemap extends Hierarchy {
         private double y0;
         private double x1;
         private double y1;
+
+        private double realX0;
+        private double parentX0;
+        private double realY0;
+        private double parentY0;
+        private double realX1;
+        private double parentX1;
+        private double realY1;
+        private double parentY1;
+
+        public void setParentY0(double parentY0) {
+            this.parentY0 = parentY0;
+        }
+
+        public double getParentY0() {
+            return parentY0;
+        }
+
+        public void setRealY0(double realY0) {
+            this.realY0 = realY0;
+        }
+
+        public double getRealY0() {
+            return realY0;
+        }
 
         TreemapNode(Node node) {
             super(node);
@@ -401,6 +570,39 @@ public class Treemap extends Hierarchy {
 
         public double gety1() {
             return y1;
+        }
+
+        @Override
+        public String toString() {
+            String nodestr = super.toString();
+            nodestr +=
+                    "placement{("
+                            + x0
+                            + ","
+                            + y0
+                            + "),("
+                            + x1
+                            + ","
+                            + y1
+                            + ")\n"
+                            + " realX0: "
+                            + realX0
+                            + " parentX0: "
+                            + parentX0
+                            + " realX1: "
+                            + realX1
+                            + " parentX1: "
+                            + parentX1
+                            + " realY0: "
+                            + realY0
+                            + " parentY0: "
+                            + parentY0
+                            + " realY1: "
+                            + realY1
+                            + " parentY1: "
+                            + parentY1
+                            + "};\n";
+            return nodestr;
         }
     }
 }

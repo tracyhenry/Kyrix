@@ -9,7 +9,7 @@ public class Canvas implements Serializable {
     private String id;
     private int w;
     private int h;
-    private int pyramidLevel;
+    private int pyramidLevel, zoomLevel;
     private String wSql, hSql, wLayerId, hLayerId;
     private double zoomInFactorX, zoomInFactorY;
     private double zoomOutFactorX, zoomOutFactorY;
@@ -38,6 +38,14 @@ public class Canvas implements Serializable {
 
     public void setH(int h) {
         this.h = h;
+    }
+
+    public void setZoomLevel(int zoomLevel) {
+        this.zoomLevel = zoomLevel;
+    }
+
+    public int getZoomLevel() {
+        return zoomLevel;
     }
 
     public int getPyramidLevel() {

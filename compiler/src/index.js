@@ -464,7 +464,7 @@ function addTreemap(treemap) {
             Math.floor(zoomFactor * (treemap.width + treemap.x)),
             Math.floor(zoomFactor * (treemap.height + treemap.y))
         );
-        treemapCanvas.pyramidLevel = i;
+        treemapCanvas.zoomLevel = i;
 
         if (!(i < 0)) treemapCanvas.addLayer(treemapRetainLayer);
         treemapCanvas.addLayer(treemapLayer);
@@ -476,7 +476,8 @@ function addTreemap(treemap) {
     var minimap = genTreemapCanvas(-2);
     this.addCanvas(minimap);
     // for (var i = 0; flag_no; i++) {
-    for (var i = 0; flag_no && zoomFactor < 3; i++) {
+    // for (var i = 0; flag_no && zoomFactor < 100; i++) {
+    for (var i = 0; i < 10; i++) {
         var curLevelCanvas = genTreemapCanvas(i);
         this.addCanvas(curLevelCanvas);
     }

@@ -46,7 +46,7 @@ param.load = "load";
 param.highlight = "highlight";
 
 // fetching scheme -- either tiling or dbox
-param.fetchingScheme = "dbox";
+param.fetchingScheme = "tiling";
 
 // whether use delta box
 param.deltaBox = false;

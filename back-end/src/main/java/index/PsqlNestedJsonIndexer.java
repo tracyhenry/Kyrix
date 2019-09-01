@@ -70,6 +70,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
                 root.setHeight(rootHeight);
             }
             rootRs.close();
+            rootRs = null;
         }
 
         // step 0: create tables for storing bboxes and tiles
@@ -84,7 +85,8 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
 
         // create the bbox table
         sql = "CREATE UNLOGGED TABLE " + bboxTableName + " (";
-        sql += "id text, parent text, value double precision, depth int, height int, ";
+        sql += "id text, parent text, value double precision, depth int, height int,";
+        sql += "x double precision, y double precision, w double precision, h double precision, ";
         sql +=
                 "cx double precision, cy double precision, minx double precision, miny "
                         + "double precision, maxx double precision, maxy double precision, geom box)";
@@ -92,8 +94,8 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
         dropCreateStmt.executeUpdate(sql);
         dropCreateStmt.close();
 
-        int pyramidLevel = c.getPyramidLevel();
-        h.calcLayout(pyramidLevel, bboxTableName, root);
+        int zoomLevel = c.getZoomLevel();
+        h.calcLayout(zoomLevel, bboxTableName, root);
 
         // time
         long startTs = (new Date()).getTime();

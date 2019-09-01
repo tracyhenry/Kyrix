@@ -10,9 +10,7 @@ import java.util.Map;
 import javax.net.ssl.HttpsURLConnection;
 import main.Config;
 import main.Main;
-import project.Hierarchy;
 import project.Project;
-import project.Treemap;
 
 /** Created by wenbo on 1/2/18. */
 public class FirstRequestHandler implements HttpHandler {
@@ -21,10 +19,10 @@ public class FirstRequestHandler implements HttpHandler {
     private final Gson gson;
 
     public FirstRequestHandler() {
-        final com.google.gson.typeadapters.RuntimeTypeAdapterFactory<Hierarchy> typeFactory =
-                com.google.gson.typeadapters.RuntimeTypeAdapterFactory.of(Hierarchy.class, "type")
-                        .registerSubtype(Treemap.class, "treemap");
-        gson = new GsonBuilder().registerTypeAdapterFactory(typeFactory).create();
+        gson =
+                new GsonBuilder()
+                        .addSerializationExclusionStrategy(new AnnotationExclusionStrategy())
+                        .create();
     }
 
     @Override
@@ -48,7 +46,12 @@ public class FirstRequestHandler implements HttpHandler {
         respMap.put("tileW", Config.tileW);
 
         // convert the response to a json object and send it back
+        // System.out.println("just before Project!!!" + project);
+        System.out.println("just before!!!" + project.getHierarchies());
+        // throw new Error("manual");
         String response = gson.toJson(respMap);
+        // String response = gson.toJson(project.getHierarchies());
+        // System.out.println("just after!!!! response: " + response);
         Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
     }
 }

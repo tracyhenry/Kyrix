@@ -1,10 +1,11 @@
 package project;
 
 import java.sql.SQLException;
+import server.Exclude;
 
 public class Hierarchy {
     protected String filepath;
-    protected String type;
+    @Exclude protected String type;
     protected String name;
     protected String id;
     protected String value;
@@ -87,9 +88,6 @@ public class Hierarchy {
         return "Hierarchy{"
                 + "filepath='"
                 + filepath
-                + '\''
-                + "type='"
-                + type
                 + '\''
                 + "id='"
                 + id
