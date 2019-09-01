@@ -148,8 +148,8 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                 });
 
                 // remove exit (invisible) tiles
-                d3.select(".layerg.layer" + i)
-                    .select(viewClass + ".mainsvg.tiling")
+                d3.select(viewClass + ".layerg.layer" + i)
+                    .select(".mainsvg.tiling")
                     .selectAll("svg")
                     .data(tileIds, function(d) {
                         return d;
