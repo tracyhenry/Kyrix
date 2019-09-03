@@ -63,7 +63,7 @@ function addRenderingFunc(rendering) {
 
 function setFetchingScheme(fetchingScheme, deltaBox) {
     if (this.isStatic)
-        throw new Erorr(
+        throw new Error(
             "Constructing Layer: static layer does not need fetching scheme."
         );
     if (fetchingScheme != "dbox" && fetchingScheme != "tiling")

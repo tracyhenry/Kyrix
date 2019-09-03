@@ -482,10 +482,11 @@ function setInitialStates(
 function setFetchingScheme(fetchingScheme, deltaBox) {
     for (var i = 0; i < this.canvases.length; i++)
         for (var j = 0; j < this.canvases[i].layers.length; j++)
-            this.canvases[i].layers[j].setFetchingScheme(
-                fetchingScheme,
-                deltaBox
-            );
+            if (!this.canvases[i].layers[j].isStatic)
+                this.canvases[i].layers[j].setFetchingScheme(
+                    fetchingScheme,
+                    deltaBox
+                );
 }
 
 function sendProjectRequestToBackend(portNumber, projectJSON) {
