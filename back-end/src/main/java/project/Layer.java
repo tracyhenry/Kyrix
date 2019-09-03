@@ -8,6 +8,8 @@ public class Layer implements Serializable {
 
     private Transform transform;
     private boolean isStatic;
+    private String fetchingScheme;
+    private boolean deltaBox;
     private Placement placement;
     private String rendering;
     private Indexer indexer;
@@ -21,6 +23,14 @@ public class Layer implements Serializable {
 
     public boolean isStatic() {
         return isStatic;
+    }
+
+    public String getFetchingScheme() {
+        return fetchingScheme;
+    }
+
+    public boolean isDeltaBox() {
+        return deltaBox;
     }
 
     public Placement getPlacement() {
@@ -68,6 +78,10 @@ public class Layer implements Serializable {
                 + transform
                 + ", isStatic="
                 + isStatic
+                + ", fetchingScheme="
+                + fetchingScheme
+                + ", deltaBox="
+                + deltaBox
                 + ", placement="
                 + placement
                 + ", rendering='"

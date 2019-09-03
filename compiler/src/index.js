@@ -186,6 +186,70 @@ function addJump(jump) {
     this.jumps.push(jump);
 }
 
+// Add a Tabular vis to a project
+function addTable(table, args) {
+    if (args == null) args = {};
+
+    this.tables.push(table);
+    table.name = "kyrix_table_" + (this.tables.length - 1);
+
+    table.renderingParams = {
+        [table.name]: {
+            x: table.x,
+            y: table.y,
+            heads: {
+                height: table.heads_height,
+                names: table.heads_names
+            },
+            width: table.width,
+            cell_height: table.cell_height,
+            fields: table.schema.slice(0, table.schema.indexOf("rn"))
+        }
+    };
+
+    var canvas = new Canvas(
+        table.name,
+        Math.ceil(table.sum_width),
+        0,
+        "",
+        `0:select count(*) * ${table.cell_height} + ${table.heads_height} from ${table.table}`
+    );
+    this.addCanvas(canvas);
+    this.addStyles(__dirname + "/template-api/css/table.css");
+    this.addRenderingParams(table.renderingParams);
+    var transform_func = table.getTableTransformFunc();
+    var tableTransform = new Transform(
+        table.query,
+        table.db,
+        transform_func,
+        table.schema,
+        true
+    );
+
+    var tableLayer = new Layer(tableTransform, false);
+    tableLayer.addPlacement(table.placement);
+    tableLayer.addRenderingFunc(table.getTableRenderer());
+    if (table.group_by.length > 0) {
+        tableLayer.setIsPredicatedTable(true);
+    }
+    canvas.addLayer(tableLayer);
+
+    if (!args.view) {
+        var tableView = new View(
+            table.name + "_view",
+            0,
+            0,
+            Math.floor(table.sum_width * 0.8),
+            700
+        );
+        this.addView(tableView);
+        this.setInitialStates(tableView, canvas, 0, 0);
+    } else if (!(args.view instanceof View))
+        throw new Error("Constructing Table: view must be a View object");
+
+    return {canvas, view: args.view ? args.view : tableView};
+}
+
 /**
  * Add an autoDD to a project, this will create a hierarchy of canvases that form a pyramid shape
  * @param autoDD an AutoDD object
@@ -237,6 +301,15 @@ function addAutoDD(autoDD, args) {
         // create one layer
         var curLayer = new Layer(transform, false);
         curCanvas.addLayer(curLayer);
+
+        // set fetching scheme
+        if (
+            autoDD.renderingMode == "contour" ||
+            autoDD.renderingMode == "contour+object" ||
+            autoDD.renderingMode == "heatmap" ||
+            autoDD.renderingMode == "heatmap+object"
+        )
+            curLayer.setFetchingScheme("dbox", false);
 
         // set isAutoDD and autoDD ID
         curLayer.setIsAutoDD(true);
@@ -353,69 +426,6 @@ function addStyles(styles) {
     // merge with current CSS
 }
 
-function addTable(table, args) {
-    if (args == null) args = {};
-
-    this.tables.push(table);
-    table.name = "kyrix_table_" + (this.tables.length - 1);
-
-    table.renderingParams = {
-        [table.name]: {
-            x: table.x,
-            y: table.y,
-            heads: {
-                height: table.heads_height,
-                names: table.heads_names
-            },
-            width: table.width,
-            cell_height: table.cell_height,
-            fields: table.schema.slice(0, table.schema.indexOf("rn"))
-        }
-    };
-
-    var canvas = new Canvas(
-        table.name,
-        Math.ceil(table.sum_width),
-        0,
-        "",
-        `0:select count(*) * ${table.cell_height} + ${table.heads_height} from ${table.table}`
-    );
-    this.addCanvas(canvas);
-    this.addStyles(__dirname + "/template-api/css/table.css");
-    this.addRenderingParams(table.renderingParams);
-    var transform_func = table.getTableTransformFunc();
-    var tableTransform = new Transform(
-        table.query,
-        table.db,
-        transform_func,
-        table.schema,
-        true
-    );
-
-    var tableLayer = new Layer(tableTransform, false);
-    tableLayer.addPlacement(table.placement);
-    tableLayer.addRenderingFunc(table.getTableRenderer());
-    if (table.group_by.length > 0) {
-        tableLayer.setIsPredicatedTable(true);
-    }
-    canvas.addLayer(tableLayer);
-
-    if (!args.view) {
-        var tableView = new View(
-            table.name + "_view",
-            0,
-            0,
-            Math.floor(table.sum_width * 0.8),
-            700
-        );
-        this.addView(tableView);
-        this.setInitialStates(tableView, canvas, 0, 0);
-    } else if (!(args.view instanceof View))
-        throw new Error("Constructing Table: view must be a View object");
-
-    return {canvas, view: args.view ? args.view : tableView};
-}
-
 /**
  * Set the initial states for a view object
  * @param {object} canvasObj - a canvas object representing the initial canvas
@@ -462,6 +472,21 @@ function setInitialStates(
     viewObj.initialViewportX = viewportX;
     viewObj.initialViewportY = viewportY;
     viewObj.initialPredicates = JSON.stringify(predicates);
+}
+
+/**
+ * set fetching schemes for all layers
+ * @param fetchingScheme
+ * @param deltaBox
+ */
+function setFetchingScheme(fetchingScheme, deltaBox) {
+    for (var i = 0; i < this.canvases.length; i++)
+        for (var j = 0; j < this.canvases[i].layers.length; j++)
+            if (!this.canvases[i].layers[j].isStatic)
+                this.canvases[i].layers[j].setFetchingScheme(
+                    fetchingScheme,
+                    deltaBox
+                );
 }
 
 function sendProjectRequestToBackend(portNumber, projectJSON) {
@@ -763,11 +788,12 @@ Project.prototype = {
     addView,
     addCanvas,
     addJump,
-    addStyles,
     addTable,
     addAutoDD,
     addRenderingParams,
+    addStyles,
     setInitialStates,
+    setFetchingScheme,
     saveProject
 };
 

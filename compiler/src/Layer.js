@@ -18,6 +18,8 @@ function Layer(transform, isStatic) {
     this.transform = transform;
     if (isStatic == null) this.isStatic = false;
     else this.isStatic = isStatic;
+    this.fetchingScheme = "dbox";
+    this.deltaBox = true;
     this.isAutoDDLayer = false;
     this.isPredicatedTable = false;
 }
@@ -59,6 +61,17 @@ function addRenderingFunc(rendering) {
     this.rendering = rendering;
 }
 
+function setFetchingScheme(fetchingScheme, deltaBox) {
+    if (this.isStatic)
+        throw new Error(
+            "Constructing Layer: static layer does not need fetching scheme."
+        );
+    if (fetchingScheme != "dbox" && fetchingScheme != "tiling")
+        throw new Error("Constructing Layer: unrecognized fetching scheme.");
+    this.fetchingScheme = fetchingScheme;
+    this.deltaBox = deltaBox ? true : false;
+}
+
 /**
  * set isAutoDD, which tells the backend that this layer should use the autodd indexer
  * @param isAutoDD
@@ -87,6 +100,7 @@ function setIsPredicatedTable(isPredicatedTable) {
 Layer.prototype = {
     addPlacement,
     addRenderingFunc,
+    setFetchingScheme,
     setIsAutoDD,
     setAutoDDId,
     setIsPredicatedTable
