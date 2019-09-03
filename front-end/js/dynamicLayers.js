@@ -190,7 +190,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
             postData +=
                 "&predicate" + i + "=" + getSqlPredicate(gvd.predicates[i]);
         postData += "&isJumping=" + isJumping;
-        var curTimePromise = $.ajax({
+        var curTilePromise = $.ajax({
             type: "GET",
             url: globalVar.serverAddr + "/tile",
             data: postData,
@@ -288,7 +288,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                 }
             }
         });
-        tilePromises.push(curTimePromise);
+        tilePromises.push(curTilePromise);
     });
 
     if (tilePromises.length == 0) return null;
