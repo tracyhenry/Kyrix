@@ -21,8 +21,6 @@ function Layer(transform, isStatic) {
     this.fetchingScheme = "dbox";
     this.deltaBox = true;
     this.indexerType = "";
-    this.isAutoDDLayer = false;
-    this.isPredicatedTable = false;
 }
 
 /**
@@ -74,27 +72,11 @@ function setFetchingScheme(fetchingScheme, deltaBox) {
 }
 
 /**
- * set isAutoDD, which tells the backend that this layer should use the autodd indexer
- * @param isAutoDD
- */
-function setIsAutoDD(isAutoDD) {
-    this.isAutoDDLayer = isAutoDD;
-}
-
-/**
  * set autoDD ID
  * @param autoDDId
  */
 function setAutoDDId(autoDDId) {
     this.autoDDId = autoDDId;
-}
-
-/**
- * set isPredicatedTable, which tells the backend that this layer should use the pred table indexer
- * @param isPredicatedTable
- */
-function setIsPredicatedTable(isPredicatedTable) {
-    this.isPredicatedTable = isPredicatedTable;
 }
 
 /**
@@ -114,9 +96,7 @@ Layer.prototype = {
     addPlacement,
     addRenderingFunc,
     setFetchingScheme,
-    setIsAutoDD,
     setAutoDDId,
-    setIsPredicatedTable,
     setIndexerType
 };
 
