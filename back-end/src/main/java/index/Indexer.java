@@ -48,12 +48,7 @@ public abstract class Indexer implements Serializable {
                     if (Config.database == Config.Database.PSQL
                             || Config.database == Config.Database.CITUS) {
                         boolean isCitus = (Config.database == Config.Database.CITUS);
-                        if (c.getLayers().get(layerId).isAutoDDLayer())
-                            indexer = AutoDDInMemoryIndexer.getInstance();
-                        else if (c.getLayers().get(layerId).isPredicatedTable())
-                            indexer = PsqlPredicatedTableIndexer.getInstance();
-                        else if (Config.indexingScheme
-                                == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
+                        if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
                             indexer = PsqlSpatialIndexer.getInstance(isCitus);
                         else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
                             indexer = PsqlTileIndexer.getInstance(isCitus);
@@ -69,9 +64,12 @@ public abstract class Indexer implements Serializable {
                                             + Config.indexingScheme.toString()
                                             + " not supported for PSQL.");
                     } else if (Config.database == Config.Database.MYSQL) {
-                        if (c.getLayers().get(layerId).isAutoDDLayer())
+                        if (l.getIndexerType().equals("AutoDDInMemoryIndexer"))
                             throw new Exception("AutoDD is not supported by MySQL indexers.");
-                        if (Config.indexingScheme == Config.IndexingScheme.MYSQL_SPATIAL_INDEX)
+                        else if (l.getIndexerType().equals("PsqlPredicatedTableIndexer"))
+                            throw new Exception(
+                                    "PredicatedTable is not supported by MySQL indexers.");
+                        else if (Config.indexingScheme == Config.IndexingScheme.MYSQL_SPATIAL_INDEX)
                             indexer = MysqlSpatialIndexer.getInstance();
                         else if (Config.indexingScheme == Config.indexingScheme.TILE_INDEX)
                             indexer = MysqlTileIndexer.getInstance();
@@ -85,6 +83,7 @@ public abstract class Indexer implements Serializable {
 
                 // associate indexer
                 l.setIndexer(indexer);
+                l.setIndexerType(indexer.getClass().getSimpleName());
 
                 // pre-run getColumnNames, see issue #84: github.com/tracyhenry/kyrix/issues/84
                 l.getTransform().getColumnNames();

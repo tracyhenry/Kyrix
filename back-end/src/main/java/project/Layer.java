@@ -15,9 +15,7 @@ public class Layer implements Serializable {
     private Placement placement;
     private String rendering;
     @Exclude private Indexer indexer;
-    private boolean isAutoDDLayer;
     private String autoDDId;
-    private boolean isPredicatedTable;
 
     @SerializedName(
             value = "indexerClass",
@@ -56,16 +54,8 @@ public class Layer implements Serializable {
         return indexer;
     }
 
-    public boolean isAutoDDLayer() {
-        return isAutoDDLayer;
-    }
-
     public String getAutoDDId() {
         return autoDDId;
-    }
-
-    public boolean isPredicatedTable() {
-        return isPredicatedTable;
     }
 
     public void setIndexerType(String indexerType) {
@@ -81,7 +71,7 @@ public class Layer implements Serializable {
         String colListStr = "";
         for (String col : transform.getColumnNames())
             colListStr += (tableName.isEmpty() ? "" : tableName + ".") + col + ", ";
-        if (isAutoDDLayer) colListStr += "cluster_num, ";
+        if (this.getIndexerType().equals("AutoDDInMemoryIndexer")) colListStr += "cluster_num, ";
         colListStr += "cx, cy, minx, miny, maxx, maxy";
         return colListStr;
     }
@@ -102,8 +92,6 @@ public class Layer implements Serializable {
                 + ", rendering='"
                 + rendering
                 + '\''
-                + ", isAutoDDLayer="
-                + isAutoDDLayer
                 + ", autoDDId="
                 + autoDDId
                 + '}';

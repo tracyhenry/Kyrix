@@ -312,7 +312,7 @@ function addAutoDD(autoDD, args) {
             curLayer.setFetchingScheme("dbox", false);
 
         // set isAutoDD and autoDD ID
-        curLayer.setIsAutoDD(true);
+        curLayer.setIndexerType("AutoDDInMemoryIndexer");
         curLayer.setAutoDDId(this.autoDDs.length - 1 + "_" + i);
 
         // dummy placement
