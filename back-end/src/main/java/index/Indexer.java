@@ -5,15 +5,20 @@ import com.coveo.nashorn_modules.FilesystemFolder;
 import com.coveo.nashorn_modules.Require;
 import java.io.File;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import jdk.nashorn.api.scripting.JSObject;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import main.Config;
 import main.Main;
+import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
 import project.Canvas;
 import project.Layer;
 import project.Placement;
@@ -35,54 +40,106 @@ public abstract class Indexer implements Serializable {
 
     // associate each layer with a proper indexer
     public static void associateIndexer() throws Exception {
+        Reflections reflections = new Reflections("index", new SubTypesScanner(false));
+
+        Set<Class<? extends Object>> indexers = reflections.getSubTypesOf(Object.class);
+
+        // for (Class indexClass: indexers) {
+        //     System.out.println("indexer:" + indexClass.getName());
+        // }
+        // System.out.println("indexers:" + indexers);
+
+        // Class indexerClass = Class.forName()
+
         for (Canvas c : Main.getProject().getCanvases())
             for (int layerId = 0; layerId < c.getLayers().size(); layerId++) {
-
-                // determine indexer for this layer
+                Layer l = c.getLayers().get(layerId);
                 Indexer indexer = null;
-                if (Config.database == Config.Database.PSQL
-                        || Config.database == Config.Database.CITUS) {
-                    boolean isCitus = (Config.database == Config.Database.CITUS);
-                    if (c.getLayers().get(layerId).isAutoDDLayer())
-                        indexer = AutoDDInMemoryIndexer.getInstance();
-                    else if (c.getLayers().get(layerId).isHierarchicalLayer()) {
-                        System.out.println("isHierarchicalLayer...!!!");
-                        indexer = PsqlNestedJsonIndexer.getInstance();
-                        // indexer = PsqlHierarchicalIndexer.getInstance();
-                    } else if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
-                        indexer = PsqlSpatialIndexer.getInstance(isCitus);
-                    else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
-                        indexer = PsqlTileIndexer.getInstance(isCitus);
-                    else if (Config.indexingScheme == Config.IndexingScheme.PSQL_NATIVEBOX_INDEX)
-                        indexer = PsqlNativeBoxIndexer.getInstance(isCitus);
-                    else if (Config.indexingScheme == Config.IndexingScheme.PSQL_NATIVECUBE_INDEX)
-                        indexer = PsqlCubeSpatialIndexer.getInstance();
-                    else
-                        throw new Exception(
-                                "Index type "
-                                        + Config.indexingScheme.toString()
-                                        + " not supported for PSQL.");
-                } else if (Config.database == Config.Database.MYSQL) {
-                    if (c.getLayers().get(layerId).isAutoDDLayer())
-                        throw new Exception("AutoDD is not supported by MySQL indexers.");
-                    if (Config.indexingScheme == Config.IndexingScheme.MYSQL_SPATIAL_INDEX)
-                        indexer = MysqlSpatialIndexer.getInstance();
-                    else if (Config.indexingScheme == Config.indexingScheme.TILE_INDEX)
-                        indexer = MysqlTileIndexer.getInstance();
-                    else
-                        throw new Exception(
-                                "Index type "
-                                        + Config.indexingScheme.toString()
-                                        + "not supported for MySQL.");
+
+                String indexerClassName = l.getIndexerClassName();
+                indexer = getIndexerByName(indexerClassName);
+                // if(indexerClassName != null) {
+                //     for (Class indexClass: indexers) {
+                //         if (indexClass.getName().equals("index." + indexerClassName)){
+                //             Method m = indexClass.getMethod("getInstance");
+                //             indexer = (Indexer) m.invoke(null);
+                //             System.out.println("indexer:" + indexClass.getName());
+                //             break;
+                //         }
+                //     }
+                //     if (indexer == null)
+                //         System.out.println("an unknown indexer is designated, ignored the
+                // designation.");
+                // }
+                // if an indexer is not properly designated
+                if (indexer == null) {
+                    // determine indexer for this layer
+                    if (Config.database == Config.Database.PSQL
+                            || Config.database == Config.Database.CITUS) {
+                        boolean isCitus = (Config.database == Config.Database.CITUS);
+                        if (c.getLayers().get(layerId).isAutoDDLayer())
+                            indexer = AutoDDInMemoryIndexer.getInstance();
+                        // else if (c.getLayers().get(layerId).isHierarchicalLayer()) {
+                        //     System.out.println("isHierarchicalLayer...!!!");
+                        //     indexer = PsqlNestedJsonIndexer.getInstance();
+                        //     // indexer = PsqlHierarchicalIndexer.getInstance();
+                        // }
+                        else if (c.getLayers().get(layerId).isPredicatedTable())
+                            indexer = PsqlPredicatedTableIndexer.getInstance();
+                        else if (Config.indexingScheme
+                                == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
+                            indexer = PsqlSpatialIndexer.getInstance(isCitus);
+                        else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
+                            indexer = PsqlTileIndexer.getInstance(isCitus);
+                        else if (Config.indexingScheme
+                                == Config.IndexingScheme.PSQL_NATIVEBOX_INDEX)
+                            indexer = PsqlNativeBoxIndexer.getInstance(isCitus);
+                        else if (Config.indexingScheme
+                                == Config.IndexingScheme.PSQL_NATIVECUBE_INDEX)
+                            indexer = PsqlCubeSpatialIndexer.getInstance();
+                        else
+                            throw new Exception(
+                                    "Index type "
+                                            + Config.indexingScheme.toString()
+                                            + " not supported for PSQL.");
+                    } else if (Config.database == Config.Database.MYSQL) {
+                        if (c.getLayers().get(layerId).isAutoDDLayer())
+                            throw new Exception("AutoDD is not supported by MySQL indexers.");
+                        if (Config.indexingScheme == Config.IndexingScheme.MYSQL_SPATIAL_INDEX)
+                            indexer = MysqlSpatialIndexer.getInstance();
+                        else if (Config.indexingScheme == Config.indexingScheme.TILE_INDEX)
+                            indexer = MysqlTileIndexer.getInstance();
+                        else
+                            throw new Exception(
+                                    "Index type "
+                                            + Config.indexingScheme.toString()
+                                            + "not supported for MySQL.");
+                    }
                 }
 
                 // associate indexer
-                Layer l = c.getLayers().get(layerId);
                 l.setIndexer(indexer);
 
                 // pre-run getColumnNames, see issue #84: github.com/tracyhenry/kyrix/issues/84
                 l.getTransform().getColumnNames();
             }
+    }
+
+    public static Indexer getIndexerByName(String className) {
+        try {
+            Class c = Class.forName("index." + className);
+            Method m = c.getMethod("getInstance");
+            return (Indexer) m.invoke(null);
+        } catch (ClassNotFoundException e) {
+            System.out.println("class not found");
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     // precompute

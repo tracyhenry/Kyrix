@@ -27,6 +27,10 @@ function getCurCanvas(viewId) {
         data: postData,
         success: function(data) {
             gvd.curCanvas = JSON.parse(data).canvas;
+            if (gvd.curCanvas.w < gvd.viewportWidth)
+                gvd.curCanvas.w = gvd.viewportWidth;
+            if (gvd.curCanvas.h < gvd.viewportHeight)
+                gvd.curCanvas.h = gvd.viewportHeight;
             gvd.curStaticData = JSON.parse(data).staticData;
             setupLayerLayouts(viewId);
 
@@ -58,7 +62,8 @@ function setupLayerLayouts(viewId) {
 
     // set render data
     gvd.renderData = [];
-    for (var i = numLayers - 1; i >= 0; i--) gvd.renderData.push([]);
+    for (var i = 0; i < numLayers; i++) gvd.renderData.push([]);
+    gvd.tileRenderData = {};
 
     // create layers
     for (var i = numLayers - 1; i >= 0; i--) {
@@ -150,8 +155,10 @@ function pageOnLoad(serverAddr) {
             globalVar.project = response.project;
             globalVar.tileW = +response.tileW;
             globalVar.tileH = +response.tileH;
-            globalVar.renderingParams = JSON.parse(
-                globalVar.project.renderingParams
+            globalVar.renderingParams = Object.assign(
+                {},
+                JSON.parse(globalVar.project.renderingParams),
+                JSON.parse(globalVar.project.BGRP)
             );
             processRenderingParams();
 
@@ -199,6 +206,7 @@ function pageOnLoad(serverAddr) {
                 gvd.viewportHeight = viewSpecs[i].height;
                 gvd.curCanvasId = viewSpecs[i].initialCanvasId;
                 gvd.renderData = null;
+                gvd.tileRenderData = null;
                 gvd.pendingBoxRequest = null;
                 gvd.curCanvas = null;
                 gvd.curJump = null;

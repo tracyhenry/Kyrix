@@ -6,7 +6,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.function.*;
+import java.util.function.UnaryOperator;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import main.Config;
 import main.DbConnector;
@@ -20,9 +20,9 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
     private static PsqlNativeBoxIndexer instance = null;
     private static boolean isCitus = false;
 
+    // singleton pattern to ensure only one instance existed
     protected PsqlNativeBoxIndexer() {}
 
-    // singleton pattern to ensure only one instance existed
     private PsqlNativeBoxIndexer(boolean isCitus) {
         this.isCitus = isCitus;
     }

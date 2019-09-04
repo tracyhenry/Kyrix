@@ -114,28 +114,51 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
     // get tile ids
     var tileIds = getTileArray(viewId, viewportX, viewportY, vpW, vpH);
 
-    // remove invisible tiles
-    d3.selectAll(viewClass + ".mainsvg:not(.static)").each(function() {
-        var tiles = d3
-            .select(this)
-            .selectAll("svg")
-            .data(tileIds, function(d) {
-                return d;
-            });
-        tiles.exit().remove();
-    });
-
-    // get new tiles
-    var newTiles = d3
+    // assign tile ids to tile
+    // and use data joins to remove old tiles and get new tiles
+    var tileDataJoins = d3
         .select(viewClass + ".mainsvg:not(.static)")
         .selectAll("svg")
         .data(tileIds, function(d) {
             return d;
-        })
-        .enter();
+        });
 
+    if (tileDataJoins.exit().size()) {
+        // update gvd.renderData
+        var numLayers = gvd.curCanvas.layers.length;
+        gvd.renderData = [];
+        for (var i = 0; i < numLayers; i++) gvd.renderData.push([]);
+        tileDataJoins.each(function(d) {
+            var tileId = d[0] + " " + d[1] + " " + gvd.curCanvasId;
+            for (var i = 0; i < numLayers; i++)
+                gvd.renderData[i] = gvd.renderData[i].concat(
+                    gvd.tileRenderData[tileId][i]
+                );
+        });
+        for (var i = 0; i < numLayers; i++) {
+            var mp = {};
+            gvd.renderData[i] = gvd.renderData[i].filter(function(d) {
+                return mp.hasOwnProperty(JSON.stringify(d))
+                    ? false
+                    : (mp[JSON.stringify(d)] = true);
+            });
+        }
+
+        // remove exit (invisible) tiles
+        d3.selectAll(viewClass + ".mainsvg:not(.static)").each(function() {
+            var tiles = d3
+                .select(this)
+                .selectAll("svg")
+                .data(tileIds, function(d) {
+                    return d;
+                });
+            tiles.exit().remove();
+        });
+    }
+
+    // get new tiles
     var numRenderedTiles = 0;
-    newTiles.each(function(d) {
+    tileDataJoins.enter().each(function(d) {
         // append tile svgs
         d3.selectAll(viewClass + ".mainsvg:not(.static)")
             .append("svg")
@@ -149,6 +172,12 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
             .classed("a" + d[0] + d[1] + gvd.curCanvasId, true)
             .classed("view_" + viewId, true)
             .classed("lowestsvg", true);
+
+        // initialize gvd.tileRenderData
+        // (used to calculate gvd.renderData)
+        var tileId = d[0] + " " + d[1] + " " + gvd.curCanvasId;
+        gvd.tileRenderData[tileId] = [];
+        for (var i = 0; i < numLayers; i++) gvd.tileRenderData[tileId].push([]);
 
         // send request to backend to get data
         var postData =
@@ -165,14 +194,23 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                 var response = JSON.parse(data);
                 var x = response.minx;
                 var y = response.miny;
-
-                // remove tuples outside the viewport
-                // doing this because some backend indexers use compression
-                // and may return tuples outside viewport
-                // doing this in the backend is not efficient, so we do it here
+                var canvasId = response.canvasId;
+                if (canvasId != gvd.curCanvasId) return;
                 var renderData = response.renderData;
                 var numLayers = gvd.curCanvas.layers.length;
-                for (var i = 0; i < numLayers; i++)
+
+                // loop through layers
+                for (var i = numLayers - 1; i >= 0; i--) {
+                    // current layer object
+                    var curLayer = gvd.curCanvas.layers[i];
+
+                    // if this layer is static, return
+                    if (curLayer.isStatic) continue;
+
+                    // remove tuples outside the viewport
+                    // doing this because some backend indexers use compression
+                    // and may return tuples outside viewport
+                    // doing this in the backend is not efficient, so we do it here
                     renderData[i] = renderData[i].filter(function(d) {
                         if (
                             +d.maxx < x ||
@@ -184,13 +222,23 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                         return true;
                     });
 
-                // loop over every layer
-                for (var i = numLayers - 1; i >= 0; i--) {
-                    // current layer object
-                    var curLayer = gvd.curCanvas.layers[i];
+                    // now add into gvd.renderData, dedup at the same time
+                    if (!gvd.renderData[i]) gvd.renderData[i] = [];
+                    var mp = {};
+                    gvd.renderData[i].forEach(function(d) {
+                        mp[JSON.stringify(d)] = true;
+                    });
+                    for (var j = 0; j < renderData[i].length; j++)
+                        if (
+                            !mp.hasOwnProperty(JSON.stringify(renderData[i][j]))
+                        )
+                            gvd.renderData[i].push(renderData[i][j]);
 
-                    // if this layer is static, return
-                    if (curLayer.isStatic) continue;
+                    // save the render data of this tile for
+                    // calculation of gvd.renderData later on
+                    // when some tiles are removed
+                    gvd.tileRenderData[x + " " + y + " " + gvd.curCanvasId][i] =
+                        renderData[i];
 
                     // current tile svg
                     var tileSvg = d3
@@ -223,19 +271,12 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     highlightLowestSvg(viewId, tileSvg, i);
 
                     // rescale
-                    if (gvd.curCanvas.layers[i].retainSizeZoom) {
-                        tileSvg
-                            .select("g:last-of-type")
-                            .selectAll("*")
-                            .filter(function() {
-                                return (
-                                    !this.children || this.children.length === 0
-                                );
-                            })
-                            .each(function() {
-                                zoomRescale(viewId, this);
-                            });
-                    }
+                    tileSvg
+                        .select("g:last-of-type")
+                        .selectAll(".kyrix-retainsizezoom")
+                        .each(function() {
+                            zoomRescale(viewId, this);
+                        });
                 }
 
                 // remove old layers
@@ -446,19 +487,12 @@ function renderDynamicBoxes(
                     highlightLowestSvg(viewId, dboxSvg, i);
 
                     // rescale
-                    if (gvd.curCanvas.layers[i].retainSizeZoom) {
-                        dboxSvg
-                            .select("g:last-of-type")
-                            .selectAll("*")
-                            .filter(function() {
-                                return (
-                                    !this.children || this.children.length === 0
-                                );
-                            })
-                            .each(function() {
-                                zoomRescale(viewId, this);
-                            });
-                    }
+                    dboxSvg
+                        .select("g:last-of-type")
+                        .selectAll(".kyrix-retainsizezoom")
+                        .each(function() {
+                            zoomRescale(viewId, this);
+                        });
                 }
 
                 // remove old layers

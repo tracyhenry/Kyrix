@@ -2,7 +2,9 @@ package index;
 
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -95,7 +97,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
         dropCreateStmt.close();
 
         int zoomLevel = c.getZoomLevel();
-        h.calcLayout(zoomLevel, bboxTableName, root);
+        h.calcLayout(c, layerId, root);
 
         // time
         long startTs = (new Date()).getTime();
@@ -146,7 +148,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
 
         // create the hierarchy table
         sql = "CREATE UNLOGGED TABLE " + hierTableName + " (";
-        sql += "id text, parent text, value double precision, depth int, height int)";
+        sql += "id text, parent text, value double precision, depth int, height int, count int)";
         System.out.println(sql);
         dropCreateStmt.executeUpdate(sql);
         dropCreateStmt.close();
@@ -156,7 +158,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
         Node root = new Node();
 
         // prepare the preparedstatement
-        String insertSql = "INSERT INTO " + hierTableName + " VALUES (?,?,?,?,?)";
+        String insertSql = "INSERT INTO " + hierTableName + " VALUES (?,?,?,?,?,?)";
         System.out.println(insertSql);
         PreparedStatement preparedStmt =
                 DbConnector.getPreparedStatement(Config.databaseName, insertSql);
@@ -218,8 +220,10 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
             JsonToken token = reader.peek();
 
             if (token.equals(JsonToken.BEGIN_ARRAY)) {
-                value = readChildren(reader, hierarchy, stack, preparedStmt);
+                Node info = readChildren(reader, hierarchy, stack, preparedStmt);
+                value = info.getValue();
                 node.setValue(value);
+                node.setCount(info.getCount());
             } else if (token.equals(JsonToken.END_OBJECT)) {
                 stack.pop();
                 // set the height of its father
@@ -234,6 +238,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
                 preparedStmt.setDouble(3, node.getValue());
                 preparedStmt.setInt(4, node.getDepth());
                 preparedStmt.setInt(5, node.getHeight());
+                preparedStmt.setInt(6, node.getCount());
                 preparedStmt.addBatch();
                 this.rowCount++;
                 if (this.rowCount % batchsize == 0) {
@@ -262,7 +267,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
         }
     }
 
-    private double readChildren(
+    private Node readChildren(
             JsonReader reader,
             Hierarchy hierarchy,
             Stack<Node> stack,
@@ -270,22 +275,33 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
             throws IOException, SQLException {
         reader.beginArray();
         double sumValue = 0;
+        int count = 0;
         Node child;
+        Node info = new Node();
+        info.setValue(0);
+        info.setCount(0);
 
+        // if sth wrong happens, the reader will reach the end and throw error.
         while (true) {
             JsonToken token = reader.peek();
 
             if (token.equals(JsonToken.END_ARRAY)) {
                 reader.endArray();
-                return sumValue;
+                info.setValue(sumValue);
+                info.setCount(count);
+                return info;
             } else if (token.equals(JsonToken.BEGIN_OBJECT)) {
                 child = readNode(reader, hierarchy, stack, preparedStmt);
                 sumValue += child.getValue();
+                // should count be the size of entire sub tree
+                // or just the count of its children
+                count++;
+                // count += child.getCount() == 0 ? 1 : child.getCount();
             } else if (token.equals(JsonToken.END_OBJECT)) {
                 reader.endObject();
-                System.out.print("end object in array ??");
+                System.out.print(" end object in array ??");
             } else {
-                System.out.print("else ??" + " ");
+                System.out.print(" else: token:" + token);
             }
         }
     }

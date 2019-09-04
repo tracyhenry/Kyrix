@@ -1,8 +1,8 @@
 var stateMapPlacement = {
     centroid_x: "col:bbox_x",
     centroid_y: "col:bbox_y",
-    width: "con:400",
-    height: "con:400"
+    width: "con:333.33",
+    height: "con:333.33"
 };
 
 var countyMapPlacement = {

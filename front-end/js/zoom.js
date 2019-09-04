@@ -264,47 +264,24 @@ function zoomed(viewId) {
         Math.abs(vWidth / scaleX - curViewport[2]) > param.eps ||
         Math.abs(vHeight / scaleY - curViewport[3]) > param.eps;
     if (isZooming) {
-        var numLayer = gvd.curCanvas.layers.length;
-        for (var i = 0; i < numLayer; i++) {
-            if (!gvd.curCanvas.layers[i].retainSizeZoom) continue;
-            d3.selectAll(viewClass + ".layerg.layer" + i)
-                .selectAll(".lowestsvg:not(.static)")
-                .selectAll("g")
-                .selectAll("*")
-                .filter(function() {
-                    return !this.children || this.children.length === 0;
-                })
-                .each(function() {
-                    zoomRescale(viewId, this);
-                });
-        }
-
+        d3.selectAll(viewClass + ".layerg")
+            .selectAll(".kyrix-retainsizezoom")
+            .each(function() {
+                zoomRescale(viewId, this);
+            });
         // for old layer groups
         if (oldCanvasId != "") {
             // proceed when it's indeed literal zoom (otherwise can only be geometric semantic zoom)
-            var oldCanvas = getCanvasById(oldCanvasId);
-            for (var i = 0; i < oldCanvas.layers.length; i++) {
-                if (!oldCanvas.layers[i].retainSizeZoom) continue;
-                d3.select(viewClass + ".oldlayerg.layer" + i)
-                    .selectAll(".lowestsvg:not(.static)")
-                    .selectAll("g")
-                    .selectAll("*")
-                    .filter(function() {
-                        return !this.children || this.children.length === 0;
-                    })
-                    .each(function() {
-                        zoomRescale(
-                            viewId,
-                            this,
-                            gvd.initialScale == 1
-                                ? zoomOutFactorX
-                                : zoomInFactorX,
-                            gvd.initialScale == 1
-                                ? zoomOutFactorY
-                                : zoomInFactorY
-                        );
-                    });
-            }
+            d3.selectAll(viewClass + ".oldlayerg")
+                .selectAll(".kyrix-retainsizezoom")
+                .each(function() {
+                    zoomRescale(
+                        viewId,
+                        this,
+                        gvd.initialScale == 1 ? zoomOutFactorX : zoomInFactorX,
+                        gvd.initialScale == 1 ? zoomOutFactorY : zoomInFactorY
+                    );
+                });
         }
     }
 
@@ -354,7 +331,17 @@ function zoomed(viewId) {
             zoomOutFactorY
         );
 
-    // call onPan & onZoom handlers
-    if (gvd.onPanHandler != null && typeof gvd.onPanHandler == "function")
-        gvd.onPanHandler();
+    // execute onPan & onZoom handlers
+    if (!isZooming && gvd.onPanHandlers != null) {
+        var subEvts = Object.keys(gvd.onPanHandlers);
+        for (var subEvt of subEvts)
+            if (typeof gvd.onPanHandlers[subEvt] == "function")
+                gvd.onPanHandlers[subEvt]();
+    }
+    if (isZooming && gvd.onZoomHandlers != null) {
+        var subEvts = Object.keys(gvd.onZoomHandlers);
+        for (var subEvt of subEvts)
+            if (typeof gvd.onZoomHandlers[subEvt] == "function")
+                gvd.onZoomHandlers[subEvt]();
+    }
 }

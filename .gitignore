@@ -181,7 +181,7 @@ gen
 *.csv
 .vscode
 front-end/js/embed/all.js
-front-end/js/embed/bundle.js
+front-end/js/embed/kyrix.js
 compile.sh
 !docker-scripts/compile.sh
 *.sql

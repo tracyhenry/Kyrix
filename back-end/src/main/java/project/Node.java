@@ -6,6 +6,7 @@ public class Node {
     protected double value;
     protected int depth;
     protected int height;
+    protected int count;
 
     // protected ArrayList<Node> children;
 
@@ -15,6 +16,7 @@ public class Node {
         this.value = -1;
         this.depth = -1;
         this.height = -1;
+        this.count = 0;
     }
 
     public Node(String id, String parent) {
@@ -28,14 +30,16 @@ public class Node {
         value = node.getValue();
         depth = node.getDepth();
         height = node.getHeight();
+        count = node.getCount();
     }
 
-    public Node(String _id, String _parent, double _value, int _depth, int _height) {
+    public Node(String _id, String _parent, double _value, int _depth, int _height, int _count) {
         id = _id;
         parent = _parent;
         value = _value;
         depth = _depth;
         height = _height;
+        count = _count;
     }
 
     public void setId(String id) {
@@ -78,9 +82,13 @@ public class Node {
         return parent;
     }
 
-    // public ArrayList<Node> getChildren() {
-    //     return children;
-    // }
+    public void setCount(int count) {
+        this.count = count;
+    }
+
+    public int getCount() {
+        return count;
+    }
 
     @Override
     public String toString() {
@@ -97,6 +105,8 @@ public class Node {
                 + height
                 + ", depth="
                 + depth
+                + ", count="
+                + count
                 + "}";
     }
 }

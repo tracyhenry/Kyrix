@@ -48,14 +48,14 @@ function Project(name, configFile) {
     // set of Hierarchies
     this.hierarchies = [];
 
+    // set of tables
+    this.tables = [];
+
     // rendering parameters
     this.renderingParams = "{}";
 
     // style sheets
     this.styles = [];
-
-    // pyramids
-    this.pyramids = [];
 }
 
 // Add a view to a project.
@@ -207,17 +207,12 @@ function addAutoDD(autoDD, args) {
         textwrap: require("./template-api/Renderers").textwrap
     });
 
-    // add one pyramid placeholder if specified
-    if (args.newPyramid) this.pyramids.push([]);
-    else if (this.pyramids.length == 0)
-        throw new Error("Adding autoDD: no pyramid available.");
-
     // construct canvases
-    var autoDDCanvases = [];
+    var curPyramid = [];
     var transform = new Transform(autoDD.query, autoDD.db, "", [], true);
     var numLevels = Math.min(
         autoDD.numLevels,
-        args.newPyramid ? 1e10 : this.pyramids[this.pyramids.length - 1].length
+        args.pyramid ? args.pyramid.length : 1e10
     );
     for (var i = 0; i < numLevels; i++) {
         var width = (autoDD.topLevelWidth * Math.pow(autoDD.zoomFactor, i)) | 0;
@@ -226,8 +221,8 @@ function addAutoDD(autoDD, args) {
 
         // construct a new canvas
         var curCanvas;
-        if (!args.newPyramid) {
-            curCanvas = this.pyramids[this.pyramids.length - 1][i];
+        if (args.pyramid) {
+            curCanvas = args.pyramid[i];
             if (
                 Math.abs(curCanvas.width - width) > 1e-3 ||
                 Math.abs(curCanvas.height - height) > 1e-3
@@ -235,13 +230,13 @@ function addAutoDD(autoDD, args) {
                 throw new Error("Adding AutoDD: Canvas sizes do not match.");
         } else {
             curCanvas = new Canvas(
-                "pyramid" + (this.pyramids.length - 1) + "_" + "level" + i,
+                "autodd" + (this.autoDDs.length - 1) + "_" + "level" + i,
                 width,
                 height
             );
             this.addCanvas(curCanvas);
         }
-        autoDDCanvases.push(curCanvas);
+        curPyramid.push(curCanvas);
 
         // create one layer
         var curLayer = new Layer(transform, false);
@@ -250,14 +245,6 @@ function addAutoDD(autoDD, args) {
         // set isAutoDD and autoDD ID
         curLayer.setIsAutoDD(true);
         curLayer.setAutoDDId(this.autoDDs.length - 1 + "_" + i);
-
-        // set retainSizeZoom
-        curLayer.setRetainSizeZoom(
-            autoDD.renderingMode == "contour only" ||
-                autoDD.renderingMode == "contour+object"
-                ? false
-                : true
-        );
 
         // dummy placement
         curLayer.addPlacement({
@@ -268,7 +255,9 @@ function addAutoDD(autoDD, args) {
         });
 
         // construct rendering function
-        curLayer.addRenderingFunc(autoDD.getLayerRenderer());
+        curLayer.addRenderingFunc(
+            autoDD.getLayerRenderer(i, this.autoDDs.length - 1)
+        );
 
         // axes
         if (autoDD.axis) {
@@ -282,20 +271,20 @@ function addAutoDD(autoDD, args) {
         var hasLiteralZoomOut = false;
         for (var j = 0; j < this.jumps.length; j++) {
             if (
-                this.jumps[j].sourceId == autoDDCanvases[i].id &&
+                this.jumps[j].sourceId == curPyramid[i].id &&
                 this.jumps[j].type == "literal_zoom_in"
             ) {
-                if (this.jumps[j].destId != autoDDCanvases[i + 1].id)
+                if (this.jumps[j].destId != curPyramid[i + 1].id)
                     throw new Error(
                         "Adding AutoDD: malformed literal zoom pyramid."
                     );
                 hasLiteralZoomIn = true;
             }
             if (
-                this.jumps[j].sourceId == autoDDCanvases[i + 1].id &&
+                this.jumps[j].sourceId == curPyramid[i + 1].id &&
                 this.jumps[j].type == "literal_zoom_out"
             ) {
-                if (this.jumps[j].destId != autoDDCanvases[i].id)
+                if (this.jumps[j].destId != curPyramid[i].id)
                     throw new Error(
                         "Adding AutoDD: malformed literal zoom pyramid."
                     );
@@ -304,27 +293,16 @@ function addAutoDD(autoDD, args) {
         }
         if (!hasLiteralZoomIn)
             this.addJump(
-                new Jump(
-                    autoDDCanvases[i],
-                    autoDDCanvases[i + 1],
-                    "literal_zoom_in"
-                )
+                new Jump(curPyramid[i], curPyramid[i + 1], "literal_zoom_in")
             );
         if (!hasLiteralZoomOut)
             this.addJump(
-                new Jump(
-                    autoDDCanvases[i + 1],
-                    autoDDCanvases[i],
-                    "literal_zoom_out"
-                )
+                new Jump(curPyramid[i + 1], curPyramid[i], "literal_zoom_out")
             );
     }
 
-    // populate the new pyramid if specified
-    if (args.newPyramid)
-        this.pyramids[this.pyramids.length - 1] = autoDDCanvases;
     // create a new view if specified
-    if (args.newView) {
+    if (!args.view) {
         var viewId = "autodd" + (this.autoDDs.length - 1);
         var view = new View(
             viewId,
@@ -336,10 +314,11 @@ function addAutoDD(autoDD, args) {
         this.addView(view);
 
         // initialize view
-        this.setInitialStates(view, autoDDCanvases[0], 0, 0);
-    }
+        this.setInitialStates(view, curPyramid[0], 0, 0);
+    } else if (!(args.view instanceof View))
+        throw new Error("Constructing AutoDD: view must be a View object");
 
-    return this;
+    return {pyramid: curPyramid, view: args.view ? args.view : view};
 }
 
 /*
@@ -603,6 +582,98 @@ function addTreemap(treemap) {
     );
 }
 
+/**
+ * Add a Circle Packing to a project, this will create a hierarchy of canvases that form a pyramid shape
+ * @param pack a CirclePacking object
+ * @param args an dictionary that contains customization parameters, see doc
+ * @returns {canvases, view} return an array of canvases created and a view
+ */
+function addCirclePacking(pack) {
+    this.hierarchies.push(pack);
+
+    pack.name = "pack_" + (this.hierarchies.length - 1);
+
+    pack.renderingParams = {
+        [pack.name]: {
+            // colorInterpolator: pack.colorInterpolator || "Rainbow",
+            // colorInterpolator: args.colorInterpolator || "Viridis"
+            transitions: pack.transitions || []
+        },
+        packSib: require("./template-api/CirclePacking.js").packSib
+    };
+
+    this.addStyles(__dirname + "/template-api/css/circlepacking.css");
+
+    var zoomFactor = 1;
+    var packCanvases = [];
+
+    var genPackCanvas = function(i) {
+        zoomFactor = Math.pow(pack.zoomFactor, i);
+        // var zoomFactor = Math.pow(2, i) ;
+        // var zoomFactor = 2 * (i+1);
+        console.log("zoomFactor!!!!!!!!:", zoomFactor);
+        var query = "select * from circlepacking";
+
+        var db = "kyrix";
+        var transform_func = "";
+        var schema = [
+            "id",
+            "parent",
+            "value",
+            "depth",
+            "height",
+            "x",
+            "y",
+            "w",
+            "h"
+        ];
+
+        var transform = new Transform(query, db, transform_func, schema, true);
+        var layer = new Layer(transform, false);
+
+        layer.addPlacement(pack.placement);
+        layer.addRenderingFunc(pack.getRenderer(i));
+        layer.setIsHierarchical(true);
+        layer.level = i;
+        layer.indexer = "PsqlNestedJsonIndexer";
+
+        var canvas = new Canvas(
+            (pack.name + "_" + i).replace(/(\.|-)/g, "_"),
+            Math.floor(zoomFactor * (pack.width + pack.x)),
+            Math.floor(zoomFactor * (pack.height + pack.y))
+        );
+        canvas.zoomLevel = i;
+
+        canvas.addLayer(layer);
+        packCanvases.push(canvas);
+        return canvas;
+    };
+
+    for (var i = 0; i < 1; i++) {
+        var curLevelCanvas = genPackCanvas(i);
+        this.addCanvas(curLevelCanvas);
+    }
+
+    console.log("packCanvases:", packCanvases);
+    for (var i = 1; i < packCanvases.length - 1; i++) {
+        this.addJump(
+            new Jump(packCanvases[i], packCanvases[i + 1], "literal_zoom_in")
+        );
+        this.addJump(
+            new Jump(packCanvases[i + 1], packCanvases[i], "literal_zoom_out")
+        );
+    }
+
+    var view_2 = new View("pack_View_2", 0, 0, pack.viewW, pack.viewH);
+
+    this.addView(view_2);
+    this.addRenderingParams(pack.renderingParams);
+
+    this.setInitialStates(view_2, packCanvases[0], pack.x, pack.y);
+
+    return {canvas: packCanvases, view: view_2};
+}
+
 // Add a rendering parameter object
 function addRenderingParams(renderingParams) {
     if (renderingParams == null) return;
@@ -639,6 +710,69 @@ function addStyles(styles) {
     this.styles.push(rules);
 }
 
+function addTable(table, args) {
+    if (args == null) args = {};
+
+    this.tables.push(table);
+    table.name = "kyrix_table_" + (this.tables.length - 1);
+
+    table.renderingParams = {
+        [table.name]: {
+            x: table.x,
+            y: table.y,
+            heads: {
+                height: table.heads_height,
+                names: table.heads_names
+            },
+            width: table.width,
+            cell_height: table.cell_height,
+            fields: table.schema.slice(0, table.schema.indexOf("rn"))
+        }
+    };
+
+    var canvas = new Canvas(
+        table.name,
+        Math.ceil(table.sum_width),
+        0,
+        "",
+        `0:select count(*) * ${table.cell_height} + ${table.heads_height} from ${table.table}`
+    );
+    this.addCanvas(canvas);
+    this.addStyles(__dirname + "/template-api/css/table.css");
+    this.addRenderingParams(table.renderingParams);
+    var transform_func = table.getTableTransformFunc();
+    var tableTransform = new Transform(
+        table.query,
+        table.db,
+        transform_func,
+        table.schema,
+        true
+    );
+
+    var tableLayer = new Layer(tableTransform, false);
+    tableLayer.addPlacement(table.placement);
+    tableLayer.addRenderingFunc(table.getTableRenderer());
+    if (table.group_by.length > 0) {
+        tableLayer.setIsPredicatedTable(true);
+    }
+    canvas.addLayer(tableLayer);
+
+    if (!args.view) {
+        var tableView = new View(
+            table.name + "_view",
+            0,
+            0,
+            Math.floor(table.sum_width * 0.8),
+            700
+        );
+        this.addView(tableView);
+        this.setInitialStates(tableView, canvas, 0, 0);
+    } else if (!(args.view instanceof View))
+        throw new Error("Constructing Table: view must be a View object");
+
+    return {canvas, view: args.view ? args.view : tableView};
+}
+
 /**
  * Set the initial states for a view object
  * @param {object} canvasObj - a canvas object representing the initial canvas
@@ -665,9 +799,16 @@ function setInitialStates(
         throw new Error("Initial canvas: unidentified canvasObj.");
 
     // check viewport range
-    if (viewportX < 0 || viewportX + viewObj.width > this.canvases[canvasId].w)
+    if (
+        this.canvases[canvasId].w > 0 &&
+        (viewportX < 0 || viewportX + viewObj.width > this.canvases[canvasId].w)
+    )
         throw new Error("Initial canvas: viewportX out of range.");
-    if (viewportY < 0 || viewportY + viewObj.height > this.canvases[canvasId].h)
+    if (
+        this.canvases[canvasId].h > 0 &&
+        (viewportY < 0 ||
+            viewportY + viewObj.height > this.canvases[canvasId].h)
+    )
         throw new Error("Initial canvas: viewportY out of range.");
 
     // check if the size of the predicates array equals the number of layers
@@ -840,7 +981,6 @@ function saveProject() {
         },
         4
     );
-    // console.log(logJSON);
 
     // add escape character to projectJSON
     var projectJSONEscapedMySQL = (projectJSON + "")
@@ -980,8 +1120,10 @@ Project.prototype = {
     addCanvas,
     addJump,
     addStyles,
+    addTable,
     addAutoDD,
     addTreemap,
+    addCirclePacking,
     addRenderingParams,
     setInitialStates,
     saveProject

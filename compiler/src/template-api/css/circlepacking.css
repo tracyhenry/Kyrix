@@ -1,0 +1,12 @@
+.pack circle {
+    fill: honeydew;
+    fill-opacity: 0.25;
+    stroke: #adadad;
+    stroke-width: 1px;
+}
+
+.pack text {
+    text-anchor: middle;
+    fill-opacity: 1;
+    fill: navy;
+}

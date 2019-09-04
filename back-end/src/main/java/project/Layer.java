@@ -1,8 +1,8 @@
 package project;
 
+import com.google.gson.annotations.SerializedName;
 import index.Indexer;
 import java.io.Serializable;
-import java.util.ArrayList;
 
 /** Created by wenbo on 4/3/18. */
 public class Layer implements Serializable {
@@ -11,12 +11,31 @@ public class Layer implements Serializable {
     private boolean isStatic;
     private Placement placement;
     private String rendering;
-    private Indexer indexer;
+    private transient Indexer indexer;
     private boolean isAutoDDLayer;
     private boolean isHierarchicalLayer;
     private String autoDDId;
-    private ArrayList<ArrayList<String>> data;
-    private boolean retainSizeZoom;
+    private boolean isPredicatedTable;
+    private int level;
+
+    @SerializedName("indexer")
+    private String indexerClassName;
+
+    public void setIndexerClassName(String indexerClassName) {
+        this.indexerClassName = indexerClassName;
+    }
+
+    public String getIndexerClassName() {
+        return indexerClassName;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    public int getLevel() {
+        return level;
+    }
 
     public Transform getTransform() {
         return transform;
@@ -50,16 +69,12 @@ public class Layer implements Serializable {
         return autoDDId;
     }
 
-    public ArrayList<ArrayList<String>> getData() {
-        return data;
-    }
-
     public boolean isHierarchicalLayer() {
         return isHierarchicalLayer;
     }
 
-    public boolean isRetainSizeZoom() {
-        return retainSizeZoom;
+    public boolean isPredicatedTable() {
+        return isPredicatedTable;
     }
 
     public String getColStr(String tableName) {
@@ -88,12 +103,8 @@ public class Layer implements Serializable {
                 + isAutoDDLayer
                 + ", autoDDId="
                 + autoDDId
-                // + ", data="
-                // + data
                 + ", isHierarchicalLayer="
                 + isHierarchicalLayer
-                + ", retainSizeZoom="
-                + retainSizeZoom
                 + '}';
     }
 }

@@ -135,6 +135,14 @@ function postJump(viewId, zoomType) {
     )
         d3.selectAll(viewClass + ".oldlayerg").remove();
     postOldLayerRemoval();
+
+    // execute on jump handlers
+    if (gvd.onJumpHandlers != null) {
+        var subEvts = Object.keys(gvd.onJumpHandlers);
+        for (var subEvt of subEvts)
+            if (typeof gvd.onJumpHandlers[subEvt] == "function")
+                gvd.onJumpHandlers[subEvt]();
+    }
 }
 
 // animate semantic zoom

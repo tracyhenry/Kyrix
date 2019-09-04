@@ -7,10 +7,11 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import javax.script.ScriptException;
 import main.Config;
 import main.DbConnector;
 import main.Main;
-import server.Exclude;
+import third_party.Exclude;
 
 public class Treemap extends Hierarchy {
 
@@ -41,30 +42,6 @@ public class Treemap extends Hierarchy {
 
     public double getRatio() {
         return ratio;
-    }
-
-    public void setPaddingBottom(double paddingBottom) {
-        this.paddingBottom = paddingBottom;
-    }
-
-    public double getPaddingBottom() {
-        return paddingBottom;
-    }
-
-    public void setPaddingLeft(double paddingLeft) {
-        this.paddingLeft = paddingLeft;
-    }
-
-    public double getPaddingLeft() {
-        return paddingLeft;
-    }
-
-    public void setPaddingRight(double paddingRight) {
-        this.paddingRight = paddingRight;
-    }
-
-    public double getPaddingRight() {
-        return paddingRight;
     }
 
     public void setHeight(double height) {
@@ -115,6 +92,30 @@ public class Treemap extends Hierarchy {
         return paddingInner;
     }
 
+    public void setPaddingBottom(double paddingBottom) {
+        this.paddingBottom = paddingBottom;
+    }
+
+    public double getPaddingBottom() {
+        return paddingBottom;
+    }
+
+    public void setPaddingLeft(double paddingLeft) {
+        this.paddingLeft = paddingLeft;
+    }
+
+    public double getPaddingLeft() {
+        return paddingLeft;
+    }
+
+    public void setPaddingRight(double paddingRight) {
+        this.paddingRight = paddingRight;
+    }
+
+    public double getPaddingRight() {
+        return paddingRight;
+    }
+
     @Override
     public String toString() {
         return "Treemap{"
@@ -141,18 +142,24 @@ public class Treemap extends Hierarchy {
     }
 
     @Override
-    public void calcLayout(int zoomLevel, String bboxTableName, Node rootNode)
-            throws SQLException, ClassNotFoundException {
-        super.calcLayout(zoomLevel, bboxTableName, rootNode);
+    public void calcLayout(Canvas c, int layerId, Node rootNode)
+            throws SQLException, ClassNotFoundException, ScriptException, NoSuchMethodException {
+        super.calcLayout(c, layerId, rootNode);
+
+        Layer l = c.getLayers().get(layerId);
+        int zoomLevel = l.getLevel();
+        String bboxTableName =
+                "bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
+
         String hierTableName = "hierarchy_" + Main.getProject().getName() + "_" + getName();
         this.bboxTableName = bboxTableName;
         this.zoomLevel = zoomLevel;
         this.flag = true;
 
         // prepare the preparedstatement
-        // 15 cols: 5(id, parent, etc.) + 4(x, y, w, h) + 6(cx, cy, etc.)
+        // 16 cols: 6(id, parent, etc.) + 4(x, y, w, h) + 6(cx, cy, etc.)
         String insertSql =
-                "INSERT INTO " + bboxTableName + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                "INSERT INTO " + bboxTableName + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         System.out.println(insertSql);
         this.insertStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
         rowCount = 0;
@@ -197,7 +204,7 @@ public class Treemap extends Hierarchy {
             insertStmt.executeBatch();
         }
         insertStmt.close();
-        if (!flag) System.out.println("Some nodes are too small");
+        if (!this.flag) System.out.println("Some nodes are too small");
         else System.out.println("All nodes are big enough");
     }
 
@@ -230,6 +237,7 @@ public class Treemap extends Hierarchy {
                 // System.out.println("a row was returned. ID: " + childId);
                 double childV = rs.getDouble(3);
                 int childH = rs.getInt(5);
+                int childC = rs.getInt(6);
                 TreemapNode child =
                         new TreemapNode(
                                 new Node(
@@ -237,7 +245,8 @@ public class Treemap extends Hierarchy {
                                         node.getId(),
                                         childV,
                                         node.getDepth() + 1,
-                                        childH));
+                                        childH,
+                                        childC));
                 stack.push(child);
                 children.add(child);
             }
@@ -514,6 +523,16 @@ public class Treemap extends Hierarchy {
         private double realY1;
         private double parentY1;
 
+        TreemapNode(Node node) {
+            super(node);
+            x0 = 0;
+            x1 = 0;
+            y0 = 0;
+            y1 = 0;
+        }
+
+        TreemapNode() {}
+
         public void setParentY0(double parentY0) {
             this.parentY0 = parentY0;
         }
@@ -529,16 +548,6 @@ public class Treemap extends Hierarchy {
         public double getRealY0() {
             return realY0;
         }
-
-        TreemapNode(Node node) {
-            super(node);
-            x0 = 0;
-            x1 = 0;
-            y0 = 0;
-            y1 = 0;
-        }
-
-        TreemapNode() {}
 
         public void setx0(double x0) {
             this.x0 = x0;

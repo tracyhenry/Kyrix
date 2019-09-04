@@ -20,7 +20,7 @@ function Layer(transform, isStatic) {
     else this.isStatic = isStatic;
     this.isAutoDDLayer = false;
     this.isHierarchicalLayer = false;
-    this.retainSizeZoom = false;
+    this.isPredicatedTable = false;
 }
 
 /**
@@ -85,11 +85,11 @@ function setIsHierarchical(isHierarchicalLayer) {
 }
 
 /**
- * set retainSizeZoom,
- * @param retainSizeZoom
+ * set isPredicatedTable, which tells the backend that this layer should use the pred table indexer
+ * @param isPredicatedTable
  */
-function setRetainSizeZoom(retainSizeZoom) {
-    this.retainSizeZoom = retainSizeZoom;
+function setIsPredicatedTable(isPredicatedTable) {
+    this.isPredicatedTable = isPredicatedTable;
 }
 
 // define prototype
@@ -99,7 +99,7 @@ Layer.prototype = {
     setIsAutoDD,
     setAutoDDId,
     setIsHierarchical,
-    setRetainSizeZoom
+    setIsPredicatedTable
 };
 
 // exports

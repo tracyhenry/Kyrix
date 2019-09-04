@@ -24,7 +24,9 @@ public class Project {
     private ArrayList<AutoDD> autoDDs;
     private ArrayList<Hierarchy> hierarchies;
     private String renderingParams;
-    private String[] styles;
+    private ArrayList<Table> tables;
+    private String BGRP = "{}"; // Back-end Generated Rendering parameters
+    private ArrayList<String> styles;
 
     public String getName() {
         return name;
@@ -50,11 +52,32 @@ public class Project {
         return hierarchies;
     }
 
+    public ArrayList<Table> getTables() {
+        return tables;
+    }
+
     public String getRenderingParams() {
         return renderingParams;
     }
 
-    public String[] getStyles() {
+    public String getBGRP() {
+        return BGRP;
+    }
+
+    public void setBGRP(String BGRP) {
+        this.BGRP = BGRP;
+    }
+
+    public void addBGRP(String key, String val) {
+
+        String newBGRP = this.BGRP;
+        newBGRP = newBGRP.substring(0, newBGRP.length() - 1);
+        if (newBGRP.length() > 1) newBGRP += ",";
+        newBGRP += "\"" + key + "\": " + val + "}";
+        this.BGRP = newBGRP;
+    }
+
+    public ArrayList<String> getStyles() {
         return styles;
     }
 
@@ -105,6 +128,9 @@ public class Project {
                 + autoDDs
                 + ", renderingParams='"
                 + renderingParams
+                + '\''
+                + ", BGRP='"
+                + BGRP
                 + '\''
                 + ", styles='"
                 + styles

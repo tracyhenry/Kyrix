@@ -15,6 +15,8 @@ import javax.net.ssl.HttpsURLConnection;
 import main.Main;
 import project.*;
 
+// import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
+
 /** Created by wenbo on 7/12/18. */
 public class ProjectRequestHandler implements HttpHandler {
 
@@ -24,7 +26,8 @@ public class ProjectRequestHandler implements HttpHandler {
     public ProjectRequestHandler() {
         final RuntimeTypeAdapterFactory<Hierarchy> typeFactory =
                 RuntimeTypeAdapterFactory.of(Hierarchy.class, "type")
-                        .registerSubtype(Treemap.class, "treemap");
+                        .registerSubtype(Treemap.class, "treemap")
+                        .registerSubtype(CirclePacking.class, "circle packing");
         gson = new GsonBuilder().registerTypeAdapterFactory(typeFactory).create();
     };
 

@@ -1,7 +1,5 @@
-const Transform = require("../Transform").Transform;
-const Layer = require("../Layer").Layer;
-const fs = require("fs");
-const d3 = require("d3");
+// const fs = require("fs");
+// const d3 = require("d3");
 /*
  * Constructor of a zoomable treemap
  * @param args
@@ -191,14 +189,11 @@ function getRenderer(level) {
             .stratify()
             .id(function(d) {
                 return d.id;
-            }) // Name of the entity (column name is name in csv)
+            })
             .parentId(function(d) {
                 if (d.parent == "") return undefined;
                 return d.parent;
-            })(
-            // Name of the parent (column name is parent in csv)
-            data
-        );
+            })(data);
 
         // data.forEach((d,i,nodes)=>{
         //     d.node = findNode(root, d.id)
