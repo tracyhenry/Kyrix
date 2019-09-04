@@ -11,6 +11,7 @@ import javax.net.ssl.HttpsURLConnection;
 import main.Config;
 import main.Main;
 import project.Project;
+import third_party.AnnotationExclusionStrategy;
 
 /** Created by wenbo on 1/2/18. */
 public class FirstRequestHandler implements HttpHandler {
@@ -19,7 +20,10 @@ public class FirstRequestHandler implements HttpHandler {
     private final Gson gson;
 
     public FirstRequestHandler() {
-        gson = new GsonBuilder().create();
+        gson =
+                new GsonBuilder()
+                        .addSerializationExclusionStrategy(new AnnotationExclusionStrategy())
+                        .create();
     }
 
     @Override

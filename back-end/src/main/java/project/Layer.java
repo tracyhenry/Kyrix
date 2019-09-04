@@ -1,7 +1,9 @@
 package project;
 
+import com.google.gson.annotations.SerializedName;
 import index.Indexer;
 import java.io.Serializable;
+import third_party.Exclude;
 
 /** Created by wenbo on 4/3/18. */
 public class Layer implements Serializable {
@@ -12,10 +14,15 @@ public class Layer implements Serializable {
     private boolean deltaBox;
     private Placement placement;
     private String rendering;
-    private Indexer indexer;
+    @Exclude private Indexer indexer;
     private boolean isAutoDDLayer;
     private String autoDDId;
     private boolean isPredicatedTable;
+
+    @SerializedName(
+            value = "indexerClass",
+            alternate = {"indexerType", "indexerName"})
+    private String indexerType;
 
     public Transform getTransform() {
         return transform;
@@ -59,6 +66,14 @@ public class Layer implements Serializable {
 
     public boolean isPredicatedTable() {
         return isPredicatedTable;
+    }
+
+    public void setIndexerType(String indexerType) {
+        this.indexerType = indexerType;
+    }
+
+    public String getIndexerType() {
+        return indexerType;
     }
 
     public String getColStr(String tableName) {

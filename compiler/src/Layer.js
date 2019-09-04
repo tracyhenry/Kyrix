@@ -20,6 +20,7 @@ function Layer(transform, isStatic) {
     else this.isStatic = isStatic;
     this.fetchingScheme = "dbox";
     this.deltaBox = true;
+    this.indexerType = "";
     this.isAutoDDLayer = false;
     this.isPredicatedTable = false;
 }
@@ -96,6 +97,18 @@ function setIsPredicatedTable(isPredicatedTable) {
     this.isPredicatedTable = isPredicatedTable;
 }
 
+/**
+ * set indexer, which tells the backend that which indexer this layer should use
+ * @param indexer
+ */
+function setIndexerType(indexerType) {
+    if (typeof indexerType !== "string") {
+        console.log("the type of an indexer must be a string!");
+        return;
+    }
+    this.indexerType = indexerType;
+}
+
 // define prototype
 Layer.prototype = {
     addPlacement,
@@ -103,7 +116,8 @@ Layer.prototype = {
     setFetchingScheme,
     setIsAutoDD,
     setAutoDDId,
-    setIsPredicatedTable
+    setIsPredicatedTable,
+    setIndexerType
 };
 
 // exports

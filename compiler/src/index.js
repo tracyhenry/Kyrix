@@ -230,7 +230,7 @@ function addTable(table, args) {
     tableLayer.addPlacement(table.placement);
     tableLayer.addRenderingFunc(table.getTableRenderer());
     if (table.group_by.length > 0) {
-        tableLayer.setIsPredicatedTable(true);
+        tableLayer.setIndexerType("PsqlPredicatedTableIndexer");
     }
     canvas.addLayer(tableLayer);
 
