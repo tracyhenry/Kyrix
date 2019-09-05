@@ -1,6 +1,5 @@
 package project;
 
-import com.google.gson.annotations.SerializedName;
 import index.Indexer;
 import java.io.Serializable;
 import third_party.Exclude;
@@ -16,20 +15,6 @@ public class Layer implements Serializable {
     private String rendering;
     @Exclude private Indexer indexer;
     private String autoDDId;
-
-    /*
-    @ SerializedName is an annotation used in gson
-    so that the json fieldname does not have to be the exact same string as in the Java Class.
-    Usage:
-    1. Simple version: @SerializedName("jsonfield") private String javafield;
-    2. More capable version: @SerializedName(value="jsondefault", alternate={"jsonalt1", "jsonalt2"});
-    Note that SerializedName will cover the original field
-    more information can be found at:
-    https://static.javadoc.io/com.google.code.gson/gson/2.6.2/com/google/gson/annotations/SerializedName.html
-    */
-    @SerializedName(
-            value = "indexerClass",
-            alternate = {"indexerType", "indexerName"})
     private String indexerType;
 
     public Transform getTransform() {
