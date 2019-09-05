@@ -94,15 +94,11 @@ public abstract class Indexer implements Serializable {
     }
 
     public static Indexer getIndexerByType(String type) throws Exception {
-        try {
-            Class c = Class.forName("index." + type);
-            Method m = c.getMethod("getInstance");
-            System.out.println("Indexer type: " + c.getSimpleName());
-            return (Indexer) m.invoke(null);
-        } catch (ClassNotFoundException e) {
-            System.out.println("Indexer type not found. default setting will be used");
-        }
-        return null;
+        if (type.isEmpty()) return null;
+        Class c = Class.forName("index." + type);
+        Method m = c.getMethod("getInstance");
+        System.out.println("Indexer type: " + c.getSimpleName());
+        return (Indexer) m.invoke(null);
     }
 
     // precompute
