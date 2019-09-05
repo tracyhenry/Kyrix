@@ -2,6 +2,7 @@ package project;
 
 import index.Indexer;
 import java.io.Serializable;
+import third_party.Exclude;
 
 /** Created by wenbo on 4/3/18. */
 public class Layer implements Serializable {
@@ -12,10 +13,9 @@ public class Layer implements Serializable {
     private boolean deltaBox;
     private Placement placement;
     private String rendering;
-    private Indexer indexer;
-    private boolean isAutoDDLayer;
+    @Exclude private Indexer indexer;
     private String autoDDId;
-    private boolean isPredicatedTable;
+    private String indexerType;
 
     public Transform getTransform() {
         return transform;
@@ -49,16 +49,16 @@ public class Layer implements Serializable {
         return indexer;
     }
 
-    public boolean isAutoDDLayer() {
-        return isAutoDDLayer;
-    }
-
     public String getAutoDDId() {
         return autoDDId;
     }
 
-    public boolean isPredicatedTable() {
-        return isPredicatedTable;
+    public void setIndexerType(String indexerType) {
+        this.indexerType = indexerType;
+    }
+
+    public String getIndexerType() {
+        return indexerType;
     }
 
     public String getColStr(String tableName) {
@@ -66,7 +66,7 @@ public class Layer implements Serializable {
         String colListStr = "";
         for (String col : transform.getColumnNames())
             colListStr += (tableName.isEmpty() ? "" : tableName + ".") + col + ", ";
-        if (isAutoDDLayer) colListStr += "cluster_num, ";
+        if (this.getIndexerType().equals("AutoDDInMemoryIndexer")) colListStr += "cluster_num, ";
         colListStr += "cx, cy, minx, miny, maxx, maxy";
         return colListStr;
     }
@@ -87,8 +87,6 @@ public class Layer implements Serializable {
                 + ", rendering='"
                 + rendering
                 + '\''
-                + ", isAutoDDLayer="
-                + isAutoDDLayer
                 + ", autoDDId="
                 + autoDDId
                 + '}';

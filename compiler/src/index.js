@@ -230,7 +230,7 @@ function addTable(table, args) {
     tableLayer.addPlacement(table.placement);
     tableLayer.addRenderingFunc(table.getTableRenderer());
     if (table.group_by.length > 0) {
-        tableLayer.setIsPredicatedTable(true);
+        tableLayer.setIndexerType("PsqlPredicatedTableIndexer");
     }
     canvas.addLayer(tableLayer);
 
@@ -312,7 +312,7 @@ function addAutoDD(autoDD, args) {
             curLayer.setFetchingScheme("dbox", false);
 
         // set isAutoDD and autoDD ID
-        curLayer.setIsAutoDD(true);
+        curLayer.setIndexerType("AutoDDInMemoryIndexer");
         curLayer.setAutoDDId(this.autoDDs.length - 1 + "_" + i);
 
         // dummy placement

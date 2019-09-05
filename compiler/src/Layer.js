@@ -20,8 +20,7 @@ function Layer(transform, isStatic) {
     else this.isStatic = isStatic;
     this.fetchingScheme = "dbox";
     this.deltaBox = true;
-    this.isAutoDDLayer = false;
-    this.isPredicatedTable = false;
+    this.indexerType = "";
 }
 
 /**
@@ -73,14 +72,6 @@ function setFetchingScheme(fetchingScheme, deltaBox) {
 }
 
 /**
- * set isAutoDD, which tells the backend that this layer should use the autodd indexer
- * @param isAutoDD
- */
-function setIsAutoDD(isAutoDD) {
-    this.isAutoDDLayer = isAutoDD;
-}
-
-/**
  * set autoDD ID
  * @param autoDDId
  */
@@ -89,11 +80,15 @@ function setAutoDDId(autoDDId) {
 }
 
 /**
- * set isPredicatedTable, which tells the backend that this layer should use the pred table indexer
- * @param isPredicatedTable
+ * set indexer, which tells the backend that which indexer this layer should use
+ * @param indexer
  */
-function setIsPredicatedTable(isPredicatedTable) {
-    this.isPredicatedTable = isPredicatedTable;
+function setIndexerType(indexerType) {
+    if (typeof indexerType !== "string")
+        throw new Error(
+            "Constructing Layer: the type of an indexer must be a string!"
+        );
+    this.indexerType = indexerType;
 }
 
 // define prototype
@@ -101,9 +96,8 @@ Layer.prototype = {
     addPlacement,
     addRenderingFunc,
     setFetchingScheme,
-    setIsAutoDD,
     setAutoDDId,
-    setIsPredicatedTable
+    setIndexerType
 };
 
 // exports
