@@ -38,12 +38,15 @@ public abstract class Indexer implements Serializable {
     public static void associateIndexer() throws Exception {
         for (Canvas c : Main.getProject().getCanvases())
             for (int layerId = 0; layerId < c.getLayers().size(); layerId++) {
+
+                // note that if the indexer type is set in the compiler
+                // it overrides the settings in Config.java (or config.yaml in the future)
                 Layer l = c.getLayers().get(layerId);
                 String indexerType = l.getIndexerType();
                 // if the indexerType is empty or wrong, indexer will be null
                 Indexer indexer = getIndexerByType(indexerType);
 
-                // determine indexer for this layer
+                // determine indexer for this layer when the indexer is not set in the compiler
                 if (indexer == null) {
                     if (Config.database == Config.Database.PSQL
                             || Config.database == Config.Database.CITUS) {
@@ -90,7 +93,7 @@ public abstract class Indexer implements Serializable {
             }
     }
 
-    public static Indexer getIndexerByType(String type) {
+    public static Indexer getIndexerByType(String type) throws Exception {
         try {
             Class c = Class.forName("index." + type);
             Method m = c.getMethod("getInstance");
@@ -98,8 +101,6 @@ public abstract class Indexer implements Serializable {
             return (Indexer) m.invoke(null);
         } catch (ClassNotFoundException e) {
             System.out.println("Indexer type not found. default setting will be used");
-        } catch (Exception e) {
-            System.out.println("getIndexerByType: Exception. default setting will be used");
         }
         return null;
     }

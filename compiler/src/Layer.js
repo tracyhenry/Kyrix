@@ -85,7 +85,9 @@ function setAutoDDId(autoDDId) {
  */
 function setIndexerType(indexerType) {
     if (typeof indexerType !== "string")
-        throw new Error("the type of an indexer must be a string!");
+        throw new Error(
+            "Constructing Layer: the type of an indexer must be a string!"
+        );
     this.indexerType = indexerType;
 }
 
