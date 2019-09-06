@@ -4,12 +4,6 @@ export function initializeApp(serverAddr) {
     return pageOnLoad(serverAddr);
 }
 
-// TODO: Remove this after adding the div resize event listener
-// Adapt svg viexbox to kyrixdiv
-export function resize() {
-    resizeKyrixSvg();
-}
-
 export function filteredNodes(viewId, layerId, filterFunc) {
     var viewClass = ".view_" + viewId;
     return d3

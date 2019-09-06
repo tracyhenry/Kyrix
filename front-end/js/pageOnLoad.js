@@ -163,10 +163,6 @@ function pageOnLoad(serverAddr) {
         .append("div")
         .classed("kyrixdiv", true);
 
-    // TODO: Change this to the div resize event listener
-    // Add resize listener to window to update svg viewbox
-    d3.select(window).on("resize.kyrixdiv", resizeKyrixSvg);
-
     // get information about the first canvas to render
     $.ajax({
         type: "GET",
@@ -320,6 +316,11 @@ function pageOnLoad(serverAddr) {
                 }
             }
         }
+    });
+
+    // add resize event listener to kyrixdiv
+    new ResizeSensor(kyrixDiv.node(), function(){ 
+        resizeKyrixSvg();
     });
 
     // return div node instead of selection
