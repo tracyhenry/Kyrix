@@ -130,6 +130,21 @@ function processStyles() {
     }
 }
 
+// Maybe put this in another file?
+// resize container svg to fit viewbox in kyrixdiv bounds
+function resizeKyrixSvg() {
+    var divs = document.getElementsByClassName("kyrixdiv"); // Update all elements of class kyrixdiv (idk if there can be multiple or not)
+    for (var i = divs.length - 1; i >= 0; i--) {
+        var div = divs[i];
+        var bbox = div.getBoundingClientRect();
+        var h = bbox.height - 20; // top margin == 20
+        var w = bbox.width - 90; // left margin == 20 + button_width + 20
+        var size = Math.min(h,w);
+        var svg = div.firstElementChild;
+        svg.setAttribute('viewBox', '0 0 ' + 1100*1100/size + ' ' + 1100*1100/size); // TODO: set values depending on size of svg instead of 1100 by default.
+    }
+}
+
 // set up page
 function pageOnLoad(serverAddr) {
     // this function can only be called once
@@ -147,6 +162,10 @@ function pageOnLoad(serverAddr) {
         .select("body")
         .append("div")
         .classed("kyrixdiv", true);
+
+    // TODO: Change this to the div resize event listener
+    // Add resize listener to window to update svg viewbox
+    d3.select(window).on("resize.kyrixdiv", resizeKyrixSvg);
 
     // get information about the first canvas to render
     $.ajax({
@@ -191,9 +210,18 @@ function pageOnLoad(serverAddr) {
                         param.viewPadding * 2
                 );
             }
+
+            // Set kyrixDiv max size (don't allow div to get bigger than svg)
+            kyrixDiv
+                .style("max-width", containerW+"px")
+                .style("max-height", containerW+"px");
+            
+            // Create container svg and set its top-left corner at (20, 90) in kyrixDiv
             kyrixDiv
                 .append("svg")
                 .attr("id", "containerSvg")
+                .style("top", "20px") // top margin == 20
+                .style("left", "90px") // left margin == 20 + button_width + 20 // Maybe make these values variable and global? They are reused in resizeKyrixSvg()
                 .attr("width", containerW)
                 .attr("height", containerH);
 
@@ -294,5 +322,6 @@ function pageOnLoad(serverAddr) {
         }
     });
 
-    return kyrixDiv;
+    // return div node instead of selection
+    return kyrixDiv.node();
 }
