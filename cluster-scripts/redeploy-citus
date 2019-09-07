@@ -5,6 +5,12 @@ echo "redeploying citus on kubernetes..."
 
 # TODO: support non-GCP
 
+
+
+# =================================================================================
+# Setting up citus-related kubernetes services, deployments, etc.
+# Waiting/spinning until all services/master/workers/Postgres/Citus to start
+
 echo "checking Kubernetes for number of nodes..."
 K8S_CLUSTER=`kubectl config current-context|perl -ne 's@.+_@@;print;'`
 echo "k8s current cluster: $K8S_CLUSTER"
@@ -55,11 +61,23 @@ while [ 1 ]; do w=`for w in $WORKERS; do kubectl exec -it $w -- su - postgres -c
 SQL_EXTENSIONS="psql -t -c \"select * from pg_extension\""
 while [ 1 ]; do w=`for w in $WORKERS; do kubectl exec -it $w -- su - postgres -c "psql -t -c \"select count(*) from pg_extension where extname = 'citus';\""; done | grep -c 1`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w postgres servers initialized with citus, waiting for $NUM_WORKERS"; sleep 3; done
 
+
+
+
+
+
+
+
+# =================================================================================
+# Setting up Postgres and Citus
+# Registering workers with the master, setting up postgres username/password
+# Creating extensions: plv8, postgis, citus. (is citus needed?)
+
 echo "registering workers with citus master/coordinator..."
 echo "WORKER_IPS=$WORKER_IPS"
 for w in $WORKER_IPS; do kubectl exec $MASTER -- su - postgres -c "psql -t -c \"SELECT * from master_add_node('$w', 5432);\""|grep 5432; done > /dev/null
-# TODO: for now, $USERNAME is created as a superuser
 
+# TODO: for now, $USERNAME is created as a superuser
 echo "creating user $USERNAME, setting users passwords, creating db $DBNAME..."
 # 
 USER_CMD="SET password_encryption = '$PG_ENCRYPTION';create user $USERNAME superuser password '$USER_PASSWORD'; alter user postgres password '$POSTGRES_PASSWORD'"
@@ -79,15 +97,30 @@ kubectl exec $MASTER -- su - postgres -c "/usr/lib/postgresql/11/bin/pg_ctl -D /
 
 echo "setting up kyrix database $DBNAME (note: if using postgis, initialization can be slow). "
 #EXT_CMD='create extension if not exists citus; create extension if not exists postgis; create extension if not exists postgis_topology; create extension if not exists postgis_sfcgal; create extension if not exists fuzzystrmatch; create extension if not exists address_standardizer; create extension if not exists address_standardizer_data_us; create extension if not exists postgis_tiger_geocoder';
+#################### Wenbo: is checking citus needed here? we already waited for citus ready earlier
 EXT_CMD="create extension if not exists citus; create extension if not exists plv8"
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"$EXT_CMD\" "; stty sane  # HARMLESS HACK: for some reason the EXT_CMD corrupts the TTY on my Mac iTerm2
 # run_command_on_workers() can't run until citus is initialized and master_add_node() called.
 for w in $WORKERS; do kubectl exec $w -- su - postgres -c "psql $DBNAME -c \"$EXT_CMD\" " > /dev/null 2> /dev/null & done;
 
+#################### Wenbo: is checking citus needed here? we already waited for citus ready earlier
 while [ 1 ]; do w=`for w in $WORKERS; do stty sane; kubectl exec -it $w -- su - postgres -c "psql $DBNAME -t -c \"select count(*) from pg_extension where extname = 'plv8' or extname='citus';\""; done | grep -c 2`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w postgres servers initialized with extensions, waiting for $NUM_WORKERS (be patient)"; sleep 3; done; stty sane
 
+#################### Wenbo: why registering workers here again?
 echo "registering workers with master..."
 for w in $WORKER_IPS; do kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -t -c \"SELECT * from master_add_node('$w', 5432);\""|grep 5432; done > /dev/null
+
+
+
+
+
+
+
+
+# =================================================================================
+# Setting up some Plv8 related stuff
+# Registering a box type
+# Register and a function that returns a box type for a dot (hardcode for dots dataset)
 
 echo "creating kyrix_bbox_coords_type"
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"DROP TYPE if exists kyrix_bbox_coords_type CASCADE;\"" > /dev/null
@@ -96,10 +129,22 @@ kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"CREATE TYPE kyrix_bb
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$CITUS\\\$  CREATE TYPE kyrix_bbox_coords_type as (cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision); \\\$CITUS\\\$);\"" > /dev/null
 # identity bbox_coords function, for testing incl performance
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"DROP FUNCTION IF EXISTS kyrix_bbox_coords_identity;\""
+#################### Wenbo: hardcode for dots?
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"CREATE OR REPLACE FUNCTION kyrix_bbox_coords_identity(x int,y int) returns kyrix_bbox_coords_type AS \\\$\\\$ return { cx: x, cy: y, minx: x-0.5, miny: y-0.5, maxx: x+0.5, maxy: y+0.5, } \\\$\\\$ language plv8 stable;\""
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$CITUS\\\$ DROP FUNCTION if exists kyrix_bbox_coords_identity \\\$CITUS\\\$);\""
 # master needs stable, workers need voltile
 kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(s) FROM ( select replace(pg_catalog.pg_get_functiondef('kyrix_bbox_coords_identity(int,int)'::regprocedure::oid)::text, 'STABLE', '') s)t;\""
+
+
+
+
+
+
+
+
+# =================================================================================
+# Tuning Postgres, setting up more parallel workers, more ram, etc.
+# Testing citus, parallel postgres, plv8, etc
 
 function tune_postgres() {
     CONF=/var/lib/postgresql/data/postgresql.conf
@@ -133,6 +178,16 @@ echo "testing citus..."
 echo "testing plv8..."
 ./test-plv8
 #./test-postgis
+
+
+
+
+
+
+
+
+# =================================================================================
+# Installing d3
 
 echo "installing d3 on master and every worker..."
 for w in $CITUS_ALL_NODES; do kubectl exec $w -- su - postgres -c "./install-d3.sh $DBNAME"; done > /dev/null
