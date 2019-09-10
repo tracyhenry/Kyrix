@@ -47,12 +47,7 @@ public class FirstRequestHandler implements HttpHandler {
         respMap.put("tileW", Config.tileW);
 
         // convert the response to a json object and send it back
-        // System.out.println("just before Project!!!" + project);
-        System.out.println("just before!!!" + project.getHierarchies());
-        // throw new Error("manual");
         String response = gson.toJson(respMap);
-        // String response = gson.toJson(project.getHierarchies());
-        // System.out.println("just after!!!! response: " + response);
         Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
     }
 }

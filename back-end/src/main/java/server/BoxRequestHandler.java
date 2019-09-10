@@ -25,6 +25,7 @@ public class BoxRequestHandler implements HttpHandler {
     private MikeBoxGetter boxGetter;
 
     public BoxRequestHandler() {
+
         gson = new GsonBuilder().create();
         boxGetter = new MikeBoxGetter();
     }

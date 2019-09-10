@@ -9,15 +9,12 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import jdk.nashorn.api.scripting.JSObject;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import main.Config;
 import main.Main;
-import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
 import project.Canvas;
 import project.Layer;
 import project.Placement;
@@ -39,19 +36,9 @@ public abstract class Indexer implements Serializable {
 
     // associate each layer with a proper indexer
     public static void associateIndexer() throws Exception {
-        Reflections reflections = new Reflections("index", new SubTypesScanner(false));
-
-        Set<Class<? extends Object>> indexers = reflections.getSubTypesOf(Object.class);
-
-        // for (Class indexClass: indexers) {
-        //     System.out.println("indexer:" + indexClass.getName());
-        // }
-        // System.out.println("indexers:" + indexers);
-
-        // Class indexerClass = Class.forName()
-
         for (Canvas c : Main.getProject().getCanvases())
             for (int layerId = 0; layerId < c.getLayers().size(); layerId++) {
+
                 // note that if the indexer type is set in the compiler
                 // it overrides the settings in Config.java (or config.yaml in the future)
                 Layer l = c.getLayers().get(layerId);

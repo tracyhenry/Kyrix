@@ -3,6 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <repositories>
         <repository>
             <id>CronApp</id>
@@ -25,8 +26,8 @@
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
-        <!-- https://stackoverflow.com/questions/4123044/maven-3-warnings-about-build-plugins-plugin-version -->
-        <version>3.2</version>
+            <!-- https://stackoverflow.com/questions/4123044/maven-3-warnings-about-build-plugins-plugin-version -->
+            <version>3.2</version>
             </plugin>
         </plugins>
     </build>
@@ -81,12 +82,6 @@
             <groupId>com.github.davidmoten</groupId>
             <artifactId>rtree</artifactId>
             <version>0.8-RC10</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-            <version>0.9.11</version>
         </dependency>
     </dependencies>
 </project>

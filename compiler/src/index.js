@@ -1,6 +1,5 @@
 // imports
 const fs = require("fs");
-const d3 = require("d3");
 const mysql = require("mysql");
 const psql = require("pg");
 const http = require("http");
@@ -70,6 +69,7 @@ function addView(view) {
             view.miny > this.views[i].miny + this.views[i].height
         )
             continue;
+        // this is commented because it conflicts with overview
         // else
         // throw new Error(
         //     "Adding View: this view intersects with an existing view."
@@ -407,8 +407,6 @@ function addCirclePacking(pack) {
 
     pack.renderingParams = {
         [pack.name]: {
-            // colorInterpolator: pack.colorInterpolator || "Rainbow",
-            // colorInterpolator: args.colorInterpolator || "Viridis"
             transitions: pack.transitions || []
         },
         packSib: require("./template-api/CirclePacking.js").packSib
@@ -421,9 +419,6 @@ function addCirclePacking(pack) {
 
     var genPackCanvas = function(i) {
         zoomFactor = Math.pow(pack.zoomFactor, i);
-        // var zoomFactor = Math.pow(2, i) ;
-        // var zoomFactor = 2 * (i+1);
-        console.log("zoomFactor!!!!!!!!:", zoomFactor);
         var query = "select * from circlepacking";
 
         var db = "kyrix";
@@ -514,7 +509,6 @@ function addCirclePacking(pack) {
         "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
     );
 
-    // this.setInitialStates(view_2, packCanvases[0], pack.x, pack.y);
     this.setInitialStates(view, packCanvases[0], pack.x, pack.y);
 
     return {canvas: packCanvases, view: view_2};

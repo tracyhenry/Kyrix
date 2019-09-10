@@ -23,6 +23,7 @@ public class ViewportRequestHandler implements HttpHandler {
     private final Gson gson;
 
     public ViewportRequestHandler() {
+
         gson = new GsonBuilder().create();
     }
 

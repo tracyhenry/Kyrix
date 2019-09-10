@@ -15,8 +15,6 @@ import javax.net.ssl.HttpsURLConnection;
 import main.Main;
 import project.*;
 
-// import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
-
 /** Created by wenbo on 7/12/18. */
 public class ProjectRequestHandler implements HttpHandler {
 

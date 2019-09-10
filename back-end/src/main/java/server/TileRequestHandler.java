@@ -22,6 +22,7 @@ public class TileRequestHandler implements HttpHandler {
     private final Gson gson;
 
     public TileRequestHandler() {
+
         gson = new GsonBuilder().create();
     }
 
