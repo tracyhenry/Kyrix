@@ -2,7 +2,6 @@ package third_party;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
-import server.Exclude;
 
 public class AnnotationExclusionStrategy implements ExclusionStrategy {
 

@@ -12,15 +12,19 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Stack;
+import javax.script.ScriptException;
 import main.Config;
 import main.DbConnector;
 import main.Main;
-import project.*;
+import project.Canvas;
+import project.Hierarchy;
+import project.Layer;
+import project.Node;
 
 public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
 
-    private static PsqlNestedJsonIndexer instance = null;
-    private int rowCount;
+    protected static PsqlNestedJsonIndexer instance = null;
+    protected int rowCount;
     // thread-safe instance getter
     public static synchronized PsqlNestedJsonIndexer getInstance() {
 
@@ -31,81 +35,37 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
         this.rowCount = 0;
-        Layer l = c.getLayers().get(layerId);
-        // Transform trans = l.getTransform();
-        // HashMap<String, Integer> hashMap = new HashMap<>();
 
-        String[] cids = c.getId().split("_");
-        // e.g. treemap_0__2: treemap 0, -2 zoom
-        String hid = cids[1];
-        // this is used to find the correct hierarchy
-        Hierarchy h = null;
-        ArrayList<Hierarchy> hierarchies = Main.getProject().getHierarchies();
-        for (Hierarchy hierarchy : hierarchies) {
-            h = hierarchy;
-            if (hid.equals(h.getName().split("_")[1])) {
-                System.out.println("hierarchy name:" + h.getName());
-                break;
-            }
-        }
-        assert h != null;
-        String hierTableName = "hierarchy_" + Main.getProject().getName() + "_" + h.getName();
+        // step 0: get hierarchy object
+        Hierarchy h = this.getHierarchy(c, layerId);
 
-        Node root = new Node();
-        String rootId;
-        double rootValue;
-        int rootHeight;
-        if (!h.getIndexed()) {
-            root = expandHierarchy(h);
-        } else {
-            Statement getRootStmt = DbConnector.getStmtByDbName(Config.databaseName);
-            String getRootQuery = "select * from " + hierTableName + " where depth = 0";
-            ResultSet rootRs = getRootStmt.executeQuery(getRootQuery);
-            while (rootRs.next()) {
-                System.out.print("a row was returned.");
-                rootId = rootRs.getString(1);
-                rootHeight = rootRs.getInt(5);
-                rootValue = rootRs.getDouble(3);
-                root.setId(rootId);
-                root.setDepth(0);
-                root.setValue(rootValue);
-                root.setHeight(rootHeight);
-            }
-            rootRs.close();
-            rootRs = null;
-        }
+        // step 1: expand the hierarchy & get the root
+        Node root = this.getRoot(h);
 
-        // step 0: create tables for storing bboxes and tiles
-        String bboxTableName =
-                "bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
+        // step 2: create bboxtable
+        this.createBBoxTable(c, layerId);
 
-        // drop table if exists
-        Statement dropCreateStmt = DbConnector.getStmtByDbName(Config.databaseName);
-        String sql = "drop table if exists " + bboxTableName + ";";
-        System.out.println(sql);
-        dropCreateStmt.executeUpdate(sql);
+        // step 3: calculate the layout and store it in the bboxtable
+        // this is the part where the sub indexers need to implement for them selves.
+        this.calcLayout(c, layerId, h, root);
 
-        // create the bbox table
-        sql = "CREATE UNLOGGED TABLE " + bboxTableName + " (";
-        sql += "id text, parent text, value double precision, depth int, height int,";
-        sql += "x double precision, y double precision, w double precision, h double precision, ";
-        sql +=
-                "cx double precision, cy double precision, minx double precision, miny "
-                        + "double precision, maxx double precision, maxy double precision, geom box)";
-        System.out.println(sql);
-        dropCreateStmt.executeUpdate(sql);
-        dropCreateStmt.close();
+        // step 4: create index
+        this.createIndex(c, layerId);
+    }
 
-        int zoomLevel = c.getZoomLevel();
-        h.calcLayout(c, layerId, root);
+    protected void calcLayout(Canvas c, int layerId, Hierarchy h, Node root)
+            throws SQLException, ClassNotFoundException, ScriptException, NoSuchMethodException {}
 
+    protected void createIndex(Canvas c, int layerId) throws SQLException, ClassNotFoundException {
+        String bboxTableName = this.getBBoxTableName(c, layerId);
         // time
         long startTs = (new Date()).getTime();
         long lastTs = startTs;
         long currTs = 0;
         // compute geom field in the database, where it can happen in parallel
         Statement setGeomFieldStmt = DbConnector.getStmtByDbName(Config.databaseName);
-        sql = "UPDATE " + bboxTableName + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
+        String sql =
+                "UPDATE " + bboxTableName + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
         System.out.println(sql);
         setGeomFieldStmt.executeUpdate(sql);
         setGeomFieldStmt.close();
@@ -132,13 +92,95 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
         startTs = currTs;
     }
 
-    private Node expandHierarchy(Hierarchy h) throws ClassNotFoundException, SQLException {
+    protected void createBBoxTable(Canvas c, int layerId)
+            throws SQLException, ClassNotFoundException {
+        // step 0: create tables for storing bboxes and tiles
+        String bboxTableName = this.getBBoxTableName(c, layerId);
+
+        // drop table if exists
+        Statement dropCreateStmt = DbConnector.getStmtByDbName(Config.databaseName);
+        String sql = "drop table if exists " + bboxTableName + ";";
+        System.out.println(sql);
+        dropCreateStmt.executeUpdate(sql);
+
+        // create the bbox table
+        sql = "CREATE UNLOGGED TABLE " + bboxTableName + " (";
+        sql += "id text, parent text, value double precision, depth int, height int, count int, ";
+        sql += "x double precision, y double precision, w double precision, h double precision, ";
+        sql +=
+                "cx double precision, cy double precision, minx double precision, miny "
+                        + "double precision, maxx double precision, maxy double precision, geom box)";
+        System.out.println(sql);
+        dropCreateStmt.executeUpdate(sql);
+        dropCreateStmt.close();
+    }
+
+    protected String getBBoxTableName(Canvas c, int layerId) {
+        return (String)
+                ("bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId);
+    }
+
+    protected Node getRoot(Hierarchy h) throws SQLException, ClassNotFoundException {
+        Node root = new Node();
+        String rootId;
+        double rootValue;
+        int rootHeight;
+        String hierTableName = this.getHierarchyTableName(h);
+        if (!h.getIndexed()) {
+            root = this.expandHierarchy(h);
+        } else {
+            Statement getRootStmt = DbConnector.getStmtByDbName(Config.databaseName);
+            String getRootQuery = "select * from " + hierTableName + " where depth = 0";
+            ResultSet rootRs = getRootStmt.executeQuery(getRootQuery);
+            while (rootRs.next()) {
+                System.out.print("a row was returned.");
+                rootId = rootRs.getString(1);
+                rootHeight = rootRs.getInt(5);
+                rootValue = rootRs.getDouble(3);
+                root.setId(rootId);
+                root.setDepth(0);
+                root.setValue(rootValue);
+                root.setHeight(rootHeight);
+            }
+            rootRs.close();
+            rootRs = null;
+        }
+
+        return root;
+    }
+
+    protected Hierarchy getHierarchy(Canvas c, int layerId) {
+        Layer l = c.getLayers().get(layerId);
+
+        String[] cids = c.getId().split("_");
+        // e.g. treemap_0__2: treemap 0, -2 zoom
+        String hid = cids[1];
+        // this is used to find the correct hierarchy
+        Hierarchy h = null;
+        ArrayList<Hierarchy> hierarchies = Main.getProject().getHierarchies();
+        for (Hierarchy hierarchy : hierarchies) {
+            h = hierarchy;
+            if (hid.equals(h.getName().split("_")[1])) {
+                System.out.println("\nhierarchy name:" + h.getName());
+                break;
+            }
+        }
+        assert h != null;
+
+        return h;
+    }
+
+    protected String getHierarchyTableName(Hierarchy h) {
+        return (String) ("hierarchy_" + Main.getProject().getName() + "_" + h.getName());
+    }
+
+    protected Node expandHierarchy(Hierarchy h) throws ClassNotFoundException, SQLException {
         // not streaming
 
         String filepath = h.getFilepath();
         // System.out.println("hierarchy filepath:" + filepath);
 
-        String hierTableName = "hierarchy_" + Main.getProject().getName() + "_" + h.getName();
+        String hierTableName = this.getHierarchyTableName(h);
 
         // drop table if exists
         Statement dropCreateStmt = DbConnector.getStmtByDbName(Config.databaseName);
@@ -175,7 +217,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
         assert fileReader != null;
         JsonReader reader = new JsonReader(fileReader);
         try {
-            root = readNode(reader, h, stack, preparedStmt);
+            root = this.readNode(reader, h, stack, preparedStmt);
         } catch (IOException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
@@ -191,7 +233,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
         return root;
     }
 
-    private Node readNode(
+    protected Node readNode(
             JsonReader reader,
             Hierarchy hierarchy,
             Stack<Node> stack,
@@ -220,7 +262,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
             JsonToken token = reader.peek();
 
             if (token.equals(JsonToken.BEGIN_ARRAY)) {
-                Node info = readChildren(reader, hierarchy, stack, preparedStmt);
+                Node info = this.readChildren(reader, hierarchy, stack, preparedStmt);
                 value = info.getValue();
                 node.setValue(value);
                 node.setCount(info.getCount());
@@ -267,7 +309,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
         }
     }
 
-    private Node readChildren(
+    protected Node readChildren(
             JsonReader reader,
             Hierarchy hierarchy,
             Stack<Node> stack,
@@ -291,7 +333,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
                 info.setCount(count);
                 return info;
             } else if (token.equals(JsonToken.BEGIN_OBJECT)) {
-                child = readNode(reader, hierarchy, stack, preparedStmt);
+                child = this.readNode(reader, hierarchy, stack, preparedStmt);
                 sumValue += child.getValue();
                 // should count be the size of entire sub tree
                 // or just the count of its children

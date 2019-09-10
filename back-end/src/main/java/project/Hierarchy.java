@@ -19,7 +19,7 @@ public class Hierarchy {
     }
 
     public double getZoomFactor() {
-        return zoomFactor;
+        return this.zoomFactor;
     }
 
     public void setIndexed(Boolean indexed) {
@@ -27,7 +27,7 @@ public class Hierarchy {
     }
 
     public Boolean getIndexed() {
-        return indexed;
+        return this.indexed;
     }
 
     public void setChildren(String children) {
@@ -35,7 +35,7 @@ public class Hierarchy {
     }
 
     public String getChildren() {
-        return children;
+        return this.children;
     }
 
     public void setValue(String value) {
@@ -43,7 +43,7 @@ public class Hierarchy {
     }
 
     public String getValue() {
-        return value;
+        return this.value;
     }
 
     public void setId(String id) {
@@ -51,7 +51,7 @@ public class Hierarchy {
     }
 
     public String getId() {
-        return id;
+        return this.id;
     }
 
     public void setFilepath(String filepath) {
@@ -59,7 +59,7 @@ public class Hierarchy {
     }
 
     public String getFilepath() {
-        return filepath;
+        return this.filepath;
     }
 
     public void setType(String type) {
@@ -67,7 +67,7 @@ public class Hierarchy {
     }
 
     public String getType() {
-        return type;
+        return this.type;
     }
 
     public void setName(String name) {
@@ -75,7 +75,7 @@ public class Hierarchy {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public void calcLayout(Canvas c, int layerId, Node root)
@@ -88,21 +88,21 @@ public class Hierarchy {
     public String toString() {
         return "Hierarchy{"
                 + "filepath='"
-                + filepath
+                + this.filepath
                 + '\''
                 + "id='"
-                + id
+                + this.id
                 + '\''
                 + "value='"
-                + value
+                + this.value
                 + '\''
                 + "children='"
-                + children
+                + this.children
                 + '\''
                 + ", indexed="
-                + indexed
+                + this.indexed
                 + ", zoomFactor="
-                + zoomFactor
+                + this.zoomFactor
                 + '}';
     }
 }

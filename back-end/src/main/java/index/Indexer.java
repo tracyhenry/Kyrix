@@ -5,7 +5,6 @@ import com.coveo.nashorn_modules.FilesystemFolder;
 import com.coveo.nashorn_modules.Require;
 import java.io.File;
 import java.io.Serializable;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,40 +53,16 @@ public abstract class Indexer implements Serializable {
         for (Canvas c : Main.getProject().getCanvases())
             for (int layerId = 0; layerId < c.getLayers().size(); layerId++) {
                 Layer l = c.getLayers().get(layerId);
-                Indexer indexer = null;
+                String indexerType = l.getIndexerType();
+                // if the indexerType is empty or wrong, indexer will be null
+                Indexer indexer = getIndexerByType(indexerType);
 
-                String indexerClassName = l.getIndexerClassName();
-                indexer = getIndexerByName(indexerClassName);
-                // if(indexerClassName != null) {
-                //     for (Class indexClass: indexers) {
-                //         if (indexClass.getName().equals("index." + indexerClassName)){
-                //             Method m = indexClass.getMethod("getInstance");
-                //             indexer = (Indexer) m.invoke(null);
-                //             System.out.println("indexer:" + indexClass.getName());
-                //             break;
-                //         }
-                //     }
-                //     if (indexer == null)
-                //         System.out.println("an unknown indexer is designated, ignored the
-                // designation.");
-                // }
-                // if an indexer is not properly designated
+                // determine indexer for this layer
                 if (indexer == null) {
-                    // determine indexer for this layer
                     if (Config.database == Config.Database.PSQL
                             || Config.database == Config.Database.CITUS) {
                         boolean isCitus = (Config.database == Config.Database.CITUS);
-                        if (c.getLayers().get(layerId).isAutoDDLayer())
-                            indexer = AutoDDInMemoryIndexer.getInstance();
-                        // else if (c.getLayers().get(layerId).isHierarchicalLayer()) {
-                        //     System.out.println("isHierarchicalLayer...!!!");
-                        //     indexer = PsqlNestedJsonIndexer.getInstance();
-                        //     // indexer = PsqlHierarchicalIndexer.getInstance();
-                        // }
-                        else if (c.getLayers().get(layerId).isPredicatedTable())
-                            indexer = PsqlPredicatedTableIndexer.getInstance();
-                        else if (Config.indexingScheme
-                                == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
+                        if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
                             indexer = PsqlSpatialIndexer.getInstance(isCitus);
                         else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
                             indexer = PsqlTileIndexer.getInstance(isCitus);
@@ -103,9 +78,12 @@ public abstract class Indexer implements Serializable {
                                             + Config.indexingScheme.toString()
                                             + " not supported for PSQL.");
                     } else if (Config.database == Config.Database.MYSQL) {
-                        if (c.getLayers().get(layerId).isAutoDDLayer())
+                        if (l.getIndexerType().equals("AutoDDInMemoryIndexer"))
                             throw new Exception("AutoDD is not supported by MySQL indexers.");
-                        if (Config.indexingScheme == Config.IndexingScheme.MYSQL_SPATIAL_INDEX)
+                        else if (l.getIndexerType().equals("PsqlPredicatedTableIndexer"))
+                            throw new Exception(
+                                    "PredicatedTable is not supported by MySQL indexers.");
+                        else if (Config.indexingScheme == Config.IndexingScheme.MYSQL_SPATIAL_INDEX)
                             indexer = MysqlSpatialIndexer.getInstance();
                         else if (Config.indexingScheme == Config.indexingScheme.TILE_INDEX)
                             indexer = MysqlTileIndexer.getInstance();
@@ -119,24 +97,22 @@ public abstract class Indexer implements Serializable {
 
                 // associate indexer
                 l.setIndexer(indexer);
+                l.setIndexerType(indexer.getClass().getSimpleName());
 
                 // pre-run getColumnNames, see issue #84: github.com/tracyhenry/kyrix/issues/84
                 l.getTransform().getColumnNames();
             }
     }
 
-    public static Indexer getIndexerByName(String className) {
+    public static Indexer getIndexerByType(String type) {
         try {
-            Class c = Class.forName("index." + className);
+            Class c = Class.forName("index." + type);
             Method m = c.getMethod("getInstance");
             return (Indexer) m.invoke(null);
         } catch (ClassNotFoundException e) {
-            System.out.println("class not found");
-        } catch (NoSuchMethodException e) {
             e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
+            System.out.println("Indexer type not found");
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;

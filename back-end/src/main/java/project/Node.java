@@ -6,6 +6,7 @@ public class Node {
     protected double value;
     protected int depth;
     protected int height;
+    // count of its direct children
     protected int count;
 
     // protected ArrayList<Node> children;
@@ -25,21 +26,21 @@ public class Node {
     }
 
     public Node(Node node) {
-        id = node.getId();
-        parent = node.getParent();
-        value = node.getValue();
-        depth = node.getDepth();
-        height = node.getHeight();
-        count = node.getCount();
+        this.id = node.getId();
+        this.parent = node.getParent();
+        this.value = node.getValue();
+        this.depth = node.getDepth();
+        this.height = node.getHeight();
+        this.count = node.getCount();
     }
 
     public Node(String _id, String _parent, double _value, int _depth, int _height, int _count) {
-        id = _id;
-        parent = _parent;
-        value = _value;
-        depth = _depth;
-        height = _height;
-        count = _count;
+        this.id = _id;
+        this.parent = _parent;
+        this.value = _value;
+        this.depth = _depth;
+        this.height = _height;
+        this.count = _count;
     }
 
     public void setId(String id) {
@@ -47,7 +48,7 @@ public class Node {
     }
 
     public String getId() {
-        return id;
+        return this.id;
     }
 
     public void setValue(double value) {
@@ -55,7 +56,7 @@ public class Node {
     }
 
     public double getValue() {
-        return value;
+        return this.value;
     }
 
     public void setHeight(int height) {
@@ -63,7 +64,7 @@ public class Node {
     }
 
     public int getHeight() {
-        return height;
+        return this.height;
     }
 
     public void setDepth(int depth) {
@@ -71,7 +72,7 @@ public class Node {
     }
 
     public int getDepth() {
-        return depth;
+        return this.depth;
     }
 
     public void setParent(String parent) {
@@ -79,7 +80,7 @@ public class Node {
     }
 
     public String getParent() {
-        return parent;
+        return this.parent;
     }
 
     public void setCount(int count) {
@@ -87,26 +88,26 @@ public class Node {
     }
 
     public int getCount() {
-        return count;
+        return this.count;
     }
 
     @Override
     public String toString() {
         return "Node{"
                 + "id:'"
-                + id
+                + this.id
                 + '\''
                 + ", parent:'"
-                + parent
+                + this.parent
                 + '\''
                 + ", value:"
-                + value
+                + this.value
                 + ", height:"
-                + height
+                + this.height
                 + ", depth="
-                + depth
+                + this.depth
                 + ", count="
-                + count
+                + this.count
                 + "}";
     }
 }

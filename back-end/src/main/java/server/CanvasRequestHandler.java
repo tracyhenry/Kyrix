@@ -17,6 +17,7 @@ import main.DbConnector;
 import main.Main;
 import project.Canvas;
 import project.Layer;
+import third_party.AnnotationExclusionStrategy;
 
 /** Created by wenbo on 1/8/18. */
 public class CanvasRequestHandler implements HttpHandler {
@@ -24,7 +25,7 @@ public class CanvasRequestHandler implements HttpHandler {
     private final Gson gson;
 
     public CanvasRequestHandler() {
-        gson = new GsonBuilder().create();
+        gson = new GsonBuilder().setExclusionStrategies(new AnnotationExclusionStrategy()).create();
     }
 
     @Override

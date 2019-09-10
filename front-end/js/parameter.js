@@ -45,11 +45,5 @@ param.geometricSemanticZoom = "geometric_semantic_zoom";
 param.load = "load";
 param.highlight = "highlight";
 
-// fetching scheme -- either tiling or dbox
-param.fetchingScheme = "tiling";
-
-// whether use delta box
-param.deltaBox = false;
-
 // epsilon
 param.eps = 1e-5;

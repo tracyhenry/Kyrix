@@ -2,19 +2,27 @@ package project;
 
 public class PackNode extends Node {
 
-    public double x;
-    public double y;
-    public double r;
+    private double x;
+    private double y;
+    private double r;
 
     // 0 for not ready, 1 for ready, 2 for done
-    public int status;
+    private int status;
 
-    PackNode(Node node) {
+    public PackNode(Node node) {
         super(node);
-        x = 5;
-        y = 4;
-        r = Math.sqrt(value);
-        status = 0;
+        this.x = 0;
+        this.y = 0;
+        this.r = 0;
+        this.status = 0;
+    }
+
+    public PackNode(Node node, double x, double y, double r) {
+        super(node);
+        this.x = x;
+        this.y = y;
+        this.r = r;
+        this.status = 0;
     }
 
     public void setStatus(int status) {
@@ -22,7 +30,7 @@ public class PackNode extends Node {
     }
 
     public int getStatus() {
-        return status;
+        return this.status;
     }
 
     public void setX(double x) {
@@ -30,7 +38,7 @@ public class PackNode extends Node {
     }
 
     public double getX() {
-        return x;
+        return this.x;
     }
 
     public void setY(double y) {
@@ -38,7 +46,7 @@ public class PackNode extends Node {
     }
 
     public double getY() {
-        return y;
+        return this.y;
     }
 
     public void setR(double r) {
@@ -46,7 +54,7 @@ public class PackNode extends Node {
     }
 
     public double getR() {
-        return r;
+        return this.r;
     }
 
     // public static void modX(PackNode node, double x) {
@@ -56,7 +64,16 @@ public class PackNode extends Node {
     @Override
     public String toString() {
         String nodestr = super.toString();
-        nodestr += "placement{ (x:" + x + ", y:" + y + ", r:" + r + ") status(" + status + ")};\n";
+        nodestr +=
+                "placement{ (x:"
+                        + this.x
+                        + ", y:"
+                        + this.y
+                        + ", r:"
+                        + this.r
+                        + ") status("
+                        + this.status
+                        + ")};";
         return nodestr;
     }
 }

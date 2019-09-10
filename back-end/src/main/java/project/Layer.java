@@ -1,33 +1,22 @@
 package project;
 
-import com.google.gson.annotations.SerializedName;
 import index.Indexer;
 import java.io.Serializable;
+import third_party.Exclude;
 
 /** Created by wenbo on 4/3/18. */
 public class Layer implements Serializable {
 
     private Transform transform;
     private boolean isStatic;
+    private String fetchingScheme;
+    private boolean deltaBox;
     private Placement placement;
     private String rendering;
-    private transient Indexer indexer;
-    private boolean isAutoDDLayer;
-    private boolean isHierarchicalLayer;
+    @Exclude private Indexer indexer;
     private String autoDDId;
-    private boolean isPredicatedTable;
+    private String indexerType;
     private int level;
-
-    @SerializedName("indexer")
-    private String indexerClassName;
-
-    public void setIndexerClassName(String indexerClassName) {
-        this.indexerClassName = indexerClassName;
-    }
-
-    public String getIndexerClassName() {
-        return indexerClassName;
-    }
 
     public void setLevel(int level) {
         this.level = level;
@@ -43,6 +32,14 @@ public class Layer implements Serializable {
 
     public boolean isStatic() {
         return isStatic;
+    }
+
+    public String getFetchingScheme() {
+        return fetchingScheme;
+    }
+
+    public boolean isDeltaBox() {
+        return deltaBox;
     }
 
     public Placement getPlacement() {
@@ -61,20 +58,16 @@ public class Layer implements Serializable {
         return indexer;
     }
 
-    public boolean isAutoDDLayer() {
-        return isAutoDDLayer;
-    }
-
     public String getAutoDDId() {
         return autoDDId;
     }
 
-    public boolean isHierarchicalLayer() {
-        return isHierarchicalLayer;
+    public void setIndexerType(String indexerType) {
+        this.indexerType = indexerType;
     }
 
-    public boolean isPredicatedTable() {
-        return isPredicatedTable;
+    public String getIndexerType() {
+        return indexerType;
     }
 
     public String getColStr(String tableName) {
@@ -82,7 +75,7 @@ public class Layer implements Serializable {
         String colListStr = "";
         for (String col : transform.getColumnNames())
             colListStr += (tableName.isEmpty() ? "" : tableName + ".") + col + ", ";
-        if (isAutoDDLayer) colListStr += "cluster_num, ";
+        if (this.getIndexerType().equals("AutoDDInMemoryIndexer")) colListStr += "cluster_num, ";
         colListStr += "cx, cy, minx, miny, maxx, maxy";
         return colListStr;
     }
@@ -94,17 +87,17 @@ public class Layer implements Serializable {
                 + transform
                 + ", isStatic="
                 + isStatic
+                + ", fetchingScheme="
+                + fetchingScheme
+                + ", deltaBox="
+                + deltaBox
                 + ", placement="
                 + placement
                 + ", rendering='"
                 + rendering
                 + '\''
-                + ", isAutoDDLayer="
-                + isAutoDDLayer
                 + ", autoDDId="
                 + autoDDId
-                + ", isHierarchicalLayer="
-                + isHierarchicalLayer
                 + '}';
     }
 }

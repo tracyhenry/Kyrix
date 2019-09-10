@@ -52,13 +52,11 @@ function setupLayerLayouts(viewId) {
     // number of layers
     var numLayers = gvd.curCanvas.layers.length;
 
-    // set box flag
-    if (param.fetchingScheme == "dbox") {
-        gvd.boxX = [-1e5];
-        gvd.boxY = [-1e5];
-        gvd.boxH = [-1e5];
-        gvd.boxW = [-1e5];
-    }
+    // set box coordinates
+    gvd.boxX = [-1e5];
+    gvd.boxY = [-1e5];
+    gvd.boxH = [-1e5];
+    gvd.boxW = [-1e5];
 
     // set render data
     gvd.renderData = [];
@@ -67,7 +65,8 @@ function setupLayerLayouts(viewId) {
 
     // create layers
     for (var i = numLayers - 1; i >= 0; i--) {
-        var isStatic = gvd.curCanvas.layers[i].isStatic;
+        var curLayer = gvd.curCanvas.layers[i];
+        var isStatic = curLayer.isStatic;
         // add new <g>
         d3.select(".view_" + viewId + ".maing")
             .append("g")
@@ -75,6 +74,8 @@ function setupLayerLayouts(viewId) {
             .append("svg")
             .classed("view_" + viewId + " mainsvg", true)
             .classed("static", isStatic)
+            .classed("dbox", !isStatic && curLayer.fetchingScheme == "dbox")
+            .classed("tiling", !isStatic && curLayer.fetchingScheme == "tiling")
             .attr("width", gvd.viewportWidth)
             .attr("height", gvd.viewportHeight)
             .attr("preserveAspectRatio", "none")
@@ -92,7 +93,10 @@ function setupLayerLayouts(viewId) {
                           " " +
                           gvd.viewportHeight
             )
-            .classed("lowestsvg", isStatic || param.fetchingScheme == "dbox");
+            .classed(
+                "lowestsvg",
+                isStatic || curLayer.fetchingScheme == "dbox"
+            );
     }
 }
 

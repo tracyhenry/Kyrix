@@ -18,9 +18,9 @@ function Layer(transform, isStatic) {
     this.transform = transform;
     if (isStatic == null) this.isStatic = false;
     else this.isStatic = isStatic;
-    this.isAutoDDLayer = false;
-    this.isHierarchicalLayer = false;
-    this.isPredicatedTable = false;
+    this.fetchingScheme = "dbox";
+    this.deltaBox = true;
+    this.indexerType = "";
 }
 
 /**
@@ -60,12 +60,15 @@ function addRenderingFunc(rendering) {
     this.rendering = rendering;
 }
 
-/**
- * set isAutoDD, which tells the backend that this layer should use the autodd indexer
- * @param isAutoDD
- */
-function setIsAutoDD(isAutoDD) {
-    this.isAutoDDLayer = isAutoDD;
+function setFetchingScheme(fetchingScheme, deltaBox) {
+    if (this.isStatic)
+        throw new Error(
+            "Constructing Layer: static layer does not need fetching scheme."
+        );
+    if (fetchingScheme != "dbox" && fetchingScheme != "tiling")
+        throw new Error("Constructing Layer: unrecognized fetching scheme.");
+    this.fetchingScheme = fetchingScheme;
+    this.deltaBox = deltaBox ? true : false;
 }
 
 /**
@@ -77,29 +80,24 @@ function setAutoDDId(autoDDId) {
 }
 
 /**
- * set isHierarchicalLayer, which tells the backend that this layer should use the autodd indexer
- * @param isHierarchicalLayer
+ * set indexer, which tells the backend that which indexer this layer should use
+ * @param indexer
  */
-function setIsHierarchical(isHierarchicalLayer) {
-    this.isHierarchicalLayer = isHierarchicalLayer;
-}
-
-/**
- * set isPredicatedTable, which tells the backend that this layer should use the pred table indexer
- * @param isPredicatedTable
- */
-function setIsPredicatedTable(isPredicatedTable) {
-    this.isPredicatedTable = isPredicatedTable;
+function setIndexerType(indexerType) {
+    if (typeof indexerType !== "string") {
+        console.log("the type of an indexer must be a string!");
+        return;
+    }
+    this.indexerType = indexerType;
 }
 
 // define prototype
 Layer.prototype = {
     addPlacement,
     addRenderingFunc,
-    setIsAutoDD,
+    setFetchingScheme,
     setAutoDDId,
-    setIsHierarchical,
-    setIsPredicatedTable
+    setIndexerType
 };
 
 // exports
