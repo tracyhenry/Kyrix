@@ -21,6 +21,7 @@ function Layer(transform, isStatic) {
     this.fetchingScheme = "dbox";
     this.deltaBox = true;
     this.indexerType = "";
+    this.zoomLevel = 0;
 }
 
 /**
@@ -84,10 +85,10 @@ function setAutoDDId(autoDDId) {
  * @param indexer
  */
 function setIndexerType(indexerType) {
-    if (typeof indexerType !== "string") {
-        console.log("the type of an indexer must be a string!");
-        return;
-    }
+    if (typeof indexerType !== "string")
+        throw new Error(
+            "Constructing Layer: the type of an indexer must be a string!"
+        );
     this.indexerType = indexerType;
 }
 

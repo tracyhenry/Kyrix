@@ -18,14 +18,6 @@ public class Layer implements Serializable {
     private String indexerType;
     private int zoomLevel;
 
-    public void setZoomLevel(int level) {
-        this.zoomLevel = level;
-    }
-
-    public int getZoomLevel() {
-        return zoomLevel;
-    }
-
     public Transform getTransform() {
         return transform;
     }
@@ -68,6 +60,14 @@ public class Layer implements Serializable {
 
     public String getIndexerType() {
         return indexerType;
+    }
+
+    public void setZoomLevel(int level) {
+        this.zoomLevel = level;
+    }
+
+    public int getZoomLevel() {
+        return zoomLevel;
     }
 
     public String getColStr(String tableName) {
