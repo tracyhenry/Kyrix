@@ -1,7 +1,5 @@
 package project;
 
-import java.sql.SQLException;
-import javax.script.ScriptException;
 import third_party.Exclude;
 
 public class Hierarchy {
@@ -76,12 +74,6 @@ public class Hierarchy {
 
     public String getName() {
         return this.name;
-    }
-
-    public void calcLayout(Canvas c, int layerId, Node root)
-            throws SQLException, ClassNotFoundException, ScriptException, NoSuchMethodException {
-        System.out.println("Calculating Layout, class = " + this.getClass().toString());
-        System.out.println("Calculating Layout, pyramid level = " + c.getZoomLevel());
     }
 
     @Override
