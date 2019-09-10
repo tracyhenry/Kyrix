@@ -80,7 +80,8 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
         this.createPackTable(h);
 
         Layer l = c.getLayers().get(layerId);
-        this.zoomLevel = l.getLevel();
+        // this.zoomLevel = l.getLevel();
+        this.zoomLevel = l.getZoomLevel();
         // assuming all nodes are big enough
         this.dx = h.getWidth() * this.getZoomCoef(h);
         this.dy = h.getHeight() * this.getZoomCoef(h);

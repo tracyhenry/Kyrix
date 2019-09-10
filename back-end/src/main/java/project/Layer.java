@@ -16,14 +16,14 @@ public class Layer implements Serializable {
     @Exclude private Indexer indexer;
     private String autoDDId;
     private String indexerType;
-    private int level;
+    private int zoomLevel;
 
-    public void setLevel(int level) {
-        this.level = level;
+    public void setZoomLevel(int level) {
+        this.zoomLevel = level;
     }
 
-    public int getLevel() {
-        return level;
+    public int getZoomLevel() {
+        return zoomLevel;
     }
 
     public Transform getTransform() {
