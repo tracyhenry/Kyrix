@@ -42,7 +42,6 @@ function CirclePacking(args) {
     var id = args.id;
     var value = args.value;
 
-    // this.name = "kyrix_treemap_" + rand;
     // this.data = data;
     this.filepath = process.cwd() + args.data.replace("./", "/");
     this.x = args.x || 0;
@@ -55,7 +54,6 @@ function CirclePacking(args) {
     this.value = value;
     this.indexed = false;
     this.type = "circle packing";
-    // this.ratio = (1 + Math.sqrt(5)) / 2;
 
     this.zoomFactor = args.zoomFactor || 2;
 
@@ -103,8 +101,6 @@ function getRenderer(level) {
         .replace(/REPLACE_ME_h/g, this.height)
         .replace(/REPLACE_ME_zoomCoef/g, zoomCoef);
 
-    // .replace(/REPLACE_ME_padding/g, this.padding)
-
     return new Function("svg, data, rend_args", rendererBody);
 
     function renderer(svg, data, rend_args) {
@@ -120,6 +116,7 @@ function getRenderer(level) {
                 return o.depth;
             })
         );
+
         color = d3
             .scaleLinear()
             .domain([0, maxD > 5 ? maxD : 5])
@@ -132,7 +129,6 @@ function getRenderer(level) {
                 return d.id;
             })
             .parentId(function(d) {
-                // return d.parent == -1 ? "" : d.parent;
                 if (d.parent == "") return undefined;
                 else return d.parent;
             })(data);
@@ -168,7 +164,6 @@ function getRenderer(level) {
             .filter(function(d) {
                 return d.count == 0 && (d.w / 2 / 1000) * 300 > 8;
             })
-            // .classed("kyrix-retainsizezoom", true)
             .attr("dy", "0.3em")
             .text(function(d) {
                 return d.id;
@@ -196,7 +191,6 @@ function getRenderer(level) {
         circles
             .on("mouseover.tooltip", function(d, i) {
                 // highlight
-                // d3.select(this).style("opacity", 1);
                 // remove all tool tips first
                 d3.select("body")
                     .selectAll(".maptooltip")
@@ -248,7 +242,6 @@ function getRenderer(level) {
                 .classed("card-title", true)
                 .text(breadcrumb)
                 .style("margin", "0px");
-            // .call(rend_args.renderingParams.textwrap(d3.select(this), 180))
             tooltip
                 .append("div")
                 .classed("card-body", true)
