@@ -32,7 +32,7 @@ echo $DBTYPE >> /kyrix/config.txt
 echo $PGHOST >> /kyrix/config.txt
 echo $USER_NAME >> /kyrix/config.txt
 echo $USER_PASSWORD >> /kyrix/config.txt
-echo "kyrix" >> /kyrix/config.txt
+echo $KYRIX_DB >> /kyrix/config.txt
 echo "/kyrix/compiler" >> /kyrix/config.txt
 
 IGNORE_RX="(NOTICE|HINT|already exists)"
@@ -99,4 +99,3 @@ done
 echo "yes" > /kyrix-started
 
 echo "*** done! Kyrix ready at: http://<host>:8000/  (index recompute may need a few minutes, blank screens until then - watch this log for messages)"
-

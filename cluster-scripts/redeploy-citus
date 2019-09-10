@@ -11,6 +11,7 @@ echo "redeploying citus on kubernetes..."
 # Setting up citus-related kubernetes services, deployments, etc.
 # Waiting/spinning until all services/master/workers/Postgres/Citus to start
 
+#################### Wenbo: maybe we should add a setup-kubernetes-var.env
 echo "checking Kubernetes for number of nodes..."
 K8S_CLUSTER=`kubectl config current-context|perl -ne 's@.+_@@;print;'`
 echo "k8s current cluster: $K8S_CLUSTER"

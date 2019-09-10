@@ -12,6 +12,12 @@ if [ "x$MASTER" = "x" ]; then
     exit 1
 fi
 
+
+
+# =================================================================================
+# deleting existing deployment, and use "kubectl create" to recreate the kyrix deployment
+# waiting until the kyrix pod starts
+
 echo "deleting existing deployment..."   # skip if not running
 active=`kubectl get -o name pods,deployments,services,pvc | grep 'kyrix' | xargs echo`
 for elem in $active; do
@@ -48,5 +54,10 @@ if [ "x$DEV" = "x1" ]; then
     echo "re-copying local start-kyrix.sh..."
     kubectl cp ../docker-scripts/start-kyrix.sh $KYRIX:/
 fi
+
+
+
+# =================================================================================
+# run restart-kyrix-server.sh (which basically determines what dataset to run) in background
 
 DATA=$DATA ./restart-kyrix-server.sh &
