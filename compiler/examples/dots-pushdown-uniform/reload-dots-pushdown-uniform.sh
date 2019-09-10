@@ -36,5 +36,3 @@ echo `date +%s`": setting citus_distribution_id in parallel..."
 cmd="select run_command_on_shards('dots_pushdown_uniform', \$\$ update %1\$s set citus_distribution_id = (select val from dots_pushdown_uniform_shardvals_local where shard='%1\$s')\$\$)"
 echo "$cmd" | tee | $PSQL $PGCONN -q -t
 echo `date +%s`": reload-dots-pushdown-uniform done."
-
-

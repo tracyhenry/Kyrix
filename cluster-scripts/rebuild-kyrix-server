@@ -1,6 +1,6 @@
 #!/bin/bash
 
-KV=${1:-asah/kyrix:latest}
+KV=${1:-tracyhenry/kyrix:latest}
 
 sudo docker build ../ -f ../Dockerfile-kyrix-alpine -t $KV
 sudo docker push $KV
