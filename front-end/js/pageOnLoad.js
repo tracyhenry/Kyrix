@@ -130,21 +130,35 @@ function processStyles() {
     }
 }
 
-// Maybe put this in another file?
 // resize container svg to fit viewbox in kyrixdiv bounds
 function resizeKyrixSvg() {
-    var divs = document.getElementsByClassName("kyrixdiv"); // Update all elements of class kyrixdiv (idk if there can be multiple or not)
+    // get containerSvg size
+    var containerW = d3.select("#containerSvg").attr("width");
+    var containerH = d3.select("#containerSvg").attr("height");
+
+    // Update all elements of class kyrixdiv
+    var divs = document.getElementsByClassName("kyrixdiv");
     for (var i = divs.length - 1; i >= 0; i--) {
         var div = divs[i];
+
+        // maximum space allowed in the div
         var bbox = div.getBoundingClientRect();
-        var h = bbox.height - 20; // top margin == 20
-        var w = bbox.width - 90; // left margin == 20 + button_width + 20
-        var size = Math.min(h, w);
+        var maxW = bbox.width - param.buttonAreaWidth;
+        var maxH = bbox.height; // top margin == 0
+
+        // maximum space according to the ratio of container svg
+        var realW = Math.min(maxW, (maxH * containerW) / containerH);
+        var realH = (realW * containerH) / containerW;
+
+        // set viewbox accordingly
         var svg = div.firstElementChild;
         svg.setAttribute(
             "viewBox",
-            "0 0 " + (1100 * 1100) / size + " " + (1100 * 1100) / size
-        ); // TODO: set values depending on size of svg instead of 1100 by default.
+            "0 0 " +
+                (containerW * containerW) / realW +
+                " " +
+                (containerH * containerH) / realH
+        );
     }
 }
 
@@ -212,15 +226,15 @@ function pageOnLoad(serverAddr) {
 
             // Set kyrixDiv max size (don't allow div to get bigger than svg)
             kyrixDiv
-                .style("max-width", containerW + "px")
-                .style("max-height", containerW + "px");
+                .style("max-width", containerW + param.buttonAreaWidth + "px")
+                .style("max-height", containerH + "px");
 
-            // Create container svg and set its top-left corner at (20, 90) in kyrixDiv
+            // Create container svg and set its top-left corner at (0, 90) in kyrixDiv
             kyrixDiv
                 .append("svg")
                 .attr("id", "containerSvg")
-                .style("top", "20px") // top margin == 20
-                .style("left", "90px") // left margin == 20 + button_width + 20 // Maybe make these values variable and global? They are reused in resizeKyrixSvg()
+                .style("top", "0px") // top margin = 0
+                .style("left", param.buttonAreaWidth + "px") // left margin == 20 + button_width + 20
                 .attr("width", containerW)
                 .attr("height", containerH);
 
