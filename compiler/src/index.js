@@ -443,6 +443,7 @@ function addCirclePacking(pack) {
         layer.addRenderingFunc(pack.getRenderer(i));
         layer.zoomLevel = i;
         layer.setIndexerType("PsqlCirclePackingIndexer");
+        layer.setFetchingScheme("dbox", true);
 
         var canvas = new Canvas(
             (pack.name + "_" + i).replace(/(\.|-)/g, "_"),
@@ -457,10 +458,10 @@ function addCirclePacking(pack) {
     };
 
     // get the minimap
-    var minimap = genPackCanvas(-2);
+    var minimap = genPackCanvas(pack.overviewLevel);
     this.addCanvas(minimap);
 
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < pack.levelNumber; i++) {
         var curLevelCanvas = genPackCanvas(i);
         this.addCanvas(curLevelCanvas);
     }
@@ -476,21 +477,25 @@ function addCirclePacking(pack) {
     for (var i = 1; i < packCanvases.length - 1; i++) {
         this.addJump(
             new Jump(packCanvases[i], packCanvases[i + 1], "literal_zoom_in", {
-                overview: packOverview(pack.getZoomCoef(i + 2))
+                overview: packOverview(pack.getZoomCoef(i - pack.overviewLevel))
             })
         );
         this.addJump(
             new Jump(packCanvases[i + 1], packCanvases[i], "literal_zoom_out", {
-                overview: packOverview(pack.getZoomCoef(i + 1))
+                overview: packOverview(
+                    pack.getZoomCoef(i - pack.overviewLevel - 1)
+                )
             })
         );
     }
     var view = new View(
         "pack_View",
         0,
-        (pack.viewH * 0.75) | 0,
-        pack.viewW / 4,
-        pack.viewH / 4
+        Math.round(
+            pack.viewH * (1 - Math.pow(pack.zoomFactor, pack.overviewLevel))
+        ) | 0,
+        Math.floor(pack.viewW * Math.pow(pack.zoomFactor, pack.overviewLevel)),
+        Math.floor(pack.viewH * Math.pow(pack.zoomFactor, pack.overviewLevel))
     );
 
     var view_2 = new View("pack_View_2", 0, 0, pack.viewW, pack.viewH);
@@ -498,7 +503,7 @@ function addCirclePacking(pack) {
     var loadObj = pack.getLoadObject(0);
     loadObj.sourceView = view;
     loadObj.destView = view_2;
-    loadObj.overview = packOverview(pack.getZoomCoef(3));
+    loadObj.overview = packOverview(pack.getZoomCoef(1 - pack.overviewLevel));
     var topJump = new Jump(minimap, packCanvases[2], "load", loadObj);
 
     this.addView(view_2);
@@ -509,9 +514,12 @@ function addCirclePacking(pack) {
         "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
     );
 
+    console.log("view", view);
+    console.log("packCanvases[0]", packCanvases[0]);
     this.setInitialStates(view, packCanvases[0], pack.x, pack.y);
+    this.setInitialStates(view_2, packCanvases[1], pack.x, pack.y);
 
-    return {canvas: packCanvases, view: view_2};
+    return {canvas: packCanvases, view: [view, view_2]};
 }
 
 // Add a rendering parameter object

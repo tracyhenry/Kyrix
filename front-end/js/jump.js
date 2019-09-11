@@ -454,11 +454,6 @@ function handleOverview(viewId, jump) {
             "style",
             "stroke:black;stroke-width:5;fill:grey;fill-opacity:0.5"
         );
-    // .style("stroke", function(){
-    //     console.log("this", this)
-    //     return "black"
-    // })
-    // .style("stroke-width", 5)
 
     if (sourceSVG.select("#overviewrect").empty()) {
         sourceSVG

@@ -56,6 +56,8 @@ function CirclePacking(args) {
     this.type = "circle packing";
 
     this.zoomFactor = args.zoomFactor || 2;
+    this.levelNumber = args.levelNumber || 10;
+    this.overviewLevel = args.overviewLevel || -2;
 
     this.viewW = args.viewW || 1200;
     this.viewH = args.viewH || 800;
@@ -99,7 +101,8 @@ function getRenderer(level) {
         .replace(/REPLACE_ME_name/g, this.name)
         .replace(/REPLACE_ME_w/g, this.width)
         .replace(/REPLACE_ME_h/g, this.height)
-        .replace(/REPLACE_ME_zoomCoef/g, zoomCoef);
+        .replace(/REPLACE_ME_zoomCoef/g, zoomCoef)
+        .replace(/REPLACE_ME_zoomFactor/g, this.zoomFactor);
 
     return new Function("svg, data, rend_args", rendererBody);
 
@@ -117,12 +120,18 @@ function getRenderer(level) {
             })
         );
 
+        var sort = (a, b) => {
+            return b.height - a.height || b.value - a.value;
+        };
+
         color = d3
             .scaleLinear()
             .domain([0, maxD > 5 ? maxD : 5])
             .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
             .interpolate(d3.interpolateHcl);
 
+        var gvd = globalVar.views[rend_args.viewId];
+        var renderData = gvd.renderData[rend_args.layerId];
         var root = d3
             .stratify()
             .id(function(d) {
@@ -131,14 +140,40 @@ function getRenderer(level) {
             .parentId(function(d) {
                 if (d.parent == "") return undefined;
                 else return d.parent;
-            })(data);
+            })(renderData);
+        // console.log("root:", root);
+        // console.log("maxD:", maxD);
+
         var arr = root.descendants();
         var dict = {};
         for (var i = 0; i < arr.length; i++) dict[arr[i].data.id] = arr[i];
 
-        data.sort((a, b) => {
-            return b.height - a.height || b.value - a.value;
-        });
+        data.sort(sort);
+
+        var flagNew = function(d) {
+            var r = +d.w / 2;
+            var flag =
+                2 * Math.log(r) - 2 * Math.log(REPLACE_ME_zoomFactor) < 5.5;
+            return flag;
+        };
+
+        var flagNewText = function(d) {
+            var flag = ((d.w / 2 / 1000) * 300) / REPLACE_ME_zoomFactor < 8;
+            return flag;
+        };
+
+        var flagColorShift = function(d) {
+            if (flagNew(d)) return false;
+            var node = dict[d.id];
+            if (!node.children > 0 || node.children.length <= 0) return false;
+            // console.log(node)
+            for (var i in node.children) {
+                // console.log("child:", node.children[i]);
+                // if (node.children[i].children || !flagNew(node.children[i].data))
+                if (!flagNew(node.children[i].data)) return false;
+            }
+            return true;
+        };
 
         // render
         var circles = g
@@ -147,7 +182,8 @@ function getRenderer(level) {
             .enter()
             .append("circle")
             .attr("r", function(d) {
-                return d.w / 2;
+                if (!flagNew(d)) return d.w / 2;
+                else return 1e-2;
             })
             .attr("cx", function(d) {
                 return +d.x;
@@ -155,9 +191,14 @@ function getRenderer(level) {
             .attr("cy", function(d) {
                 return +d.y;
             })
-            .style("fill", d => (d.count > 0 ? color(d.depth) : "white"));
+            .style("fill", d => {
+                return d.count > 0 && !flagColorShift(d)
+                    ? color(d.depth)
+                    : "white";
+            });
 
-        g.selectAll("text")
+        var texts = g
+            .selectAll("text")
             .data(data)
             .enter()
             .append("text")
@@ -179,7 +220,15 @@ function getRenderer(level) {
             })
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
-            .style("fill-opacity", 1)
+            .style("fill-opacity", d => {
+                if (d.id == "TreeBuilder" || d.id == "Data") {
+                    console.log("d:", d);
+                    console.log("flagNew(d):", flagNew(d));
+                    console.log("flagNewText(d):", flagNewText(d));
+                }
+                if (flagNew(d) || flagNewText(d)) return 0;
+                else return 1;
+            })
             .style("fill", "navy")
             .each(function(d) {
                 rend_args.renderingParams.textwrap(
@@ -187,6 +236,31 @@ function getRenderer(level) {
                     (d.w / 2) * 1.5
                 );
             });
+
+        circles
+            .filter(flagColorShift)
+            .sort(sort)
+            .transition()
+            .delay((d, i, nodes) => 100 + i * 10)
+            .duration(1000)
+            .style("fill", d => color(d.depth));
+
+        var size_new = circles
+            .filter(flagNew)
+            .sort(sort)
+            .transition()
+            .delay((d, i, nodes) => 100 + i * 10)
+            .duration(1000)
+            .attr("r", d => +d.w / 2)
+            .size();
+
+        texts
+            .filter(d => flagNew(d) || flagNewText(d))
+            .sort(sort)
+            .transition()
+            .delay((d, i, nodes) => 100 + size_new * 10)
+            .duration(800)
+            .style("fill-opacity", 1);
 
         circles
             .on("mouseover.tooltip", function(d, i) {
@@ -212,7 +286,7 @@ function getRenderer(level) {
             });
 
         function addTooltip(d, i) {
-            var node = findNode(root, d.id);
+            var node = dict[d.id];
             var ancestors = node.ancestors().reverse();
             // console.log("ancestors:", ancestors)
             var breadcrumb = ancestors
@@ -251,17 +325,6 @@ function getRenderer(level) {
                 .style("font-size", "18px")
                 .style("margin", "0px")
                 .text(+d.value);
-        }
-
-        function findNode(node, id) {
-            if (node.id == id) return node;
-            if (!node.children) return undefined;
-            var ret;
-            for (var child of node.children) {
-                ret = findNode(child, id);
-                if (ret) return ret;
-            }
-            return undefined;
         }
     }
 }

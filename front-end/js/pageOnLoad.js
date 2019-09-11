@@ -215,7 +215,7 @@ function pageOnLoad(serverAddr) {
                 gvd.curCanvas = null;
                 gvd.curJump = null;
                 gvd.curStaticData = null;
-                gvd.overView = null;
+                gvd.overview = null;
                 gvd.history = [];
                 gvd.animation = false;
                 gvd.predicates = [];

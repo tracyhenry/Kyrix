@@ -474,6 +474,7 @@ function renderDynamicBoxes(
                     optionalArgsWithBoxWHXY["boxY"] = y;
                     optionalArgsWithBoxWHXY["boxW"] = response.boxW;
                     optionalArgsWithBoxWHXY["boxH"] = response.boxH;
+                    optionalArgsWithBoxWHXY["layerId"] = i;
                     curLayer.rendering.parseFunction()(
                         dboxSvg,
                         renderData[i],

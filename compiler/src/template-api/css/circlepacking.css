@@ -11,6 +11,10 @@
     fill: navy;
 }
 
+body {
+    overflow: hidden;
+}
+
 #overviewrect {
     fill-opacity: 0;
     stroke: #fffef8;

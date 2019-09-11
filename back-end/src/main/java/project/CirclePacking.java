@@ -21,6 +21,7 @@ public class CirclePacking extends Hierarchy {
     @Exclude private int zoomLevel;
     @Exclude private Boolean flag;
     @Exclude private NashornScriptEngine engine;
+    @Exclude public int indexTime;
     // CirclePacking(){
     //     super();
     //     prestack = new Stack<>();

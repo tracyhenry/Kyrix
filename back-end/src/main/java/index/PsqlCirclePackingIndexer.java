@@ -68,11 +68,12 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
         // super.calcLayout(c, layerId, rootNode);
         CirclePacking h = (CirclePacking) hierarchy;
 
+        if (this.engine == null) h.indexTime = 0;
         // step 0: initialize and create Pack Table
         this.status = 0;
         this.map = new HashMap<>();
         this.stack = new Stack<>();
-        if (engine == null) this.engine = setupNashorn("");
+        if (this.engine == null) this.engine = setupNashorn("");
         this.k = 1;
         this.startTs = (new Date()).getTime();
         this.lastTs = startTs;
@@ -141,6 +142,8 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
         System.out.println("root after 3 round:" + root);
         this.finishTail(this.insertStmt);
 
+        h.indexTime += ((new Date()).getTime() - this.startTs) / 1000;
+        System.out.println("Total Time: " + h.indexTime + " Seconds. ");
         if (!this.flag) System.out.println("Some nodes are too small");
         else System.out.println("All nodes are big enough");
     }
@@ -188,7 +191,10 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
                                 + this.rowCount
                                 + " records inserted. "
                                 + (this.rowCount / secs)
-                                + " recs/sec.");
+                                + " recs/sec."
+                                + "total time used: "
+                                + ((this.currTs - this.startTs) / 1000)
+                                + " seconds.");
             }
         }
     }
