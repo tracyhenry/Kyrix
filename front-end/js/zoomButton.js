@@ -177,6 +177,7 @@ function backspace(viewId) {
                     enterAndZoom(t, i(t));
                 };
             })
+
             .on("start", function() {
                 // set up layer layouts
                 setupLayerLayouts(viewId);
