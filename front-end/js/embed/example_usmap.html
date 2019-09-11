@@ -1,5 +1,7 @@
 <html>
-    <body></body>
+    <body>
+        <div id="controldiv"></div>
+    </body>
     <head>
         <link
             rel="stylesheet"
@@ -24,11 +26,6 @@
         <script>
             // TODO: change the address where the kyrix backend is running, has to start with http://
             var serverAddr = "http://127.0.0.1:8000";
-
-            d3.select("body")
-                .append("div")
-                .attr("id", "controldiv")
-                .style("display", "block");
 
             // initializeApp() loads kyrix vis into a div, and returns this div
             kyrix.initializeApp(serverAddr);

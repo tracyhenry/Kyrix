@@ -1,4 +1,10 @@
+html,
+body {
+    height: 100%;
+}
+
 .kyrixdiv {
+    overflow: hidden;
     width: 100%;
     height: 100%;
 }
