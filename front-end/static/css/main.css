@@ -1,51 +1,63 @@
+html,
+body {
+    height: 100%;
+}
+
+.kyrixdiv {
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+}
+
 #containerSvg {
-    display : block;
-    margin : auto;
+    display: block;
+    position: absolute;
+    margin: auto;
 }
 
 .viewsvg {
-    display : block;
-    margin : auto;
+    display: block;
+    margin: auto;
 }
 
 #jumppopover {
-    display : block;
-    opacity : 0.9;
+    display: block;
+    opacity: 0.9;
 }
 
 #popoverarrow {
-    top : 50%;
+    top: 50%;
 }
 
 #popoverclose {
     position: relative;
     bottom: 5px;
-    left : 6px;
+    left: 6px;
 }
 
 #popovercontent {
-    margin : 0px;
-    padding : 0px;
+    margin: 0px;
+    padding: 0px;
 }
 
 #popovercontent > .list-group-item {
-    padding : 6px;
-    border : none;
+    padding: 6px;
+    border: none;
 }
 
 #jumppopover > div {
-    text-align : center;
-    font-family: 'Source Serif Pro', sans-serif !important;
+    text-align: center;
+    font-family: "Source Serif Pro", sans-serif !important;
 }
 
 .gobackbutton {
-    position : absolute;
+    position: absolute;
 }
 
 .zoominbutton {
-    position : absolute;
+    position: absolute;
 }
 
 .zoomoutbutton {
-    position : absolute;
+    position: absolute;
 }

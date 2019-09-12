@@ -47,3 +47,6 @@ param.highlight = "highlight";
 
 // epsilon
 param.eps = 1e-5;
+
+// screen space reserved for buttons
+param.buttonAreaWidth = 90;
