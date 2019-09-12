@@ -12,10 +12,11 @@ const placements = require("./placements");
 
 // construct a project
 var p = new Project("dots_uniform", "../../../config.txt");
+p.addRenderingParams(renderers.renderingParams);
 
 // ================== top zoom level ===================
-var topWidth = 1000000,
-    topHeight = 1000000;
+var topWidth = renderers.topLevelWidth,
+    topHeight = renderers.topLevelHeight;
 var topCanvas = new Canvas("top", topWidth, topHeight);
 topCanvas.addAxes(renderers.dotsAxes);
 p.addCanvas(topCanvas);

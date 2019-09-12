@@ -18,7 +18,7 @@ echo "$cmd" | tee | $PSQL $PGCONN -q -t
 for i in {1..10}; do
     echo `date +%s`": loading dots_pushdown_uniform data #$i of 10..."
     # careful to create unique IDs - use the shard id (right(<shard>,3))
-    cmd="select run_command_on_shards('dots_pushdown_uniform', \$\$ insert into %1\$s (id,w,h) select (id::bigint) * $i*1000 + right('%1\$s',3)::bigint, (random()*1000000)::int, (random()*100000)::int from generate_series(1,(1000000*$SCALE/$SHARD_COUNT)::int) id;\$\$)"
+    cmd="select run_command_on_shards('dots_pushdown_uniform', \$\$ insert into %1\$s (id,w,h) select (id::bigint) * $i*1000 + right('%1\$s',3)::bigint, (random()*100000)::int, (random()*100000)::int from generate_series(1,(1000000*$SCALE/$SHARD_COUNT)::int) id;\$\$)"
     echo "$cmd" | tee | $PSQL $PGCONN -q -t
 done
 
