@@ -12,6 +12,7 @@ public class CirclePacking extends Hierarchy {
     private double y;
 
     private double padding;
+    private double threshold;
 
     @Exclude private Stack<PackNode> prestack;
     @Exclude private Stack<PackNode> poststack;
@@ -66,6 +67,14 @@ public class CirclePacking extends Hierarchy {
 
     public double getY() {
         return this.y;
+    }
+
+    public void setThreshold(double threshold) {
+        this.threshold = threshold;
+    }
+
+    public double getThreshold() {
+        return threshold;
     }
 
     @Override

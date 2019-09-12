@@ -58,6 +58,7 @@ function CirclePacking(args) {
     this.zoomFactor = args.zoomFactor || 2;
     this.levelNumber = args.levelNumber || 10;
     this.overviewLevel = args.overviewLevel || -2;
+    this.threshold = args.threshold || 5.5;
 
     this.viewW = args.viewW || 1200;
     this.viewH = args.viewH || 800;
@@ -102,7 +103,8 @@ function getRenderer(level) {
         .replace(/REPLACE_ME_w/g, this.width)
         .replace(/REPLACE_ME_h/g, this.height)
         .replace(/REPLACE_ME_zoomCoef/g, zoomCoef)
-        .replace(/REPLACE_ME_zoomFactor/g, this.zoomFactor);
+        .replace(/REPLACE_ME_zoomFactor/g, this.zoomFactor)
+        .replace(/REPLACE_ME_threshold/g, this.threshold);
 
     return new Function("svg, data, rend_args", rendererBody);
 
@@ -152,8 +154,7 @@ function getRenderer(level) {
 
         var flagNew = function(d) {
             var r = +d.w / 2;
-            var flag =
-                2 * Math.log(r) - 2 * Math.log(REPLACE_ME_zoomFactor) < 5.5;
+            var flag = r / REPLACE_ME_zoomFactor < REPLACE_ME_threshold;
             return flag;
         };
 
@@ -241,7 +242,7 @@ function getRenderer(level) {
             .filter(flagColorShift)
             .sort(sort)
             .transition()
-            .delay((d, i, nodes) => 100 + i * 10)
+            .delay((d, i, nodes) => 100 + i * 5)
             .duration(1000)
             .style("fill", d => color(d.depth));
 
@@ -249,7 +250,7 @@ function getRenderer(level) {
             .filter(flagNew)
             .sort(sort)
             .transition()
-            .delay((d, i, nodes) => 100 + i * 10)
+            .delay((d, i, nodes) => 100 + i * 5)
             .duration(1000)
             .attr("r", d => +d.w / 2)
             .size();
@@ -258,7 +259,7 @@ function getRenderer(level) {
             .filter(d => flagNew(d) || flagNewText(d))
             .sort(sort)
             .transition()
-            .delay((d, i, nodes) => 100 + size_new * 10)
+            .delay((d, i, nodes) => 100 + size_new * 5)
             .duration(800)
             .style("fill-opacity", 1);
 

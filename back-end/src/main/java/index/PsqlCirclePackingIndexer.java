@@ -239,7 +239,7 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
             ArrayList<PackNode> children = this.getPackChildren(h, node);
             for (PackNode child : children) {
                 translateChild(child, node, this.k);
-                flag = testNode(child);
+                flag = testNode(h, child);
                 if (flag) {
                     count++;
                     this.stack.push(child);
@@ -251,9 +251,9 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
         return count;
     }
 
-    Boolean testNode(PackNode node) {
+    Boolean testNode(CirclePacking h, PackNode node) {
         double r = node.getR();
-        if (2 * Math.log(r) < 5.5) {
+        if (r < h.getThreshold()) {
             this.flag = false;
             // System.out.println("small:" + node);
             return false;
