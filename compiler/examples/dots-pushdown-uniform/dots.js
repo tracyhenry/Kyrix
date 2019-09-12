@@ -12,6 +12,7 @@ const placements = require("../dots-uniform/placements");
 
 // construct a project
 var p = new Project("dots_pushdown_uniform", "../../../config.txt");
+p.addRenderingParams(renderers.renderingParams);
 
 // ================== top zoom level ===================
 var topWidth = renderers.topLevelWidth;
