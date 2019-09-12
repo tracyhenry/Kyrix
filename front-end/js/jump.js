@@ -594,8 +594,8 @@ function registerJumps(viewId, svg, layerId) {
                 .node()
                 .getBoundingClientRect().height;
             d3.select(viewClass + "#jumppopover")
-                .style("left", d3.event.pageX)
-                .style("top", d3.event.pageY - popoverHeight / 2);
+                .style("left", d3.event.pageX + "px")
+                .style("top", d3.event.pageY - popoverHeight / 2 + "px");
         });
     });
 }
