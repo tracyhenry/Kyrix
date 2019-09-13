@@ -52,6 +52,8 @@ psql $PGCONN_STRING_POSTGRES/postgres -c "CREATE DATABASE $SRCDATA_DB OWNER $USE
 
 # workaround this issue: https://github.com/tracyhenry/Kyrix/issues/42
 psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
+# we use the stats table for writing pan/zoom fetch times for later analysis
+psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS stats (ID serial PRIMARY KEY, queryType TEXT, milliseconds NUMERIC, rowsFetched INT);"
 
 cd /kyrix/back-end
 

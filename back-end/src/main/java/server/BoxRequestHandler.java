@@ -83,6 +83,7 @@ public class BoxRequestHandler implements HttpHandler {
         double oMaxX = oMinX + Double.valueOf(queryMap.get("oboxw"));
         double oMaxY = oMinY + Double.valueOf(queryMap.get("oboxh"));
         Box oldBox = new Box(oMinX, oMinY, oMaxX, oMaxY);
+        Boolean isJumping = Boolean.valueOf(queryMap.get("isJumping"));
 
         // get box data
         long st = System.currentTimeMillis();
@@ -98,12 +99,15 @@ public class BoxRequestHandler implements HttpHandler {
         }
         System.out.println("Fetch data time: " + fetchTime + "ms.");
         System.out.println("number of intersecting rows in result: " + intersectingRows);
-        /* TODO: stats table not created. Also, will an insert query be too much overhead?
-        if (oldBox.getHight()==-100000 && oldBox.getWidth()==-100000) {
+        
+        // TODO: improve this by not sending insert query every time there is a user interaction,
+        // instead, store in prepare statement (idk if that would work?)
+        //  or in-memory data structure and flush to db in batches
+        if (isJumping) {
             sendStats("zoom", fetchTime, intersectingRows);
         } else {
             sendStats("pan", fetchTime, intersectingRows);
-        }*/
+        }
 
         // send data and box back
         Map<String, Object> respMap = new HashMap<>();
@@ -138,7 +142,7 @@ public class BoxRequestHandler implements HttpHandler {
         return "";
     }
 
-    private void sendStats(String queryType, double seconds, int fetchedRows) {
+    public static void sendStats(String queryType, double seconds, int fetchedRows) {
         String sql =
                 "insert into stats (querytype, milliseconds, rowsFetched) values ('"
                         + queryType
