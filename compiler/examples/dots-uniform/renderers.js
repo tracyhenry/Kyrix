@@ -1,3 +1,7 @@
+var topLevelWidth = 100000;
+var topLevelHeight = 100000;
+var renderingParams = {topLevelWidth, topLevelHeight};
+
 var dotsRendering = function(svg, data) {
     g = svg.append("g");
     g.selectAll("circle")
@@ -30,7 +34,7 @@ var dotsAxes = function(args) {
     //x
     var x = d3
         .scaleLinear()
-        .domain([0, 1000000])
+        .domain([0, args.renderingParams.topLevelWidth])
         .range([0, cWidth]);
     var xAxis = d3.axisTop().tickSize(-cHeight);
     axes.push({
@@ -44,7 +48,7 @@ var dotsAxes = function(args) {
     //y
     var y = d3
         .scaleLinear()
-        .domain([0, 100000])
+        .domain([0, args.renderingParams.topLevelHeight])
         .range([0, cHeight]);
     var yAxis = d3.axisLeft().tickSize(-cWidth);
     axes.push({
@@ -59,5 +63,8 @@ var dotsAxes = function(args) {
 
 module.exports = {
     dotsRendering,
-    dotsAxes
+    dotsAxes,
+    topLevelWidth,
+    topLevelHeight,
+    renderingParams
 };

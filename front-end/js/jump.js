@@ -79,7 +79,7 @@ function postJump(viewId, zoomType) {
             var nViewClass = ".view_" + nViewId;
             for (var j = 0; j < nGvd.curCanvas.layers.length; j++) {
                 var curLayer = nGvd.curCanvas.layers[j];
-                if (!curLayer.isStatic && param.fetchingScheme == "tiling")
+                if (!curLayer.isStatic && curLayer.fetchingScheme == "tiling")
                     d3.select(nViewClass + ".layerg.layer" + j)
                         .select("svg")
                         .selectAll(".lowestsvg")
@@ -594,8 +594,8 @@ function registerJumps(viewId, svg, layerId) {
                 .node()
                 .getBoundingClientRect().height;
             d3.select(viewClass + "#jumppopover")
-                .style("left", d3.event.pageX)
-                .style("top", d3.event.pageY - popoverHeight / 2);
+                .style("left", d3.event.pageX + "px")
+                .style("top", d3.event.pageY - popoverHeight / 2 + "px");
         });
     });
 }

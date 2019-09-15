@@ -32,27 +32,19 @@ function drawZoomButtons(viewId) {
             .classed("btn-lg", true)
             .html('<span class="glyphicon glyphicon-zoom-out"></span>');
 
-    // get client bounding rect of view svg
-    var bbox = d3
-        .select("#containerSvg")
-        .node()
-        .getBoundingClientRect();
-    var bLeft = +bbox.left + +d3.select(viewClass + ".viewsvg").attr("x");
-    var bTop = +bbox.top + +d3.select(viewClass + ".viewsvg").attr("y");
-
-    // position the buttons
+    // position the buttons at fixed positions in the top-left of the kyrixdiv
     var leftMargin = 20;
     var topMargin = 20;
     var dist = 50;
     d3.select(viewClass + ".gobackbutton")
-        .style("top", bTop + topMargin + "px")
-        .style("left", bLeft - leftMargin + "px");
+        .style("top", topMargin + "px")
+        .style("left", leftMargin + "px");
     d3.select(viewClass + ".zoominbutton")
-        .style("top", bTop + topMargin + dist + "px")
-        .style("left", bLeft - leftMargin + "px");
+        .style("top", topMargin + dist + "px")
+        .style("left", leftMargin + "px");
     d3.select(viewClass + ".zoomoutbutton")
-        .style("top", bTop + topMargin + dist * 2 + "px")
-        .style("left", bLeft - leftMargin + "px");
+        .style("top", topMargin + dist * 2 + "px")
+        .style("left", leftMargin + "px");
 }
 
 // called after a new canvas is completely rendered

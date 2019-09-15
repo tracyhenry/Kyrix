@@ -1,5 +1,8 @@
 <html>
-    <body></body>
+    <body>
+        <div id="controldiv"></div>
+        <div id="kyrixcontainer"></div>
+    </body>
     <head>
         <link
             rel="stylesheet"
@@ -18,13 +21,17 @@
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.min.js"></script>
         <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/css-element-queries@1.2.1/src/ElementQueries.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/css-element-queries@1.2.1/src/ResizeSensor.js"></script>
         <script src="kyrix.js"></script>
         <script>
             // TODO: change the address where the kyrix backend is running, has to start with http://
             var serverAddr = "http://127.0.0.1:8000";
 
             // initializeApp() loads kyrix vis into a div, and returns this div
-            kyrix.initializeApp(serverAddr);
+            d3.select("#kyrixcontainer")
+                .node()
+                .appendChild(kyrix.initializeApp(serverAddr));
 
             //--------------------------US Map-------------------------
             //pan by arrow
@@ -46,13 +53,13 @@
             });
 
             //highlight states on input change
-            d3.select("body")
+            d3.select("#controldiv")
                 .append("input")
                 .attr("type", "text")
                 .attr("name", "state:")
                 .attr(
                     "style",
-                    "width : 150px; height : 40px; position : absolute; top : 50px; left : 100px; font-size : 30;"
+                    "width : 150px; height : 40px; font-size : 30; display:inline-block"
                 )
                 .attr("id", "statenameinput");
             $("#statenameinput").keyup(function(e) {
@@ -103,8 +110,8 @@
                         .attr("stroke-linecap", "butt")
                         .attr("stroke-width", "3");
                 svg.select("#overviewrect")
-                    .attr("x", vp["vpX"] / 5)
-                    .attr("y", vp["vpY"] / 5);
+                    .attr("x", vp["vpX"] / 6)
+                    .attr("y", vp["vpY"] / 6);
             };
             kyrix.on("pan", "county", addRectToState);
 
@@ -115,11 +122,11 @@
                 green: d3.schemeYlGn[9],
                 blue: d3.schemePuBu[9]
             };
-            d3.select("body")
+            d3.select("#controldiv")
                 .append("select")
                 .attr(
                     "style",
-                    "width : 150px; height : 40px; position : absolute; top : 150px; left : 100px; font-size : 30"
+                    "width : 150px; height : 40px; font-size : 30; display: inline-block;"
                 )
                 .on("change", function() {
                     var colorsChoice = d3.select(this).property("value");

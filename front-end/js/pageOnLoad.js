@@ -52,13 +52,11 @@ function setupLayerLayouts(viewId) {
     // number of layers
     var numLayers = gvd.curCanvas.layers.length;
 
-    // set box flag
-    if (param.fetchingScheme == "dbox") {
-        gvd.boxX = [-1e5];
-        gvd.boxY = [-1e5];
-        gvd.boxH = [-1e5];
-        gvd.boxW = [-1e5];
-    }
+    // set box coordinates
+    gvd.boxX = [-1e5];
+    gvd.boxY = [-1e5];
+    gvd.boxH = [-1e5];
+    gvd.boxW = [-1e5];
 
     // set render data
     gvd.renderData = [];
@@ -67,7 +65,8 @@ function setupLayerLayouts(viewId) {
 
     // create layers
     for (var i = numLayers - 1; i >= 0; i--) {
-        var isStatic = gvd.curCanvas.layers[i].isStatic;
+        var curLayer = gvd.curCanvas.layers[i];
+        var isStatic = curLayer.isStatic;
         // add new <g>
         d3.select(".view_" + viewId + ".maing")
             .append("g")
@@ -75,6 +74,8 @@ function setupLayerLayouts(viewId) {
             .append("svg")
             .classed("view_" + viewId + " mainsvg", true)
             .classed("static", isStatic)
+            .classed("dbox", !isStatic && curLayer.fetchingScheme == "dbox")
+            .classed("tiling", !isStatic && curLayer.fetchingScheme == "tiling")
             .attr("width", gvd.viewportWidth)
             .attr("height", gvd.viewportHeight)
             .attr("preserveAspectRatio", "none")
@@ -92,7 +93,10 @@ function setupLayerLayouts(viewId) {
                           " " +
                           gvd.viewportHeight
             )
-            .classed("lowestsvg", isStatic || param.fetchingScheme == "dbox");
+            .classed(
+                "lowestsvg",
+                isStatic || curLayer.fetchingScheme == "dbox"
+            );
     }
 }
 
@@ -123,6 +127,38 @@ function processStyles() {
                 .attr("type", "text/css")
                 .html(globalVar.project.styles[i]);
         }
+    }
+}
+
+// resize container svg to fit viewbox in kyrixdiv bounds
+function resizeKyrixSvg() {
+    // get containerSvg size
+    var containerW = d3.select("#containerSvg").attr("width");
+    var containerH = d3.select("#containerSvg").attr("height");
+
+    // Update all elements of class kyrixdiv
+    var divs = document.getElementsByClassName("kyrixdiv");
+    for (var i = divs.length - 1; i >= 0; i--) {
+        var div = divs[i];
+
+        // maximum space allowed in the div
+        var bbox = div.getBoundingClientRect();
+        var maxW = bbox.width - param.buttonAreaWidth;
+        var maxH = bbox.height; // top margin == 0
+
+        // maximum space according to the ratio of container svg
+        var realW = Math.min(maxW, (maxH * containerW) / containerH);
+        var realH = (realW * containerH) / containerW;
+
+        // set viewbox accordingly
+        var svg = div.firstElementChild;
+        svg.setAttribute(
+            "viewBox",
+            "0 0 " +
+                (containerW * containerW) / realW +
+                " " +
+                (containerH * containerH) / realH
+        );
     }
 }
 
@@ -187,9 +223,18 @@ function pageOnLoad(serverAddr) {
                         param.viewPadding * 2
                 );
             }
+
+            // Set kyrixDiv max size (don't allow div to get bigger than svg)
+            kyrixDiv
+                .style("max-width", containerW + param.buttonAreaWidth + "px")
+                .style("max-height", containerH + "px");
+
+            // Create container svg and set its top-left corner at (0, 90) in kyrixDiv
             kyrixDiv
                 .append("svg")
                 .attr("id", "containerSvg")
+                .style("top", "0px") // top margin = 0
+                .style("left", param.buttonAreaWidth + "px") // left margin == 20 + button_width + 20
                 .attr("width", containerW)
                 .attr("height", containerH);
 
@@ -290,5 +335,11 @@ function pageOnLoad(serverAddr) {
         }
     });
 
-    return kyrixDiv;
+    // add resize event listener to kyrixdiv
+    new ResizeSensor(kyrixDiv.node(), function() {
+        resizeKyrixSvg();
+    });
+
+    // return div node instead of selection
+    return kyrixDiv.node();
 }

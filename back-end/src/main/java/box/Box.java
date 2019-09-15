@@ -38,4 +38,28 @@ public class Box {
     public String getCSV() {
         return minx + "," + miny + "," + maxx + "," + maxy;
     }
+
+    public String getWKT() {
+        return "POLYGON(("
+                + minx
+                + " "
+                + miny
+                + ","
+                + minx
+                + " "
+                + maxy
+                + ","
+                + maxx
+                + " "
+                + maxy
+                + ","
+                + maxx
+                + " "
+                + miny
+                + ","
+                + minx
+                + " "
+                + miny
+                + "))";
+    }
 }

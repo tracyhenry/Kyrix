@@ -39,7 +39,8 @@ public class TileCache {
         for (int i = 0; i < c.getLayers().size(); i++) {
             Layer curLayer = c.getLayers().get(i);
             // add an empty placeholder for static layers
-            if (curLayer.isStatic()) data.add(new ArrayList<>());
+            if (curLayer.isStatic() || !curLayer.getFetchingScheme().equals("tiling"))
+                data.add(new ArrayList<>());
             else
                 data.add(
                         curLayer.getIndexer().getDataFromTile(c, i, minx, miny, predicates.get(i)));
