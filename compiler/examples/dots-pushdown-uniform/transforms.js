@@ -8,11 +8,11 @@ var dotsTransform = new Transform({
             d3 = require("d3");
             plv8.dots_pushdown_uniform_xscale = d3
                 .scaleLinear()
-                .domain([0, 100000])
+                .domain([0, 1000000])
                 .range([0, CANVAS_WIDTH]);
             plv8.dots_pushdown_uniform_yscale = d3
                 .scaleLinear()
-                .domain([0, 100000])
+                .domain([0, 1000000])
                 .range([0, CANVAS_HEIGHT]);
         }
         // I'd use arrays for speed then annotate the column names, but plv8 can't return arrays
