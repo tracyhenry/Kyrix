@@ -116,8 +116,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
     }
 
     protected String getBBoxTableName(Canvas c, int layerId) {
-        return (String)
-                ("bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId);
+        return "bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
     }
 
     protected Node getRoot(Hierarchy h) throws SQLException, ClassNotFoundException {
@@ -126,7 +125,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
         double rootValue;
         int rootHeight;
         String hierTableName = this.getHierarchyTableName(h);
-        if (!h.getIndexed()) {
+        if (!h.getExpanded()) {
             root = this.expandHierarchy(h);
         } else {
             Statement getRootStmt = DbConnector.getStmtByDbName(Config.databaseName);
@@ -171,7 +170,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
     }
 
     protected String getHierarchyTableName(Hierarchy h) {
-        return (String) ("hierarchy_" + Main.getProject().getName() + "_" + h.getName());
+        return "hierarchy_" + Main.getProject().getName() + "_" + h.getName();
     }
 
     protected Node expandHierarchy(Hierarchy h) throws ClassNotFoundException, SQLException {
@@ -229,7 +228,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
         }
         preparedStmt.close();
 
-        h.setIndexed(true);
+        h.setExpanded(true);
         return root;
     }
 

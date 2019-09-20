@@ -7,21 +7,24 @@ const View = require("../../src/View").View;
 const CirclePacking = require("../../src/template-api/CirclePacking")
     .CirclePacking;
 
-var p = new Project("epl", "../../../config.txt");
+var p = new Project("circlepacking", "../../../config.txt");
 
+// https://raw.githubusercontent.com/d3/d3-hierarchy/master/test/data/flare.json
+// already loaded in docker
 var data = "./flare.json";
 var value = "value";
 var id = "name";
 var children = "children";
 
 var args = {
-    // need
+    // required arguments
     data: data,
     value: value,
     children: children,
-    id: id,
+    id: id
 
-    zoomFactor: 2
+    // optional arguments
+    // zoomFactor: 2
 };
 
 var pack = new CirclePacking(args);

@@ -68,7 +68,6 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
         // super.calcLayout(c, layerId, rootNode);
         CirclePacking h = (CirclePacking) hierarchy;
 
-        if (this.engine == null) h.indexTime = 0;
         // step 0: initialize and create Pack Table
         this.status = 0;
         this.map = new HashMap<>();
@@ -142,8 +141,6 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
         System.out.println("root after 3 round:" + root);
         this.finishTail(this.insertStmt);
 
-        h.indexTime += ((new Date()).getTime() - this.startTs) / 1000;
-        System.out.println("Total Time: " + h.indexTime + " Seconds. ");
         if (!this.flag) System.out.println("Some nodes are too small");
         else System.out.println("All nodes are big enough");
     }
@@ -405,7 +402,7 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
     }
 
     protected String getPackTableName(CirclePacking h) {
-        return (String) ("pack_" + Main.getProject().getName() + "_" + h.getName());
+        return "pack_" + Main.getProject().getName() + "_" + h.getName();
     }
 
     protected static NashornScriptEngine setupNashorn(String jsScript) throws ScriptException {

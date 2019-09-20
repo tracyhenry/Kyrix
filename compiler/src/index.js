@@ -58,7 +58,7 @@ function Project(name, configFile) {
 }
 
 // Add a view to a project.
-function addView(view) {
+function addView(view, allowOverlap) {
     for (var i = 0; i < this.views.length; i++) {
         if (this.views[i].id == view.id)
             throw new Error("Adding View: view id already existed.");
@@ -66,14 +66,14 @@ function addView(view) {
             this.views[i].minx > view.minx + view.width ||
             this.views[i].miny > view.miny + view.height ||
             view.minx > this.views[i].minx + this.views[i].width ||
-            view.miny > this.views[i].miny + this.views[i].height
+            view.miny > this.views[i].miny + this.views[i].height ||
+            allowOverlap
         )
             continue;
-        // this is commented because it conflicts with overview
-        // else
-        // throw new Error(
-        //     "Adding View: this view intersects with an existing view."
-        // );
+        else
+            throw new Error(
+                "Adding View: this view intersects with an existing view."
+            );
     }
     this.views.push(view);
 }
@@ -398,7 +398,7 @@ function addAutoDD(autoDD, args) {
  * Add a Circle Packing to a project, this will create a hierarchy of canvases that form a pyramid shape
  * @param pack a CirclePacking object
  * @param args an dictionary that contains customization parameters, see doc
- * @returns {canvases, view} return an array of canvases created and a view
+ * @returns {canvases, views} return an array of canvases created and two views
  */
 function addCirclePacking(pack) {
     this.hierarchies.push(pack);
@@ -406,9 +406,6 @@ function addCirclePacking(pack) {
     pack.name = "pack_" + (this.hierarchies.length - 1);
 
     pack.renderingParams = {
-        [pack.name]: {
-            transitions: pack.transitions || []
-        },
         packSib: require("./template-api/CirclePacking.js").packSib
     };
 
@@ -446,11 +443,10 @@ function addCirclePacking(pack) {
         layer.setFetchingScheme("dbox", true);
 
         var canvas = new Canvas(
-            (pack.name + "_" + i).replace(/(\.|-)/g, "_"),
-            Math.floor(zoomFactor * (pack.width + pack.x)),
-            Math.floor(zoomFactor * (pack.height + pack.y))
+            (pack.name + "_" + i).replace(/-/g, "_"),
+            Math.floor(zoomFactor * pack.width),
+            Math.floor(zoomFactor * pack.height)
         );
-        canvas.zoomLevel = i;
 
         canvas.addLayer(layer);
         packCanvases.push(canvas);
@@ -467,8 +463,8 @@ function addCirclePacking(pack) {
     }
 
     var packOverview = function(k) {
-        var destViewId = "pack_View_2";
-        var sourceViewId = "pack_View";
+        var destViewId = "main";
+        var sourceViewId = "minimap";
         var scale = pack.getOverviewScale(k);
         return {sourceViewId, destViewId, scale};
     };
@@ -488,7 +484,7 @@ function addCirclePacking(pack) {
             })
         );
     }
-    var view = new View(
+    var minimapView = new View(
         "pack_View",
         0,
         Math.round(
@@ -498,28 +494,28 @@ function addCirclePacking(pack) {
         Math.floor(pack.viewH * Math.pow(pack.zoomFactor, pack.overviewLevel))
     );
 
-    var view_2 = new View("pack_View_2", 0, 0, pack.viewW, pack.viewH);
+    var mainView = new View("main", 0, 0, pack.viewW, pack.viewH);
 
     var loadObj = pack.getLoadObject(0);
-    loadObj.sourceView = view;
-    loadObj.destView = view_2;
+    loadObj.sourceView = minimapView;
+    loadObj.destView = mainView;
     loadObj.overview = packOverview(pack.getZoomCoef(1 - pack.overviewLevel));
     var topJump = new Jump(minimap, packCanvases[2], "load", loadObj);
 
-    this.addView(view_2);
-    this.addView(view);
+    this.addView(mainView);
+    this.addView(minimapView, true);
     this.addJump(topJump);
     this.addRenderingParams(pack.renderingParams);
     this.addStyles(
         "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
     );
 
-    console.log("view", view);
+    console.log("view", minimapView);
     console.log("packCanvases[0]", packCanvases[0]);
-    this.setInitialStates(view, packCanvases[0], pack.x, pack.y);
-    this.setInitialStates(view_2, packCanvases[1], pack.x, pack.y);
+    this.setInitialStates(minimapView, packCanvases[0], 0, 0);
+    this.setInitialStates(mainView, packCanvases[1], 0, 0);
 
-    return {canvas: packCanvases, view: [view, view_2]};
+    return {canvas: packCanvases, view: [minimapView, mainView]};
 }
 
 // Add a rendering parameter object

@@ -16,11 +16,11 @@ function CirclePacking(args) {
     for (var i = 0; i < requiredArgs.length; i++) {
         if (!(requiredArgs[i] in args))
             throw new Error(
-                "Constructing Treemap: " + requiredArgs[i] + " missing."
+                "Constructing CirclePacking: " + requiredArgs[i] + " missing."
             );
         if (typeof args[requiredArgs[i]] !== requiredArgsTypes[i])
             throw new Error(
-                "Constructing Treemap: " +
+                "Constructing CirclePacking: " +
                     requiredArgs[i] +
                     " must be " +
                     requiredArgsTypes[i] +
@@ -29,39 +29,33 @@ function CirclePacking(args) {
         if (requiredArgsTypes[i] == "string")
             if (args[requiredArgs[i]].length == 0)
                 throw new Error(
-                    "Constructing Treemap: " +
+                    "Constructing CirclePacking: " +
                         requiredArgs[i] +
                         " cannot be an empty string."
                 );
     }
     if (args.data.search(/(\.json)\s*$/) < 0)
-        throw new Error("unsupported data file type");
+        throw new Error(
+            "Constructing CirclePacking: unsupported data file type"
+        );
 
-    var name = args.name;
     var children = args.children;
     var id = args.id;
     var value = args.value;
 
-    // this.data = data;
     this.filepath = process.cwd() + args.data.replace("./", "/");
-    this.x = args.x || 0;
-    this.y = args.y || 0;
-    this.width = args.width || 1200;
-    this.height = args.height || 800;
+    this.width = "width" in args ? args.width : 1200;
+    this.height = "height" in args ? args.height : 800;
     this.padding = "padding" in args ? args.padding : 0;
     this.children = children;
     this.id = id;
     this.value = value;
-    this.indexed = false;
     this.type = "circle packing";
 
-    this.zoomFactor = args.zoomFactor || 2;
-    this.levelNumber = args.levelNumber || 10;
-    this.overviewLevel = args.overviewLevel || -2;
-    this.threshold = args.threshold || 5.5;
-
-    this.viewW = args.viewW || 1200;
-    this.viewH = args.viewH || 800;
+    this.zoomFactor = "zoomFactor" in args ? args.zoomFactor : 2;
+    this.levelNumber = "levelNumber" in args ? args.levelNumber : 10;
+    this.overviewLevel = "overviewLevel" in args ? args.overviewLevel : -2;
+    this.threshold = "threshold" in args ? args.threshold : 5.5;
 
     this.placement = {
         centroid_x: "col:x",
@@ -70,44 +64,22 @@ function CirclePacking(args) {
         height: "col:h"
     };
 
-    this.transitions = args.transitions;
-
-    if (this.x < 0 || this.x + this.width < this.viewW)
-        throw new Error(
-            "Constructing CirclePacking: viewX out of range. canvas cannot be smaller than view"
-        );
-    if (this.y < 0 || this.y + this.height < this.viewH)
-        throw new Error(
-            "Constructing CirclePacking: viewY out of range. canvas cannot be smaller than view"
-        );
+    // TODO: allow user to customize transition (this.transitions = args.transitions;)
 }
 
 function getOverviewScale(k) {
-    var scaleBody = getBodyStringOfFunction(scaleFunc);
-    scaleBody = scaleBody.replace(/REPLACE_ME_k/g, k);
-
-    return new Function("x0, y0", scaleBody);
-
     function scaleFunc(x0, y0) {
         var k = REPLACE_ME_k;
         return {x: x0 / k, y: y0 / k};
     }
+
+    var scaleBody = getBodyStringOfFunction(scaleFunc);
+    scaleBody = scaleBody.replace(/REPLACE_ME_k/g, k);
+
+    return new Function("x0, y0", scaleBody);
 }
 
 function getRenderer(level) {
-    this.renderingParams.textwrap = textwrap;
-    var rendererBody = getBodyStringOfFunction(renderer);
-    var zoomCoef = this.getZoomCoef(level);
-    rendererBody = rendererBody
-        .replace(/REPLACE_ME_name/g, this.name)
-        .replace(/REPLACE_ME_w/g, this.width)
-        .replace(/REPLACE_ME_h/g, this.height)
-        .replace(/REPLACE_ME_zoomCoef/g, zoomCoef)
-        .replace(/REPLACE_ME_zoomFactor/g, this.zoomFactor)
-        .replace(/REPLACE_ME_threshold/g, this.threshold);
-
-    return new Function("svg, data, rend_args", rendererBody);
-
     function renderer(svg, data, rend_args) {
         var params = rend_args.renderingParams["REPLACE_ME_name"];
         var g = svg
@@ -328,14 +300,34 @@ function getRenderer(level) {
                 .text(+d.value);
         }
     }
+
+    this.renderingParams.textwrap = textwrap;
+    var rendererBody = getBodyStringOfFunction(renderer);
+    var zoomCoef = this.getZoomCoef(level);
+    rendererBody = rendererBody
+        .replace(/REPLACE_ME_name/g, this.name)
+        .replace(/REPLACE_ME_w/g, this.width)
+        .replace(/REPLACE_ME_h/g, this.height)
+        .replace(/REPLACE_ME_zoomCoef/g, zoomCoef)
+        .replace(/REPLACE_ME_zoomFactor/g, this.zoomFactor)
+        .replace(/REPLACE_ME_threshold/g, this.threshold);
+
+    return new Function("svg, data, rend_args", rendererBody);
 }
 
 function getZoomCoef(level) {
     return Math.pow(this.zoomFactor, level);
 }
 
+//TODO: load to current level
 function getLoadObject(level) {
     var zoomCoef = this.getZoomCoef(level + 2);
+
+    function viewportFunc(row) {
+        return {
+            constant: [row.x * REPLACE_ME_zoomCoef, row.y * REPLACE_ME_zoomCoef]
+        };
+    }
 
     var viewportBody = getBodyStringOfFunction(viewportFunc);
     viewportBody = viewportBody.replace(/REPLACE_ME_zoomCoef/g, zoomCoef);
@@ -349,12 +341,6 @@ function getLoadObject(level) {
     var predicates = function(row) {
         return {};
     };
-
-    function viewportFunc(row) {
-        return {
-            constant: [row.x * REPLACE_ME_zoomCoef, row.y * REPLACE_ME_zoomCoef]
-        };
-    }
 
     var name = function(row) {
         var str = "see more around " + row.id + "";

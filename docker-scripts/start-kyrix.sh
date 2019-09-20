@@ -35,6 +35,9 @@ echo $USER_PASSWORD >> /kyrix/config.txt
 echo "kyrix" >> /kyrix/config.txt
 echo "/kyrix/compiler" >> /kyrix/config.txt
 
+# downloading example flare JSON data
+wget https://raw.githubusercontent.com/d3/d3-hierarchy/master/test/data/flare.json -O compiler/examples/template-api-examples/flare.json -q
+
 IGNORE_RX="(NOTICE|HINT|already exists)"
 echo "*** setting up postgres roles/databases on master..."
 psql $PGCONN_STRING_POSTGRES/postgres -c "CREATE USER $USER_NAME WITH SUPERUSER PASSWORD '$USER_PASSWORD';" | egrep -v "$IGNORE_RX" 2>&1 || true

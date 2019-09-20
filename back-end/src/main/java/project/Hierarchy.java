@@ -9,71 +9,39 @@ public class Hierarchy {
     protected String id;
     protected String value;
     protected String children;
-    protected Boolean indexed;
+    protected Boolean expanded = false;
     protected double zoomFactor;
-
-    public void setZoomFactor(double zoomFactor) {
-        this.zoomFactor = zoomFactor;
-    }
 
     public double getZoomFactor() {
         return this.zoomFactor;
     }
 
-    public void setIndexed(Boolean indexed) {
-        this.indexed = indexed;
-    }
-
-    public Boolean getIndexed() {
-        return this.indexed;
-    }
-
-    public void setChildren(String children) {
-        this.children = children;
+    public Boolean getExpanded() {
+        return this.expanded;
     }
 
     public String getChildren() {
         return this.children;
     }
 
-    public void setValue(String value) {
-        this.value = value;
-    }
-
     public String getValue() {
         return this.value;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getId() {
         return this.id;
     }
 
-    public void setFilepath(String filepath) {
-        this.filepath = filepath;
-    }
-
     public String getFilepath() {
         return this.filepath;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getType() {
-        return this.type;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getName() {
         return this.name;
+    }
+
+    public void setExpanded(Boolean expanded) {
+        this.expanded = expanded;
     }
 
     @Override
@@ -91,8 +59,8 @@ public class Hierarchy {
                 + "children='"
                 + this.children
                 + '\''
-                + ", indexed="
-                + this.indexed
+                + ", expanded="
+                + this.expanded
                 + ", zoomFactor="
                 + this.zoomFactor
                 + '}';

@@ -1,18 +1,11 @@
 .pack circle {
-    /*fill: honeydew;*/
-    /*fill-opacity: 0.25;*/
-    stroke: #adad /*ad;
-    stroke-width: */ 1px;
+    stroke: #adad; /*ad*/
 }
 
 .pack text {
     text-anchor: middle;
     fill-opacity: 1;
     fill: navy;
-}
-
-body {
-    overflow: hidden;
 }
 
 #overviewrect {
@@ -22,16 +15,4 @@ body {
     stroke-linecap: butt;
     stroke-width: 3;
     pointer-events: none;
-}
-
-button.zoomoutbutton {
-    visibility: hidden;
-}
-
-button.gobackbutton {
-    visibility: hidden;
-}
-
-button.zoominbutton {
-    visibility: hidden;
 }
