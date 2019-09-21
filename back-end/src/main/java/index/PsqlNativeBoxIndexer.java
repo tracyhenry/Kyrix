@@ -155,10 +155,6 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
             System.out.println(sql);
             pushdownIndexStmt.executeQuery(sql);
 
-            sql = "SET citus.task_executor_type = 'task-tracker';";
-            System.out.println(sql);
-            pushdownIndexStmt.executeUpdate(sql);
-
             for (int i = 0; i < 100; i++) {
                 // break into 100 steps so we can hopefully see progress
                 sql =

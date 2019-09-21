@@ -156,7 +156,7 @@ function tune_postgres() {
     kubectl exec $1 -- sed -i "s@^[#]\?max_worker_processes.*@max_worker_processes = '24'@" $CONF
     kubectl exec $1 -- sed -i "s@^[#]\?max_parallel_workers.*@max_parallel_workers = '24'@" $CONF
     kubectl exec $1 -- sed -i "s@^[#]\?max_parallel_workers_per_gather.*@max_parallel_workers_per_gather = '24'@" $CONF
-    kubectl exec $1 -- bash -c "echo \"plv8.start_proc = 'commonjs.plv8_startup'\" >> $CONF; echo \"citus.max_files_per_process = '5000'\" >> $CONF; echo \"citus.task_executor_type = 'real-time'\" >> $CONF; echo \"citus.max_connections = '500'\" >> $CONF; echo \"citus.shard_count = '$NUM_SHARDS'\" >> $CONF"
+    kubectl exec $1 -- bash -c "echo \"plv8.start_proc = 'commonjs.plv8_startup'\" >> $CONF; echo \"citus.max_files_per_process = '5000'\" >> $CONF; echo \"citus.max_connections = '500'\" >> $CONF; echo \"citus.shard_count = '$NUM_SHARDS'\" >> $CONF"
     kubectl exec $1 -- su - postgres -c "/usr/lib/postgresql/11/bin/pg_ctl -D /var/lib/postgresql/data reload -s"
 }
 
