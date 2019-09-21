@@ -58,7 +58,6 @@ fi
 
 
 # =================================================================================
-# run restart-kyrix-server.sh (which basically determines what dataset to run) in background
-#################### Wenbo: how to kill this background process?
+# run restart-kyrix-server.sh (which basically determines what dataset to run)
 
-DATA=$DATA ./restart-kyrix-server.sh &
+DATA=$DATA ./restart-kyrix-server.sh

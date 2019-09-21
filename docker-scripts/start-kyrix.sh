@@ -98,4 +98,8 @@ while [ 1 ]; do
 done
 echo "yes" > /kyrix-started
 
-echo "*** done! Kyrix ready at: http://<host>:8000/  (index recompute may need a few minutes, blank screens until then - watch this log for messages)"
+if [ "x$DBTYPE" = "xpsql" ]; then
+    KYRIX_IP=$(curl -s ifconfig.me)
+fi
+
+echo "*** done! Kyrix ready at: http://$KYRIX_IP:8000/"
