@@ -261,7 +261,7 @@ function getRenderer(level) {
                 .select("body")
                 .append("div")
                 .attr("id", "mapTooltip" + i)
-                .classed("tooltip card bg-lite mapTooltip", true)
+                .classed("tooltip card bg-light mapTooltip", true)
                 .style("pointer-events", "none")
                 .style("opacity", 0)
                 .style("left", d3.event.pageX + "px")

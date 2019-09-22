@@ -415,9 +415,6 @@ function addCirclePacking(pack, args) {
     this.addRenderingParams(pack.renderingParams);
 
     this.addStyles(__dirname + "/template-api/css/circlepacking.css");
-    this.addStyles(
-        "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-    );
 
     var zoomFactor = 1;
     var packCanvases = [];
