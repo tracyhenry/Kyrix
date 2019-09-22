@@ -56,6 +56,7 @@ function getSqlPredicate(p) {
     if ("==" in p) return " (" + p["=="][0] + "='" + p["=="][1] + "') ";
     // to get the only operation from the predicate, and '==' case has already returned
     var op = Object.keys(p)[0];
+    if (!op) return "";
     if (op == "AND" || op == "OR") {
         var ret = "(";
         for (x in p[op]) {
@@ -67,7 +68,6 @@ function getSqlPredicate(p) {
     return typeof p[op][1] == "string"
         ? " (" + p[op][0] + op + "'" + p[op][1] + "') " // rhs is a string
         : " ( CAST(" + p[op][0] + " as NUMERIC)" + op + p[op][1] + ")"; // rhs is a number
-    return "";
 }
 
 // check whether a given datum passes a filter

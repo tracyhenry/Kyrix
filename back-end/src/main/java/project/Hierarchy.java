@@ -1,10 +1,8 @@
 package project;
 
-import third_party.Exclude;
-
 public class Hierarchy {
     protected String filepath;
-    @Exclude protected String type;
+    protected String type;
     protected String name;
     protected String id;
     protected String value;

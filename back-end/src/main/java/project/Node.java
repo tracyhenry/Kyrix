@@ -1,8 +1,9 @@
 package project;
 
 public class Node {
-    protected String id;
-    protected String parent;
+    protected int id;
+    protected String name;
+    protected int parent;
     protected double value;
     protected int depth;
     protected int height;
@@ -12,21 +13,23 @@ public class Node {
     // protected ArrayList<Node> children;
 
     public Node() {
-        this.id = "";
-        this.parent = "";
+        this.id = -1;
+        this.name = "";
+        this.parent = -1;
         this.value = -1;
         this.depth = -1;
         this.height = -1;
         this.count = 0;
     }
 
-    public Node(String id, String parent) {
+    public Node(int id, int parent) {
         this.id = id;
         this.parent = parent;
     }
 
     public Node(Node node) {
         this.id = node.getId();
+        this.name = node.getName();
         this.parent = node.getParent();
         this.value = node.getValue();
         this.depth = node.getDepth();
@@ -34,8 +37,16 @@ public class Node {
         this.count = node.getCount();
     }
 
-    public Node(String _id, String _parent, double _value, int _depth, int _height, int _count) {
+    public Node(
+            int _id,
+            String _name,
+            int _parent,
+            double _value,
+            int _depth,
+            int _height,
+            int _count) {
         this.id = _id;
+        this.name = _name;
         this.parent = _parent;
         this.value = _value;
         this.depth = _depth;
@@ -43,12 +54,20 @@ public class Node {
         this.count = _count;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
-    public String getId() {
+    public int getId() {
         return this.id;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setValue(double value) {
@@ -75,11 +94,11 @@ public class Node {
         return this.depth;
     }
 
-    public void setParent(String parent) {
+    public void setParent(int parent) {
         this.parent = parent;
     }
 
-    public String getParent() {
+    public int getParent() {
         return this.parent;
     }
 
@@ -96,6 +115,9 @@ public class Node {
         return "Node{"
                 + "id:'"
                 + this.id
+                + '\''
+                + "name:'"
+                + this.name
                 + '\''
                 + ", parent:'"
                 + this.parent

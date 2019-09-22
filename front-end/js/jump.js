@@ -416,7 +416,7 @@ function load(predArray, newVpX, newVpY, jump) {
 }
 
 function handleOverview(viewId, jump) {
-    // console.log("handleOverview:", viewId, jump);
+    console.log("handleOverview:", viewId, jump);
     var gvd = globalVar.views[viewId];
     // if no overview specified
     var overview;

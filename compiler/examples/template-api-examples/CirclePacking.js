@@ -11,7 +11,8 @@ var p = new Project("circlepacking", "../../../config.txt");
 
 // https://raw.githubusercontent.com/d3/d3-hierarchy/master/test/data/flare.json
 // already loaded in docker
-var data = "./flare.json";
+// absolute path is required
+var data = "/kyrix/compiler/examples/template-api-examples/flare.json";
 var value = "value";
 var id = "name";
 var children = "children";
@@ -24,7 +25,6 @@ var args = {
     id: id
 
     // optional arguments
-    // zoomFactor: 2
 };
 
 var pack = new CirclePacking(args);

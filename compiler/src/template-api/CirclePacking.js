@@ -43,7 +43,7 @@ function CirclePacking(args) {
     var id = args.id;
     var value = args.value;
 
-    this.filepath = process.cwd() + args.data.replace("./", "/");
+    this.filepath = args.data;
     this.width = "width" in args ? args.width : 1200;
     this.height = "height" in args ? args.height : 800;
     this.padding = "padding" in args ? args.padding : 0;
@@ -55,7 +55,7 @@ function CirclePacking(args) {
     this.zoomFactor = "zoomFactor" in args ? args.zoomFactor : 2;
     this.levelNumber = "levelNumber" in args ? args.levelNumber : 10;
     this.overviewLevel = "overviewLevel" in args ? args.overviewLevel : -2;
-    this.threshold = "threshold" in args ? args.threshold : 5.5;
+    this.threshold = "threshold" in args ? args.threshold : 8;
 
     this.placement = {
         centroid_x: "col:x",
@@ -112,7 +112,7 @@ function getRenderer(level) {
                 return d.id;
             })
             .parentId(function(d) {
-                if (d.parent == "") return undefined;
+                if (+d.parent < 0) return undefined;
                 else return d.parent;
             })(renderData);
         // console.log("root:", root);
@@ -139,10 +139,7 @@ function getRenderer(level) {
             if (flagNew(d)) return false;
             var node = dict[d.id];
             if (!node.children > 0 || node.children.length <= 0) return false;
-            // console.log(node)
             for (var i in node.children) {
-                // console.log("child:", node.children[i]);
-                // if (node.children[i].children || !flagNew(node.children[i].data))
                 if (!flagNew(node.children[i].data)) return false;
             }
             return true;
@@ -180,7 +177,7 @@ function getRenderer(level) {
             })
             .attr("dy", "0.3em")
             .text(function(d) {
-                return d.id;
+                return d.name;
             })
             .attr("font-size", function(d) {
                 return (d.w / 2 / 1000) * 300;
@@ -194,11 +191,6 @@ function getRenderer(level) {
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
             .style("fill-opacity", d => {
-                if (d.id == "TreeBuilder" || d.id == "Data") {
-                    console.log("d:", d);
-                    console.log("flagNew(d):", flagNew(d));
-                    console.log("flagNewText(d):", flagNewText(d));
-                }
                 if (flagNew(d) || flagNewText(d)) return 0;
                 else return 1;
             })
@@ -214,7 +206,7 @@ function getRenderer(level) {
             .filter(flagColorShift)
             .sort(sort)
             .transition()
-            .delay((d, i, nodes) => 100 + i * 5)
+            .delay((d, i, nodes) => (i * 1500) / nodes.length)
             .duration(1000)
             .style("fill", d => color(d.depth));
 
@@ -222,7 +214,7 @@ function getRenderer(level) {
             .filter(flagNew)
             .sort(sort)
             .transition()
-            .delay((d, i, nodes) => 100 + i * 5)
+            .delay((d, i, nodes) => (i * 1500) / nodes.length)
             .duration(1000)
             .attr("r", d => +d.w / 2)
             .size();
@@ -231,7 +223,7 @@ function getRenderer(level) {
             .filter(d => flagNew(d) || flagNewText(d))
             .sort(sort)
             .transition()
-            .delay((d, i, nodes) => 100 + size_new * 5)
+            .delay((d, i, nodes) => 1500 + (i * 500) / nodes.length)
             .duration(800)
             .style("fill-opacity", 1);
 
@@ -261,12 +253,10 @@ function getRenderer(level) {
         function addTooltip(d, i) {
             var node = dict[d.id];
             var ancestors = node.ancestors().reverse();
-            // console.log("ancestors:", ancestors)
             var breadcrumb = ancestors
-                .map(item => item.id)
+                .map(item => item.data.name)
                 .join("/")
                 .replace(/-\//g, "/");
-            // console.log("breadcrumb:", breadcrumb)
             var tooltip = d3
                 .select("body")
                 .append("div")
@@ -274,7 +264,6 @@ function getRenderer(level) {
                 .classed("tooltip card bg-lite mapTooltip", true)
                 .style("pointer-events", "none")
                 .style("opacity", 0)
-                // .style("max-width", "180px")
                 .style("left", d3.event.pageX + "px")
                 .style("top", d3.event.pageY + 50 + "px");
             tooltip

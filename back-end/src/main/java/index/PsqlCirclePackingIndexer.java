@@ -1,8 +1,5 @@
 package index;
 
-import com.coveo.nashorn_modules.FilesystemFolder;
-import com.coveo.nashorn_modules.Require;
-import java.io.File;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Stack;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import jdk.nashorn.api.scripting.JSObject;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
@@ -19,27 +15,26 @@ import main.Config;
 import main.DbConnector;
 import main.Main;
 import project.*;
-import third_party.Exclude;
 
 public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
     protected static PsqlCirclePackingIndexer instance = null;
 
-    @Exclude private transient Stack<PackNode> stack;
-    @Exclude private transient int rowCount;
-    @Exclude private transient PreparedStatement insertStmt;
-    @Exclude private transient PreparedStatement updateStmt;
-    @Exclude private transient int zoomLevel;
-    @Exclude private transient Boolean flag;
-    @Exclude private transient NashornScriptEngine engine;
-    @Exclude private transient HashMap<PackNode, ArrayList<PackNode>> map;
+    private transient Stack<PackNode> stack;
+    private transient int rowCount;
+    private transient PreparedStatement insertStmt;
+    private transient PreparedStatement updateStmt;
+    private transient int zoomLevel;
+    private transient Boolean flag;
+    private transient NashornScriptEngine engine;
+    private transient HashMap<PackNode, ArrayList<PackNode>> map;
     // 0 for before 1 round, 1 for first round, 2 for second round;
-    @Exclude private transient int status;
-    @Exclude private transient double k;
-    @Exclude transient double dx;
-    @Exclude transient double dy;
-    @Exclude transient long startTs;
-    @Exclude transient long currTs;
-    @Exclude transient long lastTs;
+    private transient int status;
+    private transient double k;
+    private transient double dx;
+    private transient double dy;
+    private transient long startTs;
+    private transient long currTs;
+    private transient long lastTs;
 
     // thread-safe instance getter
     public static synchronized PsqlCirclePackingIndexer getInstance() {
@@ -72,7 +67,9 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
         this.status = 0;
         this.map = new HashMap<>();
         this.stack = new Stack<>();
-        if (this.engine == null) this.engine = setupNashorn("");
+        if (this.engine == null) this.engine = setupNashorn("function(){}");
+        String script = "eval(JSON.parse(renderingParams).packSib);";
+        engine.eval(script);
         this.k = 1;
         this.startTs = (new Date()).getTime();
         this.lastTs = startTs;
@@ -91,6 +88,7 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
         // and post order pack children
         this.status = 1;
         PackNode root = new PackNode(rootNode);
+        System.out.println("before 1 round, packnode root:" + root);
         root.setX(this.dx / 2);
         root.setY(this.dy / 2);
         this.stack.push(root);
@@ -123,10 +121,10 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
 
         // step 3: translate child
         // prepare the prepared statement
-        // 16 cols: 6(id, parent, etc.) + 4(x, y, w, h) + 6(cx, cy, etc.)
+        // 17 cols: 7(id, parent, etc.) + 4(x, y, w, h) + 6(cx, cy, etc.)
         this.status = 3;
         String insertSql =
-                "INSERT INTO " + bboxTableName + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                "INSERT INTO " + bboxTableName + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         System.out.println(insertSql);
         this.insertStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
 
@@ -315,7 +313,7 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
         this.updateStmt.setDouble(1, cx);
         this.updateStmt.setDouble(2, cy);
         this.updateStmt.setDouble(3, r);
-        this.updateStmt.setString(4, node.getId());
+        this.updateStmt.setInt(4, node.getId());
         this.updateStmt.addBatch();
 
         this.rowCount++;
@@ -333,15 +331,16 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
         double cy = node.getY();
         int batchsize = Config.bboxBatchSize;
 
-        this.insertStmt.setString(1, node.getId());
-        this.insertStmt.setString(2, node.getParent());
-        this.insertStmt.setDouble(3, node.getValue());
-        this.insertStmt.setInt(4, node.getDepth());
-        this.insertStmt.setInt(5, node.getHeight());
-        this.insertStmt.setInt(6, node.getCount());
-        this.insertStmt.setDouble(7, cx);
-        this.insertStmt.setDouble(8, cy);
-        this.insertStmt.setDouble(9, r);
+        this.insertStmt.setInt(1, node.getId());
+        this.insertStmt.setString(2, node.getName());
+        this.insertStmt.setInt(3, node.getParent());
+        this.insertStmt.setDouble(4, node.getValue());
+        this.insertStmt.setInt(5, node.getDepth());
+        this.insertStmt.setInt(6, node.getHeight());
+        this.insertStmt.setInt(7, node.getCount());
+        this.insertStmt.setDouble(8, cx);
+        this.insertStmt.setDouble(9, cy);
+        this.insertStmt.setDouble(10, r);
         this.insertStmt.addBatch();
 
         this.rowCount++;
@@ -375,22 +374,23 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
 
         int batchsize = Config.bboxBatchSize;
 
-        this.insertStmt.setString(1, node.getId());
-        this.insertStmt.setString(2, node.getParent());
-        this.insertStmt.setDouble(3, node.getValue());
-        this.insertStmt.setInt(4, node.getDepth());
-        this.insertStmt.setInt(5, node.getHeight());
-        this.insertStmt.setInt(6, node.getCount());
-        this.insertStmt.setDouble(7, cx);
-        this.insertStmt.setDouble(8, cy);
-        this.insertStmt.setDouble(9, 2 * r);
+        this.insertStmt.setInt(1, node.getId());
+        this.insertStmt.setString(2, node.getName());
+        this.insertStmt.setInt(3, node.getParent());
+        this.insertStmt.setDouble(4, node.getValue());
+        this.insertStmt.setInt(5, node.getDepth());
+        this.insertStmt.setInt(6, node.getHeight());
+        this.insertStmt.setInt(7, node.getCount());
+        this.insertStmt.setDouble(8, cx);
+        this.insertStmt.setDouble(9, cy);
         this.insertStmt.setDouble(10, 2 * r);
-        this.insertStmt.setDouble(11, cx);
-        this.insertStmt.setDouble(12, cy);
-        this.insertStmt.setDouble(13, x0);
-        this.insertStmt.setDouble(14, y0);
-        this.insertStmt.setDouble(15, x1);
-        this.insertStmt.setDouble(16, y1);
+        this.insertStmt.setDouble(11, 2 * r);
+        this.insertStmt.setDouble(12, cx);
+        this.insertStmt.setDouble(13, cy);
+        this.insertStmt.setDouble(14, x0);
+        this.insertStmt.setDouble(15, y0);
+        this.insertStmt.setDouble(16, x1);
+        this.insertStmt.setDouble(17, y1);
         this.insertStmt.addBatch();
 
         this.rowCount++;
@@ -405,23 +405,6 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
         return "pack_" + Main.getProject().getName() + "_" + h.getName();
     }
 
-    protected static NashornScriptEngine setupNashorn(String jsScript) throws ScriptException {
-        NashornScriptEngine engine =
-                (NashornScriptEngine) new ScriptEngineManager().getEngineByName("nashorn");
-        FilesystemFolder rootFolder = FilesystemFolder.create(new File(Config.d3Dir), "UTF-8");
-        Require.enable(engine, rootFolder);
-
-        // register the data transform function with nashorn
-        engine.put("renderingParams", Main.getProject().getRenderingParams());
-        String script =
-                "var d3 = require('d3');\n"; // TODO: let users specify all required d3 libraries.
-        script += "var rendParams = JSON.parse(renderingParams);";
-        script += "var pNode = eval(rendParams.packSib);";
-        engine.eval(script);
-
-        return engine;
-    }
-
     void createPackTable(CirclePacking h) throws SQLException, ClassNotFoundException {
         String hierTableName = this.getPackTableName(h);
 
@@ -433,13 +416,15 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
 
         // create the hierarchy table
         sql = "CREATE UNLOGGED TABLE " + hierTableName + " (";
-        sql += "id text, parent text, value double precision, depth int, height int, count int, ";
+        sql +=
+                "id int, name text, parent int, value double precision, depth int, height int, count int, ";
         sql += "x double precision, y double precision, r double precision)";
         System.out.println(sql);
         dropCreateStmt.executeUpdate(sql);
         dropCreateStmt.close();
 
-        String insertSql = "INSERT INTO " + hierTableName + " VALUES (?,?,?,?,?,?,?,?,?)";
+        // 10 cols: 7 node(id, name, parent...) + 3 pack(x, y, r)
+        String insertSql = "INSERT INTO " + hierTableName + " VALUES (?,?,?,?,?,?,?,?,?,?)";
         System.out.println(insertSql);
         this.insertStmt = DbConnector.getPreparedStatement(Config.databaseName, insertSql);
 
@@ -466,19 +451,21 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
         ResultSet rs = getChildrenStmt.executeQuery(getChildrenQuery);
         double lastV = 999999999;
         while (rs.next()) {
-            String childId = rs.getString(1);
+            int childId = rs.getInt(1);
+            String childName = rs.getString(2);
             // System.out.println("a row was returned. ID: " + childId);
-            double childV = rs.getDouble(3);
+            double childV = rs.getDouble(4);
             if (childV > lastV) {
                 System.out.println("Order wrong");
             }
             lastV = childV;
-            int childH = rs.getInt(5);
-            int childC = rs.getInt(6);
+            int childH = rs.getInt(6);
+            int childC = rs.getInt(7);
             PackNode child =
                     new PackNode(
                             new Node(
                                     childId,
+                                    childName,
                                     node.getId(),
                                     childV,
                                     node.getDepth() + 1,
@@ -504,23 +491,25 @@ public class PsqlCirclePackingIndexer extends PsqlNestedJsonIndexer {
         ResultSet rs = getChildrenStmt.executeQuery(getChildrenQuery);
         double lastV = 99999999;
         while (rs.next()) {
-            String childId = rs.getString(1);
+            int childId = rs.getInt(1);
+            String childName = rs.getString(2);
             // System.out.println("a row was returned. ID: " + childId);
             double childV = rs.getDouble(3);
             if (childV > lastV) {
                 System.out.println("Order wrong");
             }
             lastV = childV;
-            int childH = rs.getInt(5);
-            int childC = rs.getInt(6);
-            double x = rs.getDouble(7);
-            double y = rs.getDouble(8);
-            double r = rs.getDouble(9);
+            int childH = rs.getInt(6);
+            int childC = rs.getInt(7);
+            double x = rs.getDouble(8);
+            double y = rs.getDouble(9);
+            double r = rs.getDouble(10);
 
             PackNode child =
                     new PackNode(
                             new Node(
                                     childId,
+                                    childName,
                                     node.getId(),
                                     childV,
                                     node.getDepth() + 1,

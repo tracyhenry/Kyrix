@@ -400,20 +400,30 @@ function addAutoDD(autoDD, args) {
  * @param args an dictionary that contains customization parameters, see doc
  * @returns {canvases, views} return an array of canvases created and two views
  */
-function addCirclePacking(pack) {
+function addCirclePacking(pack, args) {
+    // step 0: prepare
+    if (args == null) args = {};
+
     this.hierarchies.push(pack);
 
     pack.name = "pack_" + (this.hierarchies.length - 1);
 
     pack.renderingParams = {
-        packSib: require("./template-api/CirclePacking.js").packSib
+        packSib: require("./template-api/CirclePacking.js").packSib,
+        textwrap: require("./template-api/Renderers").textwrap
     };
+    this.addRenderingParams(pack.renderingParams);
 
     this.addStyles(__dirname + "/template-api/css/circlepacking.css");
+    this.addStyles(
+        "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    );
 
     var zoomFactor = 1;
     var packCanvases = [];
 
+    // step 1: generate canvases
+    // step 1.1: get minimap
     var genPackCanvas = function(i) {
         zoomFactor = Math.pow(pack.zoomFactor, i);
         var query = "select * from circlepacking";
@@ -422,6 +432,7 @@ function addCirclePacking(pack) {
         var transform_func = "";
         var schema = [
             "id",
+            "name",
             "parent",
             "value",
             "depth",
@@ -452,68 +463,83 @@ function addCirclePacking(pack) {
         packCanvases.push(canvas);
         return canvas;
     };
-
-    // get the minimap
     var minimap = genPackCanvas(pack.overviewLevel);
     this.addCanvas(minimap);
 
+    // step 1.2: get the main canvases
     for (var i = 0; i < pack.levelNumber; i++) {
         var curLevelCanvas = genPackCanvas(i);
         this.addCanvas(curLevelCanvas);
     }
 
-    var packOverview = function(k) {
-        var destViewId = "main";
-        var sourceViewId = "minimap";
+    // step 2: get and add views
+    // step 2.1: get and add main view
+    var mainView = args.view;
+    if (!args.view) {
+        mainView = new View("main", 0, 0, pack.width, pack.height);
+        this.addView(mainView);
+    } else {
+        if (mainView.width < pack.width || mainView.height < pack.height)
+            throw new Error(
+                "Constructing CirclePacking: main view should not be smaller than circle packing"
+            );
+    }
+    this.setInitialStates(mainView, packCanvases[1], 0, 0);
+
+    // step 2.2: get and add minimap view
+    var minimapView = new View(
+        "minimap",
+        0,
+        Math.round(
+            pack.height * (1 - Math.pow(pack.zoomFactor, pack.overviewLevel))
+        ) | 0,
+        Math.floor(pack.width * Math.pow(pack.zoomFactor, pack.overviewLevel)),
+        Math.floor(pack.height * Math.pow(pack.zoomFactor, pack.overviewLevel))
+    );
+    this.addView(minimapView, true);
+    this.setInitialStates(minimapView, packCanvases[0], 0, 0);
+
+    // step 3: generate and add jumps
+    // step 3.1: add literal zooms
+    var packOverview = function(k, main, minimap) {
+        var destViewId = main.id;
+        var sourceViewId = minimap.id;
         var scale = pack.getOverviewScale(k);
         return {sourceViewId, destViewId, scale};
     };
 
-    console.log("packCanvases:", packCanvases);
     for (var i = 1; i < packCanvases.length - 1; i++) {
         this.addJump(
             new Jump(packCanvases[i], packCanvases[i + 1], "literal_zoom_in", {
-                overview: packOverview(pack.getZoomCoef(i - pack.overviewLevel))
+                overview: packOverview(
+                    pack.getZoomCoef(i - pack.overviewLevel),
+                    mainView,
+                    minimapView
+                )
             })
         );
         this.addJump(
             new Jump(packCanvases[i + 1], packCanvases[i], "literal_zoom_out", {
                 overview: packOverview(
-                    pack.getZoomCoef(i - pack.overviewLevel - 1)
+                    pack.getZoomCoef(i - pack.overviewLevel - 1),
+                    mainView,
+                    minimapView
                 )
             })
         );
     }
-    var minimapView = new View(
-        "pack_View",
-        0,
-        Math.round(
-            pack.viewH * (1 - Math.pow(pack.zoomFactor, pack.overviewLevel))
-        ) | 0,
-        Math.floor(pack.viewW * Math.pow(pack.zoomFactor, pack.overviewLevel)),
-        Math.floor(pack.viewH * Math.pow(pack.zoomFactor, pack.overviewLevel))
-    );
 
-    var mainView = new View("main", 0, 0, pack.viewW, pack.viewH);
-
+    // step 3.2: add load
     var loadObj = pack.getLoadObject(0);
     loadObj.sourceView = minimapView;
     loadObj.destView = mainView;
-    loadObj.overview = packOverview(pack.getZoomCoef(1 - pack.overviewLevel));
-    var topJump = new Jump(minimap, packCanvases[2], "load", loadObj);
-
-    this.addView(mainView);
-    this.addView(minimapView, true);
-    this.addJump(topJump);
-    this.addRenderingParams(pack.renderingParams);
-    this.addStyles(
-        "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    loadObj.overview = packOverview(
+        pack.getZoomCoef(1 - pack.overviewLevel),
+        mainView,
+        minimapView
     );
-
-    console.log("view", minimapView);
-    console.log("packCanvases[0]", packCanvases[0]);
-    this.setInitialStates(minimapView, packCanvases[0], 0, 0);
-    this.setInitialStates(mainView, packCanvases[1], 0, 0);
+    var topJump = new Jump(minimap, packCanvases[2], "load", loadObj);
+    this.addJump(topJump);
 
     return {canvas: packCanvases, view: [minimapView, mainView]};
 }

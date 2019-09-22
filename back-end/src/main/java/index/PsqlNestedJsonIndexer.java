@@ -25,6 +25,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
 
     protected static PsqlNestedJsonIndexer instance = null;
     protected int rowCount;
+    protected int idCount;
     // thread-safe instance getter
     public static synchronized PsqlNestedJsonIndexer getInstance() {
 
@@ -35,6 +36,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
         this.rowCount = 0;
+        this.idCount = 0;
 
         // step 0: get hierarchy object
         Hierarchy h = this.getHierarchy(c, layerId);
@@ -105,7 +107,8 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
 
         // create the bbox table
         sql = "CREATE UNLOGGED TABLE " + bboxTableName + " (";
-        sql += "id text, parent text, value double precision, depth int, height int, count int, ";
+        sql +=
+                "id int, name text, parent int, value double precision, depth int, height int, count int, ";
         sql += "x double precision, y double precision, w double precision, h double precision, ";
         sql +=
                 "cx double precision, cy double precision, minx double precision, miny "
@@ -121,7 +124,8 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
 
     protected Node getRoot(Hierarchy h) throws SQLException, ClassNotFoundException {
         Node root = new Node();
-        String rootId;
+        int rootId = 0;
+        String rootName = "";
         double rootValue;
         int rootHeight;
         String hierTableName = this.getHierarchyTableName(h);
@@ -133,10 +137,12 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
             ResultSet rootRs = getRootStmt.executeQuery(getRootQuery);
             while (rootRs.next()) {
                 System.out.print("a row was returned.");
-                rootId = rootRs.getString(1);
-                rootHeight = rootRs.getInt(5);
-                rootValue = rootRs.getDouble(3);
+                rootId = rootRs.getInt(1);
+                rootName = rootRs.getString(2);
+                rootHeight = rootRs.getInt(6);
+                rootValue = rootRs.getDouble(4);
                 root.setId(rootId);
+                root.setName(rootName);
                 root.setDepth(0);
                 root.setValue(rootValue);
                 root.setHeight(rootHeight);
@@ -189,7 +195,8 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
 
         // create the hierarchy table
         sql = "CREATE UNLOGGED TABLE " + hierTableName + " (";
-        sql += "id text, parent text, value double precision, depth int, height int, count int)";
+        sql +=
+                "id int, name text, parent int, value double precision, depth int, height int, count int)";
         System.out.println(sql);
         dropCreateStmt.executeUpdate(sql);
         dropCreateStmt.close();
@@ -199,7 +206,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
         Node root = new Node();
 
         // prepare the preparedstatement
-        String insertSql = "INSERT INTO " + hierTableName + " VALUES (?,?,?,?,?,?)";
+        String insertSql = "INSERT INTO " + hierTableName + " VALUES (?,?,?,?,?,?,?)";
         System.out.println(insertSql);
         PreparedStatement preparedStmt =
                 DbConnector.getPreparedStatement(Config.databaseName, insertSql);
@@ -240,7 +247,8 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
             throws IOException, SQLException {
         reader.beginObject();
         String fieldName = null;
-        String id;
+        int id;
+        String name;
         double value = 0;
 
         int batchsize = Config.bboxBatchSize;
@@ -253,6 +261,7 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
         }
 
         Node node = new Node();
+        node.setId(this.idCount++);
         node.setDepth(stack.size());
         node.setParent(parent.getId());
         stack.push(node);
@@ -274,12 +283,13 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
                 reader.endObject();
 
                 // add to the prepared statment
-                preparedStmt.setString(1, node.getId());
-                preparedStmt.setString(2, node.getParent());
-                preparedStmt.setDouble(3, node.getValue());
-                preparedStmt.setInt(4, node.getDepth());
-                preparedStmt.setInt(5, node.getHeight());
-                preparedStmt.setInt(6, node.getCount());
+                preparedStmt.setInt(1, node.getId());
+                preparedStmt.setString(2, node.getName());
+                preparedStmt.setInt(3, node.getParent());
+                preparedStmt.setDouble(4, node.getValue());
+                preparedStmt.setInt(5, node.getDepth());
+                preparedStmt.setInt(6, node.getHeight());
+                preparedStmt.setInt(7, node.getCount());
                 preparedStmt.addBatch();
                 this.rowCount++;
                 if (this.rowCount % batchsize == 0) {
@@ -294,8 +304,8 @@ public class PsqlNestedJsonIndexer extends PsqlNativeBoxIndexer {
                     fieldName = reader.nextName();
                 } else if (hierarchy.getId().equals(fieldName)) {
                     // move to next token
-                    id = reader.nextString();
-                    node.setId(id);
+                    name = reader.nextString();
+                    node.setName(name);
                 } else if (hierarchy.getValue().equals(fieldName)) {
                     // move to next token
                     value = reader.nextDouble();
