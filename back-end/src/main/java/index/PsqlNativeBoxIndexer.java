@@ -102,12 +102,11 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
                                 .replaceAll("transfunc", transformFuncName)
                                 .replaceAll("bboxfunc", bboxFuncName)
                                 .replaceAll("bboxtbl", bboxTableName)
-                                .replaceAll("dbsource", trans.getDbsource())
-                                .replaceAll("CANVAS_WIDTH", String.valueOf(c.getW()))
-                                .replaceAll("CANVAS_HEIGHT", String.valueOf(c.getH())));
+                                .replaceAll("dbsource", trans.getDbsource()));
                     };
 
             // register transform JS function with Postgres/Citus
+
             run_citus_dml_ddl(
                     pushdownIndexStmt, tsql.apply("DROP TYPE IF EXISTS transtype CASCADE"));
             run_citus_dml_ddl(
@@ -133,7 +132,7 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
 
             sql =
                     tsql.apply(
-                            "CREATE OR REPLACE FUNCTION transfunc(id bigint,w int,h int) returns transtype"
+                            "CREATE OR REPLACE FUNCTION transfunc(id bigint,w int,h int, cw int, ch int, params json) returns transtype"
                                     +
                                     // TODO(security): SQL injection - perhaps use $foo<hard to
                                     // guess number>$ ... $foo<#>$ ?
@@ -180,7 +179,15 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
                                         +
                                         // TODO: replace args to transfunc with parsed args from the
                                         // func decl
-                                        "    SELECT transfunc(id,w,h) v, citus_distribution_id FROM dbsource "
+                                        "    SELECT transfunc(id,w,h,"
+                                        + c.getW()
+                                        + ","
+                                        + c.getH()
+                                        + ",\'"
+                                        + Main.getProject()
+                                                .getRenderingParams()
+                                                .replaceAll("\'", "\'\'")
+                                        + "\'::json) v, citus_distribution_id FROM dbsource "
                                         + "    WHERE w % 100 = "
                                         + i
                                         + "  ) sq1"
