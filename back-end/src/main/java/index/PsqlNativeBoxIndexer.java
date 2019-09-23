@@ -107,18 +107,22 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
 
             // register transform JS function with Postgres/Citus
 
+            // kyrix_bbox_coords_type
+            run_citus_dml_ddl(
+                    pushdownIndexStmt, "DROP TYPE if exists kyrix_bbox_coords_type CASCADE");
+            run_citus_dml_ddl(
+                    pushdownIndexStmt,
+                    "CREATE TYPE kyrix_bbox_coords_type as (cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision);");
+
+            // transtype
             run_citus_dml_ddl(
                     pushdownIndexStmt, tsql.apply("DROP TYPE IF EXISTS transtype CASCADE"));
             run_citus_dml_ddl(
                     pushdownIndexStmt,
                     tsql.apply("CREATE TYPE transtype as (id bigint,x int,y int)"));
+
+            // bbox func
             run_citus_dml_ddl(pushdownIndexStmt, tsql.apply("DROP FUNCTION IF EXISTS transfunc"));
-
-            String transFuncStr = trans.getTransformFunc();
-            // TODO: analyze trans.getTransformFunc() to find arguments - for now, hardcode
-
-            // TODO: generate bbox func - see Indexer.getBboxCoordinates()
-
             sql =
                     tsql.apply(
                             "CREATE OR REPLACE FUNCTION bboxfunc(id bigint,x int,y int) returns kyrix_bbox_coords_type"
@@ -130,6 +134,7 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
             run_citus_dml_ddl2(
                     pushdownIndexStmt, sql + " STABLE", sql); // append is safer than replace...
 
+            // transform func
             sql =
                     tsql.apply(
                             "CREATE OR REPLACE FUNCTION transfunc(id bigint,w int,h int, cw int, ch int, params json) returns transtype"
