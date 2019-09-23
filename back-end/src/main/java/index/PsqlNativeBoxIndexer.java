@@ -154,52 +154,46 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
             System.out.println(sql);
             pushdownIndexStmt.executeQuery(sql);
 
-            for (int i = 0; i < 100; i++) {
-                // break into 100 steps so we can hopefully see progress
-                sql =
-                        tsql.apply(
-                                "INSERT INTO bboxtbl(id,x,y,citus_distribution_id,cx,cy,minx,miny,maxx,maxy) "
-                                        + "SELECT id, x, y, citus_distribution_id, "
-                                        + "(coords::kyrix_bbox_coords_type).cx, (coords::kyrix_bbox_coords_type).cy,"
-                                        + "(coords::kyrix_bbox_coords_type).minx, (coords::kyrix_bbox_coords_type).miny,"
-                                        + "(coords::kyrix_bbox_coords_type).maxx, (coords::kyrix_bbox_coords_type).maxy "
-                                        + "FROM ("
-                                        +
-                                        // TODO: replace v:: args with parsed results from the trans
-                                        // func
-                                        "  SELECT (v::transtype).id, (v::transtype).x, (v::transtype).y, "
-                                        + "         citus_distribution_id, "
-                                        +
-                                        // TODO: replace v:: args with parsed results from the trans
-                                        // func
-                                        // TODO: can we inline bboxfunc?  could be easier than
-                                        // another plv8 func...
-                                        "         bboxfunc( (v::transtype).id, (v::transtype).x, (v::transtype).y ) coords"
-                                        + "  FROM ("
-                                        +
-                                        // TODO: replace args to transfunc with parsed args from the
-                                        // func decl
-                                        "    SELECT transfunc(id,w,h,"
-                                        + c.getW()
-                                        + ","
-                                        + c.getH()
-                                        + ",\'"
-                                        + Main.getProject()
-                                                .getRenderingParams()
-                                                .replaceAll("\'", "\'\'")
-                                        + "\'::json) v, citus_distribution_id FROM dbsource "
-                                        + "    WHERE w % 100 = "
-                                        + i
-                                        + "  ) sq1"
-                                        + ") sq2");
-                long startts = System.nanoTime();
-                if (i % 20 == 0)
-                    System.out.println("pipeline/insertion stage " + i + " of 100: " + sql);
-                pushdownIndexStmt.executeUpdate(sql);
-                long elapsed = System.nanoTime() - startts;
-                if (i % 20 == 0)
-                    System.out.println("stage " + i + " took " + (elapsed / 1000000) + " msec");
-            }
+            // run transform func, create bboxtbl
+            sql =
+                    tsql.apply(
+                            "INSERT INTO bboxtbl(id,x,y,citus_distribution_id,cx,cy,minx,miny,maxx,maxy) "
+                                    + "SELECT id, x, y, citus_distribution_id, "
+                                    + "(coords::kyrix_bbox_coords_type).cx, (coords::kyrix_bbox_coords_type).cy,"
+                                    + "(coords::kyrix_bbox_coords_type).minx, (coords::kyrix_bbox_coords_type).miny,"
+                                    + "(coords::kyrix_bbox_coords_type).maxx, (coords::kyrix_bbox_coords_type).maxy "
+                                    + "FROM ("
+                                    +
+                                    // TODO: replace v:: args with parsed results from the trans
+                                    // func
+                                    "  SELECT (v::transtype).id, (v::transtype).x, (v::transtype).y, "
+                                    + "         citus_distribution_id, "
+                                    +
+                                    // TODO: replace v:: args with parsed results from the trans
+                                    // func
+                                    // TODO: can we inline bboxfunc?  could be easier than
+                                    // another plv8 func...
+                                    "         bboxfunc( (v::transtype).id, (v::transtype).x, (v::transtype).y ) coords"
+                                    + "  FROM ("
+                                    +
+                                    // TODO: replace args to transfunc with parsed args from the
+                                    // func decl
+                                    "    SELECT transfunc(id,w,h,"
+                                    + c.getW()
+                                    + ","
+                                    + c.getH()
+                                    + ",\'"
+                                    + Main.getProject()
+                                            .getRenderingParams()
+                                            .replaceAll("\'", "\'\'")
+                                    + "\'::json) v, citus_distribution_id FROM dbsource "
+                                    + "  ) sq1"
+                                    + ") sq2");
+            long startts = System.currentTimeMillis();
+            System.out.println("pipeline/insertion: " + sql);
+            pushdownIndexStmt.executeUpdate(sql);
+            long elapsed = System.currentTimeMillis() - startts;
+            System.out.println("Running transform func took " + elapsed + " msec");
 
             // compute geom field in the database, where it can happen in parallel
             Statement setGeomFieldStmt = DbConnector.getStmtByDbName(Config.databaseName);
