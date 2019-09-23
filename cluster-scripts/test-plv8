@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source setup-db-vars.env
-source setup-citus-vars.env
+source env/setup-pg-vars.env
+source env/setup-citus-vars.env
 
 echo "testing plv8..."
 res=$(kubectl exec -it $MASTER -- su - postgres -c "psql $KYRIX_DB -q -t -c \"DO \\\$\\\$ plv8.elog(NOTICE, 42); \\\$\\\$ LANGUAGE plv8;\""|grep -c 42)
