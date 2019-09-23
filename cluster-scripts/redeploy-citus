@@ -79,10 +79,10 @@ echo "WORKER_IPS=$WORKER_IPS"
 for w in $WORKER_IPS; do kubectl exec $MASTER -- su - postgres -c "psql -t -c \"SELECT * from master_add_node('$w', 5432);\""|grep 5432; done > /dev/null
 
 # TODO: for now, $USERNAME is created as a superuser
-echo "creating user $USERNAME, setting users passwords, creating db $DBNAME..."
+echo "creating user $USERNAME, setting users passwords, creating db $KYRIX_DB..."
 # 
 USER_CMD="SET password_encryption = '$PG_ENCRYPTION';create user $USERNAME superuser password '$USER_PASSWORD'; alter user postgres password '$POSTGRES_PASSWORD'"
-for w in $CITUS_ALL_NODES; do kubectl exec $w -- su - postgres -c "psql -t -c \"$USER_CMD\"; createdb --owner $USERNAME $DBNAME"; done|grep ALTER > /dev/null
+for w in $CITUS_ALL_NODES; do kubectl exec $w -- su - postgres -c "psql -t -c \"$USER_CMD\"; createdb --owner $USERNAME $KYRIX_DB"; done|grep ALTER > /dev/null
 
 echo "opening master/coordinator postgres instance for access..."
 # important: citus installs on Docker startup and opens all forms of connection to being passwordless,
@@ -96,15 +96,15 @@ kubectl exec $MASTER -- bash -c "echo \"host all all $POD_INTERNAL_SUBNET trust\
 kubectl exec $MASTER -- su - postgres -c "/usr/lib/postgresql/11/bin/pg_ctl -D /var/lib/postgresql/data reload -s"
 #dbg kubectl exec $MASTER -- cat /var/lib/postgresql/data/pg_hba.conf | egrep '^(host|local)'
 
-echo "setting up kyrix database $DBNAME (creating citus/plv8, registering citus workers)..."
+echo "setting up kyrix database $KYRIX_DB (creating citus/plv8, registering citus workers)..."
 EXT_CMD="create extension if not exists citus; create extension if not exists plv8"
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"$EXT_CMD\" "; stty sane  # HARMLESS HACK: for some reason the EXT_CMD corrupts the TTY on my Mac iTerm2
-for w in $WORKERS; do kubectl exec $w -- su - postgres -c "psql $DBNAME -c \"$EXT_CMD\" " > /dev/null 2> /dev/null & done;
-while [ 1 ]; do w=`for w in $WORKERS; do stty sane; kubectl exec -it $w -- su - postgres -c "psql $DBNAME -t -c \"select count(*) from pg_extension where extname = 'plv8' or extname='citus';\""; done | grep -c 2`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w postgres servers initialized with extensions, waiting for $NUM_WORKERS (be patient)"; sleep 3; done; stty sane
+kubectl exec $MASTER -- su - postgres -c "psql $KYRIX_DB -c \"$EXT_CMD\" "; stty sane  # HARMLESS HACK: for some reason the EXT_CMD corrupts the TTY on my Mac iTerm2
+for w in $WORKERS; do kubectl exec $w -- su - postgres -c "psql $KYRIX_DB -c \"$EXT_CMD\" " > /dev/null 2> /dev/null & done;
+while [ 1 ]; do w=`for w in $WORKERS; do stty sane; kubectl exec -it $w -- su - postgres -c "psql $KYRIX_DB -t -c \"select count(*) from pg_extension where extname = 'plv8' or extname='citus';\""; done | grep -c 2`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w postgres servers initialized with extensions, waiting for $NUM_WORKERS (be patient)"; sleep 3; done; stty sane
 
 # master_add_node needs to be called for every database
 echo "registering workers with master..."
-for w in $WORKER_IPS; do kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -t -c \"SELECT * from master_add_node('$w', 5432);\""|grep 5432; done > /dev/null
+for w in $WORKER_IPS; do kubectl exec $MASTER -- su - postgres -c "psql $KYRIX_DB -t -c \"SELECT * from master_add_node('$w', 5432);\""|grep 5432; done > /dev/null
 
 
 
@@ -161,8 +161,8 @@ echo "testing plv8..."
 # Installing d3
 
 echo "installing d3 on master and every worker..."
-for w in $CITUS_ALL_NODES; do kubectl exec $w -- su - postgres -c "./install-d3.sh $DBNAME"; done > /dev/null
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$\\\$ DO \\\$v8\\\$ require('d3'); \\\$v8\\\$ language plv8; \\\$\\\$)\""
+for w in $CITUS_ALL_NODES; do kubectl exec $w -- su - postgres -c "./install-d3.sh $KYRIX_DB"; done > /dev/null
+kubectl exec $MASTER -- su - postgres -c "psql $KYRIX_DB -c \"select run_command_on_workers(\\\$\\\$ DO \\\$v8\\\$ require('d3'); \\\$v8\\\$ language plv8; \\\$\\\$)\""
 
 echo "waiting for k8s bastion startup (slow because of external IP allocation)..."
 
@@ -177,4 +177,4 @@ source setup-bastion-vars.env > /dev/null
 
 echo "done! to connect to citus:"
 echo " - easy: source ./cluster-scripts/setup-shell-vars.env; kyrix-psql"
-echo " - manually: psql postgres://$USERNAME:$USER_PASSWORD@$BASTION_IP/$DBNAME   (warning: uses old MD5 auth: not safe over the open internet)"
+echo " - manually: psql postgres://$USERNAME:$USER_PASSWORD@$BASTION_IP/$KYRIX_DB   (warning: uses old MD5 auth: not safe over the open internet)"
