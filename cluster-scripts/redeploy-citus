@@ -19,13 +19,13 @@ echo "k8s first pool: $K8S_POOL"
 K8S_NUM_NODES=`gcloud container node-pools describe $K8S_POOL --cluster $K8S_CLUSTER | perl -ane 'print $F[1] if $F[0] eq "initialNodeCount:"' `
 echo "k8s nodes in pool: $K8S_NUM_NODES"
 NUM_WORKERS=`expr $K8S_NUM_NODES - 2`
-echo "setting worker-deployment.yaml replicas to $NUM_WORKERS (reserving nodes for kyrix server and citus master/coordinator"
-perl -pi -e "s/replicas:.*/replicas: $NUM_WORKERS/g" worker-deployment.yaml
-grep replicas worker-deployment.yaml
+echo "setting k8s-yaml/worker-deployment.yaml replicas to $NUM_WORKERS (reserving nodes for kyrix server and citus master/coordinator"
+perl -pi -e "s/replicas:.*/replicas: $NUM_WORKERS/g" k8s-yaml/worker-deployment.yaml
+grep replicas k8s-yaml/worker-deployment.yaml
 
 source ../docker-scripts/spinner.sh
 source env/setup-pg-vars.env > /dev/null
-echo "$NUM_WORKERS workers found in worker-deployment.yaml"
+echo "$NUM_WORKERS workers found in k8s-yaml/worker-deployment.yaml"
 
 echo "deleting existing citus deployment..."
 active=`kubectl get -o name pods,deployments,services,pvc | egrep -v '(kubernetes|kyrix)' | xargs echo`
@@ -37,7 +37,7 @@ while [ 1 ]; do w=`kubectl get -o name pods,deployments,services,pvc | egrep -v 
 
 echo "starting new deployment..."  # TODO: manager-deployment
 for file in master-service master-deployment worker-deployment; do
-    kubectl create -f $file.yaml
+    kubectl create -f k8s-yaml/$file.yaml
 done
 
 echo "exposing bastion early - it take minutes to allocate an external IP"
@@ -144,10 +144,10 @@ MAINTENANCE_MEM_RAM=$(echo $WORKER_RAM| perl -ane 'printf("%.2fm", $F[1]/1024/10
 for w in $CITUS_ALL_NODES; do tune_postgres $w; done > /dev/null
 
 echo "testing citus..."
-./test-citus
+./test/test-citus
 echo "testing plv8..."
-./test-plv8
-#./test-postgis
+./test/test-plv8
+#./test/test-postgis
 
 
 

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#this script is assumed to be run in the parent folder (cluster-scripts/)
 source env/setup-pg-vars.env
 source env/setup-citus-vars.env
 

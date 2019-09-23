@@ -1,6 +1,7 @@
 #!/bin/bash
 # Google GCP note: to run, you must first create a kubernetes cluster with plenty of RAM - we use n1-standard-2 (7.5GB)
 
+#this script is assumed to be run in the parent folder (cluster-scripts/)
 source env/setup-pg-vars.env
 source env/setup-citus-vars.env
 

@@ -25,7 +25,7 @@ for elem in $active; do
 done
 while [ 1 ]; do w=`kubectl get -o name pods,deployments,services,pvc | egrep kyrix|wc -l`; if [ $w = 0 ]; then break; fi; spin "waiting for $w kubernetes resources (pods, etc) to shut down"; done
 
-kubectl create -f kyrix-deployment.yaml
+kubectl create -f k8s-yaml/kyrix-deployment.yaml
 
 while [ 1 ]; do w=`kubectl get pods -o wide | egrep "kyrix.+Running" |wc -l`; if [ $w = 1 ]; then break; fi; spin "waiting for kyrix kubernetes pod to start"; done
 
