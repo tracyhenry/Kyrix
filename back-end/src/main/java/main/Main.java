@@ -41,6 +41,7 @@ public class Main {
 
         System.out.println("Current project set to: " + newProject.getName());
         project = newProject;
+        TileCache.clear();
     }
 
     public static void setProjectClean() throws SQLException, ClassNotFoundException {
