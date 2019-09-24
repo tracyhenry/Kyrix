@@ -175,5 +175,5 @@ kubectl exec -it $MASTER -- sh -c 'if [ -x "$(command -v apk)" ]; then apk insta
 source env/setup-bastion-vars.env > /dev/null
 
 echo "done! to connect to citus:"
-echo " - easy: source ./cluster-scripts/env/setup-shell-vars.env; kyrix-psql"
+echo " - easy: source env/setup-shell-vars.env; kyrix-psql"
 echo " - manually: psql postgres://$USERNAME:$USER_PASSWORD@$BASTION_IP/$KYRIX_DB   (warning: uses old MD5 auth: not safe over the open internet)"
