@@ -41,6 +41,8 @@ public class Main {
 
         System.out.println("Current project set to: " + newProject.getName());
         project = newProject;
+
+        // clear cache whenever there is a project switch
         TileCache.clear();
     }
 

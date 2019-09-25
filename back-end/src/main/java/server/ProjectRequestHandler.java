@@ -13,7 +13,6 @@ import java.util.HashMap;
 import javax.net.ssl.HttpsURLConnection;
 import main.Main;
 import project.*;
-import cache.TileCache;
 
 /** Created by wenbo on 7/12/18. */
 public class ProjectRequestHandler implements HttpHandler {
@@ -78,7 +77,6 @@ public class ProjectRequestHandler implements HttpHandler {
             if (forceRecompute) {
                 System.out.println(
                         "Requesting force-recompute, ignoring diff, shutting down server and recomputing...");
-                TileCache.clear();
                 Server.terminate();
             } else if (skipRecompute) {
                 System.out.println(
@@ -88,7 +86,6 @@ public class ProjectRequestHandler implements HttpHandler {
             } else if (needsReIndex(oldProject, newProject)) {
                 System.out.println(
                         "There is diff that requires recomputing indexes. Shutting down server and recomputing...");
-                TileCache.clear();
                 Server.terminate();
             } else {
                 System.out.println(
