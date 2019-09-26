@@ -185,3 +185,4 @@ front-end/js/embed/kyrix.js
 compile.sh
 !docker-scripts/compile.sh
 *.sql
+csv

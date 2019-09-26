@@ -82,21 +82,21 @@ cd /kyrix/back-end
 mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn exec:java -Dexec.mainClass="main.Main" | stdbuf -oL grep -v Downloading: | tee mvn-exec.out &
 touch mvn-exec.out
 # note(asah): limited grep behavior inside alpine/busybox, but still this is awkward due to my limited shell scripting skills.
-while [ 1 ]; do if grep -E -q 'Done precomputing|Backend server started' mvn-exec.out; then break; fi; spin "waiting for backend server"; sleep 1; done
+#while [ 1 ]; do if grep -E -q 'Done precomputing|Backend server started' mvn-exec.out; then break; fi; spin "waiting for backend server"; sleep 1; done
 
-echo "*** (re)indexing (force=$KYRIX_DB_INDEX_FORCE)..."
-FORCE=$KYRIX_DB_INDEX_FORCE $KYRIX_DB_INDEX_CMD || true
+#echo "*** (re)indexing (force=$KYRIX_DB_INDEX_FORCE)..."
+#FORCE=$KYRIX_DB_INDEX_FORCE $KYRIX_DB_INDEX_CMD || true
 
-sql="select dirty from project where name='$SRCDATA_PROJECT_NAME';"
-echo "sql=$sql"
-cmd="psql $PGCONN_STRING_USER/kyrix -X -P t -P format=unaligned -c \"$sql\""
-echo "cmd=$cmd"
-while [ 1 ]; do
-    w=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select dirty from project where name='$SRCDATA_PROJECT_NAME';") || -1;
-    if [ "x$w" = "x0" ]; then break; fi;
-    spin "waiting for kyrix re-index, currently dirty=$w"
-done
-echo "yes" > /kyrix-started
+#sql="select dirty from project where name='$SRCDATA_PROJECT_NAME';"
+#echo "sql=$sql"
+#cmd="psql $PGCONN_STRING_USER/kyrix -X -P t -P format=unaligned -c \"$sql\""
+#echo "cmd=$cmd"
+#while [ 1 ]; do
+#    w=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select dirty from project where name='$SRCDATA_PROJECT_NAME';") || -1;
+#    if [ "x$w" = "x0" ]; then break; fi;
+#    spin "waiting for kyrix re-index, currently dirty=$w"
+#done
+#echo "yes" > /kyrix-started
 
-echo "*** done! Kyrix ready at: http://<host>:8000/  (index recompute may need a few minutes, blank screens until then - watch this log for messages)"
+#echo "*** done! Kyrix ready at: http://<host>:8000/  (index recompute may need a few minutes, blank screens until then - watch this log for messages)"
 
