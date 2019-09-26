@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import main.Config;
+import main.Main;
 import project.Canvas;
 import project.Layer;
 
@@ -22,10 +23,14 @@ public class TileCache {
                 };
     }
 
+    public static void clear() {
+        tileCache.clear();
+    }
+
     public static ArrayList<ArrayList<ArrayList<String>>> getTile(
             Canvas c, int minx, int miny, ArrayList<String> predicates) throws Exception {
-
-        String key = c + "-" + minx + "-" + miny + "-" + predicates;
+        String projectName = Main.getProject().getName();
+        String key = projectName + '-' + c.getId() + "-" + minx + "-" + miny + "-" + predicates;
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
 
         // cache hit

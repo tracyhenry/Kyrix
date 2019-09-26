@@ -80,4 +80,5 @@ if [ "$HOST" = "" -o "$PORT" = "" ]; then
   usage 2
 fi
 
+# pass all remaining arguments to wait for
 wait_for "$@"
