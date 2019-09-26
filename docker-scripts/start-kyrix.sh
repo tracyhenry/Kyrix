@@ -50,9 +50,6 @@ psql $PGCONN_STRING_POSTGRES/postgres -c "CREATE DATABASE $SRCDATA_DB OWNER $USE
 #psql $PGCONN_STRING_USER/kyrix -c "$EXT_CMD" | egrep -v "$IGNORE_RX" 2>&1 || true
 #psql $PGCONN_STRING_USER/$SRCDATA_DB -c "$EXT_CMD" | egrep -v "$IGNORE_RX" 2>&1 || true
 
-# workaround this issue: https://github.com/tracyhenry/Kyrix/issues/42
-psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
-
 cd /kyrix/back-end
 
 recs_exists=$(psql $PGCONN_STRING_USER/$SRCDATA_DB -X -P t -P format=unaligned -c "select exists(select 1 from information_schema.tables where table_schema='public' and table_name='$SRCDATA_DB_TEST_TABLE');")
