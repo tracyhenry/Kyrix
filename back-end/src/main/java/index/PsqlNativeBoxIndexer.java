@@ -106,27 +106,21 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
                     };
 
             // register transform JS function with Postgres/Citus
-
-            // kyrix_bbox_coords_type
-            run_citus_dml_ddl(
-                    pushdownIndexStmt, "DROP TYPE if exists kyrix_bbox_coords_type CASCADE");
-            run_citus_dml_ddl(
-                    pushdownIndexStmt,
-                    "CREATE TYPE kyrix_bbox_coords_type as (cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision);");
-
-            // transtype
             run_citus_dml_ddl(
                     pushdownIndexStmt, tsql.apply("DROP TYPE IF EXISTS transtype CASCADE"));
+            run_citus_dml_ddl(pushdownIndexStmt, tsql.apply("DROP FUNCTION IF EXISTS bboxfunc"));
+            run_citus_dml_ddl(pushdownIndexStmt, tsql.apply("DROP FUNCTION IF EXISTS transfunc"));
+
+            // transtype
             run_citus_dml_ddl(
                     pushdownIndexStmt,
                     tsql.apply("CREATE TYPE transtype as (id bigint,x int,y int)"));
 
             // bbox func
-            run_citus_dml_ddl(pushdownIndexStmt, tsql.apply("DROP FUNCTION IF EXISTS transfunc"));
             sql =
                     tsql.apply(
-                            "CREATE OR REPLACE FUNCTION bboxfunc(id bigint,x int,y int) returns kyrix_bbox_coords_type"
-                                    + " AS $$ return { cx: x, cy: y, minx: x-0.5, miny: y-0.5, maxx: x+0.5, maxy: y+0.5, }"
+                            "CREATE OR REPLACE FUNCTION bboxfunc(id bigint,x int,y int) returns double precision[]"
+                                    + " AS $$ return [x, y, x-0.5, y-0.5, x+0.5, y+0.5]"
                                     + "$$ LANGUAGE plv8");
             // master needs 'stable' for citus to pushdown to workers
             // workers need 'volatile' for pg11 to memoize and not call the function repeatedly per
@@ -164,9 +158,7 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
                     tsql.apply(
                             "INSERT INTO bboxtbl(id,x,y,citus_distribution_id,cx,cy,minx,miny,maxx,maxy) "
                                     + "SELECT id, x, y, citus_distribution_id, "
-                                    + "(coords::kyrix_bbox_coords_type).cx, (coords::kyrix_bbox_coords_type).cy,"
-                                    + "(coords::kyrix_bbox_coords_type).minx, (coords::kyrix_bbox_coords_type).miny,"
-                                    + "(coords::kyrix_bbox_coords_type).maxx, (coords::kyrix_bbox_coords_type).maxy "
+                                    + "coords[1], coords[2], coords[3], coords[4], coords[5], coords[6] "
                                     + "FROM ("
                                     +
                                     // TODO: replace v:: args with parsed results from the trans
