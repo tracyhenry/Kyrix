@@ -2,26 +2,29 @@ const Transform = require("../../src/Transform").Transform;
 
 var dotsTransform = new Transform({
     dbsource: "dots_pushdown_uniform",
-    transformFunc: function(id, w, h, params) {
-        if (!("dots_pushdown_uniform_xscale" in plv8)) {
-            // memoize for performance
-            d3 = require("d3");
-            plv8.dots_pushdown_uniform_xscale = d3
+    transformFunc: function(obj, cw, ch, params) {
+        if (!("d3" in plv8)) {
+            plv8.d3 = require("d3");
+        }
+        d3 = plv8.d3;
+        if (!("scalex" + cw in plv8))
+            plv8["scalex" + cw] = d3
                 .scaleLinear()
                 .domain([0, params.topLevelWidth])
-                .range([0, CANVAS_WIDTH]);
-            plv8.dots_pushdown_uniform_yscale = d3
+                .range([0, cw]);
+        if (!("scaley" + ch in plv8))
+            plv8["scaley" + ch] = d3
                 .scaleLinear()
                 .domain([0, params.topLevelHeight])
-                .range([0, CANVAS_HEIGHT]);
-        }
+                .range([0, ch]);
+
         // I'd use arrays for speed then annotate the column names, but plv8 can't return arrays
         // and other serialization is even slower. I didn't try returning a recordset (and then
         // having the caller invoke the func with 1000ish record sets... that could be faster...
         return {
-            id: id, // @result: id
-            x: plv8.dots_pushdown_uniform_xscale(w), // @result: x
-            y: plv8.dots_pushdown_uniform_yscale(h) // @result: y
+            id: obj.id, // @result: id
+            x: plv8["scalex" + cw](obj.w), // @result: x
+            y: plv8["scaley" + ch](obj.h) // @result: y
         };
     }
 });

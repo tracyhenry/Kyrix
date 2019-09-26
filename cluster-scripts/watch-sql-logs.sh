@@ -1,7 +1,7 @@
 #!/bin/bash
 # TODO: hardcoded for postgres 11
 
-source setup-citus-vars.env
+source env/setup-citus-vars.env
 
 PGDIR=/var/lib/postgresql
 PGDATA=$PGDIR/data

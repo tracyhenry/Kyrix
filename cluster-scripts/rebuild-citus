@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # latest always gets pulled
-TAG=${1:-asah/pg11_postgis25_citus811_plv8:latest}
+TAG=${1:-tracyhenry/pg11_postgis25_citus811_plv8:latest}
 
 sudo docker build ../ -f ../Dockerfile-citus-debian -t $TAG
 sudo docker push $TAG
@@ -10,7 +10,7 @@ sudo docker push $TAG
 TAG=${TAG//\//\\\/};
 
 # updating yaml files
-perl -pi -e "s/image:.*/image: $TAG/g" worker-deployment.yaml
-perl -pi -e "s/image:.*/image: $TAG/g" master-deployment.yaml
+perl -pi -e "s/image:.*/image: $TAG/g" k8s-yaml/worker-deployment.yaml
+perl -pi -e "s/image:.*/image: $TAG/g" k8s-yaml/master-deployment.yaml
 
 echo "docker build successful and {master,worker}-deployment.yaml updated"
