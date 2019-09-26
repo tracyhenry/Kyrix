@@ -106,21 +106,14 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
                     };
 
             // register transform JS function with Postgres/Citus
-            run_citus_dml_ddl(
-                    pushdownIndexStmt, tsql.apply("DROP TYPE IF EXISTS transtype CASCADE"));
             run_citus_dml_ddl(pushdownIndexStmt, tsql.apply("DROP FUNCTION IF EXISTS bboxfunc"));
             run_citus_dml_ddl(pushdownIndexStmt, tsql.apply("DROP FUNCTION IF EXISTS transfunc"));
-
-            // transtype
-            run_citus_dml_ddl(
-                    pushdownIndexStmt,
-                    tsql.apply("CREATE TYPE transtype as (id bigint,x int,y int)"));
 
             // bbox func
             sql =
                     tsql.apply(
-                            "CREATE OR REPLACE FUNCTION bboxfunc(id bigint,x int,y int) returns double precision[]"
-                                    + " AS $$ return [x, y, x-0.5, y-0.5, x+0.5, y+0.5]"
+                            "CREATE OR REPLACE FUNCTION bboxfunc(v json) returns double precision[]"
+                                    + " AS $$ return [v.x, v.y, v.x-0.5, v.y-0.5, (+v.x)+0.5, (+v.y)+0.5]"
                                     + "$$ LANGUAGE plv8");
             // master needs 'stable' for citus to pushdown to workers
             // workers need 'volatile' for pg11 to memoize and not call the function repeatedly per
@@ -131,7 +124,7 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
             // transform func
             sql =
                     tsql.apply(
-                            "CREATE OR REPLACE FUNCTION transfunc(id bigint,w int,h int, cw int, ch int, params json) returns transtype"
+                            "CREATE OR REPLACE FUNCTION transfunc(obj json, cw int, ch int, params json) returns json"
                                     +
                                     // TODO(security): SQL injection - perhaps use $foo<hard to
                                     // guess number>$ ... $foo<#>$ ?
@@ -160,22 +153,11 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
                                     + "SELECT id, x, y, citus_distribution_id, "
                                     + "coords[1], coords[2], coords[3], coords[4], coords[5], coords[6] "
                                     + "FROM ("
-                                    +
-                                    // TODO: replace v:: args with parsed results from the trans
-                                    // func
-                                    "  SELECT (v::transtype).id, (v::transtype).x, (v::transtype).y, "
+                                    + "  SELECT (v->>'id') as id, (v->>'x') as x, (v->>'y') as y, "
                                     + "         citus_distribution_id, "
-                                    +
-                                    // TODO: replace v:: args with parsed results from the trans
-                                    // func
-                                    // TODO: can we inline bboxfunc?  could be easier than
-                                    // another plv8 func...
-                                    "         bboxfunc( (v::transtype).id, (v::transtype).x, (v::transtype).y ) coords"
+                                    + "         bboxfunc(v) coords"
                                     + "  FROM ("
-                                    +
-                                    // TODO: replace args to transfunc with parsed args from the
-                                    // func decl
-                                    "    SELECT transfunc(id,w,h,"
+                                    + "    SELECT transfunc(row_to_json(dbsource),"
                                     + c.getW()
                                     + ","
                                     + c.getH()
@@ -183,7 +165,7 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
                                     + Main.getProject()
                                             .getRenderingParams()
                                             .replaceAll("\'", "\'\'")
-                                    + "\'::json) v, citus_distribution_id FROM dbsource "
+                                    + "\'::json) v, citus_distribution_id FROM dbsource"
                                     + "  ) sq1"
                                     + ") sq2");
             long startts = System.currentTimeMillis();

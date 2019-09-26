@@ -2,7 +2,7 @@ const Transform = require("../../src/Transform").Transform;
 
 var dotsTransform = new Transform({
     dbsource: "dots_pushdown_uniform",
-    transformFunc: function(id, w, h, cw, ch, params) {
+    transformFunc: function(obj, cw, ch, params) {
         if (!("d3" in plv8)) {
             plv8.d3 = require("d3");
         }
@@ -22,9 +22,9 @@ var dotsTransform = new Transform({
         // and other serialization is even slower. I didn't try returning a recordset (and then
         // having the caller invoke the func with 1000ish record sets... that could be faster...
         return {
-            id: id, // @result: id
-            x: plv8["scalex" + cw](w), // @result: x
-            y: plv8["scaley" + ch](h) // @result: y
+            id: obj.id, // @result: id
+            x: plv8["scalex" + cw](obj.w), // @result: x
+            y: plv8["scaley" + ch](obj.h) // @result: y
         };
     }
 });
