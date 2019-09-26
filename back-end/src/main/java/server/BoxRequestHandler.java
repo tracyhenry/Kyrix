@@ -102,9 +102,11 @@ public class BoxRequestHandler implements HttpHandler {
         // instead, store in prepare statement (idk if that would work?)
         //  or in-memory data structure and flush to db in batches
         if (isJumping) {
-            Server.sendStats("jump", fetchTime, intersectingRows);
+            Server.sendStats(
+                    Main.getProject().getName(), c.getId(), "jump", fetchTime, intersectingRows);
         } else {
-            Server.sendStats("pan", fetchTime, intersectingRows);
+            Server.sendStats(
+                    Main.getProject().getName(), c.getId(), "pan", fetchTime, intersectingRows);
         }
 
         // send data and box back

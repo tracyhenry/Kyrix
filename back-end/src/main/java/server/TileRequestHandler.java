@@ -82,9 +82,11 @@ public class TileRequestHandler implements HttpHandler {
         System.out.println("number of intersecting rows in result: " + intersectingRows);
 
         if (isJumping) {
-            Server.sendStats("zoom", fetchTime, intersectingRows);
+            Server.sendStats(
+                    Main.getProject().getName(), c.getId(), "jump", fetchTime, intersectingRows);
         } else {
-            Server.sendStats("pan", fetchTime, intersectingRows);
+            Server.sendStats(
+                    Main.getProject().getName(), c.getId(), "pan", fetchTime, intersectingRows);
         }
 
         // construct response

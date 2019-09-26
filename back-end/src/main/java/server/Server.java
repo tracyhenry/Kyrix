@@ -116,12 +116,22 @@ public class Server {
         return result;
     }
 
-    public static void sendStats(String queryType, double seconds, int fetchedRows) {
+    public static void sendStats(
+            String projectName,
+            String canvasId,
+            String queryType,
+            double fetchTime,
+            int fetchedRows) {
         String sql =
-                "insert into stats (querytype, milliseconds, rowsFetched) values ('"
+                "insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ("
+                        + "'"
+                        + projectName
+                        + "','"
+                        + canvasId
+                        + "','"
                         + queryType
                         + "',"
-                        + seconds
+                        + fetchTime
                         + ","
                         + fetchedRows
                         + ");";
