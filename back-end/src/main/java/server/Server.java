@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.net.ssl.HttpsURLConnection;
 import main.Config;
+import main.DbConnector;
 import main.Main;
 
 /** Created by wenbo on 1/8/18. */
@@ -113,5 +114,25 @@ public class Server {
             result.put(param.substring(0, pos), param.substring(pos + 1));
         }
         return result;
+    }
+
+    public static void sendStats(String queryType, double seconds, int fetchedRows) {
+        String sql =
+                "insert into stats (querytype, milliseconds, rowsFetched) values ('"
+                        + queryType
+                        + "',"
+                        + seconds
+                        + ","
+                        + fetchedRows
+                        + ");";
+        System.out.println("stats sql: " + sql);
+        System.out.println("database name is: " + Config.databaseName);
+
+        try {
+            DbConnector.executeUpdate(Config.databaseName, sql);
+        } catch (Exception e) {
+            System.out.println("couldn't write stats to the stats table: ");
+            System.out.println(e);
+        }
     }
 }

@@ -14,7 +14,6 @@ import javax.net.ssl.HttpsURLConnection;
 import main.Config;
 import main.Main;
 import project.Canvas;
-import server.BoxRequestHandler;
 
 /** Created by wenbo on 1/2/18. */
 public class TileRequestHandler implements HttpHandler {
@@ -83,11 +82,11 @@ public class TileRequestHandler implements HttpHandler {
         System.out.println("number of intersecting rows in result: " + intersectingRows);
 
         if (isJumping) {
-            BoxRequestHandler.sendStats("zoom", fetchTime, intersectingRows);
+            Server.sendStats("zoom", fetchTime, intersectingRows);
         } else {
-            BoxRequestHandler.sendStats("pan", fetchTime, intersectingRows);
+            Server.sendStats("pan", fetchTime, intersectingRows);
         }
-    
+
         // construct response
         Map<String, Object> respMap = new HashMap<>();
         respMap.put("renderData", BoxandData.getDictionaryFromData(data, c));

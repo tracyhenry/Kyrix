@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import javax.net.ssl.HttpsURLConnection;
-import main.Config;
-import main.DbConnector;
 import main.Main;
 import project.Canvas;
 import project.View;
@@ -99,14 +97,14 @@ public class BoxRequestHandler implements HttpHandler {
         }
         System.out.println("Fetch data time: " + fetchTime + "ms.");
         System.out.println("number of intersecting rows in result: " + intersectingRows);
-        
+
         // TODO: improve this by not sending insert query every time there is a user interaction,
         // instead, store in prepare statement (idk if that would work?)
         //  or in-memory data structure and flush to db in batches
         if (isJumping) {
-            sendStats("zoom", fetchTime, intersectingRows);
+            Server.sendStats("jump", fetchTime, intersectingRows);
         } else {
-            sendStats("pan", fetchTime, intersectingRows);
+            Server.sendStats("pan", fetchTime, intersectingRows);
         }
 
         // send data and box back
@@ -140,25 +138,5 @@ public class BoxRequestHandler implements HttpHandler {
 
         // check passed
         return "";
-    }
-
-    public static void sendStats(String queryType, double seconds, int fetchedRows) {
-        String sql =
-                "insert into stats (querytype, milliseconds, rowsFetched) values ('"
-                        + queryType
-                        + "',"
-                        + seconds
-                        + ","
-                        + fetchedRows
-                        + ");";
-        System.out.println("stats sql: " + sql);
-        System.out.println("database name is: " + Config.databaseName);
-
-        try {
-            DbConnector.executeUpdate(Config.databaseName, sql);
-        } catch (Exception e) {
-            System.out.println("couldn't write stats to the stats table: ");
-            System.out.println(e);
-        }
     }
 }
