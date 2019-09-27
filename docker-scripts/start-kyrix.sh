@@ -81,22 +81,24 @@ mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransfe
 # note(asah): limited grep behavior inside alpine/busybox, but still this is awkward due to my limited shell scripting skills.
 while [ 1 ]; do if grep -E -q 'Done precomputing|Backend server started' mvn-exec.out; then break; fi; spin "waiting for backend server"; sleep 1; done
 
-echo "*** (re)indexing (force=$KYRIX_DB_INDEX_FORCE)..."
-FORCE=$KYRIX_DB_INDEX_FORCE $KYRIX_DB_INDEX_CMD || true
+if [ "x$START_APP" = "x1" ]; then
+    echo "*** (re)indexing (force=$KYRIX_DB_INDEX_FORCE)..."
+    FORCE=$KYRIX_DB_INDEX_FORCE $KYRIX_DB_INDEX_CMD || true
 
-sql="select dirty from project where name='$SRCDATA_PROJECT_NAME';"
-echo "sql=$sql"
-cmd="psql $PGCONN_STRING_USER/kyrix -X -P t -P format=unaligned -c \"$sql\""
-echo "cmd=$cmd"
-while [ 1 ]; do
-    w=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select dirty from project where name='$SRCDATA_PROJECT_NAME';") || -1;
-    if [ "x$w" = "x0" ]; then break; fi;
-    spin "waiting for kyrix re-index, currently dirty=$w"
-done
-echo "yes" > /kyrix-started
+    sql="select dirty from project where name='$SRCDATA_PROJECT_NAME';"
+    echo "sql=$sql"
+    cmd="psql $PGCONN_STRING_USER/kyrix -X -P t -P format=unaligned -c \"$sql\""
+    echo "cmd=$cmd"
+    while [ 1 ]; do
+        w=$(psql $PGCONN_STRING_USER/$KYRIX_DB -X -P t -P format=unaligned -c "select dirty from project where name='$SRCDATA_PROJECT_NAME';") || -1;
+        if [ "x$w" = "x0" ]; then break; fi;
+        spin "waiting for kyrix re-index, currently dirty=$w"
+    done
+    echo "yes" > /kyrix-started
 
-if [ "x$DBTYPE" = "xpsql" ]; then
-    KYRIX_IP=$(curl -s ifconfig.me)
+    if [ "x$DBTYPE" = "xpsql" ]; then
+        KYRIX_IP=$(curl -s ifconfig.me)
+    fi
+
+    echo "*** done! Kyrix ready at: http://$KYRIX_IP:$KYRIX_PORT/"
 fi
-
-echo "*** done! Kyrix ready at: http://$KYRIX_IP:8000/"
