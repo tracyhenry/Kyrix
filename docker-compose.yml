@@ -8,14 +8,15 @@
 # - Dockerfiles can't refer to files in parent directories (e.g. back-end and compiler),
 #   hence the Dockerfiles in the parent, outside of docker-scripts/
 
-version: '3.1'
+version: '3.4'
 
 services:
 
   db:
     build:
       context: .
-      dockerfile: Dockerfile-postgis-alpine
+      dockerfile: Dockerfile-citus-debian
+      target: "${BUILD_STAGE:-pg-plv8}"
     restart: always
     ports: # comment-out for extra security or to avoid conflicts with host OS
      - "${DB_PORT:-5432}:5432"
