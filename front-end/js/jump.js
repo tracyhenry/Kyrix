@@ -63,6 +63,8 @@ function postJump(viewId, zoomType) {
                     gvd.curCanvas.zoomInFactorY
                 ) - param.eps
             );
+        else if ((zoomType = param.load))
+            setupZoom(viewId, gvd.initialScale || 1);
         else setupZoom(viewId, 1);
 
         // set up button states
@@ -361,8 +363,8 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     }
 }
 
-function load(predArray, newVpX, newVpY, jump) {
-    var destViewId = jump.destViewId;
+function load(predArray, newVpX, newVpY, newScale, viewId, canvasId) {
+    var destViewId = viewId;
 
     // stop any tweens
     d3.selection().interrupt("zoomInTween_" + destViewId);
@@ -373,17 +375,18 @@ function load(predArray, newVpX, newVpY, jump) {
 
     // reset global vars
     var gvd = globalVar.views[destViewId];
-    gvd.curCanvasId = jump.destId;
+    gvd.curCanvasId = canvasId;
     gvd.predicates = predArray;
     gvd.highlightPredicates = [];
     gvd.initialViewportX = newVpX;
     gvd.initialViewportY = newVpY;
+    gvd.initialScale = newScale;
     gvd.renderData = null;
     gvd.pendingBoxRequest = null;
     gvd.history = [];
 
     // pre animation
-    preJump(destViewId, jump.type);
+    preJump(destViewId, param.load);
 
     // draw buttons because they were not created if it was an empty view
     drawZoomButtons(destViewId);
@@ -393,9 +396,8 @@ function load(predArray, newVpX, newVpY, jump) {
     gotCanvas.then(function() {
         // render static layers
         renderStaticLayers(destViewId);
-
         // post animation
-        postJump(destViewId, jump.type);
+        postJump(destViewId, param.load);
     });
 }
 
@@ -468,7 +470,8 @@ function startJump(viewId, d, jump, optionalArgs) {
         jump.type == param.geometricSemanticZoom
     )
         semanticZoom(viewId, jump, predArray, newVpX, newVpY, d);
-    else if (jump.type == param.load) load(predArray, newVpX, newVpY, jump);
+    else if (jump.type == param.load)
+        load(predArray, newVpX, newVpY, jump.destViewId, jump.destId);
     else if (jump.type == param.highlight) highlight(predArray, jump);
 }
 
