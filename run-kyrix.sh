@@ -1,5 +1,12 @@
 #!/bin/bash
 
+echo -e "\nStopping existing containers..."
+docker-compose stop
+echo -e "Done.\n"
+
+start_time=$(date +%s)
+#echo "Current UNIX timestamp: $start_time"
+
 DB_PORT=5432
 KYRIX_PORT=8000
 START_APP=0
@@ -39,4 +46,41 @@ do
     esac
 done
 
-START_APP=$START_APP DB_PORT=$DB_PORT KYRIX_PORT=$KYRIX_PORT BUILD_STAGE=$BUILD_STAGE docker-compose up $REBUILD
+START_APP=$START_APP DB_PORT=$DB_PORT KYRIX_PORT=$KYRIX_PORT BUILD_STAGE=$BUILD_STAGE docker-compose up $REBUILD -d
+
+source docker-scripts/spinner.sh
+# waiting for kyrix_db_1 to start
+while [ 1 ]; do
+    if docker logs 2>&1 --since $start_time kyrix_db_1 | grep -q "LOG:  database system is ready to accept connections"; then
+        break;
+    fi;
+    spin "waiting for the Postgres container to start (be patient, it might take a few minutes)..."
+done
+
+# Tune postgres
+echo -e "\nPostgres started! Tuning..."
+CONF=/var/lib/postgresql/data/postgresql.conf
+docker exec -t kyrix_db_1 su - postgres -c "psql -c \"create extension if not exists plv8\" " # shutup start_proc warning
+docker exec -t kyrix_db_1 sed -i "s@^[#]\?maintenance_work_mem.*@maintenance_work_mem = '1GB'@" $CONF
+docker exec -t kyrix_db_1 sed -i "s@^[#]\?max_worker_processes.*@max_worker_processes = '24'@" $CONF
+docker exec -t kyrix_db_1 sed -i "s@^[#]\?max_parallel_workers.*@max_parallel_workers = '24'@" $CONF
+docker exec -t kyrix_db_1 sed -i "s@^[#]\?max_parallel_workers_per_gather.*@max_parallel_workers_per_gather = '24'@" $CONF
+docker exec -t kyrix_db_1 bash -c "echo \"plv8.start_proc = 'commonjs.plv8_startup'\" >> $CONF"
+docker exec -t kyrix_db_1 su - postgres -c "/usr/lib/postgresql/11/bin/pg_ctl -D /var/lib/postgresql/data reload -s"
+
+# installing d3
+docker exec -it kyrix_db_1 su - postgres -c "./install-d3.sh kyrix" > /dev/null
+echo -e "Done.\n"
+
+# waiting for kyrix back-end to start
+while [ 1 ]; do
+    if docker logs 2>&1 --since $start_time kyrix_kyrix_1 | grep -q "Backend server started"; then
+        break;
+    fi;
+    spin "waiting for Kyrix backend to start..."
+done
+
+# redirect to docker logs
+echo -e "\nKyrix back-end started! Redirecting to Kyrix backend logs...\n"
+sleep 1
+docker logs --since $start_time kyrix_kyrix_1 -f

@@ -13,6 +13,7 @@ fi
 cd /var/lib/postgresql
 
 psql $1 -q -c "create extension if not exists plv8"
+psql $1 -q -c "create database kyrix;"
 ./plv8-modules/bin/install_modules -d $1
 echo "adding d3 to plv8-modules in database $1..."
 ./plv8-modules/bin/add_module_simple -d $1 --simple -n d3 --path /var/lib/postgresql/node_modules/d3/dist/d3.js

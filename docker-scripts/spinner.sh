@@ -13,7 +13,7 @@ sc=0
 spin_msg_printed=0
 spin() {
     if (( $spin_msg_printed % 30 == 0 )); then
-	printf "$1...  "
+	printf "\n$1...  "
     else
 	printf "\b${sp:sc++:1}"
 	((sc==${#sp})) && sc=0
