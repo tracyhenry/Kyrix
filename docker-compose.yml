@@ -15,7 +15,7 @@ services:
   db:
     build:
       context: .
-      dockerfile: Dockerfile-citus-debian
+      dockerfile: Dockerfile-db
       target: "${BUILD_STAGE:-pg-plv8}"
     restart: always
     ports: # comment-out for extra security or to avoid conflicts with host OS
