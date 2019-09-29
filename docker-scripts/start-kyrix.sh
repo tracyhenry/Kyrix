@@ -76,6 +76,7 @@ while [ 1 ]; do KYRIX_PID=`ps awwwx | grep Slf4jMavenTransferListener | grep -v 
 
 echo "*** starting backend server..."
 cd /kyrix/back-end
+mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out >/dev/null 2>&1
 rm -f mvn-exec.out && touch mvn-exec.out
 mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn exec:java -Dexec.mainClass="main.Main" | stdbuf -oL grep -v Downloading: | tee mvn-exec.out &
 # note(asah): limited grep behavior inside alpine/busybox, but still this is awkward due to my limited shell scripting skills.
@@ -100,5 +101,5 @@ if [ "x$START_APP" = "x1" ]; then
         KYRIX_IP=$(curl -s ifconfig.me)
     fi
 
-    echo "*** done! Kyrix ready at: http://$KYRIX_IP:$KYRIX_PORT/"
+    echo "*** done! Kyrix ready at: http://$KYRIX_IP:${KYRIX_PORT:-8000}/"
 fi
