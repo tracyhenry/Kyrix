@@ -4,10 +4,6 @@
 #  - postgres backend will be available on port 5432 by default (for debugging)
 #
 
-# notes for newbies to docker/docker-compose:
-# - Dockerfiles can't refer to files in parent directories (e.g. back-end and compiler),
-#   hence the Dockerfiles in the parent, outside of docker-scripts/
-
 version: '3.4'
 
 services:
@@ -15,7 +11,7 @@ services:
   db:
     build:
       context: .
-      dockerfile: Dockerfile-db
+      dockerfile: docker-scripts/Dockerfile-db
       target: "${BUILD_STAGE:-pg-plv8}"
     restart: always
     ports: # comment-out for extra security or to avoid conflicts with host OS
@@ -32,7 +28,7 @@ services:
   kyrix:
     build:
       context: .
-      dockerfile: Dockerfile-kyrix-alpine
+      dockerfile: docker-scripts/Dockerfile-kyrix-alpine
     ports:
      - "${KYRIX_PORT:-8000}:8000"
     depends_on:

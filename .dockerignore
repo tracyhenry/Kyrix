@@ -1,0 +1,6 @@
+img/
+back-end/target/
+*.svg
+*.csv
+node_modules/
+
