@@ -47,6 +47,9 @@ function Project(name, configFile) {
     // set of tables
     this.tables = [];
 
+    // set of maps
+    this.maps = [];
+
     // rendering parameters
     this.renderingParams = "{}";
 
@@ -389,6 +392,121 @@ function addAutoDD(autoDD, args) {
 
     return {pyramid: curPyramid, view: args.view ? args.view : view};
 }
+
+/**
+ * Add a USMap visualization to a project
+ * @param map a USMap object
+ * @param args an dictionary that contains customization parameters, see doc
+ * @returns canvas object for initial view
+ */
+function addUSMap(map, args) {
+    if (args == null) args = {};
+
+    this.maps.push(map);
+    map.name = "kyrix_map_" + (this.maps.length - 1);
+
+    // rendering params
+    this.addRenderingParams(map.renderingParams);
+
+    // array of canvases
+    var canvases = [];
+
+    // ========== state map canvas ================
+    var stateMapWidth = 2000,
+        stateMapHeight = 1000;
+    var stateMapCanvas = new Canvas("statemap", stateMapWidth, stateMapHeight);
+    this.addCanvas(canvas);
+
+    // static legends layer
+    var stateMapLegendLayer = new Layer(null, true);
+    stateMapCanvas.addLayer(stateMapLegendLayer);
+    stateMapLegendLayer.addRenderingFunc(map.renderers.stateMapLegendRendering);
+    
+    // state boundary layer
+    var stateBoundaryLayer = new Layer(map.transforms.stateMapTransform, false);
+    stateMapCanvas.addLayer(stateBoundaryLayer);
+    stateBoundaryLayer.addPlacement(map.placements.stateMapPlacement);
+
+    // ================== county map canvas ===================
+    var zoomFactor =
+        map.renderingParams.countyMapScale /
+        map.renderingParams.stateMapScale;
+    var countyMapCanvas = new Canvas(
+        "countymap",
+        stateMapWidth * zoomFactor,
+        stateMapHeight * zoomFactor
+    );
+    this.addCanvas(countyMapCanvas);
+    
+    // static legends layer
+    var countyMapLegendLayer = new Layer(null, true);
+    countyMapCanvas.addLayer(countyMapLegendLayer);
+    countyMapLegendLayer.addRenderingFunc(map.renderers.countyMapLegendRendering);
+    
+    // thick state boundary layer
+    var countyMapStateBoundaryLayer = new Layer(
+        map.transforms.countyMapStateBoundaryTransform,
+        false
+    );
+    countyMapCanvas.addLayer(countyMapStateBoundaryLayer);
+    countyMapStateBoundaryLayer.addPlacement(map.placements.countyMapPlacement);
+    countyMapStateBoundaryLayer.addRenderingFunc(
+        map.renderers.countyMapStateBoundaryRendering
+    );
+    
+    // county boundary layer
+    var countyBoundaryLayer = new Layer(map.transforms.countyMapTransform, false);
+    countyMapCanvas.addLayer(countyBoundaryLayer);
+    countyBoundaryLayer.addPlacement(map.placements.countyMapPlacement);
+    countyBoundaryLayer.addRenderingFunc(map.renderers.countyMapRendering);
+
+    // ==========  Views ===============
+    if (!args.view) {
+        var view = new View("usmap", 0, 0, stateMapWidth, stateMapHeight);
+        this.addView(view);
+        this.setInitialStates(view, stateMapCanvas, 0, 0);
+    } else if (!(args.view instanceof View)) {
+        throw new Error("Constructing USMap: view must be a View object");
+    }
+
+    // ================== state -> county jump ===================
+    var selector = function(row, args) {
+        return args.layerId == 1;
+    };
+    
+    var newPredicates = function() {
+        return {};
+    };
+    
+    var newViewport = function(row, args) {
+        var zoomFactor =
+            args.renderingParams.countyMapScale /
+            args.renderingParams.stateMapScale;
+        var vpW = args.viewportW;
+        var vpH = args.viewportH;
+        return {
+            constant: [
+                row.bbox_x * zoomFactor - vpW / 2,
+                row.bbox_y * zoomFactor - vpH / 2
+            ]
+        };
+    };
+    
+    var jumpName = function(row) {
+        return "County map of " + row.name;
+    };
+    
+    this.addJump(
+        new Jump(stateMapCanvas, countyMapCanvas, "geometric_semantic_zoom", {
+            selector: selector,
+            viewport: newViewport,
+            predicates: newPredicates,
+            name: jumpName
+        })
+    );
+
+    return {canvas: canvas, view: args.view ? args.view : view};
+} // end func addUSMap
 
 // Add a rendering parameter object
 function addRenderingParams(renderingParams) {
