@@ -1,5 +1,5 @@
 #
-# to start up, simply run docker-compose up:
+# to start up, simply run "./run-kyrix.sh" or "docker-compose up"
 #  - kyrix frontend will be available on port 8000 by default
 #  - postgres backend will be available on port 5432 by default (for debugging)
 #
