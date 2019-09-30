@@ -102,28 +102,18 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
                                 .replaceAll("transfunc", transformFuncName)
                                 .replaceAll("bboxfunc", bboxFuncName)
                                 .replaceAll("bboxtbl", bboxTableName)
-                                .replaceAll("dbsource", trans.getDbsource())
-                                .replaceAll("CANVAS_WIDTH", String.valueOf(c.getW()))
-                                .replaceAll("CANVAS_HEIGHT", String.valueOf(c.getH())));
+                                .replaceAll("dbsource", trans.getDbsource()));
                     };
 
             // register transform JS function with Postgres/Citus
-            run_citus_dml_ddl(
-                    pushdownIndexStmt, tsql.apply("DROP TYPE IF EXISTS transtype CASCADE"));
-            run_citus_dml_ddl(
-                    pushdownIndexStmt,
-                    tsql.apply("CREATE TYPE transtype as (id bigint,x int,y int)"));
+            run_citus_dml_ddl(pushdownIndexStmt, tsql.apply("DROP FUNCTION IF EXISTS bboxfunc"));
             run_citus_dml_ddl(pushdownIndexStmt, tsql.apply("DROP FUNCTION IF EXISTS transfunc"));
 
-            String transFuncStr = trans.getTransformFunc();
-            // TODO: analyze trans.getTransformFunc() to find arguments - for now, hardcode
-
-            // TODO: generate bbox func - see Indexer.getBboxCoordinates()
-
+            // bbox func
             sql =
                     tsql.apply(
-                            "CREATE OR REPLACE FUNCTION bboxfunc(id bigint,x int,y int) returns kyrix_bbox_coords_type"
-                                    + " AS $$ return { cx: x, cy: y, minx: x-0.5, miny: y-0.5, maxx: x+0.5, maxy: y+0.5, }"
+                            "CREATE OR REPLACE FUNCTION bboxfunc(v json) returns double precision[]"
+                                    + " AS $$ return [v.x, v.y, v.x-0.5, v.y-0.5, (+v.x)+0.5, (+v.y)+0.5]"
                                     + "$$ LANGUAGE plv8");
             // master needs 'stable' for citus to pushdown to workers
             // workers need 'volatile' for pg11 to memoize and not call the function repeatedly per
@@ -131,9 +121,10 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
             run_citus_dml_ddl2(
                     pushdownIndexStmt, sql + " STABLE", sql); // append is safer than replace...
 
+            // transform func
             sql =
                     tsql.apply(
-                            "CREATE OR REPLACE FUNCTION transfunc(id bigint,w int,h int) returns transtype"
+                            "CREATE OR REPLACE FUNCTION transfunc(obj json, cw int, ch int, params json) returns json"
                                     +
                                     // TODO(security): SQL injection - perhaps use $foo<hard to
                                     // guess number>$ ... $foo<#>$ ?
@@ -155,48 +146,33 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
             System.out.println(sql);
             pushdownIndexStmt.executeQuery(sql);
 
-            sql = "SET citus.task_executor_type = 'task-tracker';";
-            System.out.println(sql);
+            // run transform func, create bboxtbl
+            sql =
+                    tsql.apply(
+                            "INSERT INTO bboxtbl(id,x,y,citus_distribution_id,cx,cy,minx,miny,maxx,maxy) "
+                                    + "SELECT id, x, y, citus_distribution_id, "
+                                    + "coords[1], coords[2], coords[3], coords[4], coords[5], coords[6] "
+                                    + "FROM ("
+                                    + "  SELECT (v->>'id') as id, (v->>'x') as x, (v->>'y') as y, "
+                                    + "         citus_distribution_id, "
+                                    + "         bboxfunc(v) coords"
+                                    + "  FROM ("
+                                    + "    SELECT transfunc(row_to_json(dbsource),"
+                                    + c.getW()
+                                    + ","
+                                    + c.getH()
+                                    + ",\'"
+                                    + Main.getProject()
+                                            .getRenderingParams()
+                                            .replaceAll("\'", "\'\'")
+                                    + "\'::json) v, citus_distribution_id FROM dbsource"
+                                    + "  ) sq1"
+                                    + ") sq2");
+            long startts = System.currentTimeMillis();
+            System.out.println("pipeline/insertion: " + sql);
             pushdownIndexStmt.executeUpdate(sql);
-
-            for (int i = 0; i < 100; i++) {
-                // break into 100 steps so we can hopefully see progress
-                sql =
-                        tsql.apply(
-                                "INSERT INTO bboxtbl(id,x,y,citus_distribution_id,cx,cy,minx,miny,maxx,maxy) "
-                                        + "SELECT id, x, y, citus_distribution_id, "
-                                        + "(coords::kyrix_bbox_coords_type).cx, (coords::kyrix_bbox_coords_type).cy,"
-                                        + "(coords::kyrix_bbox_coords_type).minx, (coords::kyrix_bbox_coords_type).miny,"
-                                        + "(coords::kyrix_bbox_coords_type).maxx, (coords::kyrix_bbox_coords_type).maxy "
-                                        + "FROM ("
-                                        +
-                                        // TODO: replace v:: args with parsed results from the trans
-                                        // func
-                                        "  SELECT (v::transtype).id, (v::transtype).x, (v::transtype).y, "
-                                        + "         citus_distribution_id, "
-                                        +
-                                        // TODO: replace v:: args with parsed results from the trans
-                                        // func
-                                        // TODO: can we inline bboxfunc?  could be easier than
-                                        // another plv8 func...
-                                        "         bboxfunc( (v::transtype).id, (v::transtype).x, (v::transtype).y ) coords"
-                                        + "  FROM ("
-                                        +
-                                        // TODO: replace args to transfunc with parsed args from the
-                                        // func decl
-                                        "    SELECT transfunc(id,w,h) v, citus_distribution_id FROM dbsource "
-                                        + "    WHERE w % 100 = "
-                                        + i
-                                        + "  ) sq1"
-                                        + ") sq2");
-                long startts = System.nanoTime();
-                if (i % 20 == 0)
-                    System.out.println("pipeline/insertion stage " + i + " of 100: " + sql);
-                pushdownIndexStmt.executeUpdate(sql);
-                long elapsed = System.nanoTime() - startts;
-                if (i % 20 == 0)
-                    System.out.println("stage " + i + " took " + (elapsed / 1000000) + " msec");
-            }
+            long elapsed = System.currentTimeMillis() - startts;
+            System.out.println("Running transform func took " + elapsed + " msec");
 
             // compute geom field in the database, where it can happen in parallel
             Statement setGeomFieldStmt = DbConnector.getStmtByDbName(Config.databaseName);

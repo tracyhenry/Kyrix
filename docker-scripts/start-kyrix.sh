@@ -32,7 +32,7 @@ echo $DBTYPE >> /kyrix/config.txt
 echo $PGHOST >> /kyrix/config.txt
 echo $USER_NAME >> /kyrix/config.txt
 echo $USER_PASSWORD >> /kyrix/config.txt
-echo "kyrix" >> /kyrix/config.txt
+echo $KYRIX_DB >> /kyrix/config.txt
 echo "/kyrix/compiler" >> /kyrix/config.txt
 
 IGNORE_RX="(NOTICE|HINT|already exists)"
@@ -49,9 +49,6 @@ psql $PGCONN_STRING_POSTGRES/postgres -c "CREATE DATABASE $SRCDATA_DB OWNER $USE
 #EXT_CMD='CREATE EXTENSION IF NOT EXISTS postgis;CREATE EXTENSION IF NOT EXISTS postgis_topology;CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder'
 #psql $PGCONN_STRING_USER/kyrix -c "$EXT_CMD" | egrep -v "$IGNORE_RX" 2>&1 || true
 #psql $PGCONN_STRING_USER/$SRCDATA_DB -c "$EXT_CMD" | egrep -v "$IGNORE_RX" 2>&1 || true
-
-# workaround this issue: https://github.com/tracyhenry/Kyrix/issues/42
-psql $PGCONN_STRING_USER/kyrix -c "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int, CONSTRAINT PK_project PRIMARY KEY (name));"
 
 cd /kyrix/back-end
 
@@ -79,8 +76,8 @@ while [ 1 ]; do KYRIX_PID=`ps awwwx | grep Slf4jMavenTransferListener | grep -v 
 
 echo "*** starting backend server..."
 cd /kyrix/back-end
+rm -f mvn-exec.out && touch mvn-exec.out
 mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn exec:java -Dexec.mainClass="main.Main" | stdbuf -oL grep -v Downloading: | tee mvn-exec.out &
-touch mvn-exec.out
 # note(asah): limited grep behavior inside alpine/busybox, but still this is awkward due to my limited shell scripting skills.
 while [ 1 ]; do if grep -E -q 'Done precomputing|Backend server started' mvn-exec.out; then break; fi; spin "waiting for backend server"; sleep 1; done
 
@@ -98,5 +95,8 @@ while [ 1 ]; do
 done
 echo "yes" > /kyrix-started
 
-echo "*** done! Kyrix ready at: http://<host>:8000/  (index recompute may need a few minutes, blank screens until then - watch this log for messages)"
+if [ "x$DBTYPE" = "xpsql" ]; then
+    KYRIX_IP=$(curl -s ifconfig.me)
+fi
 
+echo "*** done! Kyrix ready at: http://$KYRIX_IP:8000/"

@@ -10,5 +10,5 @@ $PSQL $PGCONN -t -c "drop table if exists dots_uniform cascade; create table dot
 
 for i in {1..100}; do
     echo `date +%s`": loading dots_uniform data #$i of 100..."
-    $PSQL $PGCONN -q -t -c "insert into dots_uniform (id,w,h, citus_distribution_id) select id, (random()*1000000)::bigint, (random()*100000)::bigint, (random()*2147483648*2.0 - 2147483648)::int from generate_series(1,10000*$SCALE) id;"
+    $PSQL $PGCONN -q -t -c "insert into dots_uniform (id,w,h, citus_distribution_id) select id, (random()*100000)::bigint, (random()*100000)::bigint, (random()*2147483648*2.0 - 2147483648)::int from generate_series(1,10000*$SCALE) id;"
 done

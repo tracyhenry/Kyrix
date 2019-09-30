@@ -5,6 +5,12 @@ echo "redeploying citus on kubernetes..."
 
 # TODO: support non-GCP
 
+
+
+# =================================================================================
+# Setting up citus-related kubernetes services, deployments, etc.
+# Waiting/spinning until all services/master/workers/Postgres/Citus to start
+
 echo "checking Kubernetes for number of nodes..."
 K8S_CLUSTER=`kubectl config current-context|perl -ne 's@.+_@@;print;'`
 echo "k8s current cluster: $K8S_CLUSTER"
@@ -13,13 +19,13 @@ echo "k8s first pool: $K8S_POOL"
 K8S_NUM_NODES=`gcloud container node-pools describe $K8S_POOL --cluster $K8S_CLUSTER | perl -ane 'print $F[1] if $F[0] eq "initialNodeCount:"' `
 echo "k8s nodes in pool: $K8S_NUM_NODES"
 NUM_WORKERS=`expr $K8S_NUM_NODES - 2`
-echo "setting worker-deployment.yaml replicas to $NUM_WORKERS (reserving nodes for kyrix server and citus master/coordinator"
-perl -pi -e "s/replicas:.*/replicas: $NUM_WORKERS/g" worker-deployment.yaml
-grep replicas worker-deployment.yaml
+echo "setting k8s-yaml/worker-deployment.yaml replicas to $NUM_WORKERS (reserving nodes for kyrix server and citus master/coordinator"
+perl -pi -e "s/replicas:.*/replicas: $NUM_WORKERS/g" k8s-yaml/worker-deployment.yaml
+grep replicas k8s-yaml/worker-deployment.yaml
 
 source ../docker-scripts/spinner.sh
-source setup-db-vars.env > /dev/null
-echo "$NUM_WORKERS workers found in worker-deployment.yaml"
+source env/setup-pg-vars.env > /dev/null
+echo "$NUM_WORKERS workers found in k8s-yaml/worker-deployment.yaml"
 
 echo "deleting existing citus deployment..."
 active=`kubectl get -o name pods,deployments,services,pvc | egrep -v '(kubernetes|kyrix)' | xargs echo`
@@ -31,7 +37,7 @@ while [ 1 ]; do w=`kubectl get -o name pods,deployments,services,pvc | egrep -v 
 
 echo "starting new deployment..."  # TODO: manager-deployment
 for file in master-service master-deployment worker-deployment; do
-    kubectl create -f $file.yaml
+    kubectl create -f k8s-yaml/$file.yaml
 done
 
 echo "exposing bastion early - it take minutes to allocate an external IP"
@@ -42,7 +48,7 @@ echo "waiting for new deployment to complete..."
 while [ 1 ]; do w=`kubectl get pods | egrep -c 'worker.+Running'`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w kubernetes containers running, waiting for $NUM_WORKERS"; sleep 3; done
 echo "all $NUM_WORKERS kubernetes containers running."
 
-source setup-citus-vars.env > /dev/null
+source env/setup-citus-vars.env > /dev/null
 
 # convenience for developers
 kubectl exec -it $MASTER -- su - postgres -c "echo \"\\set PROMPT1 '%n@%/%R%# '\" > .psqlrc"
@@ -55,15 +61,27 @@ while [ 1 ]; do w=`for w in $WORKERS; do kubectl exec -it $w -- su - postgres -c
 SQL_EXTENSIONS="psql -t -c \"select * from pg_extension\""
 while [ 1 ]; do w=`for w in $WORKERS; do kubectl exec -it $w -- su - postgres -c "psql -t -c \"select count(*) from pg_extension where extname = 'citus';\""; done | grep -c 1`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w postgres servers initialized with citus, waiting for $NUM_WORKERS"; sleep 3; done
 
+
+
+
+
+
+
+
+# =================================================================================
+# Setting up Postgres and Citus
+# Registering workers with the master, setting up postgres username/password
+# Creating extensions: plv8, postgis, citus. (is citus needed?)
+
 echo "registering workers with citus master/coordinator..."
 echo "WORKER_IPS=$WORKER_IPS"
 for w in $WORKER_IPS; do kubectl exec $MASTER -- su - postgres -c "psql -t -c \"SELECT * from master_add_node('$w', 5432);\""|grep 5432; done > /dev/null
-# TODO: for now, $USERNAME is created as a superuser
 
-echo "creating user $USERNAME, setting users passwords, creating db $DBNAME..."
+# TODO: for now, $USERNAME is created as a superuser
+echo "creating user $USERNAME, setting users passwords, creating db $KYRIX_DB..."
 # 
 USER_CMD="SET password_encryption = '$PG_ENCRYPTION';create user $USERNAME superuser password '$USER_PASSWORD'; alter user postgres password '$POSTGRES_PASSWORD'"
-for w in $CITUS_ALL_NODES; do kubectl exec $w -- su - postgres -c "psql -t -c \"$USER_CMD\"; createdb --owner $USERNAME $DBNAME"; done|grep ALTER > /dev/null
+for w in $CITUS_ALL_NODES; do kubectl exec $w -- su - postgres -c "psql -t -c \"$USER_CMD\"; createdb --owner $USERNAME $KYRIX_DB"; done|grep ALTER > /dev/null
 
 echo "opening master/coordinator postgres instance for access..."
 # important: citus installs on Docker startup and opens all forms of connection to being passwordless,
@@ -77,29 +95,25 @@ kubectl exec $MASTER -- bash -c "echo \"host all all $POD_INTERNAL_SUBNET trust\
 kubectl exec $MASTER -- su - postgres -c "/usr/lib/postgresql/11/bin/pg_ctl -D /var/lib/postgresql/data reload -s"
 #dbg kubectl exec $MASTER -- cat /var/lib/postgresql/data/pg_hba.conf | egrep '^(host|local)'
 
-echo "setting up kyrix database $DBNAME (note: if using postgis, initialization can be slow). "
-#EXT_CMD='create extension if not exists citus; create extension if not exists postgis; create extension if not exists postgis_topology; create extension if not exists postgis_sfcgal; create extension if not exists fuzzystrmatch; create extension if not exists address_standardizer; create extension if not exists address_standardizer_data_us; create extension if not exists postgis_tiger_geocoder';
+echo "setting up kyrix database $KYRIX_DB (creating citus/plv8, registering citus workers)..."
 EXT_CMD="create extension if not exists citus; create extension if not exists plv8"
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"$EXT_CMD\" "; stty sane  # HARMLESS HACK: for some reason the EXT_CMD corrupts the TTY on my Mac iTerm2
-# run_command_on_workers() can't run until citus is initialized and master_add_node() called.
-for w in $WORKERS; do kubectl exec $w -- su - postgres -c "psql $DBNAME -c \"$EXT_CMD\" " > /dev/null 2> /dev/null & done;
+kubectl exec $MASTER -- su - postgres -c "psql $KYRIX_DB -c \"$EXT_CMD\" "; stty sane  # HARMLESS HACK: for some reason the EXT_CMD corrupts the TTY on my Mac iTerm2
+for w in $WORKERS; do kubectl exec $w -- su - postgres -c "psql $KYRIX_DB -c \"$EXT_CMD\" " > /dev/null 2> /dev/null & done;
+while [ 1 ]; do w=`for w in $WORKERS; do stty sane; kubectl exec -it $w -- su - postgres -c "psql $KYRIX_DB -t -c \"select count(*) from pg_extension where extname = 'plv8' or extname='citus';\""; done | grep -c 2`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w postgres servers initialized with extensions, waiting for $NUM_WORKERS (be patient)"; sleep 3; done; stty sane
 
-while [ 1 ]; do w=`for w in $WORKERS; do stty sane; kubectl exec -it $w -- su - postgres -c "psql $DBNAME -t -c \"select count(*) from pg_extension where extname = 'plv8' or extname='citus';\""; done | grep -c 2`; if [ $w = $NUM_WORKERS ]; then break; fi; echo "$w postgres servers initialized with extensions, waiting for $NUM_WORKERS (be patient)"; sleep 3; done; stty sane
-
+# master_add_node needs to be called for every database
 echo "registering workers with master..."
-for w in $WORKER_IPS; do kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -t -c \"SELECT * from master_add_node('$w', 5432);\""|grep 5432; done > /dev/null
+for w in $WORKER_IPS; do kubectl exec $MASTER -- su - postgres -c "psql $KYRIX_DB -t -c \"SELECT * from master_add_node('$w', 5432);\""|grep 5432; done > /dev/null
 
-echo "creating kyrix_bbox_coords_type"
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"DROP TYPE if exists kyrix_bbox_coords_type CASCADE;\"" > /dev/null
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$CITUS\\\$ DROP TYPE if exists kyrix_bbox_coords_type CASCADE; \\\$CITUS\\\$);\"" > /dev/null
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"CREATE TYPE kyrix_bbox_coords_type as (cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision);\"" > /dev/null
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$CITUS\\\$  CREATE TYPE kyrix_bbox_coords_type as (cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision); \\\$CITUS\\\$);\"" > /dev/null
-# identity bbox_coords function, for testing incl performance
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"DROP FUNCTION IF EXISTS kyrix_bbox_coords_identity;\""
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"CREATE OR REPLACE FUNCTION kyrix_bbox_coords_identity(x int,y int) returns kyrix_bbox_coords_type AS \\\$\\\$ return { cx: x, cy: y, minx: x-0.5, miny: y-0.5, maxx: x+0.5, maxy: y+0.5, } \\\$\\\$ language plv8 stable;\""
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$CITUS\\\$ DROP FUNCTION if exists kyrix_bbox_coords_identity \\\$CITUS\\\$);\""
-# master needs stable, workers need voltile
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(s) FROM ( select replace(pg_catalog.pg_get_functiondef('kyrix_bbox_coords_identity(int,int)'::regprocedure::oid)::text, 'STABLE', '') s)t;\""
+
+
+
+
+
+
+# =================================================================================
+# Tuning Postgres, setting up more parallel workers, more ram, etc.
+# Testing citus, parallel postgres, plv8, etc
 
 function tune_postgres() {
     CONF=/var/lib/postgresql/data/postgresql.conf
@@ -110,7 +124,7 @@ function tune_postgres() {
     kubectl exec $1 -- sed -i "s@^[#]\?max_worker_processes.*@max_worker_processes = '24'@" $CONF
     kubectl exec $1 -- sed -i "s@^[#]\?max_parallel_workers.*@max_parallel_workers = '24'@" $CONF
     kubectl exec $1 -- sed -i "s@^[#]\?max_parallel_workers_per_gather.*@max_parallel_workers_per_gather = '24'@" $CONF
-    kubectl exec $1 -- bash -c "echo \"plv8.start_proc = 'commonjs.plv8_startup'\" >> $CONF; echo \"citus.max_files_per_process = '5000'\" >> $CONF; echo \"citus.task_executor_type = 'task-tracker'\" >> $CONF; echo \"citus.max_connections = '500'\" >> $CONF"
+    kubectl exec $1 -- bash -c "echo \"plv8.start_proc = 'commonjs.plv8_startup'\" >> $CONF; echo \"citus.max_files_per_process = '5000'\" >> $CONF; echo \"citus.max_connections = '500'\" >> $CONF; echo \"citus.shard_count = '$NUM_SHARDS'\" >> $CONF"
     kubectl exec $1 -- su - postgres -c "/usr/lib/postgresql/11/bin/pg_ctl -D /var/lib/postgresql/data reload -s"
 }
 
@@ -120,6 +134,7 @@ MASTER_RAM=$(kubectl exec $MASTER free | grep Mem)
 SHARED_BUFFERS_RAM=$(echo $MASTER_RAM | perl -ane 'printf("%.2fg", $F[1]/1024/1024/4);')
 WORK_MEM_RAM=$(echo $MASTER_RAM| perl -ane 'printf("%.2fm", $F[1]/1024/100*3);')
 MAINTENANCE_MEM_RAM=$(echo $MASTER_RAM| perl -ane 'printf("%.2fm", $F[1]/1024/100*10);')
+NUM_SHARDS=$(python -c "print($NUM_WORKERS * $(kubectl exec $MASTER -- nproc))")
 tune_postgres $MASTER 
 
 WORKER_RAM=$(kubectl exec $FIRST_WORKER free | grep Mem)
@@ -129,14 +144,24 @@ MAINTENANCE_MEM_RAM=$(echo $WORKER_RAM| perl -ane 'printf("%.2fm", $F[1]/1024/10
 for w in $CITUS_ALL_NODES; do tune_postgres $w; done > /dev/null
 
 echo "testing citus..."
-./test-citus
+./test/test-citus
 echo "testing plv8..."
-./test-plv8
-#./test-postgis
+./test/test-plv8
+#./test/test-postgis
+
+
+
+
+
+
+
+
+# =================================================================================
+# Installing d3
 
 echo "installing d3 on master and every worker..."
-for w in $CITUS_ALL_NODES; do kubectl exec $w -- su - postgres -c "./install-d3.sh $DBNAME"; done > /dev/null
-kubectl exec $MASTER -- su - postgres -c "psql $DBNAME -c \"select run_command_on_workers(\\\$\\\$ DO \\\$v8\\\$ require('d3'); \\\$v8\\\$ language plv8; \\\$\\\$)\""
+for w in $CITUS_ALL_NODES; do kubectl exec $w -- su - postgres -c "./install-d3.sh $KYRIX_DB"; done > /dev/null
+kubectl exec $MASTER -- su - postgres -c "psql $KYRIX_DB -c \"select run_command_on_workers(\\\$\\\$ DO \\\$v8\\\$ require('d3'); \\\$v8\\\$ language plv8; \\\$\\\$)\""
 
 echo "waiting for k8s bastion startup (slow because of external IP allocation)..."
 
@@ -147,8 +172,8 @@ echo "installing developer tools (optional)"
 kubectl exec -it $MASTER -- sh -c 'if [ -x "$(command -v apt)" ]; then apt install -y iputils-ping telnet emacs; fi' > /dev/null 2>&1  # ubuntu
 kubectl exec -it $MASTER -- sh -c 'if [ -x "$(command -v apk)" ]; then apk install -y bash busybox-extras emacs; fi' > /dev/null 2>&1  # alpine
 
-source setup-bastion-vars.env > /dev/null
+source env/setup-bastion-vars.env > /dev/null
 
 echo "done! to connect to citus:"
-echo " - easy: source ./cluster-scripts/setup-shell-vars.env; kyrix-psql"
-echo " - manually: psql postgres://$USERNAME:$USER_PASSWORD@$BASTION_IP/$DBNAME   (warning: uses old MD5 auth: not safe over the open internet)"
+echo " - easy: source env/setup-shell-vars.env; kyrix-psql"
+echo " - manually: psql postgres://$USERNAME:$USER_PASSWORD@$BASTION_IP/$KYRIX_DB   (warning: uses old MD5 auth: not safe over the open internet)"
