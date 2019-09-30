@@ -41,6 +41,5 @@ kyrix_1  | Backend server started...
 * [API Reference](https://github.com/tracyhenry/Kyrix/wiki/API-Reference)
 * [How to Contribute](https://github.com/tracyhenry/Kyrix/wiki/How-to-Contribute)
 * [Parallel Indexing](https://github.com/tracyhenry/Kyrix/wiki/Parallel-Indexing-Instructions)
-* [Manual Installation](https://github.com/tracyhenry/Kyrix/wiki/Installation-Details)
 * [Web Embedding](https://github.com/tracyhenry/Kyrix/wiki/Web-Embedding)
 * [Docker Config Details](https://github.com/tracyhenry/Kyrix/wiki/Docker-Config-Details)
