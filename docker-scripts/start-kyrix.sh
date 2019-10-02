@@ -47,19 +47,8 @@ psql $PGCONN_STRING_POSTGRES/postgres -c "CREATE DATABASE kyrix OWNER $USER_NAME
 #psql $PGCONN_STRING_USER/kyrix -c "$EXT_CMD" | egrep -v "$IGNORE_RX" 2>&1 || true
 #psql $PGCONN_STRING_USER/$SRCDATA_DB -c "$EXT_CMD" | egrep -v "$IGNORE_RX" 2>&1 || true
 
-cd /kyrix/back-end
-
-while [ 1 ]; do KYRIX_PID=`ps awwwx | grep Slf4jMavenTransferListener | grep -v grep | head -1 | awk '{print $1}' | tr -d '\n'`; if [ "x$KYRIX_PID" == "x" ]; then break; fi; spin "backend server found - killing $KYRIX_PID..."; kill $KYRIX_PID; sleep 1; done
-
-echo "*** starting backend server..."
-cd /kyrix/back-end
-mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out >/dev/null 2>&1
-rm -f mvn-exec.out && touch mvn-exec.out
-mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn exec:java -Dexec.mainClass="main.Main" | stdbuf -oL grep -v Downloading: | tee mvn-exec.out &
-# note(asah): limited grep behavior inside alpine/busybox, but still this is awkward due to my limited shell scripting skills.
-while [ 1 ]; do if grep -E -q 'Done precomputing|Backend server started' mvn-exec.out; then break; fi; spin "waiting for backend server"; sleep 1; done
-
-if [ "x$START_APP" = "x1" ]; then
+# loading the data for example app if 1) app is set to NBA, i.e. it is single-node docker; or 2) START_APP is set to 1
+if [ "x$START_APP" = "x1" ] || [ "x$SRCDATA_PROJECT_NAME" = "xnba" ]; then
     # citus: this data isn't distributed, so these DBs
     psql $PGCONN_STRING_POSTGRES/postgres -c "CREATE DATABASE $SRCDATA_DB OWNER $USER_NAME;" | egrep -v "$IGNORE_RX" 2>&1 || true
 
@@ -82,7 +71,23 @@ if [ "x$START_APP" = "x1" ]; then
         echo "raw data records loaded: $numrecs"
         # TODO(asah): test for >SRCDATA_DB_TEST_TABLE_MIN_RECS
     fi
+fi
 
+# starting the backend
+cd /kyrix/back-end
+
+while [ 1 ]; do KYRIX_PID=`ps awwwx | grep Slf4jMavenTransferListener | grep -v grep | head -1 | awk '{print $1}' | tr -d '\n'`; if [ "x$KYRIX_PID" == "x" ]; then break; fi; spin "backend server found - killing $KYRIX_PID..."; kill $KYRIX_PID; sleep 1; done
+
+echo "*** starting backend server..."
+cd /kyrix/back-end
+mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn compile | tee mvn-compile.out >/dev/null 2>&1
+rm -f mvn-exec.out && touch mvn-exec.out
+mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn exec:java -Dexec.mainClass="main.Main" | stdbuf -oL grep -v Downloading: | tee mvn-exec.out &
+# note(asah): limited grep behavior inside alpine/busybox, but still this is awkward due to my limited shell scripting skills.
+while [ 1 ]; do if grep -E -q 'Done precomputing|Backend server started' mvn-exec.out; then break; fi; spin "waiting for backend server"; sleep 1; done
+
+# indexing the app if START_APP is set to 1
+if [ "x$START_APP" = "x1" ]; then
     echo "*** (re)indexing (force=$KYRIX_DB_INDEX_FORCE)..."
     FORCE=$KYRIX_DB_INDEX_FORCE $KYRIX_DB_INDEX_CMD || true
 
