@@ -2,7 +2,7 @@
 
 KV=${1:-tracyhenry/kyrix:latest}
 
-sudo docker build ../ -f ../Dockerfile-kyrix-alpine -t $KV
+sudo docker build ../ -f ../docker-scripts/Dockerfile-kyrix-alpine -t $KV
 sudo docker push $KV
 
 #escaping / in $KV
