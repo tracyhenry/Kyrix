@@ -1,5 +1,4 @@
-
-# Kyrix - Easy Creation of Pan/zoom Data Visualizations at Scale
+# Kyrix - Democratizing Pan/zoom Data Visualizations at Scale
 
 ![Build status](https://travis-ci.org/tracyhenry/Kyrix.svg?branch=master) [![code style: 
 prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
