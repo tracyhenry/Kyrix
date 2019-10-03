@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# usage:
+# --nba: Run the NBA example upon start. You would need to wait the indexing for about a minute.
+# --dbport PORT_NUMBER: Specify the host port number of the postgres container.
+# --kyrixport PORT_NUMBER: Specify the host port number of the kyrix backend container.
+# --postgis: Start the DB container with postgis.
+# --build: Rebuild the docker images before starting.
+
 echo -e "\nStopping existing containers..."
 docker-compose stop
 echo -e "Done.\n"
