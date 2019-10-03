@@ -4,7 +4,7 @@
 # --nba: Run the NBA example upon start. You would need to wait the indexing for about a minute.
 # --dbport PORT_NUMBER: Specify the host port number of the postgres container.
 # --kyrixport PORT_NUMBER: Specify the host port number of the kyrix backend container.
-# --postgis: Start the DB container with postgis.
+# --postgis: Start the DB container with postgis. You need to either start from scratch or run with --build to let docker rebuild the images.
 # --build: Rebuild the docker images before starting.
 
 echo -e "\nStopping existing containers..."
@@ -80,6 +80,7 @@ docker exec -it kyrix_db_1 su - postgres -c "./install-d3.sh kyrix" > /dev/null
 echo -e "Done.\n"
 
 # waiting for kyrix back-end to start
+spin_msg_printed=0
 while [ 1 ]; do
     if docker logs 2>&1 --since $start_time kyrix_kyrix_1 | grep -q "Backend server started"; then
         break;
