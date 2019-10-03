@@ -93,13 +93,11 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
                     "Transform database marked 'src_db_same_as_kyrix' - trying to pushdown...");
             Statement pushdownIndexStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
-            String transformResultType = bboxTableName + "_transform_response_type";
             String transformFuncName = bboxTableName + "_transform_func";
             String bboxFuncName = bboxTableName + "_bbox_func";
             UnaryOperator<String> tsql =
                     (sqlstr) -> {
-                        return (sqlstr.replaceAll("transtype", transformResultType)
-                                .replaceAll("transfunc", transformFuncName)
+                        return (sqlstr.replaceAll("transfunc", transformFuncName)
                                 .replaceAll("bboxfunc", bboxFuncName)
                                 .replaceAll("bboxtbl", bboxTableName)
                                 .replaceAll("dbsource", trans.getDbsource()));
