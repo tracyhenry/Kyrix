@@ -124,13 +124,13 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     // HashMap<String, Aggregate> rowAgg = getDummyAgg(o);
                     ArrayList<String> curRow = o.value();
                     String curAggStr = curRow.get(numRawColumns);
-                    HashMap<String, Aggregate> curMap = new HashMap<>();
-                    Type type = new TypeToken<HashMap<String, Aggregate>>() {}.getType();
+                    HashMap<String, ArrayList<Double>> curMap = new HashMap<>();
+                    Type type = new TypeToken<HashMap<String, ArrayList<Double>>>() {}.getType();
                     curMap = this.gson.fromJson(curAggStr, type);
 
                     // boundary case: bottom level
                     // if (i == numLevels) curRow.set(numRawColumns, "{}");
-                    int count = curMap.entrySet().iterator().next().getValue().count;
+                    int count = curMap.entrySet().iterator().next().getValue().get(0).intValue();
 
                     minWeight = Math.min(minWeight, count);
                     maxWeight = Math.max(maxWeight, count);
@@ -184,7 +184,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     // nearestNeighbor.set(numRawColumns, String.valueOf(clusterNumAfterIncrement));
 
                     String nnAggStr = nearestNeighbor.get(numRawColumns);
-                    HashMap<String, Aggregate> nnMap = new HashMap<>();
+                    HashMap<String, ArrayList<Double>> nnMap = new HashMap<>();
                     nnMap = this.gson.fromJson(nnAggStr, type);
                     updateAgg(nnMap, curMap);
                     nearestNeighbor.set(numRawColumns, gson.toJson(nnMap));
@@ -367,8 +367,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         return "";
     }
 
-    private HashMap<String, Aggregate> getDummyAgg(ArrayList<String> row) {
-        HashMap<String, Aggregate> dummy = new HashMap<>();
+    private HashMap<String, ArrayList<Double>> getDummyAgg(ArrayList<String> row) {
+        HashMap<String, ArrayList<Double>> dummy = new HashMap<>();
         for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
             // System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
             Double value = 0.0;
@@ -377,37 +377,49 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             } catch (Exception e) {
                 throw new Error("Indexing AutoDD: Aggregate Column must be numeric");
             }
-            dummy.put(entry.getKey(), new Aggregate(1, value, value, value, value * value));
+            ArrayList<Double> arr = new ArrayList<>();
+            arr.add(1.0); // count
+            arr.add(value); // sum
+            arr.add(value); // max
+            arr.add(value); // min
+            arr.add(value * value); // squaresum
+            dummy.put(entry.getKey(), arr);
         }
         return dummy;
     }
 
-    private HashMap<String, Aggregate> updateAgg(
-            HashMap<String, Aggregate> parent, HashMap<String, Aggregate> child) {
+    private HashMap<String, ArrayList<Double>> updateAgg(
+            HashMap<String, ArrayList<Double>> parent, HashMap<String, ArrayList<Double>> child) {
         // System.out.println("parent before: " + parent);
         for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
+            // Aggregate entry: [count, sum, max, min, squaresum]
             String key = entry.getKey();
-            Aggregate p = parent.get(key);
-            Aggregate c = child.get(key);
-            p.count = p.count + c.count;
-            p.sum = p.sum + c.sum;
-            if (c.max > p.max) p.max = c.max;
-            if (c.min < p.min) p.min = c.min;
-            p.squaresum = p.squaresum + c.squaresum;
+            ArrayList<Double> p = parent.get(key);
+            ArrayList<Double> c = child.get(key);
+            // count
+            p.set(0, p.get(0) + c.get(0));
+            // sum
+            p.set(1, p.get(1) + c.get(1));
+            // max
+            if (c.get(2) > p.get(2)) p.set(2, c.get(2));
+            // min
+            if (c.get(3) < p.get(3)) p.set(3, c.get(3));
+            // squaresum
+            p.set(4, p.get(4) + c.get(4));
         }
         // System.out.println("parent after:" + parent);
         return parent;
     }
 }
 
-class Aggregate {
+/*class ArrayList<Double> {
     public int count;
     public double sum;
     public double max;
     public double min;
     public double squaresum;
 
-    Aggregate() {
+    ArrayList<Double>() {
         this.count = 0;
         this.sum = 0;
         this.min = Integer.MAX_VALUE;
@@ -415,7 +427,7 @@ class Aggregate {
         this.squaresum = 0;
     }
 
-    Aggregate(int _count, double _sum, double _min, double _max, double _squaresum) {
+    ArrayList<Double>(int _count, double _sum, double _min, double _max, double _squaresum) {
         this.count = _count;
         this.sum = _sum;
         this.min = _min;
@@ -438,4 +450,4 @@ class Aggregate {
                 + squaresum
                 + '}';
     }
-}
+}*/

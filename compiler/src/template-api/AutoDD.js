@@ -210,7 +210,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         data.forEach(d => {
             d.cluster_agg = JSON.parse(d.cluster_agg);
             d.cluster_num = String(
-                d.cluster_agg[Object.keys(d.cluster_agg)[0]].count
+                d.cluster_agg[Object.keys(d.cluster_agg)[0]][0]
             );
         });
         var circleSizeInterpolator = d3
