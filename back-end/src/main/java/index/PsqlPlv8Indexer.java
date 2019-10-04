@@ -2,11 +2,13 @@ package index;
 
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import main.Config;
 import main.DbConnector;
 import main.Main;
 import project.Canvas;
 import project.Layer;
+import project.Placement;
 import project.Transform;
 
 /** Created by wenbo on 9/30/19. */
@@ -39,13 +41,14 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
 
         // create bbox table
         sql = "CREATE UNLOGGED TABLE " + bboxTableName + " (";
-        for (int i = 0; i < trans.getColumnNames().size(); i++)
-            sql += trans.getColumnNames().get(i) + " text, ";
+        ArrayList<String> colNames = trans.getColumnNames();
+        for (int i = 0; i < colNames.size(); i++) sql += colNames.get(i) + " text, ";
         sql +=
-                "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)";
+                "cx double precision, cy double precision, "
+                        + "minx double precision, miny double precision, "
+                        + "maxx double precision, maxy double precision, geom box)";
         System.out.println(sql);
         bboxStmt.executeUpdate(sql);
-        bboxStmt.close();
 
         // if this is an empty layer, return
         if (trans.getDb().equals("")) return;
@@ -57,21 +60,94 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
                             + Config.database
                             + "** database.");
 
-        // create trans && bbox functions
+        // create trans function
         String transFuncName = bboxTableName + "_transform_func";
-        String bboxFuncName = bboxTableName + "_bbox_func";
         bboxStmt.executeUpdate("DROP FUNCTION IF EXISTS " + transFuncName);
-        bboxStmt.executeUpdate("DROP FUNCTION IF EXISTS " + bboxFuncName);
 
         sql =
                 "CREATE or REPLACE FUNCTION "
                         + transFuncName
-                        + "(obj json, cw int, ch int, params json) RETURNS json"
+                        + "(obj json, cw int, ch int, params json) RETURNS json "
                         + "AS $$ "
                         + trans.getTransformFuncBody()
-                        + " $$";
+                        + " $$ LANGUAGE plv8";
+        System.out.println(sql);
         bboxStmt.executeUpdate(sql);
 
-        sql = "CREATE or REPLACE FUNCTION " + bboxFuncName + "(v json, )";
+        // ================= constructing the big sql =================
+        sql = "INSERT INTO " + bboxTableName + "(";
+        for (int i = 0; i < colNames.size(); i++) sql += colNames.get(i) + ", ";
+        sql += "cx, cy, minx, miny, maxx, maxy) " + "SELECT ";
+
+        // raw fields
+        for (int i = 0; i < colNames.size(); i++) sql += colNames.get(i) + ",";
+
+        // cx cy, w and h
+        if (l.isStatic()) sql += "0, 0, 0, 0, 0, 0 ";
+        else {
+            String cx, cy, w, h;
+            Placement p = l.getPlacement();
+            cx =
+                    (p.getCentroid_x().substring(0, 4).equals("full")
+                            ? "0"
+                            : p.getCentroid_x().substring(4));
+            cy =
+                    (p.getCentroid_y().substring(0, 4).equals("full")
+                            ? "0"
+                            : p.getCentroid_y().substring(4));
+            w = (p.getWidth().substring(0, 4).equals("full") ? "1e20" : p.getWidth().substring(4));
+            h =
+                    (p.getHeight().substring(0, 4).equals("full")
+                            ? "1e20"
+                            : p.getHeight().substring(4));
+            sql += cx + "::float, " + cy + "::float, ";
+            sql += cx + "::float - " + w + "::float / 2.0, ";
+            sql += cy + "::float - " + h + "::float / 2.0, ";
+            sql += cx + "::float + " + w + "::float / 2.0, ";
+            sql += cy + "::float + " + h + "::float / 2.0 ";
+        }
+
+        // run trans func
+        sql += "FROM (SELECT ";
+        for (int i = 0; i < colNames.size(); i++)
+            sql +=
+                    "(v->>'"
+                            + colNames.get(i)
+                            + "') as "
+                            + colNames.get(i)
+                            + (i < colNames.size() - 1 ? ", " : " ");
+        sql +=
+                "FROM ("
+                        + "SELECT "
+                        + transFuncName
+                        + "(row_to_json(rawquery),"
+                        + c.getW()
+                        + ","
+                        + c.getH()
+                        + ",\'"
+                        + Main.getProject().getRenderingParams().replaceAll("\'", "\'\'")
+                        + "\'::json) v FROM ("
+                        + removeTrailingSemiColon(trans.getQuery())
+                        + ") rawquery"
+                        + ") transjson"
+                        + ") transsql";
+        System.out.println(sql);
+        bboxStmt.executeUpdate(sql);
+
+        // update geom
+        sql = "UPDATE " + bboxTableName + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
+        System.out.println(sql);
+        bboxStmt.executeUpdate(sql);
+
+        // create spatial index
+        sql = "CREATE INDEX sp_" + bboxTableName + " ON " + bboxTableName + " USING gist (geom);";
+        System.out.println(sql);
+        bboxStmt.executeUpdate(sql);
+    }
+
+    public String removeTrailingSemiColon(String q) {
+        while (q.charAt(q.length() - 1) == ' ') q = q.substring(0, q.length() - 1);
+        if (q.charAt(q.length() - 1) == ';') q = q.substring(0, q.length() - 1);
+        return q;
     }
 }

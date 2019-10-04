@@ -16,12 +16,12 @@ var teamLogoTransform = new Transform(
 
 var teamTimelineTransform = new Transform(
     "select game_id, year, month, day, home_team, away_team, home_score, away_score, 1 from games;",
-    "nba",
+    "kyrix",
     function(obj, cw, ch, params) {
         if (!("d3" in plv8)) {
             plv8.d3 = require("d3");
         }
-        d3 = plv8.d3;
+        var d3 = plv8.d3;
         // x
         var curDate = new Date(obj.year, obj.month - 1, obj.day);
         obj.x = d3
@@ -56,7 +56,7 @@ var teamTimelineTransform = new Transform(
 
 var teamTimelineStaticTransform = new Transform(
     "select city, name, abbr from teams;",
-    "nba",
+    "kyrix",
     "",
     [],
     true
@@ -66,7 +66,7 @@ var playByPlayTransform = new Transform(
     "select games.game_id, period, qtr_time, score, margin, home_desc, away_desc, home_team, away_team, play_id, h_player_id, a_player_id" +
         " from plays, games" +
         " where plays.game_id = games.game_id;",
-    "nba",
+    "kyrix",
     function(obj, cw, ch, params) {
         // y
         obj.y = (obj.play_id + 1) * 160;
@@ -101,7 +101,7 @@ var playByPlayTransform = new Transform(
 
 var playByPlayStaticTransform = new Transform(
     "select team1.abbr as abbr1, team2.abbr as abbr2 from teams as team1, teams as team2;",
-    "nba",
+    "kyrix",
     "",
     [],
     true
@@ -109,7 +109,7 @@ var playByPlayStaticTransform = new Transform(
 
 var boxscoreTransform = new Transform(
     "select * from player_boxscore;",
-    "nba",
+    "kyrix",
     "",
     [],
     true

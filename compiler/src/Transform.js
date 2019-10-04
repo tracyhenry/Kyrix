@@ -1,4 +1,4 @@
-var getBodyStringOfFunction = require("template-api/Renderers")
+var getBodyStringOfFunction = require("./template-api/Renderers")
     .getBodyStringOfFunction;
 
 // simple parse JS function for its parameters - note that it only works in simple cases, like ours
@@ -31,7 +31,7 @@ function Transform(query, db, transformFunc, columnNames, separable) {
             );
 
         this.transformFunc = query["transformFunc"];
-        this.transformFuncBody = getFuncBody(this.transformFunc);
+        this.transformFuncBody = getBodyStringOfFunction(this.transformFunc);
         if (typeof this.transformFunc !== "function")
             throw new Error(
                 "Constructing Transform: transformFunc required and must be a JavaScript function"
@@ -95,7 +95,8 @@ function Transform(query, db, transformFunc, columnNames, separable) {
     this.db = db;
     this.columnNames = columnNames;
     this.transformFunc = transformFunc;
-    this.transformFuncBody = getFuncBody(this.transformFunc);
+    if (transformFunc == "") this.transformFuncBody = "";
+    else this.transformFuncBody = getBodyStringOfFunction(this.transformFunc);
     this.separable = separable;
 }
 
