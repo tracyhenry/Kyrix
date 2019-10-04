@@ -20,7 +20,9 @@ function AutoDD(args) {
         "contour",
         "contour+object",
         "heatmap",
-        "heatmap+object"
+        "heatmap+object",
+        "glyph",
+        "glyph+object"
     ]);
     if (!allRenderingModes.has(args.rendering.mode))
         throw new Error("Constructing AutoDD: unsupported rendering mode.");
@@ -44,6 +46,7 @@ function AutoDD(args) {
         (args.rendering.mode == "object" ||
             args.rendering.mode == "object+clusternum" ||
             args.rendering.mode == "circle+object" ||
+            args.rendering.mode == "glyph+object" ||
             args.rendering.mode == "contour+object" ||
             args.rendering.mode == "heatmap+object") &&
         (!("obj" in args.rendering) || !("renderer" in args.rendering.obj))
@@ -66,6 +69,7 @@ function AutoDD(args) {
             args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
                 this.heatmapRadius * 2 + 1;
     }
+    args.aggregate = "aggregate" in args ? args.aggregate : {columns: []};
 
     // check required args
     var requiredArgs = [
@@ -162,6 +166,7 @@ function AutoDD(args) {
     this.rendering =
         "renderer" in args.rendering.obj ? args.rendering.obj.renderer : null;
     this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
+    this.aggColumns = "columns" in args.aggregate ? args.aggregate.columns : [];
     this.numLevels =
         "numLevels" in args.rendering ? args.rendering.numLevels : 10;
     this.topLevelWidth =
@@ -202,6 +207,12 @@ function AutoDD(args) {
 function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
+        data.forEach(d => {
+            d.cluster_agg = JSON.parse(d.cluster_agg);
+            d.cluster_num = String(
+                d.cluster_agg[Object.keys(d.cluster_agg)[0]].count
+            );
+        });
         var circleSizeInterpolator = d3
             .scaleLinear()
             .domain([1, params.roughN.toString().length - 1])
@@ -582,6 +593,82 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         }
     }
 
+    function renderGlyphBody() {
+        var params = args.renderingParams;
+        var circleSizeInterpolator = d3
+            .scaleLinear()
+            .domain([1, params.roughN.toString().length - 1])
+            .range([REPLACE_ME_circleMinSize, REPLACE_ME_circleMaxSize]);
+        var g = svg.append("g");
+        g.selectAll("circle")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("r", function(d) {
+                return circleSizeInterpolator(d.cluster_num.length);
+            })
+            .attr("cx", function(d) {
+                return d.cx;
+            })
+            .attr("cy", function(d) {
+                return d.cy;
+            })
+            .style("fill-opacity", 0.25)
+            .attr("fill", "honeydew")
+            .attr("stroke", "#ADADAD")
+            .style("stroke-width", "1px")
+            .classed("kyrix-retainsizezoom", true);
+        g.selectAll("text")
+            .data(data)
+            .enter()
+            .append("text")
+            .attr("dy", "0.3em")
+            .text(function(d) {
+                return d.cluster_num.toString();
+            })
+            .attr("font-size", function(d) {
+                return circleSizeInterpolator(d.cluster_num.length) / 2;
+            })
+            .attr("x", function(d) {
+                return d.cx;
+            })
+            .attr("y", function(d) {
+                return d.cy;
+            })
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .style("fill-opacity", 1)
+            .style("fill", "navy")
+            .style("pointer-events", "none")
+            .classed("kyrix-retainsizezoom", true)
+            .each(function(d) {
+                params.textwrap(
+                    d3.select(this),
+                    circleSizeInterpolator(d.cluster_num.length) * 1.5
+                );
+            });
+        var isObjectOnHover = REPLACE_ME_is_object_onhover;
+        if (isObjectOnHover) {
+            var objectRenderer = REPLACE_ME_this_rendering;
+            g.selectAll("circle")
+                .on("mouseover", function(d) {
+                    objectRenderer(svg, [d], args);
+                    svg.selectAll("g:last-of-type")
+                        .attr("id", "autodd_tooltip")
+                        .style("opacity", 0.8)
+                        .style("pointer-events", "none")
+                        .selectAll("*")
+                        .classed("kyrix-retainsizezoom", true)
+                        .each(function() {
+                            zoomRescale(args.viewId, this);
+                        });
+                })
+                .on("mouseleave", function() {
+                    d3.select("#autodd_tooltip").remove();
+                });
+        }
+    }
+
     var renderFuncBody;
     if (
         this.renderingMode == "object" ||
@@ -629,6 +716,29 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .replace(
                     /REPLACE_ME_is_object_onhover/g,
                     this.renderingMode == "contour+object"
+                )
+                .replace(
+                    /REPLACE_ME_this_rendering/g,
+                    this.rendering.toString()
+                );
+    } else if (
+        this.renderingMode == "glyph" ||
+        this.renderingMode == "glyph+object"
+    ) {
+        renderFuncBody = getBodyStringOfFunction(renderGlyphBody)
+            .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)
+            .replace(/REPLACE_ME_radius/g, this.bboxH)
+            .replace(/REPLACE_ME_contour_colorScheme/g, this.contourColorScheme)
+            .replace(/REPLACE_ME_CONTOUR_OPACITY/g, this.contourOpacity)
+            .replace(
+                /REPLACE_ME_is_object_onhover/g,
+                this.renderingMode == "glyph+object"
+            );
+        if (this.renderingMode == "glyph+object")
+            renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
+                .replace(
+                    /REPLACE_ME_is_object_onhover/g,
+                    this.renderingMode == "glyph+object"
                 )
                 .replace(
                     /REPLACE_ME_this_rendering/g,

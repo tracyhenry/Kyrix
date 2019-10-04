@@ -4,8 +4,16 @@ import com.github.davidmoten.rtree.Entry;
 import com.github.davidmoten.rtree.RTree;
 import com.github.davidmoten.rtree.geometry.Geometries;
 import com.github.davidmoten.rtree.geometry.Rectangle;
-import java.sql.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import main.Config;
 import main.DbConnector;
 import main.Main;
@@ -19,14 +27,19 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     private final int objectNumLimit = 4000; // in a 1k by 1k region
     private final int virtualViewportSize = 1000;
     private double overlappingThreshold = 1.0;
+    private final transient Gson gson;
 
     // One Rtree per level to store samples
     // https://github.com/davidmoten/rtree
     private ArrayList<RTree<ArrayList<String>, Rectangle>> Rtrees;
     private ArrayList<ArrayList<String>> rawRows;
+    private HashMap<String, Integer> aggMap;
 
     // singleton pattern to ensure only one instance existed
-    private AutoDDInMemoryIndexer() {}
+    private AutoDDInMemoryIndexer() {
+        this.gson = new GsonBuilder().create();
+        this.aggMap = new HashMap();
+    }
 
     // thread-safe instance getter
     public static synchronized AutoDDInMemoryIndexer getInstance() {
@@ -48,33 +61,39 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
         int numLevels = autoDD.getNumLevels();
         int numRawColumns = autoDD.getColumnNames().size();
+        System.out.println("columns: " + autoDD.getColumnNames());
+        System.out.println("aggcolumns: " + autoDD.getAggColumns());
+        for (String aggcol : autoDD.getAggColumns()) {
+            aggMap.put(aggcol, autoDD.getColumnNames().indexOf(aggcol));
+        }
 
         // calculate overlapping threshold
-        overlappingThreshold =
+        this.overlappingThreshold =
                 Math.max(
                         0.2,
                         Math.sqrt(
                                         4
-                                                * (virtualViewportSize + autoDD.getBboxW() * 2)
-                                                * (virtualViewportSize + autoDD.getBboxH() * 2)
-                                                / objectNumLimit
+                                                * (this.virtualViewportSize + autoDD.getBboxW() * 2)
+                                                * (this.virtualViewportSize + autoDD.getBboxH() * 2)
+                                                / this.objectNumLimit
                                                 / autoDD.getBboxH()
                                                 / autoDD.getBboxW())
                                 - 1);
-        if (!autoDD.getOverlap()) overlappingThreshold = Math.max(overlappingThreshold, 1);
-        System.out.println("Overlapping threshold: " + overlappingThreshold);
+        if (!autoDD.getOverlap())
+            this.overlappingThreshold = Math.max(this.overlappingThreshold, 1);
+        System.out.println("Overlapping threshold: " + this.overlappingThreshold);
 
         // store raw query results into memory
-        rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
+        this.rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
         // add row number as a BGRP
-        Main.getProject().addBGRP("roughN", String.valueOf(rawRows.size()));
+        Main.getProject().addBGRP("roughN", String.valueOf(this.rawRows.size()));
 
         // sample for each level
-        Rtrees = new ArrayList<>();
-        for (int i = 0; i < numLevels; i++) Rtrees.add(RTree.create());
+        this.Rtrees = new ArrayList<>();
+        for (int i = 0; i < numLevels; i++) this.Rtrees.add(RTree.create());
         for (int i = 0; i < numLevels; i++) createMVForLevel(i, autoDDIndex);
 
-        // compute cluster number
+        // compute cluster Aggregate
         if (autoDD.getRenderingMode().equals("object+clusternum")
                 || autoDD.getRenderingMode().equals("circle")
                 || autoDD.getRenderingMode().equals("circle+object")
@@ -84,29 +103,37 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 || autoDD.getRenderingMode().equals("heatmap+object")) {
 
             // a fake bottom level for non-sampled objects
-            Rtrees.add(RTree.create());
-            for (ArrayList<String> rawRow : rawRows) {
+            this.Rtrees.add(RTree.create());
+            for (ArrayList<String> rawRow : this.rawRows) {
                 ArrayList<String> bboxRow = new ArrayList<>();
                 for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
-                bboxRow.add("0");
-                Rtrees.set(
+                bboxRow.add(gson.toJson(getDummyAgg(rawRow)));
+                this.Rtrees.set(
                         numLevels,
-                        Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
+                        this.Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
             }
 
             for (int i = numLevels; i >= 0; i--) {
                 // all samples
                 Iterable<Entry<ArrayList<String>, Rectangle>> curSamples =
-                        Rtrees.get(i).entries().toBlocking().toIterable();
+                        this.Rtrees.get(i).entries().toBlocking().toIterable();
                 // min clusternum && max clusternum
                 // for renderers
                 int minWeight = Integer.MAX_VALUE, maxWeight = Integer.MIN_VALUE;
                 for (Entry<ArrayList<String>, Rectangle> o : curSamples) {
+                    // HashMap<String, Aggregate> rowAgg = getDummyAgg(o);
                     ArrayList<String> curRow = o.value();
+                    String curAggStr = curRow.get(numRawColumns);
+                    HashMap<String, Aggregate> curMap = new HashMap<>();
+                    Type type = new TypeToken<HashMap<String, Aggregate>>() {}.getType();
+                    curMap = this.gson.fromJson(curAggStr, type);
+
                     // boundary case: bottom level
-                    if (i == numLevels) curRow.set(numRawColumns, "1");
-                    minWeight = Math.min(minWeight, Integer.valueOf(curRow.get(numRawColumns)));
-                    maxWeight = Math.max(maxWeight, Integer.valueOf(curRow.get(numRawColumns)));
+                    // if (i == numLevels) curRow.set(numRawColumns, "{}");
+                    int count = curMap.entrySet().iterator().next().getValue().count;
+
+                    minWeight = Math.min(minWeight, count);
+                    maxWeight = Math.max(maxWeight, count);
                     if (i == 0) continue;
 
                     // find its nearest neighbor in one level up
@@ -119,12 +146,12 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     double cy =
                             autoDD.getCanvasCoordinate(
                                     i - 1, Double.valueOf(curRow.get(autoDD.getYColId())), false);
-                    double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
-                    double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
-                    double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
-                    double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
+                    double minx = cx - autoDD.getBboxW() * this.overlappingThreshold / 2;
+                    double miny = cy - autoDD.getBboxH() * this.overlappingThreshold / 2;
+                    double maxx = cx + autoDD.getBboxW() * this.overlappingThreshold / 2;
+                    double maxy = cy + autoDD.getBboxH() * this.overlappingThreshold / 2;
                     Iterable<Entry<ArrayList<String>, Rectangle>> neighbors =
-                            Rtrees.get(i - 1)
+                            this.Rtrees.get(i - 1)
                                     .search(Geometries.rectangle(minx, miny, maxx, maxy))
                                     .toBlocking()
                                     .toIterable();
@@ -149,11 +176,18 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     }
 
                     // increment the cluster number of the NN
-                    int clusterNumBeforeIncrement =
-                            Integer.valueOf(nearestNeighbor.get(numRawColumns));
-                    int clusterNumAfterIncrement =
-                            clusterNumBeforeIncrement + Integer.valueOf(curRow.get(numRawColumns));
-                    nearestNeighbor.set(numRawColumns, String.valueOf(clusterNumAfterIncrement));
+                    // int clusterNumBeforeIncrement =
+                    //         Integer.valueOf(nearestNeighbor.get(numRawColumns));
+                    // int clusterNumAfterIncrement =
+                    //         clusterNumBeforeIncrement +
+                    // Integer.valueOf(curRow.get(numRawColumns));
+                    // nearestNeighbor.set(numRawColumns, String.valueOf(clusterNumAfterIncrement));
+
+                    String nnAggStr = nearestNeighbor.get(numRawColumns);
+                    HashMap<String, Aggregate> nnMap = new HashMap<>();
+                    nnMap = this.gson.fromJson(nnAggStr, type);
+                    updateAgg(nnMap, curMap);
+                    nearestNeighbor.set(numRawColumns, gson.toJson(nnMap));
                 }
 
                 // add min & max weight into rendering params
@@ -184,7 +218,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             for (int j = 0; j < autoDD.getColumnNames().size(); j++)
                 sql += autoDD.getColumnNames().get(j) + " text, ";
             sql +=
-                    "cluster_num int, cx double precision, cy double precision, minx double precision, miny double precision, "
+                    "cluster_agg text, cx double precision, cy double precision, minx double precision, miny double precision, "
                             + "maxx double precision, maxy double precision, geom geometry(polygon));";
             bboxStmt.executeUpdate(sql);
         }
@@ -200,16 +234,16 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     DbConnector.getPreparedStatement(Config.databaseName, insertSql);
             int insertCount = 0;
             Iterable<Entry<ArrayList<String>, Rectangle>> samples =
-                    Rtrees.get(i).entries().toBlocking().toIterable();
+                    this.Rtrees.get(i).entries().toBlocking().toIterable();
             for (Entry<ArrayList<String>, Rectangle> o : samples) {
                 ArrayList<String> curRow = o.value();
 
-                // raw data fields
-                for (int k = 0; k < numRawColumns; k++)
+                // raw data fields & cluster agg
+                for (int k = 0; k <= numRawColumns; k++)
                     preparedStmt.setString(k + 1, curRow.get(k).replaceAll("\'", "\'\'"));
 
-                // cluster_num & bounding box fields
-                for (int k = 0; k <= 6; k++)
+                // bounding box fields
+                for (int k = 1; k <= 6; k++)
                     preparedStmt.setDouble(
                             numRawColumns + k + 1, Double.valueOf(curRow.get(numRawColumns + k)));
                 double minx = Double.valueOf(curRow.get(numRawColumns + 3));
@@ -243,24 +277,24 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         DbConnector.closeConnection(Config.databaseName);
 
         // release memory
-        Rtrees = null;
-        rawRows = null;
+        this.Rtrees = null;
+        this.rawRows = null;
     }
 
     private void createMVForLevel(int level, int autoDDIndex)
             throws SQLException, ClassNotFoundException {
 
         System.out.println("Sampling for level " + level + "...");
-
         AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
         int numLevels = autoDD.getNumLevels();
 
         // loop through raw query results, sample one by one.
-        for (ArrayList<String> rawRow : rawRows) {
+        for (ArrayList<String> rawRow : this.rawRows) {
 
             ArrayList<String> bboxRow = new ArrayList<>();
             for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
-            bboxRow.add("0"); // place holder for cluster num field
+            bboxRow.add(
+                    gson.toJson(getDummyAgg(rawRow))); // place holder for cluster aggregate field
 
             // centroid of this tuple
             double cx =
@@ -271,12 +305,12 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                             level, Double.valueOf(rawRow.get(autoDD.getYColId())), false);
 
             // check overlap
-            double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
-            double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
-            double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
-            double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
+            double minx = cx - autoDD.getBboxW() * this.overlappingThreshold / 2;
+            double miny = cy - autoDD.getBboxH() * this.overlappingThreshold / 2;
+            double maxx = cx + autoDD.getBboxW() * this.overlappingThreshold / 2;
+            double maxy = cy + autoDD.getBboxH() * this.overlappingThreshold / 2;
             Iterable<Entry<ArrayList<String>, Rectangle>> overlappingSamples =
-                    Rtrees.get(level)
+                    this.Rtrees.get(level)
                             .search(Geometries.rectangle(minx, miny, maxx, maxy))
                             .toBlocking()
                             .toIterable();
@@ -301,12 +335,14 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 curRow.add(String.valueOf(miny));
                 curRow.add(String.valueOf(maxx));
                 curRow.add(String.valueOf(maxy));
-                minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
-                miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
-                maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
-                maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
-                Rtrees.set(
-                        i, Rtrees.get(i).add(curRow, Geometries.rectangle(minx, miny, maxx, maxy)));
+                minx = cx - autoDD.getBboxW() * this.overlappingThreshold / 2;
+                miny = cy - autoDD.getBboxH() * this.overlappingThreshold / 2;
+                maxx = cx + autoDD.getBboxW() * this.overlappingThreshold / 2;
+                maxy = cy + autoDD.getBboxH() * this.overlappingThreshold / 2;
+                this.Rtrees.set(
+                        i,
+                        this.Rtrees.get(i)
+                                .add(curRow, Geometries.rectangle(minx, miny, maxx, maxy)));
             }
         }
     }
@@ -329,5 +365,77 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             }
         }
         return "";
+    }
+
+    private HashMap<String, Aggregate> getDummyAgg(ArrayList<String> row) {
+        HashMap<String, Aggregate> dummy = new HashMap<>();
+        for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
+            // System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+            Double value = 0.0;
+            try {
+                value = Double.parseDouble(row.get(entry.getValue()));
+            } catch (Exception e) {
+                throw new Error("Indexing AutoDD: Aggregate Column must be numeric");
+            }
+            dummy.put(entry.getKey(), new Aggregate(1, value, value, value, value * value));
+        }
+        return dummy;
+    }
+
+    private HashMap<String, Aggregate> updateAgg(
+            HashMap<String, Aggregate> parent, HashMap<String, Aggregate> child) {
+        // System.out.println("parent before: " + parent);
+        for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
+            String key = entry.getKey();
+            Aggregate p = parent.get(key);
+            Aggregate c = child.get(key);
+            p.count = p.count + c.count;
+            p.sum = p.sum + c.sum;
+            if (c.max > p.max) p.max = c.max;
+            if (c.min < p.min) p.min = c.min;
+            p.squaresum = p.squaresum + c.squaresum;
+        }
+        // System.out.println("parent after:" + parent);
+        return parent;
+    }
+}
+
+class Aggregate {
+    public int count;
+    public double sum;
+    public double max;
+    public double min;
+    public double squaresum;
+
+    Aggregate() {
+        this.count = 0;
+        this.sum = 0;
+        this.min = Integer.MAX_VALUE;
+        this.max = Integer.MIN_VALUE;
+        this.squaresum = 0;
+    }
+
+    Aggregate(int _count, double _sum, double _min, double _max, double _squaresum) {
+        this.count = _count;
+        this.sum = _sum;
+        this.min = _min;
+        this.max = _max;
+        this.squaresum = _squaresum;
+    }
+
+    @Override
+    public String toString() {
+        return "{"
+                + "count: "
+                + count
+                + ", sum: "
+                + sum
+                + ", min: "
+                + min
+                + ", max: "
+                + max
+                + ", squaresum: "
+                + squaresum
+                + '}';
     }
 }

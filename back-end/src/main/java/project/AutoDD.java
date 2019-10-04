@@ -13,7 +13,7 @@ public class AutoDD {
     private int bboxW, bboxH;
     private String rendering;
     private String renderingMode;
-    private ArrayList<String> columnNames, queriedColumnNames = null;
+    private ArrayList<String> columnNames, aggColumns, queriedColumnNames = null;
     private int numLevels, topLevelWidth, topLevelHeight;
     private boolean overlap;
     private double zoomFactor;
@@ -93,6 +93,10 @@ public class AutoDD {
                 e.printStackTrace();
             }
         return queriedColumnNames;
+    }
+
+    public ArrayList<String> getAggColumns() {
+        return aggColumns;
     }
 
     public int getNumLevels() {
