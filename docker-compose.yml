@@ -1,24 +1,21 @@
 #
-# to start up, simply run docker-compose up:
-#  - kyrix frontend will be available on port 8000
-#  - postgres backend will be available on port 5432 (for debugging)
+# to start up, simply run "./run-kyrix.sh" or "docker-compose up"
+#  - kyrix frontend will be available on port 8000 by default
+#  - postgres backend will be available on port 5432 by default (for debugging)
 #
 
-# notes for newbies to docker/docker-compose:
-# - Dockerfiles can't refer to files in parent directories (e.g. back-end and compiler),
-#   hence the Dockerfiles in the parent, outside of docker-scripts/
-
-version: '3.1'
+version: '3.4'
 
 services:
 
   db:
     build:
       context: .
-      dockerfile: Dockerfile-postgis-alpine
+      dockerfile: docker-scripts/Dockerfile-db
+      target: "${BUILD_STAGE:-pg-plv8}"
     restart: always
     ports: # comment-out for extra security or to avoid conflicts with host OS
-     - "5432:5432"   
+     - "${DB_PORT:-5432}:5432"
     environment:
       POSTGRES_PASS: ${POSTGRES_PASSWORD:-kyrixftw}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -31,17 +28,13 @@ services:
   kyrix:
     build:
       context: .
-      dockerfile: Dockerfile-kyrix-alpine
+      dockerfile: docker-scripts/Dockerfile-kyrix-alpine
     ports:
-     - "8000:8000"
+     - "${KYRIX_PORT:-8000}:8000"
     depends_on:
      - db
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kyrixftw}
+      KYRIX_PORT: ${KYRIX_PORT:-8000}
+      START_APP: ${START_APP:-0}
     entrypoint: sh -c 'sleep 5; /wait-for-postgres db:5432 -t 60 -- /start-kyrix.sh; tail -f /dev/null'
-
-#  adminer:
-#    image: adminer
-#    restart: always
-#    ports:
-#      - "8081:8080"
