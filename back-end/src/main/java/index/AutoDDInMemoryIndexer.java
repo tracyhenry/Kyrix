@@ -99,6 +99,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 || autoDD.getRenderingMode().equals("circle+object")
                 || autoDD.getRenderingMode().equals("contour")
                 || autoDD.getRenderingMode().equals("contour+object")
+                || autoDD.getRenderingMode().equals("glyph")
+                || autoDD.getRenderingMode().equals("glyph+object")
                 || autoDD.getRenderingMode().equals("heatmap")
                 || autoDD.getRenderingMode().equals("heatmap+object")) {
 
@@ -107,7 +109,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             for (ArrayList<String> rawRow : this.rawRows) {
                 ArrayList<String> bboxRow = new ArrayList<>();
                 for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
-                bboxRow.add(gson.toJson(getDummyAgg(rawRow)));
+                bboxRow.add(gson.toJson(getDummyAgg(rawRow, false)));
                 this.Rtrees.set(
                         numLevels,
                         this.Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
@@ -294,7 +296,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             ArrayList<String> bboxRow = new ArrayList<>();
             for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
             bboxRow.add(
-                    gson.toJson(getDummyAgg(rawRow))); // place holder for cluster aggregate field
+                    gson.toJson(
+                            getDummyAgg(rawRow, true))); // place holder for cluster aggregate field
 
             // centroid of this tuple
             double cx =
@@ -367,22 +370,31 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         return "";
     }
 
-    private HashMap<String, ArrayList<Double>> getDummyAgg(ArrayList<String> row) {
+    // if flag == true, use constant; if flag == false, use row info
+    private HashMap<String, ArrayList<Double>> getDummyAgg(ArrayList<String> row, boolean flag) {
         HashMap<String, ArrayList<Double>> dummy = new HashMap<>();
         for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
             // System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
-            Double value = 0.0;
-            try {
-                value = Double.parseDouble(row.get(entry.getValue()));
-            } catch (Exception e) {
-                throw new Error("Indexing AutoDD: Aggregate Column must be numeric");
-            }
             ArrayList<Double> arr = new ArrayList<>();
-            arr.add(1.0); // count
-            arr.add(value); // sum
-            arr.add(value); // max
-            arr.add(value); // min
-            arr.add(value * value); // squaresum
+            if (flag) {
+                arr.add(0.0);
+                arr.add(0.0);
+                arr.add(Double.MIN_VALUE);
+                arr.add(Double.MAX_VALUE);
+                arr.add(0.0);
+            } else {
+                Double value = 0.0;
+                try {
+                    value = Double.parseDouble(row.get(entry.getValue()));
+                } catch (Exception e) {
+                    throw new Error("Indexing AutoDD: Aggregate Column must be numeric");
+                }
+                arr.add(1.0); // count
+                arr.add(value); // sum
+                arr.add(value); // max
+                arr.add(value); // min
+                arr.add(value * value); // squaresum
+            }
             dummy.put(entry.getKey(), arr);
         }
         return dummy;

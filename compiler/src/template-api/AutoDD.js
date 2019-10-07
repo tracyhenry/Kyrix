@@ -69,6 +69,13 @@ function AutoDD(args) {
             args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
                 this.heatmapRadius * 2 + 1;
     }
+    if (
+        args.rendering.mode == "glyph" ||
+        args.rendering.mode == "glyph+object"
+    ) {
+        if (!("glyph" in args.rendering)) args.rendering.glyph = {};
+        this.glyph = JSON.stringify(args.rendering.glyph);
+    }
     args.aggregate = "aggregate" in args ? args.aggregate : {columns: []};
 
     // check required args
@@ -209,9 +216,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var params = args.renderingParams;
         data.forEach(d => {
             d.cluster_agg = JSON.parse(d.cluster_agg);
-            d.cluster_num = String(
-                d.cluster_agg[Object.keys(d.cluster_agg)[0]][0]
-            );
+            d.cluster_num = d.cluster_agg[
+                Object.keys(d.cluster_agg)[0]
+            ][0].toString();
         });
         var circleSizeInterpolator = d3
             .scaleLinear()
@@ -594,64 +601,189 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function renderGlyphBody() {
+        console.log("glyph raw:", data);
         var params = args.renderingParams;
-        var circleSizeInterpolator = d3
-            .scaleLinear()
-            .domain([1, params.roughN.toString().length - 1])
-            .range([REPLACE_ME_circleMinSize, REPLACE_ME_circleMaxSize]);
-        var g = svg.append("g");
-        g.selectAll("circle")
-            .data(data)
-            .enter()
-            .append("circle")
-            .attr("r", function(d) {
-                return circleSizeInterpolator(d.cluster_num.length);
-            })
-            .attr("cx", function(d) {
-                return d.cx;
-            })
-            .attr("cy", function(d) {
-                return d.cy;
-            })
-            .style("fill-opacity", 0.25)
-            .attr("fill", "honeydew")
-            .attr("stroke", "#ADADAD")
-            .style("stroke-width", "1px")
-            .classed("kyrix-retainsizezoom", true);
-        g.selectAll("text")
-            .data(data)
-            .enter()
-            .append("text")
-            .attr("dy", "0.3em")
-            .text(function(d) {
-                return d.cluster_num.toString();
-            })
-            .attr("font-size", function(d) {
-                return circleSizeInterpolator(d.cluster_num.length) / 2;
-            })
-            .attr("x", function(d) {
-                return d.cx;
-            })
-            .attr("y", function(d) {
-                return d.cy;
-            })
-            .attr("dy", ".35em")
-            .attr("text-anchor", "middle")
-            .style("fill-opacity", 1)
-            .style("fill", "navy")
-            .style("pointer-events", "none")
-            .classed("kyrix-retainsizezoom", true)
-            .each(function(d) {
-                params.textwrap(
-                    d3.select(this),
-                    circleSizeInterpolator(d.cluster_num.length) * 1.5
-                );
+        var glyph = REPLACE_ME_glyph;
+        console.log("glyph:", glyph);
+        var dict = {};
+        for (var key in JSON.parse(data[0].cluster_agg)) {
+            Object.assign(dict, {
+                [key]: {
+                    extent: [Number.MAX_VALUE, -Number.MAX_VALUE]
+                }
             });
+        }
+        data.forEach(d => {
+            d.cluster_agg = JSON.parse(d.cluster_agg);
+            d.cluster_num = d.cluster_agg[
+                Object.keys(d.cluster_agg)[0]
+            ][0].toString();
+            for (var key in d.cluster_agg) {
+                d.cluster_agg[key][5] =
+                    d.cluster_agg[key][1] / d.cluster_agg[key][0];
+                // if cur avg < min avg
+                if (d.cluster_agg[key][5] < dict[key]["extent"][0])
+                    dict[key]["extent"][0] = d.cluster_agg[key][5];
+                if (d.cluster_agg[key][5] > dict[key]["extent"][1])
+                    dict[key]["extent"][1] = d.cluster_agg[key][5];
+            }
+        });
+        // radar chart, for avaerage
+
+        var rangeRadius = [0, REPLACE_ME_radius];
+        // radius scale build
+        for (var key in dict) {
+            dict[key].scale = d3.scaleLinear().range(rangeRadius);
+            if (Array.isArray(glyph.domain)) {
+                dict[key].scale.domain(glyph.domain);
+            } else if (typeof glyph.domain === "object") {
+                dict[key].scale.domain(glyph.domain[key]);
+            } else if (typeof glyph.domain === "number") {
+                dict[key].scale.domain([0, glyph.domain]);
+            } else {
+                dict[key].scale.domain(
+                    dict[key].extent[0] > 0
+                        ? [0, dict[key].extent[1]]
+                        : dict[key].extent
+                );
+            }
+        }
+        console.log("dict:", dict);
+
+        var g = svg.append("g");
+
+        var glyphs = g
+            .selectAll("g.glyph")
+            .data(data)
+            .enter();
+
+        // ticks
+        var ticks = [];
+        if (Array.isArray(glyph.ticks)) {
+            ticks = glyph.ticks;
+        } else if (typeof glyph.ticks === "number") {
+            for (var i = 0; i < glyph.ticks; i++)
+                ticks.push((i + 1) * (REPLACE_ME_radius / glyph.ticks));
+        }
+        console.log("ticks: ", ticks);
+
+        // axis
+        var attributes = [];
+        attributes = glyph.attributes;
+
+        // line
+        var line = d3
+            .line()
+            .x(d => d.x)
+            .y(d => d.y);
+
+        function getPathCoordinates(d, key) {
+            var coordinates = [];
+            for (var i = 0; i < attributes.length; i++) {
+                var attribute = attributes[i];
+                var angle = Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
+                // average
+                coordinates.push(
+                    angleToCoordinate(
+                        d,
+                        angle,
+                        key,
+                        d.cluster_agg[attribute][5]
+                    )
+                );
+            }
+            coordinates.push(coordinates[0]);
+            return coordinates;
+        }
+
+        function angleToCoordinate(d, angle, key, value) {
+            var x = Math.cos(angle) * dict[key].scale(value);
+            var y = Math.sin(angle) * dict[key].scale(value);
+            if (d.name == "L. Messi") {
+                // console.log("key: ", key)
+                // console.log(dict[key].scale(0));
+                // console.log(dict[key].scale(100));
+                // console.log("x: ", x)
+                // console.log("y: ", y)
+                // console.log("d: ", d)
+                // console.log("angle: ", angle)
+                // console.log("value: ", value)
+            }
+            return {x: +d.cx + x, y: +d.cy - y};
+        }
+
+        glyphs.each((p, j, nodes) => {
+            // ticks
+            for (var i = ticks.length - 1; i >= 0; i--) {
+                d3.select(nodes[j])
+                    .append("circle")
+                    .attr("cx", d => d.cx)
+                    .attr("cy", d => d.cy)
+                    .attr("fill", "none")
+                    .attr("stroke", "gray")
+                    .attr("r", ticks[i])
+                    .classed("kyrix-retainsizezoom", true);
+            }
+            // axis & axis
+            for (var i = 0; i < attributes.length; i++) {
+                var attribute = attributes[i];
+                var angle = Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
+                var line_coordinate = angleToCoordinate(
+                    p,
+                    angle,
+                    attribute,
+                    dict[key].scale.domain()[1]
+                );
+                var label_coordinate = angleToCoordinate(
+                    p,
+                    angle,
+                    attribute,
+                    dict[key].scale.domain()[1] + 1
+                );
+
+                //draw axis line
+                d3.select(nodes[j])
+                    .append("line")
+                    .attr("x1", p.cx)
+                    .attr("y1", p.cy)
+                    .attr("x2", line_coordinate.x)
+                    .attr("y2", line_coordinate.y)
+                    .classed("kyrix-retainsizezoom", true)
+                    .attr("stroke", "black");
+
+                //draw axis label
+                d3.select(nodes[j])
+                    .append("text")
+                    .attr("x", label_coordinate.x)
+                    .attr("y", label_coordinate.y)
+                    .classed("kyrix-retainsizezoom", true)
+                    .text(attribute.substr(0, 3).toUpperCase());
+
+                // path
+                var coordinates = getPathCoordinates(p, attribute);
+            }
+            for (var i = 0; i < attributes.length; i++) {
+                d3.select(nodes[j])
+                    .append("path")
+                    .datum(coordinates)
+                    .attr("d", line)
+                    .classed("glyph", true)
+                    .attr("stroke-width", 3)
+                    .attr("stroke", "darkorange")
+                    .attr("fill", "darkorange")
+                    .attr("stroke-opacity", 0.5)
+                    .attr("fill-opacity", 0.1)
+                    .classed("kyrix-retainsizezoom", true)
+                    .datum(p);
+            }
+        });
+
         var isObjectOnHover = REPLACE_ME_is_object_onhover;
         if (isObjectOnHover) {
             var objectRenderer = REPLACE_ME_this_rendering;
-            g.selectAll("circle")
-                .on("mouseover", function(d) {
+            g.selectAll("path.glyph")
+                .on("mouseover", function(d, i, nodes) {
+                    // console.log("d, this, nodes[i]: ", d, this, nodes[i])
                     objectRenderer(svg, [d], args);
                     svg.selectAll("g:last-of-type")
                         .attr("id", "autodd_tooltip")
@@ -726,24 +858,18 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         this.renderingMode == "glyph+object"
     ) {
         renderFuncBody = getBodyStringOfFunction(renderGlyphBody)
-            .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)
-            .replace(/REPLACE_ME_radius/g, this.bboxH)
-            .replace(/REPLACE_ME_contour_colorScheme/g, this.contourColorScheme)
-            .replace(/REPLACE_ME_CONTOUR_OPACITY/g, this.contourOpacity)
+            .replace(/REPLACE_ME_glyph/g, this.glyph)
+            .replace(/REPLACE_ME_radius/g, this.bboxH / 2)
             .replace(
                 /REPLACE_ME_is_object_onhover/g,
                 this.renderingMode == "glyph+object"
+            )
+            .replace(
+                /REPLACE_ME_this_rendering/g,
+                this.renderingMode == "glyph+object"
+                    ? this.rendering.toString()
+                    : "null;"
             );
-        if (this.renderingMode == "glyph+object")
-            renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
-                .replace(
-                    /REPLACE_ME_is_object_onhover/g,
-                    this.renderingMode == "glyph+object"
-                )
-                .replace(
-                    /REPLACE_ME_this_rendering/g,
-                    this.rendering.toString()
-                );
     } else if (
         this.renderingMode == "heatmap" ||
         this.renderingMode == "heatmap+object"
