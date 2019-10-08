@@ -70,7 +70,7 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
                         + "(obj json, cw int, ch int, params json) RETURNS json "
                         + "AS $$ "
                         + trans.getTransformFuncBody()
-                        + " $$ LANGUAGE plv8";
+                        + " $$ LANGUAGE plv8 PARALLEL SAFE";
         System.out.println(sql);
         bboxStmt.executeUpdate(sql);
 
@@ -132,17 +132,25 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
                         + ") transjson"
                         + ") transsql";
         System.out.println(sql);
+        long st = System.currentTimeMillis();
         bboxStmt.executeUpdate(sql);
+        System.out.println(
+                "Running transform func took: " + (System.currentTimeMillis() - st) + "ms.");
 
         // update geom
         sql = "UPDATE " + bboxTableName + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
         System.out.println(sql);
+        st = System.currentTimeMillis();
         bboxStmt.executeUpdate(sql);
+        System.out.println("Setting geom field took: " + (System.currentTimeMillis() - st) + "ms.");
 
         // create spatial index
         sql = "CREATE INDEX sp_" + bboxTableName + " ON " + bboxTableName + " USING gist (geom);";
         System.out.println(sql);
+        st = System.currentTimeMillis();
         bboxStmt.executeUpdate(sql);
+        System.out.println(
+                "Creating spatial indexes took: " + (System.currentTimeMillis() - st) + "ms.");
     }
 
     public String removeTrailingSemiColon(String q) {

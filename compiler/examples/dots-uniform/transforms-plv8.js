@@ -2,7 +2,7 @@ const Transform = require("../../src/Transform").Transform;
 
 var dotsTransform = new Transform(
     "select * from dots_uniform;",
-    "dots_uniform",
+    "kyrix",
     function(obj, cw, ch, params) {
         if (!("d3" in plv8)) {
             plv8.d3 = require("d3");
@@ -11,11 +11,11 @@ var dotsTransform = new Transform(
         var x = d3
             .scaleLinear()
             .domain([0, params.topLevelWidth])
-            .range([0, cw])(obj.x);
+            .range([0, cw])(obj.w);
         var y = d3
             .scaleLinear()
             .domain([0, params.topLevelHeight])
-            .range([0, ch])(row.y);
+            .range([0, ch])(obj.h);
 
         return {
             id: obj.id,

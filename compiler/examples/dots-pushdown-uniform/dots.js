@@ -7,7 +7,7 @@ const View = require("../../src/View").View;
 
 // project components
 const renderers = require("../dots-uniform/renderers");
-const transforms = require("./transforms");
+const transforms = require("./transforms-plv8");
 const placements = require("../dots-uniform/placements");
 
 // construct a project
