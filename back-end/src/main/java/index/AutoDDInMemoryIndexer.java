@@ -64,7 +64,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         System.out.println("columns: " + autoDD.getColumnNames());
         System.out.println("aggcolumns: " + autoDD.getAggColumns());
         for (String aggcol : autoDD.getAggColumns()) {
-            aggMap.put(aggcol, autoDD.getColumnNames().indexOf(aggcol));
+            this.aggMap.put(aggcol, autoDD.getColumnNames().indexOf(aggcol));
         }
 
         // calculate overlapping threshold
@@ -126,13 +126,17 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     // HashMap<String, Aggregate> rowAgg = getDummyAgg(o);
                     ArrayList<String> curRow = o.value();
                     String curAggStr = curRow.get(numRawColumns);
+
                     HashMap<String, ArrayList<Double>> curMap = new HashMap<>();
                     Type type = new TypeToken<HashMap<String, ArrayList<Double>>>() {}.getType();
                     curMap = this.gson.fromJson(curAggStr, type);
 
                     // boundary case: bottom level
                     // if (i == numLevels) curRow.set(numRawColumns, "{}");
+                    // System.out.println("curRow: " + curRow);
+                    // System.out.println("curMap: " + curMap);
                     int count = curMap.entrySet().iterator().next().getValue().get(0).intValue();
+                    // System.out.println("count: " + count);
 
                     minWeight = Math.min(minWeight, count);
                     maxWeight = Math.max(maxWeight, count);
@@ -298,7 +302,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             bboxRow.add(
                     gson.toJson(
                             getDummyAgg(rawRow, true))); // place holder for cluster aggregate field
-
             // centroid of this tuple
             double cx =
                     autoDD.getCanvasCoordinate(
@@ -378,7 +381,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             ArrayList<Double> arr = new ArrayList<>();
             if (flag) {
                 arr.add(0.0);
-                arr.add(0.0);
                 arr.add(Double.MIN_VALUE);
                 arr.add(Double.MAX_VALUE);
                 arr.add(0.0);
@@ -389,7 +391,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 } catch (Exception e) {
                     throw new Error("Indexing AutoDD: Aggregate Column must be numeric");
                 }
-                arr.add(1.0); // count
                 arr.add(value); // sum
                 arr.add(value); // max
                 arr.add(value); // min
@@ -397,6 +398,14 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             }
             dummy.put(entry.getKey(), arr);
         }
+        ArrayList<Double> countArr = new ArrayList<>();
+        if (flag) {
+            countArr.add(0.0);
+        } else {
+            countArr.add(1.0);
+        }
+        dummy.put("count", countArr);
+        //        TODO: CONVEX HULL POINTS
         return dummy;
     }
 
@@ -408,17 +417,16 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             String key = entry.getKey();
             ArrayList<Double> p = parent.get(key);
             ArrayList<Double> c = child.get(key);
-            // count
-            p.set(0, p.get(0) + c.get(0));
             // sum
-            p.set(1, p.get(1) + c.get(1));
+            p.set(0, p.get(0) + c.get(0));
             // max
-            if (c.get(2) > p.get(2)) p.set(2, c.get(2));
+            if (c.get(1) > p.get(1)) p.set(1, c.get(1));
             // min
-            if (c.get(3) < p.get(3)) p.set(3, c.get(3));
+            if (c.get(2) < p.get(2)) p.set(2, c.get(2));
             // squaresum
-            p.set(4, p.get(4) + c.get(4));
+            p.set(3, p.get(3) + c.get(3));
         }
+        parent.get("count").set(0, parent.get("count").get(0) + child.get("count").get(0));
         // System.out.println("parent after:" + parent);
         return parent;
     }
