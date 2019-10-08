@@ -67,7 +67,7 @@ done
 # Tune postgres
 echo -e "\nPostgres started! Tuning..."
 CONF=/var/lib/postgresql/data/postgresql.conf
-docker exec -t kyrix_db_1 su - postgres -c "psql -c \"create extension if not exists plv8\" " # shutup start_proc warning
+docker exec -t kyrix_db_1 su - postgres -c "psql -c \"create extension if not exists plv8; create database kyrix;\" " # shutup start_proc warning
 docker exec -t kyrix_db_1 sed -i "s@^[#]\?maintenance_work_mem.*@maintenance_work_mem = '1GB'@" $CONF
 docker exec -t kyrix_db_1 sed -i "s@^[#]\?max_worker_processes.*@max_worker_processes = '24'@" $CONF
 docker exec -t kyrix_db_1 sed -i "s@^[#]\?max_parallel_workers.*@max_parallel_workers = '24'@" $CONF
