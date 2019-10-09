@@ -18,4 +18,3 @@ cat nba_db_psql.sql | perl -ne 'print if (s@^CREATE TABLE ([^ ]+).+@DROP TABLE I
 echo "loading NBA dataset..."
 cat nba_db_psql.sql | egrep -v '^SET idle_in_transaction_session_timeout' | $PSQL $PGCONN | egrep -i 'error'
 # || true
-

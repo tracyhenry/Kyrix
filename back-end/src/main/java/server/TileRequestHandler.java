@@ -65,11 +65,28 @@ public class TileRequestHandler implements HttpHandler {
         ArrayList<String> predicates = new ArrayList<>();
         for (int i = 0; i < c.getLayers().size(); i++)
             predicates.add(queryMap.get("predicate" + i));
-
+        Boolean isJumping = Boolean.valueOf(queryMap.get("isJumping"));
+        long st = System.currentTimeMillis();
         try {
             data = TileCache.getTile(c, minx, miny, predicates);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        double fetchTime = System.currentTimeMillis() - st;
+        int intersectingRows = 0;
+        for (int i = 0; i < data.size(); i++) {
+            intersectingRows += data.get(i).size();
+        }
+        System.out.println("Fetch data time: " + fetchTime + "ms.");
+        System.out.println("number of intersecting rows in result: " + intersectingRows);
+
+        if (isJumping) {
+            Server.sendStats(
+                    Main.getProject().getName(), c.getId(), "jump", fetchTime, intersectingRows);
+        } else {
+            Server.sendStats(
+                    Main.getProject().getName(), c.getId(), "pan", fetchTime, intersectingRows);
         }
 
         // construct response

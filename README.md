@@ -1,5 +1,4 @@
-
-# Kyrix - Easy Creation of Pan/zoom Data Visualizations at Scale
+# Kyrix - Democratizing Pan/zoom Data Visualizations at Scale
 
 ![Build status](https://travis-ci.org/tracyhenry/Kyrix.svg?branch=master) [![code style: 
 prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
@@ -21,19 +20,19 @@ We are working with users from MGH ([30T data vis demo](https://youtu.be/fZ32cE8
 ## Installation instructions for the impatient
 
 1. Install Docker (e.g. on a Linux system run `sudo apt update; sudo apt install -y docker.io docker-compose;`). 
-2. Run `sudo docker-compose up` in the root directory. 
+2. Run `sudo ./run-kyrix.sh --nba` in the root directory. You might need to make `run-kyrix.sh` executable, i.e. `sudo chmod +x run-kyrix.sh`.  
 3. Wait a couple minutes, then point your browser at <ip address>:8000 - remember that if you are using a cloud instance you may (probably) need to open your cloud provider's firewall for this port. If that sounds scary, you can create an SSH tunnel from your PC (e.g. Mac) using `ssh -N <server ipaddr> -L 8000:<same ipaddr>:8000` to forward your laptop's port 8000 to the server via [SSH tunneling](https://www.tecmint.com/create-ssh-tunneling-port-forwarding-in-linux/). 
 
 note that you'll need to wait for a message saying `Backend server started...` like this:
 ```
-kyrix_1  | Serving /project
-kyrix_1  |  New project definition coming...
-kyrix_1  | There is diff that requires recomputing indexes. Shutting down server and recomputing...
-kyrix_1  | Precomputing...
-kyrix_1  | *** done! Kyrix ready at: http://<host>:8000/  (may need a minute to recompute indexes - watch this log for messages)
-kyrix_1  | Done precomputing!
-kyrix_1  | Completed recomputing indexes. Server restarting...
-kyrix_1  | Backend server started...
+Serving /project
+New project definition coming...
+There is diff that requires recomputing indexes. Shutting down server and recomputing...
+Precomputing...
+Done precomputing!
+Completed recomputing indexes. Server restarting...
+Backend server started...
+*** done! Kyrix ready at: http://<host>:8000/
 ```
 
 ## More information
@@ -41,5 +40,5 @@ kyrix_1  | Backend server started...
 * [API Reference](https://github.com/tracyhenry/Kyrix/wiki/API-Reference)
 * [How to Contribute](https://github.com/tracyhenry/Kyrix/wiki/How-to-Contribute)
 * [Parallel Indexing](https://github.com/tracyhenry/Kyrix/wiki/Parallel-Indexing-Instructions)
-* [Manual Installation](https://github.com/tracyhenry/Kyrix/wiki/Installation-Details)
+* [Web Embedding](https://github.com/tracyhenry/Kyrix/wiki/Web-Embedding)
 * [Docker Config Details](https://github.com/tracyhenry/Kyrix/wiki/Docker-Config-Details)

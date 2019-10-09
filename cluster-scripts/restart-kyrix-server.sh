@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source setup-kyrix-vars.env > /dev/null
+source env/setup-kyrix-vars.env > /dev/null
 source ../docker-scripts/spinner.sh
 
 DATA=${DATA:-nba}
@@ -45,17 +45,11 @@ elif [ "x$SRCDATA_DB" = "x" ]; then
     exit 1
 fi
 
-# note: DBTYPE=psql is safe, but won't distribute the data across the Citus cluster, i.e. it'll use local tables on the master Citus node only.
-CMD="cd /kyrix/back-end; SCALE=$SCALE NUM_WORKERS=$NUM_WORKERS SRCDATA_PROJECT_NAME=$SRCDATA_PROJECT_NAME SRCDATA_DB=$SRCDATA_DB SRCDATA_DB_TEST_TABLE=$SRCDATA_DB_TEST_TABLE SRCDATA_DB_LOAD_CMD=$SRCDATA_DB_LOAD_CMD KYRIX_DB_INDEX_CMD=$KYRIX_DB_INDEX_CMD KYRIX_DB_INDEX_FORCE=$KYRIX_DB_INDEX_FORCE KYRIX_DB_RELOAD_FORCE=$KYRIX_DB_RELOAD_FORCE DBTYPE=citus PGHOST=master POSTGRES_PASSWORD=kyrixftw USERNAME=kyrix USER_PASSWORD=kyrix_password /wait-for-postgres master:5432 -t 60 -- /start-kyrix.sh"
-echo $CMD
-kubectl exec -it $KYRIX -- sh -c "$CMD" &
-
 # wait for external IP then export vars
 while [ 1 ]; do ip=`kubectl get services -o wide | grep kyrixserver | awk '{print $4}'`; if [ $ip != '<pending>' ]; then break; fi; spin "waiting for external IP"; done
-source setup-kyrix-vars.env > /dev/null
+source env/setup-kyrix-vars.env > /dev/null
 
-while [ 1 ]; do started=`kubectl exec -it $KYRIX -- sh -c "cat /kyrix-started | tr -d '\n' "`; if [ "x$started" == 'xyes' ]; then break; fi; spin "waiting for kyrix to start"; done
-
-echo "Kyrix running; run 'source cluster-scripts/setup-kyrix-vars.env' for convenience scripts/functions or visit http://$KYRIX_IP:8000/"
-
-exit 0
+# note: DBTYPE=psql is safe, but won't distribute the data across the Citus cluster, i.e. it'll use local tables on the master Citus node only.
+CMD="cd /kyrix/back-end; START_APP=1 KYRIX_IP=$KYRIX_IP KYRIX_DB=$KYRIX_DB SCALE=$SCALE NUM_WORKERS=$NUM_WORKERS SRCDATA_PROJECT_NAME=$SRCDATA_PROJECT_NAME SRCDATA_DB=$SRCDATA_DB SRCDATA_DB_TEST_TABLE=$SRCDATA_DB_TEST_TABLE SRCDATA_DB_LOAD_CMD=$SRCDATA_DB_LOAD_CMD KYRIX_DB_INDEX_CMD=$KYRIX_DB_INDEX_CMD KYRIX_DB_INDEX_FORCE=$KYRIX_DB_INDEX_FORCE KYRIX_DB_RELOAD_FORCE=$KYRIX_DB_RELOAD_FORCE DBTYPE=citus PGHOST=master POSTGRES_PASSWORD=kyrixftw USERNAME=kyrix USER_PASSWORD=kyrix_password /wait-for-postgres master:5432 -t 60 -- /start-kyrix.sh; tail -f /dev/null"
+echo $CMD
+kubectl exec -it $KYRIX -- sh -c "$CMD"

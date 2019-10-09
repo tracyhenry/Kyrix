@@ -33,31 +33,33 @@ function Transform(query, db, transformFunc, columnNames, separable) {
             throw new Error(
                 "Constructing Transform: object-style construction may only have one argument"
             );
-        this.v2obj = query;
+
         this.transformFunc = query["transformFunc"];
+        this.transformFuncBody = getFuncBody(this.transformFunc);
         if (typeof this.transformFunc !== "function")
             throw new Error(
                 "Constructing Transform: transformFunc required and must be a JavaScript function"
             );
-        this.params = getFuncParamNames(this.transformFunc);
-        this.transformFuncBody = getFuncBody(this.transformFunc);
-        if (this.params.length == 0)
-            throw new Error(
-                "Constructing Transform: transformFunc must take parameters (whose names match the dbsource output)"
-            );
-        transformFuncSource = this.transformFunc.toString();
-        matches = transformFuncSource.match(
-            /\/\/ *@result: *([a-zA-Z_][a-zA-Z0-9_]*)/g
-        );
+        matches = this.transformFunc
+            .toString()
+            .match(/\/\/ *@result: *([a-zA-Z_][a-zA-Z0-9_]*)/g);
         if (!matches || matches.length == 0)
             throw new Error(
                 "Constructing Transform: transformFunc must specify output column names with @result."
             );
+
+        this.params = getFuncParamNames(this.transformFunc);
+        if (this.params.length == 0)
+            throw new Error(
+                "Constructing Transform: transformFunc must take parameters (whose names match the dbsource output)"
+            );
+
         this.columnNames = matches
             .join(",")
             .replace(/\/\/ *@result: */g, "")
             .split(","); // safe bec we restricted the charset above
         console.log("columnNames=" + this.columnNames);
+
         this.dbsource = query["dbsource"];
         this.db = "src_db_same_as_kyrix";
         if (typeof this.dbsource !== "string")

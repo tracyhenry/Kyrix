@@ -660,7 +660,8 @@ function saveProject() {
     // construct queries
     var createTableQuery =
         "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int" +
-        ", CONSTRAINT PK_project PRIMARY KEY (name));";
+        ", CONSTRAINT PK_project PRIMARY KEY (name));" +
+        "CREATE TABLE IF NOT EXISTS stats (ID serial PRIMARY KEY, project_name VARCHAR(255), canvas_id TEXT, query_type TEXT, fetch_time_ms FLOAT, rows_fetched INT)";
     var deleteProjQuery =
         "DELETE FROM project where name = '" + this.name + "'";
     var insertProjQueryMySQL =
