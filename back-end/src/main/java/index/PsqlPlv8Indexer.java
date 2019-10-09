@@ -64,6 +64,7 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
         String transFuncName = bboxTableName + "_transform_func";
         bboxStmt.executeUpdate("DROP FUNCTION IF EXISTS " + transFuncName);
 
+        // TODO: optimize the case where there is no transform func
         sql =
                 "CREATE or REPLACE FUNCTION "
                         + transFuncName

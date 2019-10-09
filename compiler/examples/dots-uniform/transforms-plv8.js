@@ -1,3 +1,4 @@
+// THIS NEW SYNTAX HAS NOT BEEN THOROUGHLY TESTED NOR INTEGRATED
 const Transform = require("../../src/Transform").Transform;
 
 var dotsTransform = new Transform(
