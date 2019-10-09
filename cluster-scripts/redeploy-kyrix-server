@@ -5,12 +5,18 @@ source ../docker-scripts/spinner.sh
 DATA=${DATA:-nba}
 
 echo "checking for Citus-on-Kubernetes and gathering connection info..."
-source setup-citus-vars.env > /dev/null
-source setup-bastion-vars.env > /dev/null
+source env/setup-citus-vars.env > /dev/null
+source env/setup-bastion-vars.env > /dev/null
 if [ "x$MASTER" = "x" ]; then
     echo "please run redeploy-citus to bring up the database. exiting..."
     exit 1
 fi
+
+
+
+# =================================================================================
+# deleting existing deployment, and use "kubectl create" to recreate the kyrix deployment
+# waiting until the kyrix pod starts
 
 echo "deleting existing deployment..."   # skip if not running
 active=`kubectl get -o name pods,deployments,services,pvc | grep 'kyrix' | xargs echo`
@@ -19,11 +25,11 @@ for elem in $active; do
 done
 while [ 1 ]; do w=`kubectl get -o name pods,deployments,services,pvc | egrep kyrix|wc -l`; if [ $w = 0 ]; then break; fi; spin "waiting for $w kubernetes resources (pods, etc) to shut down"; done
 
-kubectl create -f kyrix-deployment.yaml
+kubectl create -f k8s-yaml/kyrix-deployment.yaml
 
 while [ 1 ]; do w=`kubectl get pods -o wide | egrep "kyrix.+Running" |wc -l`; if [ $w = 1 ]; then break; fi; spin "waiting for kyrix kubernetes pod to start"; done
 
-source setup-kyrix-vars.env > /dev/null
+source env/setup-kyrix-vars.env > /dev/null
 
 # expose early because it takes a while to allocate an external IP address
 kubectl expose replicaset.apps/$RS_KYRIX --type=LoadBalancer --name=kyrixserver --port=8000 --target-port=8000
@@ -49,4 +55,9 @@ if [ "x$DEV" = "x1" ]; then
     kubectl cp ../docker-scripts/start-kyrix.sh $KYRIX:/
 fi
 
-DATA=$DATA ./restart-kyrix-server.sh &
+
+
+# =================================================================================
+# run restart-kyrix-server.sh (which basically determines what dataset to run)
+
+DATA=$DATA ./restart-kyrix-server.sh
