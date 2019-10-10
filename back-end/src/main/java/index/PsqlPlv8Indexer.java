@@ -15,6 +15,7 @@ import project.Transform;
 public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
 
     private static PsqlPlv8Indexer instance = null;
+    private static final int NUM_PARTITIONS = 10; // 10 partitions - for now
 
     private PsqlPlv8Indexer() {}
 
@@ -46,9 +47,27 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
         sql +=
                 "cx double precision, cy double precision, "
                         + "minx double precision, miny double precision, "
-                        + "maxx double precision, maxy double precision, geom box)";
+                        + "maxx double precision, maxy double precision, geom box, partition_id int)"
+                        + "PARTITION BY HASH(partition_id);";
         System.out.println(sql);
         bboxStmt.executeUpdate(sql);
+
+        // create bbox table's partitions
+        for (int i = 0; i < NUM_PARTITIONS; i++) {
+            sql =
+                    "CREATE UNLOGGED TABLE "
+                            + bboxTableName
+                            + "_"
+                            + i
+                            + " PARTITION OF "
+                            + bboxTableName
+                            + " FOR VALUES WITH (MODULUS )"
+                            + NUM_PARTITIONS
+                            + ", REMAINDER "
+                            + i
+                            + ");";
+            bboxStmt.executeUpdate(sql);
+        }
 
         // if this is an empty layer, return
         if (trans.getDb().equals("")) return;
@@ -78,13 +97,13 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
         // ================= constructing the big sql =================
         sql = "INSERT INTO " + bboxTableName + "(";
         for (int i = 0; i < colNames.size(); i++) sql += colNames.get(i) + ", ";
-        sql += "cx, cy, minx, miny, maxx, maxy) " + "SELECT ";
+        sql += "cx, cy, minx, miny, maxx, maxy, partition_id) " + "SELECT ";
 
         // raw fields
         for (int i = 0; i < colNames.size(); i++) sql += colNames.get(i) + ",";
 
         // cx cy, w and h
-        if (l.isStatic()) sql += "0, 0, 0, 0, 0, 0 ";
+        if (l.isStatic()) sql += "0, 0, 0, 0, 0, 0, ";
         else {
             String cx, cy, w, h;
             Placement p = l.getPlacement();
@@ -105,8 +124,11 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
             sql += cx + "::float - " + w + "::float / 2.0, ";
             sql += cy + "::float - " + h + "::float / 2.0, ";
             sql += cx + "::float + " + w + "::float / 2.0, ";
-            sql += cy + "::float + " + h + "::float / 2.0 ";
+            sql += cy + "::float + " + h + "::float / 2.0, ";
         }
+
+        // partition_id -- using random generators for now
+        sql += " floor(random() * 10) ";
 
         // run trans func
         sql += "FROM (SELECT ";
