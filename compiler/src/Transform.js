@@ -1,3 +1,6 @@
+var getBodyStringOfFunction = require("./template-api/Renderers")
+    .getBodyStringOfFunction;
+
 // simple parse JS function for its parameters - note that it only works in simple cases, like ours
 // https://stackoverflow.com/a/9924463
 var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm;
@@ -8,13 +11,6 @@ function getFuncParamNames(func) {
         .slice(fnStr.indexOf("(") + 1, fnStr.indexOf(")"))
         .match(ARGUMENT_NAMES);
     if (result === null) result = [];
-    return result;
-}
-function getFuncBody(func) {
-    var fnStr = func.toString().replace(STRIP_COMMENTS, "");
-    //fnStr="function foo(x){ ..body..{...if...} }"; fnStr.slice(fnStr.indexOf('{')+1, fnStr.lastIndexOf('}'));
-    var result = fnStr.slice(fnStr.indexOf("{") + 1, fnStr.lastIndexOf("}"));
-    if (result === null) result = "";
     return result;
 }
 
@@ -35,7 +31,7 @@ function Transform(query, db, transformFunc, columnNames, separable) {
             );
 
         this.transformFunc = query["transformFunc"];
-        this.transformFuncBody = getFuncBody(this.transformFunc);
+        this.transformFuncBody = getBodyStringOfFunction(this.transformFunc);
         if (typeof this.transformFunc !== "function")
             throw new Error(
                 "Constructing Transform: transformFunc required and must be a JavaScript function"
@@ -99,6 +95,8 @@ function Transform(query, db, transformFunc, columnNames, separable) {
     this.db = db;
     this.columnNames = columnNames;
     this.transformFunc = transformFunc;
+    if (transformFunc == "") this.transformFuncBody = "";
+    else this.transformFuncBody = getBodyStringOfFunction(this.transformFunc);
     this.separable = separable;
 }
 
