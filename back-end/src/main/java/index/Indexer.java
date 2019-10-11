@@ -57,8 +57,8 @@ public abstract class Indexer implements Serializable {
                             indexer = PsqlTileIndexer.getInstance(isCitus);
                         else if (Config.indexingScheme
                                 == Config.IndexingScheme.PSQL_NATIVEBOX_INDEX)
-                            indexer = PsqlNativeBoxIndexer.getInstance(isCitus);
-                        // indexer = PsqlPlv8Indexer.getInstance();
+                            //    indexer = PsqlNativeBoxIndexer.getInstance(isCitus);
+                            indexer = PsqlPlv8Indexer.getInstance();
                         else if (Config.indexingScheme
                                 == Config.IndexingScheme.PSQL_NATIVECUBE_INDEX)
                             indexer = PsqlCubeSpatialIndexer.getInstance();

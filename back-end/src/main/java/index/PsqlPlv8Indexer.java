@@ -15,7 +15,7 @@ import project.Transform;
 public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
 
     private static PsqlPlv8Indexer instance = null;
-    private static final int NUM_PARTITIONS = 10; // 10 partitions - for now
+    private static final int NUM_PARTITIONS = 50; // 50 partitions - for now
 
     private PsqlPlv8Indexer() {}
 
@@ -29,6 +29,7 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
     @Override
     public void createMV(Canvas c, int layerId) throws SQLException, ClassNotFoundException {
 
+        if (c.getId().equals("top")) return;
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
@@ -47,8 +48,8 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
         sql +=
                 "cx double precision, cy double precision, "
                         + "minx double precision, miny double precision, "
-                        + "maxx double precision, maxy double precision, geom box, partition_id int)"
-                        + "PARTITION BY HASH(partition_id);";
+                        + "maxx double precision, maxy double precision, geom box, partition_id int) "
+                        + "PARTITION BY HASH (partition_id);";
         System.out.println(sql);
         bboxStmt.executeUpdate(sql);
 
@@ -61,11 +62,12 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
                             + i
                             + " PARTITION OF "
                             + bboxTableName
-                            + " FOR VALUES WITH (MODULUS )"
+                            + " FOR VALUES WITH (MODULUS "
                             + NUM_PARTITIONS
                             + ", REMAINDER "
                             + i
                             + ");";
+            System.out.println(sql);
             bboxStmt.executeUpdate(sql);
         }
 
@@ -128,7 +130,7 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
         }
 
         // partition_id -- using random generators for now
-        sql += " floor(random() * 10) ";
+        sql += " floor(random() * 200000000) ";
 
         // run trans func
         sql += "FROM (SELECT ";
