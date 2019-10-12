@@ -381,7 +381,6 @@ function addAutoDD(autoDD, args) {
             autoDD.topLevelHeight
         );
         this.addView(view);
-
         // initialize view
         this.setInitialStates(view, curPyramid[0], 0, 0);
     } else if (!(args.view instanceof View))

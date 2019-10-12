@@ -34,11 +34,13 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     private ArrayList<RTree<ArrayList<String>, Rectangle>> Rtrees;
     private ArrayList<ArrayList<String>> rawRows;
     private HashMap<String, Integer> aggMap;
+    private int aggMode;
 
     // singleton pattern to ensure only one instance existed
     private AutoDDInMemoryIndexer() {
         this.gson = new GsonBuilder().create();
         this.aggMap = new HashMap();
+        this.aggMode = 0;
     }
 
     // thread-safe instance getter
@@ -63,9 +65,18 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         int numRawColumns = autoDD.getColumnNames().size();
         System.out.println("columns: " + autoDD.getColumnNames());
         System.out.println("aggcolumns: " + autoDD.getAggColumns());
+        // mode 0: numeric, mode 1: categorical
         for (String aggcol : autoDD.getAggColumns()) {
-            this.aggMap.put(aggcol, autoDD.getColumnNames().indexOf(aggcol));
+            if (aggcol.substring(0, 5).equals("mode:")) {
+                if (aggcol.substring(5).equals("category")) this.aggMode = 1;
+                if (aggcol.substring(5).equals("number")) this.aggMode = 0;
+            } else {
+                this.aggMap.put(aggcol, autoDD.getColumnNames().indexOf(aggcol));
+            }
         }
+
+        System.out.println("this.aggMap: " + this.aggMap);
+        System.out.println("this.aggMode: " + this.aggMode);
 
         // calculate overlapping threshold
         this.overlappingThreshold =
@@ -110,6 +121,9 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 ArrayList<String> bboxRow = new ArrayList<>();
                 for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
                 bboxRow.add(gson.toJson(getDummyAgg(rawRow, false)));
+                // if (rawRow.get(0).equals("L. Messi")){
+                //     System.out.println("Messi bboxRow: " + bboxRow);
+                // }
                 this.Rtrees.set(
                         numLevels,
                         this.Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
@@ -123,7 +137,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 // for renderers
                 int minWeight = Integer.MAX_VALUE, maxWeight = Integer.MIN_VALUE;
                 for (Entry<ArrayList<String>, Rectangle> o : curSamples) {
-                    // HashMap<String, Aggregate> rowAgg = getDummyAgg(o);
                     ArrayList<String> curRow = o.value();
                     String curAggStr = curRow.get(numRawColumns);
 
@@ -135,7 +148,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     // if (i == numLevels) curRow.set(numRawColumns, "{}");
                     // System.out.println("curRow: " + curRow);
                     // System.out.println("curMap: " + curMap);
-                    int count = curMap.entrySet().iterator().next().getValue().get(0).intValue();
+                    int count = curMap.get("count").get(0).intValue();
                     // System.out.println("count: " + count);
 
                     minWeight = Math.min(minWeight, count);
@@ -192,8 +205,15 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     String nnAggStr = nearestNeighbor.get(numRawColumns);
                     HashMap<String, ArrayList<Double>> nnMap = new HashMap<>();
                     nnMap = this.gson.fromJson(nnAggStr, type);
+                    // if (nearestNeighbor.get(0).equals("L. Messi")){
+                    //     System.out.println("Level:" + i + " before Messi: " + nearestNeighbor);
+                    //     System.out.println("Level:" + i + " before curRow: " + curRow);
+                    // }
                     updateAgg(nnMap, curMap);
                     nearestNeighbor.set(numRawColumns, gson.toJson(nnMap));
+                    // if (nearestNeighbor.get(0).equals("L. Messi")){
+                    //     System.out.println("Level:" + i + " after Messi: " + nearestNeighbor);
+                    // }
                 }
 
                 // add min & max weight into rendering params
@@ -302,6 +322,11 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             bboxRow.add(
                     gson.toJson(
                             getDummyAgg(rawRow, true))); // place holder for cluster aggregate field
+
+            // if (rawRow.get(0).equals("L. Messi")){
+            //     System.out.println("Level: " + level + " Messi bboxRow: " + bboxRow);
+            // }
+
             // centroid of this tuple
             double cx =
                     autoDD.getCanvasCoordinate(
@@ -376,27 +401,39 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     // if flag == true, use constant; if flag == false, use row info
     private HashMap<String, ArrayList<Double>> getDummyAgg(ArrayList<String> row, boolean flag) {
         HashMap<String, ArrayList<Double>> dummy = new HashMap<>();
-        for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
-            // System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
-            ArrayList<Double> arr = new ArrayList<>();
-            if (flag) {
-                arr.add(0.0);
-                arr.add(Double.MIN_VALUE);
-                arr.add(Double.MAX_VALUE);
-                arr.add(0.0);
-            } else {
-                Double value = 0.0;
-                try {
-                    value = Double.parseDouble(row.get(entry.getValue()));
-                } catch (Exception e) {
-                    throw new Error("Indexing AutoDD: Aggregate Column must be numeric");
+        if (this.aggMode == 0) {
+            for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
+                // System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+                ArrayList<Double> arr = new ArrayList<>();
+                if (flag) {
+                    arr.add(0.0);
+                    arr.add(Double.MIN_VALUE);
+                    arr.add(Double.MAX_VALUE);
+                    arr.add(0.0);
+                } else {
+                    Double value = 0.0;
+                    try {
+                        value = Double.parseDouble(row.get(entry.getValue()));
+                    } catch (Exception e) {
+                        throw new Error("Indexing AutoDD: Aggregate Column must be numeric");
+                    }
+                    arr.add(value); // sum
+                    arr.add(value); // max
+                    arr.add(value); // min
+                    arr.add(value * value); // squaresum
                 }
-                arr.add(value); // sum
-                arr.add(value); // max
-                arr.add(value); // min
-                arr.add(value * value); // squaresum
+                dummy.put(entry.getKey(), arr);
             }
-            dummy.put(entry.getKey(), arr);
+        } else if (this.aggMode == 1) {
+            String category = "";
+            ArrayList<Double> arr = new ArrayList<>();
+            for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
+                arr = new ArrayList<>();
+                if (flag) arr.add(0.0);
+                else arr.add(1.0);
+                category = category.concat(row.get(entry.getValue()).toString()).concat("+");
+            }
+            dummy.put(category.substring(0, category.length() - 1), arr);
         }
         ArrayList<Double> countArr = new ArrayList<>();
         if (flag) {
@@ -405,6 +442,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             countArr.add(1.0);
         }
         dummy.put("count", countArr);
+
         //        TODO: CONVEX HULL POINTS
         return dummy;
     }
@@ -412,21 +450,39 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     private HashMap<String, ArrayList<Double>> updateAgg(
             HashMap<String, ArrayList<Double>> parent, HashMap<String, ArrayList<Double>> child) {
         // System.out.println("parent before: " + parent);
-        for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
-            // Aggregate entry: [count, sum, max, min, squaresum]
-            String key = entry.getKey();
-            ArrayList<Double> p = parent.get(key);
-            ArrayList<Double> c = child.get(key);
-            // sum
-            p.set(0, p.get(0) + c.get(0));
-            // max
-            if (c.get(1) > p.get(1)) p.set(1, c.get(1));
-            // min
-            if (c.get(2) < p.get(2)) p.set(2, c.get(2));
-            // squaresum
-            p.set(3, p.get(3) + c.get(3));
+        if (this.aggMode == 0) {
+            for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
+                // Aggregate entry: [count, sum, max, min, squaresum]
+                String key = entry.getKey();
+                ArrayList<Double> p = parent.get(key);
+                ArrayList<Double> c = child.get(key);
+                // sum
+                p.set(0, p.get(0) + c.get(0));
+                // max
+                if (c.get(1) > p.get(1)) p.set(1, c.get(1));
+                // min
+                if (c.get(2) < p.get(2)) p.set(2, c.get(2));
+                // squaresum
+                p.set(3, p.get(3) + c.get(3));
+            }
+            parent.get("count").set(0, parent.get("count").get(0) + child.get("count").get(0));
+        } else if (this.aggMode == 1) {
+            // default value
+            ArrayList<Double> zero = new ArrayList<>();
+            zero.add(0.0);
+            for (Map.Entry<String, ArrayList<Double>> pentry : parent.entrySet()) {
+                String pkey = pentry.getKey();
+                ArrayList<Double> p = parent.get(pkey);
+                ArrayList<Double> c = child.getOrDefault(pkey, zero);
+                // count
+                p.set(0, p.get(0) + c.get(0));
+            }
+            for (Map.Entry<String, ArrayList<Double>> centry : child.entrySet()) {
+                String ckey = centry.getKey();
+                ArrayList<Double> c = child.get(ckey);
+                parent.putIfAbsent(ckey, c);
+            }
         }
-        parent.get("count").set(0, parent.get("count").get(0) + child.get("count").get(0));
         // System.out.println("parent after:" + parent);
         return parent;
     }

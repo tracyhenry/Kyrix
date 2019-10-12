@@ -75,6 +75,10 @@ function AutoDD(args) {
     ) {
         if (!("glyph" in args.rendering)) args.rendering.glyph = {};
         this.glyph = JSON.stringify(args.rendering.glyph);
+        this.aggMode =
+            "mode" in args.aggregate
+                ? "mode:" + args.aggregate.mode
+                : "mode:number";
     }
     args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
 
@@ -174,7 +178,9 @@ function AutoDD(args) {
         "renderer" in args.rendering.obj ? args.rendering.obj.renderer : null;
     this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
     this.aggColumns =
-        "attributes" in args.aggregate ? args.aggregate.attributes : [];
+        "attributes" in args.aggregate
+            ? [this.aggMode].concat(args.aggregate.attributes)
+            : [this.aggMode];
     this.numLevels =
         "numLevels" in args.rendering ? args.rendering.numLevels : 10;
     this.topLevelWidth =
@@ -616,6 +622,13 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             d.cluster_agg = JSON.parse(d.cluster_agg);
             d.cluster_num = d.cluster_agg["count"][0].toString();
             for (var key in d.cluster_agg) {
+                if (!(key in dict)) {
+                    Object.assign(dict, {
+                        [key]: {
+                            extent: [Number.MAX_VALUE, -Number.MAX_VALUE]
+                        }
+                    });
+                }
                 if (key != "count") {
                     d.cluster_agg[key].push(
                         d.cluster_agg[key][0] / d.cluster_agg["count"][0]
@@ -623,10 +636,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 }
                 var avg_index = d.cluster_agg[key].length - 1;
                 // if cur avg < min avg
-                if (d.cluster_agg[key][avg_index] < dict[key]["extent"][0])
-                    dict[key]["extent"][0] = d.cluster_agg[key][avg_index];
-                if (d.cluster_agg[key][avg_index] > dict[key]["extent"][1])
-                    dict[key]["extent"][1] = d.cluster_agg[key][avg_index];
+                if (d.cluster_agg[key][avg_index] < dict[key].extent[0])
+                    dict[key].extent[0] = d.cluster_agg[key][avg_index];
+                if (d.cluster_agg[key][avg_index] > dict[key].extent[1])
+                    dict[key].extent[1] = d.cluster_agg[key][avg_index];
             }
         });
         // radar chart, for avaerage
@@ -679,8 +692,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         console.log("ticks: ", ticks);
 
         // axis
-        var attributes = [];
-        attributes = glyph.attributes;
+        // var attributes = [];
+        // attributes = glyph.attributes;
 
         // line
         var line = d3
@@ -688,8 +701,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .x(d => d.x)
             .y(d => d.y);
 
-        function getPathCoordinates(d, key) {
+        function getPathCoordinates(d) {
             var coordinates = [];
+            var attributes = Object.keys(d.cluster_agg).filter(
+                item => item !== "count"
+            );
             for (var i = 0; i < attributes.length; i++) {
                 var attribute = attributes[i];
                 var angle = Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
@@ -698,8 +714,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     angleToCoordinate(
                         d,
                         angle,
-                        key,
-                        d.cluster_agg[attribute][4]
+                        attribute,
+                        d.cluster_agg[attribute].slice(-1).pop()
                     )
                 );
             }
@@ -707,23 +723,23 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             return coordinates;
         }
 
-        function angleToCoordinate(d, angle, key, value) {
+        function angleToCoordinate(d, angle, key, value, arg) {
             var x = Math.cos(angle) * dict[key].scale(value);
             var y = Math.sin(angle) * dict[key].scale(value);
-            if (d.name == "L. Messi") {
-                // console.log("key: ", key)
-                // console.log(dict[key].scale(0));
-                // console.log(dict[key].scale(100));
-                // console.log("x: ", x)
-                // console.log("y: ", y)
-                // console.log("d: ", d)
-                // console.log("angle: ", angle)
-                // console.log("value: ", value)
+            if (d.name == "L. Messi" && arg) {
+                console.log("arg: ", arg);
+                console.log("d: ", d);
+                console.log("angle: ", angle);
+                console.log("value: ", value);
+                console.log("key: ", key);
+                console.log(dict[key].scale(dict[key].scale.domain()[0]));
+                console.log(dict[key].scale(value));
+                console.log(dict[key].scale(dict[key].scale.domain()[1]));
+                console.log("x: ", x);
+                console.log("y: ", y);
             }
             return {x: +d.cx + x, y: +d.cy - y};
         }
-
-        var textSizer = d3.scaleLinear().domain([0]);
 
         glyphs.each((p, j, nodes) => {
             // ticks
@@ -738,20 +754,27 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     .classed("kyrix-retainsizezoom", true);
             }
             // axis & axis
+            var attributes = Object.keys(p.cluster_agg).filter(
+                item => item !== "count"
+            );
+
             for (var i = 0; i < attributes.length; i++) {
                 var attribute = attributes[i];
                 var angle = Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
+                var max = dict[attribute].scale.domain()[1];
                 var line_coordinate = angleToCoordinate(
                     p,
                     angle,
                     attribute,
-                    dict[key].scale.domain()[1]
+                    max,
+                    "line"
                 );
                 var label_coordinate = angleToCoordinate(
                     p,
                     angle,
                     attribute,
-                    dict[key].scale.domain()[1] + 1
+                    max * 1.1,
+                    "label"
                 );
 
                 //draw axis line
@@ -772,10 +795,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     .attr("y", label_coordinate.y)
                     .classed("kyrix-retainsizezoom", true)
                     .text(attribute.substr(0, 3).toUpperCase());
-
-                // path
-                var coordinates = getPathCoordinates(p, attribute);
             }
+            // path
+            var coordinates = getPathCoordinates(p);
             d3.select(nodes[j])
                 .append("path")
                 .datum(coordinates)
@@ -827,7 +849,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     objectRenderer(svg, [d], args);
                     svg.selectAll("g:last-of-type")
                         .attr("id", "autodd_tooltip")
-                        .style("opacity", 0.8)
+                        .style("opacity", 1)
                         .style("pointer-events", "none")
                         .selectAll("*")
                         .classed("kyrix-retainsizezoom", true)
