@@ -726,18 +726,18 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         function angleToCoordinate(d, angle, key, value, arg) {
             var x = Math.cos(angle) * dict[key].scale(value);
             var y = Math.sin(angle) * dict[key].scale(value);
-            if (d.name == "L. Messi" && arg) {
-                console.log("arg: ", arg);
-                console.log("d: ", d);
-                console.log("angle: ", angle);
-                console.log("value: ", value);
-                console.log("key: ", key);
-                console.log(dict[key].scale(dict[key].scale.domain()[0]));
-                console.log(dict[key].scale(value));
-                console.log(dict[key].scale(dict[key].scale.domain()[1]));
-                console.log("x: ", x);
-                console.log("y: ", y);
-            }
+            // if (d.name == "L. Messi" && arg) {
+            //     console.log("arg: ", arg)
+            //     console.log("d: ", d);
+            //     console.log("angle: ", angle)
+            //     console.log("value: ", value)
+            //     console.log("key: ", key)
+            //     console.log(dict[key].scale(dict[key].scale.domain()[0]));
+            //     console.log(dict[key].scale(value));
+            //     console.log(dict[key].scale(dict[key].scale.domain()[1]));
+            //     console.log("x: ", x)
+            //     console.log("y: ", y)
+            // }
             return {x: +d.cx + x, y: +d.cy - y};
         }
 
