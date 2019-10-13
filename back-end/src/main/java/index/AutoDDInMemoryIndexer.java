@@ -193,26 +193,11 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                         }
                     }
 
-                    // increment the cluster number of the NN
-                    // int clusterNumBeforeIncrement =
-                    //         Integer.valueOf(nearestNeighbor.get(numRawColumns));
-                    // int clusterNumAfterIncrement =
-                    //         clusterNumBeforeIncrement +
-                    // Integer.valueOf(curRow.get(numRawColumns));
-                    // nearestNeighbor.set(numRawColumns, String.valueOf(clusterNumAfterIncrement));
-
                     String nnAggStr = nearestNeighbor.get(numRawColumns);
-                    HashMap<String, ArrayList<Double>> nnMap = new HashMap<>();
+                    HashMap<String, ArrayList<Double>> nnMap;
                     nnMap = gson.fromJson(nnAggStr, type);
-                    // if (nearestNeighbor.get(0).equals("L. Messi")){
-                    //     System.out.println("Level:" + i + " before Messi: " + nearestNeighbor);
-                    //     System.out.println("Level:" + i + " before curRow: " + curRow);
-                    // }
                     updateAgg(nnMap, curMap);
                     nearestNeighbor.set(numRawColumns, gson.toJson(nnMap));
-                    // if (nearestNeighbor.get(0).equals("L. Messi")){
-                    //     System.out.println("Level:" + i + " after Messi: " + nearestNeighbor);
-                    // }
                 }
 
                 // add min & max weight into rendering params
@@ -485,43 +470,3 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         return parent;
     }
 }
-
-/*class ArrayList<Double> {
-    public int count;
-    public double sum;
-    public double max;
-    public double min;
-    public double squaresum;
-
-    ArrayList<Double>() {
-        this.count = 0;
-        this.sum = 0;
-        this.min = Integer.MAX_VALUE;
-        this.max = Integer.MIN_VALUE;
-        this.squaresum = 0;
-    }
-
-    ArrayList<Double>(int _count, double _sum, double _min, double _max, double _squaresum) {
-        this.count = _count;
-        this.sum = _sum;
-        this.min = _min;
-        this.max = _max;
-        this.squaresum = _squaresum;
-    }
-
-    @Override
-    public String toString() {
-        return "{"
-                + "count: "
-                + count
-                + ", sum: "
-                + sum
-                + ", min: "
-                + min
-                + ", max: "
-                + max
-                + ", squaresum: "
-                + squaresum
-                + '}';
-    }
-}*/
