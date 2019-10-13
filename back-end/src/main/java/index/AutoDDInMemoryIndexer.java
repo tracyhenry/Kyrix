@@ -146,10 +146,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     Type type = new TypeToken<HashMap<String, ArrayList<Double>>>() {}.getType();
                     curMap = gson.fromJson(curAggStr, type);
 
-                    // boundary case: bottom level
-                    // if (i == numLevels) curRow.set(numRawColumns, "{}");
-                    // System.out.println("curRow: " + curRow);
-                    // System.out.println("curMap: " + curMap);
                     int count = curMap.get("count").get(0).intValue();
                     // System.out.println("count: " + count);
 
