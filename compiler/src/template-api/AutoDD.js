@@ -606,18 +606,14 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function renderGlyphBody() {
-        console.log("glyph raw:", data);
+        // console.log("glyph raw:", data);
         var params = args.renderingParams;
         var glyph = REPLACE_ME_glyph;
-        console.log("glyph:", glyph);
+        var g = svg.append("g");
+        // console.log("glyph:", glyph);
         var dict = {};
-        for (var key in JSON.parse(data[0].cluster_agg)) {
-            Object.assign(dict, {
-                [key]: {
-                    extent: [Number.MAX_VALUE, -Number.MAX_VALUE]
-                }
-            });
-        }
+
+        // Step 1: Pre-compute
         data.forEach(d => {
             d.cluster_agg = JSON.parse(d.cluster_agg);
             d.cluster_num = d.cluster_agg["count"][0].toString();
@@ -642,39 +638,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     dict[key].extent[1] = d.cluster_agg[key][avg_index];
             }
         });
-        // radar chart, for avaerage
-        var radius = 0;
-        if (typeof glyph.size === "number") radius = glyph.size;
-        else radius = REPLACE_ME_bboxH / 4;
-
-        var rangeRadius = [0, radius];
-        // radius scale build
-        for (var key in dict) {
-            dict[key].scale = d3.scaleLinear().range(rangeRadius);
-            if (Array.isArray(glyph.domain)) {
-                dict[key].scale.domain(glyph.domain);
-            } else if (typeof glyph.domain === "object") {
-                dict[key].scale.domain(glyph.domain[key]);
-            } else if (typeof glyph.domain === "number") {
-                dict[key].scale.domain([0, glyph.domain]);
-            } else {
-                dict[key].scale.domain(
-                    dict[key].extent[0] > 0
-                        ? [0, dict[key].extent[1]]
-                        : dict[key].extent
-                );
-            }
-        }
-        dict.count.scale = d3
-            .scaleLinear()
-            .range([rangeRadius[1] * 0.6, rangeRadius[1] * 0.5])
-            .domain([
-                dict.count.extent[0].toString().length,
-                dict.count.extent[1].toString().length
-            ]);
-        console.log("dict:", dict);
-
-        var g = svg.append("g");
+        // console.log("dict:", dict);
 
         var glyphs = g
             .selectAll("g.glyph")
@@ -685,6 +649,38 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
         // radar chart
         if (glyph.type == "radar" || glyph.type == "spider") {
+            // radar chart, for avaerage
+            var radius = 0;
+            if (typeof glyph.size === "number") radius = glyph.size;
+            else radius = REPLACE_ME_bboxH / 4;
+
+            // radar chart scales
+            var rangeRadius = [0, radius];
+            // build radius scale
+            for (var key in dict) {
+                dict[key].scale = d3.scaleLinear().range(rangeRadius);
+                if (Array.isArray(glyph.domain)) {
+                    dict[key].scale.domain(glyph.domain);
+                } else if (typeof glyph.domain === "object") {
+                    dict[key].scale.domain(glyph.domain[key]);
+                } else if (typeof glyph.domain === "number") {
+                    dict[key].scale.domain([0, glyph.domain]);
+                } else {
+                    dict[key].scale.domain(
+                        dict[key].extent[0] > 0
+                            ? [0, dict[key].extent[1]]
+                            : dict[key].extent
+                    );
+                }
+            }
+            dict.count.scale = d3
+                .scaleLinear()
+                .range([rangeRadius[1] * 0.6, rangeRadius[1] * 0.5])
+                .domain([
+                    dict.count.extent[0].toString().length,
+                    dict.count.extent[1].toString().length
+                ]);
+
             // ticks
             var ticks = [];
             if (Array.isArray(glyph.ticks)) {
@@ -693,11 +689,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 for (var i = 0; i < glyph.ticks; i++)
                     ticks.push((i + 1) * (radius / glyph.ticks));
             }
-            console.log("ticks: ", ticks);
-
-            // axis
-            // var attributes = [];
-            // attributes = glyph.attributes;
+            // console.log("ticks: ", ticks);
 
             // line
             var line = d3
@@ -731,18 +723,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             function angleToCoordinate(d, angle, key, value, arg) {
                 var x = Math.cos(angle) * dict[key].scale(value);
                 var y = Math.sin(angle) * dict[key].scale(value);
-                // if (d.name == "L. Messi" && arg) {
-                //     console.log("arg: ", arg)
-                //     console.log("d: ", d);
-                //     console.log("angle: ", angle)
-                //     console.log("value: ", value)
-                //     console.log("key: ", key)
-                //     console.log(dict[key].scale(dict[key].scale.domain()[0]));
-                //     console.log(dict[key].scale(value));
-                //     console.log(dict[key].scale(dict[key].scale.domain()[1]));
-                //     console.log("x: ", x)
-                //     console.log("y: ", y)
-                // }
                 return {x: +d.cx + x, y: +d.cy - y};
             }
 
@@ -852,7 +832,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             var objectRenderer = REPLACE_ME_this_rendering;
             g.selectAll("path.glyph")
                 .on("mouseover", function(d, i, nodes) {
-                    // console.log("d, this, nodes[i]: ", d, this, nodes[i])
                     objectRenderer(svg, [d], args);
                     svg.selectAll("g:last-of-type")
                         .attr("id", "autodd_tooltip")

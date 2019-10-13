@@ -9,7 +9,7 @@ p.addRenderingParams(renderers.renderingParams);
 p.addStyles(renderers.glyphStyles);
 
 // set up auto drill down
-var query = "select * from players order by cast(wage as int) desc";
+var query = "select * from fifa19 order by cast(wage as int) desc";
 
 var attributes = [
     "defending",
