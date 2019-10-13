@@ -29,7 +29,6 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
     @Override
     public void createMV(Canvas c, int layerId) throws SQLException, ClassNotFoundException {
 
-        if (c.getId().equals("top")) return;
         Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
@@ -99,7 +98,7 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
         // ================= constructing the big sql =================
         sql = "INSERT INTO " + bboxTableName + "(";
         for (int i = 0; i < colNames.size(); i++) sql += colNames.get(i) + ", ";
-        sql += "cx, cy, minx, miny, maxx, maxy, partition_id) " + "SELECT ";
+        sql += "cx, cy, minx, miny, maxx, maxy, geom, partition_id) " + "SELECT ";
 
         // raw fields
         for (int i = 0; i < colNames.size(); i++) sql += colNames.get(i) + ",";
@@ -107,7 +106,7 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
         // cx cy, w and h
         if (l.isStatic()) sql += "0, 0, 0, 0, 0, 0, ";
         else {
-            String cx, cy, w, h;
+            String cx, cy, minx, miny, maxx, maxy, w, h;
             Placement p = l.getPlacement();
             cx =
                     (p.getCentroid_x().substring(0, 4).equals("full")
@@ -123,14 +122,18 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
                             ? "1e20"
                             : p.getHeight().substring(4));
             sql += cx + "::float, " + cy + "::float, ";
-            sql += cx + "::float - " + w + "::float / 2.0, ";
-            sql += cy + "::float - " + h + "::float / 2.0, ";
-            sql += cx + "::float + " + w + "::float / 2.0, ";
-            sql += cy + "::float + " + h + "::float / 2.0, ";
+
+            // bounding box
+            minx = cx + "::float - " + w + "::float / 2.0";
+            miny = cy + "::float - " + h + "::float / 2.0";
+            maxx = cx + "::float + " + w + "::float / 2.0";
+            maxy = cy + "::float + " + h + "::float / 2.0";
+            sql += minx + ", " + miny + ", " + maxx + ", " + maxy + ", ";
+            sql += "box( point(" + minx + ", " + miny + "), point(" + maxx + ", " + maxy + ") ), ";
         }
 
         // partition_id -- using random generators for now
-        sql += " floor(random() * 200000000) ";
+        sql += "floor(random() * 200000000) ";
 
         // run trans func
         sql += "FROM (SELECT ";
@@ -160,14 +163,9 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
         long st = System.currentTimeMillis();
         bboxStmt.executeUpdate(sql);
         System.out.println(
-                "Running transform func took: " + (System.currentTimeMillis() - st) + "ms.");
-
-        // update geom
-        sql = "UPDATE " + bboxTableName + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
-        System.out.println(sql);
-        st = System.currentTimeMillis();
-        bboxStmt.executeUpdate(sql);
-        System.out.println("Setting geom field took: " + (System.currentTimeMillis() - st) + "ms.");
+                "Running transform func took: "
+                        + (System.currentTimeMillis() - st) / 1000.0
+                        + "s.");
 
         // create spatial index
         sql = "CREATE INDEX sp_" + bboxTableName + " ON " + bboxTableName + " USING gist (geom);";
@@ -175,7 +173,9 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
         st = System.currentTimeMillis();
         bboxStmt.executeUpdate(sql);
         System.out.println(
-                "Creating spatial indexes took: " + (System.currentTimeMillis() - st) + "ms.");
+                "Creating spatial indexes took: "
+                        + (System.currentTimeMillis() - st) / 1000.0
+                        + "s.");
     }
 
     public String removeTrailingSemiColon(String q) {
