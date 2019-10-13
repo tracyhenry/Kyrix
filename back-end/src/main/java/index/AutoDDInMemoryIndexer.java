@@ -34,7 +34,13 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     private ArrayList<RTree<ArrayList<String>, Rectangle>> Rtrees;
     private ArrayList<ArrayList<String>> rawRows;
     private HashMap<String, Integer> aggMap;
-    private int aggMode;
+
+    private enum AggMode {
+        NUMERIC,
+        CATEGORICAL
+    };
+
+    private AggMode aggMode;
 
     // singleton pattern to ensure only one instance existed
     private AutoDDInMemoryIndexer() {
@@ -62,14 +68,14 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         int numLevels = autoDD.getNumLevels();
         int numRawColumns = autoDD.getColumnNames().size();
         aggMap = new HashMap();
-        aggMode = 0;
+        aggMode = AggMode.NUMERIC;
         System.out.println("columns: " + autoDD.getColumnNames());
         System.out.println("aggcolumns: " + autoDD.getAggColumns());
         // mode 0: numeric, mode 1: categorical
         for (String aggcol : autoDD.getAggColumns()) {
             if (aggcol.substring(0, 5).equals("mode:")) {
-                if (aggcol.substring(5).equals("category")) aggMode = 1;
-                if (aggcol.substring(5).equals("number")) aggMode = 0;
+                if (aggcol.substring(5).equals("category")) aggMode = AggMode.CATEGORICAL;
+                if (aggcol.substring(5).equals("number")) aggMode = AggMode.NUMERIC;
             } else {
                 aggMap.put(aggcol, autoDD.getColumnNames().indexOf(aggcol));
             }
@@ -377,7 +383,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     // if flag == true, use constant; if flag == false, use row info
     private HashMap<String, ArrayList<Double>> getDummyAgg(ArrayList<String> row, boolean flag) {
         HashMap<String, ArrayList<Double>> dummy = new HashMap<>();
-        if (aggMode == 0) {
+        if (aggMode == AggMode.NUMERIC) {
             for (Map.Entry<String, Integer> entry : aggMap.entrySet()) {
                 // System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
                 ArrayList<Double> arr = new ArrayList<>();
@@ -400,7 +406,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 }
                 dummy.put(entry.getKey(), arr);
             }
-        } else if (aggMode == 1) {
+        } else if (aggMode == AggMode.CATEGORICAL) {
             String category = "";
             ArrayList<Double> arr = new ArrayList<>();
             for (Map.Entry<String, Integer> entry : aggMap.entrySet()) {
@@ -426,7 +432,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     private HashMap<String, ArrayList<Double>> updateAgg(
             HashMap<String, ArrayList<Double>> parent, HashMap<String, ArrayList<Double>> child) {
         // System.out.println("parent before: " + parent);
-        if (aggMode == 0) {
+        if (aggMode == AggMode.NUMERIC) {
             for (Map.Entry<String, Integer> entry : aggMap.entrySet()) {
                 // Aggregate entry: [count, sum, max, min, squaresum]
                 String key = entry.getKey();
@@ -442,7 +448,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 p.set(3, p.get(3) + c.get(3));
             }
             parent.get("count").set(0, parent.get("count").get(0) + child.get("count").get(0));
-        } else if (aggMode == 1) {
+        } else if (aggMode == AggMode.CATEGORICAL) {
             // default value
             ArrayList<Double> zero = new ArrayList<>();
             zero.add(0.0);
