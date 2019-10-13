@@ -69,6 +69,7 @@ function AutoDD(args) {
             args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
                 this.heatmapRadius * 2 + 1;
     }
+    args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
     if (
         args.rendering.mode == "glyph" ||
         args.rendering.mode == "glyph+object"
@@ -80,7 +81,6 @@ function AutoDD(args) {
                 ? "mode:" + args.aggregate.mode
                 : "mode:number";
     }
-    args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
 
     // check required args
     var requiredArgs = [
