@@ -48,18 +48,18 @@ public class Transform implements Serializable {
         if (columnNames.size() > 0) return columnNames;
 
         // if it is an empty transform, return an empty array
-        if (this.getDb().isEmpty()) return columnNames;
+        if (getDb().isEmpty()) return columnNames;
 
         // otherwise the transform func is empty, fetch the schema from DB
         if (queriedColumnNames == null)
             try {
                 queriedColumnNames = new ArrayList<>();
-                Statement rawDBStmt = DbConnector.getStmtByDbName(this.getDb(), true);
-                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, this.getQuery());
+                Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
+                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, getQuery());
                 int colCount = rs.getMetaData().getColumnCount();
                 for (int i = 1; i <= colCount; i++)
                     queriedColumnNames.add(rs.getMetaData().getColumnName(i));
-                DbConnector.closeConnection(this.getDb());
+                DbConnector.closeConnection(getDb());
             } catch (Exception e) {
                 e.printStackTrace();
             }
