@@ -58,6 +58,7 @@ public abstract class Indexer implements Serializable {
                         else if (Config.indexingScheme
                                 == Config.IndexingScheme.PSQL_NATIVEBOX_INDEX)
                             indexer = PsqlNativeBoxIndexer.getInstance(isCitus);
+                        // indexer = PsqlPlv8Indexer.getInstance();
                         else if (Config.indexingScheme
                                 == Config.IndexingScheme.PSQL_NATIVECUBE_INDEX)
                             indexer = PsqlCubeSpatialIndexer.getInstance();
@@ -227,48 +228,6 @@ public abstract class Indexer implements Serializable {
             bbox.add(centroid_y_dbl + height_dbl / 2.0); // max y
         } else for (int i = 0; i < 6; i++) bbox.add(0.0);
         return bbox;
-    }
-
-    // WORK IN PROGRESS
-    // return a String expression suitable for pushing into javascript or SQL.
-    // note: may refer to column names coming from the outut of the transform func
-    protected static String getBboxCoordinatesFunc(Layer l) {
-
-        if (l.isStatic()) {
-            return "{cx:0.0, cy:0.0, minx:0.0, miny:0.0, maxx:0.0, maxy:0.0}";
-        }
-
-        Placement p = l.getPlacement();
-        String centroid_x = p.getCentroid_x();
-        String centroid_y = p.getCentroid_y();
-        String width_func = p.getWidth();
-        String height_func = p.getHeight();
-
-        // substring(4) handles both col:name or con:value
-        String centroid_x_str =
-                (centroid_x.substring(0, 4).equals("full")) ? "0" : centroid_x.substring(4);
-        String centroid_y_str =
-                (centroid_y.substring(0, 4).equals("full")) ? "0" : centroid_y.substring(4);
-        String width_str =
-                (width_func.substring(0, 4).equals("full"))
-                        ? String.valueOf(Double.MAX_VALUE)
-                        : width_func.substring(4);
-        String height_str =
-                (height_func.substring(0, 4).equals("full"))
-                        ? String.valueOf(Double.MAX_VALUE)
-                        : height_func.substring(4);
-
-        return ("{ cx: centroid_x_str,"
-                        + "cy: centroid_y_str,"
-                        + "minx: centroid_x_str - width_str / 2.0,"
-                        + // may include column name
-                        "miny: centroid_y_str - height_str / 2.0,"
-                        + "maxx: centroid_x_str + width_str / 2.0,"
-                        + "maxy: centroid_y_str + height_str / 2.0 }")
-                .replaceAll("centroid_x_str", centroid_x_str)
-                .replaceAll("centroid_y_str", centroid_y_str)
-                .replaceAll("width_str", width_str)
-                .replaceAll("height_str", height_str);
     }
 
     protected static String getPolygonText(double minx, double miny, double maxx, double maxy) {

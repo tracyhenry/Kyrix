@@ -50,6 +50,6 @@ while [ 1 ]; do ip=`kubectl get services -o wide | grep kyrixserver | awk '{prin
 source env/setup-kyrix-vars.env > /dev/null
 
 # note: DBTYPE=psql is safe, but won't distribute the data across the Citus cluster, i.e. it'll use local tables on the master Citus node only.
-CMD="cd /kyrix/back-end; KYRIX_IP=$KYRIX_IP KYRIX_DB=$KYRIX_DB SCALE=$SCALE NUM_WORKERS=$NUM_WORKERS SRCDATA_PROJECT_NAME=$SRCDATA_PROJECT_NAME SRCDATA_DB=$SRCDATA_DB SRCDATA_DB_TEST_TABLE=$SRCDATA_DB_TEST_TABLE SRCDATA_DB_LOAD_CMD=$SRCDATA_DB_LOAD_CMD KYRIX_DB_INDEX_CMD=$KYRIX_DB_INDEX_CMD KYRIX_DB_INDEX_FORCE=$KYRIX_DB_INDEX_FORCE KYRIX_DB_RELOAD_FORCE=$KYRIX_DB_RELOAD_FORCE DBTYPE=citus PGHOST=master POSTGRES_PASSWORD=kyrixftw USERNAME=kyrix USER_PASSWORD=kyrix_password /wait-for-postgres master:5432 -t 60 -- /start-kyrix.sh; tail -f /dev/null"
+CMD="cd /kyrix/back-end; START_APP=1 KYRIX_IP=$KYRIX_IP KYRIX_DB=$KYRIX_DB SCALE=$SCALE NUM_WORKERS=$NUM_WORKERS SRCDATA_PROJECT_NAME=$SRCDATA_PROJECT_NAME SRCDATA_DB=$SRCDATA_DB SRCDATA_DB_TEST_TABLE=$SRCDATA_DB_TEST_TABLE SRCDATA_DB_LOAD_CMD=$SRCDATA_DB_LOAD_CMD KYRIX_DB_INDEX_CMD=$KYRIX_DB_INDEX_CMD KYRIX_DB_INDEX_FORCE=$KYRIX_DB_INDEX_FORCE KYRIX_DB_RELOAD_FORCE=$KYRIX_DB_RELOAD_FORCE DBTYPE=citus PGHOST=master POSTGRES_PASSWORD=kyrixftw USERNAME=kyrix USER_PASSWORD=kyrix_password /wait-for-postgres master:5432 -t 60 -- /start-kyrix.sh; tail -f /dev/null"
 echo $CMD
 kubectl exec -it $KYRIX -- sh -c "$CMD"

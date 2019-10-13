@@ -1,9 +1,9 @@
 #!/bin/bash
 #
 # run inside docker, on each database
-# note: can't be added to postgres initialization because we haven't created the kyrix databases yet;
-# also, install_modules/add_modules can't connect via unix sockets, which is the only option pg
-# allows during init
+# note: can't be added to postgres initialization because
+# install_modules/add_modules can't connect via unix sockets
+# which is the only option pg allows during init
 #
 if [ `whoami` != "postgres" ]; then
     echo "$0: must run as postgres, not "`whoami`
