@@ -70,16 +70,16 @@ function AutoDD(args) {
                 this.heatmapRadius * 2 + 1;
     }
     args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
+    this.aggMode =
+        "mode" in args.aggregate
+            ? "mode:" + args.aggregate.mode
+            : "mode:number";
     if (
         args.rendering.mode == "glyph" ||
         args.rendering.mode == "glyph+object"
     ) {
         if (!("glyph" in args.rendering)) args.rendering.glyph = {};
         this.glyph = JSON.stringify(args.rendering.glyph);
-        this.aggMode =
-            "mode" in args.aggregate
-                ? "mode:" + args.aggregate.mode
-                : "mode:number";
     }
 
     // check required args
@@ -301,6 +301,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function renderObjectClusterNumBody() {
         var g = svg.select("g:last-of-type");
+        data.forEach(d => {
+            d.cluster_agg = JSON.parse(d.cluster_agg);
+            d.cluster_num = d.cluster_agg["count"][0].toString();
+        });
         g.selectAll(".clusternum")
             .data(data)
             .enter()
@@ -346,7 +350,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var translatedData = data.map(d => ({
             x: d.cx - (x - radius),
             y: d.cy - (y - radius),
-            w: +d.cluster_num
+            w: +JSON.parse(d.cluster_agg).count[0]
         }));
         contours = d3
             .contourDensity()
@@ -444,7 +448,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var translatedData = data.map(d => ({
             x: d.cx - (x - radius),
             y: d.cy - (y - radius),
-            w: +d.cluster_num
+            w: +JSON.parse(d.cluster_agg).count[0]
         }));
 
         // render heatmap
