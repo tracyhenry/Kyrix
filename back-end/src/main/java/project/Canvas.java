@@ -98,7 +98,7 @@ public class Canvas implements Serializable {
 
     public String getDbByLayerId(String layerId) {
 
-        return this.getLayers().get(Integer.valueOf(layerId)).getTransform().getDb();
+        return getLayers().get(Integer.valueOf(layerId)).getTransform().getDb();
     }
 
     @Override
