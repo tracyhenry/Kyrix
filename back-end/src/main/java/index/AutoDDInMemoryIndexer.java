@@ -120,9 +120,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 ArrayList<String> bboxRow = new ArrayList<>();
                 for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
                 bboxRow.add(gson.toJson(getDummyAgg(rawRow, false)));
-                // if (rawRow.get(0).equals("L. Messi")){
-                //     System.out.println("Messi bboxRow: " + bboxRow);
-                // }
                 Rtrees.set(
                         numLevels,
                         Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
@@ -307,10 +304,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             bboxRow.add(
                     gson.toJson(
                             getDummyAgg(rawRow, true))); // place holder for cluster aggregate field
-
-            // if (rawRow.get(0).equals("L. Messi")){
-            //     System.out.println("Level: " + level + " Messi bboxRow: " + bboxRow);
-            // }
 
             // centroid of this tuple
             double cx =
