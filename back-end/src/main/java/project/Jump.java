@@ -5,7 +5,7 @@ public class Jump {
 
     private String sourceId, destId;
     private String type;
-    private String selector, viewport, predicates, name;
+    private String selector, viewport, predicates, name, overview;
     private String sourceViewId, destViewId;
     private Boolean noPrefix;
 
@@ -35,6 +35,10 @@ public class Jump {
 
     public String getName() {
         return name;
+    }
+
+    public String getOverview() {
+        return overview;
     }
 
     public String getSourceViewId() {
@@ -72,6 +76,9 @@ public class Jump {
                 + '\''
                 + ", name='"
                 + name
+                + '\''
+                + ", overview='"
+                + overview
                 + '\''
                 + ", sourceViewId='"
                 + sourceViewId

@@ -2,6 +2,7 @@ package server;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import index.Indexer;
@@ -21,8 +22,10 @@ public class ProjectRequestHandler implements HttpHandler {
     private static HashMap<String, ArrayList<Project>> projects = new HashMap<>();
 
     public ProjectRequestHandler() {
-
-        gson = new GsonBuilder().create();
+        final RuntimeTypeAdapterFactory<Hierarchy> typeFactory =
+                RuntimeTypeAdapterFactory.of(Hierarchy.class, "type")
+                        .registerSubtype(CirclePacking.class, "circle packing");
+        gson = new GsonBuilder().registerTypeAdapterFactory(typeFactory).create();
     };
 
     private Project getLastProjectObject(String projectName) {

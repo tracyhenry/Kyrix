@@ -2,7 +2,6 @@ package project;
 
 import index.Indexer;
 import java.io.Serializable;
-import third_party.Exclude;
 
 /** Created by wenbo on 4/3/18. */
 public class Layer implements Serializable {
@@ -13,9 +12,10 @@ public class Layer implements Serializable {
     private boolean deltaBox;
     private Placement placement;
     private String rendering;
-    @Exclude private Indexer indexer;
+    private Indexer indexer;
     private String autoDDId;
     private String indexerType;
+    private int zoomLevel;
 
     public Transform getTransform() {
         return transform;
@@ -59,6 +59,14 @@ public class Layer implements Serializable {
 
     public String getIndexerType() {
         return indexerType;
+    }
+
+    public void setZoomLevel(int level) {
+        this.zoomLevel = level;
+    }
+
+    public int getZoomLevel() {
+        return zoomLevel;
     }
 
     public String getColStr(String tableName) {

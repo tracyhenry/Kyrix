@@ -24,7 +24,6 @@ public class CanvasRequestHandler implements HttpHandler {
     private final Gson gson;
 
     public CanvasRequestHandler() {
-
         gson = new GsonBuilder().create();
     }
 

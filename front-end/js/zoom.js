@@ -116,8 +116,12 @@ function completeZoom(viewId, zoomType, oldZoomFactorX, oldZoomFactorY) {
 
     // get the id of the canvas to zoom into
     var jumps = gvd.curJump;
+    var index = 0;
     for (var i = 0; i < jumps.length; i++)
-        if (jumps[i].type == zoomType) gvd.curCanvasId = jumps[i].destId;
+        if (jumps[i].type == zoomType) {
+            gvd.curCanvasId = jumps[i].destId;
+            index = i;
+        }
 
     // get new viewport coordinates
     var curViewport = d3
@@ -135,6 +139,10 @@ function completeZoom(viewId, zoomType, oldZoomFactorX, oldZoomFactorY) {
     gotCanvas.then(function() {
         // render static layers
         renderStaticLayers(viewId);
+
+        // console.log(jumps, index)
+        // handle overview, if not specified, nothing will happen
+        handleOverview(viewId, jumps[index]);
 
         // post animation
         postJump(viewId, zoomType);
@@ -212,6 +220,8 @@ function zoomed(viewId) {
             vHeight / scaleY
     );
 
+    handleOverview(viewId);
+
     // set viewboxes old layer groups
     var jumps = gvd.curJump;
     var zoomType =
@@ -259,7 +269,6 @@ function zoomed(viewId) {
             .each(function() {
                 zoomRescale(viewId, this);
             });
-
         // for old layer groups
         if (oldCanvasId != "") {
             // proceed when it's indeed literal zoom (otherwise can only be geometric semantic zoom)
