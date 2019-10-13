@@ -681,164 +681,171 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .data(data)
             .enter();
 
-        // ticks
-        var ticks = [];
-        if (Array.isArray(glyph.ticks)) {
-            ticks = glyph.ticks;
-        } else if (typeof glyph.ticks === "number") {
-            for (var i = 0; i < glyph.ticks; i++)
-                ticks.push((i + 1) * (radius / glyph.ticks));
-        }
-        console.log("ticks: ", ticks);
+        // Step 2: append glyphs
 
-        // axis
-        // var attributes = [];
-        // attributes = glyph.attributes;
+        // radar chart
+        if (glyph.type == "radar" || glyph.type == "spider") {
+            // ticks
+            var ticks = [];
+            if (Array.isArray(glyph.ticks)) {
+                ticks = glyph.ticks;
+            } else if (typeof glyph.ticks === "number") {
+                for (var i = 0; i < glyph.ticks; i++)
+                    ticks.push((i + 1) * (radius / glyph.ticks));
+            }
+            console.log("ticks: ", ticks);
 
-        // line
-        var line = d3
-            .line()
-            .x(d => d.x)
-            .y(d => d.y);
+            // axis
+            // var attributes = [];
+            // attributes = glyph.attributes;
 
-        function getPathCoordinates(d) {
-            var coordinates = [];
-            var attributes = Object.keys(d.cluster_agg).filter(
-                item => item !== "count"
-            );
-            for (var i = 0; i < attributes.length; i++) {
-                var attribute = attributes[i];
-                var angle = Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
-                // average
-                coordinates.push(
-                    angleToCoordinate(
-                        d,
+            // line
+            var line = d3
+                .line()
+                .x(d => d.x)
+                .y(d => d.y);
+
+            function getPathCoordinates(d) {
+                var coordinates = [];
+                var attributes = Object.keys(d.cluster_agg).filter(
+                    item => item !== "count"
+                );
+                for (var i = 0; i < attributes.length; i++) {
+                    var attribute = attributes[i];
+                    var angle =
+                        Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
+                    // average
+                    coordinates.push(
+                        angleToCoordinate(
+                            d,
+                            angle,
+                            attribute,
+                            d.cluster_agg[attribute].slice(-1).pop()
+                        )
+                    );
+                }
+                coordinates.push(coordinates[0]);
+                return coordinates;
+            }
+
+            function angleToCoordinate(d, angle, key, value, arg) {
+                var x = Math.cos(angle) * dict[key].scale(value);
+                var y = Math.sin(angle) * dict[key].scale(value);
+                // if (d.name == "L. Messi" && arg) {
+                //     console.log("arg: ", arg)
+                //     console.log("d: ", d);
+                //     console.log("angle: ", angle)
+                //     console.log("value: ", value)
+                //     console.log("key: ", key)
+                //     console.log(dict[key].scale(dict[key].scale.domain()[0]));
+                //     console.log(dict[key].scale(value));
+                //     console.log(dict[key].scale(dict[key].scale.domain()[1]));
+                //     console.log("x: ", x)
+                //     console.log("y: ", y)
+                // }
+                return {x: +d.cx + x, y: +d.cy - y};
+            }
+
+            glyphs.each((p, j, nodes) => {
+                // ticks
+                for (var i = ticks.length - 1; i >= 0; i--) {
+                    d3.select(nodes[j])
+                        .append("circle")
+                        .attr("cx", d => d.cx)
+                        .attr("cy", d => d.cy)
+                        .attr("fill", "none")
+                        .attr("stroke", "gray")
+                        .attr("r", ticks[i])
+                        .classed("kyrix-retainsizezoom", true);
+                }
+                // axis & axis
+                var attributes = Object.keys(p.cluster_agg).filter(
+                    item => item !== "count"
+                );
+
+                for (var i = 0; i < attributes.length; i++) {
+                    var attribute = attributes[i];
+                    var angle =
+                        Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
+                    var max = dict[attribute].scale.domain()[1];
+                    var line_coordinate = angleToCoordinate(
+                        p,
                         angle,
                         attribute,
-                        d.cluster_agg[attribute].slice(-1).pop()
-                    )
-                );
-            }
-            coordinates.push(coordinates[0]);
-            return coordinates;
-        }
+                        max,
+                        "line"
+                    );
+                    var label_coordinate = angleToCoordinate(
+                        p,
+                        angle,
+                        attribute,
+                        max * 1.1,
+                        "label"
+                    );
 
-        function angleToCoordinate(d, angle, key, value, arg) {
-            var x = Math.cos(angle) * dict[key].scale(value);
-            var y = Math.sin(angle) * dict[key].scale(value);
-            // if (d.name == "L. Messi" && arg) {
-            //     console.log("arg: ", arg)
-            //     console.log("d: ", d);
-            //     console.log("angle: ", angle)
-            //     console.log("value: ", value)
-            //     console.log("key: ", key)
-            //     console.log(dict[key].scale(dict[key].scale.domain()[0]));
-            //     console.log(dict[key].scale(value));
-            //     console.log(dict[key].scale(dict[key].scale.domain()[1]));
-            //     console.log("x: ", x)
-            //     console.log("y: ", y)
-            // }
-            return {x: +d.cx + x, y: +d.cy - y};
-        }
+                    //draw axis line
+                    d3.select(nodes[j])
+                        .append("line")
+                        .attr("x1", p.cx)
+                        .attr("y1", p.cy)
+                        .attr("x2", line_coordinate.x)
+                        .attr("y2", line_coordinate.y)
+                        .classed("kyrix-retainsizezoom", true)
+                        .attr("stroke", "black");
 
-        glyphs.each((p, j, nodes) => {
-            // ticks
-            for (var i = ticks.length - 1; i >= 0; i--) {
+                    //draw axis label
+                    d3.select(nodes[j])
+                        .append("text")
+                        .classed("label", true)
+                        .attr("x", label_coordinate.x)
+                        .attr("y", label_coordinate.y)
+                        .classed("kyrix-retainsizezoom", true)
+                        .text(attribute.substr(0, 3).toUpperCase());
+                }
+                // path
+                var coordinates = getPathCoordinates(p);
                 d3.select(nodes[j])
-                    .append("circle")
-                    .attr("cx", d => d.cx)
-                    .attr("cy", d => d.cy)
-                    .attr("fill", "none")
-                    .attr("stroke", "gray")
-                    .attr("r", ticks[i])
-                    .classed("kyrix-retainsizezoom", true);
-            }
-            // axis & axis
-            var attributes = Object.keys(p.cluster_agg).filter(
-                item => item !== "count"
-            );
-
-            for (var i = 0; i < attributes.length; i++) {
-                var attribute = attributes[i];
-                var angle = Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
-                var max = dict[attribute].scale.domain()[1];
-                var line_coordinate = angleToCoordinate(
-                    p,
-                    angle,
-                    attribute,
-                    max,
-                    "line"
-                );
-                var label_coordinate = angleToCoordinate(
-                    p,
-                    angle,
-                    attribute,
-                    max * 1.1,
-                    "label"
-                );
-
-                //draw axis line
-                d3.select(nodes[j])
-                    .append("line")
-                    .attr("x1", p.cx)
-                    .attr("y1", p.cy)
-                    .attr("x2", line_coordinate.x)
-                    .attr("y2", line_coordinate.y)
+                    .append("path")
+                    .datum(coordinates)
+                    .attr("d", line)
+                    .classed("glyph", true)
+                    .attr("stroke-width", 3)
+                    .attr("stroke", "darkorange")
+                    .attr("fill", "darkorange")
+                    .attr("stroke-opacity", 0.8)
+                    .attr("fill-opacity", 0.5)
                     .classed("kyrix-retainsizezoom", true)
-                    .attr("stroke", "black");
+                    .datum(p);
 
-                //draw axis label
                 d3.select(nodes[j])
                     .append("text")
-                    .classed("label", true)
-                    .attr("x", label_coordinate.x)
-                    .attr("y", label_coordinate.y)
+                    .attr("dy", "0.3em")
+                    .text(function(d) {
+                        return d.cluster_num.toString();
+                    })
+                    .attr("font-size", function(d) {
+                        return dict.count.scale(d.cluster_num.length) / 2;
+                    })
+                    .attr("x", function(d) {
+                        return d.cx;
+                    })
+                    .attr("y", function(d) {
+                        return d.cy;
+                    })
+                    .attr("dy", ".35em")
+                    .attr("text-anchor", "middle")
+                    .style("fill-opacity", 1)
+                    .style("fill", "navy")
+                    .style("pointer-events", "none")
                     .classed("kyrix-retainsizezoom", true)
-                    .text(attribute.substr(0, 3).toUpperCase());
-            }
-            // path
-            var coordinates = getPathCoordinates(p);
-            d3.select(nodes[j])
-                .append("path")
-                .datum(coordinates)
-                .attr("d", line)
-                .classed("glyph", true)
-                .attr("stroke-width", 3)
-                .attr("stroke", "darkorange")
-                .attr("fill", "darkorange")
-                .attr("stroke-opacity", 0.8)
-                .attr("fill-opacity", 0.5)
-                .classed("kyrix-retainsizezoom", true)
-                .datum(p);
-
-            d3.select(nodes[j])
-                .append("text")
-                .attr("dy", "0.3em")
-                .text(function(d) {
-                    return d.cluster_num.toString();
-                })
-                .attr("font-size", function(d) {
-                    return dict.count.scale(d.cluster_num.length) / 2;
-                })
-                .attr("x", function(d) {
-                    return d.cx;
-                })
-                .attr("y", function(d) {
-                    return d.cy;
-                })
-                .attr("dy", ".35em")
-                .attr("text-anchor", "middle")
-                .style("fill-opacity", 1)
-                .style("fill", "navy")
-                .style("pointer-events", "none")
-                .classed("kyrix-retainsizezoom", true)
-                .each(function(d) {
-                    params.textwrap(
-                        d3.select(this),
-                        dict.count.scale(d.cluster_num.length) * 1.5
-                    );
-                });
-        });
+                    .each(function(d) {
+                        params.textwrap(
+                            d3.select(this),
+                            dict.count.scale(d.cluster_num.length) * 1.5
+                        );
+                    });
+            });
+        }
 
         var isObjectOnHover = REPLACE_ME_is_object_onhover;
         if (isObjectOnHover) {

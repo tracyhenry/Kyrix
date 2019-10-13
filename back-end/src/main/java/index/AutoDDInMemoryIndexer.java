@@ -39,8 +39,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     // singleton pattern to ensure only one instance existed
     private AutoDDInMemoryIndexer() {
         this.gson = new GsonBuilder().create();
-        this.aggMap = new HashMap();
-        this.aggMode = 0;
     }
 
     // thread-safe instance getter
@@ -63,6 +61,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
         int numLevels = autoDD.getNumLevels();
         int numRawColumns = autoDD.getColumnNames().size();
+        this.aggMap = new HashMap();
+        this.aggMode = 0;
         System.out.println("columns: " + autoDD.getColumnNames());
         System.out.println("aggcolumns: " + autoDD.getAggColumns());
         // mode 0: numeric, mode 1: categorical
@@ -305,6 +305,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         // release memory
         this.Rtrees = null;
         this.rawRows = null;
+        this.aggMap = null;
     }
 
     private void createMVForLevel(int level, int autoDDIndex)
