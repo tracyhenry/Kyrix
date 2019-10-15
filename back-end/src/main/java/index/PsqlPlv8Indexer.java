@@ -191,7 +191,7 @@ public class PsqlPlv8Indexer extends BoundingBoxIndexer {
                     "CREATE INDEX on Partition #"
                             + i
                             + " took "
-                            + (System.currentTimeMillis() - st) / 1000.0
+                            + (System.currentTimeMillis() - stt) / 1000.0
                             + "s.");
         }
         System.out.println(
