@@ -135,7 +135,7 @@ public class PsqlPlv8Indexer extends BoundingBoxIndexer {
             if (!c.getwSql().isEmpty())
                 throw new IllegalArgumentException(
                         "Canvas " + c.getId() + " has non-fixed width, partition failed.");
-            double partitionWidth = (double) c.getW() / NUM_PARTITIONS;
+            double partitionWidth = (double) (c.getW() + 1) / NUM_PARTITIONS;
             sql += "floor(" + cx + "::float / " + partitionWidth + ") ";
         }
 
