@@ -611,7 +611,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function renderGlyphBody() {
         console.log("glyph raw:", data);
-        if (!data) return;
+        if (!data || data.length == 0) return;
         var params = args.renderingParams;
         var glyph = REPLACE_ME_glyph;
         var g = svg.append("g");
@@ -701,6 +701,20 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .line()
                 .x(d => d.x)
                 .y(d => d.y);
+
+            function getConvexCoordinates(d) {
+                var coords = d.cluster_agg.convexhull;
+                var size = coords.length / 2;
+                var convexhull = [];
+                for (var i = 0; i < size; i++) {
+                    convexhull.push({
+                        x: coords[i * 2],
+                        y: coords[i * 2 + 1]
+                    });
+                }
+                d.convexhull = convexhull;
+                return convexhull;
+            }
 
             function getPathCoordinates(d) {
                 var coordinates = [];
@@ -802,6 +816,17 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     .classed("kyrix-retainsizezoom", true)
                     .datum(p);
 
+                // convex hull
+                var convexhull = getConvexCoordinates(p);
+                d3.select(nodes[j])
+                    .append("path")
+                    .datum(convexhull)
+                    .attr("d", line)
+                    .attr("stroke-width", 3)
+                    .attr("fill-opacity", 0)
+                    .attr("stroke", "grey")
+                    .style("pointer-events", "none");
+
                 d3.select(nodes[j])
                     .append("text")
                     .attr("dy", "0.3em")
@@ -857,17 +882,31 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function renderPieBody() {
         console.log("pie raw:", data);
-        if (!data) return;
+        if (!data || data.length == 0) return;
         var params = args.renderingParams;
         var clusterParams = REPLACE_ME_cluster_params;
         var g = svg.append("g");
         console.log("pie:", clusterParams);
         var dict = {};
 
+        function getConvexCoordinates(d) {
+            var coords = d.cluster_agg.convexhull;
+            var size = coords.length / 2;
+            var convexhull = [];
+            for (var i = 0; i < size; i++) {
+                convexhull.push({
+                    x: coords[i * 2],
+                    y: coords[i * 2 + 1]
+                });
+            }
+            return convexhull;
+        }
+
         // Step 1: Pre-compute
         data.forEach(d => {
             d.cluster_agg = JSON.parse(d.cluster_agg);
             d.cluster_num = d.cluster_agg["count"][0].toString();
+            d.convexhull = getConvexCoordinates(d);
             for (var key in d.cluster_agg) {
                 if (!(key in dict)) {
                     Object.assign(dict, {
@@ -904,6 +943,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var pie = d3.pie().value(function(d) {
             return d.value[0];
         });
+        var line = d3
+            .line()
+            .x(d => d.x)
+            .y(d => d.y);
 
         var params = {
             innerRadius: 5,
@@ -967,6 +1010,12 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     return ret;
                 });
         });
+
+        g.selectAll("path.convex")
+            .data(data)
+            .enter()
+            .append("path")
+            .attr("d", d => line(d.convexhull));
 
         console.log("glyphs.data(): ", glyphs.data());
 

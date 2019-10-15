@@ -35,10 +35,11 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
     // One Rtree per level to store samples
     // https://github.com/davidmoten/rtree
-    private ArrayList<RTree<ArrayList<String>, Rectangle>> Rtrees;
-    private ArrayList<ArrayList<String>> rawRows;
-    private HashMap<String, Integer> aggMap;
-    private int aggMode;
+    private transient ArrayList<RTree<ArrayList<String>, Rectangle>> Rtrees;
+    private transient ArrayList<ArrayList<String>> rawRows;
+    private transient HashMap<String, Integer> aggMap;
+    private transient int aggMode;
+    private transient AutoDD autoDD;
 
     // singleton pattern to ensure only one instance existed
     private AutoDDInMemoryIndexer() {
@@ -62,7 +63,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
         // get current AutoDD object
         int autoDDIndex = Integer.valueOf(autoDDId.substring(0, autoDDId.indexOf("_")));
-        AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
+        autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
         int numLevels = autoDD.getNumLevels();
         int numRawColumns = autoDD.getColumnNames().size();
         this.aggMap = new HashMap();
@@ -180,6 +181,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                                     .search(Geometries.rectangle(minx, miny, maxx, maxy))
                                     .toBlocking()
                                     .toIterable();
+                    double minCx = cx, minCy = cy;
                     for (Entry<ArrayList<String>, Rectangle> nb : neighbors) {
                         ArrayList<String> curNeighbor = nb.value();
                         double curCx =
@@ -197,45 +199,57 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                         if (curDistance < minDistance) {
                             minDistance = curDistance;
                             nearestNeighbor = curNeighbor;
+                            minCx = curCx;
+                            minCy = curCy;
                         }
                     }
-
-                    // increment the cluster number of the NN
-                    // int clusterNumBeforeIncrement =
-                    //         Integer.valueOf(nearestNeighbor.get(numRawColumns));
-                    // int clusterNumAfterIncrement =
-                    //         clusterNumBeforeIncrement +
-                    // Integer.valueOf(curRow.get(numRawColumns));
-                    // nearestNeighbor.set(numRawColumns, String.valueOf(clusterNumAfterIncrement));
+                    double minMinx = minCx - autoDD.getBboxW() * this.overlappingThreshold / 2;
+                    double minMiny = minCy - autoDD.getBboxH() * this.overlappingThreshold / 2;
+                    double minMaxx = minCx + autoDD.getBboxW() * this.overlappingThreshold / 2;
+                    double minMaxy = minCy + autoDD.getBboxH() * this.overlappingThreshold / 2;
 
                     String nnAggStr = nearestNeighbor.get(numRawColumns);
                     HashMap<String, ArrayList<Double>> nnMap = new HashMap<>();
                     nnMap = this.gson.fromJson(nnAggStr, type);
+                    // ArrayList<Double> centroid = new ArrayList<>();
+                    // centroid.add(cx * autoDD.getZoomFactor());
+                    // centroid.add(cy * autoDD.getZoomFactor());
+                    // ArrayList<Double> nnCentroid = new ArrayList<>();
+                    // nnCentroid.add(minCx);
+                    // nnCentroid.add(minCy);
+                    ArrayList<Double> bbox =
+                            getBboxCoordsList(
+                                    minx * autoDD.getZoomFactor(),
+                                    miny * autoDD.getZoomFactor(),
+                                    maxx * autoDD.getZoomFactor(),
+                                    maxy * autoDD.getZoomFactor());
+                    ArrayList<Double> nnBbox =
+                            getBboxCoordsList(minMinx, minMiny, minMaxx, minMaxy);
+
+                    // nnMap.putIfAbsent("convexhull", nnCentroid);
+                    // curMap.putIfAbsent("convexhull", centroid);
+                    nnMap.putIfAbsent("convexhull", nnBbox);
+                    curMap.putIfAbsent("convexhull", bbox);
+
                     if (nearestNeighbor.get(0).equals("L. Messi")) {
                         // System.out.println("Level:" + i + " before Messi: " + nearestNeighbor);
                         // System.out.println("Level:" + i + " before curRow: " + curRow);
-                        System.out.println(
-                                "Level:"
-                                        + i
-                                        + " before curMap convexhull: "
-                                        + curMap.get("convexhull"));
-                        System.out.println(
-                                "Level:"
-                                        + i
-                                        + " before nnMap convexhull: "
-                                        + nnMap.get("convexhull"));
+                        // System.out.println("centroid: " + centroid);
+                        // System.out.println("nnCentroid: " + nnCentroid);
+                        System.out.println("level: " + i);
+                        System.out.println("bbox: " + bbox);
+                        System.out.println("nnBbox: " + nnBbox);
+                        System.out.println("curRow: " + curRow.get(0));
+                        System.out.println("before curMap convexhull: " + curMap.get("convexhull"));
+                        System.out.println("nearestNeighbor: " + nearestNeighbor.get(0));
+                        System.out.println(" before nnMap convexhull: " + nnMap.get("convexhull"));
                     }
-                    ArrayList<Double> centroid = new ArrayList<>();
-                    centroid.add(cx);
-                    centroid.add(cy);
-                    nnMap.putIfAbsent("convexhull", centroid);
-                    curMap.putIfAbsent("convexhull", centroid);
 
                     updateAgg(nnMap, curMap);
                     nearestNeighbor.set(numRawColumns, gson.toJson(nnMap));
                     if (nearestNeighbor.get(0).equals("L. Messi")) {
-                        System.out.println("nnMap.get('convexhull'): " + nnMap.get("convexhull"));
-                        System.out.println("Level:" + i + " after Messi: " + nearestNeighbor);
+                        System.out.println("after convexhull : " + nnMap.get("convexhull"));
+                        // System.out.println("Level:" + i + " after Messi: " + nearestNeighbor);
                     }
                 }
 
@@ -461,12 +475,12 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             dummy.put(category.substring(0, category.length() - 1), arr);
         }
         ArrayList<Double> countArr = new ArrayList<>();
-        ArrayList<Double> convexhullArr = new ArrayList<>();
-        convexhullArr.add(cx);
-        convexhullArr.add(cy);
+        // ArrayList<Double> convexhullArr = new ArrayList<>();
+        // convexhullArr.add(cx);
+        // convexhullArr.add(cy);
         if (flag) {
             countArr.add(0.0);
-            dummy.put("convexhull", convexhullArr);
+            // dummy.put("convexhull", convexhullArr);
         } else {
             countArr.add(1.0);
         }
@@ -477,7 +491,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
     private HashMap<String, ArrayList<Double>> updateAgg(
             HashMap<String, ArrayList<Double>> parent, HashMap<String, ArrayList<Double>> child) {
-        // System.out.println("parent before: " + parent);
+        // System.out.println("parent convexhull before: " + parent.get("convexhull"));
+        // System.out.println("child convexhull before: " + child.get("convexhull"));
         if (this.aggMode == 0) {
             for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
                 // Aggregate entry: [count, sum, max, min, squaresum]
@@ -517,12 +532,16 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         }
         ArrayList<Double> pconvex = parent.get("convexhull");
         ArrayList<Double> cconvex = child.get("convexhull");
-        System.out.println("pconvex: " + pconvex);
-        System.out.println("cconvex: " + cconvex);
-        updateConvex(pconvex, cconvex);
-        System.out.println("updated pconvex: " + pconvex);
+        ArrayList<Double> cconvex_small = new ArrayList<>();
+        for (int i = 0; i < cconvex.size(); i++) {
+            cconvex_small.add(cconvex.get(i) / autoDD.getZoomFactor());
+        }
 
-        // System.out.println("parent after:" + parent);
+        pconvex = updateConvex(pconvex, cconvex_small);
+
+        parent.put("convexhull", pconvex);
+        // System.out.println("parent convexhull after:" + parent.get("convexhull"));
+
         return parent;
     }
 
@@ -531,9 +550,9 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         Geometry cgeom = getGeometry(child);
         Geometry union = pgeom.union(cgeom);
         Coordinate[] coordinates = pgeom.getCoordinates();
-        System.out.println("before:" + parent);
+        // System.out.println("before:" + parent);
         parent = getCoordsList(union.convexHull());
-        System.out.println("after:" + parent);
+        // System.out.println("after:" + parent);
         return parent;
     }
 
@@ -558,6 +577,19 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             coordsList.add(coordinate.y);
         }
         return coordsList;
+    }
+
+    ArrayList<Double> getBboxCoordsList(double minx, double miny, double maxx, double maxy) {
+        ArrayList<Double> coords = new ArrayList<>();
+        coords.add(minx);
+        coords.add(miny);
+        coords.add(minx);
+        coords.add(maxy);
+        coords.add(maxx);
+        coords.add(maxy);
+        coords.add(maxx);
+        coords.add(miny);
+        return coords;
     }
 
     public static void main(String[] args) {
