@@ -31,16 +31,7 @@ var args = {
   db: db, 
   table: table,
   rate_col: rate_col,
-  renderers: {
-    stateMapRendering: renderers.stateMapRendering,
-    stateMapLegendRendering: renderers.stateMapLegendRendering,
-    countyMapLegendRendering: renderers.countyMapLegendRendering,
-    countyMapStateBoundaryRendering: renderers.countyMapStateBoundaryRendering,
-    countyMapRenderer: rendering.countyMapRendering
-  },
-  renderingParams: {
-    renderers.renderingParams
-  },
+  renderingParams: renderers.renderingParams,
   transforms: {
     stateMapTransform: transforms.stateMapTransform,
     countyMapStateBoundaryTransform: transforms.countyMapStateBoundaryTransform,
@@ -53,7 +44,7 @@ var args = {
 };
 
 // build project
-var USMap = new USMap(args);
-p.addUSMap(USMap);
+var USMapProject = new USMap(args);
+p.addUSMap(USMapProject);
 
 p.saveProject();

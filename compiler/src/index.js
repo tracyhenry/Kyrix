@@ -408,24 +408,22 @@ function addUSMap(map, args) {
     // rendering params
     this.addRenderingParams(map.renderingParams);
 
-    // array of canvases
-    var canvases = [];
-
     // ========== state map canvas ================
     var stateMapWidth = 2000,
         stateMapHeight = 1000;
     var stateMapCanvas = new Canvas("statemap", stateMapWidth, stateMapHeight);
-    this.addCanvas(canvas);
+    this.addCanvas(stateMapCanvas);
 
     // static legends layer
     var stateMapLegendLayer = new Layer(null, true);
     stateMapCanvas.addLayer(stateMapLegendLayer);
-    stateMapLegendLayer.addRenderingFunc(map.renderers.stateMapLegendRendering);
+    stateMapLegendLayer.addRenderingFunc(map.getUSMapRenderer("stateMapLegendRendering"));
     
     // state boundary layer
     var stateBoundaryLayer = new Layer(map.transforms.stateMapTransform, false);
     stateMapCanvas.addLayer(stateBoundaryLayer);
     stateBoundaryLayer.addPlacement(map.placements.stateMapPlacement);
+    stateBoundaryLayer.addRenderingFunc(map.getUSMapRenderer("stateMapRendering"));
 
     // ================== county map canvas ===================
     var zoomFactor =
@@ -441,7 +439,7 @@ function addUSMap(map, args) {
     // static legends layer
     var countyMapLegendLayer = new Layer(null, true);
     countyMapCanvas.addLayer(countyMapLegendLayer);
-    countyMapLegendLayer.addRenderingFunc(map.renderers.countyMapLegendRendering);
+    countyMapLegendLayer.addRenderingFunc(map.getUSMapRenderer("countyMapLegendRendering"));
     
     // thick state boundary layer
     var countyMapStateBoundaryLayer = new Layer(
@@ -450,15 +448,13 @@ function addUSMap(map, args) {
     );
     countyMapCanvas.addLayer(countyMapStateBoundaryLayer);
     countyMapStateBoundaryLayer.addPlacement(map.placements.countyMapPlacement);
-    countyMapStateBoundaryLayer.addRenderingFunc(
-        map.renderers.countyMapStateBoundaryRendering
-    );
+    countyMapStateBoundaryLayer.addRenderingFunc(map.getUSMapRenderer("countyMapStateBoundaryRendering"));
     
     // county boundary layer
     var countyBoundaryLayer = new Layer(map.transforms.countyMapTransform, false);
     countyMapCanvas.addLayer(countyBoundaryLayer);
     countyBoundaryLayer.addPlacement(map.placements.countyMapPlacement);
-    countyBoundaryLayer.addRenderingFunc(map.renderers.countyMapRendering);
+    countyBoundaryLayer.addRenderingFunc(map.getUSMapRenderer("countyMapRendering"));
 
     // ==========  Views ===============
     if (!args.view) {
@@ -505,7 +501,7 @@ function addUSMap(map, args) {
         })
     );
 
-    return {canvas: canvas, view: args.view ? args.view : view};
+    return {canvas: stateMapCanvas, view: args.view ? args.view : view};
 } // end func addUSMap
 
 // Add a rendering parameter object
@@ -909,6 +905,7 @@ Project.prototype = {
     addJump,
     addTable,
     addAutoDD,
+    addUSMap,
     addRenderingParams,
     addStyles,
     setInitialStates,

@@ -1,5 +1,5 @@
 const getBodyStringOfFunction = require("./Renderers").getBodyStringOfFunction;
-const checkArgs = require("../utility.js").checkArgs;
+const checkArgs = require("./Renderers").checkArgs;
 
 /*
  * Constructor of a table
