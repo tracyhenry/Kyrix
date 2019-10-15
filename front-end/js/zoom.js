@@ -8,6 +8,17 @@ function zoomRescale(viewId, ele, oldGScaleX, oldGScaleY) {
     var scaleX = 1 / transform.k;
     var scaleY = 1 / transform.k;
 
+    // protect udf transform (assume only one)
+    // var transformOld = d3.select(ele).attr("transform");
+    // var translateRegex = /translate\(.*?\)/;
+    // var scaleRegex = /scale\(.*?\)/;
+    // var translateMatch = translateRegex.exec(transformOld);
+    // var scaleMatch = scaleRegex.exec(transformOld);
+    // var translateOld = translateMatch ? translateMatch[0] : "translate(0,0)";
+    // var scaleOld = scaleMatch ? scaleMatch[0] : "scale(1.0)";
+    // console.log("translateOld: ", translateOld)
+    // console.log("scaleOld: ", scaleOld)
+
     if (gvd.curCanvas.zoomInFactorX <= 1 && gvd.curCanvas.zoomOutFactorX >= 1)
         scaleX = 1;
     if (gvd.curCanvas.zoomInFactorY <= 1 && gvd.curCanvas.zoomOutFactorY >= 1)
@@ -19,6 +30,7 @@ function zoomRescale(viewId, ele, oldGScaleX, oldGScaleY) {
     var translateStr = tx + "," + ty;
     d3.select(ele).attr(
         "transform",
+        // translateOld + scaleOld +
         "translate(" + translateStr + ") scale(" + scaleX + ", " + scaleY + ")"
     );
 }

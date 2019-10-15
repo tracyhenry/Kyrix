@@ -22,7 +22,9 @@ function AutoDD(args) {
         "heatmap",
         "heatmap+object",
         "glyph",
-        "glyph+object"
+        "glyph+object",
+        "pie",
+        "pie+object"
     ]);
     if (!allRenderingModes.has(args.rendering.mode))
         throw new Error("Constructing AutoDD: unsupported rendering mode.");
@@ -69,9 +71,12 @@ function AutoDD(args) {
             args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
                 this.heatmapRadius * 2 + 1;
     }
+    args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
     if (
         args.rendering.mode == "glyph" ||
-        args.rendering.mode == "glyph+object"
+        args.rendering.mode == "glyph+object" ||
+        args.rendering.mode == "pie" ||
+        args.rendering.mode == "pie+object"
     ) {
         if (!("glyph" in args.rendering)) args.rendering.glyph = {};
         this.glyph = JSON.stringify(args.rendering.glyph);
@@ -80,7 +85,6 @@ function AutoDD(args) {
                 ? "mode:" + args.aggregate.mode
                 : "mode:number";
     }
-    args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
 
     // check required args
     var requiredArgs = [
@@ -606,11 +610,12 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function renderGlyphBody() {
-        // console.log("glyph raw:", data);
+        console.log("glyph raw:", data);
+        if (!data) return;
         var params = args.renderingParams;
         var glyph = REPLACE_ME_glyph;
         var g = svg.append("g");
-        // console.log("glyph:", glyph);
+        console.log("glyph:", glyph);
         var dict = {};
 
         // Step 1: Pre-compute
@@ -625,7 +630,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                         }
                     });
                 }
-                if (key != "count") {
+                if (key != "count" && key != "convexhull") {
                     d.cluster_agg[key].push(
                         d.cluster_agg[key][0] / d.cluster_agg["count"][0]
                     );
@@ -638,7 +643,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     dict[key].extent[1] = d.cluster_agg[key][avg_index];
             }
         });
-        // console.log("dict:", dict);
+        console.log("dict:", dict);
 
         var glyphs = g
             .selectAll("g.glyph")
@@ -700,7 +705,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             function getPathCoordinates(d) {
                 var coordinates = [];
                 var attributes = Object.keys(d.cluster_agg).filter(
-                    item => item !== "count"
+                    item => item !== "count" && item !== "convexhull"
                 );
                 for (var i = 0; i < attributes.length; i++) {
                     var attribute = attributes[i];
@@ -740,7 +745,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 }
                 // axis & axis
                 var attributes = Object.keys(p.cluster_agg).filter(
-                    item => item !== "count"
+                    item => item !== "count" && item !== "convexhull"
                 );
 
                 for (var i = 0; i < attributes.length; i++) {
@@ -825,12 +830,150 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                         );
                     });
             });
+        } else if (glyph.type == "pie") {
         }
 
         var isObjectOnHover = REPLACE_ME_is_object_onhover;
         if (isObjectOnHover) {
             var objectRenderer = REPLACE_ME_this_rendering;
             g.selectAll("path.glyph")
+                .on("mouseover", function(d, i, nodes) {
+                    objectRenderer(svg, [d], args);
+                    svg.selectAll("g:last-of-type")
+                        .attr("id", "autodd_tooltip")
+                        .style("opacity", 1)
+                        .style("pointer-events", "none")
+                        .selectAll("*")
+                        .classed("kyrix-retainsizezoom", true)
+                        .each(function() {
+                            zoomRescale(args.viewId, this);
+                        });
+                })
+                .on("mouseleave", function() {
+                    d3.select("#autodd_tooltip").remove();
+                });
+        }
+    }
+
+    function renderPieBody() {
+        console.log("pie raw:", data);
+        if (!data) return;
+        var params = args.renderingParams;
+        var clusterParams = REPLACE_ME_cluster_params;
+        var g = svg.append("g");
+        console.log("pie:", clusterParams);
+        var dict = {};
+
+        // Step 1: Pre-compute
+        data.forEach(d => {
+            d.cluster_agg = JSON.parse(d.cluster_agg);
+            d.cluster_num = d.cluster_agg["count"][0].toString();
+            for (var key in d.cluster_agg) {
+                if (!(key in dict)) {
+                    Object.assign(dict, {
+                        [key]: {
+                            extent: [Number.MAX_VALUE, -Number.MAX_VALUE]
+                        }
+                    });
+                }
+                if (key != "count") {
+                    d.cluster_agg[key].push(
+                        d.cluster_agg[key][0] / d.cluster_agg["count"][0]
+                    );
+                }
+                var avg_index = d.cluster_agg[key].length - 1;
+                // if cur avg < min avg
+                if (d.cluster_agg[key][avg_index] < dict[key].extent[0])
+                    dict[key].extent[0] = d.cluster_agg[key][avg_index];
+                if (d.cluster_agg[key][avg_index] > dict[key].extent[1])
+                    dict[key].extent[1] = d.cluster_agg[key][avg_index];
+            }
+        });
+        console.log("dict:", dict);
+
+        var glyphs = g
+            .selectAll("g.pie")
+            .data(data)
+            .enter()
+            .append("g")
+            .attr("class", (d, i, nodes) => `pie pie${i}`);
+
+        console.log("glyphs: ", glyphs);
+
+        // Step 2: append glyphs
+        var pie = d3.pie().value(function(d) {
+            return d.value[0];
+        });
+
+        var params = {
+            innerRadius: 5,
+            outerRadius: 80,
+            cornerRadius: 5,
+            padAngle: 0.05
+        };
+
+        var domain = Object.keys(dict).filter(key => key !== "count");
+        console.log("domain: ", domain);
+
+        var color = d3
+            .scaleOrdinal(d3.schemeTableau10)
+            .domain(Object.keys(dict).filter(key => key !== "count"));
+        // .range()
+        // .domain(dict.count.extent);
+
+        console.log("color('U23'):", color("U23"));
+
+        var arc = d3
+            .arc()
+            .innerRadius(params.innerRadius)
+            .outerRadius(params.outerRadius)
+            .cornerRadius(params.cornerRadius)
+            .padAngle(params.padAngle);
+
+        var pos = ["cx", "cy", "minx", "miny", "maxx", "maxy"];
+
+        glyphs.each((p, j, nodes) => {
+            p.arcs = pie(
+                d3.entries(p.cluster_agg).filter(d => d.key !== "count")
+            );
+            var _this = d3.select(nodes[j]);
+
+            var cooked = p.arcs.map(d => {
+                for (var index in pos) d[pos[index]] = +p[pos[index]];
+                return d;
+            });
+
+            console.log("cooked: ", cooked);
+
+            var slices = _this
+                .selectAll("g.slice" + j)
+                .data(cooked)
+                .enter()
+                .append("g")
+                .attr("transform", `translate(${p.cx}, ${p.cy})`)
+                .attr("class", function(d, i) {
+                    return "slice slice" + i + " pie" + j;
+                });
+
+            console.log("slices.data(): ", slices.data());
+            slices
+                .append("path")
+                .attr("class", function(d, i) {
+                    return "value kyrix-retainsizezoom";
+                })
+                .attr("d", arc)
+                .attr("fill", function(d, i) {
+                    var ret = color(d.data.key);
+                    return ret;
+                });
+        });
+
+        console.log("glyphs.data(): ", glyphs.data());
+
+        var isObjectOnHover = REPLACE_ME_is_object_onhover;
+        if (isObjectOnHover) {
+            var objectRenderer = REPLACE_ME_this_rendering;
+            g.selectAll("g.pie")
                 .on("mouseover", function(d, i, nodes) {
                     objectRenderer(svg, [d], args);
                     svg.selectAll("g:last-of-type")
@@ -915,6 +1058,23 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .replace(
                 /REPLACE_ME_this_rendering/g,
                 this.renderingMode == "glyph+object"
+                    ? this.rendering.toString()
+                    : "null;"
+            );
+    } else if (
+        this.renderingMode == "pie" ||
+        this.renderingMode == "pie+object"
+    ) {
+        renderFuncBody = getBodyStringOfFunction(renderPieBody)
+            .replace(/REPLACE_ME_cluster_params/g, this.glyph)
+            .replace(/REPLACE_ME_bboxH/g, this.bboxH)
+            .replace(
+                /REPLACE_ME_is_object_onhover/g,
+                this.renderingMode == "pie+object"
+            )
+            .replace(
+                /REPLACE_ME_this_rendering/g,
+                this.renderingMode == "pie+object"
                     ? this.rendering.toString()
                     : "null;"
             );

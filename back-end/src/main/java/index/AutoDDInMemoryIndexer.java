@@ -17,6 +17,10 @@ import java.util.Map;
 import main.Config;
 import main.DbConnector;
 import main.Main;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import project.AutoDD;
 import project.Canvas;
 
@@ -112,6 +116,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 || autoDD.getRenderingMode().equals("contour+object")
                 || autoDD.getRenderingMode().equals("glyph")
                 || autoDD.getRenderingMode().equals("glyph+object")
+                || autoDD.getRenderingMode().equals("pie")
+                || autoDD.getRenderingMode().equals("pie+object")
                 || autoDD.getRenderingMode().equals("heatmap")
                 || autoDD.getRenderingMode().equals("heatmap+object")) {
 
@@ -120,7 +126,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             for (ArrayList<String> rawRow : this.rawRows) {
                 ArrayList<String> bboxRow = new ArrayList<>();
                 for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
-                bboxRow.add(gson.toJson(getDummyAgg(rawRow, false)));
+                bboxRow.add(gson.toJson(getDummyAgg(rawRow, -1, -1, false)));
                 // if (rawRow.get(0).equals("L. Messi")){
                 //     System.out.println("Messi bboxRow: " + bboxRow);
                 // }
@@ -205,15 +211,32 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     String nnAggStr = nearestNeighbor.get(numRawColumns);
                     HashMap<String, ArrayList<Double>> nnMap = new HashMap<>();
                     nnMap = this.gson.fromJson(nnAggStr, type);
-                    // if (nearestNeighbor.get(0).equals("L. Messi")){
-                    //     System.out.println("Level:" + i + " before Messi: " + nearestNeighbor);
-                    //     System.out.println("Level:" + i + " before curRow: " + curRow);
-                    // }
+                    if (nearestNeighbor.get(0).equals("L. Messi")) {
+                        // System.out.println("Level:" + i + " before Messi: " + nearestNeighbor);
+                        // System.out.println("Level:" + i + " before curRow: " + curRow);
+                        System.out.println(
+                                "Level:"
+                                        + i
+                                        + " before curMap convexhull: "
+                                        + curMap.get("convexhull"));
+                        System.out.println(
+                                "Level:"
+                                        + i
+                                        + " before nnMap convexhull: "
+                                        + nnMap.get("convexhull"));
+                    }
+                    ArrayList<Double> centroid = new ArrayList<>();
+                    centroid.add(cx);
+                    centroid.add(cy);
+                    nnMap.putIfAbsent("convexhull", centroid);
+                    curMap.putIfAbsent("convexhull", centroid);
+
                     updateAgg(nnMap, curMap);
                     nearestNeighbor.set(numRawColumns, gson.toJson(nnMap));
-                    // if (nearestNeighbor.get(0).equals("L. Messi")){
-                    //     System.out.println("Level:" + i + " after Messi: " + nearestNeighbor);
-                    // }
+                    if (nearestNeighbor.get(0).equals("L. Messi")) {
+                        System.out.println("nnMap.get('convexhull'): " + nnMap.get("convexhull"));
+                        System.out.println("Level:" + i + " after Messi: " + nearestNeighbor);
+                    }
                 }
 
                 // add min & max weight into rendering params
@@ -320,13 +343,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
             ArrayList<String> bboxRow = new ArrayList<>();
             for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
-            bboxRow.add(
-                    gson.toJson(
-                            getDummyAgg(rawRow, true))); // place holder for cluster aggregate field
-
-            // if (rawRow.get(0).equals("L. Messi")){
-            //     System.out.println("Level: " + level + " Messi bboxRow: " + bboxRow);
-            // }
 
             // centroid of this tuple
             double cx =
@@ -335,6 +351,13 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             double cy =
                     autoDD.getCanvasCoordinate(
                             level, Double.valueOf(rawRow.get(autoDD.getYColId())), false);
+
+            // place holder for cluster aggregate field
+            bboxRow.add(gson.toJson(getDummyAgg(rawRow, cx, cy, true)));
+
+            // if (rawRow.get(0).equals("L. Messi")){
+            //     System.out.println("Level: " + level + " Messi bboxRow: " + bboxRow);
+            // }
 
             // check overlap
             double minx = cx - autoDD.getBboxW() * this.overlappingThreshold / 2;
@@ -400,7 +423,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     }
 
     // if flag == true, use constant; if flag == false, use row info
-    private HashMap<String, ArrayList<Double>> getDummyAgg(ArrayList<String> row, boolean flag) {
+    private HashMap<String, ArrayList<Double>> getDummyAgg(
+            ArrayList<String> row, double cx, double cy, boolean flag) {
         HashMap<String, ArrayList<Double>> dummy = new HashMap<>();
         if (this.aggMode == 0) {
             for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
@@ -437,13 +461,16 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             dummy.put(category.substring(0, category.length() - 1), arr);
         }
         ArrayList<Double> countArr = new ArrayList<>();
+        ArrayList<Double> convexhullArr = new ArrayList<>();
+        convexhullArr.add(cx);
+        convexhullArr.add(cy);
         if (flag) {
             countArr.add(0.0);
+            dummy.put("convexhull", convexhullArr);
         } else {
             countArr.add(1.0);
         }
         dummy.put("count", countArr);
-
         //        TODO: CONVEX HULL POINTS
         return dummy;
     }
@@ -473,58 +500,82 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             zero.add(0.0);
             for (Map.Entry<String, ArrayList<Double>> pentry : parent.entrySet()) {
                 String pkey = pentry.getKey();
-                ArrayList<Double> p = parent.get(pkey);
-                ArrayList<Double> c = child.getOrDefault(pkey, zero);
-                // count
-                p.set(0, p.get(0) + c.get(0));
+                if (!(pkey.equals("convexhull"))) {
+                    ArrayList<Double> p = parent.get(pkey);
+                    ArrayList<Double> c = child.getOrDefault(pkey, zero);
+                    // count
+                    p.set(0, p.get(0) + c.get(0));
+                }
             }
             for (Map.Entry<String, ArrayList<Double>> centry : child.entrySet()) {
                 String ckey = centry.getKey();
-                ArrayList<Double> c = child.get(ckey);
-                parent.putIfAbsent(ckey, c);
+                if (!(ckey.equals("convexhull"))) {
+                    ArrayList<Double> c = child.get(ckey);
+                    parent.putIfAbsent(ckey, c);
+                }
             }
         }
+        ArrayList<Double> pconvex = parent.get("convexhull");
+        ArrayList<Double> cconvex = child.get("convexhull");
+        System.out.println("pconvex: " + pconvex);
+        System.out.println("cconvex: " + cconvex);
+        updateConvex(pconvex, cconvex);
+        System.out.println("updated pconvex: " + pconvex);
+
         // System.out.println("parent after:" + parent);
         return parent;
     }
+
+    private ArrayList<Double> updateConvex(ArrayList<Double> parent, ArrayList<Double> child) {
+        Geometry pgeom = getGeometry(parent);
+        Geometry cgeom = getGeometry(child);
+        Geometry union = pgeom.union(cgeom);
+        Coordinate[] coordinates = pgeom.getCoordinates();
+        System.out.println("before:" + parent);
+        parent = getCoordsList(union.convexHull());
+        System.out.println("after:" + parent);
+        return parent;
+    }
+
+    static Geometry getGeometry(ArrayList<Double> coords) {
+        GeometryFactory gf = new GeometryFactory();
+        int size = coords.size() / 2;
+        ArrayList<Point> points = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            double x = coords.get(i * 2);
+            double y = coords.get(i * 2 + 1);
+            points.add(gf.createPoint(new Coordinate(x, y)));
+        }
+        Geometry geom = gf.createMultiPoint(GeometryFactory.toPointArray(points));
+        return geom;
+    }
+
+    ArrayList<Double> getCoordsList(Geometry geometry) {
+        Coordinate[] coordinates = geometry.getCoordinates();
+        ArrayList<Double> coordsList = new ArrayList<>();
+        for (Coordinate coordinate : coordinates) {
+            coordsList.add(coordinate.x);
+            coordsList.add(coordinate.y);
+        }
+        return coordsList;
+    }
+
+    public static void main(String[] args) {
+        System.out.println("test");
+        ArrayList<Double> parent = new ArrayList<>();
+        ArrayList<Double> child = new ArrayList<>();
+        double[] numbers = new double[] {0.0, 0.0, 0.0, 10.0, 5.0, 5.0, 10.0, 10.0, 10.0, 0.0};
+        for (double number : numbers) {
+            parent.add(number);
+            child.add(-number);
+        }
+        Geometry pgeom = getGeometry(parent);
+        Geometry cgeom = getGeometry(child);
+        Geometry union = pgeom.union(cgeom);
+        Coordinate[] coordinates = union.convexHull().getCoordinates();
+        for (Coordinate coordinate : coordinates) {
+            System.out.println(coordinate.x + "," + coordinate.y);
+        }
+        System.out.println("end");
+    }
 }
-
-/*class ArrayList<Double> {
-    public int count;
-    public double sum;
-    public double max;
-    public double min;
-    public double squaresum;
-
-    ArrayList<Double>() {
-        this.count = 0;
-        this.sum = 0;
-        this.min = Integer.MAX_VALUE;
-        this.max = Integer.MIN_VALUE;
-        this.squaresum = 0;
-    }
-
-    ArrayList<Double>(int _count, double _sum, double _min, double _max, double _squaresum) {
-        this.count = _count;
-        this.sum = _sum;
-        this.min = _min;
-        this.max = _max;
-        this.squaresum = _squaresum;
-    }
-
-    @Override
-    public String toString() {
-        return "{"
-                + "count: "
-                + count
-                + ", sum: "
-                + sum
-                + ", min: "
-                + min
-                + ", max: "
-                + max
-                + ", squaresum: "
-                + squaresum
-                + '}';
-    }
-}*/

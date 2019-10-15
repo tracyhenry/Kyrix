@@ -11,16 +11,7 @@ p.addStyles(renderers.glyphStyles);
 // set up auto drill down
 var query = "select * from fifa19 order by cast(wage as int) desc";
 
-var attributes = [
-    // "defending",
-    "general",
-    "mental",
-    "passing",
-    "mobility",
-    "power"
-    // "rating",
-    // "shooting"
-];
+var attributes = ["agegroup"];
 
 var autoDD = {
     data: {
@@ -36,21 +27,21 @@ var autoDD = {
         range: [100, 0]
     },
     aggregate: {
-        mode: "number",
+        mode: "category",
         attributes: attributes
     },
     rendering: {
-        mode: "glyph+object",
+        mode: "pie+object",
         topLevelWidth: 1600,
         topLevelHeight: 1000,
         axis: true,
         glyph: {
-            type: "radar",
+            type: "pie",
             attributes: attributes,
             value: "average",
             size: 80,
-            ticks: 5,
-            domain: 100
+            ticks: 5
+            // domain: 100
         },
         obj: {
             renderer: renderers.playerRendering,
