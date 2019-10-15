@@ -82,6 +82,13 @@ while [ 1 ]; do
     spin "waiting for Kyrix backend to start..."
 done
 
+# load dots-uniform data
+echo -e "loading dots-uniform data....\n"
+docker exec -t kyrix_db_1 su - postgres -c "psql kyrix -c \"create table dots_uniform(id int, w int, h int, partition_id int);\" "
+docker exec -t kyrix_db_1 su - postgres -c "psql kyrix -c \"insert into dots_uniform (id,w,h, partition_id) select id, (random()*316227)::bigint, (random()*316227)::bigint, (random()*2147483648*2.0 - 2147483648)::int 
+from generate_series(1,100000000) id;\"  "
+echo -e "Done.\n"
+
 # redirect to docker logs
 echo -e "\nKyrix back-end started! Redirecting to Kyrix backend logs...\n"
 sleep 1

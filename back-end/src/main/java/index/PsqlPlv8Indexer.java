@@ -181,6 +181,8 @@ public class PsqlPlv8Indexer extends BoundingBoxIndexer {
                             + i
                             + " ON "
                             + bboxTableName
+                            + "_"
+                            + i
                             + " USING gist (geom);";
             System.out.println(sql);
             long stt = System.currentTimeMillis();
