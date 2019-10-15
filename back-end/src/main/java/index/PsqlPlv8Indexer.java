@@ -172,14 +172,31 @@ public class PsqlPlv8Indexer extends BoundingBoxIndexer {
                         + "s.");
 
         // create spatial index
-        sql = "CREATE INDEX sp_" + bboxTableName + " ON " + bboxTableName + " USING gist (geom);";
-        System.out.println(sql);
         st = System.currentTimeMillis();
-        bboxStmt.executeUpdate(sql);
+        for (int i = 0; i < NUM_PARTITIONS; i++) {
+            sql =
+                    "CREATE INDEX sp"
+                            + bboxTableName
+                            + "_"
+                            + i
+                            + " ON "
+                            + bboxTableName
+                            + " USING gist (geom);";
+            System.out.println(sql);
+            long stt = System.currentTimeMillis();
+            bboxStmt.executeUpdate(sql);
+            System.out.println(
+                    "CREATE INDEX on Partition #"
+                            + i
+                            + " took "
+                            + (System.currentTimeMillis() - st) / 1000.0
+                            + "s.");
+        }
         System.out.println(
                 "Creating spatial indexes took: "
                         + (System.currentTimeMillis() - st) / 1000.0
                         + "s.");
+        bboxStmt.close();
     }
 
     public String removeTrailingSemiColon(String q) {
