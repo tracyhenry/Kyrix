@@ -172,30 +172,40 @@ public class PsqlPlv8Indexer extends BoundingBoxIndexer {
                         + "s.");
 
         // create spatial index
+        sql = "CREATE INDEX sp_" + bboxTableName + " ON " + bboxTableName + " USING gist (geom);";
+        System.out.println(sql);
         st = System.currentTimeMillis();
-        for (int i = 0; i < NUM_PARTITIONS; i++) {
-            sql =
-                    "CREATE INDEX sp"
-                            + bboxTableName
-                            + "_"
-                            + i
-                            + " ON "
-                            + bboxTableName
-                            + " USING gist (geom);";
-            System.out.println(sql);
-            long stt = System.currentTimeMillis();
-            bboxStmt.executeUpdate(sql);
-            System.out.println(
-                    "CREATE INDEX on Partition #"
-                            + i
-                            + " took "
-                            + (System.currentTimeMillis() - st) / 1000.0
-                            + "s.");
-        }
+        bboxStmt.executeUpdate(sql);
         System.out.println(
                 "Creating spatial indexes took: "
                         + (System.currentTimeMillis() - st) / 1000.0
                         + "s.");
+
+        // CLUSTER
+        st = System.currentTimeMillis();
+        for (int i = 0; i < NUM_PARTITIONS; i++) {
+            sql =
+                    "CLUSTER "
+                            + bboxTableName
+                            + "_"
+                            + i
+                            + " USING "
+                            + bboxTableName
+                            + "_"
+                            + i
+                            + "_geom_idx;";
+            System.out.println(sql);
+            long stt = System.currentTimeMillis();
+            bboxStmt.executeUpdate(sql);
+            System.out.println(
+                    "CLUSTERing Partition #"
+                            + i
+                            + " took "
+                            + (System.currentTimeMillis() - stt) / 1000.0
+                            + "s.");
+        }
+        System.out.println(
+                "CLUSTERing in total took: " + (System.currentTimeMillis() - st) / 1000.0 + "s.");
         bboxStmt.close();
     }
 
