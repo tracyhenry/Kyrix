@@ -1,5 +1,5 @@
-var topLevelWidth = 316227;
-var topLevelHeight = 316227;
+var topLevelWidth = 1000000;
+var topLevelHeight = 1000000;
 var renderingParams = {topLevelWidth, topLevelHeight};
 
 var dotsRendering = function(svg, data) {
