@@ -19,17 +19,18 @@ var autoDD = {
         query: query
     },
     x: {
-        col: "shooting",
-        range: [0, 100]
+        col: "rating",
+        range: [40, 100]
     },
     y: {
-        col: "defending",
-        range: [100, 0]
+        col: "wage",
+        range: [600, 0]
     },
     aggregate: {
         mode: "category",
         attributes: attributes
     },
+    upper: true,
     rendering: {
         mode: "pie+object",
         topLevelWidth: 1600,
@@ -38,15 +39,12 @@ var autoDD = {
         glyph: {
             type: "pie",
             attributes: attributes,
-            value: "average",
-            size: 80,
-            ticks: 5
-            // domain: 100
+            domain: ["U20", "U23", "U29", "Older"]
         },
         obj: {
             renderer: renderers.playerRendering,
-            bboxW: 200,
-            bboxH: 200
+            bboxW: 290,
+            bboxH: 290
         }
     }
 };

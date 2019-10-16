@@ -50,7 +50,7 @@ var renderingParams = {
 function playerRendering(svg, data, args) {
     // console.log("raw:", data[0]);
 
-    var g = svg.append("g").classed("player", true);
+    var g = svg.append("g").attr("class", "player object");
 
     var params = args.renderingParams;
 
@@ -159,7 +159,7 @@ g.player rect.player-bg {
 }
 
 text.label {
-    text-anchor: middle;
+    text-anchor: start;
 }`;
 
 module.exports = {

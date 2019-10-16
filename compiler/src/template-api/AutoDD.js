@@ -71,6 +71,7 @@ function AutoDD(args) {
             args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
                 this.heatmapRadius * 2 + 1;
     }
+    this.upper = "upper" in args ? args.upper : false;
     args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
     if (
         args.rendering.mode == "glyph" ||
@@ -79,7 +80,16 @@ function AutoDD(args) {
         args.rendering.mode == "pie+object"
     ) {
         if (!("glyph" in args.rendering)) args.rendering.glyph = {};
-        this.glyph = JSON.stringify(args.rendering.glyph);
+        var glyph = args.rendering.glyph;
+        if (glyph.type == "pie") {
+            glyph.innerRadius = "innerRadius" in glyph ? glyph.innerRadius : 1;
+            glyph.outerRadius = "outerRadius" in glyph ? glyph.outerRadius : 80;
+            glyph.cornerRadius =
+                "cornerRadius" in glyph ? glyph.cornerRadius : 5;
+            glyph.padAngle = "padAngle" in glyph ? glyph.padAngle : 0.05;
+        }
+        this.glyph = JSON.stringify(glyph);
+        console.log("this.glyph: ", this.glyph);
         this.aggMode =
             "mode" in args.aggregate
                 ? "mode:" + args.aggregate.mode
@@ -829,7 +839,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
                 d3.select(nodes[j])
                     .append("text")
-                    .attr("dy", "0.3em")
                     .text(function(d) {
                         return d.cluster_num.toString();
                     })
@@ -881,13 +890,129 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function renderPieBody() {
-        console.log("pie raw:", data);
+        // step 0: import
+        /**
+         * expected argument lengths
+         * @type {Object}
+         */
+
+        var length = {
+            a: 7,
+            c: 6,
+            h: 1,
+            l: 2,
+            m: 2,
+            q: 4,
+            s: 4,
+            t: 2,
+            v: 1,
+            z: 0
+        };
+
+        /**
+         * segment pattern
+         * @type {RegExp}
+         */
+
+        var segment = /([astvzqmhlc])([^astvzqmhlc]*)/gi;
+
+        /**
+         * parse an svg path data string. Generates an Array
+         * of commands where each command is an Array of the
+         * form `[command, arg1, arg2, ...]`
+         *
+         * @param {String} path
+         * @return {Array}
+         */
+
+        function parse(path) {
+            var data = [];
+            path.replace(segment, function(_, command, args) {
+                var type = command.toLowerCase();
+                args = parseValues(args);
+
+                // overloaded moveTo
+                if (type == "m" && args.length > 2) {
+                    data.push([command].concat(args.splice(0, 2)));
+                    type = "l";
+                    command = command == "m" ? "l" : "L";
+                }
+
+                while (true) {
+                    if (args.length == length[type]) {
+                        args.unshift(command);
+                        return data.push(args);
+                    }
+                    if (args.length < length[type])
+                        throw new Error("malformed path data");
+                    data.push([command].concat(args.splice(0, length[type])));
+                }
+            });
+            return data;
+        }
+
+        var number = /-?[0-9]*\.?[0-9]+(?:e[-+]?\d+)?/gi;
+
+        function parseValues(args) {
+            var numbers = args.match(number);
+            return numbers ? numbers.map(Number) : [];
+        }
+
+        function translate(segments, x, y) {
+            // y is optional
+            y = y || 0;
+
+            return segments.map(function(segment) {
+                var cmd = segment[0];
+
+                // Shift coords only for commands with absolute values
+                if ("ACHLMRQSTVZ".indexOf(cmd) === -1) {
+                    return segment;
+                }
+
+                var name = cmd.toLowerCase();
+
+                // V is the only command, with shifted coords parity
+                if (name === "v") {
+                    segment[1] = Number(segment[1]) + +y;
+                    return segment;
+                }
+
+                // ARC is: ['A', rx, ry, x-axis-rotation, large-arc-flag, sweep-flag, x, y]
+                // touch x, y only
+                if (name === "a") {
+                    segment[6] = Number(segment[6]) + +x;
+                    segment[7] = Number(segment[7]) + +y;
+                    return segment;
+                }
+
+                // All other commands have [cmd, x1, y1, x2, y2, x3, y3, ...] format
+                return segment.map(function(val, i) {
+                    if (!i) {
+                        return val;
+                    }
+                    return i % 2 ? Number(val) + +x : Number(val) + +y;
+                });
+            });
+        }
+
+        function serialize(path) {
+            return path.reduce(function(str, seg) {
+                return str + seg[0] + seg.slice(1).join(",");
+            }, "");
+        }
+
+        // console.log("pie raw:", data);
         if (!data || data.length == 0) return;
         var params = args.renderingParams;
         var clusterParams = REPLACE_ME_cluster_params;
         var g = svg.append("g");
-        console.log("pie:", clusterParams);
+        // console.log("pie:", clusterParams);
         var dict = {};
+
+        function filter(key) {
+            return key !== "count" && key !== "convexhull";
+        }
 
         function getConvexCoordinates(d) {
             var coords = d.cluster_agg.convexhull;
@@ -915,7 +1040,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                         }
                     });
                 }
-                if (key != "count") {
+                if (filter(key)) {
                     d.cluster_agg[key].push(
                         d.cluster_agg[key][0] / d.cluster_agg["count"][0]
                     );
@@ -928,104 +1053,157 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     dict[key].extent[1] = d.cluster_agg[key][avg_index];
             }
         });
-        console.log("dict:", dict);
+        // console.log("dict:", dict);
 
-        var glyphs = g
-            .selectAll("g.pie")
-            .data(data)
-            .enter()
-            .append("g")
-            .attr("class", (d, i, nodes) => `pie pie${i}`);
+        // var glyphs = g
+        //     .selectAll("g.pie")
+        //     .data(data)
+        //     .enter()
+        //     .append("g")
+        //     .attr("class", (d, i, nodes) => `glyph pie pie${i} ${d.name}`);
 
-        console.log("glyphs: ", glyphs);
+        // console.log("glyphs: ", glyphs);
 
         // Step 2: append glyphs
-        var pie = d3.pie().value(function(d) {
-            return d.value[0];
-        });
+        var domain = clusterParams.domain;
+        var pie = d3
+            .pie()
+            .value(function(d) {
+                return d.value[0];
+            })
+            .sort(function(a, b) {
+                return domain.indexOf(a.key) - domain.indexOf(b.key);
+            });
         var line = d3
             .line()
             .x(d => d.x)
             .y(d => d.y);
 
-        var params = {
-            innerRadius: 5,
-            outerRadius: 80,
-            cornerRadius: 5,
-            padAngle: 0.05
-        };
+        // var clusterParams = {
+        //     innerRadius: 15,
+        //     outerRadius: 80,
+        //     cornerRadius: 5,
+        //     padAngle: 0.05,
+        // };
 
-        var domain = Object.keys(dict).filter(key => key !== "count");
-        console.log("domain: ", domain);
+        // var domain = Object.keys(dict).filter(filter);
+        // console.log("domain: ", domain);
 
-        var color = d3
-            .scaleOrdinal(d3.schemeTableau10)
-            .domain(Object.keys(dict).filter(key => key !== "count"));
+        var color = d3.scaleOrdinal(d3.schemeTableau10).domain(domain);
         // .range()
         // .domain(dict.count.extent);
 
-        console.log("color('U23'):", color("U23"));
+        // console.log("color('U23'):", color("U23"));
 
         var arc = d3
             .arc()
-            .innerRadius(params.innerRadius)
-            .outerRadius(params.outerRadius)
-            .cornerRadius(params.cornerRadius)
-            .padAngle(params.padAngle);
+            .innerRadius(clusterParams.innerRadius)
+            .outerRadius(clusterParams.outerRadius)
+            .cornerRadius(clusterParams.cornerRadius)
+            .padAngle(clusterParams.padAngle);
+
+        var scalePercent = d3
+            .scaleLinear()
+            .domain([0, 2 * Math.PI])
+            .range([0, 1]);
+        var formatter = d3.format(".1%");
 
         var pos = ["cx", "cy", "minx", "miny", "maxx", "maxy"];
 
-        glyphs.each((p, j, nodes) => {
+        var slicedata = [];
+
+        data.forEach((p, j) => {
             p.arcs = pie(
-                d3.entries(p.cluster_agg).filter(d => d.key !== "count")
+                d3
+                    .entries(p.cluster_agg)
+                    .filter(d => filter(d.key))
+                    .sort((x, y) => d3.ascending(x.key, y.key))
             );
-            var _this = d3.select(nodes[j]);
-
-            var cooked = p.arcs.map(d => {
-                for (var index in pos) d[pos[index]] = +p[pos[index]];
-                return d;
+            var cooked = p.arcs.map(entry => {
+                // for (var index in pos) entry[pos[index]] = +p[pos[index]];
+                for (var key in p) {
+                    entry[key] = p[key];
+                }
+                entry.data.percentage = formatter(
+                    scalePercent(entry.endAngle - entry.startAngle)
+                );
+                entry.convexhull = p.convexhull;
+                return entry;
             });
-
-            console.log("cooked: ", cooked);
-
-            var slices = _this
-                .selectAll("g.slice" + j)
-                .data(cooked)
-                .enter()
-                .append("g")
-                .attr("transform", `translate(${p.cx}, ${p.cy})`)
-                .attr("class", function(d, i) {
-                    return "slice slice" + i + " pie" + j;
-                });
-
-            console.log("slices.data(): ", slices.data());
-            slices
-                .append("path")
-                .attr("class", function(d, i) {
-                    return "value kyrix-retainsizezoom";
-                })
-                .attr("d", arc)
-                .attr("fill", function(d, i) {
-                    var ret = color(d.data.key);
-                    return ret;
-                });
+            slicedata = slicedata.concat(cooked);
         });
 
-        g.selectAll("path.convex")
-            .data(data)
+        // console.log("slicedata: ", slicedata)
+
+        var slices = g
+            .selectAll("path.slice")
+            .data(slicedata)
             .enter()
             .append("path")
-            .attr("d", d => line(d.convexhull));
+            .attr("class", function(d, i) {
+                return `value ${d.data.key} kyrix-retainsizezoom`;
+            })
+            .attr("d", (d, i, nodes) => {
+                return serialize(translate(parse(arc(d)), d.cx, d.cy));
+            })
+            .attr("fill", function(d, i) {
+                var ret = color(d.data.key);
+                return ret;
+            });
 
-        console.log("glyphs.data(): ", glyphs.data());
+        var numbers = g
+            .selectAll("text.cluster_num")
+            .data(data)
+            .enter()
+            .append("text")
+            .classed("cluster_num", true)
+            .text(d => d.cluster_num)
+            .attr("x", d => +d.cx)
+            .attr("y", d => +d.cy - clusterParams.outerRadius)
+            // .attr("dy", ".35em")
+            .attr("font-size", clusterParams.outerRadius / 2.5)
+            .attr("text-anchor", "middle")
+            .style("fill-opacity", 0.8)
+            .style("fill", "grey")
+            .style("pointer-events", "none")
+            .classed("kyrix-retainsizezoom", true);
+
+        // var convexhulls = g.selectAll("path.convexhull")
+        //     .data(data)
+        //     .enter()
+        //     .append("path")
+        //     .attr("class", d=>`convexhull ${d.name}`)
+        //     .attr("d", d=>line(d.convexhull))
+        //     .style("fill-opacity", 0)
+        //     .style("stroke-width", 3)
+        //     .style("stroke-opacity", 0.5)
+        //     .style("stroke", "grey")
+        //     .style("pointer-events", "none")
+
+        function showConvex(svg, d) {
+            var g = svg.append("g");
+            g.append("path")
+                .datum(d)
+                .attr("class", d => `convexhull ${d.name}`)
+                .attr("id", "convexhull")
+                .attr("d", d => line(d.convexhull))
+                .style("fill-opacity", 0)
+                .style("stroke-width", 3)
+                .style("stroke-opacity", 0.5)
+                .style("stroke", "grey")
+                .style("pointer-events", "none");
+        }
+
+        // console.log("glyphs.data(): ", glyphs.data());
 
         var isObjectOnHover = REPLACE_ME_is_object_onhover;
         if (isObjectOnHover) {
             var objectRenderer = REPLACE_ME_this_rendering;
-            g.selectAll("g.pie")
+            g.selectAll("path.value")
                 .on("mouseover", function(d, i, nodes) {
                     objectRenderer(svg, [d], args);
-                    svg.selectAll("g:last-of-type")
+                    showConvex(svg, d);
+                    svg.selectAll("g.object")
                         .attr("id", "autodd_tooltip")
                         .style("opacity", 1)
                         .style("pointer-events", "none")
@@ -1036,7 +1214,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                         });
                 })
                 .on("mouseleave", function() {
-                    d3.select("#autodd_tooltip").remove();
+                    d3.selectAll("#autodd_tooltip").remove();
+                    d3.selectAll("#convexhull").remove();
                 });
         }
     }
@@ -1168,12 +1347,12 @@ function getAxesRenderer(level) {
             .scaleLinear()
             .domain([REPLACE_ME_this_loX, REPLACE_ME_this_hiX])
             .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);
-        var xAxis = d3.axisTop().tickSize(-cHeight);
+        var xAxis = d3.axisBottom().tickSize(-cHeight);
         axes.push({
             dim: "x",
             scale: x,
             axis: xAxis,
-            translate: [0, 0],
+            translate: [0, 1000],
             styling: styling
         });
         //y
@@ -1205,10 +1384,51 @@ function getAxesRenderer(level) {
     return new Function("args", axesFuncBody);
 }
 
+function getStaticUpperRenderer(level) {
+    function legendRenderer() {
+        svg.append("g")
+            .attr("class", "legendOrdinal")
+            .attr("transform", "translate(50,50)scale(2.0)");
+        // g.selectAll("path.convex")
+        //     .data(data)
+        //     .enter()
+        //     .append("path")
+
+        var clusterParams = REPLACE_ME_cluster_params;
+        var domain = clusterParams.domain;
+
+        var color = d3.scaleOrdinal(d3.schemeTableau10).domain(domain);
+
+        var legendOrdinal = d3
+            .legendColor()
+            //d3 symbol creates a path-string, for example
+            //"M0,-8.059274488676564L9.306048591020996,
+            //8.059274488676564 -9.306048591020996,8.059274488676564Z"
+            // .shape("path", d3.symbol().type(d3.symbolDiamond).size(150)())
+            .shape("rect")
+            .shapePadding(10)
+            .title("Age Groups of Soccer Players in FIFA 19")
+            .labelOffset(15)
+            // .labelAlign("start")
+            .scale(color);
+
+        svg.select(".legendOrdinal").call(legendOrdinal);
+    }
+
+    if (this.aggMode == "mode:category") {
+        renderFuncBody = getBodyStringOfFunction(legendRenderer).replace(
+            /REPLACE_ME_cluster_params/g,
+            this.glyph
+        );
+    }
+    return new Function("svg", "data", "args", renderFuncBody);
+}
+
 //define prototype
 AutoDD.prototype = {
     getLayerRenderer,
-    getAxesRenderer
+    getAxesRenderer,
+    getStaticUpperRenderer
 };
 
 // exports

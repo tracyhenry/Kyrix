@@ -236,19 +236,21 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                         // System.out.println("Level:" + i + " before curRow: " + curRow);
                         // System.out.println("centroid: " + centroid);
                         // System.out.println("nnCentroid: " + nnCentroid);
-                        System.out.println("level: " + i);
-                        System.out.println("bbox: " + bbox);
-                        System.out.println("nnBbox: " + nnBbox);
-                        System.out.println("curRow: " + curRow.get(0));
-                        System.out.println("before curMap convexhull: " + curMap.get("convexhull"));
-                        System.out.println("nearestNeighbor: " + nearestNeighbor.get(0));
-                        System.out.println(" before nnMap convexhull: " + nnMap.get("convexhull"));
+                        // System.out.println("level: " + i);
+                        // System.out.println("bbox: " + bbox);
+                        // System.out.println("nnBbox: " + nnBbox);
+                        // System.out.println("curRow: " + curRow.get(0));
+                        // System.out.println("before curMap convexhull: " +
+                        // curMap.get("convexhull"));
+                        // System.out.println("nearestNeighbor: " + nearestNeighbor.get(0));
+                        // System.out.println(" before nnMap convexhull: " +
+                        // nnMap.get("convexhull"));
                     }
 
                     updateAgg(nnMap, curMap);
                     nearestNeighbor.set(numRawColumns, gson.toJson(nnMap));
                     if (nearestNeighbor.get(0).equals("L. Messi")) {
-                        System.out.println("after convexhull : " + nnMap.get("convexhull"));
+                        // System.out.println("after convexhull : " + nnMap.get("convexhull"));
                         // System.out.println("Level:" + i + " after Messi: " + nearestNeighbor);
                     }
                 }

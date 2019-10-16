@@ -298,6 +298,13 @@ function addAutoDD(autoDD, args) {
         }
         curPyramid.push(curCanvas);
 
+        // add static legent layer
+        if (autoDD.upper == true) {
+            var staticLayer = new Layer(null, true);
+            curCanvas.addLayer(staticLayer);
+            staticLayer.addRenderingFunc(autoDD.getStaticUpperRenderer(i));
+        }
+
         // create one layer
         var curLayer = new Layer(transform, false);
         curCanvas.addLayer(curLayer);
