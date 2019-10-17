@@ -472,7 +472,7 @@ function startJump(viewId, d, jump, optionalArgs) {
     )
         semanticZoom(viewId, jump, predArray, newVpX, newVpY, d);
     else if (jump.type == param.load)
-        load(predArray, newVpX, newVpY, jump.destViewId, jump.destId);
+        load(predArray, newVpX, newVpY, 1, jump.destViewId, jump.destId);
     else if (jump.type == param.highlight) highlight(predArray, jump);
 }
 
