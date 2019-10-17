@@ -63,7 +63,7 @@ function postJump(viewId, zoomType) {
                     gvd.curCanvas.zoomInFactorY
                 ) - param.eps
             );
-        else if ((zoomType = param.load))
+        else if (zoomType == param.load)
             setupZoom(viewId, gvd.initialScale || 1);
         else setupZoom(viewId, 1);
 
@@ -132,7 +132,8 @@ function postJump(viewId, zoomType) {
         !(
             zoomType == param.geometricSemanticZoom ||
             zoomType == param.literalZoomIn ||
-            zoomType == param.literalZoomOut
+            zoomType == param.literalZoomOut ||
+            zoomType == param.load
         )
     )
         d3.selectAll(viewClass + ".oldlayerg").remove();
