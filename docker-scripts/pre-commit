@@ -33,7 +33,7 @@ npm list --depth 1 -g prettier > /dev/null
 
 if [[ $? -ne 0 ]]; then
     echo "Prettier formatter not found, installing it as a global npm package..."
-    npm install prettier --global
+    sudo npm install prettier --global
 fi
 
 cd $GIT_DIR/../

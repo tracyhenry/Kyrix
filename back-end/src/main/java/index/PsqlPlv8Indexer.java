@@ -1,5 +1,6 @@
 package index;
 
+import box.Box;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -12,9 +13,10 @@ import project.Placement;
 import project.Transform;
 
 /** Created by wenbo on 9/30/19. */
-public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
+public class PsqlPlv8Indexer extends BoundingBoxIndexer {
 
     private static PsqlPlv8Indexer instance = null;
+    private static final int NUM_PARTITIONS = 50; // 50 partitions - for now
 
     private PsqlPlv8Indexer() {}
 
@@ -46,9 +48,26 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
         sql +=
                 "cx double precision, cy double precision, "
                         + "minx double precision, miny double precision, "
-                        + "maxx double precision, maxy double precision, geom box)";
+                        + "maxx double precision, maxy double precision, geom box, partition_id int) "
+                        + "PARTITION BY LIST (partition_id);";
         System.out.println(sql);
         bboxStmt.executeUpdate(sql);
+
+        // create bbox table's partitions
+        for (int i = 0; i < NUM_PARTITIONS; i++) {
+            sql =
+                    "CREATE UNLOGGED TABLE "
+                            + bboxTableName
+                            + "_"
+                            + i
+                            + " PARTITION OF "
+                            + bboxTableName
+                            + " FOR VALUES IN ("
+                            + i
+                            + ");";
+            System.out.println(sql);
+            bboxStmt.executeUpdate(sql);
+        }
 
         // if this is an empty layer, return
         if (trans.getDb().equals("")) return;
@@ -78,15 +97,15 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
         // ================= constructing the big sql =================
         sql = "INSERT INTO " + bboxTableName + "(";
         for (int i = 0; i < colNames.size(); i++) sql += colNames.get(i) + ", ";
-        sql += "cx, cy, minx, miny, maxx, maxy) " + "SELECT ";
+        sql += "cx, cy, minx, miny, maxx, maxy, geom, partition_id) " + "SELECT ";
 
         // raw fields
         for (int i = 0; i < colNames.size(); i++) sql += colNames.get(i) + ",";
 
-        // cx cy, w and h
-        if (l.isStatic()) sql += "0, 0, 0, 0, 0, 0 ";
+        // placement and partition_id
+        if (l.isStatic()) sql += "0, 0, 0, 0, 0, 0, 0 ";
         else {
-            String cx, cy, w, h;
+            String cx, cy, minx, miny, maxx, maxy, w, h;
             Placement p = l.getPlacement();
             cx =
                     (p.getCentroid_x().substring(0, 4).equals("full")
@@ -102,10 +121,22 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
                             ? "1e20"
                             : p.getHeight().substring(4));
             sql += cx + "::float, " + cy + "::float, ";
-            sql += cx + "::float - " + w + "::float / 2.0, ";
-            sql += cy + "::float - " + h + "::float / 2.0, ";
-            sql += cx + "::float + " + w + "::float / 2.0, ";
-            sql += cy + "::float + " + h + "::float / 2.0 ";
+
+            // bounding box
+            minx = cx + "::float - " + w + "::float / 2.0";
+            miny = cy + "::float - " + h + "::float / 2.0";
+            maxx = cx + "::float + " + w + "::float / 2.0";
+            maxy = cy + "::float + " + h + "::float / 2.0";
+            sql += minx + ", " + miny + ", " + maxx + ", " + maxy + ", ";
+            sql += "box( point(" + minx + ", " + miny + "), point(" + maxx + ", " + maxy + ") ), ";
+
+            // partition_id -- partition width into equal-sized buckets
+            // requiring that c.getWsql is empty
+            if (!c.getwSql().isEmpty())
+                throw new IllegalArgumentException(
+                        "Canvas " + c.getId() + " has non-fixed width, partition failed.");
+            double partitionWidth = (double) (c.getW() + 1) / NUM_PARTITIONS;
+            sql += "floor(" + cx + "::float / " + partitionWidth + ") ";
         }
 
         // run trans func
@@ -136,14 +167,9 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
         long st = System.currentTimeMillis();
         bboxStmt.executeUpdate(sql);
         System.out.println(
-                "Running transform func took: " + (System.currentTimeMillis() - st) + "ms.");
-
-        // update geom
-        sql = "UPDATE " + bboxTableName + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
-        System.out.println(sql);
-        st = System.currentTimeMillis();
-        bboxStmt.executeUpdate(sql);
-        System.out.println("Setting geom field took: " + (System.currentTimeMillis() - st) + "ms.");
+                "Running transform func took: "
+                        + (System.currentTimeMillis() - st) / 1000.0
+                        + "s.");
 
         // create spatial index
         sql = "CREATE INDEX sp_" + bboxTableName + " ON " + bboxTableName + " USING gist (geom);";
@@ -151,12 +177,92 @@ public class PsqlPlv8Indexer extends PsqlNativeBoxIndexer {
         st = System.currentTimeMillis();
         bboxStmt.executeUpdate(sql);
         System.out.println(
-                "Creating spatial indexes took: " + (System.currentTimeMillis() - st) + "ms.");
+                "Creating spatial indexes took: "
+                        + (System.currentTimeMillis() - st) / 1000.0
+                        + "s.");
+
+        // CLUSTER
+        st = System.currentTimeMillis();
+        for (int i = 0; i < NUM_PARTITIONS; i++) {
+            sql =
+                    "CLUSTER "
+                            + bboxTableName
+                            + "_"
+                            + i
+                            + " USING "
+                            + bboxTableName
+                            + "_"
+                            + i
+                            + "_geom_idx;";
+            System.out.println(sql);
+            long stt = System.currentTimeMillis();
+            bboxStmt.executeUpdate(sql);
+            System.out.println(
+                    "CLUSTERing Partition #"
+                            + i
+                            + " took "
+                            + (System.currentTimeMillis() - stt) / 1000.0
+                            + "s.");
+        }
+        System.out.println(
+                "CLUSTERing in total took: " + (System.currentTimeMillis() - st) / 1000.0 + "s.");
+        bboxStmt.close();
     }
 
     public String removeTrailingSemiColon(String q) {
         while (q.charAt(q.length() - 1) == ' ') q = q.substring(0, q.length() - 1);
         if (q.charAt(q.length() - 1) == ';') q = q.substring(0, q.length() - 1);
         return q;
+    }
+
+    @Override
+    public ArrayList<ArrayList<String>> getDataFromRegion(
+            Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox)
+            throws Exception {
+
+        // get column list string
+        String colListStr = c.getLayers().get(layerId).getColStr("");
+
+        // final data
+        ArrayList<ArrayList<String>> ret = new ArrayList<>();
+
+        // minPartitionID & maxParititonId
+        double partitionWidth = (double) c.getW() / NUM_PARTITIONS;
+        int minPartitionId = (int) Math.floor(newBox.getMinx() / partitionWidth);
+        int maxPartitionId = (int) Math.floor(newBox.getMaxx() / partitionWidth);
+
+        // loop through all partitions (hopefully it's one most of the time)
+        for (int i = minPartitionId; i <= maxPartitionId; i++) {
+            // construct range query
+            String sql =
+                    "select "
+                            + colListStr
+                            + " from bbox_"
+                            + Main.getProject().getName()
+                            + "_"
+                            + c.getId()
+                            + "layer"
+                            + layerId
+                            + "_"
+                            + i
+                            + " where ";
+            sql += "geom && box('" + newBox.getCSV() + "')";
+            if (oldBox.getWidth()
+                    > 0) // when there is not an old box, oldBox is set to -1e5, -1e5,...
+            sql += "and not (geom && box('" + oldBox.getCSV() + "') )";
+            if (predicate.length() > 0) sql += " and " + predicate + ";";
+            System.out.println(sql);
+
+            // return
+            ret.addAll(DbConnector.getQueryResult(Config.databaseName, sql));
+        }
+
+        return ret;
+    }
+
+    @Override
+    public ArrayList<ArrayList<String>> getDataFromTile(
+            Canvas c, int layerId, int minx, int miny, String predicate) throws Exception {
+        return null;
     }
 }

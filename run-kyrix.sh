@@ -66,16 +66,8 @@ done
 
 # Tune postgres
 echo -e "\nPostgres started! Tuning..."
-CONF=/var/lib/postgresql/data/postgresql.conf
 docker exec -t kyrix_db_1 su - postgres -c "psql -c \"create database kyrix;\" " # shutup start_proc warning
 docker exec -t kyrix_db_1 su - postgres -c "psql -c \"create extension if not exists plv8;\" " # shutup start_proc warning
-docker exec -t kyrix_db_1 sed -i "s@^[#]\?max_parallel_maintenance_workers.*@max_parallel_maintenance_workers = '24'@" $CONF
-docker exec -t kyrix_db_1 sed -i "s@^[#]\?maintenance_work_mem.*@maintenance_work_mem = '2GB'@" $CONF
-docker exec -t kyrix_db_1 sed -i "s@^[#]\?max_worker_processes.*@max_worker_processes = '24'@" $CONF
-docker exec -t kyrix_db_1 sed -i "s@^[#]\?max_parallel_workers .*@max_parallel_workers = '24'@" $CONF
-docker exec -t kyrix_db_1 sed -i "s@^[#]\?max_parallel_workers_per_gather.*@max_parallel_workers_per_gather = '24'@" $CONF
-docker exec -t kyrix_db_1 bash -c "echo \"plv8.start_proc = 'commonjs.plv8_startup'\" >> $CONF"
-docker exec -t kyrix_db_1 su - postgres -c "/usr/lib/postgresql/11/bin/pg_ctl -D /var/lib/postgresql/data reload -s"
 
 # installing d3
 docker exec -it kyrix_db_1 su - postgres -c "./install-d3.sh kyrix" > /dev/null
