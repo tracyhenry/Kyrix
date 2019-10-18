@@ -63,6 +63,10 @@ function postJump(viewId, zoomType) {
                     gvd.curCanvas.zoomInFactorY
                 ) - param.eps
             );
+        // hardcode for load for now
+        // in the future we shouldn't need these if-elses
+        // gvd.initialScale should be prior to all jumps.
+        // relevant: https://github.com/tracyhenry/Kyrix/issues/12
         else if (zoomType == param.load)
             setupZoom(viewId, gvd.initialScale || 1);
         else setupZoom(viewId, 1);
