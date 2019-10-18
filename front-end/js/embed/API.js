@@ -229,3 +229,24 @@ export function getRenderingParameters() {
 export function getGlobalVarDictionary(viewId) {
     return globalVar.views[viewId];
 }
+
+export function triggerPredicate(viewId, predDict) {
+    var gvd = globalVar.views[viewId];
+
+    var vp = getCurrentViewport(viewId);
+
+    // step 1: get predicates, viewport, scale
+    var predArray = [];
+    var numLayer = gvd.curCanvas.layers.length;
+    for (var i = 0; i < numLayer; i++)
+        if ("layer" + i in predDict) predArray.push(predDict["layer" + i]);
+        else predArray.push({});
+
+    var newVpX = vp.vpX;
+    var newVpY = vp.vpY;
+    var viewClass = ".view_" + viewId + ".maing";
+    var k = d3.zoomTransform(d3.select(viewClass).node()).k;
+
+    // step 2: load
+    load(predArray, newVpX, newVpY, k, viewId, gvd.curCanvasId);
+}
