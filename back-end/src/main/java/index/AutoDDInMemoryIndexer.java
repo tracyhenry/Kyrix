@@ -38,12 +38,17 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     private transient ArrayList<RTree<ArrayList<String>, Rectangle>> Rtrees;
     private transient ArrayList<ArrayList<String>> rawRows;
     private transient HashMap<String, Integer> aggMap;
-    private transient int aggMode;
+    private transient AggMode aggMode;
     private transient AutoDD autoDD;
+
+    private enum AggMode {
+        NUMERIC,
+        CATEGORICAL
+    };
 
     // singleton pattern to ensure only one instance existed
     private AutoDDInMemoryIndexer() {
-        this.gson = new GsonBuilder().create();
+        gson = new GsonBuilder().create();
     }
 
     // thread-safe instance getter
@@ -66,22 +71,22 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
         int numLevels = autoDD.getNumLevels();
         int numRawColumns = autoDD.getColumnNames().size();
-        this.aggMap = new HashMap();
-        this.aggMode = 0;
+        aggMap = new HashMap();
+        aggMode = AggMode.NUMERIC;
         System.out.println("columns: " + autoDD.getColumnNames());
         System.out.println("aggcolumns: " + autoDD.getAggColumns());
         // mode 0: numeric, mode 1: categorical
         for (String aggcol : autoDD.getAggColumns()) {
             if (aggcol.substring(0, 5).equals("mode:")) {
-                if (aggcol.substring(5).equals("category")) this.aggMode = 1;
-                if (aggcol.substring(5).equals("number")) this.aggMode = 0;
+                if (aggcol.substring(5).equals("category")) aggMode = AggMode.CATEGORICAL;
+                if (aggcol.substring(5).equals("number")) aggMode = AggMode.NUMERIC;
             } else {
-                this.aggMap.put(aggcol, autoDD.getColumnNames().indexOf(aggcol));
+                aggMap.put(aggcol, autoDD.getColumnNames().indexOf(aggcol));
             }
         }
 
-        System.out.println("this.aggMap: " + this.aggMap);
-        System.out.println("this.aggMode: " + this.aggMode);
+        System.out.println("this.aggMap: " + aggMap);
+        System.out.println("this.aggMode: " + aggMode);
 
         // calculate overlapping threshold
         this.overlappingThreshold =
@@ -127,11 +132,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             for (ArrayList<String> rawRow : this.rawRows) {
                 ArrayList<String> bboxRow = new ArrayList<>();
                 for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
-                bboxRow.add(gson.toJson(getDummyAgg(rawRow, -1, -1, false)));
-                // if (rawRow.get(0).equals("L. Messi")){
-                //     System.out.println("Messi bboxRow: " + bboxRow);
-                // }
-                this.Rtrees.set(
+                bboxRow.add(gson.toJson(getDummyAgg(rawRow, false)));
+                Rtrees.set(
                         numLevels,
                         this.Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
             }
@@ -147,14 +149,10 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     ArrayList<String> curRow = o.value();
                     String curAggStr = curRow.get(numRawColumns);
 
-                    HashMap<String, ArrayList<Double>> curMap = new HashMap<>();
+                    HashMap<String, ArrayList<Double>> curMap;
                     Type type = new TypeToken<HashMap<String, ArrayList<Double>>>() {}.getType();
-                    curMap = this.gson.fromJson(curAggStr, type);
+                    curMap = gson.fromJson(curAggStr, type);
 
-                    // boundary case: bottom level
-                    // if (i == numLevels) curRow.set(numRawColumns, "{}");
-                    // System.out.println("curRow: " + curRow);
-                    // System.out.println("curMap: " + curMap);
                     int count = curMap.get("count").get(0).intValue();
                     // System.out.println("count: " + count);
 
@@ -342,9 +340,10 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         DbConnector.closeConnection(Config.databaseName);
 
         // release memory
-        this.Rtrees = null;
-        this.rawRows = null;
-        this.aggMap = null;
+        Rtrees = null;
+        rawRows = null;
+        aggMap = null;
+        autoDD = null;
     }
 
     private void createMVForLevel(int level, int autoDDIndex)
@@ -360,6 +359,13 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             ArrayList<String> bboxRow = new ArrayList<>();
             for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
 
+            // place holder for cluster aggregate field
+            bboxRow.add(gson.toJson(getDummyAgg(rawRow, true)));
+
+            // if (rawRow.get(0).equals("L. Messi")){
+            //     System.out.println("Level: " + level + " Messi bboxRow: " + bboxRow);
+            // }
+
             // centroid of this tuple
             double cx =
                     autoDD.getCanvasCoordinate(
@@ -367,13 +373,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             double cy =
                     autoDD.getCanvasCoordinate(
                             level, Double.valueOf(rawRow.get(autoDD.getYColId())), false);
-
-            // place holder for cluster aggregate field
-            bboxRow.add(gson.toJson(getDummyAgg(rawRow, cx, cy, true)));
-
-            // if (rawRow.get(0).equals("L. Messi")){
-            //     System.out.println("Level: " + level + " Messi bboxRow: " + bboxRow);
-            // }
 
             // check overlap
             double minx = cx - autoDD.getBboxW() * this.overlappingThreshold / 2;
@@ -439,11 +438,10 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     }
 
     // if flag == true, use constant; if flag == false, use row info
-    private HashMap<String, ArrayList<Double>> getDummyAgg(
-            ArrayList<String> row, double cx, double cy, boolean flag) {
+    private HashMap<String, ArrayList<Double>> getDummyAgg(ArrayList<String> row, boolean flag) {
         HashMap<String, ArrayList<Double>> dummy = new HashMap<>();
-        if (this.aggMode == 0) {
-            for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
+        if (aggMode == AggMode.NUMERIC) {
+            for (Map.Entry<String, Integer> entry : aggMap.entrySet()) {
                 // System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
                 ArrayList<Double> arr = new ArrayList<>();
                 if (flag) {
@@ -465,10 +463,10 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 }
                 dummy.put(entry.getKey(), arr);
             }
-        } else if (this.aggMode == 1) {
+        } else if (aggMode == AggMode.CATEGORICAL) {
             String category = "";
             ArrayList<Double> arr = new ArrayList<>();
-            for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
+            for (Map.Entry<String, Integer> entry : aggMap.entrySet()) {
                 arr = new ArrayList<>();
                 if (flag) arr.add(0.0);
                 else arr.add(1.0);
@@ -477,26 +475,20 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             dummy.put(category.substring(0, category.length() - 1), arr);
         }
         ArrayList<Double> countArr = new ArrayList<>();
-        // ArrayList<Double> convexhullArr = new ArrayList<>();
-        // convexhullArr.add(cx);
-        // convexhullArr.add(cy);
         if (flag) {
             countArr.add(0.0);
-            // dummy.put("convexhull", convexhullArr);
         } else {
             countArr.add(1.0);
         }
         dummy.put("count", countArr);
-        //        TODO: CONVEX HULL POINTS
         return dummy;
     }
 
     private HashMap<String, ArrayList<Double>> updateAgg(
             HashMap<String, ArrayList<Double>> parent, HashMap<String, ArrayList<Double>> child) {
-        // System.out.println("parent convexhull before: " + parent.get("convexhull"));
-        // System.out.println("child convexhull before: " + child.get("convexhull"));
-        if (this.aggMode == 0) {
-            for (Map.Entry<String, Integer> entry : this.aggMap.entrySet()) {
+        // System.out.println("parent before: " + parent);
+        if (aggMode == AggMode.NUMERIC) {
+            for (Map.Entry<String, Integer> entry : aggMap.entrySet()) {
                 // Aggregate entry: [count, sum, max, min, squaresum]
                 String key = entry.getKey();
                 ArrayList<Double> p = parent.get(key);
@@ -511,7 +503,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 p.set(3, p.get(3) + c.get(3));
             }
             parent.get("count").set(0, parent.get("count").get(0) + child.get("count").get(0));
-        } else if (this.aggMode == 1) {
+        } else if (aggMode == AggMode.CATEGORICAL) {
             // default value
             ArrayList<Double> zero = new ArrayList<>();
             zero.add(0.0);

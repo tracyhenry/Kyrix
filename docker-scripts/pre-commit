@@ -33,7 +33,7 @@ npm list --depth 1 -g prettier > /dev/null
 
 if [[ $? -ne 0 ]]; then
     echo "Prettier formatter not found, installing it as a global npm package..."
-    npm install prettier --global
+    sudo npm install prettier --global
 fi
 
 cd $GIT_DIR/../
@@ -41,7 +41,7 @@ FILES=$(git diff --cached --name-only --diff-filter=ACM "*.js" "*.jsx" "*.html" 
 [ -z "$FILES" ] && exit 0
 
 # Prettify all selected files
-echo "$FILES" | xargs prettier --no-bracket-spacing --tab-width 4 --end-of-line "lf" --check > /dev/null 2>&1
+echo "$FILES" | xargs prettier --no-bracket-spacing --tab-width 4 --end-of-line "lf" --check > /dev/null
 
 if [[ $? -ne 0 ]]; then
     echo "$FILES" | xargs prettier --no-bracket-spacing --tab-width 4 --end-of-line "lf" --write > /dev/null 2>&1

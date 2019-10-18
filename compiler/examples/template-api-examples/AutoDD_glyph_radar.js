@@ -1,3 +1,8 @@
+// To run this example:
+// download this csv file at: https://www.dropbox.com/s/4cdabhctkybw8tf/fifa19.csv
+// then run (in root folder): ./docker-scripts/load-csv.sh fifa19.csv
+// note that the name of the file has to be fifa19.csv
+
 // libraries
 const Project = require("../../src/index").Project;
 const AutoDD = require("../../src/template-api/AutoDD").AutoDD;
@@ -12,14 +17,14 @@ p.addStyles(renderers.glyphStyles);
 var query = "select * from fifa19 order by cast(wage as int) desc";
 
 var attributes = [
-    // "defending",
+    "defending",
     "general",
     "mental",
     "passing",
     "mobility",
-    "power"
-    // "rating",
-    // "shooting"
+    "power",
+    "rating",
+    "shooting"
 ];
 
 var autoDD = {

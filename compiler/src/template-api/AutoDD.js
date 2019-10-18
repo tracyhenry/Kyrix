@@ -315,6 +315,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function renderObjectClusterNumBody() {
         var g = svg.select("g:last-of-type");
+        data.forEach(d => {
+            d.cluster_agg = JSON.parse(d.cluster_agg);
+            d.cluster_num = d.cluster_agg["count"][0].toString();
+        });
         g.selectAll(".clusternum")
             .data(data)
             .enter()
@@ -360,7 +364,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var translatedData = data.map(d => ({
             x: d.cx - (x - radius),
             y: d.cy - (y - radius),
-            w: +d.cluster_num
+            w: +JSON.parse(d.cluster_agg).count[0]
         }));
         contours = d3
             .contourDensity()
@@ -458,7 +462,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var translatedData = data.map(d => ({
             x: d.cx - (x - radius),
             y: d.cy - (y - radius),
-            w: +d.cluster_num
+            w: +JSON.parse(d.cluster_agg).count[0]
         }));
 
         // render heatmap
@@ -620,18 +624,19 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function renderGlyphBody() {
-        console.log("glyph raw:", data);
+        // console.log("glyph raw:", data);
         if (!data || data.length == 0) return;
         var params = args.renderingParams;
         var glyph = REPLACE_ME_glyph;
         var g = svg.append("g");
-        console.log("glyph:", glyph);
+        // console.log("glyph:", glyph);
         var dict = {};
 
         // Step 1: Pre-compute
         data.forEach(d => {
             d.cluster_agg = JSON.parse(d.cluster_agg);
             d.cluster_num = d.cluster_agg["count"][0].toString();
+            d.convexhull = getConvexCoordinates(d);
             for (var key in d.cluster_agg) {
                 if (!(key in dict)) {
                     Object.assign(dict, {
@@ -653,7 +658,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     dict[key].extent[1] = d.cluster_agg[key][avg_index];
             }
         });
-        console.log("dict:", dict);
+        // console.log("dict:", dict);
 
         var glyphs = g
             .selectAll("g.glyph")
@@ -711,20 +716,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .line()
                 .x(d => d.x)
                 .y(d => d.y);
-
-            function getConvexCoordinates(d) {
-                var coords = d.cluster_agg.convexhull;
-                var size = coords.length / 2;
-                var convexhull = [];
-                for (var i = 0; i < size; i++) {
-                    convexhull.push({
-                        x: coords[i * 2],
-                        y: coords[i * 2 + 1]
-                    });
-                }
-                d.convexhull = convexhull;
-                return convexhull;
-            }
 
             function getPathCoordinates(d) {
                 var coordinates = [];
@@ -826,17 +817,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     .classed("kyrix-retainsizezoom", true)
                     .datum(p);
 
-                // convex hull
-                var convexhull = getConvexCoordinates(p);
-                d3.select(nodes[j])
-                    .append("path")
-                    .datum(convexhull)
-                    .attr("d", line)
-                    .attr("stroke-width", 3)
-                    .attr("fill-opacity", 0)
-                    .attr("stroke", "grey")
-                    .style("pointer-events", "none");
-
                 d3.select(nodes[j])
                     .append("text")
                     .text(function(d) {
@@ -864,7 +844,34 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                         );
                     });
             });
-        } else if (glyph.type == "pie") {
+        }
+
+        function getConvexCoordinates(d) {
+            var coords = d.cluster_agg.convexhull;
+            var size = coords.length / 2;
+            var convexhull = [];
+            for (var i = 0; i < size; i++) {
+                convexhull.push({
+                    x: coords[i * 2],
+                    y: coords[i * 2 + 1]
+                });
+            }
+            d.convexhull = convexhull;
+            return convexhull;
+        }
+
+        function showConvex(svg, d) {
+            var g = svg.append("g");
+            g.append("path")
+                .datum(d)
+                .attr("class", d => `convexhull`)
+                .attr("id", "convexhull")
+                .attr("d", d => line(d.convexhull))
+                .style("fill-opacity", 0)
+                .style("stroke-width", 3)
+                .style("stroke-opacity", 0.5)
+                .style("stroke", "grey")
+                .style("pointer-events", "none");
         }
 
         var isObjectOnHover = REPLACE_ME_is_object_onhover;
@@ -872,6 +879,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             var objectRenderer = REPLACE_ME_this_rendering;
             g.selectAll("path.glyph")
                 .on("mouseover", function(d, i, nodes) {
+                    showConvex(svg, d);
                     objectRenderer(svg, [d], args);
                     svg.selectAll("g:last-of-type")
                         .attr("id", "autodd_tooltip")
@@ -884,7 +892,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                         });
                 })
                 .on("mouseleave", function() {
-                    d3.select("#autodd_tooltip").remove();
+                    d3.selectAll("#autodd_tooltip").remove();
+                    d3.selectAll("#convexhull").remove();
                 });
         }
     }
@@ -1201,9 +1210,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             var objectRenderer = REPLACE_ME_this_rendering;
             g.selectAll("path.value")
                 .on("mouseover", function(d, i, nodes) {
-                    objectRenderer(svg, [d], args);
                     showConvex(svg, d);
-                    svg.selectAll("g.object")
+                    objectRenderer(svg, [d], args);
+                    svg.selectAll("g:last-of-type")
                         .attr("id", "autodd_tooltip")
                         .style("opacity", 1)
                         .style("pointer-events", "none")

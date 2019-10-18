@@ -65,11 +65,11 @@ public class Project {
 
     public void addBGRP(String key, String val) {
 
-        String newBGRP = this.BGRP;
+        String newBGRP = BGRP;
         newBGRP = newBGRP.substring(0, newBGRP.length() - 1);
         if (newBGRP.length() > 1) newBGRP += ",";
         newBGRP += "\"" + key + "\": " + val + "}";
-        this.BGRP = newBGRP;
+        BGRP = newBGRP;
     }
 
     public ArrayList<String> getStyles() {

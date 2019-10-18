@@ -3,7 +3,7 @@
 # latest always gets pulled
 TAG=${1:-tracyhenry/pg11_postgis25_citus811_plv8:latest}
 
-sudo docker build ../ -f ../Dockerfile-citus-debian -t $TAG
+sudo docker build ../ -f ../docker-scripts/Dockerfile-db --target pg-plv8-citus -t $TAG
 sudo docker push $TAG
 
 #escaping / in $TAG

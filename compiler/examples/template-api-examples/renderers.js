@@ -51,7 +51,6 @@ function playerRendering(svg, data, args) {
     // console.log("raw:", data[0]);
 
     var g = svg.append("g").attr("class", "player object");
-
     var params = args.renderingParams;
 
     var basex = d => +d.cx - +params.rectPlayer.w / 2;
