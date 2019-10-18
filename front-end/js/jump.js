@@ -65,7 +65,7 @@ function postJump(viewId, zoomType) {
             );
         // hardcode for load for now
         // in the future we shouldn't need these if-elses
-        // gvd.initialScale should be prior to all jumps.
+        // gvd.initialScale should be set prior to all jumps.
         // relevant: https://github.com/tracyhenry/Kyrix/issues/12
         else if (zoomType == param.load)
             setupZoom(viewId, gvd.initialScale || 1);

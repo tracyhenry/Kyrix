@@ -235,7 +235,7 @@ export function triggerPredicate(viewId, predDict) {
 
     var vp = getCurrentViewport(viewId);
 
-    // step 1: from start jump
+    // step 1: get predicates, viewport, scale
     var predArray = [];
     var numLayer = gvd.curCanvas.layers.length;
     for (var i = 0; i < numLayer; i++)
