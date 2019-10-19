@@ -51,7 +51,3 @@ docker cp $SQL_FILE kyrix_db_1:/$FILE_NAME
 
 # import sql file content into the selected database
 docker exec -it kyrix_db_1 /bin/sh -c "psql postgresql://postgres:kyrixftw@localhost/${DB_NAME} < ${FILE_NAME}"
-
-
-
-

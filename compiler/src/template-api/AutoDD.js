@@ -73,6 +73,10 @@ function AutoDD(args) {
     }
     this.upper = "upper" in args ? args.upper : false;
     args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
+    this.aggMode =
+        "mode" in args.aggregate
+            ? "mode:" + args.aggregate.mode
+            : "mode:number";
     if (
         args.rendering.mode == "glyph" ||
         args.rendering.mode == "glyph+object" ||
@@ -90,10 +94,6 @@ function AutoDD(args) {
         }
         this.glyph = JSON.stringify(glyph);
         console.log("this.glyph: ", this.glyph);
-        this.aggMode =
-            "mode" in args.aggregate
-                ? "mode:" + args.aggregate.mode
-                : "mode:number";
     }
 
     // check required args
@@ -1361,7 +1361,7 @@ function getAxesRenderer(level) {
             dim: "x",
             scale: x,
             axis: xAxis,
-            translate: [0, 1000],
+            translate: [0, cHeight],
             styling: styling
         });
         //y
