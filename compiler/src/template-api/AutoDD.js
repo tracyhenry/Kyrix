@@ -1361,7 +1361,7 @@ function getAxesRenderer(level) {
             dim: "x",
             scale: x,
             axis: xAxis,
-            translate: [0, cHeight],
+            translate: [0, args.viewportH],
             styling: styling
         });
         //y
