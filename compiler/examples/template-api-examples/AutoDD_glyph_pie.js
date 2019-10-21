@@ -30,11 +30,13 @@ var autoDD = {
     },
     upper: true,
     marks: {
-        mode: "pie+object",
-        glyph: {
-            type: "pie",
-            attributes: ["agegroup"],
-            domain: ["U20", "U23", "U29", "Older"]
+        cluster: {
+            mode: "pie+object",
+            glyph: {
+                type: "pie",
+                attributes: ["agegroup"],
+                domain: ["U20", "U23", "U29", "Older"]
+            }
         },
         obj: {
             renderer: renderers.playerRendering,

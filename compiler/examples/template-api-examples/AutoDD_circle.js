@@ -28,15 +28,19 @@ var autoDD = {
         col: "away_score",
         range: [69, 148]
     },
-    rendering: {
-        // mode: "circle",
-        mode: "circle+object",
-        axis: true,
+    marks: {
+        cluster: {
+            // mode: "circle",
+            mode: "circle+object"
+        },
         obj: {
             renderer: renderers.teamTimelineRendering,
             bboxW: 162,
             bboxH: 132
         }
+    },
+    config: {
+        axis: true
     }
 };
 

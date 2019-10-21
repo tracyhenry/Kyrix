@@ -44,24 +44,28 @@ var autoDD = {
         mode: "number",
         attributes: attributes
     },
-    rendering: {
-        mode: "glyph+object",
-        topLevelWidth: 1600,
-        topLevelHeight: 1000,
-        axis: true,
-        glyph: {
-            type: "radar",
-            attributes: attributes,
-            value: "average",
-            size: 80,
-            ticks: 5,
-            domain: 100
+    marks: {
+        cluster: {
+            mode: "glyph+object",
+            glyph: {
+                type: "radar",
+                attributes: attributes,
+                value: "average",
+                size: 80,
+                ticks: 5,
+                domain: 100
+            }
         },
         obj: {
             renderer: renderers.playerRendering,
             bboxW: 200,
             bboxH: 200
         }
+    },
+    config: {
+        topLevelWidth: 1600,
+        topLevelHeight: 1000,
+        axis: true
     }
 };
 

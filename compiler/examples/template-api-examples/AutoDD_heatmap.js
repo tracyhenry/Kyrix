@@ -28,17 +28,21 @@ var autoDD = {
         col: "away_score",
         range: [69, 148]
     },
-    rendering: {
-        // mode: "heatmap",
-        mode: "heatmap+object",
-        axis: true,
-        // heatmapRadius: 90,
-        // heatmapOpacity: 0.5,
+    marks: {
+        cluster: {
+            // mode: "heatmap",
+            mode: "heatmap+object"
+            // heatmapRadius: 90,
+            // heatmapOpacity: 0.5,
+        },
         obj: {
             renderer: renderers.teamTimelineRendering,
             bboxW: 162,
             bboxH: 132
         }
+    },
+    config: {
+        axis: true
     }
 };
 

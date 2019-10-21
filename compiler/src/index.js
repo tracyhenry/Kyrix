@@ -311,10 +311,10 @@ function addAutoDD(autoDD, args) {
 
         // set fetching scheme
         if (
-            autoDD.renderingMode == "contour" ||
-            autoDD.renderingMode == "contour+object" ||
-            autoDD.renderingMode == "heatmap" ||
-            autoDD.renderingMode == "heatmap+object"
+            autoDD.clusterMode == "contour" ||
+            autoDD.clusterMode == "contour+object" ||
+            autoDD.clusterMode == "heatmap" ||
+            autoDD.clusterMode == "heatmap+object"
         )
             curLayer.setFetchingScheme("dbox", false);
 
