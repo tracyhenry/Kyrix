@@ -11,8 +11,6 @@ p.addStyles(renderers.glyphStyles);
 // set up auto drill down
 var query = "select * from fifa19 order by cast(wage as int) desc";
 
-var attributes = ["agegroup"];
-
 var autoDD = {
     data: {
         db: "fifa19",
@@ -28,17 +26,14 @@ var autoDD = {
     },
     aggregate: {
         mode: "category",
-        attributes: attributes
+        attributes: ["agegroup"]
     },
     upper: true,
-    rendering: {
+    marks: {
         mode: "pie+object",
-        topLevelWidth: 1600,
-        topLevelHeight: 1000,
-        axis: true,
         glyph: {
             type: "pie",
-            attributes: attributes,
+            attributes: ["agegroup"],
             domain: ["U20", "U23", "U29", "Older"]
         },
         obj: {
@@ -46,6 +41,11 @@ var autoDD = {
             bboxW: 290,
             bboxH: 290
         }
+    },
+    config: {
+        topLevelWidth: 1500,
+        topLevelHeight: 1000,
+        axis: true
     }
 };
 

@@ -8,9 +8,9 @@ const getBodyStringOfFunction = require("./Renderers").getBodyStringOfFunction;
 function AutoDD(args) {
     if (args == null) args = {};
 
-    if (!("rendering" in args) || !("mode" in args.rendering))
+    if (!("marks" in args) || !("mode" in args.marks))
         throw new Error(
-            "Constructing AutoDD: rendering mode (rendering.mode) missing."
+            "Constructing AutoDD: rendering mode (marks.mode) missing."
         );
     var allRenderingModes = new Set([
         "object",
@@ -26,49 +26,44 @@ function AutoDD(args) {
         "pie",
         "pie+object"
     ]);
-    if (!allRenderingModes.has(args.rendering.mode))
+    if (!allRenderingModes.has(args.marks.mode))
         throw new Error("Constructing AutoDD: unsupported rendering mode.");
 
     // check constraints according to rendering mode
     this.circleMinSize = 30;
     this.circleMaxSize = 70;
     this.contourBandwidth =
-        "contourBandwidth" in args.rendering
-            ? args.rendering.contourBandwidth
-            : 30;
+        "contourBandwidth" in args.marks ? args.marks.contourBandwidth : 30;
     this.heatmapRadius =
-        "heatmapRadius" in args.rendering ? args.rendering.heatmapRadius : 80;
-    if (
-        args.rendering.mode == "circle" ||
-        args.rendering.mode == "circle+object"
-    )
-        args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
+        "heatmapRadius" in args.marks ? args.marks.heatmapRadius : 80;
+    if (args.marks.mode == "circle" || args.marks.mode == "circle+object")
+        args.marks["obj"]["bboxW"] = args.marks["obj"]["bboxH"] =
             this.circleMaxSize * 2;
     if (
-        (args.rendering.mode == "object" ||
-            args.rendering.mode == "object+clusternum" ||
-            args.rendering.mode == "circle+object" ||
-            args.rendering.mode == "glyph+object" ||
-            args.rendering.mode == "contour+object" ||
-            args.rendering.mode == "heatmap+object") &&
-        (!("obj" in args.rendering) || !("renderer" in args.rendering.obj))
+        (args.marks.mode == "object" ||
+            args.marks.mode == "object+clusternum" ||
+            args.marks.mode == "circle+object" ||
+            args.marks.mode == "glyph+object" ||
+            args.marks.mode == "contour+object" ||
+            args.marks.mode == "heatmap+object") &&
+        (!("obj" in args.marks) || !("renderer" in args.marks.obj))
     )
         throw new Error(
             "Constructing AutoDD: object renderer (rendering.obj.renderer) missing."
         );
     if (
-        args.rendering.mode == "contour" ||
-        args.rendering.mode == "contour+object" ||
-        args.rendering.mode == "heatmap" ||
-        args.rendering.mode == "heatmap+object"
+        args.marks.mode == "contour" ||
+        args.marks.mode == "contour+object" ||
+        args.marks.mode == "heatmap" ||
+        args.marks.mode == "heatmap+object"
     ) {
-        if (!("obj" in args.rendering)) args.rendering.obj = {};
-        if (args.rendering.mode.indexOf("contour") >= 0)
+        if (!("obj" in args.marks)) args.marks.obj = {};
+        if (args.marks.mode.indexOf("contour") >= 0)
             // as what's implemented by d3-contour
-            args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
+            args.marks["obj"]["bboxW"] = args.marks["obj"]["bboxH"] =
                 this.contourBandwidth * 8;
         else
-            args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
+            args.marks["obj"]["bboxW"] = args.marks["obj"]["bboxH"] =
                 this.heatmapRadius * 2 + 1;
     }
     this.upper = "upper" in args ? args.upper : false;
@@ -78,13 +73,13 @@ function AutoDD(args) {
             ? "mode:" + args.aggregate.mode
             : "mode:number";
     if (
-        args.rendering.mode == "glyph" ||
-        args.rendering.mode == "glyph+object" ||
-        args.rendering.mode == "pie" ||
-        args.rendering.mode == "pie+object"
+        args.marks.mode == "glyph" ||
+        args.marks.mode == "glyph+object" ||
+        args.marks.mode == "pie" ||
+        args.marks.mode == "pie+object"
     ) {
-        if (!("glyph" in args.rendering)) args.rendering.glyph = {};
-        var glyph = args.rendering.glyph;
+        if (!("glyph" in args.marks)) args.marks.glyph = {};
+        var glyph = args.marks.glyph;
         if (glyph.type == "pie") {
             glyph.innerRadius = "innerRadius" in glyph ? glyph.innerRadius : 1;
             glyph.outerRadius = "outerRadius" in glyph ? glyph.outerRadius : 80;
@@ -104,9 +99,8 @@ function AutoDD(args) {
         ["x", "range"],
         ["y", "col"],
         ["y", "range"],
-        ["rendering", "mode"],
-        ["rendering", "obj", "bboxW"],
-        ["rendering", "obj", "bboxH"]
+        ["marks", "obj", "bboxW"],
+        ["marks", "obj", "bboxH"]
     ];
     var requiredArgsTypes = [
         "string",
@@ -115,7 +109,6 @@ function AutoDD(args) {
         "object",
         "string",
         "object",
-        "string",
         "number",
         "number"
     ];
@@ -145,9 +138,10 @@ function AutoDD(args) {
                         " cannot be an empty string."
                 );
     }
+    if (!("config" in args)) args.config = {};
 
     // other constraints
-    if (args.rendering.obj.bboxW <= 0 || args.rendering.obj.bboxH <= 0)
+    if (args.marks.obj.bboxW <= 0 || args.marks.obj.bboxH <= 0)
         throw new Error("Constructing AutoDD: non-positive bbox size.");
     if (
         args.x.range != null &&
@@ -165,10 +159,7 @@ function AutoDD(args) {
             typeof args.y.range[1] != "number")
     )
         throw new Error("Constructing AutoDD: malformed y.range");
-    if (
-        "axis" in args.rendering &&
-        (args.x.range == null || args.y.range == null)
-    )
+    if ("axis" in args.marks && (args.x.range == null || args.y.range == null))
         throw new Error(
             "Constructing AutoDD: raw data domain needs to be specified for rendering an axis."
         );
@@ -185,29 +176,25 @@ function AutoDD(args) {
     this.db = args.data.db;
     this.xCol = args.x.col;
     this.yCol = args.y.col;
-    this.bboxW = args.rendering.obj.bboxW;
-    this.bboxH = args.rendering.obj.bboxH;
-    this.renderingMode = args.rendering.mode;
+    this.bboxW = args.marks.obj.bboxW;
+    this.bboxH = args.marks.obj.bboxH;
+    this.renderingMode = args.marks.mode;
     this.rendering =
-        "renderer" in args.rendering.obj ? args.rendering.obj.renderer : null;
+        "renderer" in args.marks.obj ? args.marks.obj.renderer : null;
     this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
     this.aggColumns =
         "attributes" in args.aggregate
             ? [this.aggMode].concat(args.aggregate.attributes)
             : [this.aggMode];
-    this.numLevels =
-        "numLevels" in args.rendering ? args.rendering.numLevels : 10;
+    this.numLevels = "numLevels" in args.config ? args.config.numLevels : 10;
     this.topLevelWidth =
-        "topLevelWidth" in args.rendering ? args.rendering.topLevelWidth : 1000;
+        "topLevelWidth" in args.config ? args.config.topLevelWidth : 1000;
     this.topLevelHeight =
-        "topLevelHeight" in args.rendering
-            ? args.rendering.topLevelHeight
-            : 1000;
-    this.zoomFactor =
-        "zoomFactor" in args.rendering ? args.rendering.zoomFactor : 2;
+        "topLevelHeight" in args.config ? args.config.topLevelHeight : 1000;
+    this.zoomFactor = "zoomFactor" in args.config ? args.config.zoomFactor : 2;
     this.overlap =
-        "overlap" in args.rendering.obj
-            ? args.rendering.obj.overlap
+        "overlap" in args.marks.obj
+            ? args.marks.obj.overlap
                 ? true
                 : false
             : this.renderingMode == "contour" ||
@@ -216,15 +203,15 @@ function AutoDD(args) {
               this.renderingMode == "heatmap+object"
             ? true
             : false;
-    this.axis = "axis" in args.rendering ? args.rendering.axis : false;
+    this.axis = "axis" in args.config ? args.config.axis : false;
     this.contourColorScheme =
-        "contourColorScheme" in args.rendering
-            ? args.rendering.contourColorScheme
+        "contourColorScheme" in args.marks
+            ? args.marks.contourColorScheme
             : "interpolateViridis";
     this.contourOpacity =
-        "contourOpacity" in args.rendering ? args.rendering.contourOpacity : 1;
+        "contourOpacity" in args.marks ? args.marks.contourOpacity : 1;
     this.heatmapOpacity =
-        "heatmapOpacity" in args.rendering ? args.rendering.heatmapOpacity : 1;
+        "heatmapOpacity" in args.marks ? args.marks.heatmapOpacity : 1;
     this.loX = args.x.range != null ? args.x.range[0] : null;
     this.loY = args.y.range != null ? args.y.range[0] : null;
     this.hiX = args.x.range != null ? args.x.range[1] : null;
@@ -1062,16 +1049,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     dict[key].extent[1] = d.cluster_agg[key][avg_index];
             }
         });
-        // console.log("dict:", dict);
-
-        // var glyphs = g
-        //     .selectAll("g.pie")
-        //     .data(data)
-        //     .enter()
-        //     .append("g")
-        //     .attr("class", (d, i, nodes) => `glyph pie pie${i} ${d.name}`);
-
-        // console.log("glyphs: ", glyphs);
 
         // Step 2: append glyphs
         var domain = clusterParams.domain;
