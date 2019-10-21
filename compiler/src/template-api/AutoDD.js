@@ -12,7 +12,7 @@ function AutoDD(args) {
         throw new Error(
             "Constructing AutoDD: rendering mode (marks.mode) missing."
         );
-    var allRenderingModes = new Set([
+    var allClusterModes = new Set([
         "object",
         "object+clusternum",
         "circle",
@@ -26,7 +26,7 @@ function AutoDD(args) {
         "pie",
         "pie+object"
     ]);
-    if (!allRenderingModes.has(args.marks.mode))
+    if (!allClusterModes.has(args.marks.mode))
         throw new Error("Constructing AutoDD: unsupported rendering mode.");
 
     // check constraints according to rendering mode
@@ -178,7 +178,7 @@ function AutoDD(args) {
     this.yCol = args.y.col;
     this.bboxW = args.marks.obj.bboxW;
     this.bboxH = args.marks.obj.bboxH;
-    this.renderingMode = args.marks.mode;
+    this.clusterMode = args.marks.mode;
     this.rendering =
         "renderer" in args.marks.obj ? args.marks.obj.renderer : null;
     this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
@@ -197,10 +197,10 @@ function AutoDD(args) {
             ? args.marks.obj.overlap
                 ? true
                 : false
-            : this.renderingMode == "contour" ||
-              this.renderingMode == "contour+object" ||
-              this.renderingMode == "heatmap" ||
-              this.renderingMode == "heatmap+object"
+            : this.clusterMode == "contour" ||
+              this.clusterMode == "contour+object" ||
+              this.clusterMode == "heatmap" ||
+              this.clusterMode == "heatmap+object"
             ? true
             : false;
     this.axis = "axis" in args.config ? args.config.axis : false;
@@ -1208,18 +1208,18 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     var renderFuncBody;
     if (
-        this.renderingMode == "object" ||
-        this.renderingMode == "object+clusternum"
+        this.clusterMode == "object" ||
+        this.clusterMode == "object+clusternum"
     ) {
         renderFuncBody =
             "(" + this.rendering.toString() + ")(svg, data, args);\n";
-        if (this.renderingMode == "object+clusternum")
+        if (this.clusterMode == "object+clusternum")
             renderFuncBody += getBodyStringOfFunction(
                 renderObjectClusterNumBody
             );
     } else if (
-        this.renderingMode == "circle" ||
-        this.renderingMode == "circle+object"
+        this.clusterMode == "circle" ||
+        this.clusterMode == "circle+object"
     ) {
         // render circle
         renderFuncBody = getBodyStringOfFunction(renderCircleBody)
@@ -1227,17 +1227,17 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .replace(/REPLACE_ME_circleMaxSize/g, this.circleMaxSize)
             .replace(
                 /REPLACE_ME_this_rendering/g,
-                this.renderingMode == "circle+object"
+                this.clusterMode == "circle+object"
                     ? this.rendering.toString()
                     : "null;"
             )
             .replace(
                 /REPLACE_ME_is_object_onhover/g,
-                this.renderingMode == "circle+object"
+                this.clusterMode == "circle+object"
             );
     } else if (
-        this.renderingMode == "contour" ||
-        this.renderingMode == "contour+object"
+        this.clusterMode == "contour" ||
+        this.clusterMode == "contour+object"
     ) {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
             .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)
@@ -1246,65 +1246,62 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .replace(/REPLACE_ME_CONTOUR_OPACITY/g, this.contourOpacity)
             .replace(
                 /REPLACE_ME_is_object_onhover/g,
-                this.renderingMode == "contour+object"
+                this.clusterMode == "contour+object"
             );
-        if (this.renderingMode == "contour+object")
+        if (this.clusterMode == "contour+object")
             renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
                 .replace(
                     /REPLACE_ME_is_object_onhover/g,
-                    this.renderingMode == "contour+object"
+                    this.clusterMode == "contour+object"
                 )
                 .replace(
                     /REPLACE_ME_this_rendering/g,
                     this.rendering.toString()
                 );
     } else if (
-        this.renderingMode == "glyph" ||
-        this.renderingMode == "glyph+object"
+        this.clusterMode == "glyph" ||
+        this.clusterMode == "glyph+object"
     ) {
         renderFuncBody = getBodyStringOfFunction(renderGlyphBody)
             .replace(/REPLACE_ME_glyph/g, this.glyph)
             .replace(/REPLACE_ME_bboxH/g, this.bboxH)
             .replace(
                 /REPLACE_ME_is_object_onhover/g,
-                this.renderingMode == "glyph+object"
+                this.clusterMode == "glyph+object"
             )
             .replace(
                 /REPLACE_ME_this_rendering/g,
-                this.renderingMode == "glyph+object"
+                this.clusterMode == "glyph+object"
                     ? this.rendering.toString()
                     : "null;"
             );
-    } else if (
-        this.renderingMode == "pie" ||
-        this.renderingMode == "pie+object"
-    ) {
+    } else if (this.clusterMode == "pie" || this.clusterMode == "pie+object") {
         renderFuncBody = getBodyStringOfFunction(renderPieBody)
             .replace(/REPLACE_ME_cluster_params/g, this.glyph)
             .replace(/REPLACE_ME_bboxH/g, this.bboxH)
             .replace(
                 /REPLACE_ME_is_object_onhover/g,
-                this.renderingMode == "pie+object"
+                this.clusterMode == "pie+object"
             )
             .replace(
                 /REPLACE_ME_this_rendering/g,
-                this.renderingMode == "pie+object"
+                this.clusterMode == "pie+object"
                     ? this.rendering.toString()
                     : "null;"
             );
     } else if (
-        this.renderingMode == "heatmap" ||
-        this.renderingMode == "heatmap+object"
+        this.clusterMode == "heatmap" ||
+        this.clusterMode == "heatmap+object"
     ) {
         renderFuncBody = getBodyStringOfFunction(renderHeatmapBody)
             .replace(/REPLACE_ME_radius/g, this.heatmapRadius)
             .replace(/REPLACE_ME_heatmap_opacity/g, this.heatmapOpacity)
             .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
-        if (this.renderingMode == "heatmap+object")
+        if (this.clusterMode == "heatmap+object")
             renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
                 .replace(
                     /REPLACE_ME_is_object_onhover/g,
-                    this.renderingMode == "heatmap+object"
+                    this.clusterMode == "heatmap+object"
                 )
                 .replace(
                     /REPLACE_ME_this_rendering/g,

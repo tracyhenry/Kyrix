@@ -12,7 +12,7 @@ public class AutoDD {
     private String xCol, yCol;
     private int bboxW, bboxH;
     private String rendering;
-    private String renderingMode;
+    private String clusterMode;
     private ArrayList<String> columnNames, aggColumns, queriedColumnNames = null;
     private int numLevels, topLevelWidth, topLevelHeight;
     private boolean overlap;
@@ -44,8 +44,8 @@ public class AutoDD {
         return bboxH;
     }
 
-    public String getRenderingMode() {
-        return renderingMode;
+    public String getClusterMode() {
+        return clusterMode;
     }
 
     public String getRendering() {
@@ -171,8 +171,8 @@ public class AutoDD {
                 + ", rendering='"
                 + rendering
                 + '\''
-                + ", renderingMode='"
-                + renderingMode
+                + ", clusterMode='"
+                + clusterMode
                 + '\''
                 + ", columnNames="
                 + columnNames

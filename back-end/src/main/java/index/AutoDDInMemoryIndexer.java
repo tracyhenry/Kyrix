@@ -115,17 +115,17 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         for (int i = 0; i < numLevels; i++) createMVForLevel(i, autoDDIndex);
 
         // compute cluster Aggregate
-        if (autoDD.getRenderingMode().equals("object+clusternum")
-                || autoDD.getRenderingMode().equals("circle")
-                || autoDD.getRenderingMode().equals("circle+object")
-                || autoDD.getRenderingMode().equals("contour")
-                || autoDD.getRenderingMode().equals("contour+object")
-                || autoDD.getRenderingMode().equals("glyph")
-                || autoDD.getRenderingMode().equals("glyph+object")
-                || autoDD.getRenderingMode().equals("pie")
-                || autoDD.getRenderingMode().equals("pie+object")
-                || autoDD.getRenderingMode().equals("heatmap")
-                || autoDD.getRenderingMode().equals("heatmap+object")) {
+        if (autoDD.getClusterMode().equals("object+clusternum")
+                || autoDD.getClusterMode().equals("circle")
+                || autoDD.getClusterMode().equals("circle+object")
+                || autoDD.getClusterMode().equals("contour")
+                || autoDD.getClusterMode().equals("contour+object")
+                || autoDD.getClusterMode().equals("glyph")
+                || autoDD.getClusterMode().equals("glyph+object")
+                || autoDD.getClusterMode().equals("pie")
+                || autoDD.getClusterMode().equals("pie+object")
+                || autoDD.getClusterMode().equals("heatmap")
+                || autoDD.getClusterMode().equals("heatmap+object")) {
 
             // a fake bottom level for non-sampled objects
             this.Rtrees.add(RTree.create());
