@@ -25,8 +25,8 @@ function AutoDD(args) {
         "contour+object",
         "heatmap",
         "heatmap+object",
-        "glyph",
-        "glyph+object",
+        "radar",
+        "radar+object",
         "pie",
         "pie+object"
     ]);
@@ -34,6 +34,7 @@ function AutoDD(args) {
         throw new Error("Constructing AutoDD: unsupported rendering mode.");
 
     // check constraints according to rendering mode
+    this.upper = "upper" in args ? args.upper : false;
     this.circleMinSize = 30;
     this.circleMaxSize = 70;
     this.contourBandwidth =
@@ -44,6 +45,11 @@ function AutoDD(args) {
         "heatmapRadius" in args.marks.cluster
             ? args.marks.cluster.heatmapRadius
             : 80;
+    args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
+    this.aggMode =
+        "mode" in args.aggregate
+            ? "mode:" + args.aggregate.mode
+            : "mode:number";
     if (
         args.marks.cluster.mode == "circle" ||
         args.marks.cluster.mode == "circle+object"
@@ -54,7 +60,7 @@ function AutoDD(args) {
         (args.marks.cluster.mode == "object" ||
             args.marks.cluster.mode == "object+clusternum" ||
             args.marks.cluster.mode == "circle+object" ||
-            args.marks.cluster.mode == "glyph+object" ||
+            args.marks.cluster.mode == "radar+object" ||
             args.marks.cluster.mode == "contour+object" ||
             args.marks.cluster.mode == "heatmap+object") &&
         (!("obj" in args.marks) || !("renderer" in args.marks.obj))
@@ -77,29 +83,35 @@ function AutoDD(args) {
             args.marks["obj"]["bboxW"] = args.marks["obj"]["bboxH"] =
                 this.heatmapRadius * 2 + 1;
     }
-    this.upper = "upper" in args ? args.upper : false;
-    args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
-    this.aggMode =
-        "mode" in args.aggregate
-            ? "mode:" + args.aggregate.mode
-            : "mode:number";
     if (
-        args.marks.cluster.mode == "glyph" ||
-        args.marks.cluster.mode == "glyph+object" ||
+        args.marks.cluster.mode == "radar" ||
+        args.marks.cluster.mode == "radar+object"
+    ) {
+        this.glyph = JSON.parse(JSON.stringify(args.marks.cluster));
+        delete this.glyph.mode;
+        this.glyph = JSON.stringify(this.glyph);
+    }
+    if (
         args.marks.cluster.mode == "pie" ||
         args.marks.cluster.mode == "pie+object"
     ) {
-        if (!("glyph" in args.marks.cluster)) args.marks.cluster.glyph = {};
-        var glyph = args.marks.cluster.glyph;
-        if (glyph.type == "pie") {
-            glyph.innerRadius = "innerRadius" in glyph ? glyph.innerRadius : 1;
-            glyph.outerRadius = "outerRadius" in glyph ? glyph.outerRadius : 80;
-            glyph.cornerRadius =
-                "cornerRadius" in glyph ? glyph.cornerRadius : 5;
-            glyph.padAngle = "padAngle" in glyph ? glyph.padAngle : 0.05;
-        }
-        this.glyph = JSON.stringify(glyph);
-        console.log("this.glyph: ", this.glyph);
+        this.glyph = {};
+        this.glyph.domain = args.marks.cluster.domain;
+        this.glyph.innerRadius =
+            "innerRadius" in args.marks.cluster ? args.marks.innerRadius : 1;
+        this.glyph.outerRadius =
+            "outerRadius" in args.marks.cluster
+                ? args.marks.cluster.outerRadius
+                : 80;
+        this.glyph.cornerRadius =
+            "cornerRadius" in args.marks.cluster
+                ? args.marks.cluster.cornerRadius
+                : 5;
+        this.glyph.padAngle =
+            "padAngle" in args.marks.cluster
+                ? args.marks.cluster.padAngle
+                : 0.05;
+        this.glyph = JSON.stringify(this.glyph);
     }
 
     // check required args
@@ -625,13 +637,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         }
     }
 
-    function renderGlyphBody() {
-        // console.log("glyph raw:", data);
+    function renderRadarBody() {
         if (!data || data.length == 0) return;
         var params = args.renderingParams;
         var glyph = REPLACE_ME_glyph;
         var g = svg.append("g");
-        // console.log("glyph:", glyph);
         var dict = {};
 
         // Step 1: Pre-compute
@@ -660,193 +670,185 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     dict[key].extent[1] = d.cluster_agg[key][avg_index];
             }
         });
-        // console.log("dict:", dict);
 
+        // Step 2: append radars
         var glyphs = g
             .selectAll("g.glyph")
             .data(data)
             .enter();
 
-        // Step 2: append glyphs
+        // radar chart, for avaerage
+        var radius = 0;
+        if (typeof glyph.size === "number") radius = glyph.size;
+        else radius = REPLACE_ME_bboxH / 4;
 
-        // radar chart
-        if (glyph.type == "radar" || glyph.type == "spider") {
-            // radar chart, for avaerage
-            var radius = 0;
-            if (typeof glyph.size === "number") radius = glyph.size;
-            else radius = REPLACE_ME_bboxH / 4;
-
-            // radar chart scales
-            var rangeRadius = [0, radius];
-            // build radius scale
-            for (var key in dict) {
-                dict[key].scale = d3.scaleLinear().range(rangeRadius);
-                if (Array.isArray(glyph.domain)) {
-                    dict[key].scale.domain(glyph.domain);
-                } else if (typeof glyph.domain === "object") {
-                    dict[key].scale.domain(glyph.domain[key]);
-                } else if (typeof glyph.domain === "number") {
-                    dict[key].scale.domain([0, glyph.domain]);
-                } else {
-                    dict[key].scale.domain(
-                        dict[key].extent[0] > 0
-                            ? [0, dict[key].extent[1]]
-                            : dict[key].extent
-                    );
-                }
+        // radar chart scales
+        var rangeRadius = [0, radius];
+        // build radius scale
+        for (var key in dict) {
+            dict[key].scale = d3.scaleLinear().range(rangeRadius);
+            if (Array.isArray(glyph.domain)) {
+                dict[key].scale.domain(glyph.domain);
+            } else if (typeof glyph.domain === "object") {
+                dict[key].scale.domain(glyph.domain[key]);
+            } else if (typeof glyph.domain === "number") {
+                dict[key].scale.domain([0, glyph.domain]);
+            } else {
+                dict[key].scale.domain(
+                    dict[key].extent[0] > 0
+                        ? [0, dict[key].extent[1]]
+                        : dict[key].extent
+                );
             }
-            dict.count.scale = d3
-                .scaleLinear()
-                .range([rangeRadius[1] * 0.6, rangeRadius[1] * 0.5])
-                .domain([
-                    dict.count.extent[0].toString().length,
-                    dict.count.extent[1].toString().length
-                ]);
+        }
+        dict.count.scale = d3
+            .scaleLinear()
+            .range([rangeRadius[1] * 0.6, rangeRadius[1] * 0.5])
+            .domain([
+                dict.count.extent[0].toString().length,
+                dict.count.extent[1].toString().length
+            ]);
 
+        // ticks
+        var ticks = [];
+        if (Array.isArray(glyph.ticks)) {
+            ticks = glyph.ticks;
+        } else if (typeof glyph.ticks === "number") {
+            for (var i = 0; i < glyph.ticks; i++)
+                ticks.push((i + 1) * (radius / glyph.ticks));
+        }
+
+        // line
+        var line = d3
+            .line()
+            .x(d => d.x)
+            .y(d => d.y);
+
+        function getPathCoordinates(d) {
+            var coordinates = [];
+            var attributes = Object.keys(d.cluster_agg).filter(
+                item => item !== "count" && item !== "convexhull"
+            );
+            for (var i = 0; i < attributes.length; i++) {
+                var attribute = attributes[i];
+                var angle = Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
+                // average
+                coordinates.push(
+                    angleToCoordinate(
+                        d,
+                        angle,
+                        attribute,
+                        d.cluster_agg[attribute].slice(-1).pop()
+                    )
+                );
+            }
+            coordinates.push(coordinates[0]);
+            return coordinates;
+        }
+
+        function angleToCoordinate(d, angle, key, value, arg) {
+            var x = Math.cos(angle) * dict[key].scale(value);
+            var y = Math.sin(angle) * dict[key].scale(value);
+            return {x: +d.cx + x, y: +d.cy - y};
+        }
+
+        glyphs.each((p, j, nodes) => {
             // ticks
-            var ticks = [];
-            if (Array.isArray(glyph.ticks)) {
-                ticks = glyph.ticks;
-            } else if (typeof glyph.ticks === "number") {
-                for (var i = 0; i < glyph.ticks; i++)
-                    ticks.push((i + 1) * (radius / glyph.ticks));
-            }
-            // console.log("ticks: ", ticks);
-
-            // line
-            var line = d3
-                .line()
-                .x(d => d.x)
-                .y(d => d.y);
-
-            function getPathCoordinates(d) {
-                var coordinates = [];
-                var attributes = Object.keys(d.cluster_agg).filter(
-                    item => item !== "count" && item !== "convexhull"
-                );
-                for (var i = 0; i < attributes.length; i++) {
-                    var attribute = attributes[i];
-                    var angle =
-                        Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
-                    // average
-                    coordinates.push(
-                        angleToCoordinate(
-                            d,
-                            angle,
-                            attribute,
-                            d.cluster_agg[attribute].slice(-1).pop()
-                        )
-                    );
-                }
-                coordinates.push(coordinates[0]);
-                return coordinates;
-            }
-
-            function angleToCoordinate(d, angle, key, value, arg) {
-                var x = Math.cos(angle) * dict[key].scale(value);
-                var y = Math.sin(angle) * dict[key].scale(value);
-                return {x: +d.cx + x, y: +d.cy - y};
-            }
-
-            glyphs.each((p, j, nodes) => {
-                // ticks
-                for (var i = ticks.length - 1; i >= 0; i--) {
-                    d3.select(nodes[j])
-                        .append("circle")
-                        .attr("cx", d => d.cx)
-                        .attr("cy", d => d.cy)
-                        .attr("fill", "none")
-                        .attr("stroke", "gray")
-                        .attr("r", ticks[i])
-                        .classed("kyrix-retainsizezoom", true);
-                }
-                // axis & axis
-                var attributes = Object.keys(p.cluster_agg).filter(
-                    item => item !== "count" && item !== "convexhull"
-                );
-
-                for (var i = 0; i < attributes.length; i++) {
-                    var attribute = attributes[i];
-                    var angle =
-                        Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
-                    var max = dict[attribute].scale.domain()[1];
-                    var line_coordinate = angleToCoordinate(
-                        p,
-                        angle,
-                        attribute,
-                        max,
-                        "line"
-                    );
-                    var label_coordinate = angleToCoordinate(
-                        p,
-                        angle,
-                        attribute,
-                        max * 1.1,
-                        "label"
-                    );
-
-                    //draw axis line
-                    d3.select(nodes[j])
-                        .append("line")
-                        .attr("x1", p.cx)
-                        .attr("y1", p.cy)
-                        .attr("x2", line_coordinate.x)
-                        .attr("y2", line_coordinate.y)
-                        .classed("kyrix-retainsizezoom", true)
-                        .attr("stroke", "black");
-
-                    //draw axis label
-                    d3.select(nodes[j])
-                        .append("text")
-                        .classed("label", true)
-                        .attr("x", label_coordinate.x)
-                        .attr("y", label_coordinate.y)
-                        .classed("kyrix-retainsizezoom", true)
-                        .text(attribute.substr(0, 3).toUpperCase());
-                }
-                // path
-                var coordinates = getPathCoordinates(p);
+            for (var i = ticks.length - 1; i >= 0; i--) {
                 d3.select(nodes[j])
-                    .append("path")
-                    .datum(coordinates)
-                    .attr("d", line)
-                    .classed("glyph", true)
-                    .attr("stroke-width", 3)
-                    .attr("stroke", "darkorange")
-                    .attr("fill", "darkorange")
-                    .attr("stroke-opacity", 0.8)
-                    .attr("fill-opacity", 0.5)
-                    .classed("kyrix-retainsizezoom", true)
-                    .datum(p);
+                    .append("circle")
+                    .attr("cx", d => d.cx)
+                    .attr("cy", d => d.cy)
+                    .attr("fill", "none")
+                    .attr("stroke", "gray")
+                    .attr("r", ticks[i])
+                    .classed("kyrix-retainsizezoom", true);
+            }
+            // axis & axis
+            var attributes = Object.keys(p.cluster_agg).filter(
+                item => item !== "count" && item !== "convexhull"
+            );
 
+            for (var i = 0; i < attributes.length; i++) {
+                var attribute = attributes[i];
+                var angle = Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
+                var max = dict[attribute].scale.domain()[1];
+                var line_coordinate = angleToCoordinate(
+                    p,
+                    angle,
+                    attribute,
+                    max,
+                    "line"
+                );
+                var label_coordinate = angleToCoordinate(
+                    p,
+                    angle,
+                    attribute,
+                    max * 1.1,
+                    "label"
+                );
+
+                //draw axis line
+                d3.select(nodes[j])
+                    .append("line")
+                    .attr("x1", p.cx)
+                    .attr("y1", p.cy)
+                    .attr("x2", line_coordinate.x)
+                    .attr("y2", line_coordinate.y)
+                    .classed("kyrix-retainsizezoom", true)
+                    .attr("stroke", "black");
+
+                //draw axis label
                 d3.select(nodes[j])
                     .append("text")
-                    .text(function(d) {
-                        return d.cluster_num.toString();
-                    })
-                    .attr("font-size", function(d) {
-                        return dict.count.scale(d.cluster_num.length) / 2;
-                    })
-                    .attr("x", function(d) {
-                        return d.cx;
-                    })
-                    .attr("y", function(d) {
-                        return d.cy;
-                    })
-                    .attr("dy", ".35em")
-                    .attr("text-anchor", "middle")
-                    .style("fill-opacity", 1)
-                    .style("fill", "navy")
-                    .style("pointer-events", "none")
+                    .classed("label", true)
+                    .attr("x", label_coordinate.x)
+                    .attr("y", label_coordinate.y)
                     .classed("kyrix-retainsizezoom", true)
-                    .each(function(d) {
-                        params.textwrap(
-                            d3.select(this),
-                            dict.count.scale(d.cluster_num.length) * 1.5
-                        );
-                    });
-            });
-        }
+                    .text(attribute.substr(0, 3).toUpperCase());
+            }
+            // path
+            var coordinates = getPathCoordinates(p);
+            d3.select(nodes[j])
+                .append("path")
+                .datum(coordinates)
+                .attr("d", line)
+                .classed("glyph", true)
+                .attr("stroke-width", 3)
+                .attr("stroke", "darkorange")
+                .attr("fill", "darkorange")
+                .attr("stroke-opacity", 0.8)
+                .attr("fill-opacity", 0.5)
+                .classed("kyrix-retainsizezoom", true)
+                .datum(p);
+
+            d3.select(nodes[j])
+                .append("text")
+                .text(function(d) {
+                    return d.cluster_num.toString();
+                })
+                .attr("font-size", function(d) {
+                    return dict.count.scale(d.cluster_num.length) / 2;
+                })
+                .attr("x", function(d) {
+                    return d.cx;
+                })
+                .attr("y", function(d) {
+                    return d.cy;
+                })
+                .attr("dy", ".35em")
+                .attr("text-anchor", "middle")
+                .style("fill-opacity", 1)
+                .style("fill", "navy")
+                .style("pointer-events", "none")
+                .classed("kyrix-retainsizezoom", true)
+                .each(function(d) {
+                    params.textwrap(
+                        d3.select(this),
+                        dict.count.scale(d.cluster_num.length) * 1.5
+                    );
+                });
+        });
 
         function getConvexCoordinates(d) {
             var coords = d.cluster_agg.convexhull;
@@ -1013,12 +1015,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             }, "");
         }
 
-        // console.log("pie raw:", data);
         if (!data || data.length == 0) return;
         var params = args.renderingParams;
         var clusterParams = REPLACE_ME_cluster_params;
         var g = svg.append("g");
-        // console.log("pie:", clusterParams);
+
         var dict = {};
 
         function filter(key) {
@@ -1080,37 +1081,19 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .x(d => d.x)
             .y(d => d.y);
 
-        // var clusterParams = {
-        //     innerRadius: 15,
-        //     outerRadius: 80,
-        //     cornerRadius: 5,
-        //     padAngle: 0.05,
-        // };
-
-        // var domain = Object.keys(dict).filter(filter);
-        // console.log("domain: ", domain);
-
         var color = d3.scaleOrdinal(d3.schemeTableau10).domain(domain);
-        // .range()
-        // .domain(dict.count.extent);
-
-        // console.log("color('U23'):", color("U23"));
-
         var arc = d3
             .arc()
             .innerRadius(clusterParams.innerRadius)
             .outerRadius(clusterParams.outerRadius)
             .cornerRadius(clusterParams.cornerRadius)
             .padAngle(clusterParams.padAngle);
-
         var scalePercent = d3
             .scaleLinear()
             .domain([0, 2 * Math.PI])
             .range([0, 1]);
         var formatter = d3.format(".1%");
-
         var pos = ["cx", "cy", "minx", "miny", "maxx", "maxy"];
-
         var slicedata = [];
 
         data.forEach((p, j) => {
@@ -1133,8 +1116,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             });
             slicedata = slicedata.concat(cooked);
         });
-
-        // console.log("slicedata: ", slicedata)
 
         var slices = g
             .selectAll("path.slice")
@@ -1194,8 +1175,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .style("stroke", "grey")
                 .style("pointer-events", "none");
         }
-
-        // console.log("glyphs.data(): ", glyphs.data());
 
         var isObjectOnHover = REPLACE_ME_is_object_onhover;
         if (isObjectOnHover) {
@@ -1274,19 +1253,19 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     this.rendering.toString()
                 );
     } else if (
-        this.clusterMode == "glyph" ||
-        this.clusterMode == "glyph+object"
+        this.clusterMode == "radar" ||
+        this.clusterMode == "radar+object"
     ) {
-        renderFuncBody = getBodyStringOfFunction(renderGlyphBody)
+        renderFuncBody = getBodyStringOfFunction(renderRadarBody)
             .replace(/REPLACE_ME_glyph/g, this.glyph)
             .replace(/REPLACE_ME_bboxH/g, this.bboxH)
             .replace(
                 /REPLACE_ME_is_object_onhover/g,
-                this.clusterMode == "glyph+object"
+                this.clusterMode == "radar+object"
             )
             .replace(
                 /REPLACE_ME_this_rendering/g,
-                this.clusterMode == "glyph+object"
+                this.clusterMode == "radar+object"
                     ? this.rendering.toString()
                     : "null;"
             );

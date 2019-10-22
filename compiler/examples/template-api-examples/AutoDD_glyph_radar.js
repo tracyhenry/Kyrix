@@ -46,15 +46,12 @@ var autoDD = {
     },
     marks: {
         cluster: {
-            mode: "glyph+object",
-            glyph: {
-                type: "radar",
-                attributes: attributes,
-                value: "average",
-                size: 80,
-                ticks: 5,
-                domain: 100
-            }
+            mode: "radar+object",
+            attributes: attributes,
+            value: "average",
+            size: 80,
+            ticks: 5,
+            domain: 100
         },
         obj: {
             renderer: renderers.playerRendering,
