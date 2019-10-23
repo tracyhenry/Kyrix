@@ -45,6 +45,10 @@ var autoDD = {
             convex: true
         }
     },
+    legend: {
+        title: "Age Groups of Soccer Players in FIFA 2019",
+        domain: ["U20", "U23", "U29", "Older"]
+    },
     config: {
         topLevelWidth: 1500,
         topLevelHeight: 1000,

@@ -151,6 +151,18 @@ function AutoDD(args) {
             padAngle: 0.05
         });
 
+    // setting legend parameters
+    this.legendParams = "legend" in args ? args.legend : null;
+    if (this.legendParams != null)
+        if (args.marks.cluster.mode == "pie")
+            if (
+                !("title" in this.legendParams) ||
+                !("domain" in this.legendParams)
+            )
+                throw new Error(
+                    "Constructing AutoDD: title and domain required for args.legend"
+                );
+
     // setting bboxes
     if (args.marks.cluster.mode == "object") {
         if (
@@ -174,7 +186,6 @@ function AutoDD(args) {
     this.hover = args.marks.hover;
     setPropertiesIfNotExists(this.hover, {convex: false, object: null});
     this.isHover = this.hover.object != null || this.hover.convex;
-    this.upper = "upper" in args ? args.upper : false;
     args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
     this.aggMode =
         "mode" in args.aggregate
@@ -1128,17 +1139,17 @@ function getAxesRenderer(level) {
     return new Function("args", axesFuncBody);
 }
 
-function getStaticUpperRenderer(level) {
-    function legendRenderer() {
+function getLegendRenderer() {
+    function pieLegendRendererBody() {
         svg.append("g")
             .attr("class", "legendOrdinal")
-            .attr("transform", "translate(50,50)scale(2.0)");
+            .attr("transform", "translate(50,50) scale(2.0)");
 
         var clusterParams = REPLACE_ME_cluster_params;
-        var domain = clusterParams.domain;
-
-        var color = d3.scaleOrdinal(d3.schemeTableau10).domain(domain);
-
+        var legendParams = REPLACE_ME_legend_params;
+        var color = d3
+            .scaleOrdinal(d3.schemeTableau10)
+            .domain(legendParams.domain);
         var legendOrdinal = d3
             .legendColor()
             //d3 symbol creates a path-string, for example
@@ -1147,7 +1158,7 @@ function getStaticUpperRenderer(level) {
             // .shape("path", d3.symbol().type(d3.symbolDiamond).size(150)())
             .shape("rect")
             .shapePadding(10)
-            .title("Age Groups of Soccer Players in FIFA 19")
+            .title(legendParams.title)
             .labelOffset(15)
             // .labelAlign("start")
             .scale(color);
@@ -1155,12 +1166,19 @@ function getStaticUpperRenderer(level) {
         svg.select(".legendOrdinal").call(legendOrdinal);
     }
 
-    if (this.aggMode == "mode:category") {
-        renderFuncBody = getBodyStringOfFunction(legendRenderer).replace(
-            /REPLACE_ME_cluster_params/g,
-            JSON.stringify(this.clusterParams)
-        );
+    var renderFuncBody = "";
+    if (this.clusterMode == "pie") {
+        renderFuncBody = getBodyStringOfFunction(pieLegendRendererBody)
+            .replace(
+                /REPLACE_ME_cluster_params/g,
+                JSON.stringify(this.clusterParams)
+            )
+            .replace(
+                /REPLACE_ME_legend_params/g,
+                JSON.stringify(this.legendParams)
+            );
     }
+    // TODO: add legend for other templates
     return new Function("svg", "data", "args", renderFuncBody);
 }
 
@@ -1168,7 +1186,7 @@ function getStaticUpperRenderer(level) {
 AutoDD.prototype = {
     getLayerRenderer,
     getAxesRenderer,
-    getStaticUpperRenderer
+    getLegendRenderer
 };
 
 // exports
