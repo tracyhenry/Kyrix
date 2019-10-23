@@ -89,48 +89,47 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         System.out.println("this.aggMode: " + aggMode);
 
         // calculate overlapping threshold
-        this.overlappingThreshold =
+        overlappingThreshold =
                 Math.max(
                         0.2,
                         Math.sqrt(
                                         4
-                                                * (this.virtualViewportSize + autoDD.getBboxW() * 2)
-                                                * (this.virtualViewportSize + autoDD.getBboxH() * 2)
-                                                / this.objectNumLimit
+                                                * (virtualViewportSize + autoDD.getBboxW() * 2)
+                                                * (virtualViewportSize + autoDD.getBboxH() * 2)
+                                                / objectNumLimit
                                                 / autoDD.getBboxH()
                                                 / autoDD.getBboxW())
                                 - 1);
-        if (!autoDD.getOverlap())
-            this.overlappingThreshold = Math.max(this.overlappingThreshold, 1);
-        System.out.println("Overlapping threshold: " + this.overlappingThreshold);
+        if (!autoDD.getOverlap()) overlappingThreshold = Math.max(overlappingThreshold, 1);
+        System.out.println("Overlapping threshold: " + overlappingThreshold);
 
         // store raw query results into memory
-        this.rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
+        rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
         // add row number as a BGRP
-        Main.getProject().addBGRP("roughN", String.valueOf(this.rawRows.size()));
+        Main.getProject().addBGRP("roughN", String.valueOf(rawRows.size()));
 
         // sample for each level
-        this.Rtrees = new ArrayList<>();
-        for (int i = 0; i < numLevels; i++) this.Rtrees.add(RTree.create());
+        Rtrees = new ArrayList<>();
+        for (int i = 0; i < numLevels; i++) Rtrees.add(RTree.create());
         for (int i = 0; i < numLevels; i++) createMVForLevel(i, autoDDIndex);
 
         // compute cluster Aggregate
 
         // a fake bottom level for non-sampled objects
-        this.Rtrees.add(RTree.create());
-        for (ArrayList<String> rawRow : this.rawRows) {
+        Rtrees.add(RTree.create());
+        for (ArrayList<String> rawRow : rawRows) {
             ArrayList<String> bboxRow = new ArrayList<>();
             for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
             bboxRow.add(gson.toJson(getDummyAgg(rawRow, false)));
             Rtrees.set(
                     numLevels,
-                    this.Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
+                    Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
         }
 
         for (int i = numLevels; i >= 0; i--) {
             // all samples
             Iterable<Entry<ArrayList<String>, Rectangle>> curSamples =
-                    this.Rtrees.get(i).entries().toBlocking().toIterable();
+                    Rtrees.get(i).entries().toBlocking().toIterable();
             // min clusternum && max clusternum
             // for renderers
             int minWeight = Integer.MAX_VALUE, maxWeight = Integer.MIN_VALUE;
@@ -159,12 +158,12 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 double cy =
                         autoDD.getCanvasCoordinate(
                                 i - 1, Double.valueOf(curRow.get(autoDD.getYColId())), false);
-                double minx = cx - autoDD.getBboxW() * this.overlappingThreshold / 2;
-                double miny = cy - autoDD.getBboxH() * this.overlappingThreshold / 2;
-                double maxx = cx + autoDD.getBboxW() * this.overlappingThreshold / 2;
-                double maxy = cy + autoDD.getBboxH() * this.overlappingThreshold / 2;
+                double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
+                double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
+                double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
+                double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
                 Iterable<Entry<ArrayList<String>, Rectangle>> neighbors =
-                        this.Rtrees.get(i - 1)
+                        Rtrees.get(i - 1)
                                 .search(Geometries.rectangle(minx, miny, maxx, maxy))
                                 .toBlocking()
                                 .toIterable();
@@ -189,14 +188,14 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                         minCy = curCy;
                     }
                 }
-                double minMinx = minCx - autoDD.getBboxW() * this.overlappingThreshold / 2;
-                double minMiny = minCy - autoDD.getBboxH() * this.overlappingThreshold / 2;
-                double minMaxx = minCx + autoDD.getBboxW() * this.overlappingThreshold / 2;
-                double minMaxy = minCy + autoDD.getBboxH() * this.overlappingThreshold / 2;
+                double minMinx = minCx - autoDD.getBboxW() * overlappingThreshold / 2;
+                double minMiny = minCy - autoDD.getBboxH() * overlappingThreshold / 2;
+                double minMaxx = minCx + autoDD.getBboxW() * overlappingThreshold / 2;
+                double minMaxy = minCy + autoDD.getBboxH() * overlappingThreshold / 2;
 
                 String nnAggStr = nearestNeighbor.get(numRawColumns);
                 HashMap<String, ArrayList<Double>> nnMap = new HashMap<>();
-                nnMap = this.gson.fromJson(nnAggStr, type);
+                nnMap = gson.fromJson(nnAggStr, type);
                 ArrayList<Double> bbox =
                         getBboxCoordsList(
                                 minx * autoDD.getZoomFactor(),
@@ -274,7 +273,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     DbConnector.getPreparedStatement(Config.databaseName, insertSql);
             int insertCount = 0;
             Iterable<Entry<ArrayList<String>, Rectangle>> samples =
-                    this.Rtrees.get(i).entries().toBlocking().toIterable();
+                    Rtrees.get(i).entries().toBlocking().toIterable();
             for (Entry<ArrayList<String>, Rectangle> o : samples) {
                 ArrayList<String> curRow = o.value();
 
@@ -331,7 +330,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         int numLevels = autoDD.getNumLevels();
 
         // loop through raw query results, sample one by one.
-        for (ArrayList<String> rawRow : this.rawRows) {
+        for (ArrayList<String> rawRow : rawRows) {
 
             ArrayList<String> bboxRow = new ArrayList<>();
             for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
@@ -352,12 +351,12 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                             level, Double.valueOf(rawRow.get(autoDD.getYColId())), false);
 
             // check overlap
-            double minx = cx - autoDD.getBboxW() * this.overlappingThreshold / 2;
-            double miny = cy - autoDD.getBboxH() * this.overlappingThreshold / 2;
-            double maxx = cx + autoDD.getBboxW() * this.overlappingThreshold / 2;
-            double maxy = cy + autoDD.getBboxH() * this.overlappingThreshold / 2;
+            double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
+            double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
+            double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
+            double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
             Iterable<Entry<ArrayList<String>, Rectangle>> overlappingSamples =
-                    this.Rtrees.get(level)
+                    Rtrees.get(level)
                             .search(Geometries.rectangle(minx, miny, maxx, maxy))
                             .toBlocking()
                             .toIterable();
@@ -382,14 +381,12 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 curRow.add(String.valueOf(miny));
                 curRow.add(String.valueOf(maxx));
                 curRow.add(String.valueOf(maxy));
-                minx = cx - autoDD.getBboxW() * this.overlappingThreshold / 2;
-                miny = cy - autoDD.getBboxH() * this.overlappingThreshold / 2;
-                maxx = cx + autoDD.getBboxW() * this.overlappingThreshold / 2;
-                maxy = cy + autoDD.getBboxH() * this.overlappingThreshold / 2;
-                this.Rtrees.set(
-                        i,
-                        this.Rtrees.get(i)
-                                .add(curRow, Geometries.rectangle(minx, miny, maxx, maxy)));
+                minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
+                miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
+                maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
+                maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
+                Rtrees.set(
+                        i, Rtrees.get(i).add(curRow, Geometries.rectangle(minx, miny, maxx, maxy)));
             }
         }
     }
