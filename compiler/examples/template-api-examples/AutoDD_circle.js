@@ -38,6 +38,7 @@ var autoDD = {
         },
         hover: {
             object: renderers.teamTimelineRendering
+            // convex: true
         }
     },
     config: {

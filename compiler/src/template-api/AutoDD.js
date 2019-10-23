@@ -215,10 +215,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
         var clusterParams = REPLACE_ME_cluster_params;
-        data.forEach(d => {
-            d.cluster_agg = JSON.parse(d.cluster_agg);
-            d.cluster_num = d.cluster_agg["count"][0].toString();
-        });
+        var processClusterAgg = REPLACE_ME_processClusterAgg;
+        processClusterAgg(data, {});
         var circleSizeInterpolator = d3
             .scaleLinear()
             .domain([1, params.roughN.toString().length - 1])
@@ -271,26 +269,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     circleSizeInterpolator(d.cluster_num.length) * 1.5
                 );
             });
-        var isHover = REPLACE_ME_is_hover;
-        if (isHover) {
-            var objectRenderer = REPLACE_ME_this_rendering;
-            g.selectAll("circle")
-                .on("mouseover", function(d) {
-                    objectRenderer(svg, [d], args);
-                    svg.selectAll("g:last-of-type")
-                        .attr("id", "autodd_tooltip")
-                        .style("opacity", 0.8)
-                        .style("pointer-events", "none")
-                        .selectAll("*")
-                        .classed("kyrix-retainsizezoom", true)
-                        .each(function() {
-                            zoomRescale(args.viewId, this);
-                        });
-                })
-                .on("mouseleave", function() {
-                    d3.select("#autodd_tooltip").remove();
-                });
-        }
+
+        // for hover
+        var hoverSelector = "circle";
     }
 
     function renderObjectClusterNumBody() {
@@ -565,46 +546,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         d3.select(render.canvas).style("opacity", clusterParams.heatmapOpacity);
     }
 
-    function KDEObjectHoverBody() {
-        var isHover = REPLACE_ME_is_hover;
-        if (isHover) {
-            var objectRenderer = REPLACE_ME_this_rendering;
-            var hiddenRectSize = 100;
-            svg.append("g")
-                .selectAll("rect")
-                .data(data)
-                .enter()
-                .append("rect")
-                .attr("x", d => d.cx - hiddenRectSize / 2)
-                .attr("y", d => d.cy - hiddenRectSize / 2)
-                .attr("width", hiddenRectSize)
-                .attr("height", hiddenRectSize)
-                .attr("fill-opacity", 0)
-                .on("mouseover", function(d) {
-                    var svgNode;
-                    if ("tileX" in args)
-                        svgNode = d3.select(svg.node().parentNode);
-                    else svgNode = svg;
-                    objectRenderer(svgNode, [d], args);
-                    var lastG = svgNode.node().childNodes[
-                        svgNode.node().childElementCount - 1
-                    ];
-                    d3.select(lastG)
-                        .attr("id", "autodd_tooltip")
-                        .style("opacity", 0.8)
-                        .style("pointer-events", "none")
-                        .selectAll("*")
-                        .classed("kyrix-retainsizezoom", true)
-                        .each(function() {
-                            zoomRescale(args.viewId, this);
-                        });
-                })
-                .on("mouseleave", function() {
-                    d3.select("#autodd_tooltip").remove();
-                });
-        }
-    }
-
     function renderRadarBody() {
         if (!data || data.length == 0) return;
         var params = args.renderingParams;
@@ -612,32 +553,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var g = svg.append("g");
         var dict = {};
 
-        // Step 1: Pre-compute
-        data.forEach(d => {
-            d.cluster_agg = JSON.parse(d.cluster_agg);
-            d.cluster_num = d.cluster_agg["count"][0].toString();
-            d.convexhull = getConvexCoordinates(d);
-            for (var key in d.cluster_agg) {
-                if (!(key in dict)) {
-                    Object.assign(dict, {
-                        [key]: {
-                            extent: [Number.MAX_VALUE, -Number.MAX_VALUE]
-                        }
-                    });
-                }
-                if (key != "count" && key != "convexhull") {
-                    d.cluster_agg[key].push(
-                        d.cluster_agg[key][0] / d.cluster_agg["count"][0]
-                    );
-                }
-                var avg_index = d.cluster_agg[key].length - 1;
-                // if cur avg < min avg
-                if (d.cluster_agg[key][avg_index] < dict[key].extent[0])
-                    dict[key].extent[0] = d.cluster_agg[key][avg_index];
-                if (d.cluster_agg[key][avg_index] > dict[key].extent[1])
-                    dict[key].extent[1] = d.cluster_agg[key][avg_index];
-            }
-        });
+        // Step 1: Pre-process clusterAgg
+        var processClusterAgg = REPLACE_ME_processClusterAgg;
+        processClusterAgg(data, dict);
 
         // Step 2: append radars
         var radars = g
@@ -818,56 +736,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 });
         });
 
-        function getConvexCoordinates(d) {
-            var coords = d.cluster_agg.convexhull;
-            var size = coords.length / 2;
-            var convexhull = [];
-            for (var i = 0; i < size; i++) {
-                convexhull.push({
-                    x: coords[i * 2],
-                    y: coords[i * 2 + 1]
-                });
-            }
-            d.convexhull = convexhull;
-            return convexhull;
-        }
-
-        function showConvex(svg, d) {
-            var g = svg.append("g");
-            g.append("path")
-                .datum(d)
-                .attr("class", d => `convexhull`)
-                .attr("id", "convexhull")
-                .attr("d", d => line(d.convexhull))
-                .style("fill-opacity", 0)
-                .style("stroke-width", 3)
-                .style("stroke-opacity", 0.5)
-                .style("stroke", "grey")
-                .style("pointer-events", "none");
-        }
-
-        var isHover = REPLACE_ME_is_hover;
-        if (isHover) {
-            var objectRenderer = REPLACE_ME_this_rendering;
-            g.selectAll("path.radar")
-                .on("mouseover", function(d, i, nodes) {
-                    showConvex(svg, d);
-                    objectRenderer(svg, [d], args);
-                    svg.selectAll("g:last-of-type")
-                        .attr("id", "autodd_tooltip")
-                        .style("opacity", 1)
-                        .style("pointer-events", "none")
-                        .selectAll("*")
-                        .classed("kyrix-retainsizezoom", true)
-                        .each(function() {
-                            zoomRescale(args.viewId, this);
-                        });
-                })
-                .on("mouseleave", function() {
-                    d3.selectAll("#autodd_tooltip").remove();
-                    d3.selectAll("#convexhull").remove();
-                });
-        }
+        // for hover
+        var hoverSelector = "path.radar";
     }
 
     function renderPieBody() {
@@ -990,49 +860,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
         var dict = {};
 
-        function filter(key) {
-            return key !== "count" && key !== "convexhull";
-        }
-
-        function getConvexCoordinates(d) {
-            var coords = d.cluster_agg.convexhull;
-            var size = coords.length / 2;
-            var convexhull = [];
-            for (var i = 0; i < size; i++) {
-                convexhull.push({
-                    x: coords[i * 2],
-                    y: coords[i * 2 + 1]
-                });
-            }
-            return convexhull;
-        }
-
-        // Step 1: Pre-compute
-        data.forEach(d => {
-            d.cluster_agg = JSON.parse(d.cluster_agg);
-            d.cluster_num = d.cluster_agg["count"][0].toString();
-            d.convexhull = getConvexCoordinates(d);
-            for (var key in d.cluster_agg) {
-                if (!(key in dict)) {
-                    Object.assign(dict, {
-                        [key]: {
-                            extent: [Number.MAX_VALUE, -Number.MAX_VALUE]
-                        }
-                    });
-                }
-                if (filter(key)) {
-                    d.cluster_agg[key].push(
-                        d.cluster_agg[key][0] / d.cluster_agg["count"][0]
-                    );
-                }
-                var avg_index = d.cluster_agg[key].length - 1;
-                // if cur avg < min avg
-                if (d.cluster_agg[key][avg_index] < dict[key].extent[0])
-                    dict[key].extent[0] = d.cluster_agg[key][avg_index];
-                if (d.cluster_agg[key][avg_index] > dict[key].extent[1])
-                    dict[key].extent[1] = d.cluster_agg[key][avg_index];
-            }
-        });
+        // Step 1: Pre-process clusterAgg
+        var processClusterAgg = REPLACE_ME_processClusterAgg;
+        processClusterAgg(data, dict);
 
         // Step 2: append pies
         var domain = clusterParams.domain;
@@ -1044,11 +874,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .sort(function(a, b) {
                 return domain.indexOf(a.key) - domain.indexOf(b.key);
             });
-        var line = d3
-            .line()
-            .x(d => d.x)
-            .y(d => d.y);
-
         var color = d3.scaleOrdinal(d3.schemeTableau10).domain(domain);
         var arc = d3
             .arc()
@@ -1068,14 +893,12 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             p.arcs = pie(
                 d3
                     .entries(p.cluster_agg)
-                    .filter(d => filter(d.key))
+                    .filter(d => d.key !== "count" && d.key !== "convexhull")
                     .sort((x, y) => d3.ascending(x.key, y.key))
             );
             var cooked = p.arcs.map(entry => {
                 // for (var index in pos) entry[pos[index]] = +p[pos[index]];
-                for (var key in p) {
-                    entry[key] = p[key];
-                }
+                for (var key in p) entry[key] = p[key];
                 entry.data.percentage = formatter(
                     scalePercent(entry.endAngle - entry.startAngle)
                 );
@@ -1118,12 +941,63 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .style("pointer-events", "none")
             .classed("kyrix-retainsizezoom", true);
 
+        // for hover
+        var hoverSelector = "path.value";
+    }
+
+    function processClusterAgg(data, dict) {
+        function getConvexCoordinates(d) {
+            var coords = d.cluster_agg.convexhull;
+            var size = coords.length / 2;
+            var convexhull = [];
+            for (var i = 0; i < size; i++) {
+                convexhull.push({
+                    x: coords[i * 2],
+                    y: coords[i * 2 + 1]
+                });
+            }
+            d.convexhull = convexhull;
+            return convexhull;
+        }
+
+        data.forEach(d => {
+            d.cluster_agg = JSON.parse(d.cluster_agg);
+            d.cluster_num = d.cluster_agg["count"][0].toString();
+            d.convexhull = getConvexCoordinates(d);
+            for (var key in d.cluster_agg) {
+                if (!(key in dict)) {
+                    Object.assign(dict, {
+                        [key]: {
+                            extent: [Number.MAX_VALUE, -Number.MAX_VALUE]
+                        }
+                    });
+                }
+                if (key != "count" && key != "convexhull") {
+                    d.cluster_agg[key].push(
+                        d.cluster_agg[key][0] / d.cluster_agg["count"][0]
+                    );
+                }
+                var avg_index = d.cluster_agg[key].length - 1;
+                // if cur avg < min avg
+                if (d.cluster_agg[key][avg_index] < dict[key].extent[0])
+                    dict[key].extent[0] = d.cluster_agg[key][avg_index];
+                if (d.cluster_agg[key][avg_index] > dict[key].extent[1])
+                    dict[key].extent[1] = d.cluster_agg[key][avg_index];
+            }
+        });
+    }
+
+    function regularHoverBody() {
         function showConvex(svg, d) {
+            var line = d3
+                .line()
+                .x(d => d.x)
+                .y(d => d.y);
             var g = svg.append("g");
             g.append("path")
                 .datum(d)
-                .attr("class", d => `convexhull ${d.name}`)
-                .attr("id", "convexhull")
+                .attr("class", d => `convexhull`)
+                .attr("id", "autodd_convexhull")
                 .attr("d", d => line(d.convexhull))
                 .style("fill-opacity", 0)
                 .style("stroke-width", 3)
@@ -1131,29 +1005,61 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .style("stroke", "grey")
                 .style("pointer-events", "none");
         }
+        var objectRenderer = REPLACE_ME_this_rendering;
+        g.selectAll(hoverSelector)
+            .on("mouseover", function(d) {
+                if (REPLACE_ME_show_convex) showConvex(svg, d);
+                objectRenderer(svg, [d], args);
+                svg.selectAll("g:last-of-type")
+                    .attr("id", "autodd_tooltip")
+                    .style("opacity", 0.8)
+                    .style("pointer-events", "none")
+                    .selectAll("*")
+                    .classed("kyrix-retainsizezoom", true)
+                    .each(function() {
+                        zoomRescale(args.viewId, this);
+                    });
+            })
+            .on("mouseleave", function() {
+                d3.selectAll("#autodd_tooltip").remove();
+                d3.selectAll("#autodd_convexhull").remove();
+            });
+    }
 
-        var isHover = REPLACE_ME_is_hover;
-        if (isHover) {
-            var objectRenderer = REPLACE_ME_this_rendering;
-            g.selectAll("path.value")
-                .on("mouseover", function(d, i, nodes) {
-                    showConvex(svg, d);
-                    objectRenderer(svg, [d], args);
-                    svg.selectAll("g:last-of-type")
-                        .attr("id", "autodd_tooltip")
-                        .style("opacity", 1)
-                        .style("pointer-events", "none")
-                        .selectAll("*")
-                        .classed("kyrix-retainsizezoom", true)
-                        .each(function() {
-                            zoomRescale(args.viewId, this);
-                        });
-                })
-                .on("mouseleave", function() {
-                    d3.selectAll("#autodd_tooltip").remove();
-                    d3.selectAll("#convexhull").remove();
-                });
-        }
+    function KDEObjectHoverBody() {
+        var objectRenderer = REPLACE_ME_this_rendering;
+        var hiddenRectSize = 100;
+        svg.append("g")
+            .selectAll("rect")
+            .data(data)
+            .enter()
+            .append("rect")
+            .attr("x", d => d.cx - hiddenRectSize / 2)
+            .attr("y", d => d.cy - hiddenRectSize / 2)
+            .attr("width", hiddenRectSize)
+            .attr("height", hiddenRectSize)
+            .attr("fill-opacity", 0)
+            .on("mouseover", function(d) {
+                var svgNode;
+                if ("tileX" in args) svgNode = d3.select(svg.node().parentNode);
+                else svgNode = svg;
+                objectRenderer(svgNode, [d], args);
+                var lastG = svgNode.node().childNodes[
+                    svgNode.node().childElementCount - 1
+                ];
+                d3.select(lastG)
+                    .attr("id", "autodd_tooltip")
+                    .style("opacity", 0.8)
+                    .style("pointer-events", "none")
+                    .selectAll("*")
+                    .classed("kyrix-retainsizezoom", true)
+                    .each(function() {
+                        zoomRescale(args.viewId, this);
+                    });
+            })
+            .on("mouseleave", function() {
+                d3.select("#autodd_tooltip").remove();
+            });
     }
 
     var renderFuncBody;
@@ -1177,7 +1083,17 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     ? this.hover.object.toString()
                     : "null;"
             )
-            .replace(/REPLACE_ME_is_hover/g, this.isHover);
+            .replace(
+                /REPLACE_ME_processClusterAgg/g,
+                processClusterAgg.toString()
+            );
+        if (this.isHover)
+            renderFuncBody += getBodyStringOfFunction(regularHoverBody)
+                .replace(
+                    /REPLACE_ME_this_rendering/g,
+                    this.hover.object.toString()
+                )
+                .replace(/REPLACE_ME_show_convex/g, this.hover.convex);
     } else if (this.clusterMode == "contour") {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
             .replace(
@@ -1187,12 +1103,12 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .replace(/REPLACE_ME_radius/g, this.bboxH)
             .replace(/REPLACE_ME_is_hover/g, this.isHover);
         if (this.isHover)
-            renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
-                .replace(/REPLACE_ME_is_hover/g, this.isHover)
-                .replace(
-                    /REPLACE_ME_this_rendering/g,
-                    this.hover.object.toString()
-                );
+            renderFuncBody += getBodyStringOfFunction(
+                KDEObjectHoverBody
+            ).replace(
+                /REPLACE_ME_this_rendering/g,
+                this.hover.object.toString()
+            );
     } else if (this.clusterMode == "heatmap") {
         renderFuncBody = getBodyStringOfFunction(renderHeatmapBody)
             .replace(
@@ -1201,12 +1117,12 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             )
             .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
         if (this.isHover)
-            renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
-                .replace(/REPLACE_ME_is_hover/g, this.isHover)
-                .replace(
-                    /REPLACE_ME_this_rendering/g,
-                    this.hover.object.toString()
-                );
+            renderFuncBody += getBodyStringOfFunction(
+                KDEObjectHoverBody
+            ).replace(
+                /REPLACE_ME_this_rendering/g,
+                this.hover.object.toString()
+            );
     } else if (this.clusterMode == "radar") {
         renderFuncBody = getBodyStringOfFunction(renderRadarBody)
             .replace(
@@ -1214,11 +1130,21 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 JSON.stringify(this.clusterParams)
             )
             .replace(/REPLACE_ME_bboxH/g, this.bboxH)
-            .replace(/REPLACE_ME_is_hover/g, this.isHover)
             .replace(
                 /REPLACE_ME_this_rendering/g,
                 this.hover.object ? this.hover.object.toString() : "null;"
+            )
+            .replace(
+                /REPLACE_ME_processClusterAgg/g,
+                processClusterAgg.toString()
             );
+        if (this.isHover)
+            renderFuncBody += getBodyStringOfFunction(regularHoverBody)
+                .replace(
+                    /REPLACE_ME_this_rendering/g,
+                    this.hover.object.toString()
+                )
+                .replace(/REPLACE_ME_show_convex/g, this.hover.convex);
     } else if (this.clusterMode == "pie") {
         renderFuncBody = getBodyStringOfFunction(renderPieBody)
             .replace(
@@ -1226,11 +1152,21 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 JSON.stringify(this.clusterParams)
             )
             .replace(/REPLACE_ME_bboxH/g, this.bboxH)
-            .replace(/REPLACE_ME_is_hover/g, this.isHover)
             .replace(
                 /REPLACE_ME_this_rendering/g,
                 this.hover.object ? this.hover.object.toString() : "null;"
+            )
+            .replace(
+                /REPLACE_ME_processClusterAgg/g,
+                processClusterAgg.toString()
             );
+        if (this.isHover)
+            renderFuncBody += getBodyStringOfFunction(regularHoverBody)
+                .replace(
+                    /REPLACE_ME_this_rendering/g,
+                    this.hover.object.toString()
+                )
+                .replace(/REPLACE_ME_show_convex/g, this.hover.convex);
     }
     return new Function("svg", "data", "args", renderFuncBody);
 }
@@ -1296,10 +1232,6 @@ function getStaticUpperRenderer(level) {
         svg.append("g")
             .attr("class", "legendOrdinal")
             .attr("transform", "translate(50,50)scale(2.0)");
-        // g.selectAll("path.convex")
-        //     .data(data)
-        //     .enter()
-        //     .append("path")
 
         var clusterParams = REPLACE_ME_cluster_params;
         var domain = clusterParams.domain;

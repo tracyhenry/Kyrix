@@ -57,6 +57,7 @@ var autoDD = {
         },
         hover: {
             object: renderers.playerRendering
+            //convex: true
         }
     },
     config: {
