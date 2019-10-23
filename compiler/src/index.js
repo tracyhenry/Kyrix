@@ -310,12 +310,7 @@ function addAutoDD(autoDD, args) {
         curCanvas.addLayer(curLayer);
 
         // set fetching scheme
-        if (
-            autoDD.clusterMode == "contour" ||
-            autoDD.clusterMode == "contour+object" ||
-            autoDD.clusterMode == "heatmap" ||
-            autoDD.clusterMode == "heatmap+object"
-        )
+        if (autoDD.clusterMode == "contour" || autoDD.clusterMode == "heatmap")
             curLayer.setFetchingScheme("dbox", false);
 
         // set isAutoDD and autoDD ID
@@ -419,13 +414,13 @@ function addStyles(styles) {
     if (!styles || typeof styles != "string") return;
 
     //match http:// and https://
+    var rules;
     if (styles.match(/https?:\/\//)) {
-        var rules = styles;
+        rules = styles;
     } else if (styles.match(".css")) {
-        var rules = fs.readFileSync(styles).toString();
+        rules = fs.readFileSync(styles).toString();
     } else {
-        console.log("STYLES NOT CSS FILE, BUT STRING", styles);
-        var rules = styles;
+        rules = styles;
     }
 
     this.styles.push(rules);

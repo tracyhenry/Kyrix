@@ -30,13 +30,13 @@ var autoDD = {
     },
     marks: {
         cluster: {
-            // mode: "object",
-            mode: "object+clusternum"
-        },
-        obj: {
-            renderer: renderers.teamTimelineRendering,
-            bboxW: 162,
-            bboxH: 132
+            mode: "object",
+            object: renderers.teamTimelineRendering,
+            config: {
+                //clusterCount: true,
+                bboxW: 162,
+                bboxH: 132
+            }
         }
     },
     config: {

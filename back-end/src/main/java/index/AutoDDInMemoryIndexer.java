@@ -115,150 +115,127 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         for (int i = 0; i < numLevels; i++) createMVForLevel(i, autoDDIndex);
 
         // compute cluster Aggregate
-        if (autoDD.getClusterMode().equals("object+clusternum")
-                || autoDD.getClusterMode().equals("circle")
-                || autoDD.getClusterMode().equals("circle+object")
-                || autoDD.getClusterMode().equals("contour")
-                || autoDD.getClusterMode().equals("contour+object")
-                || autoDD.getClusterMode().equals("radar")
-                || autoDD.getClusterMode().equals("radar+object")
-                || autoDD.getClusterMode().equals("pie")
-                || autoDD.getClusterMode().equals("pie+object")
-                || autoDD.getClusterMode().equals("heatmap")
-                || autoDD.getClusterMode().equals("heatmap+object")) {
 
-            // a fake bottom level for non-sampled objects
-            this.Rtrees.add(RTree.create());
-            for (ArrayList<String> rawRow : this.rawRows) {
-                ArrayList<String> bboxRow = new ArrayList<>();
-                for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
-                bboxRow.add(gson.toJson(getDummyAgg(rawRow, false)));
-                Rtrees.set(
-                        numLevels,
-                        this.Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
+        // a fake bottom level for non-sampled objects
+        this.Rtrees.add(RTree.create());
+        for (ArrayList<String> rawRow : this.rawRows) {
+            ArrayList<String> bboxRow = new ArrayList<>();
+            for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
+            bboxRow.add(gson.toJson(getDummyAgg(rawRow, false)));
+            Rtrees.set(
+                    numLevels,
+                    this.Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
+        }
+
+        for (int i = numLevels; i >= 0; i--) {
+            // all samples
+            Iterable<Entry<ArrayList<String>, Rectangle>> curSamples =
+                    this.Rtrees.get(i).entries().toBlocking().toIterable();
+            // min clusternum && max clusternum
+            // for renderers
+            int minWeight = Integer.MAX_VALUE, maxWeight = Integer.MIN_VALUE;
+            for (Entry<ArrayList<String>, Rectangle> o : curSamples) {
+                ArrayList<String> curRow = o.value();
+                String curAggStr = curRow.get(numRawColumns);
+
+                HashMap<String, ArrayList<Double>> curMap;
+                Type type = new TypeToken<HashMap<String, ArrayList<Double>>>() {}.getType();
+                curMap = gson.fromJson(curAggStr, type);
+
+                int count = curMap.get("count").get(0).intValue();
+                // System.out.println("count: " + count);
+
+                minWeight = Math.min(minWeight, count);
+                maxWeight = Math.max(maxWeight, count);
+                if (i == 0) continue;
+
+                // find its nearest neighbor in one level up
+                // using binary search + Rtree
+                double minDistance = Double.MAX_VALUE;
+                ArrayList<String> nearestNeighbor = null;
+                double cx =
+                        autoDD.getCanvasCoordinate(
+                                i - 1, Double.valueOf(curRow.get(autoDD.getXColId())), true);
+                double cy =
+                        autoDD.getCanvasCoordinate(
+                                i - 1, Double.valueOf(curRow.get(autoDD.getYColId())), false);
+                double minx = cx - autoDD.getBboxW() * this.overlappingThreshold / 2;
+                double miny = cy - autoDD.getBboxH() * this.overlappingThreshold / 2;
+                double maxx = cx + autoDD.getBboxW() * this.overlappingThreshold / 2;
+                double maxy = cy + autoDD.getBboxH() * this.overlappingThreshold / 2;
+                Iterable<Entry<ArrayList<String>, Rectangle>> neighbors =
+                        this.Rtrees.get(i - 1)
+                                .search(Geometries.rectangle(minx, miny, maxx, maxy))
+                                .toBlocking()
+                                .toIterable();
+                double minCx = cx, minCy = cy;
+                for (Entry<ArrayList<String>, Rectangle> nb : neighbors) {
+                    ArrayList<String> curNeighbor = nb.value();
+                    double curCx =
+                            autoDD.getCanvasCoordinate(
+                                    i - 1,
+                                    Double.valueOf(curNeighbor.get(autoDD.getXColId())),
+                                    true);
+                    double curCy =
+                            autoDD.getCanvasCoordinate(
+                                    i - 1,
+                                    Double.valueOf(curNeighbor.get(autoDD.getYColId())),
+                                    false);
+                    double curDistance = (cx - curCx) * (cx - curCx) + (cy - curCy) * (cy - curCy);
+                    if (curDistance < minDistance) {
+                        minDistance = curDistance;
+                        nearestNeighbor = curNeighbor;
+                        minCx = curCx;
+                        minCy = curCy;
+                    }
+                }
+                double minMinx = minCx - autoDD.getBboxW() * this.overlappingThreshold / 2;
+                double minMiny = minCy - autoDD.getBboxH() * this.overlappingThreshold / 2;
+                double minMaxx = minCx + autoDD.getBboxW() * this.overlappingThreshold / 2;
+                double minMaxy = minCy + autoDD.getBboxH() * this.overlappingThreshold / 2;
+
+                String nnAggStr = nearestNeighbor.get(numRawColumns);
+                HashMap<String, ArrayList<Double>> nnMap = new HashMap<>();
+                nnMap = this.gson.fromJson(nnAggStr, type);
+                ArrayList<Double> bbox =
+                        getBboxCoordsList(
+                                minx * autoDD.getZoomFactor(),
+                                miny * autoDD.getZoomFactor(),
+                                maxx * autoDD.getZoomFactor(),
+                                maxy * autoDD.getZoomFactor());
+                ArrayList<Double> nnBbox = getBboxCoordsList(minMinx, minMiny, minMaxx, minMaxy);
+                nnMap.putIfAbsent("convexhull", nnBbox);
+                curMap.putIfAbsent("convexhull", bbox);
+
+                if (nearestNeighbor.get(0).equals("L. Messi")) {
+                    // System.out.println("Level:" + i + " before Messi: " + nearestNeighbor);
+                    // System.out.println("Level:" + i + " before curRow: " + curRow);
+                    // System.out.println("centroid: " + centroid);
+                    // System.out.println("nnCentroid: " + nnCentroid);
+                    // System.out.println("level: " + i);
+                    // System.out.println("bbox: " + bbox);
+                    // System.out.println("nnBbox: " + nnBbox);
+                    // System.out.println("curRow: " + curRow.get(0));
+                    // System.out.println("before curMap convexhull: " +
+                    // curMap.get("convexhull"));
+                    // System.out.println("nearestNeighbor: " + nearestNeighbor.get(0));
+                    // System.out.println(" before nnMap convexhull: " +
+                    // nnMap.get("convexhull"));
+                }
+
+                updateAgg(nnMap, curMap);
+                nearestNeighbor.set(numRawColumns, gson.toJson(nnMap));
+                if (nearestNeighbor.get(0).equals("L. Messi")) {
+                    // System.out.println("after convexhull : " + nnMap.get("convexhull"));
+                    // System.out.println("Level:" + i + " after Messi: " + nearestNeighbor);
+                }
             }
 
-            for (int i = numLevels; i >= 0; i--) {
-                // all samples
-                Iterable<Entry<ArrayList<String>, Rectangle>> curSamples =
-                        this.Rtrees.get(i).entries().toBlocking().toIterable();
-                // min clusternum && max clusternum
-                // for renderers
-                int minWeight = Integer.MAX_VALUE, maxWeight = Integer.MIN_VALUE;
-                for (Entry<ArrayList<String>, Rectangle> o : curSamples) {
-                    ArrayList<String> curRow = o.value();
-                    String curAggStr = curRow.get(numRawColumns);
-
-                    HashMap<String, ArrayList<Double>> curMap;
-                    Type type = new TypeToken<HashMap<String, ArrayList<Double>>>() {}.getType();
-                    curMap = gson.fromJson(curAggStr, type);
-
-                    int count = curMap.get("count").get(0).intValue();
-                    // System.out.println("count: " + count);
-
-                    minWeight = Math.min(minWeight, count);
-                    maxWeight = Math.max(maxWeight, count);
-                    if (i == 0) continue;
-
-                    // find its nearest neighbor in one level up
-                    // using binary search + Rtree
-                    double minDistance = Double.MAX_VALUE;
-                    ArrayList<String> nearestNeighbor = null;
-                    double cx =
-                            autoDD.getCanvasCoordinate(
-                                    i - 1, Double.valueOf(curRow.get(autoDD.getXColId())), true);
-                    double cy =
-                            autoDD.getCanvasCoordinate(
-                                    i - 1, Double.valueOf(curRow.get(autoDD.getYColId())), false);
-                    double minx = cx - autoDD.getBboxW() * this.overlappingThreshold / 2;
-                    double miny = cy - autoDD.getBboxH() * this.overlappingThreshold / 2;
-                    double maxx = cx + autoDD.getBboxW() * this.overlappingThreshold / 2;
-                    double maxy = cy + autoDD.getBboxH() * this.overlappingThreshold / 2;
-                    Iterable<Entry<ArrayList<String>, Rectangle>> neighbors =
-                            this.Rtrees.get(i - 1)
-                                    .search(Geometries.rectangle(minx, miny, maxx, maxy))
-                                    .toBlocking()
-                                    .toIterable();
-                    double minCx = cx, minCy = cy;
-                    for (Entry<ArrayList<String>, Rectangle> nb : neighbors) {
-                        ArrayList<String> curNeighbor = nb.value();
-                        double curCx =
-                                autoDD.getCanvasCoordinate(
-                                        i - 1,
-                                        Double.valueOf(curNeighbor.get(autoDD.getXColId())),
-                                        true);
-                        double curCy =
-                                autoDD.getCanvasCoordinate(
-                                        i - 1,
-                                        Double.valueOf(curNeighbor.get(autoDD.getYColId())),
-                                        false);
-                        double curDistance =
-                                (cx - curCx) * (cx - curCx) + (cy - curCy) * (cy - curCy);
-                        if (curDistance < minDistance) {
-                            minDistance = curDistance;
-                            nearestNeighbor = curNeighbor;
-                            minCx = curCx;
-                            minCy = curCy;
-                        }
-                    }
-                    double minMinx = minCx - autoDD.getBboxW() * this.overlappingThreshold / 2;
-                    double minMiny = minCy - autoDD.getBboxH() * this.overlappingThreshold / 2;
-                    double minMaxx = minCx + autoDD.getBboxW() * this.overlappingThreshold / 2;
-                    double minMaxy = minCy + autoDD.getBboxH() * this.overlappingThreshold / 2;
-
-                    String nnAggStr = nearestNeighbor.get(numRawColumns);
-                    HashMap<String, ArrayList<Double>> nnMap = new HashMap<>();
-                    nnMap = this.gson.fromJson(nnAggStr, type);
-                    // ArrayList<Double> centroid = new ArrayList<>();
-                    // centroid.add(cx * autoDD.getZoomFactor());
-                    // centroid.add(cy * autoDD.getZoomFactor());
-                    // ArrayList<Double> nnCentroid = new ArrayList<>();
-                    // nnCentroid.add(minCx);
-                    // nnCentroid.add(minCy);
-                    ArrayList<Double> bbox =
-                            getBboxCoordsList(
-                                    minx * autoDD.getZoomFactor(),
-                                    miny * autoDD.getZoomFactor(),
-                                    maxx * autoDD.getZoomFactor(),
-                                    maxy * autoDD.getZoomFactor());
-                    ArrayList<Double> nnBbox =
-                            getBboxCoordsList(minMinx, minMiny, minMaxx, minMaxy);
-
-                    // nnMap.putIfAbsent("convexhull", nnCentroid);
-                    // curMap.putIfAbsent("convexhull", centroid);
-                    nnMap.putIfAbsent("convexhull", nnBbox);
-                    curMap.putIfAbsent("convexhull", bbox);
-
-                    if (nearestNeighbor.get(0).equals("L. Messi")) {
-                        // System.out.println("Level:" + i + " before Messi: " + nearestNeighbor);
-                        // System.out.println("Level:" + i + " before curRow: " + curRow);
-                        // System.out.println("centroid: " + centroid);
-                        // System.out.println("nnCentroid: " + nnCentroid);
-                        // System.out.println("level: " + i);
-                        // System.out.println("bbox: " + bbox);
-                        // System.out.println("nnBbox: " + nnBbox);
-                        // System.out.println("curRow: " + curRow.get(0));
-                        // System.out.println("before curMap convexhull: " +
-                        // curMap.get("convexhull"));
-                        // System.out.println("nearestNeighbor: " + nearestNeighbor.get(0));
-                        // System.out.println(" before nnMap convexhull: " +
-                        // nnMap.get("convexhull"));
-                    }
-
-                    updateAgg(nnMap, curMap);
-                    nearestNeighbor.set(numRawColumns, gson.toJson(nnMap));
-                    if (nearestNeighbor.get(0).equals("L. Messi")) {
-                        // System.out.println("after convexhull : " + nnMap.get("convexhull"));
-                        // System.out.println("Level:" + i + " after Messi: " + nearestNeighbor);
-                    }
-                }
-
-                // add min & max weight into rendering params
-                if (i < numLevels) {
-                    autoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(i);
-                    Main.getProject().addBGRP(autoDDId + "_minWeight", String.valueOf(minWeight));
-                    Main.getProject().addBGRP(autoDDId + "_maxWeight", String.valueOf(maxWeight));
-                }
+            // add min & max weight into rendering params
+            if (i < numLevels) {
+                autoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(i);
+                Main.getProject().addBGRP(autoDDId + "_minWeight", String.valueOf(minWeight));
+                Main.getProject().addBGRP(autoDDId + "_maxWeight", String.valueOf(maxWeight));
             }
         }
 

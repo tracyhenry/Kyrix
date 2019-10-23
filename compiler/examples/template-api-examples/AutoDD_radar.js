@@ -46,7 +46,7 @@ var autoDD = {
     },
     marks: {
         cluster: {
-            mode: "radar+object",
+            mode: "radar",
             config: {
                 attributes: attributes,
                 value: "average",
@@ -55,10 +55,8 @@ var autoDD = {
                 domain: 100
             }
         },
-        obj: {
-            renderer: renderers.playerRendering,
-            bboxW: 200,
-            bboxH: 200
+        hover: {
+            object: renderers.playerRendering
         }
     },
     config: {

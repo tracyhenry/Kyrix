@@ -30,17 +30,14 @@ var autoDD = {
     },
     marks: {
         cluster: {
-            // mode: "circle",
-            mode: "circle+object",
+            mode: "circle",
             config: {
                 // circleMinSize: 30,
                 // circleMaxSize: 70
             }
         },
-        obj: {
-            renderer: renderers.teamTimelineRendering,
-            bboxW: 162,
-            bboxH: 132
+        hover: {
+            object: renderers.teamTimelineRendering
         }
     },
     config: {

@@ -17,64 +17,22 @@ function AutoDD(args) {
         !("mode" in args.marks.cluster)
     )
         throw new Error(
-            "Constructing AutoDD: rendering mode (marks.cluster.mode) missing."
+            "Constructing AutoDD: cluster mode (marks.cluster.mode) missing."
         );
     var allClusterModes = new Set([
         "object",
-        "object+clusternum",
         "circle",
-        "circle+object",
         "contour",
-        "contour+object",
         "heatmap",
-        "heatmap+object",
         "radar",
-        "radar+object",
-        "pie",
-        "pie+object"
+        "pie"
     ]);
     if (!allClusterModes.has(args.marks.cluster.mode))
-        throw new Error("Constructing AutoDD: unsupported rendering mode.");
+        throw new Error("Constructing AutoDD: unsupported cluster mode.");
 
-    // setting cluster params
-    this.clusterParams =
-        "config" in args.marks.cluster ? args.marks.cluster.config : {};
-    if (
-        args.marks.cluster.mode == "circle" ||
-        args.marks.cluster.mode == "circle+object"
-    )
-        setPropertiesIfNotExists(this.clusterParams, {
-            circleMinSize: 30,
-            circleMaxSize: 70
-        });
-    console.log(this.clusterParams);
-    if (
-        args.marks.cluster.mode == "contour" ||
-        args.marks.cluster.mode == "contour+object"
-    )
-        setPropertiesIfNotExists(this.clusterParams, {
-            contourBandwidth: 30,
-            contourColorScheme: "interpolateViridis",
-            contourOpacity: 1
-        });
-    if (
-        args.marks.cluster.mode == "heatmap" ||
-        args.marks.cluster.mode == "heatmap+object"
-    )
-        setPropertiesIfNotExists(this.clusterParams, {
-            heatmapRadius: 80,
-            heatmapOpacity: 1
-        });
-    if (
-        args.marks.cluster.mode == "pie" ||
-        args.marks.cluster.mode == "pie+object"
-    )
-        setPropertiesIfNotExists(this.clusterParams, {
-            innerRadius: 1,
-            outerRadius: 80,
-            cornerRadius: 5,
-            padAngle: 0.05
-        });
+    // augment args with optional stuff that is omitted in the spec
+    if (!("config" in args)) args.config = {};
+    if (!("hover" in args.marks)) args.marks.hover = {};
 
     // check required args
     var requiredArgs = [
@@ -122,20 +80,6 @@ function AutoDD(args) {
 
     // other constraints
     if (
-        (args.marks.cluster.mode == "object" ||
-            args.marks.cluster.mode == "object+clusternum" ||
-            args.marks.cluster.mode == "circle+object" ||
-            args.marks.cluster.mode == "radar+object" ||
-            args.marks.cluster.mode == "contour+object" ||
-            args.marks.cluster.mode == "heatmap+object") &&
-        (!("obj" in args.marks) || !("renderer" in args.marks.obj))
-    )
-        throw new Error(
-            "Constructing AutoDD: object renderer (rendering.obj.renderer) missing."
-        );
-    if (args.marks.obj.bboxW <= 0 || args.marks.obj.bboxH <= 0)
-        throw new Error("Constructing AutoDD: non-positive bbox size.");
-    if (
         args.x.range != null &&
         (!Array.isArray(args.x.range) ||
             args.x.range.length != 2 ||
@@ -162,50 +106,89 @@ function AutoDD(args) {
         throw new Error(
             "Constructing AutoDD: x range and y range must both be provided."
         );
+    if (
+        args.marks.cluster.mode == "object" &&
+        !("object" in args.marks.cluster)
+    )
+        throw new Error(
+            "Constructing AutoDD: object renderer (marks.cluster.object) missing."
+        );
+    if (
+        "object" in args.marks.hover &&
+        typeof args.marks.hover.object != "function"
+    )
+        throw new Error(
+            "Constructing AutoDD: hover object renderer (marks.cluster.hover.object) is not a function."
+        );
+
+    // setting cluster params
+    this.clusterParams =
+        "config" in args.marks.cluster ? args.marks.cluster.config : {};
+    if (args.marks.cluster.mode == "circle")
+        setPropertiesIfNotExists(this.clusterParams, {
+            circleMinSize: 30,
+            circleMaxSize: 70
+        });
+    if (args.marks.cluster.mode == "contour")
+        setPropertiesIfNotExists(this.clusterParams, {
+            contourBandwidth: 30,
+            contourColorScheme: "interpolateViridis",
+            contourOpacity: 1
+        });
+    if (args.marks.cluster.mode == "heatmap")
+        setPropertiesIfNotExists(this.clusterParams, {
+            heatmapRadius: 80,
+            heatmapOpacity: 1
+        });
+    if (args.marks.cluster.mode == "pie")
+        setPropertiesIfNotExists(this.clusterParams, {
+            innerRadius: 1,
+            outerRadius: 80,
+            cornerRadius: 5,
+            padAngle: 0.05
+        });
 
     // setting bboxes
-    if (
-        args.marks.cluster.mode == "circle" ||
-        args.marks.cluster.mode == "circle+object"
-    )
-        this.bboxW = this.bboxH = this.clusterParams.circleMaxSize * 2;
-    else if (
-        args.marks.cluster.mode == "contour" ||
-        args.marks.cluster.mode == "contour+object" ||
-        args.marks.cluster.mode == "heatmap" ||
-        args.marks.cluster.mode == "heatmap+object"
-    ) {
-        if (args.marks.cluster.mode.indexOf("contour") >= 0)
-            // as what's implemented by d3-contour
-            this.bboxW = this.bboxH = this.clusterParams.contourBandwidth * 8;
-        else this.bboxW = this.bboxH = this.clusterParams.heatmapRadius * 2 + 1;
-    } else {
-        if (!("bboxW" in args.marks.obj) || !("bboxH" in args.marks.obj))
+    if (args.marks.cluster.mode == "object") {
+        if (
+            !("bboxW" in args.marks.cluster.config) ||
+            !("bboxH" in args.marks.cluster.config)
+        )
             throw new Error("Constructing AutoDD: bboxW or bboxH missing");
-        this.bboxW = args.marks.obj.bboxW;
-        this.bboxH = args.marks.obj.bboxH;
-    }
+        this.bboxW = args.marks.cluster.config.bboxW;
+        this.bboxH = args.marks.cluster.config.bboxH;
+    } else if (args.marks.cluster.mode == "circle")
+        this.bboxW = this.bboxH = this.clusterParams.circleMaxSize * 2;
+    else if (args.marks.cluster.mode == "contour")
+        this.bboxW = this.bboxH = this.clusterParams.contourBandwidth * 8;
+    else if (args.marks.cluster.mode == "heatmap")
+        this.bboxW = this.bboxH = this.clusterParams.heatmapRadius * 2 + 1;
+    else if (args.marks.cluster.mode == "radar") this.bboxW = this.bboxH = 290;
+    // tuned by hand :)
+    else if (args.marks.cluster.mode == "pie") this.bboxW = this.bboxH = 290; // tuned by hand :)
 
     // assign other fields
-    if (!("config" in args)) args.config = {};
+    this.hover = args.marks.hover;
+    setPropertiesIfNotExists(this.hover, {convex: false, object: null});
+    this.isHover = this.hover.object != null || this.hover.convex;
     this.upper = "upper" in args ? args.upper : false;
     args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
     this.aggMode =
         "mode" in args.aggregate
             ? "mode:" + args.aggregate.mode
             : "mode:number";
+    this.aggColumns =
+        "attributes" in args.aggregate
+            ? [this.aggMode].concat(args.aggregate.attributes)
+            : [this.aggMode];
     this.query = args.data.query;
     this.db = args.data.db;
     this.xCol = args.x.col;
     this.yCol = args.y.col;
     this.clusterMode = args.marks.cluster.mode;
     this.rendering =
-        "renderer" in args.marks.obj ? args.marks.obj.renderer : null;
+        "object" in args.marks.cluster ? args.marks.cluster.object : null;
     this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
-    this.aggColumns =
-        "attributes" in args.aggregate
-            ? [this.aggMode].concat(args.aggregate.attributes)
-            : [this.aggMode];
     this.numLevels = "numLevels" in args.config ? args.config.numLevels : 10;
     this.topLevelWidth =
         "topLevelWidth" in args.config ? args.config.topLevelWidth : 1000;
@@ -217,10 +200,7 @@ function AutoDD(args) {
             ? this.clusterParams.overlap
                 ? true
                 : false
-            : this.clusterMode == "contour" ||
-              this.clusterMode == "contour+object" ||
-              this.clusterMode == "heatmap" ||
-              this.clusterMode == "heatmap+object"
+            : this.clusterMode == "contour" || this.clusterMode == "heatmap"
             ? true
             : false;
     this.axis = "axis" in args.config ? args.config.axis : false;
@@ -230,7 +210,7 @@ function AutoDD(args) {
     this.hiY = args.y.range != null ? args.y.range[1] : null;
 }
 
-// get rendering function for an autodd layer based on rendering mode
+// get rendering function for an autodd layer based on cluster mode
 function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
@@ -291,8 +271,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     circleSizeInterpolator(d.cluster_num.length) * 1.5
                 );
             });
-        var isObjectOnHover = REPLACE_ME_is_object_onhover;
-        if (isObjectOnHover) {
+        var isHover = REPLACE_ME_is_hover;
+        if (isHover) {
             var objectRenderer = REPLACE_ME_this_rendering;
             g.selectAll("circle")
                 .on("mouseover", function(d) {
@@ -404,8 +384,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 "translate(" + (x - radius) + " " + (y - radius) + ")"
             );
 
-        var isObjectOnHover = REPLACE_ME_is_object_onhover;
-        if (isObjectOnHover) {
+        var isHover = REPLACE_ME_is_hover;
+        if (isHover) {
             g.attr("fill", "none")
                 .attr("stroke", "black")
                 .attr("stroke-opacity", 0)
@@ -586,8 +566,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function KDEObjectHoverBody() {
-        var isObjectOnHover = REPLACE_ME_is_object_onhover;
-        if (isObjectOnHover) {
+        var isHover = REPLACE_ME_is_hover;
+        if (isHover) {
             var objectRenderer = REPLACE_ME_this_rendering;
             var hiddenRectSize = 100;
             svg.append("g")
@@ -866,8 +846,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .style("pointer-events", "none");
         }
 
-        var isObjectOnHover = REPLACE_ME_is_object_onhover;
-        if (isObjectOnHover) {
+        var isHover = REPLACE_ME_is_hover;
+        if (isHover) {
             var objectRenderer = REPLACE_ME_this_rendering;
             g.selectAll("path.radar")
                 .on("mouseover", function(d, i, nodes) {
@@ -1152,8 +1132,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .style("pointer-events", "none");
         }
 
-        var isObjectOnHover = REPLACE_ME_is_object_onhover;
-        if (isObjectOnHover) {
+        var isHover = REPLACE_ME_is_hover;
+        if (isHover) {
             var objectRenderer = REPLACE_ME_this_rendering;
             g.selectAll("path.value")
                 .on("mouseover", function(d, i, nodes) {
@@ -1177,20 +1157,14 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     var renderFuncBody;
-    if (
-        this.clusterMode == "object" ||
-        this.clusterMode == "object+clusternum"
-    ) {
+    if (this.clusterMode == "object") {
         renderFuncBody =
             "(" + this.rendering.toString() + ")(svg, data, args);\n";
-        if (this.clusterMode == "object+clusternum")
+        if (this.clusterParams.clusterCount)
             renderFuncBody += getBodyStringOfFunction(
                 renderObjectClusterNumBody
             );
-    } else if (
-        this.clusterMode == "circle" ||
-        this.clusterMode == "circle+object"
-    ) {
+    } else if (this.clusterMode == "circle") {
         // render circle
         renderFuncBody = getBodyStringOfFunction(renderCircleBody)
             .replace(
@@ -1199,95 +1173,64 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             )
             .replace(
                 /REPLACE_ME_this_rendering/g,
-                this.clusterMode == "circle+object"
-                    ? this.rendering.toString()
+                this.hover.object != null
+                    ? this.hover.object.toString()
                     : "null;"
             )
-            .replace(
-                /REPLACE_ME_is_object_onhover/g,
-                this.clusterMode == "circle+object"
-            );
-    } else if (
-        this.clusterMode == "contour" ||
-        this.clusterMode == "contour+object"
-    ) {
+            .replace(/REPLACE_ME_is_hover/g, this.isHover);
+    } else if (this.clusterMode == "contour") {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
             .replace(
                 /REPLACE_ME_cluster_params/g,
                 JSON.stringify(this.clusterParams)
             )
             .replace(/REPLACE_ME_radius/g, this.bboxH)
-            .replace(
-                /REPLACE_ME_is_object_onhover/g,
-                this.clusterMode == "contour+object"
-            );
-        if (this.clusterMode == "contour+object")
+            .replace(/REPLACE_ME_is_hover/g, this.isHover);
+        if (this.isHover)
             renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
-                .replace(
-                    /REPLACE_ME_is_object_onhover/g,
-                    this.clusterMode == "contour+object"
-                )
+                .replace(/REPLACE_ME_is_hover/g, this.isHover)
                 .replace(
                     /REPLACE_ME_this_rendering/g,
-                    this.rendering.toString()
+                    this.hover.object.toString()
                 );
-    } else if (
-        this.clusterMode == "radar" ||
-        this.clusterMode == "radar+object"
-    ) {
-        renderFuncBody = getBodyStringOfFunction(renderRadarBody)
-            .replace(
-                /REPLACE_ME_cluster_params/g,
-                JSON.stringify(this.clusterParams)
-            )
-            .replace(/REPLACE_ME_bboxH/g, this.bboxH)
-            .replace(
-                /REPLACE_ME_is_object_onhover/g,
-                this.clusterMode == "radar+object"
-            )
-            .replace(
-                /REPLACE_ME_this_rendering/g,
-                this.clusterMode == "radar+object"
-                    ? this.rendering.toString()
-                    : "null;"
-            );
-    } else if (this.clusterMode == "pie" || this.clusterMode == "pie+object") {
-        renderFuncBody = getBodyStringOfFunction(renderPieBody)
-            .replace(
-                /REPLACE_ME_cluster_params/g,
-                JSON.stringify(this.clusterParams)
-            )
-            .replace(/REPLACE_ME_bboxH/g, this.bboxH)
-            .replace(
-                /REPLACE_ME_is_object_onhover/g,
-                this.clusterMode == "pie+object"
-            )
-            .replace(
-                /REPLACE_ME_this_rendering/g,
-                this.clusterMode == "pie+object"
-                    ? this.rendering.toString()
-                    : "null;"
-            );
-    } else if (
-        this.clusterMode == "heatmap" ||
-        this.clusterMode == "heatmap+object"
-    ) {
+    } else if (this.clusterMode == "heatmap") {
         renderFuncBody = getBodyStringOfFunction(renderHeatmapBody)
             .replace(
                 /REPLACE_ME_cluster_params/g,
                 JSON.stringify(this.clusterParams)
             )
             .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
-        if (this.clusterMode == "heatmap+object")
+        if (this.isHover)
             renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
-                .replace(
-                    /REPLACE_ME_is_object_onhover/g,
-                    this.clusterMode == "heatmap+object"
-                )
+                .replace(/REPLACE_ME_is_hover/g, this.isHover)
                 .replace(
                     /REPLACE_ME_this_rendering/g,
-                    this.rendering.toString()
+                    this.hover.object.toString()
                 );
+    } else if (this.clusterMode == "radar") {
+        renderFuncBody = getBodyStringOfFunction(renderRadarBody)
+            .replace(
+                /REPLACE_ME_cluster_params/g,
+                JSON.stringify(this.clusterParams)
+            )
+            .replace(/REPLACE_ME_bboxH/g, this.bboxH)
+            .replace(/REPLACE_ME_is_hover/g, this.isHover)
+            .replace(
+                /REPLACE_ME_this_rendering/g,
+                this.hover.object ? this.hover.object.toString() : "null;"
+            );
+    } else if (this.clusterMode == "pie") {
+        renderFuncBody = getBodyStringOfFunction(renderPieBody)
+            .replace(
+                /REPLACE_ME_cluster_params/g,
+                JSON.stringify(this.clusterParams)
+            )
+            .replace(/REPLACE_ME_bboxH/g, this.bboxH)
+            .replace(/REPLACE_ME_is_hover/g, this.isHover)
+            .replace(
+                /REPLACE_ME_this_rendering/g,
+                this.hover.object ? this.hover.object.toString() : "null;"
+            );
     }
     return new Function("svg", "data", "args", renderFuncBody);
 }

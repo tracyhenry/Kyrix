@@ -30,18 +30,15 @@ var autoDD = {
     },
     marks: {
         cluster: {
-            // mode: "contour",
-            mode: "contour+object",
+            mode: "contour",
             config: {
                 // contourColorScheme: "interpolateBlues",
                 // contourOpacity: 0.5,
                 // contourBandwidth: 50,
             }
         },
-        obj: {
-            renderer: renderers.teamTimelineRendering,
-            bboxW: 162,
-            bboxH: 132
+        hover: {
+            object: renderers.teamTimelineRendering
         }
     },
     config: {

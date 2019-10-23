@@ -31,7 +31,7 @@ var autoDD = {
     upper: true,
     marks: {
         cluster: {
-            mode: "pie+object",
+            mode: "pie",
             config: {
                 // padAngle: 0.05,
                 // cornerRadius: 5,
@@ -40,10 +40,9 @@ var autoDD = {
                 domain: ["U20", "U23", "U29", "Older"]
             }
         },
-        obj: {
-            renderer: renderers.playerRendering,
-            bboxW: 290,
-            bboxH: 290
+        hover: {
+            object: renderers.playerRendering,
+            convex: true
         }
     },
     config: {

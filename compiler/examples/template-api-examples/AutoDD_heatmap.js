@@ -30,17 +30,14 @@ var autoDD = {
     },
     marks: {
         cluster: {
-            // mode: "heatmap",
-            mode: "heatmap+object",
+            mode: "heatmap",
             config: {
                 // heatmapRadius: 90,
                 // heatmapOpacity: 0.5,
             }
         },
-        obj: {
-            renderer: renderers.teamTimelineRendering,
-            bboxW: 162,
-            bboxH: 132
+        hover: {
+            object: renderers.teamTimelineRendering
         }
     },
     config: {
