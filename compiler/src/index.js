@@ -264,7 +264,7 @@ function addAutoDD(autoDD, args) {
 
     // add stuff to renderingParam for circle agg rendering
     this.addRenderingParams({
-        textwrap: require("./template-api/Renderers").textwrap
+        textwrap: require("./template-api/Utilities").textwrap
     });
 
     // construct canvases

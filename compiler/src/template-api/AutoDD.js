@@ -1,6 +1,9 @@
-const getBodyStringOfFunction = require("./Renderers").getBodyStringOfFunction;
-const setPropertiesIfNotExists = require("./Renderers")
+const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
+const setPropertiesIfNotExists = require("./Utilities")
     .setPropertiesIfNotExists;
+const parsePathIntoSegments = require("./Utilities").parsePathIntoSegments;
+const translatePathSegments = require("./Utilities").translatePathSegments;
+const serializePath = require("./Utilities").serializePath;
 
 /**
  * Constructor of an AutoDD object
@@ -741,121 +744,12 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function renderPieBody() {
-        // step 0: import
-        /**
-         * expected argument lengths
-         * @type {Object}
-         */
-
-        var length = {
-            a: 7,
-            c: 6,
-            h: 1,
-            l: 2,
-            m: 2,
-            q: 4,
-            s: 4,
-            t: 2,
-            v: 1,
-            z: 0
-        };
-
-        /**
-         * segment pattern
-         * @type {RegExp}
-         */
-
-        var segment = /([astvzqmhlc])([^astvzqmhlc]*)/gi;
-
-        /**
-         * parse an svg path data string. Generates an Array
-         * of commands where each command is an Array of the
-         * form `[command, arg1, arg2, ...]`
-         *
-         * @param {String} path
-         * @return {Array}
-         */
-
-        function parse(path) {
-            var data = [];
-            path.replace(segment, function(_, command, args) {
-                var type = command.toLowerCase();
-                args = parseValues(args);
-
-                // overloaded moveTo
-                if (type == "m" && args.length > 2) {
-                    data.push([command].concat(args.splice(0, 2)));
-                    type = "l";
-                    command = command == "m" ? "l" : "L";
-                }
-
-                while (true) {
-                    if (args.length == length[type]) {
-                        args.unshift(command);
-                        return data.push(args);
-                    }
-                    if (args.length < length[type])
-                        throw new Error("malformed path data");
-                    data.push([command].concat(args.splice(0, length[type])));
-                }
-            });
-            return data;
-        }
-
-        var number = /-?[0-9]*\.?[0-9]+(?:e[-+]?\d+)?/gi;
-
-        function parseValues(args) {
-            var numbers = args.match(number);
-            return numbers ? numbers.map(Number) : [];
-        }
-
-        function translate(segments, x, y) {
-            // y is optional
-            y = y || 0;
-
-            return segments.map(function(segment) {
-                var cmd = segment[0];
-
-                // Shift coords only for commands with absolute values
-                if ("ACHLMRQSTVZ".indexOf(cmd) === -1) {
-                    return segment;
-                }
-
-                var name = cmd.toLowerCase();
-
-                // V is the only command, with shifted coords parity
-                if (name === "v") {
-                    segment[1] = Number(segment[1]) + +y;
-                    return segment;
-                }
-
-                // ARC is: ['A', rx, ry, x-axis-rotation, large-arc-flag, sweep-flag, x, y]
-                // touch x, y only
-                if (name === "a") {
-                    segment[6] = Number(segment[6]) + +x;
-                    segment[7] = Number(segment[7]) + +y;
-                    return segment;
-                }
-
-                // All other commands have [cmd, x1, y1, x2, y2, x3, y3, ...] format
-                return segment.map(function(val, i) {
-                    if (!i) {
-                        return val;
-                    }
-                    return i % 2 ? Number(val) + +x : Number(val) + +y;
-                });
-            });
-        }
-
-        function serialize(path) {
-            return path.reduce(function(str, seg) {
-                return str + seg[0] + seg.slice(1).join(",");
-            }, "");
-        }
-
         if (!data || data.length == 0) return;
         var params = args.renderingParams;
         var clusterParams = REPLACE_ME_cluster_params;
+        var parse = REPLACE_ME_parse_func;
+        var translate = REPlACE_ME_translate_func;
+        var serialize = REPLACE_ME_serialize_func;
         var g = svg.append("g");
 
         var dict = {};
@@ -1159,7 +1053,13 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .replace(
                 /REPLACE_ME_processClusterAgg/g,
                 processClusterAgg.toString()
-            );
+            )
+            .replace(/REPLACE_ME_parse_func/g, parsePathIntoSegments.toString())
+            .replace(
+                /REPLACE_ME_translate_func/g,
+                translatePathSegments.toString()
+            )
+            .replace(/REPLACE_ME_serialize_func/g, serializePath.toString());
         if (this.isHover)
             renderFuncBody += getBodyStringOfFunction(regularHoverBody)
                 .replace(

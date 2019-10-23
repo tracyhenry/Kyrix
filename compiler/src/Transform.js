@@ -1,4 +1,4 @@
-var getBodyStringOfFunction = require("./template-api/Renderers")
+var getBodyStringOfFunction = require("./template-api/Utilities")
     .getBodyStringOfFunction;
 
 // simple parse JS function for its parameters - note that it only works in simple cases, like ours
