@@ -6,7 +6,7 @@ const renderers = require("./renderers");
 // construct a project
 var p = new Project("fifa_autodd", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
-p.addStyles(renderers.glyphStyles);
+p.addStyles(renderers.playerRenderingStyles);
 
 // set up auto drill down
 var query = "select * from fifa19 order by cast(wage as int) desc";

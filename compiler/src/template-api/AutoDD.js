@@ -213,8 +213,8 @@ function AutoDD(args) {
         "topLevelHeight" in args.config ? args.config.topLevelHeight : 1000;
     this.zoomFactor = "zoomFactor" in args.config ? args.config.zoomFactor : 2;
     this.overlap =
-        "overlap" in args.marks.obj
-            ? args.marks.obj.overlap
+        "overlap" in this.clusterParams
+            ? this.clusterParams.overlap
                 ? true
                 : false
             : this.clusterMode == "contour" ||

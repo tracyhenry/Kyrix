@@ -11,7 +11,6 @@ public class AutoDD {
     private String query, db;
     private String xCol, yCol;
     private int bboxW, bboxH;
-    private String rendering;
     private String clusterMode;
     private ArrayList<String> columnNames, aggColumns, queriedColumnNames = null;
     private int numLevels, topLevelWidth, topLevelHeight;
@@ -46,10 +45,6 @@ public class AutoDD {
 
     public String getClusterMode() {
         return clusterMode;
-    }
-
-    public String getRendering() {
-        return rendering;
     }
 
     public boolean getOverlap() {
@@ -168,8 +163,6 @@ public class AutoDD {
                 + bboxW
                 + ", bboxH="
                 + bboxH
-                + ", rendering='"
-                + rendering
                 + '\''
                 + ", clusterMode='"
                 + clusterMode

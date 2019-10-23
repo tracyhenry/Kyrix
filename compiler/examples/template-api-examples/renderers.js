@@ -48,8 +48,6 @@ var renderingParams = {
 };
 
 function playerRendering(svg, data, args) {
-    // console.log("raw:", data[0]);
-
     var g = svg.append("g").attr("class", "player object");
     var params = args.renderingParams;
 
@@ -67,7 +65,7 @@ function playerRendering(svg, data, args) {
         .attr("ry", 10)
         .attr("width", params.rectPlayer.w)
         .attr("height", params.rectPlayer.h)
-        .classed("kyrix-retainsizezoom", true); // for NBA autoDD
+        .classed("kyrix-retainsizezoom", true);
 
     var imgs = ["photo", "flag", "club_logo"];
     for (var i = imgs.length - 1; i >= 0; i--) {
@@ -150,7 +148,7 @@ function playerRendering(svg, data, args) {
     }
 }
 
-var glyphStyles = `
+var playerRenderingStyles = `
 g.player rect.player-bg {
     fill: #fff;
     stroke: #ccc;
@@ -163,6 +161,6 @@ text.label {
 
 module.exports = {
     playerRendering,
-    glyphStyles,
+    playerRenderingStyles,
     renderingParams
 };
