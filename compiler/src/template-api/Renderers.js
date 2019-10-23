@@ -61,6 +61,11 @@ function textwrap(text, width) {
     });
 }
 
+/**
+ * serialize the body of a function into a string
+ * @param func
+ * @returns {string}
+ */
 function getBodyStringOfFunction(func) {
     var funcStr = func.toString();
     const bodyStart = funcStr.indexOf("{") + 1;
@@ -68,7 +73,19 @@ function getBodyStringOfFunction(func) {
     return "\n" + funcStr.substring(bodyStart, bodyEnd) + "\n";
 }
 
+/**
+ * setting the values of a dictionary if they don't exist yet
+ * @param dict
+ * @param properties
+ */
+function setPropertiesIfNotExists(dict, properties) {
+    var keys = Object.keys(properties);
+    for (var i = 0; i < keys.length; i++)
+        if (!(keys[i] in dict)) dict[keys[i]] = properties[keys[i]];
+}
+
 module.exports = {
     textwrap,
-    getBodyStringOfFunction
+    getBodyStringOfFunction,
+    setPropertiesIfNotExists
 };

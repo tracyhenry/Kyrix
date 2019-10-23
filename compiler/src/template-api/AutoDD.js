@@ -1,4 +1,6 @@
 const getBodyStringOfFunction = require("./Renderers").getBodyStringOfFunction;
+const setPropertiesIfNotExists = require("./Renderers")
+    .setPropertiesIfNotExists;
 
 /**
  * Constructor of an AutoDD object
@@ -8,6 +10,7 @@ const getBodyStringOfFunction = require("./Renderers").getBodyStringOfFunction;
 function AutoDD(args) {
     if (args == null) args = {};
 
+    // check clusterMode is correct
     if (
         !("marks" in args) ||
         !"cluster" in args.marks ||
@@ -33,86 +36,45 @@ function AutoDD(args) {
     if (!allClusterModes.has(args.marks.cluster.mode))
         throw new Error("Constructing AutoDD: unsupported rendering mode.");
 
-    // check constraints according to rendering mode
-    this.upper = "upper" in args ? args.upper : false;
-    this.circleMinSize = 30;
-    this.circleMaxSize = 70;
-    this.contourBandwidth =
-        "contourBandwidth" in args.marks.cluster
-            ? args.marks.cluster.contourBandwidth
-            : 30;
-    this.heatmapRadius =
-        "heatmapRadius" in args.marks.cluster
-            ? args.marks.cluster.heatmapRadius
-            : 80;
-    args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
-    this.aggMode =
-        "mode" in args.aggregate
-            ? "mode:" + args.aggregate.mode
-            : "mode:number";
+    // setting cluster params
+    this.clusterParams =
+        "config" in args.marks.cluster ? args.marks.cluster.config : {};
     if (
         args.marks.cluster.mode == "circle" ||
         args.marks.cluster.mode == "circle+object"
     )
-        args.marks["obj"]["bboxW"] = args.marks["obj"]["bboxH"] =
-            this.circleMaxSize * 2;
-    if (
-        (args.marks.cluster.mode == "object" ||
-            args.marks.cluster.mode == "object+clusternum" ||
-            args.marks.cluster.mode == "circle+object" ||
-            args.marks.cluster.mode == "radar+object" ||
-            args.marks.cluster.mode == "contour+object" ||
-            args.marks.cluster.mode == "heatmap+object") &&
-        (!("obj" in args.marks) || !("renderer" in args.marks.obj))
-    )
-        throw new Error(
-            "Constructing AutoDD: object renderer (rendering.obj.renderer) missing."
-        );
+        setPropertiesIfNotExists(this.clusterParams, {
+            circleMinSize: 30,
+            circleMaxSize: 70
+        });
+    console.log(this.clusterParams);
     if (
         args.marks.cluster.mode == "contour" ||
-        args.marks.cluster.mode == "contour+object" ||
+        args.marks.cluster.mode == "contour+object"
+    )
+        setPropertiesIfNotExists(this.clusterParams, {
+            contourBandwidth: 30,
+            contourColorScheme: "interpolateViridis",
+            contourOpacity: 1
+        });
+    if (
         args.marks.cluster.mode == "heatmap" ||
         args.marks.cluster.mode == "heatmap+object"
-    ) {
-        if (!("obj" in args.marks)) args.marks.obj = {};
-        if (args.marks.cluster.mode.indexOf("contour") >= 0)
-            // as what's implemented by d3-contour
-            args.marks["obj"]["bboxW"] = args.marks["obj"]["bboxH"] =
-                this.contourBandwidth * 8;
-        else
-            args.marks["obj"]["bboxW"] = args.marks["obj"]["bboxH"] =
-                this.heatmapRadius * 2 + 1;
-    }
-    if (
-        args.marks.cluster.mode == "radar" ||
-        args.marks.cluster.mode == "radar+object"
-    ) {
-        this.glyph = JSON.parse(JSON.stringify(args.marks.cluster));
-        delete this.glyph.mode;
-        this.glyph = JSON.stringify(this.glyph);
-    }
+    )
+        setPropertiesIfNotExists(this.clusterParams, {
+            heatmapRadius: 80,
+            heatmapOpacity: 1
+        });
     if (
         args.marks.cluster.mode == "pie" ||
         args.marks.cluster.mode == "pie+object"
-    ) {
-        this.glyph = {};
-        this.glyph.domain = args.marks.cluster.domain;
-        this.glyph.innerRadius =
-            "innerRadius" in args.marks.cluster ? args.marks.innerRadius : 1;
-        this.glyph.outerRadius =
-            "outerRadius" in args.marks.cluster
-                ? args.marks.cluster.outerRadius
-                : 80;
-        this.glyph.cornerRadius =
-            "cornerRadius" in args.marks.cluster
-                ? args.marks.cluster.cornerRadius
-                : 5;
-        this.glyph.padAngle =
-            "padAngle" in args.marks.cluster
-                ? args.marks.cluster.padAngle
-                : 0.05;
-        this.glyph = JSON.stringify(this.glyph);
-    }
+    )
+        setPropertiesIfNotExists(this.clusterParams, {
+            innerRadius: 1,
+            outerRadius: 80,
+            cornerRadius: 5,
+            padAngle: 0.05
+        });
 
     // check required args
     var requiredArgs = [
@@ -121,9 +83,7 @@ function AutoDD(args) {
         ["x", "col"],
         ["x", "range"],
         ["y", "col"],
-        ["y", "range"],
-        ["marks", "obj", "bboxW"],
-        ["marks", "obj", "bboxH"]
+        ["y", "range"]
     ];
     var requiredArgsTypes = [
         "string",
@@ -131,9 +91,7 @@ function AutoDD(args) {
         "string",
         "object",
         "string",
-        "object",
-        "number",
-        "number"
+        "object"
     ];
     for (var i = 0; i < requiredArgs.length; i++) {
         var curObj = args;
@@ -161,9 +119,20 @@ function AutoDD(args) {
                         " cannot be an empty string."
                 );
     }
-    if (!("config" in args)) args.config = {};
 
     // other constraints
+    if (
+        (args.marks.cluster.mode == "object" ||
+            args.marks.cluster.mode == "object+clusternum" ||
+            args.marks.cluster.mode == "circle+object" ||
+            args.marks.cluster.mode == "radar+object" ||
+            args.marks.cluster.mode == "contour+object" ||
+            args.marks.cluster.mode == "heatmap+object") &&
+        (!("obj" in args.marks) || !("renderer" in args.marks.obj))
+    )
+        throw new Error(
+            "Constructing AutoDD: object renderer (rendering.obj.renderer) missing."
+        );
     if (args.marks.obj.bboxW <= 0 || args.marks.obj.bboxH <= 0)
         throw new Error("Constructing AutoDD: non-positive bbox size.");
     if (
@@ -194,13 +163,41 @@ function AutoDD(args) {
             "Constructing AutoDD: x range and y range must both be provided."
         );
 
-    // assign fields
+    // setting bboxes
+    if (
+        args.marks.cluster.mode == "circle" ||
+        args.marks.cluster.mode == "circle+object"
+    )
+        this.bboxW = this.bboxH = this.clusterParams.circleMaxSize * 2;
+    else if (
+        args.marks.cluster.mode == "contour" ||
+        args.marks.cluster.mode == "contour+object" ||
+        args.marks.cluster.mode == "heatmap" ||
+        args.marks.cluster.mode == "heatmap+object"
+    ) {
+        if (args.marks.cluster.mode.indexOf("contour") >= 0)
+            // as what's implemented by d3-contour
+            this.bboxW = this.bboxH = this.clusterParams.contourBandwidth * 8;
+        else this.bboxW = this.bboxH = this.clusterParams.heatmapRadius * 2 + 1;
+    } else {
+        if (!("bboxW" in args.marks.obj) || !("bboxH" in args.marks.obj))
+            throw new Error("Constructing AutoDD: bboxW or bboxH missing");
+        this.bboxW = args.marks.obj.bboxW;
+        this.bboxH = args.marks.obj.bboxH;
+    }
+
+    // assign other fields
+    if (!("config" in args)) args.config = {};
+    this.upper = "upper" in args ? args.upper : false;
+    args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
+    this.aggMode =
+        "mode" in args.aggregate
+            ? "mode:" + args.aggregate.mode
+            : "mode:number";
     this.query = args.data.query;
     this.db = args.data.db;
     this.xCol = args.x.col;
     this.yCol = args.y.col;
-    this.bboxW = args.marks.obj.bboxW;
-    this.bboxH = args.marks.obj.bboxH;
     this.clusterMode = args.marks.cluster.mode;
     this.rendering =
         "renderer" in args.marks.obj ? args.marks.obj.renderer : null;
@@ -227,18 +224,6 @@ function AutoDD(args) {
             ? true
             : false;
     this.axis = "axis" in args.config ? args.config.axis : false;
-    this.contourColorScheme =
-        "contourColorScheme" in args.marks.cluster
-            ? args.marks.cluster.contourColorScheme
-            : "interpolateViridis";
-    this.contourOpacity =
-        "contourOpacity" in args.marks.cluster
-            ? args.marks.cluster.contourOpacity
-            : 1;
-    this.heatmapOpacity =
-        "heatmapOpacity" in args.marks.cluster
-            ? args.marks.cluster.heatmapOpacity
-            : 1;
     this.loX = args.x.range != null ? args.x.range[0] : null;
     this.loY = args.y.range != null ? args.y.range[0] : null;
     this.hiX = args.x.range != null ? args.x.range[1] : null;
@@ -249,6 +234,7 @@ function AutoDD(args) {
 function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
+        var clusterParams = REPLACE_ME_cluster_params;
         data.forEach(d => {
             d.cluster_agg = JSON.parse(d.cluster_agg);
             d.cluster_num = d.cluster_agg["count"][0].toString();
@@ -256,7 +242,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var circleSizeInterpolator = d3
             .scaleLinear()
             .domain([1, params.roughN.toString().length - 1])
-            .range([REPLACE_ME_circleMinSize, REPLACE_ME_circleMaxSize]);
+            .range([clusterParams.circleMinSize, clusterParams.circleMaxSize]);
         var g = svg.append("g");
         g.selectAll("circle")
             .data(data)
@@ -355,8 +341,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function renderContourBody() {
+        var clusterParams = REPLACE_ME_cluster_params;
         var roughN = args.renderingParams.roughN;
-        var bandwidth = REPLACE_ME_bandwidth;
+        var bandwidth = clusterParams.contourBandwidth;
         var radius = REPLACE_ME_radius;
         var decayRate = 2.4;
         var cellSize = 2;
@@ -399,7 +386,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             })(translatedData);
 
         var color = d3
-            .scaleSequential(d3["REPLACE_ME_contour_colorScheme"])
+            .scaleSequential(d3[clusterParams.contourColorScheme])
             .domain([
                 1e-4,
                 (0.04 * roughN) /
@@ -429,7 +416,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .append("path")
                 .attr("d", d3.geoPath())
                 .style("fill", d => color(d.value))
-                .style("opacity", REPLACE_ME_CONTOUR_OPACITY);
+                .style("opacity", clusterParams.contourOpacity);
         } else {
             var canvas = document.createElement("canvas");
             var ctx = canvas.getContext("2d");
@@ -457,7 +444,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function renderHeatmapBody() {
         var params = args.renderingParams;
-        var radius = REPLACE_ME_radius;
+        var clusterParams = REPLACE_ME_cluster_params;
+        var radius = clusterParams.heatmapRadius;
         var heatmapWidth, heatmapHeight, x, y;
         if ("tileX" in args) {
             // tiling
@@ -594,7 +582,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .style("overflow", "auto")
             .node()
             .appendChild(render.canvas);
-        d3.select(render.canvas).style("opacity", REPLACE_ME_heatmap_opacity);
+        d3.select(render.canvas).style("opacity", clusterParams.heatmapOpacity);
     }
 
     function KDEObjectHoverBody() {
@@ -640,7 +628,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function renderRadarBody() {
         if (!data || data.length == 0) return;
         var params = args.renderingParams;
-        var glyph = REPLACE_ME_glyph;
+        var clusterParams = REPLACE_ME_cluster_params;
         var g = svg.append("g");
         var dict = {};
 
@@ -672,14 +660,14 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         });
 
         // Step 2: append radars
-        var glyphs = g
-            .selectAll("g.glyph")
+        var radars = g
+            .selectAll("g.radar")
             .data(data)
             .enter();
 
         // radar chart, for avaerage
         var radius = 0;
-        if (typeof glyph.size === "number") radius = glyph.size;
+        if (typeof clusterParams.size === "number") radius = clusterParams.size;
         else radius = REPLACE_ME_bboxH / 4;
 
         // radar chart scales
@@ -687,12 +675,12 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         // build radius scale
         for (var key in dict) {
             dict[key].scale = d3.scaleLinear().range(rangeRadius);
-            if (Array.isArray(glyph.domain)) {
-                dict[key].scale.domain(glyph.domain);
-            } else if (typeof glyph.domain === "object") {
-                dict[key].scale.domain(glyph.domain[key]);
-            } else if (typeof glyph.domain === "number") {
-                dict[key].scale.domain([0, glyph.domain]);
+            if (Array.isArray(clusterParams.domain)) {
+                dict[key].scale.domain(clusterParams.domain);
+            } else if (typeof clusterParams.domain === "object") {
+                dict[key].scale.domain(clusterParams.domain[key]);
+            } else if (typeof clusterParams.domain === "number") {
+                dict[key].scale.domain([0, clusterParams.domain]);
             } else {
                 dict[key].scale.domain(
                     dict[key].extent[0] > 0
@@ -711,11 +699,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
         // ticks
         var ticks = [];
-        if (Array.isArray(glyph.ticks)) {
-            ticks = glyph.ticks;
-        } else if (typeof glyph.ticks === "number") {
-            for (var i = 0; i < glyph.ticks; i++)
-                ticks.push((i + 1) * (radius / glyph.ticks));
+        if (Array.isArray(clusterParams.ticks)) {
+            ticks = clusterParams.ticks;
+        } else if (typeof clusterParams.ticks === "number") {
+            for (var i = 0; i < clusterParams.ticks; i++)
+                ticks.push((i + 1) * (radius / clusterParams.ticks));
         }
 
         // line
@@ -752,7 +740,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             return {x: +d.cx + x, y: +d.cy - y};
         }
 
-        glyphs.each((p, j, nodes) => {
+        radars.each((p, j, nodes) => {
             // ticks
             for (var i = ticks.length - 1; i >= 0; i--) {
                 d3.select(nodes[j])
@@ -813,7 +801,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .append("path")
                 .datum(coordinates)
                 .attr("d", line)
-                .classed("glyph", true)
+                .classed("radar", true)
                 .attr("stroke-width", 3)
                 .attr("stroke", "darkorange")
                 .attr("fill", "darkorange")
@@ -881,7 +869,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var isObjectOnHover = REPLACE_ME_is_object_onhover;
         if (isObjectOnHover) {
             var objectRenderer = REPLACE_ME_this_rendering;
-            g.selectAll("path.glyph")
+            g.selectAll("path.radar")
                 .on("mouseover", function(d, i, nodes) {
                     showConvex(svg, d);
                     objectRenderer(svg, [d], args);
@@ -1066,7 +1054,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             }
         });
 
-        // Step 2: append glyphs
+        // Step 2: append pies
         var domain = clusterParams.domain;
         var pie = d3
             .pie()
@@ -1150,18 +1138,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .style("pointer-events", "none")
             .classed("kyrix-retainsizezoom", true);
 
-        // var convexhulls = g.selectAll("path.convexhull")
-        //     .data(data)
-        //     .enter()
-        //     .append("path")
-        //     .attr("class", d=>`convexhull ${d.name}`)
-        //     .attr("d", d=>line(d.convexhull))
-        //     .style("fill-opacity", 0)
-        //     .style("stroke-width", 3)
-        //     .style("stroke-opacity", 0.5)
-        //     .style("stroke", "grey")
-        //     .style("pointer-events", "none")
-
         function showConvex(svg, d) {
             var g = svg.append("g");
             g.append("path")
@@ -1217,8 +1193,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     ) {
         // render circle
         renderFuncBody = getBodyStringOfFunction(renderCircleBody)
-            .replace(/REPLACE_ME_circleMinSize/g, this.circleMinSize)
-            .replace(/REPLACE_ME_circleMaxSize/g, this.circleMaxSize)
+            .replace(
+                /REPLACE_ME_cluster_params/g,
+                JSON.stringify(this.clusterParams)
+            )
             .replace(
                 /REPLACE_ME_this_rendering/g,
                 this.clusterMode == "circle+object"
@@ -1234,10 +1212,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         this.clusterMode == "contour+object"
     ) {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
-            .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)
+            .replace(
+                /REPLACE_ME_cluster_params/g,
+                JSON.stringify(this.clusterParams)
+            )
             .replace(/REPLACE_ME_radius/g, this.bboxH)
-            .replace(/REPLACE_ME_contour_colorScheme/g, this.contourColorScheme)
-            .replace(/REPLACE_ME_CONTOUR_OPACITY/g, this.contourOpacity)
             .replace(
                 /REPLACE_ME_is_object_onhover/g,
                 this.clusterMode == "contour+object"
@@ -1257,7 +1236,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         this.clusterMode == "radar+object"
     ) {
         renderFuncBody = getBodyStringOfFunction(renderRadarBody)
-            .replace(/REPLACE_ME_glyph/g, this.glyph)
+            .replace(
+                /REPLACE_ME_cluster_params/g,
+                JSON.stringify(this.clusterParams)
+            )
             .replace(/REPLACE_ME_bboxH/g, this.bboxH)
             .replace(
                 /REPLACE_ME_is_object_onhover/g,
@@ -1271,7 +1253,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             );
     } else if (this.clusterMode == "pie" || this.clusterMode == "pie+object") {
         renderFuncBody = getBodyStringOfFunction(renderPieBody)
-            .replace(/REPLACE_ME_cluster_params/g, this.glyph)
+            .replace(
+                /REPLACE_ME_cluster_params/g,
+                JSON.stringify(this.clusterParams)
+            )
             .replace(/REPLACE_ME_bboxH/g, this.bboxH)
             .replace(
                 /REPLACE_ME_is_object_onhover/g,
@@ -1288,8 +1273,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         this.clusterMode == "heatmap+object"
     ) {
         renderFuncBody = getBodyStringOfFunction(renderHeatmapBody)
-            .replace(/REPLACE_ME_radius/g, this.heatmapRadius)
-            .replace(/REPLACE_ME_heatmap_opacity/g, this.heatmapOpacity)
+            .replace(
+                /REPLACE_ME_cluster_params/g,
+                JSON.stringify(this.clusterParams)
+            )
             .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
         if (this.clusterMode == "heatmap+object")
             renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
@@ -1395,7 +1382,7 @@ function getStaticUpperRenderer(level) {
     if (this.aggMode == "mode:category") {
         renderFuncBody = getBodyStringOfFunction(legendRenderer).replace(
             /REPLACE_ME_cluster_params/g,
-            this.glyph
+            JSON.stringify(this.clusterParams)
         );
     }
     return new Function("svg", "data", "args", renderFuncBody);

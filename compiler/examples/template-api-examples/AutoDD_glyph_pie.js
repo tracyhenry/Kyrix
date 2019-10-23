@@ -32,11 +32,13 @@ var autoDD = {
     marks: {
         cluster: {
             mode: "pie+object",
-            // padAngle: 0.05,
-            // cornerRadius: 5,
-            // outerRadius: 80,
-            // innerRadius: 1
-            domain: ["U20", "U23", "U29", "Older"]
+            config: {
+                // padAngle: 0.05,
+                // cornerRadius: 5,
+                // outerRadius: 80,
+                // innerRadius: 1,
+                domain: ["U20", "U23", "U29", "Older"]
+            }
         },
         obj: {
             renderer: renderers.playerRendering,

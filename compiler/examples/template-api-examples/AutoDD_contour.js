@@ -31,10 +31,12 @@ var autoDD = {
     marks: {
         cluster: {
             // mode: "contour",
-            mode: "contour+object"
-            // contourColorScheme: "interpolateBlues",
-            // contourOpacity: 0.5,
-            // contourBandwidth: 50,
+            mode: "contour+object",
+            config: {
+                // contourColorScheme: "interpolateBlues",
+                // contourOpacity: 0.5,
+                // contourBandwidth: 50,
+            }
         },
         obj: {
             renderer: renderers.teamTimelineRendering,

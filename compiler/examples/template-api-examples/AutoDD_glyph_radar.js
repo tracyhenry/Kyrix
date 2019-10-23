@@ -47,11 +47,13 @@ var autoDD = {
     marks: {
         cluster: {
             mode: "radar+object",
-            attributes: attributes,
-            value: "average",
-            size: 80,
-            ticks: 5,
-            domain: 100
+            config: {
+                attributes: attributes,
+                value: "average",
+                size: 80,
+                ticks: 5,
+                domain: 100
+            }
         },
         obj: {
             renderer: renderers.playerRendering,

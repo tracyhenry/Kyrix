@@ -31,7 +31,11 @@ var autoDD = {
     marks: {
         cluster: {
             // mode: "circle",
-            mode: "circle+object"
+            mode: "circle+object",
+            config: {
+                // circleMinSize: 30,
+                // circleMaxSize: 70
+            }
         },
         obj: {
             renderer: renderers.teamTimelineRendering,
