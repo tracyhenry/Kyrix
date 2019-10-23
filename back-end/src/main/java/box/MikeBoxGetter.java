@@ -1,5 +1,6 @@
 package box;
 
+import cache.DBoxCache;
 import java.util.ArrayList;
 import project.Canvas;
 import project.View;
@@ -21,8 +22,13 @@ public class MikeBoxGetter extends BoxGetter {
         double maxx = Math.min(c.getW() + 10, minx + (1 + 2 * wrapLength) * vpW);
         double maxy = Math.min(c.getH() + 10, miny + (1 + 2 * wrapLength) * vpH);
         Box newBox = new Box(minx, miny, maxx, maxy);
-        data = fetchData(c, newBox, oldBox, predicates);
-
+        data = DBoxCache.getData(c, newBox, predicates);
+        if (data.size() == 0) {
+            Box squaredBox = DBoxCache.getSquaredBox(newBox, oldBox);
+            data = fetchData(c, squaredBox, oldBox, predicates);
+            DBoxCache.addData(data, c, newBox, predicates);
+            data = DBoxCache.getData(c, newBox, predicates);
+        }
         Box box = new Box(minx, miny, maxx, maxy);
         return new BoxandData(box, data);
     }

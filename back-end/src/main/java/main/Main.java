@@ -1,5 +1,6 @@
 package main;
 
+import cache.DBoxCache;
 import cache.TileCache;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -28,6 +29,7 @@ public class Main {
         // create tile cache
         System.out.println("Creating tile cache...");
         TileCache.create();
+        DBoxCache.create();
 
         System.out.println("Starting server...");
         Server.startServer(Config.portNumber);
