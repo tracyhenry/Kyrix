@@ -68,6 +68,16 @@ public class DBoxCache {
                 && (oBoxMaxY >= rBoxMaxY);
     }
 
+    public static Box getPartialHit(Canvas c, Box newBox, ArrayList<String> predicates) throws Exception{
+        String projectName = Main.getProject().getName();
+        String key = projectName + '-' + c.getId() + "-" + predicates; 
+        if (dBoxCacheBox.containsKey(key)){
+            return (Box)dBoxCacheBox.get(key);
+        }
+        return null;
+    }
+
+
     public static ArrayList<ArrayList<ArrayList<String>>> getData(
             Canvas c, Box requestedBox, ArrayList<String> predicates) throws Exception {
         String projectName = Main.getProject().getName();

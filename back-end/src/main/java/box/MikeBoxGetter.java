@@ -25,7 +25,13 @@ public class MikeBoxGetter extends BoxGetter {
         data = DBoxCache.getData(c, newBox, predicates);
         if (data.size() == 0) {
             Box squaredBox = DBoxCache.getSquaredBox(newBox, oldBox);
-            data = fetchData(c, squaredBox, oldBox, predicates);
+            Box existingBox = DBoxCache.getPartialHit(c, newBox, predicates);
+            if (existingBox!=null){
+                data = fetchData(c, squaredBox, existingBox, predicates);
+            }
+            else{
+                data = fetchData(c, squaredBox, oldBox, predicates);
+            }
             DBoxCache.addData(data, c, newBox, predicates);
             data = DBoxCache.getData(c, newBox, predicates);
         }
