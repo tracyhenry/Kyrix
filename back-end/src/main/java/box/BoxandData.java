@@ -38,7 +38,7 @@ public class BoxandData {
 
                 // cluster number field for autodd layer
                 if (curLayer.getIndexerType().equals("AutoDDInMemoryIndexer")) {
-                    rowDict.put("cluster_num", rowArray.get(numFields));
+                    rowDict.put("cluster_agg", rowArray.get(numFields));
                     numFields++;
                 }
 

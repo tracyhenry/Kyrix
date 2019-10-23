@@ -13,7 +13,7 @@ public class AutoDD {
     private int bboxW, bboxH;
     private String rendering;
     private String renderingMode;
-    private ArrayList<String> columnNames, queriedColumnNames = null;
+    private ArrayList<String> columnNames, aggColumns, queriedColumnNames = null;
     private int numLevels, topLevelWidth, topLevelHeight;
     private boolean overlap;
     private double zoomFactor;
@@ -59,7 +59,7 @@ public class AutoDD {
     public int getXColId() {
 
         if (xColId < 0) {
-            ArrayList<String> colNames = this.getColumnNames();
+            ArrayList<String> colNames = getColumnNames();
             for (int i = 0; i < colNames.size(); i++) if (colNames.get(i).equals(xCol)) xColId = i;
         }
         return xColId;
@@ -68,7 +68,7 @@ public class AutoDD {
     public int getYColId() {
 
         if (yColId < 0) {
-            ArrayList<String> colNames = this.getColumnNames();
+            ArrayList<String> colNames = getColumnNames();
             for (int i = 0; i < colNames.size(); i++) if (colNames.get(i).equals(yCol)) yColId = i;
         }
         return yColId;
@@ -83,16 +83,20 @@ public class AutoDD {
         if (queriedColumnNames == null)
             try {
                 queriedColumnNames = new ArrayList<>();
-                Statement rawDBStmt = DbConnector.getStmtByDbName(this.getDb(), true);
-                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, this.getQuery());
+                Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
+                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, getQuery());
                 int colCount = rs.getMetaData().getColumnCount();
                 for (int i = 1; i <= colCount; i++)
                     queriedColumnNames.add(rs.getMetaData().getColumnName(i));
-                DbConnector.closeConnection(this.getDb());
+                DbConnector.closeConnection(getDb());
             } catch (Exception e) {
                 e.printStackTrace();
             }
         return queriedColumnNames;
+    }
+
+    public ArrayList<String> getAggColumns() {
+        return aggColumns;
     }
 
     public int getNumLevels() {
@@ -121,18 +125,18 @@ public class AutoDD {
             loX = loY = Double.MAX_VALUE;
             hiX = hiY = Double.MIN_VALUE;
             try {
-                Statement rawDBStmt = DbConnector.getStmtByDbName(this.getDb(), true);
-                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, this.getQuery());
+                Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
+                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, getQuery());
                 while (rs.next()) {
-                    double cx = rs.getDouble(this.getXColId() + 1);
-                    double cy = rs.getDouble(this.getYColId() + 1);
+                    double cx = rs.getDouble(getXColId() + 1);
+                    double cy = rs.getDouble(getYColId() + 1);
                     loX = Math.min(loX, cx);
                     hiX = Math.max(hiX, cx);
                     loY = Math.min(loY, cy);
                     hiY = Math.max(hiY, cy);
                 }
                 rawDBStmt.close();
-                DbConnector.closeConnection(this.getDb());
+                DbConnector.closeConnection(getDb());
             } catch (Exception e) {
                 e.printStackTrace();
             }
