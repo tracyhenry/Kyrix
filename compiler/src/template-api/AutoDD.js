@@ -748,8 +748,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var params = args.renderingParams;
         var clusterParams = REPLACE_ME_cluster_params;
         var parse = REPLACE_ME_parse_func;
-        var translate = REPlACE_ME_translate_func;
+        var translate = REPLACE_ME_translate_func;
         var serialize = REPLACE_ME_serialize_func;
+
         var g = svg.append("g");
 
         var dict = {};
