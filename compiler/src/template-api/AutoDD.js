@@ -13,7 +13,9 @@ const serializePath = require("./Utilities").serializePath;
 function AutoDD(args) {
     if (args == null) args = {};
 
-    // check clusterMode is correct
+    /******************************
+     * check clusterMode is correct
+     ******************************/
     if (
         !("marks" in args) ||
         !"cluster" in args.marks ||
@@ -33,11 +35,17 @@ function AutoDD(args) {
     if (!allClusterModes.has(args.marks.cluster.mode))
         throw new Error("Constructing AutoDD: unsupported cluster mode.");
 
-    // augment args with optional stuff that is omitted in the spec
+    /**************************************************************
+     * augment args with optional stuff that is omitted in the spec
+     **************************************************************/
+
     if (!("config" in args)) args.config = {};
     if (!("hover" in args.marks)) args.marks.hover = {};
+    if (!("aggregate" in args)) args.aggregate = {attributes: []};
 
-    // check required args
+    /*********************
+     * check required args
+     *********************/
     var requiredArgs = [
         ["data", "query"],
         ["data", "db"],
@@ -81,7 +89,9 @@ function AutoDD(args) {
                 );
     }
 
-    // other constraints
+    /*******************
+     * other constraints
+     *******************/
     if (
         args.x.range != null &&
         (!Array.isArray(args.x.range) ||
@@ -124,7 +134,9 @@ function AutoDD(args) {
             "Constructing AutoDD: hover object renderer (marks.cluster.hover.object) is not a function."
         );
 
-    // setting cluster params
+    /************************
+     * setting cluster params
+     ************************/
     this.clusterParams =
         "config" in args.marks.cluster ? args.marks.cluster.config : {};
     if (args.marks.cluster.mode == "circle")
@@ -151,7 +163,9 @@ function AutoDD(args) {
             padAngle: 0.05
         });
 
-    // setting legend parameters
+    /***************************
+     * setting legend parameters
+     ***************************/
     this.legendParams = "legend" in args ? args.legend : null;
     if (this.legendParams != null)
         if (args.marks.cluster.mode == "pie")
@@ -163,7 +177,9 @@ function AutoDD(args) {
                     "Constructing AutoDD: title and domain required for args.legend"
                 );
 
-    // setting bboxes
+    /****************
+     * setting bboxes
+     ****************/
     if (args.marks.cluster.mode == "object") {
         if (
             !("bboxW" in args.marks.cluster.config) ||
@@ -186,7 +202,6 @@ function AutoDD(args) {
     this.hover = args.marks.hover;
     setPropertiesIfNotExists(this.hover, {convex: false, object: null});
     this.isHover = this.hover.object != null || this.hover.convex;
-    args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
     this.aggMode =
         "mode" in args.aggregate
             ? "mode:" + args.aggregate.mode
