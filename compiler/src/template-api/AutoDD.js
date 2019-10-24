@@ -166,16 +166,12 @@ function AutoDD(args) {
     /***************************
      * setting legend parameters
      ***************************/
-    this.legendParams = "legend" in args ? args.legend : null;
-    if (this.legendParams != null)
-        if (args.marks.cluster.mode == "pie")
-            if (
-                !("title" in this.legendParams) ||
-                !("domain" in this.legendParams)
-            )
-                throw new Error(
-                    "Constructing AutoDD: title and domain required for args.legend"
-                );
+    this.legendParams = "legend" in args ? args.legend : {};
+    if (args.marks.cluster.mode == "pie")
+        setPropertiesIfNotExists(this.legendParams, {
+            title: "Legend",
+            domain: this.clusterParams.domain
+        });
 
     /****************
      * setting bboxes
