@@ -71,6 +71,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
         int numLevels = autoDD.getNumLevels();
         int numRawColumns = autoDD.getColumnNames().size();
+
         aggMap = new HashMap();
         aggMode = AggMode.NUMERIC;
         System.out.println("columns: " + autoDD.getColumnNames());
@@ -84,7 +85,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 aggMap.put(aggcol, autoDD.getColumnNames().indexOf(aggcol));
             }
         }
-
         System.out.println("this.aggMap: " + aggMap);
         System.out.println("this.aggMode: " + aggMode);
 
@@ -114,7 +114,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         for (int i = 0; i < numLevels; i++) createMVForLevel(i, autoDDIndex);
 
         // compute cluster Aggregate
-
         // a fake bottom level for non-sampled objects
         Rtrees.add(RTree.create());
         for (ArrayList<String> rawRow : rawRows) {
@@ -130,7 +129,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             // all samples
             Iterable<Entry<ArrayList<String>, Rectangle>> curSamples =
                     Rtrees.get(i).entries().toBlocking().toIterable();
-            // min clusternum && max clusternum
+
             // for renderers
             int minWeight = Integer.MAX_VALUE, maxWeight = Integer.MIN_VALUE;
             for (Entry<ArrayList<String>, Rectangle> o : curSamples) {
@@ -417,43 +416,35 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         if (aggMode == AggMode.NUMERIC) {
             for (Map.Entry<String, Integer> entry : aggMap.entrySet()) {
                 // System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
-                ArrayList<Double> arr = new ArrayList<>();
+                ArrayList<Double> curClusterAgg = new ArrayList<>();
                 if (flag) {
-                    arr.add(0.0);
-                    arr.add(Double.MIN_VALUE);
-                    arr.add(Double.MAX_VALUE);
-                    arr.add(0.0);
+                    curClusterAgg.add(0.0);
+                    curClusterAgg.add(Double.MIN_VALUE);
+                    curClusterAgg.add(Double.MAX_VALUE);
+                    curClusterAgg.add(0.0);
                 } else {
-                    Double value = 0.0;
-                    try {
-                        value = Double.parseDouble(row.get(entry.getValue()));
-                    } catch (Exception e) {
-                        throw new Error("Indexing AutoDD: Aggregate Column must be numeric");
-                    }
-                    arr.add(value); // sum
-                    arr.add(value); // max
-                    arr.add(value); // min
-                    arr.add(value * value); // squaresum
+                    Double value = Double.valueOf(row.get(entry.getValue()));
+                    curClusterAgg.add(value); // sum
+                    curClusterAgg.add(value); // max
+                    curClusterAgg.add(value); // min
+                    curClusterAgg.add(value * value); // squaresum
                 }
-                dummy.put(entry.getKey(), arr);
+                dummy.put(entry.getKey(), curClusterAgg);
             }
         } else if (aggMode == AggMode.CATEGORICAL) {
             String category = "";
-            ArrayList<Double> arr = new ArrayList<>();
+            ArrayList<Double> curClusterAgg = new ArrayList<>();
             for (Map.Entry<String, Integer> entry : aggMap.entrySet()) {
-                arr = new ArrayList<>();
-                if (flag) arr.add(0.0);
-                else arr.add(1.0);
-                category = category.concat(row.get(entry.getValue()).toString()).concat("+");
+                curClusterAgg = new ArrayList<>();
+                if (flag) curClusterAgg.add(0.0);
+                else curClusterAgg.add(1.0);
+                category = category.concat(row.get(entry.getValue())).concat("+");
             }
-            dummy.put(category.substring(0, category.length() - 1), arr);
+            dummy.put(category.substring(0, category.length() - 1), curClusterAgg);
         }
         ArrayList<Double> countArr = new ArrayList<>();
-        if (flag) {
-            countArr.add(0.0);
-        } else {
-            countArr.add(1.0);
-        }
+        if (flag) countArr.add(0.0);
+        else countArr.add(1.0);
         dummy.put("count", countArr);
         return dummy;
     }
@@ -558,24 +549,5 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         coords.add(maxx);
         coords.add(miny);
         return coords;
-    }
-
-    public static void main(String[] args) {
-        System.out.println("test");
-        ArrayList<Double> parent = new ArrayList<>();
-        ArrayList<Double> child = new ArrayList<>();
-        double[] numbers = new double[] {0.0, 0.0, 0.0, 10.0, 5.0, 5.0, 10.0, 10.0, 10.0, 0.0};
-        for (double number : numbers) {
-            parent.add(number);
-            child.add(-number);
-        }
-        Geometry pgeom = getGeometry(parent);
-        Geometry cgeom = getGeometry(child);
-        Geometry union = pgeom.union(cgeom);
-        Coordinate[] coordinates = union.convexHull().getCoordinates();
-        for (Coordinate coordinate : coordinates) {
-            System.out.println(coordinate.x + "," + coordinate.y);
-        }
-        System.out.println("end");
     }
 }

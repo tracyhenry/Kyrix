@@ -262,10 +262,12 @@ function addAutoDD(autoDD, args) {
     // add to project
     this.autoDDs.push(autoDD);
 
-    // add stuff to renderingParam for circle agg rendering
+    // add stuff to renderingParam
     this.addRenderingParams({
         textwrap: require("./template-api/Utilities").textwrap
     });
+    this.addRenderingParams(autoDD.clusterParams);
+    this.addRenderingParams(autoDD.legendParams);
 
     // construct canvases
     var curPyramid = [];

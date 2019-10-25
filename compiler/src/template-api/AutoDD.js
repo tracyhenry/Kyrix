@@ -41,6 +41,7 @@ function AutoDD(args) {
 
     if (!("config" in args)) args.config = {};
     if (!("hover" in args.marks)) args.marks.hover = {};
+    if (!("legend" in args)) args.legend = {};
     if (!("aggregate" in args)) args.aggregate = {attributes: []};
 
     /*********************
@@ -155,6 +156,11 @@ function AutoDD(args) {
             heatmapRadius: 80,
             heatmapOpacity: 1
         });
+    if (args.marks.cluster.mode == "radar")
+        setPropertiesIfNotExists(this.clusterParams, {
+            radius: 80,
+            ticks: 5
+        });
     if (args.marks.cluster.mode == "pie")
         setPropertiesIfNotExists(this.clusterParams, {
             innerRadius: 1,
@@ -166,12 +172,18 @@ function AutoDD(args) {
     /***************************
      * setting legend parameters
      ***************************/
-    this.legendParams = "legend" in args ? args.legend : {};
-    if (args.marks.cluster.mode == "pie")
+    this.legendParams = {};
+    // TODO: add legend params for other templates
+    if (args.marks.cluster.mode == "pie") {
+        if ("title" in args.legend)
+            this.legendParams.legendTitle = args.legend.title;
+        if ("domain" in args.legend)
+            this.legendParams.legendDomain = args.legend.domain;
         setPropertiesIfNotExists(this.legendParams, {
-            title: "Legend",
-            domain: this.clusterParams.domain
+            legendTitle: "Legend",
+            legendDomain: this.clusterParams.domain
         });
+    }
 
     /****************
      * setting bboxes
@@ -190,8 +202,9 @@ function AutoDD(args) {
         this.bboxW = this.bboxH = this.clusterParams.contourBandwidth * 8;
     else if (args.marks.cluster.mode == "heatmap")
         this.bboxW = this.bboxH = this.clusterParams.heatmapRadius * 2 + 1;
-    else if (args.marks.cluster.mode == "radar") this.bboxW = this.bboxH = 290;
-    // tuned by hand :)
+    else if (args.marks.cluster.mode == "radar")
+        // tuned by hand :)
+        this.bboxW = this.bboxH = 290;
     else if (args.marks.cluster.mode == "pie") this.bboxW = this.bboxH = 290; // tuned by hand :)
 
     // assign other fields
@@ -202,10 +215,7 @@ function AutoDD(args) {
         "mode" in args.aggregate
             ? "mode:" + args.aggregate.mode
             : "mode:number";
-    this.aggColumns =
-        "attributes" in args.aggregate
-            ? [this.aggMode].concat(args.aggregate.attributes)
-            : [this.aggMode];
+    this.aggColumns = [this.aggMode].concat(args.aggregate.attributes);
     this.query = args.data.query;
     this.db = args.data.db;
     this.xCol = args.x.col;
@@ -239,13 +249,12 @@ function AutoDD(args) {
 function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
-        var clusterParams = REPLACE_ME_cluster_params;
         var processClusterAgg = REPLACE_ME_processClusterAgg;
-        processClusterAgg(data, {});
+        processClusterAgg(data);
         var circleSizeInterpolator = d3
             .scaleLinear()
             .domain([1, params.roughN.toString().length - 1])
-            .range([clusterParams.circleMinSize, clusterParams.circleMaxSize]);
+            .range([params.circleMinSize, params.circleMaxSize]);
         var g = svg.append("g");
         g.selectAll("circle")
             .data(data)
@@ -327,9 +336,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function renderContourBody() {
-        var clusterParams = REPLACE_ME_cluster_params;
-        var roughN = args.renderingParams.roughN;
-        var bandwidth = clusterParams.contourBandwidth;
+        var params = args.renderingParams;
+        var roughN = params.roughN;
+        var bandwidth = params.contourBandwidth;
         var radius = REPLACE_ME_radius;
         var decayRate = 2.4;
         var cellSize = 2;
@@ -372,7 +381,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             })(translatedData);
 
         var color = d3
-            .scaleSequential(d3[clusterParams.contourColorScheme])
+            .scaleSequential(d3[params.contourColorScheme])
             .domain([
                 1e-4,
                 (0.04 * roughN) /
@@ -402,7 +411,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .append("path")
                 .attr("d", d3.geoPath())
                 .style("fill", d => color(d.value))
-                .style("opacity", clusterParams.contourOpacity);
+                .style("opacity", params.contourOpacity);
         } else {
             var canvas = document.createElement("canvas");
             var ctx = canvas.getContext("2d");
@@ -430,8 +439,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function renderHeatmapBody() {
         var params = args.renderingParams;
-        var clusterParams = REPLACE_ME_cluster_params;
-        var radius = clusterParams.heatmapRadius;
+        var radius = params.heatmapRadius;
         var heatmapWidth, heatmapHeight, x, y;
         if ("tileX" in args) {
             // tiling
@@ -568,13 +576,12 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .style("overflow", "auto")
             .node()
             .appendChild(render.canvas);
-        d3.select(render.canvas).style("opacity", clusterParams.heatmapOpacity);
+        d3.select(render.canvas).style("opacity", params.heatmapOpacity);
     }
 
     function renderRadarBody() {
         if (!data || data.length == 0) return;
         var params = args.renderingParams;
-        var clusterParams = REPLACE_ME_cluster_params;
         var g = svg.append("g");
         var dict = {};
 
@@ -588,46 +595,20 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .data(data)
             .enter();
 
-        // radar chart, for avaerage
-        var radius = 0;
-        if (typeof clusterParams.size === "number") radius = clusterParams.size;
-        else radius = REPLACE_ME_bboxH / 4;
+        // radar chart, for average
+        var radius = params.radius;
 
-        // radar chart scales
-        var rangeRadius = [0, radius];
         // build radius scale
-        for (var key in dict) {
-            dict[key].scale = d3.scaleLinear().range(rangeRadius);
-            if (Array.isArray(clusterParams.domain)) {
-                dict[key].scale.domain(clusterParams.domain);
-            } else if (typeof clusterParams.domain === "object") {
-                dict[key].scale.domain(clusterParams.domain[key]);
-            } else if (typeof clusterParams.domain === "number") {
-                dict[key].scale.domain([0, clusterParams.domain]);
-            } else {
-                dict[key].scale.domain(
-                    dict[key].extent[0] > 0
-                        ? [0, dict[key].extent[1]]
-                        : dict[key].extent
-                );
-            }
-        }
-        dict.count.scale = d3
-            .scaleLinear()
-            .range([rangeRadius[1] * 0.6, rangeRadius[1] * 0.5])
-            .domain([
-                dict.count.extent[0].toString().length,
-                dict.count.extent[1].toString().length
-            ]);
+        for (var key in dict)
+            dict[key].scale = d3
+                .scaleLinear()
+                .domain([0, params.domain])
+                .range([0, radius]);
 
         // ticks
         var ticks = [];
-        if (Array.isArray(clusterParams.ticks)) {
-            ticks = clusterParams.ticks;
-        } else if (typeof clusterParams.ticks === "number") {
-            for (var i = 0; i < clusterParams.ticks; i++)
-                ticks.push((i + 1) * (radius / clusterParams.ticks));
-        }
+        for (var i = 0; i < params.ticks; i++)
+            ticks.push((i + 1) * (radius / params.ticks));
 
         // line
         var line = d3
@@ -738,9 +719,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .text(function(d) {
                     return d.cluster_num.toString();
                 })
-                .attr("font-size", function(d) {
-                    return dict.count.scale(d.cluster_num.length) / 2;
-                })
+                .attr("font-size", 25)
                 .attr("x", function(d) {
                     return d.cx;
                 })
@@ -752,13 +731,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .style("fill-opacity", 1)
                 .style("fill", "navy")
                 .style("pointer-events", "none")
-                .classed("kyrix-retainsizezoom", true)
-                .each(function(d) {
-                    params.textwrap(
-                        d3.select(this),
-                        dict.count.scale(d.cluster_num.length) * 1.5
-                    );
-                });
+                .classed("kyrix-retainsizezoom", true);
         });
 
         // for hover
@@ -768,21 +741,18 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function renderPieBody() {
         if (!data || data.length == 0) return;
         var params = args.renderingParams;
-        var clusterParams = REPLACE_ME_cluster_params;
         var parse = REPLACE_ME_parse_func;
         var translate = REPLACE_ME_translate_func;
         var serialize = REPLACE_ME_serialize_func;
 
         var g = svg.append("g");
 
-        var dict = {};
-
         // Step 1: Pre-process clusterAgg
         var processClusterAgg = REPLACE_ME_processClusterAgg;
-        processClusterAgg(data, dict);
+        processClusterAgg(data);
 
         // Step 2: append pies
-        var domain = clusterParams.domain;
+        var domain = params.domain;
         var pie = d3
             .pie()
             .value(function(d) {
@@ -794,10 +764,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var color = d3.scaleOrdinal(d3.schemeTableau10).domain(domain);
         var arc = d3
             .arc()
-            .innerRadius(clusterParams.innerRadius)
-            .outerRadius(clusterParams.outerRadius)
-            .cornerRadius(clusterParams.cornerRadius)
-            .padAngle(clusterParams.padAngle);
+            .innerRadius(params.innerRadius)
+            .outerRadius(params.outerRadius)
+            .cornerRadius(params.cornerRadius)
+            .padAngle(params.padAngle);
         var scalePercent = d3
             .scaleLinear()
             .domain([0, 2 * Math.PI])
@@ -849,9 +819,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .classed("cluster_num", true)
             .text(d => d.cluster_num)
             .attr("x", d => +d.cx)
-            .attr("y", d => +d.cy - clusterParams.outerRadius)
+            .attr("y", d => +d.cy - params.outerRadius)
             // .attr("dy", ".35em")
-            .attr("font-size", clusterParams.outerRadius / 2.5)
+            .attr("font-size", params.outerRadius / 2.5)
             .attr("text-anchor", "middle")
             .style("fill-opacity", 0.8)
             .style("fill", "grey")
@@ -862,7 +832,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var hoverSelector = "path.value";
     }
 
-    function processClusterAgg(data, dict) {
+    function processClusterAgg(data) {
         function getConvexCoordinates(d) {
             var coords = d.cluster_agg.convexhull;
             var size = coords.length / 2;
@@ -882,24 +852,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             d.cluster_num = d.cluster_agg["count"][0].toString();
             d.convexhull = getConvexCoordinates(d);
             for (var key in d.cluster_agg) {
-                if (!(key in dict)) {
-                    Object.assign(dict, {
-                        [key]: {
-                            extent: [Number.MAX_VALUE, -Number.MAX_VALUE]
-                        }
-                    });
-                }
                 if (key != "count" && key != "convexhull") {
                     d.cluster_agg[key].push(
                         d.cluster_agg[key][0] / d.cluster_agg["count"][0]
                     );
                 }
-                var avg_index = d.cluster_agg[key].length - 1;
-                // if cur avg < min avg
-                if (d.cluster_agg[key][avg_index] < dict[key].extent[0])
-                    dict[key].extent[0] = d.cluster_agg[key][avg_index];
-                if (d.cluster_agg[key][avg_index] > dict[key].extent[1])
-                    dict[key].extent[1] = d.cluster_agg[key][avg_index];
             }
         });
     }
@@ -991,10 +948,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         // render circle
         renderFuncBody = getBodyStringOfFunction(renderCircleBody)
             .replace(
-                /REPLACE_ME_cluster_params/g,
-                JSON.stringify(this.clusterParams)
-            )
-            .replace(
                 /REPLACE_ME_this_rendering/g,
                 this.hover.object != null
                     ? this.hover.object.toString()
@@ -1013,10 +966,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .replace(/REPLACE_ME_show_convex/g, this.hover.convex);
     } else if (this.clusterMode == "contour") {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
-            .replace(
-                /REPLACE_ME_cluster_params/g,
-                JSON.stringify(this.clusterParams)
-            )
             .replace(/REPLACE_ME_radius/g, this.bboxH)
             .replace(/REPLACE_ME_is_hover/g, this.isHover);
         if (this.isHover)
@@ -1027,12 +976,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 this.hover.object.toString()
             );
     } else if (this.clusterMode == "heatmap") {
-        renderFuncBody = getBodyStringOfFunction(renderHeatmapBody)
-            .replace(
-                /REPLACE_ME_cluster_params/g,
-                JSON.stringify(this.clusterParams)
-            )
-            .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
+        renderFuncBody = getBodyStringOfFunction(renderHeatmapBody).replace(
+            /REPLACE_ME_autoDDId/g,
+            autoDDArrayIndex + "_" + level
+        );
         if (this.isHover)
             renderFuncBody += getBodyStringOfFunction(
                 KDEObjectHoverBody
@@ -1042,11 +989,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             );
     } else if (this.clusterMode == "radar") {
         renderFuncBody = getBodyStringOfFunction(renderRadarBody)
-            .replace(
-                /REPLACE_ME_cluster_params/g,
-                JSON.stringify(this.clusterParams)
-            )
-            .replace(/REPLACE_ME_bboxH/g, this.bboxH)
             .replace(
                 /REPLACE_ME_this_rendering/g,
                 this.hover.object ? this.hover.object.toString() : "null;"
@@ -1064,11 +1006,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .replace(/REPLACE_ME_show_convex/g, this.hover.convex);
     } else if (this.clusterMode == "pie") {
         renderFuncBody = getBodyStringOfFunction(renderPieBody)
-            .replace(
-                /REPLACE_ME_cluster_params/g,
-                JSON.stringify(this.clusterParams)
-            )
-            .replace(/REPLACE_ME_bboxH/g, this.bboxH)
             .replace(
                 /REPLACE_ME_this_rendering/g,
                 this.hover.object ? this.hover.object.toString() : "null;"
@@ -1156,11 +1093,10 @@ function getLegendRenderer() {
             .attr("class", "legendOrdinal")
             .attr("transform", "translate(50,50) scale(2.0)");
 
-        var clusterParams = REPLACE_ME_cluster_params;
-        var legendParams = REPLACE_ME_legend_params;
+        var params = args.renderingParams;
         var color = d3
             .scaleOrdinal(d3.schemeTableau10)
-            .domain(legendParams.domain);
+            .domain(params.legendDomain);
         var legendOrdinal = d3
             .legendColor()
             //d3 symbol creates a path-string, for example
@@ -1169,7 +1105,7 @@ function getLegendRenderer() {
             // .shape("path", d3.symbol().type(d3.symbolDiamond).size(150)())
             .shape("rect")
             .shapePadding(10)
-            .title(legendParams.title)
+            .title(params.legendTitle)
             .labelOffset(15)
             // .labelAlign("start")
             .scale(color);
@@ -1179,15 +1115,10 @@ function getLegendRenderer() {
 
     var renderFuncBody = "";
     if (this.clusterMode == "pie") {
-        renderFuncBody = getBodyStringOfFunction(pieLegendRendererBody)
-            .replace(
-                /REPLACE_ME_cluster_params/g,
-                JSON.stringify(this.clusterParams)
-            )
-            .replace(
-                /REPLACE_ME_legend_params/g,
-                JSON.stringify(this.legendParams)
-            );
+        renderFuncBody = getBodyStringOfFunction(pieLegendRendererBody).replace(
+            /REPLACE_ME_legend_params/g,
+            JSON.stringify(this.legendParams)
+        );
     }
     // TODO: add legend for other templates
     return new Function("svg", "data", "args", renderFuncBody);
