@@ -13,13 +13,10 @@
 // libraries
 const Project = require("../../src/index").Project;
 const USMap = require("../../src/template-api/USMap").USMap;  // specify template
-const renderers = require("../USMap/renderers");    // specify renderers
-const transforms = require("../USMap/transforms");    // specify transforms
 const placements = require("../USMap/placements");    // specify transforms
 
 // construct project
 var p = new Project("map_template_usmap", "../../../config.txt");
-p.addRenderingParams(renderers.renderingParams);
 
 // specify db name to get map data from TODO: separate shapes one
 var db = "usmap";
@@ -31,16 +28,6 @@ var args = {
   db: db, 
   table: table,
   rate_col: rate_col,
-  renderingParams: renderers.renderingParams,
-  transforms: {
-    stateMapTransform: transforms.stateMapTransform,
-    countyMapStateBoundaryTransform: transforms.countyMapStateBoundaryTransform,
-    countyMapTransform: transforms.countyMapTransform 
-  },
-  placements: {
-    stateMapPlacement: placements.stateMapPlacement,
-    countyMapPlacement: placements.countyMapPlacement
-  }
 };
 
 // build project

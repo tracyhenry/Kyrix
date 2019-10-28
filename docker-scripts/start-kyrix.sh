@@ -4,12 +4,12 @@ echo "no" > /kyrix-started
 
 source /kyrix/docker-scripts/spinner.sh
 
-SRCDATA_PROJECT_NAME=${SRCDATA_PROJECT_NAME:-nba}
-SRCDATA_DB=${SRCDATA_DB:-nba}
+SRCDATA_PROJECT_NAME=${SRCDATA_PROJECT_NAME:-usmap}
+SRCDATA_DB=${SRCDATA_DB:-usmap}
 SRCDATA_DB_TEST_TABLE=${SRCDATA_DB_TEST_TABLE:-plays}  # source table (one of...) checked to avoid duplicate loads
 SRCDATA_DB_TEST_TABLE_MIN_RECS=${SRCDATA_DB_TEST_TABLE_MIN_RECS:-500000}  # rarely needs changing: min records to find in test table
-SRCDATA_DB_LOAD_CMD=${SRCDATA_DB_LOAD_CMD:-/kyrix/compiler/examples/nba/reload-nba.sh}
-KYRIX_DB_INDEX_CMD=${KYRIX_DB_INDEX_CMD:-/kyrix/compiler/examples/nba/reindex-nba.sh}
+SRCDATA_DB_LOAD_CMD=${SRCDATA_DB_LOAD_CMD:-/kyrix/compiler/examples/template-api-examples/reload-usmap.sh}
+KYRIX_DB_INDEX_CMD=${KYRIX_DB_INDEX_CMD:-/kyrix/compiler/examples/template-api-examples/reindex-usmap.sh}
 KYRIX_DB_INDEX_FORCE=${KYRIX_DB_INDEX_FORCE:-0}
 KYRIX_DB_RELOAD_FORCE=${KYRIX_DB_RELOAD_FORCE:-0}
 

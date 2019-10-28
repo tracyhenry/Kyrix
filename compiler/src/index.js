@@ -420,7 +420,14 @@ function addUSMap(map, args) {
     stateMapLegendLayer.addRenderingFunc(map.getUSMapRenderer("stateMapLegendRendering"));
     
     // state boundary layer
-    var stateBoundaryLayer = new Layer(map.transforms.stateMapTransform, false);
+    var stateMapTransform = new Transform(
+      "select state.state_id, state.name, stateCrimeRate.crimeRate, state.geomstr from (select state_id, avg(crimeRate) as crimeRate from county group by state_id) as stateCrimeRate, state where state.state_id = stateCrimeRate.state_id;",
+      map.db,
+      map.getUSMapTransformFunc("stateMapTransform"),
+      ["id", "bbox_x", "bbox_y", "name", "crimerate", "geomstr"],
+      true
+    );
+    var stateBoundaryLayer = new Layer(stateMapTransform, false);
     stateMapCanvas.addLayer(stateBoundaryLayer);
     stateBoundaryLayer.addPlacement(map.placements.stateMapPlacement);
     stateBoundaryLayer.addRenderingFunc(map.getUSMapRenderer("stateMapRendering"));
@@ -442,8 +449,15 @@ function addUSMap(map, args) {
     countyMapLegendLayer.addRenderingFunc(map.getUSMapRenderer("countyMapLegendRendering"));
     
     // thick state boundary layer
+    var countyMapStateBoundaryTransform = new Transform(
+        "select geomstr from state",
+        map.db,
+        map.getUSMapTransformFunc("countyMapStateBoundaryTransform"),
+        ["bbox_x", "bbox_y", "bbox_w", "bbox_h", "geomstr"],
+        true
+    );
     var countyMapStateBoundaryLayer = new Layer(
-        map.transforms.countyMapStateBoundaryTransform,
+        countyMapStateBoundaryTransform,
         false
     );
     countyMapCanvas.addLayer(countyMapStateBoundaryLayer);
@@ -451,7 +465,25 @@ function addUSMap(map, args) {
     countyMapStateBoundaryLayer.addRenderingFunc(map.getUSMapRenderer("countyMapStateBoundaryRendering"));
     
     // county boundary layer
-    var countyBoundaryLayer = new Layer(map.transforms.countyMapTransform, false);
+    var countyMapTransform = new Transform(
+        "select * from county",
+        map.db,
+        map.getUSMapTransformFunc("countyMapTransform"),
+        [
+            "id",
+            "bbox_x",
+            "bbox_y",
+            "bbox_w",
+            "bbox_h",
+            "state_id",
+            "name",
+            "crimerate",
+            "population",
+            "geomstr"
+        ],
+        true
+    );
+    var countyBoundaryLayer = new Layer(countyMapTransform, false);
     countyMapCanvas.addLayer(countyBoundaryLayer);
     countyBoundaryLayer.addPlacement(map.placements.countyMapPlacement);
     countyBoundaryLayer.addRenderingFunc(map.getUSMapRenderer("countyMapRendering"));
