@@ -16,17 +16,6 @@ p.addStyles(renderers.playerRenderingStyles);
 // set up auto drill down
 var query = "select * from fifa19 order by cast(wage as int) desc";
 
-var attributes = [
-    "defending",
-    "general",
-    "mental",
-    "passing",
-    "mobility",
-    "power",
-    "rating",
-    "shooting"
-];
-
 var autoDD = {
     data: {
         db: "fifa19",
@@ -40,24 +29,34 @@ var autoDD = {
         col: "defending",
         range: [100, 0]
     },
-    aggregate: {
-        mode: "number",
-        attributes: attributes
-    },
     marks: {
         cluster: {
             mode: "radar",
+            aggregate: {
+                // object notation for measures with same function & extent
+                measures: {
+                    fields: [
+                        "defending",
+                        "general",
+                        "mental",
+                        "passing",
+                        "mobility",
+                        "power",
+                        "rating",
+                        "shooting"
+                    ],
+                    function: "avg",
+                    extent: [0, 100]
+                }
+            },
             config: {
-                attributes: attributes,
-                value: "average",
-                size: 80,
-                ticks: 5,
-                domain: 100
+                // radarRadius: 80,
+                // radarTicks: 5
             }
         },
         hover: {
-            object: renderers.playerRendering
-            //convex: true
+            object: renderers.playerRendering,
+            convex: true
         }
     },
     config: {

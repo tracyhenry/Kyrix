@@ -268,6 +268,7 @@ function addAutoDD(autoDD, args) {
     });
     this.addRenderingParams(autoDD.clusterParams);
     this.addRenderingParams(autoDD.legendParams);
+    this.addRenderingParams(autoDD.aggregateParams);
 
     // construct canvases
     var curPyramid = [];

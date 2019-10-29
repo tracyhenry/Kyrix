@@ -33,7 +33,7 @@ var autoDD = {
             mode: "object",
             object: renderers.teamTimelineRendering,
             config: {
-                //clusterCount: true,
+                clusterCount: true,
                 bboxW: 162,
                 bboxH: 132
             }

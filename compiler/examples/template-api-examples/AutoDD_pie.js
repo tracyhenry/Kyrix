@@ -24,20 +24,28 @@ var autoDD = {
         col: "wage",
         range: [600, 0]
     },
-    aggregate: {
-        mode: "category",
-        attributes: ["agegroup"]
-    },
-    upper: true,
     marks: {
         cluster: {
             mode: "pie",
+            aggregate: {
+                dimensions: [
+                    {
+                        field: "agegroup",
+                        domain: ["U20", "U23", "U29", "Older"]
+                    }
+                ],
+                measures: [
+                    {
+                        field: "*",
+                        function: "count"
+                    }
+                ]
+            },
             config: {
-                // padAngle: 0.05,
-                // cornerRadius: 5,
-                // outerRadius: 80,
-                // innerRadius: 1,
-                domain: ["U20", "U23", "U29", "Older"]
+                // piePadAngle: 0.05,
+                // pieCornerRadius: 5,
+                // pieOuterRadius: 80,
+                // pieInnerRadius: 1
             }
         },
         hover: {
@@ -46,8 +54,8 @@ var autoDD = {
         }
     },
     legend: {
-        title: "Age Groups of Soccer Players in FIFA 2019",
-        domain: ["Under 20", "Under 23", "Under 29", "Older"]
+        title: "Age Groups of Soccer Players in FIFA 2019"
+        //domain: ["Under 20", "Under 23", "Under 29", "Older"]
     },
     config: {
         topLevelWidth: 1500,
