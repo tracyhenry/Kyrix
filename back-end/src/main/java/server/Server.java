@@ -40,10 +40,15 @@ public class Server {
             while (!terminated) terminationLock.wait();
         }
         Server.stopServer();
-        Indexer.precompute();
-        Main.setProjectClean();
-        System.out.println("Completed recomputing indexes. Server restarting...");
-        Server.startServer(Config.portNumber);
+
+        try {
+            Indexer.precompute();
+            Main.setProjectClean();
+            System.out.println("Completed recomputing indexes. Server restarting...");
+            Server.startServer(Config.portNumber);
+        } catch (Exception e) {
+            Main.setProjectClean();
+        }
     }
 
     public static void terminate() {
