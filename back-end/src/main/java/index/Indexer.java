@@ -107,17 +107,21 @@ public abstract class Indexer implements Serializable {
 
         System.out.println("Precomputing...");
 
-        associateIndexer();
-        long indexingStartTime = System.currentTimeMillis();
-        for (Canvas c : Main.getProject().getCanvases()) {
-            for (int layerId = 0; layerId < c.getLayers().size(); layerId++) {
-                c.getLayers().get(layerId).getIndexer().createMV(c, layerId);
+        try {
+            associateIndexer();
+            long indexingStartTime = System.currentTimeMillis();
+            for (Canvas c : Main.getProject().getCanvases()) {
+                for (int layerId = 0; layerId < c.getLayers().size(); layerId++) {
+                    c.getLayers().get(layerId).getIndexer().createMV(c, layerId);
+                }
             }
-        }
 
-        System.out.println(
-                "Indexing took: " + (System.currentTimeMillis() - indexingStartTime) / 1000 + "s.");
-        System.out.println("Done precomputing!");
+            System.out.println(
+                    "Indexing took: " + (System.currentTimeMillis() - indexingStartTime) / 1000 + "s.");
+            System.out.println("Done precomputing!");
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     // common static methods used by child classes
