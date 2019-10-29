@@ -94,7 +94,7 @@ public class ProjectRequestHandler implements HttpHandler {
                 Main.setProjectClean();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw e;
         }
     }
 
