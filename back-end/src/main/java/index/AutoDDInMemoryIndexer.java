@@ -195,7 +195,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             for (int j = 0; j < autoDD.getColumnNames().size(); j++)
                 sql += autoDD.getColumnNames().get(j) + " text, ";
             sql +=
-                    "cluster_agg text, cx double precision, cy double precision, minx double precision, miny double precision, "
+                    "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
                             + "maxx double precision, maxy double precision, geom geometry(polygon));";
             bboxStmt.executeUpdate(sql);
         }
