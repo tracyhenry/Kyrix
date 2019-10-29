@@ -4,7 +4,7 @@ const setPropertiesIfNotExists = require("./Utilities")
 const parsePathIntoSegments = require("./Utilities").parsePathIntoSegments;
 const translatePathSegments = require("./Utilities").translatePathSegments;
 const serializePath = require("./Utilities").serializePath;
-const delimiter = "__";
+const aggKeyDelimiter = "__";
 
 /**
  * Constructor of an AutoDD object
@@ -227,7 +227,7 @@ function AutoDD(args) {
     while (true) {
         var curDomain = "";
         for (var i = 0; i < dimensions.length; i++) {
-            if (i > 0) curDomain += delimiter;
+            if (i > 0) curDomain += aggKeyDelimiter;
             curDomain += dimensions[i].domain[pointers[i]];
         }
         this.aggregateParams.aggDomain.push(curDomain);
@@ -652,7 +652,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function renderRadarBody() {
         if (!data || data.length == 0) return;
         var params = args.renderingParams;
-        var delimiter = "REPLACE_ME_agg_delimiter";
+        var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
         var g = svg.append("g");
 
         // Step 1: Pre-process clusterAgg
@@ -683,7 +683,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             for (var i = 0; i < params.aggMeasures.length; i++) {
                 var curMeasure = params.aggMeasures[i];
                 var curAggKey =
-                    delimiter +
+                    aggKeyDelimiter +
                     curMeasure.function +
                     "(" +
                     curMeasure.field +
@@ -808,7 +808,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function renderPieBody() {
         if (!data || data.length == 0) return;
         var params = args.renderingParams;
-        var delimiter = "REPLACE_ME_agg_delimiter";
+        var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
         var parse = REPLACE_ME_parse_func;
         var translate = REPLACE_ME_translate_func;
         var serialize = REPLACE_ME_serialize_func;
@@ -827,7 +827,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         for (var i = 0; i < params.aggDomain.length; i++)
             aggKeys.push(
                 params.aggDomain[i] +
-                    delimiter +
+                    aggKeyDelimiter +
                     params.aggMeasures[0].function +
                     "(" +
                     params.aggMeasures[0].field +
@@ -925,7 +925,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     var curFunc = params.aggMeasures[j].function;
                     var curKey =
                         params.aggDomain[i] +
-                        delimiter +
+                        aggKeyDelimiter +
                         curFunc +
                         "(" +
                         curField +
@@ -946,13 +946,13 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                             case "avg":
                                 var sumKey =
                                     params.aggDomain[i] +
-                                    delimiter +
+                                    aggKeyDelimiter +
                                     "sum(" +
                                     curField +
                                     ")";
                                 var countKey =
                                     params.aggDomain[i] +
-                                    delimiter +
+                                    aggKeyDelimiter +
                                     "count(*)";
                                 if (
                                     !(sumKey in d.clusterAgg) ||
@@ -1106,7 +1106,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 /REPLACE_ME_processClusterAgg/g,
                 "(" + processClusterAgg.toString() + ")"
             )
-            .replace(/REPLACE_ME_agg_delimiter/g, delimiter);
+            .replace(/REPLACE_ME_agg_key_delimiter/g, aggKeyDelimiter);
         if (this.isHover)
             renderFuncBody += getBodyStringOfFunction(regularHoverBody)
                 .replace(
@@ -1124,7 +1124,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 /REPLACE_ME_processClusterAgg/g,
                 "(" + processClusterAgg.toString() + ")"
             )
-            .replace(/REPLACE_ME_agg_delimiter/g, delimiter)
+            .replace(/REPLACE_ME_agg_key_delimiter/g, aggKeyDelimiter)
             .replace(/REPLACE_ME_parse_func/g, parsePathIntoSegments.toString())
             .replace(
                 /REPLACE_ME_translate_func/g,

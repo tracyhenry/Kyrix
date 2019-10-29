@@ -29,7 +29,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     private final int objectNumLimit = 4000; // in a 1k by 1k region
     private final int virtualViewportSize = 1000;
     private double overlappingThreshold = 1.0;
-    private final String delimiter = "__";
+    private final String aggKeyDelimiter = "__";
     private final transient Gson gson;
 
     // One Rtree per level to store samples
@@ -368,26 +368,29 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         // numeric aggregations
         String curDimensionStr = "";
         for (String dimension : autoDD.getAggDimensionFields()) {
-            if (curDimensionStr.length() > 0) curDimensionStr += delimiter;
+            if (curDimensionStr.length() > 0) curDimensionStr += aggKeyDelimiter;
             curDimensionStr += row.get(autoDD.getColumnNames().indexOf(dimension));
         }
         int numMeasures = autoDD.getAggMeasureFields().size();
         for (int i = 0; i < numMeasures; i++) {
             // always calculate count(*)
-            clusterAgg.put(curDimensionStr + delimiter + "count(*)", "1");
+            clusterAgg.put(curDimensionStr + aggKeyDelimiter + "count(*)", "1");
 
             // calculate other stuff if current measure is not count(*)
             String curMeasureField = autoDD.getAggMeasureFields().get(i);
             if (!curMeasureField.equals("*")) {
                 String curValue = row.get(autoDD.getColumnNames().indexOf(curMeasureField));
                 clusterAgg.put(
-                        curDimensionStr + delimiter + "sum(" + curMeasureField + ")", curValue);
+                        curDimensionStr + aggKeyDelimiter + "sum(" + curMeasureField + ")",
+                        curValue);
                 clusterAgg.put(
-                        curDimensionStr + delimiter + "max(" + curMeasureField + ")", curValue);
+                        curDimensionStr + aggKeyDelimiter + "max(" + curMeasureField + ")",
+                        curValue);
                 clusterAgg.put(
-                        curDimensionStr + delimiter + "min(" + curMeasureField + ")", curValue);
+                        curDimensionStr + aggKeyDelimiter + "min(" + curMeasureField + ")",
+                        curValue);
                 clusterAgg.put(
-                        curDimensionStr + delimiter + "sqrsum(" + curMeasureField + ")",
+                        curDimensionStr + aggKeyDelimiter + "sqrsum(" + curMeasureField + ")",
                         String.valueOf(Double.valueOf(curValue) * Double.valueOf(curValue)));
             }
         }
@@ -427,7 +430,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             else {
                 String curFunc =
                         aggKey.substring(
-                                aggKey.lastIndexOf(delimiter) + delimiter.length(),
+                                aggKey.lastIndexOf(aggKeyDelimiter) + aggKeyDelimiter.length(),
                                 aggKey.lastIndexOf("("));
                 Double parentValue = Double.valueOf(parent.get(aggKey));
                 Double childValue = Double.valueOf(child.get(aggKey));
