@@ -1,4 +1,4 @@
-const getBodyStringOfFunction = require("./Renderers").getBodyStringOfFunction;
+const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
 
 /*
  * Constructor of a table

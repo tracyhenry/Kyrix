@@ -1,4 +1,10 @@
-const getBodyStringOfFunction = require("./Renderers").getBodyStringOfFunction;
+const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
+const setPropertiesIfNotExists = require("./Utilities")
+    .setPropertiesIfNotExists;
+const parsePathIntoSegments = require("./Utilities").parsePathIntoSegments;
+const translatePathSegments = require("./Utilities").translatePathSegments;
+const serializePath = require("./Utilities").serializePath;
+const aggKeyDelimiter = "__";
 
 /**
  * Constructor of an AutoDD object
@@ -8,91 +14,80 @@ const getBodyStringOfFunction = require("./Renderers").getBodyStringOfFunction;
 function AutoDD(args) {
     if (args == null) args = {};
 
-    if (!("rendering" in args) || !("mode" in args.rendering))
+    /******************************
+     * check clusterMode is correct
+     ******************************/
+    if (
+        !("marks" in args) ||
+        !"cluster" in args.marks ||
+        !("mode" in args.marks.cluster)
+    )
         throw new Error(
-            "Constructing AutoDD: rendering mode (rendering.mode) missing."
+            "Constructing AutoDD: cluster mode (marks.cluster.mode) missing."
         );
-    var allRenderingModes = new Set([
+    var allClusterModes = new Set([
         "object",
-        "object+clusternum",
         "circle",
-        "circle+object",
         "contour",
-        "contour+object",
         "heatmap",
-        "heatmap+object",
-        "glyph",
-        "glyph+object"
+        "radar",
+        "pie"
     ]);
-    if (!allRenderingModes.has(args.rendering.mode))
-        throw new Error("Constructing AutoDD: unsupported rendering mode.");
+    if (!allClusterModes.has(args.marks.cluster.mode))
+        throw new Error("Constructing AutoDD: unsupported cluster mode.");
 
-    // check constraints according to rendering mode
-    this.circleMinSize = 30;
-    this.circleMaxSize = 70;
-    this.contourBandwidth =
-        "contourBandwidth" in args.rendering
-            ? args.rendering.contourBandwidth
-            : 30;
-    this.heatmapRadius =
-        "heatmapRadius" in args.rendering ? args.rendering.heatmapRadius : 80;
-    if (
-        args.rendering.mode == "circle" ||
-        args.rendering.mode == "circle+object"
-    )
-        args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
-            this.circleMaxSize * 2;
-    if (
-        (args.rendering.mode == "object" ||
-            args.rendering.mode == "object+clusternum" ||
-            args.rendering.mode == "circle+object" ||
-            args.rendering.mode == "glyph+object" ||
-            args.rendering.mode == "contour+object" ||
-            args.rendering.mode == "heatmap+object") &&
-        (!("obj" in args.rendering) || !("renderer" in args.rendering.obj))
-    )
-        throw new Error(
-            "Constructing AutoDD: object renderer (rendering.obj.renderer) missing."
-        );
-    if (
-        args.rendering.mode == "contour" ||
-        args.rendering.mode == "contour+object" ||
-        args.rendering.mode == "heatmap" ||
-        args.rendering.mode == "heatmap+object"
-    ) {
-        if (!("obj" in args.rendering)) args.rendering.obj = {};
-        if (args.rendering.mode.indexOf("contour") >= 0)
-            // as what's implemented by d3-contour
-            args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
-                this.contourBandwidth * 8;
-        else
-            args.rendering["obj"]["bboxW"] = args.rendering["obj"]["bboxH"] =
-                this.heatmapRadius * 2 + 1;
-    }
-    args.aggregate = "aggregate" in args ? args.aggregate : {attributes: []};
-    this.aggMode =
-        "mode" in args.aggregate
-            ? "mode:" + args.aggregate.mode
-            : "mode:number";
-    if (
-        args.rendering.mode == "glyph" ||
-        args.rendering.mode == "glyph+object"
-    ) {
-        if (!("glyph" in args.rendering)) args.rendering.glyph = {};
-        this.glyph = JSON.stringify(args.rendering.glyph);
+    /**************************************************************
+     * augment args with optional stuff that is omitted in the spec
+     **************************************************************/
+    if (!("config" in args)) args.config = {};
+    if (!("hover" in args.marks)) args.marks.hover = {};
+    if (!("legend" in args)) args.legend = {};
+    if (!("aggregate" in args.marks.cluster))
+        args.marks.cluster.aggregate = {dimensions: [], measures: []};
+    if (!("dimensions" in args.marks.cluster.aggregate))
+        args.marks.cluster.aggregate.dimensions = [];
+    if (!("measures" in args.marks.cluster.aggregate))
+        args.marks.cluster.aggregate.measures = [];
+
+    // succinct object notation of the measures
+    if (!("length" in args.marks.cluster.aggregate.measures)) {
+        if (
+            !("fields" in args.marks.cluster.aggregate.measures) ||
+            !("function" in args.marks.cluster.aggregate.measures)
+        )
+            throw new Error(
+                "Constructing AutoDD: fields or function not found" +
+                    "in the object notation of args.marks.cluster.aggregate.measures."
+            );
+        var measureArray = [];
+        for (
+            var i = 0;
+            i < args.marks.cluster.aggregate.measures.fields.length;
+            i++
+        )
+            measureArray.push({
+                field: args.marks.cluster.aggregate.measures.fields[i],
+                function: args.marks.cluster.aggregate.measures.function,
+                extent:
+                    "extent" in args.marks.cluster.aggregate.measures
+                        ? args.marks.cluster.aggregate.measures.extent
+                        : [Number.MIN_VALUE, Number.MAX_VALUE]
+            });
+        args.marks.cluster.aggregate.measures = measureArray;
     }
 
-    // check required args
+    /*********************
+     * check required args
+     *********************/
     var requiredArgs = [
         ["data", "query"],
         ["data", "db"],
-        ["x", "col"],
-        ["x", "range"],
-        ["y", "col"],
-        ["y", "range"],
-        ["rendering", "mode"],
-        ["rendering", "obj", "bboxW"],
-        ["rendering", "obj", "bboxH"]
+        ["x", "field"],
+        ["x", "extent"],
+        ["y", "field"],
+        ["y", "extent"],
+        ["z", "field"],
+        ["z", "order"]
     ];
     var requiredArgsTypes = [
         "string",
@@ -102,8 +97,7 @@ function AutoDD(args) {
         "string",
         "object",
         "string",
-        "number",
-        "number"
+        "string"
     ];
     for (var i = 0; i < requiredArgs.length; i++) {
         var curObj = args;
@@ -132,110 +126,251 @@ function AutoDD(args) {
                 );
     }
 
-    // other constraints
-    if (args.rendering.obj.bboxW <= 0 || args.rendering.obj.bboxH <= 0)
-        throw new Error("Constructing AutoDD: non-positive bbox size.");
+    /*******************
+     * other constraints
+     *******************/
     if (
-        args.x.range != null &&
-        (!Array.isArray(args.x.range) ||
-            args.x.range.length != 2 ||
-            typeof args.x.range[0] != "number" ||
-            typeof args.x.range[1] != "number")
+        args.x.extent != null &&
+        (!Array.isArray(args.x.extent) ||
+            args.x.extent.length != 2 ||
+            typeof args.x.extent[0] != "number" ||
+            typeof args.x.extent[1] != "number")
     )
-        throw new Error("Constructing AutoDD: malformed x.range");
+        throw new Error("Constructing AutoDD: malformed x.extent");
     if (
-        args.y.range != null &&
-        (!Array.isArray(args.y.range) ||
-            args.y.range.length != 2 ||
-            typeof args.y.range[0] != "number" ||
-            typeof args.y.range[1] != "number")
+        args.y.extent != null &&
+        (!Array.isArray(args.y.extent) ||
+            args.y.extent.length != 2 ||
+            typeof args.y.extent[0] != "number" ||
+            typeof args.y.extent[1] != "number")
     )
-        throw new Error("Constructing AutoDD: malformed y.range");
+        throw new Error("Constructing AutoDD: malformed y.extent");
     if (
-        "axis" in args.rendering &&
-        (args.x.range == null || args.y.range == null)
+        "axis" in args.marks &&
+        (args.x.extent == null || args.y.extent == null)
     )
         throw new Error(
             "Constructing AutoDD: raw data domain needs to be specified for rendering an axis."
         );
     if (
-        (args.x.range != null && args.y.range == null) ||
-        (args.x.range == null && args.y.range != null)
+        (args.x.extent != null && args.y.extent == null) ||
+        (args.x.extent == null && args.y.extent != null)
     )
         throw new Error(
-            "Constructing AutoDD: x range and y range must both be provided."
+            "Constructing AutoDD: x extent and y extent must both be provided."
+        );
+    if (
+        args.marks.cluster.mode == "object" &&
+        !("object" in args.marks.cluster)
+    )
+        throw new Error(
+            "Constructing AutoDD: object renderer (marks.cluster.object) missing."
+        );
+    if (
+        "object" in args.marks.hover &&
+        typeof args.marks.hover.object != "function"
+    )
+        throw new Error(
+            "Constructing AutoDD: hover object renderer (marks.cluster.hover.object) is not a function."
+        );
+    if (
+        (args.marks.cluster.mode == "radar" ||
+            args.marks.cluster.mode == "circle" ||
+            args.marks.cluster.mode == "object") &&
+        args.marks.cluster.aggregate.dimensions.length > 0
+    )
+        throw new Error(
+            "Constructing AutoDD: dimension columns (args.marks.cluster.aggregate.dimensions) not allowed for the given cluster mode."
+        );
+    for (var i = 0; i < args.marks.cluster.aggregate.dimensions.length; i++) {
+        if (!("field" in args.marks.cluster.aggregate.dimensions[i]))
+            throw new Error(
+                "Constructing AutoDD: field not found in aggregate dimensions."
+            );
+        if (!("domain" in args.marks.cluster.aggregate.dimensions[i]))
+            throw new Error(
+                "Constructing AutoDD: domain not found in aggregate dimensions."
+            );
+    }
+    for (var i = 0; i < args.marks.cluster.aggregate.measures.length; i++) {
+        if (!("field" in args.marks.cluster.aggregate.measures[i]))
+            throw new Error(
+                "Constructing AutoDD: field not found in aggregate measures."
+            );
+        if (!("function" in args.marks.cluster.aggregate.measures[i]))
+            throw new Error(
+                "Constructing AutoDD: function not found in aggregate measures."
+            );
+    }
+    if (args.marks.cluster.mode == "radar")
+        for (var i = 0; i < args.marks.cluster.aggregate.measures.length; i++)
+            if (!("extent" in args.marks.cluster.aggregate.measures[i]))
+                throw new Error(
+                    "Constructing AutoDD: extent in aggregate measures required for radar charts."
+                );
+    if (
+        args.marks.cluster.mode == "pie" &&
+        args.marks.cluster.aggregate.measures.length != 1
+    )
+        throw new Error(
+            "Constructing AutoDD: there must be exactly 1 aggregate measure for pie charts."
         );
 
-    // assign fields
+    /************************
+     * setting cluster params
+     ************************/
+    this.clusterParams =
+        "config" in args.marks.cluster ? args.marks.cluster.config : {};
+    if (args.marks.cluster.mode == "circle")
+        setPropertiesIfNotExists(this.clusterParams, {
+            circleMinSize: 30,
+            circleMaxSize: 70
+        });
+    if (args.marks.cluster.mode == "contour")
+        setPropertiesIfNotExists(this.clusterParams, {
+            contourBandwidth: 30,
+            contourColorScheme: "interpolateViridis",
+            contourOpacity: 1
+        });
+    if (args.marks.cluster.mode == "heatmap")
+        setPropertiesIfNotExists(this.clusterParams, {
+            heatmapRadius: 80,
+            heatmapOpacity: 1
+        });
+    if (args.marks.cluster.mode == "radar")
+        setPropertiesIfNotExists(this.clusterParams, {
+            radarRadius: 80,
+            radarTicks: 5
+        });
+    if (args.marks.cluster.mode == "pie")
+        setPropertiesIfNotExists(this.clusterParams, {
+            pieInnerRadius: 1,
+            pieOuterRadius: 80,
+            pieCornerRadius: 5,
+            padAngle: 0.05
+        });
+
+    /********************************
+     * setting aggregation parameters
+     ********************************/
+    this.aggregateParams = {
+        aggDimensions: args.marks.cluster.aggregate.dimensions,
+        aggMeasures: args.marks.cluster.aggregate.measures
+    };
+    this.aggregateParams.aggDomain = [];
+    // combinations of domain values from all columns
+    var dimensions = args.marks.cluster.aggregate.dimensions;
+    var pointers = [];
+    for (var i = 0; i < dimensions.length; i++) pointers.push(0);
+    while (true) {
+        var curDomain = "";
+        for (var i = 0; i < dimensions.length; i++) {
+            if (i > 0) curDomain += aggKeyDelimiter;
+            curDomain += dimensions[i].domain[pointers[i]];
+        }
+        this.aggregateParams.aggDomain.push(curDomain);
+
+        // next combination
+        var pos = dimensions.length - 1;
+        while (pos >= 0 && pointers[pos] >= dimensions[pos].domain.length - 1)
+            pos--;
+        if (pos < 0) break;
+        pointers[pos]++;
+        for (var i = pos + 1; i < dimensions.length; i++) pointers[i] = 0;
+    }
+
+    /***************************
+     * setting legend parameters
+     ***************************/
+    // TODO: legend params for different templates
+    this.legendParams = {};
+    this.legendParams.legendTitle =
+        "title" in args.legend ? args.legend.title : "Legend";
+    if ("domain" in args.legend)
+        this.legendParams.legendDomain = args.legend.domain;
+
+    /****************
+     * setting bboxes
+     ****************/
+    if (args.marks.cluster.mode == "object") {
+        if (
+            !("bboxW" in args.marks.cluster.config) ||
+            !("bboxH" in args.marks.cluster.config)
+        )
+            throw new Error("Constructing AutoDD: bboxW or bboxH missing");
+        this.bboxW = args.marks.cluster.config.bboxW;
+        this.bboxH = args.marks.cluster.config.bboxH;
+    } else if (args.marks.cluster.mode == "circle")
+        this.bboxW = this.bboxH = this.clusterParams.circleMaxSize * 2;
+    else if (args.marks.cluster.mode == "contour")
+        this.bboxW = this.bboxH = this.clusterParams.contourBandwidth * 8;
+    else if (args.marks.cluster.mode == "heatmap")
+        this.bboxW = this.bboxH = this.clusterParams.heatmapRadius * 2 + 1;
+    else if (args.marks.cluster.mode == "radar")
+        // tuned by hand :)
+        this.bboxW = this.bboxH = 290;
+    else if (args.marks.cluster.mode == "pie") this.bboxW = this.bboxH = 290; // tuned by hand :)
+
+    // assign other fields
+    this.hover = args.marks.hover;
+    setPropertiesIfNotExists(this.hover, {convex: false, object: null});
+    this.isHover = this.hover.object != null || this.hover.convex;
     this.query = args.data.query;
+    while (this.query.slice(-1) == " " || this.query.slice(-1) == ";")
+        this.query = this.query.slice(0, -1);
+    this.query += " order by " + args.z.field + " " + args.z.order + ";";
     this.db = args.data.db;
-    this.xCol = args.x.col;
-    this.yCol = args.y.col;
-    this.bboxW = args.rendering.obj.bboxW;
-    this.bboxH = args.rendering.obj.bboxH;
-    this.renderingMode = args.rendering.mode;
+    this.xCol = args.x.field;
+    this.yCol = args.y.field;
+    this.clusterMode = args.marks.cluster.mode;
+    this.aggDimensionFields = [];
+    for (var i = 0; i < this.aggregateParams.aggDimensions.length; i++)
+        this.aggDimensionFields.push(
+            this.aggregateParams.aggDimensions[i].field
+        );
+    this.aggMeasureFields = [];
+    for (var i = 0; i < this.aggregateParams.aggMeasures.length; i++)
+        this.aggMeasureFields.push(this.aggregateParams.aggMeasures[i].field);
     this.rendering =
-        "renderer" in args.rendering.obj ? args.rendering.obj.renderer : null;
+        "object" in args.marks.cluster ? args.marks.cluster.object : null;
     this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
-    this.aggColumns =
-        "attributes" in args.aggregate
-            ? [this.aggMode].concat(args.aggregate.attributes)
-            : [this.aggMode];
-    this.numLevels =
-        "numLevels" in args.rendering ? args.rendering.numLevels : 10;
+    this.numLevels = "numLevels" in args.config ? args.config.numLevels : 10;
     this.topLevelWidth =
-        "topLevelWidth" in args.rendering ? args.rendering.topLevelWidth : 1000;
+        "topLevelWidth" in args.config ? args.config.topLevelWidth : 1000;
     this.topLevelHeight =
-        "topLevelHeight" in args.rendering
-            ? args.rendering.topLevelHeight
-            : 1000;
-    this.zoomFactor =
-        "zoomFactor" in args.rendering ? args.rendering.zoomFactor : 2;
+        "topLevelHeight" in args.config ? args.config.topLevelHeight : 1000;
+    this.zoomFactor = "zoomFactor" in args.config ? args.config.zoomFactor : 2;
     this.overlap =
-        "overlap" in args.rendering.obj
-            ? args.rendering.obj.overlap
+        "overlap" in this.clusterParams
+            ? this.clusterParams.overlap
                 ? true
                 : false
-            : this.renderingMode == "contour" ||
-              this.renderingMode == "contour+object" ||
-              this.renderingMode == "heatmap" ||
-              this.renderingMode == "heatmap+object"
+            : this.clusterMode == "contour" || this.clusterMode == "heatmap"
             ? true
             : false;
-    this.axis = "axis" in args.rendering ? args.rendering.axis : false;
-    this.contourColorScheme =
-        "contourColorScheme" in args.rendering
-            ? args.rendering.contourColorScheme
-            : "interpolateViridis";
-    this.contourOpacity =
-        "contourOpacity" in args.rendering ? args.rendering.contourOpacity : 1;
-    this.heatmapOpacity =
-        "heatmapOpacity" in args.rendering ? args.rendering.heatmapOpacity : 1;
-    this.loX = args.x.range != null ? args.x.range[0] : null;
-    this.loY = args.y.range != null ? args.y.range[0] : null;
-    this.hiX = args.x.range != null ? args.x.range[1] : null;
-    this.hiY = args.y.range != null ? args.y.range[1] : null;
+    this.axis = "axis" in args.config ? args.config.axis : false;
+    this.loX = args.x.extent != null ? args.x.extent[0] : null;
+    this.loY = args.y.extent != null ? args.y.extent[0] : null;
+    this.hiX = args.x.extent != null ? args.x.extent[1] : null;
+    this.hiY = args.y.extent != null ? args.y.extent[1] : null;
 }
 
-// get rendering function for an autodd layer based on rendering mode
+// get rendering function for an autodd layer based on cluster mode
 function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
-        data.forEach(d => {
-            d.cluster_agg = JSON.parse(d.cluster_agg);
-            d.cluster_num = d.cluster_agg["count"][0].toString();
-        });
+        REPLACE_ME_processClusterAgg();
         var circleSizeInterpolator = d3
             .scaleLinear()
             .domain([1, params.roughN.toString().length - 1])
-            .range([REPLACE_ME_circleMinSize, REPLACE_ME_circleMaxSize]);
+            .range([params.circleMinSize, params.circleMaxSize]);
         var g = svg.append("g");
         g.selectAll("circle")
             .data(data)
             .enter()
             .append("circle")
             .attr("r", function(d) {
-                return circleSizeInterpolator(d.cluster_num.length);
+                return circleSizeInterpolator(d.clusterAgg["count(*)"].length);
             })
             .attr("cx", function(d) {
                 return d.cx;
@@ -254,10 +389,12 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .append("text")
             .attr("dy", "0.3em")
             .text(function(d) {
-                return d.cluster_num.toString();
+                return d.clusterAgg["count(*)"];
             })
             .attr("font-size", function(d) {
-                return circleSizeInterpolator(d.cluster_num.length) / 2;
+                return (
+                    circleSizeInterpolator(d.clusterAgg["count(*)"].length) / 2
+                );
             })
             .attr("x", function(d) {
                 return d.cx;
@@ -274,43 +411,26 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .each(function(d) {
                 params.textwrap(
                     d3.select(this),
-                    circleSizeInterpolator(d.cluster_num.length) * 1.5
+                    circleSizeInterpolator(d.clusterAgg["count(*)"].length) *
+                        1.5
                 );
             });
-        var isObjectOnHover = REPLACE_ME_is_object_onhover;
-        if (isObjectOnHover) {
-            var objectRenderer = REPLACE_ME_this_rendering;
-            g.selectAll("circle")
-                .on("mouseover", function(d) {
-                    objectRenderer(svg, [d], args);
-                    svg.selectAll("g:last-of-type")
-                        .attr("id", "autodd_tooltip")
-                        .style("opacity", 0.8)
-                        .style("pointer-events", "none")
-                        .selectAll("*")
-                        .classed("kyrix-retainsizezoom", true)
-                        .each(function() {
-                            zoomRescale(args.viewId, this);
-                        });
-                })
-                .on("mouseleave", function() {
-                    d3.select("#autodd_tooltip").remove();
-                });
-        }
+
+        // for hover
+        var hoverSelector = "circle";
     }
 
     function renderObjectClusterNumBody() {
         var g = svg.select("g:last-of-type");
         data.forEach(d => {
-            d.cluster_agg = JSON.parse(d.cluster_agg);
-            d.cluster_num = d.cluster_agg["count"][0].toString();
+            d.clusterAgg = JSON.parse(d.clusterAgg);
         });
         g.selectAll(".clusternum")
             .data(data)
             .enter()
             .append("text")
             .text(function(d) {
-                return d.cluster_num;
+                return d.clusterAgg["count(*)"];
             })
             .attr("x", function(d) {
                 return +d.cx;
@@ -327,8 +447,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function renderContourBody() {
-        var roughN = args.renderingParams.roughN;
-        var bandwidth = REPLACE_ME_bandwidth;
+        var params = args.renderingParams;
+        var roughN = params.roughN;
+        var bandwidth = params.contourBandwidth;
         var radius = REPLACE_ME_radius;
         var decayRate = 2.4;
         var cellSize = 2;
@@ -350,7 +471,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var translatedData = data.map(d => ({
             x: d.cx - (x - radius),
             y: d.cy - (y - radius),
-            w: +JSON.parse(d.cluster_agg).count[0]
+            w: +JSON.parse(d.clusterAgg)["count(*)"]
         }));
         contours = d3
             .contourDensity()
@@ -371,7 +492,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             })(translatedData);
 
         var color = d3
-            .scaleSequential(d3["REPLACE_ME_contour_colorScheme"])
+            .scaleSequential(d3[params.contourColorScheme])
             .domain([
                 1e-4,
                 (0.04 * roughN) /
@@ -389,8 +510,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 "translate(" + (x - radius) + " " + (y - radius) + ")"
             );
 
-        var isObjectOnHover = REPLACE_ME_is_object_onhover;
-        if (isObjectOnHover) {
+        var isHover = REPLACE_ME_is_hover;
+        if (isHover) {
             g.attr("fill", "none")
                 .attr("stroke", "black")
                 .attr("stroke-opacity", 0)
@@ -401,7 +522,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .append("path")
                 .attr("d", d3.geoPath())
                 .style("fill", d => color(d.value))
-                .style("opacity", REPLACE_ME_CONTOUR_OPACITY);
+                .style("opacity", params.contourOpacity);
         } else {
             var canvas = document.createElement("canvas");
             var ctx = canvas.getContext("2d");
@@ -429,7 +550,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function renderHeatmapBody() {
         var params = args.renderingParams;
-        var radius = REPLACE_ME_radius;
+        var radius = params.heatmapRadius;
         var heatmapWidth, heatmapHeight, x, y;
         if ("tileX" in args) {
             // tiling
@@ -448,7 +569,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var translatedData = data.map(d => ({
             x: d.cx - (x - radius),
             y: d.cy - (y - radius),
-            w: +JSON.parse(d.cluster_agg).count[0]
+            w: +JSON.parse(d.clusterAgg)["count(*)"]
         }));
 
         // render heatmap
@@ -566,380 +687,516 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .style("overflow", "auto")
             .node()
             .appendChild(render.canvas);
-        d3.select(render.canvas).style("opacity", REPLACE_ME_heatmap_opacity);
+        d3.select(render.canvas).style("opacity", params.heatmapOpacity);
     }
 
-    function KDEObjectHoverBody() {
-        var isObjectOnHover = REPLACE_ME_is_object_onhover;
-        if (isObjectOnHover) {
-            var objectRenderer = REPLACE_ME_this_rendering;
-            var hiddenRectSize = 100;
-            svg.append("g")
-                .selectAll("rect")
-                .data(data)
-                .enter()
-                .append("rect")
-                .attr("x", d => d.cx - hiddenRectSize / 2)
-                .attr("y", d => d.cy - hiddenRectSize / 2)
-                .attr("width", hiddenRectSize)
-                .attr("height", hiddenRectSize)
-                .attr("fill-opacity", 0)
-                .on("mouseover", function(d) {
-                    var svgNode;
-                    if ("tileX" in args)
-                        svgNode = d3.select(svg.node().parentNode);
-                    else svgNode = svg;
-                    objectRenderer(svgNode, [d], args);
-                    var lastG = svgNode.node().childNodes[
-                        svgNode.node().childElementCount - 1
-                    ];
-                    d3.select(lastG)
-                        .attr("id", "autodd_tooltip")
-                        .style("opacity", 0.8)
-                        .style("pointer-events", "none")
-                        .selectAll("*")
-                        .classed("kyrix-retainsizezoom", true)
-                        .each(function() {
-                            zoomRescale(args.viewId, this);
-                        });
-                })
-                .on("mouseleave", function() {
-                    d3.select("#autodd_tooltip").remove();
-                });
-        }
-    }
-
-    function renderGlyphBody() {
-        // console.log("glyph raw:", data);
+    function renderRadarBody() {
+        if (!data || data.length == 0) return;
         var params = args.renderingParams;
-        var glyph = REPLACE_ME_glyph;
+        var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
         var g = svg.append("g");
-        // console.log("glyph:", glyph);
-        var dict = {};
 
-        // Step 1: Pre-compute
-        data.forEach(d => {
-            d.cluster_agg = JSON.parse(d.cluster_agg);
-            d.cluster_num = d.cluster_agg["count"][0].toString();
-            for (var key in d.cluster_agg) {
-                if (!(key in dict)) {
-                    Object.assign(dict, {
-                        [key]: {
-                            extent: [Number.MAX_VALUE, -Number.MAX_VALUE]
-                        }
-                    });
-                }
-                if (key != "count") {
-                    d.cluster_agg[key].push(
-                        d.cluster_agg[key][0] / d.cluster_agg["count"][0]
-                    );
-                }
-                var avg_index = d.cluster_agg[key].length - 1;
-                // if cur avg < min avg
-                if (d.cluster_agg[key][avg_index] < dict[key].extent[0])
-                    dict[key].extent[0] = d.cluster_agg[key][avg_index];
-                if (d.cluster_agg[key][avg_index] > dict[key].extent[1])
-                    dict[key].extent[1] = d.cluster_agg[key][avg_index];
-            }
-        });
-        // console.log("dict:", dict);
+        // Step 1: Pre-process clusterAgg
+        REPLACE_ME_processClusterAgg();
 
-        var glyphs = g
-            .selectAll("g.glyph")
+        // Step 2: append radars
+        var radars = g
+            .selectAll("g.radar")
             .data(data)
             .enter();
 
-        // Step 2: append glyphs
+        // radar chart, for average
+        var radius = params.radarRadius;
 
-        // radar chart
-        if (glyph.type == "radar" || glyph.type == "spider") {
-            // radar chart, for avaerage
-            var radius = 0;
-            if (typeof glyph.size === "number") radius = glyph.size;
-            else radius = REPLACE_ME_bboxH / 4;
+        // ticks
+        var ticks = [];
+        for (var i = 0; i < params.radarTicks; i++)
+            ticks.push((i + 1) * (radius / params.radarTicks));
 
-            // radar chart scales
-            var rangeRadius = [0, radius];
-            // build radius scale
-            for (var key in dict) {
-                dict[key].scale = d3.scaleLinear().range(rangeRadius);
-                if (Array.isArray(glyph.domain)) {
-                    dict[key].scale.domain(glyph.domain);
-                } else if (typeof glyph.domain === "object") {
-                    dict[key].scale.domain(glyph.domain[key]);
-                } else if (typeof glyph.domain === "number") {
-                    dict[key].scale.domain([0, glyph.domain]);
-                } else {
-                    dict[key].scale.domain(
-                        dict[key].extent[0] > 0
-                            ? [0, dict[key].extent[1]]
-                            : dict[key].extent
-                    );
-                }
+        // line
+        var line = d3
+            .line()
+            .x(d => d.x)
+            .y(d => d.y);
+
+        function getPathCoordinates(d) {
+            var coordinates = [];
+            for (var i = 0; i < params.aggMeasures.length; i++) {
+                var curMeasure = params.aggMeasures[i];
+                var curAggKey =
+                    aggKeyDelimiter +
+                    curMeasure.function +
+                    "(" +
+                    curMeasure.field +
+                    ")";
+                var angle =
+                    Math.PI / 2 + (2 * Math.PI * i) / params.aggMeasures.length;
+                // average
+                coordinates.push(
+                    angleToCoordinate(
+                        d,
+                        angle,
+                        curMeasure.extent[0],
+                        curMeasure.extent[1],
+                        +d.clusterAgg[curAggKey]
+                    )
+                );
             }
-            dict.count.scale = d3
+            coordinates.push(coordinates[0]);
+            return coordinates;
+        }
+
+        function angleToCoordinate(d, angle, lo, hi, value) {
+            var curScale = d3
                 .scaleLinear()
-                .range([rangeRadius[1] * 0.6, rangeRadius[1] * 0.5])
-                .domain([
-                    dict.count.extent[0].toString().length,
-                    dict.count.extent[1].toString().length
-                ]);
+                .domain([lo, hi])
+                .range([0, radius]);
+            var x = Math.cos(angle) * curScale(value);
+            var y = Math.sin(angle) * curScale(value);
+            return {x: +d.cx + x, y: +d.cy - y};
+        }
 
+        radars.each((p, j, nodes) => {
             // ticks
-            var ticks = [];
-            if (Array.isArray(glyph.ticks)) {
-                ticks = glyph.ticks;
-            } else if (typeof glyph.ticks === "number") {
-                for (var i = 0; i < glyph.ticks; i++)
-                    ticks.push((i + 1) * (radius / glyph.ticks));
+            for (var i = ticks.length - 1; i >= 0; i--) {
+                d3.select(nodes[j])
+                    .append("circle")
+                    .attr("cx", d => d.cx)
+                    .attr("cy", d => d.cy)
+                    .attr("fill", "none")
+                    .attr("stroke", "gray")
+                    .attr("r", ticks[i])
+                    .classed("kyrix-retainsizezoom", true);
             }
-            // console.log("ticks: ", ticks);
+            // axis & labels
+            for (var i = 0; i < params.aggMeasures.length; i++) {
+                var curMeasure = params.aggMeasures[i];
+                var angle =
+                    Math.PI / 2 + (2 * Math.PI * i) / params.aggMeasures.length;
+                var lineCoords = angleToCoordinate(
+                    p,
+                    angle,
+                    curMeasure.extent[0],
+                    curMeasure.extent[1],
+                    curMeasure.extent[1]
+                );
+                var labelCoords = angleToCoordinate(
+                    p,
+                    angle,
+                    curMeasure.extent[0],
+                    curMeasure.extent[1],
+                    curMeasure.extent[1] * 1.1
+                );
 
-            // line
+                //draw axis line
+                d3.select(nodes[j])
+                    .append("line")
+                    .attr("x1", p.cx)
+                    .attr("y1", p.cy)
+                    .attr("x2", lineCoords.x)
+                    .attr("y2", lineCoords.y)
+                    .classed("kyrix-retainsizezoom", true)
+                    .attr("stroke", "black");
+
+                //draw axis label
+                d3.select(nodes[j])
+                    .append("text")
+                    .classed("label", true)
+                    .attr("x", labelCoords.x)
+                    .attr("y", labelCoords.y)
+                    .classed("kyrix-retainsizezoom", true)
+                    .text(curMeasure.field.substr(0, 3).toUpperCase());
+            }
+            // path
+            var coordinates = getPathCoordinates(p);
+            d3.select(nodes[j])
+                .append("path")
+                .datum(coordinates)
+                .attr("d", line)
+                .classed("radar", true)
+                .attr("stroke-width", 3)
+                .attr("stroke", "darkorange")
+                .attr("fill", "darkorange")
+                .attr("stroke-opacity", 0.8)
+                .attr("fill-opacity", 0.5)
+                .classed("kyrix-retainsizezoom", true)
+                .datum(p);
+
+            d3.select(nodes[j])
+                .append("text")
+                .text(function(d) {
+                    return d.clusterAgg["count(*)"];
+                })
+                .attr("font-size", 25)
+                .attr("x", function(d) {
+                    return d.cx;
+                })
+                .attr("y", function(d) {
+                    return d.cy;
+                })
+                .attr("dy", ".35em")
+                .attr("text-anchor", "middle")
+                .style("fill-opacity", 1)
+                .style("fill", "navy")
+                .style("pointer-events", "none")
+                .classed("kyrix-retainsizezoom", true);
+        });
+
+        // for hover
+        g.selectAll(".radarhover")
+            .data(data)
+            .enter()
+            .append("circle")
+            .classed("radarhover", true)
+            .attr("cx", d => d.cx)
+            .attr("cy", d => d.cy)
+            .attr("r", radius)
+            .style("opacity", 0);
+        var hoverSelector = ".radarhover";
+    }
+
+    function renderPieBody() {
+        if (!data || data.length == 0) return;
+        var params = args.renderingParams;
+        var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
+        var parse = REPLACE_ME_parse_func;
+        var translate = REPLACE_ME_translate_func;
+        var serialize = REPLACE_ME_serialize_func;
+
+        var g = svg.append("g");
+
+        // Step 1: Pre-process clusterAgg
+        REPLACE_ME_processClusterAgg();
+
+        // Step 2: append pies
+        var pie = d3.pie().value(function(d) {
+            return d.value;
+        });
+
+        var aggKeys = [];
+        for (var i = 0; i < params.aggDomain.length; i++)
+            aggKeys.push(
+                params.aggDomain[i] +
+                    aggKeyDelimiter +
+                    params.aggMeasures[0].function +
+                    "(" +
+                    params.aggMeasures[0].field +
+                    ")"
+            );
+        var color = d3.scaleOrdinal(d3.schemeTableau10).domain(aggKeys);
+        var arc = d3
+            .arc()
+            .innerRadius(params.pieInnerRadius)
+            .outerRadius(params.pieOuterRadius)
+            .cornerRadius(params.pieCornerRadius)
+            .padAngle(params.padAngle);
+        var scalePercent = d3
+            .scaleLinear()
+            .domain([0, 2 * Math.PI])
+            .range([0, 1]);
+        var formatter = d3.format(".1%");
+        var slicedata = [];
+
+        data.forEach((p, j) => {
+            p.arcs = pie(
+                d3
+                    .entries(p.clusterAgg)
+                    .filter(d => aggKeys.indexOf(d.key) >= 0)
+            );
+            var cooked = p.arcs.map(entry => {
+                // for (var index in pos) entry[pos[index]] = +p[pos[index]];
+                for (var key in p) entry[key] = p[key];
+                entry.data.percentage = formatter(
+                    scalePercent(entry.endAngle - entry.startAngle)
+                );
+                entry.convexHull = p.convexHull;
+                return entry;
+            });
+            slicedata = slicedata.concat(cooked);
+        });
+
+        // slices
+        g.selectAll("path.slice")
+            .data(slicedata)
+            .enter()
+            .append("path")
+            .attr("class", function(d, i) {
+                return `value ${d.data.key} kyrix-retainsizezoom`;
+            })
+            .attr("d", (d, i, nodes) => {
+                return serialize(translate(parse(arc(d)), d.cx, d.cy));
+            })
+            .attr("fill", function(d, i) {
+                var ret = color(d.data.key);
+                return ret;
+            });
+
+        // numbers
+        g.selectAll("text.cluster_num")
+            .data(data)
+            .enter()
+            .append("text")
+            .classed("cluster_num", true)
+            .text(d => d.clusterAgg["count(*)"])
+            .attr("x", d => +d.cx)
+            .attr("y", d => +d.cy - params.pieOuterRadius)
+            // .attr("dy", ".35em")
+            .attr("font-size", params.pieOuterRadius / 2.5)
+            .attr("text-anchor", "middle")
+            .style("fill-opacity", 0.8)
+            .style("fill", "grey")
+            .style("pointer-events", "none")
+            .classed("kyrix-retainsizezoom", true);
+
+        // for hover
+        g.selectAll(".piehover")
+            .data(data)
+            .enter()
+            .append("circle")
+            .classed("piehover", true)
+            .attr("cx", d => d.cx)
+            .attr("cy", d => d.cy)
+            .attr("r", params.pieOuterRadius)
+            .style("opacity", 0);
+        var hoverSelector = ".piehover";
+    }
+
+    function processClusterAgg() {
+        function getConvexCoordinates(d) {
+            var coords = JSON.parse(d.clusterAgg.convexHull);
+            var size = coords.length / 2;
+            var convexHull = [];
+            for (var i = 0; i < size; i++) {
+                convexHull.push({
+                    x: +coords[i * 2],
+                    y: +coords[i * 2 + 1]
+                });
+            }
+            return convexHull;
+        }
+
+        data.forEach(d => {
+            d.clusterAgg = JSON.parse(d.clusterAgg);
+            d.convexHull = getConvexCoordinates(d);
+            for (var i = 0; i < params.aggDomain.length; i++)
+                for (var j = 0; j < params.aggMeasures.length; j++) {
+                    var curField = params.aggMeasures[j].field;
+                    var curFunc = params.aggMeasures[j].function;
+                    var curKey =
+                        params.aggDomain[i] +
+                        aggKeyDelimiter +
+                        curFunc +
+                        "(" +
+                        curField +
+                        ")";
+                    if (!(curKey in d.clusterAgg)) {
+                        switch (curFunc) {
+                            case "count":
+                            case "sum":
+                            case "sqrsum":
+                                d.clusterAgg[curKey] = 0;
+                                break;
+                            case "min":
+                                d.clusterAgg[curKey] = Number.MIN_VALUE;
+                                break;
+                            case "max":
+                                d.clusterAgg[curKey] = Number.MAX_VALUE;
+                                break;
+                            case "avg":
+                                var sumKey =
+                                    params.aggDomain[i] +
+                                    aggKeyDelimiter +
+                                    "sum(" +
+                                    curField +
+                                    ")";
+                                var countKey =
+                                    params.aggDomain[i] +
+                                    aggKeyDelimiter +
+                                    "count(*)";
+                                if (
+                                    !(sumKey in d.clusterAgg) ||
+                                    !(countKey in d.clusterAgg)
+                                )
+                                    d.clusterAgg[curKey] = 0;
+                                else
+                                    d.clusterAgg[curKey] =
+                                        d.clusterAgg[sumKey] /
+                                        d.clusterAgg[countKey];
+                                break;
+                        }
+                    }
+                }
+        });
+    }
+
+    function regularHoverBody() {
+        function showConvex(svg, d) {
             var line = d3
                 .line()
                 .x(d => d.x)
                 .y(d => d.y);
-
-            function getPathCoordinates(d) {
-                var coordinates = [];
-                var attributes = Object.keys(d.cluster_agg).filter(
-                    item => item !== "count"
-                );
-                for (var i = 0; i < attributes.length; i++) {
-                    var attribute = attributes[i];
-                    var angle =
-                        Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
-                    // average
-                    coordinates.push(
-                        angleToCoordinate(
-                            d,
-                            angle,
-                            attribute,
-                            d.cluster_agg[attribute].slice(-1).pop()
-                        )
-                    );
-                }
-                coordinates.push(coordinates[0]);
-                return coordinates;
-            }
-
-            function angleToCoordinate(d, angle, key, value, arg) {
-                var x = Math.cos(angle) * dict[key].scale(value);
-                var y = Math.sin(angle) * dict[key].scale(value);
-                return {x: +d.cx + x, y: +d.cy - y};
-            }
-
-            glyphs.each((p, j, nodes) => {
-                // ticks
-                for (var i = ticks.length - 1; i >= 0; i--) {
-                    d3.select(nodes[j])
-                        .append("circle")
-                        .attr("cx", d => d.cx)
-                        .attr("cy", d => d.cy)
-                        .attr("fill", "none")
-                        .attr("stroke", "gray")
-                        .attr("r", ticks[i])
-                        .classed("kyrix-retainsizezoom", true);
-                }
-                // axis & axis
-                var attributes = Object.keys(p.cluster_agg).filter(
-                    item => item !== "count"
-                );
-
-                for (var i = 0; i < attributes.length; i++) {
-                    var attribute = attributes[i];
-                    var angle =
-                        Math.PI / 2 + (2 * Math.PI * i) / attributes.length;
-                    var max = dict[attribute].scale.domain()[1];
-                    var line_coordinate = angleToCoordinate(
-                        p,
-                        angle,
-                        attribute,
-                        max,
-                        "line"
-                    );
-                    var label_coordinate = angleToCoordinate(
-                        p,
-                        angle,
-                        attribute,
-                        max * 1.1,
-                        "label"
-                    );
-
-                    //draw axis line
-                    d3.select(nodes[j])
-                        .append("line")
-                        .attr("x1", p.cx)
-                        .attr("y1", p.cy)
-                        .attr("x2", line_coordinate.x)
-                        .attr("y2", line_coordinate.y)
-                        .classed("kyrix-retainsizezoom", true)
-                        .attr("stroke", "black");
-
-                    //draw axis label
-                    d3.select(nodes[j])
-                        .append("text")
-                        .classed("label", true)
-                        .attr("x", label_coordinate.x)
-                        .attr("y", label_coordinate.y)
-                        .classed("kyrix-retainsizezoom", true)
-                        .text(attribute.substr(0, 3).toUpperCase());
-                }
-                // path
-                var coordinates = getPathCoordinates(p);
-                d3.select(nodes[j])
-                    .append("path")
-                    .datum(coordinates)
-                    .attr("d", line)
-                    .classed("glyph", true)
-                    .attr("stroke-width", 3)
-                    .attr("stroke", "darkorange")
-                    .attr("fill", "darkorange")
-                    .attr("stroke-opacity", 0.8)
-                    .attr("fill-opacity", 0.5)
-                    .classed("kyrix-retainsizezoom", true)
-                    .datum(p);
-
-                d3.select(nodes[j])
-                    .append("text")
-                    .attr("dy", "0.3em")
-                    .text(function(d) {
-                        return d.cluster_num.toString();
-                    })
-                    .attr("font-size", function(d) {
-                        return dict.count.scale(d.cluster_num.length) / 2;
-                    })
-                    .attr("x", function(d) {
-                        return d.cx;
-                    })
-                    .attr("y", function(d) {
-                        return d.cy;
-                    })
-                    .attr("dy", ".35em")
-                    .attr("text-anchor", "middle")
-                    .style("fill-opacity", 1)
-                    .style("fill", "navy")
+            var g = svg.append("g");
+            g.append("path")
+                .datum(d)
+                .attr("class", "convexHull")
+                .attr("id", "autodd_convexHull")
+                .attr("d", d => line(d.convexHull))
+                .style("fill-opacity", 0)
+                .style("stroke-width", 3)
+                .style("stroke-opacity", 0.5)
+                .style("stroke", "grey")
+                .style("pointer-events", "none");
+        }
+        var objectRenderer = REPLACE_ME_this_rendering;
+        g.selectAll(hoverSelector)
+            .on("mouseover", function(d) {
+                if (REPLACE_ME_show_convex) showConvex(svg, d);
+                objectRenderer(svg, [d], args);
+                svg.selectAll("g:last-of-type")
+                    .attr("id", "autodd_tooltip")
+                    .style("opacity", 0.8)
                     .style("pointer-events", "none")
+                    .selectAll("*")
                     .classed("kyrix-retainsizezoom", true)
-                    .each(function(d) {
-                        params.textwrap(
-                            d3.select(this),
-                            dict.count.scale(d.cluster_num.length) * 1.5
-                        );
+                    .each(function() {
+                        zoomRescale(args.viewId, this);
                     });
+            })
+            .on("mouseleave", function() {
+                d3.selectAll("#autodd_tooltip").remove();
+                d3.selectAll("#autodd_convexHull").remove();
             });
-        }
+    }
 
-        var isObjectOnHover = REPLACE_ME_is_object_onhover;
-        if (isObjectOnHover) {
-            var objectRenderer = REPLACE_ME_this_rendering;
-            g.selectAll("path.glyph")
-                .on("mouseover", function(d, i, nodes) {
-                    objectRenderer(svg, [d], args);
-                    svg.selectAll("g:last-of-type")
-                        .attr("id", "autodd_tooltip")
-                        .style("opacity", 1)
-                        .style("pointer-events", "none")
-                        .selectAll("*")
-                        .classed("kyrix-retainsizezoom", true)
-                        .each(function() {
-                            zoomRescale(args.viewId, this);
-                        });
-                })
-                .on("mouseleave", function() {
-                    d3.select("#autodd_tooltip").remove();
-                });
-        }
+    function KDEObjectHoverBody() {
+        var objectRenderer = REPLACE_ME_this_rendering;
+        var hiddenRectSize = 100;
+        svg.append("g")
+            .selectAll("rect")
+            .data(data)
+            .enter()
+            .append("rect")
+            .attr("x", d => d.cx - hiddenRectSize / 2)
+            .attr("y", d => d.cy - hiddenRectSize / 2)
+            .attr("width", hiddenRectSize)
+            .attr("height", hiddenRectSize)
+            .attr("fill-opacity", 0)
+            .on("mouseover", function(d) {
+                var svgNode;
+                if ("tileX" in args) svgNode = d3.select(svg.node().parentNode);
+                else svgNode = svg;
+                objectRenderer(svgNode, [d], args);
+                var lastG = svgNode.node().childNodes[
+                    svgNode.node().childElementCount - 1
+                ];
+                d3.select(lastG)
+                    .attr("id", "autodd_tooltip")
+                    .style("opacity", 0.8)
+                    .style("pointer-events", "none")
+                    .selectAll("*")
+                    .classed("kyrix-retainsizezoom", true)
+                    .each(function() {
+                        zoomRescale(args.viewId, this);
+                    });
+            })
+            .on("mouseleave", function() {
+                d3.select("#autodd_tooltip").remove();
+            });
     }
 
     var renderFuncBody;
-    if (
-        this.renderingMode == "object" ||
-        this.renderingMode == "object+clusternum"
-    ) {
+    if (this.clusterMode == "object") {
         renderFuncBody =
             "(" + this.rendering.toString() + ")(svg, data, args);\n";
-        if (this.renderingMode == "object+clusternum")
+        if (this.clusterParams.clusterCount)
             renderFuncBody += getBodyStringOfFunction(
                 renderObjectClusterNumBody
             );
-    } else if (
-        this.renderingMode == "circle" ||
-        this.renderingMode == "circle+object"
-    ) {
+    } else if (this.clusterMode == "circle") {
         // render circle
         renderFuncBody = getBodyStringOfFunction(renderCircleBody)
-            .replace(/REPLACE_ME_circleMinSize/g, this.circleMinSize)
-            .replace(/REPLACE_ME_circleMaxSize/g, this.circleMaxSize)
             .replace(
                 /REPLACE_ME_this_rendering/g,
-                this.renderingMode == "circle+object"
-                    ? this.rendering.toString()
+                this.hover.object != null
+                    ? this.hover.object.toString()
                     : "null;"
             )
             .replace(
-                /REPLACE_ME_is_object_onhover/g,
-                this.renderingMode == "circle+object"
+                /REPLACE_ME_processClusterAgg/g,
+                "(" + processClusterAgg.toString() + ")"
             );
-    } else if (
-        this.renderingMode == "contour" ||
-        this.renderingMode == "contour+object"
-    ) {
+        if (this.isHover)
+            renderFuncBody += getBodyStringOfFunction(regularHoverBody)
+                .replace(
+                    /REPLACE_ME_this_rendering/g,
+                    this.hover.object.toString()
+                )
+                .replace(/REPLACE_ME_show_convex/g, this.hover.convex);
+    } else if (this.clusterMode == "contour") {
         renderFuncBody = getBodyStringOfFunction(renderContourBody)
-            .replace(/REPLACE_ME_bandwidth/g, this.contourBandwidth)
             .replace(/REPLACE_ME_radius/g, this.bboxH)
-            .replace(/REPLACE_ME_contour_colorScheme/g, this.contourColorScheme)
-            .replace(/REPLACE_ME_CONTOUR_OPACITY/g, this.contourOpacity)
-            .replace(
-                /REPLACE_ME_is_object_onhover/g,
-                this.renderingMode == "contour+object"
+            .replace(/REPLACE_ME_is_hover/g, this.isHover);
+        if (this.isHover)
+            renderFuncBody += getBodyStringOfFunction(
+                KDEObjectHoverBody
+            ).replace(
+                /REPLACE_ME_this_rendering/g,
+                this.hover.object.toString()
             );
-        if (this.renderingMode == "contour+object")
-            renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
-                .replace(
-                    /REPLACE_ME_is_object_onhover/g,
-                    this.renderingMode == "contour+object"
-                )
-                .replace(
-                    /REPLACE_ME_this_rendering/g,
-                    this.rendering.toString()
-                );
-    } else if (
-        this.renderingMode == "glyph" ||
-        this.renderingMode == "glyph+object"
-    ) {
-        renderFuncBody = getBodyStringOfFunction(renderGlyphBody)
-            .replace(/REPLACE_ME_glyph/g, this.glyph)
-            .replace(/REPLACE_ME_bboxH/g, this.bboxH)
-            .replace(
-                /REPLACE_ME_is_object_onhover/g,
-                this.renderingMode == "glyph+object"
-            )
+    } else if (this.clusterMode == "heatmap") {
+        renderFuncBody = getBodyStringOfFunction(renderHeatmapBody).replace(
+            /REPLACE_ME_autoDDId/g,
+            autoDDArrayIndex + "_" + level
+        );
+        if (this.isHover)
+            renderFuncBody += getBodyStringOfFunction(
+                KDEObjectHoverBody
+            ).replace(
+                /REPLACE_ME_this_rendering/g,
+                this.hover.object.toString()
+            );
+    } else if (this.clusterMode == "radar") {
+        renderFuncBody = getBodyStringOfFunction(renderRadarBody)
             .replace(
                 /REPLACE_ME_this_rendering/g,
-                this.renderingMode == "glyph+object"
-                    ? this.rendering.toString()
-                    : "null;"
-            );
-    } else if (
-        this.renderingMode == "heatmap" ||
-        this.renderingMode == "heatmap+object"
-    ) {
-        renderFuncBody = getBodyStringOfFunction(renderHeatmapBody)
-            .replace(/REPLACE_ME_radius/g, this.heatmapRadius)
-            .replace(/REPLACE_ME_heatmap_opacity/g, this.heatmapOpacity)
-            .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
-        if (this.renderingMode == "heatmap+object")
-            renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody)
-                .replace(
-                    /REPLACE_ME_is_object_onhover/g,
-                    this.renderingMode == "heatmap+object"
-                )
+                this.hover.object ? this.hover.object.toString() : "null;"
+            )
+            .replace(
+                /REPLACE_ME_processClusterAgg/g,
+                "(" + processClusterAgg.toString() + ")"
+            )
+            .replace(/REPLACE_ME_agg_key_delimiter/g, aggKeyDelimiter);
+        if (this.isHover)
+            renderFuncBody += getBodyStringOfFunction(regularHoverBody)
                 .replace(
                     /REPLACE_ME_this_rendering/g,
-                    this.rendering.toString()
-                );
+                    this.hover.object.toString()
+                )
+                .replace(/REPLACE_ME_show_convex/g, this.hover.convex);
+    } else if (this.clusterMode == "pie") {
+        renderFuncBody = getBodyStringOfFunction(renderPieBody)
+            .replace(
+                /REPLACE_ME_this_rendering/g,
+                this.hover.object ? this.hover.object.toString() : "null;"
+            )
+            .replace(
+                /REPLACE_ME_processClusterAgg/g,
+                "(" + processClusterAgg.toString() + ")"
+            )
+            .replace(/REPLACE_ME_agg_key_delimiter/g, aggKeyDelimiter)
+            .replace(/REPLACE_ME_parse_func/g, parsePathIntoSegments.toString())
+            .replace(
+                /REPLACE_ME_translate_func/g,
+                translatePathSegments.toString()
+            )
+            .replace(/REPLACE_ME_serialize_func/g, serializePath.toString());
+        if (this.isHover)
+            renderFuncBody += getBodyStringOfFunction(regularHoverBody)
+                .replace(
+                    /REPLACE_ME_this_rendering/g,
+                    this.hover.object.toString()
+                )
+                .replace(/REPLACE_ME_show_convex/g, this.hover.convex);
     }
     return new Function("svg", "data", "args", renderFuncBody);
 }
@@ -963,12 +1220,12 @@ function getAxesRenderer(level) {
             .scaleLinear()
             .domain([REPLACE_ME_this_loX, REPLACE_ME_this_hiX])
             .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);
-        var xAxis = d3.axisTop().tickSize(-cHeight);
+        var xAxis = d3.axisBottom().tickSize(-cHeight);
         axes.push({
             dim: "x",
             scale: x,
             axis: xAxis,
-            translate: [0, 0],
+            translate: [0, args.viewportH],
             styling: styling
         });
         //y
@@ -1000,10 +1257,47 @@ function getAxesRenderer(level) {
     return new Function("args", axesFuncBody);
 }
 
+function getLegendRenderer() {
+    function pieLegendRendererBody() {
+        svg.append("g")
+            .attr("class", "legendOrdinal")
+            .attr("transform", "translate(50,50) scale(2.0)");
+
+        var params = args.renderingParams;
+        var color = d3
+            .scaleOrdinal(d3.schemeTableau10)
+            .domain(
+                "legendDomain" in params
+                    ? params.legendDomain
+                    : params.aggDomain
+            );
+        var legendOrdinal = d3
+            .legendColor()
+            //d3 symbol creates a path-string, for example
+            //"M0,-8.059274488676564L9.306048591020996,
+            //8.059274488676564 -9.306048591020996,8.059274488676564Z"
+            // .shape("path", d3.symbol().type(d3.symbolDiamond).size(150)())
+            .shape("rect")
+            .shapePadding(10)
+            .title(params.legendTitle)
+            .labelOffset(15)
+            // .labelAlign("start")
+            .scale(color);
+
+        svg.select(".legendOrdinal").call(legendOrdinal);
+    }
+
+    var renderFuncBody = "";
+    if (this.clusterMode == "pie")
+        renderFuncBody = getBodyStringOfFunction(pieLegendRendererBody);
+    return new Function("svg", "data", "args", renderFuncBody);
+}
+
 //define prototype
 AutoDD.prototype = {
     getLayerRenderer,
-    getAxesRenderer
+    getAxesRenderer,
+    getLegendRenderer
 };
 
 // exports

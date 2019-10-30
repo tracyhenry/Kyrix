@@ -262,10 +262,13 @@ function addAutoDD(autoDD, args) {
     // add to project
     this.autoDDs.push(autoDD);
 
-    // add stuff to renderingParam for circle agg rendering
+    // add stuff to renderingParam
     this.addRenderingParams({
-        textwrap: require("./template-api/Renderers").textwrap
+        textwrap: require("./template-api/Utilities").textwrap
     });
+    this.addRenderingParams(autoDD.clusterParams);
+    this.addRenderingParams(autoDD.legendParams);
+    this.addRenderingParams(autoDD.aggregateParams);
 
     // construct canvases
     var curPyramid = [];
@@ -298,17 +301,17 @@ function addAutoDD(autoDD, args) {
         }
         curPyramid.push(curCanvas);
 
+        // add static legend layer
+        var staticLayer = new Layer(null, true);
+        curCanvas.addLayer(staticLayer);
+        staticLayer.addRenderingFunc(autoDD.getLegendRenderer());
+
         // create one layer
         var curLayer = new Layer(transform, false);
         curCanvas.addLayer(curLayer);
 
         // set fetching scheme
-        if (
-            autoDD.renderingMode == "contour" ||
-            autoDD.renderingMode == "contour+object" ||
-            autoDD.renderingMode == "heatmap" ||
-            autoDD.renderingMode == "heatmap+object"
-        )
+        if (autoDD.clusterMode == "contour" || autoDD.clusterMode == "heatmap")
             curLayer.setFetchingScheme("dbox", false);
 
         // set isAutoDD and autoDD ID
@@ -381,7 +384,6 @@ function addAutoDD(autoDD, args) {
             autoDD.topLevelHeight
         );
         this.addView(view);
-
         // initialize view
         this.setInitialStates(view, curPyramid[0], 0, 0);
     } else if (!(args.view instanceof View))
@@ -413,13 +415,13 @@ function addStyles(styles) {
     if (!styles || typeof styles != "string") return;
 
     //match http:// and https://
+    var rules;
     if (styles.match(/https?:\/\//)) {
-        var rules = styles;
+        rules = styles;
     } else if (styles.match(".css")) {
-        var rules = fs.readFileSync(styles).toString();
+        rules = fs.readFileSync(styles).toString();
     } else {
-        console.log("STYLES NOT CSS FILE, BUT STRING", styles);
-        var rules = styles;
+        rules = styles;
     }
 
     this.styles.push(rules);

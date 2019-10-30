@@ -11,9 +11,9 @@ public class AutoDD {
     private String query, db;
     private String xCol, yCol;
     private int bboxW, bboxH;
-    private String rendering;
-    private String renderingMode;
-    private ArrayList<String> columnNames, aggColumns, queriedColumnNames = null;
+    private String clusterMode;
+    private ArrayList<String> columnNames, queriedColumnNames = null;
+    private ArrayList<String> aggDimensionFields, aggMeasureFields;
     private int numLevels, topLevelWidth, topLevelHeight;
     private boolean overlap;
     private double zoomFactor;
@@ -44,12 +44,8 @@ public class AutoDD {
         return bboxH;
     }
 
-    public String getRenderingMode() {
-        return renderingMode;
-    }
-
-    public String getRendering() {
-        return rendering;
+    public String getClusterMode() {
+        return clusterMode;
     }
 
     public boolean getOverlap() {
@@ -95,8 +91,12 @@ public class AutoDD {
         return queriedColumnNames;
     }
 
-    public ArrayList<String> getAggColumns() {
-        return aggColumns;
+    public ArrayList<String> getAggDimensionFields() {
+        return aggDimensionFields;
+    }
+
+    public ArrayList<String> getAggMeasureFields() {
+        return aggMeasureFields;
     }
 
     public int getNumLevels() {
@@ -168,11 +168,9 @@ public class AutoDD {
                 + bboxW
                 + ", bboxH="
                 + bboxH
-                + ", rendering='"
-                + rendering
                 + '\''
-                + ", renderingMode='"
-                + renderingMode
+                + ", clusterMode='"
+                + clusterMode
                 + '\''
                 + ", columnNames="
                 + columnNames

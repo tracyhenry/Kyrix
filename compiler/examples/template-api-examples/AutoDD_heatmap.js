@@ -12,8 +12,7 @@ p.addStyles("../nba/nba.css");
 var query =
     "select game_id, year, month, day, team1.abbr as home_team, team2.abbr as away_team, home_score, away_score, team1.rank + team2.rank as agg_rank " +
     "from games, teams as team1, teams as team2 " +
-    "where games.home_team = team1.abbr and games.away_team = team2.abbr " +
-    "order by agg_rank;";
+    "where games.home_team = team1.abbr and games.away_team = team2.abbr ";
 
 var autoDD = {
     data: {
@@ -21,24 +20,31 @@ var autoDD = {
         query: query
     },
     x: {
-        col: "home_score",
-        range: [69, 149]
+        field: "home_score",
+        extent: [69, 149]
     },
     y: {
-        col: "away_score",
-        range: [69, 148]
+        field: "away_score",
+        extent: [69, 148]
     },
-    rendering: {
-        // mode: "heatmap",
-        mode: "heatmap+object",
-        axis: true,
-        // heatmapRadius: 90,
-        // heatmapOpacity: 0.5,
-        obj: {
-            renderer: renderers.teamTimelineRendering,
-            bboxW: 162,
-            bboxH: 132
+    z: {
+        field: "agg_rank",
+        order: "asc"
+    },
+    marks: {
+        cluster: {
+            mode: "heatmap",
+            config: {
+                // heatmapRadius: 90,
+                // heatmapOpacity: 0.5,
+            }
+        },
+        hover: {
+            object: renderers.teamTimelineRendering
         }
+    },
+    config: {
+        axis: true
     }
 };
 
