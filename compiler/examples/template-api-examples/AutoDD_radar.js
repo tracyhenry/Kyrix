@@ -14,7 +14,7 @@ p.addRenderingParams(renderers.renderingParams);
 p.addStyles(renderers.playerRenderingStyles);
 
 // set up auto drill down
-var query = "select * from fifa19 order by cast(wage as int) desc";
+var query = "select * from fifa19;";
 
 var autoDD = {
     data: {
@@ -22,12 +22,16 @@ var autoDD = {
         query: query
     },
     x: {
-        col: "shooting",
-        range: [0, 100]
+        field: "shooting",
+        extent: [0, 100]
     },
     y: {
-        col: "defending",
-        range: [100, 0]
+        field: "defending",
+        extent: [100, 0]
+    },
+    z: {
+        field: "cast(wage as int)",
+        order: "desc"
     },
     marks: {
         cluster: {

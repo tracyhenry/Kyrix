@@ -82,10 +82,12 @@ function AutoDD(args) {
     var requiredArgs = [
         ["data", "query"],
         ["data", "db"],
-        ["x", "col"],
-        ["x", "range"],
-        ["y", "col"],
-        ["y", "range"]
+        ["x", "field"],
+        ["x", "extent"],
+        ["y", "field"],
+        ["y", "extent"],
+        ["z", "field"],
+        ["z", "order"]
     ];
     var requiredArgsTypes = [
         "string",
@@ -93,7 +95,9 @@ function AutoDD(args) {
         "string",
         "object",
         "string",
-        "object"
+        "object",
+        "string",
+        "string"
     ];
     for (var i = 0; i < requiredArgs.length; i++) {
         var curObj = args;
@@ -126,31 +130,34 @@ function AutoDD(args) {
      * other constraints
      *******************/
     if (
-        args.x.range != null &&
-        (!Array.isArray(args.x.range) ||
-            args.x.range.length != 2 ||
-            typeof args.x.range[0] != "number" ||
-            typeof args.x.range[1] != "number")
+        args.x.extent != null &&
+        (!Array.isArray(args.x.extent) ||
+            args.x.extent.length != 2 ||
+            typeof args.x.extent[0] != "number" ||
+            typeof args.x.extent[1] != "number")
     )
-        throw new Error("Constructing AutoDD: malformed x.range");
+        throw new Error("Constructing AutoDD: malformed x.extent");
     if (
-        args.y.range != null &&
-        (!Array.isArray(args.y.range) ||
-            args.y.range.length != 2 ||
-            typeof args.y.range[0] != "number" ||
-            typeof args.y.range[1] != "number")
+        args.y.extent != null &&
+        (!Array.isArray(args.y.extent) ||
+            args.y.extent.length != 2 ||
+            typeof args.y.extent[0] != "number" ||
+            typeof args.y.extent[1] != "number")
     )
-        throw new Error("Constructing AutoDD: malformed y.range");
-    if ("axis" in args.marks && (args.x.range == null || args.y.range == null))
+        throw new Error("Constructing AutoDD: malformed y.extent");
+    if (
+        "axis" in args.marks &&
+        (args.x.extent == null || args.y.extent == null)
+    )
         throw new Error(
             "Constructing AutoDD: raw data domain needs to be specified for rendering an axis."
         );
     if (
-        (args.x.range != null && args.y.range == null) ||
-        (args.x.range == null && args.y.range != null)
+        (args.x.extent != null && args.y.extent == null) ||
+        (args.x.extent == null && args.y.extent != null)
     )
         throw new Error(
-            "Constructing AutoDD: x range and y range must both be provided."
+            "Constructing AutoDD: x extent and y extent must both be provided."
         );
     if (
         args.marks.cluster.mode == "object" &&
@@ -309,9 +316,12 @@ function AutoDD(args) {
     setPropertiesIfNotExists(this.hover, {convex: false, object: null});
     this.isHover = this.hover.object != null || this.hover.convex;
     this.query = args.data.query;
+    while (this.query.slice(-1) == " " || this.query.slice(-1) == ";")
+        this.query = this.query.slice(0, -1);
+    this.query += " order by " + args.z.field + " " + args.z.order + ";";
     this.db = args.data.db;
-    this.xCol = args.x.col;
-    this.yCol = args.y.col;
+    this.xCol = args.x.field;
+    this.yCol = args.y.field;
     this.clusterMode = args.marks.cluster.mode;
     this.aggDimensionFields = [];
     for (var i = 0; i < this.aggregateParams.aggDimensions.length; i++)
@@ -339,10 +349,10 @@ function AutoDD(args) {
             ? true
             : false;
     this.axis = "axis" in args.config ? args.config.axis : false;
-    this.loX = args.x.range != null ? args.x.range[0] : null;
-    this.loY = args.y.range != null ? args.y.range[0] : null;
-    this.hiX = args.x.range != null ? args.x.range[1] : null;
-    this.hiY = args.y.range != null ? args.y.range[1] : null;
+    this.loX = args.x.extent != null ? args.x.extent[0] : null;
+    this.loY = args.y.extent != null ? args.y.extent[0] : null;
+    this.hiX = args.x.extent != null ? args.x.extent[1] : null;
+    this.hiY = args.y.extent != null ? args.y.extent[1] : null;
 }
 
 // get rendering function for an autodd layer based on cluster mode
