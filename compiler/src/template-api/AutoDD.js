@@ -56,7 +56,8 @@ function AutoDD(args) {
             !("function" in args.marks.cluster.aggregate.measures)
         )
             throw new Error(
-                "Constructing AutoDD: fields or function not in the object notation of args.marks.cluster.aggregate.measures."
+                "Constructing AutoDD: fields or function not found" +
+                    "in the object notation of args.marks.cluster.aggregate.measures."
             );
         var measureArray = [];
         for (
@@ -172,11 +173,41 @@ function AutoDD(args) {
         args.marks.cluster.aggregate.dimensions.length > 0
     )
         throw new Error(
-            "Constructing AutoDD: radar chart doesn't allow any dimension columns (args.marks.cluster.aggregate.dimensions)."
+            "Constructing AutoDD: dimension columns (args.marks.cluster.aggregate.dimensions) not allowed for the given cluster mode."
         );
-    // TODO: extent required for radar charts
-    // TODO: check dimensions and measure fields correctness
-    // TODO: check pie only has one measure
+    for (var i = 0; i < args.marks.cluster.aggregate.dimensions.length; i++) {
+        if (!("field" in args.marks.cluster.aggregate.dimensions[i]))
+            throw new Error(
+                "Constructing AutoDD: field not found in aggregate dimensions."
+            );
+        if (!("domain" in args.marks.cluster.aggregate.dimensions[i]))
+            throw new Error(
+                "Constructing AutoDD: domain not found in aggregate dimensions."
+            );
+    }
+    for (var i = 0; i < args.marks.cluster.aggregate.measures.length; i++) {
+        if (!("field" in args.marks.cluster.aggregate.measures[i]))
+            throw new Error(
+                "Constructing AutoDD: field not found in aggregate measures."
+            );
+        if (!("function" in args.marks.cluster.aggregate.measures[i]))
+            throw new Error(
+                "Constructing AutoDD: function not found in aggregate measures."
+            );
+    }
+    if (args.marks.cluster.mode == "radar")
+        for (var i = 0; i < args.marks.cluster.aggregate.measures.length; i++)
+            if (!("extent" in args.marks.cluster.aggregate.measures[i]))
+                throw new Error(
+                    "Constructing AutoDD: extent in aggregate measures required for radar charts."
+                );
+    if (
+        args.marks.cluster.mode == "pie" &&
+        args.marks.cluster.aggregate.measures.length != 1
+    )
+        throw new Error(
+            "Constructing AutoDD: there must be exactly 1 aggregate measure for pie charts."
+        );
 
     /************************
      * setting cluster params
@@ -1231,7 +1262,6 @@ function getLegendRenderer() {
     var renderFuncBody = "";
     if (this.clusterMode == "pie")
         renderFuncBody = getBodyStringOfFunction(pieLegendRendererBody);
-    // TODO: add legend for other templates
     return new Function("svg", "data", "args", renderFuncBody);
 }
 
