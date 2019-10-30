@@ -833,7 +833,16 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         });
 
         // for hover
-        var hoverSelector = "path.radar";
+        g.selectAll(".radarhover")
+            .data(data)
+            .enter()
+            .append("circle")
+            .classed("radarhover", true)
+            .attr("cx", d => d.cx)
+            .attr("cy", d => d.cy)
+            .attr("r", radius)
+            .style("opacity", 0);
+        var hoverSelector = ".radarhover";
     }
 
     function renderPieBody() {
@@ -930,7 +939,16 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .classed("kyrix-retainsizezoom", true);
 
         // for hover
-        var hoverSelector = "path.value";
+        g.selectAll(".piehover")
+            .data(data)
+            .enter()
+            .append("circle")
+            .classed("piehover", true)
+            .attr("cx", d => d.cx)
+            .attr("cy", d => d.cy)
+            .attr("r", params.pieOuterRadius)
+            .style("opacity", 0);
+        var hoverSelector = ".piehover";
     }
 
     function processClusterAgg() {
