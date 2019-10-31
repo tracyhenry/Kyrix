@@ -6,10 +6,10 @@ if [ "x$PGCONN" = "x" ]; then echo "$0: PGCONN must be set."; exit 1; fi
 if [ "x$PSQL" ]; then PSQL=`which psql`; fi
 if [ ! -x $PSQL ]; then echo "$0: $PSQL not found - consider setting PSQL to the psql(1) path."; exit 1; fi
 
-# download NBA example data
+# download USMap example data
 if [ ! -f usmap_db_psql.sql ]; then
-    echo "downloading NBA dataset..."
-    wget -q -O usmap_db_psql.sql 'https://www.dropbox.com/s/xwwk386m1apl9jx/usmap_db_psql.sql?dl=0' > /dev/null
+    echo "downloading USMap dataset..."
+    wget -q -O usmap_db_psql.sql 'https://www.dropbox.com/s/obkbx8izp6cpysu/usmap_template_db_psql.sql?dl=0' > /dev/null
 fi
 
 echo "dropping USMap source tables..."

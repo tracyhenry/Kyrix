@@ -29,11 +29,6 @@ function USMap(args) {
     countyScaleRange: 2000,
     countyScaleStep: 250
   };
-  /*this.transforms = {
-    stateMapTransform: getUSMapTransformFunc("stateMapTransform"),
-    countyMapStateBoundaryTransform: getUSMapTransformFunc("countyMapStateBoundaryTransform"),
-    countyMapTransform: getUSMapTransformFunc("countyMapTransform")
-  };*/
   this.placements = {
     stateMapPlacement: {
         centroid_x: "col:bbox_x",
