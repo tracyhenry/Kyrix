@@ -421,7 +421,7 @@ function addUSMap(map, args) {
     
     // state boundary layer
     var stateMapTransform = new Transform(
-      "select state.state_id, state.name, stateRate.rate, state.geomstr from (select state_id, avg(" + map.rate_col + ") as rate from " + map.table + " group by state_id) as stateRate, state where state.state_id = stateRate.state_id;",
+      "select state.state_id, state.name, stateRate.rate, state.geomstr from (select state_id, cast(avg(cast(" + map.rate_col + " as float)) as float) as rate from " + map.table + " group by state_id) as stateRate, state where state.state_id = stateRate.state_id;",
       map.db,
       map.getUSMapTransformFunc("stateMapTransform"),
       ["id", "bbox_x", "bbox_y", "name", "rate", "geomstr"],
