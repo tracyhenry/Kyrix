@@ -207,7 +207,7 @@ function getUSMapRenderer(renderer) {
           .style("stroke", "#fff")
           .style("stroke-width", "0.5")
           .style("fill", function(d) {
-              return color(d.crimerate);
+              return color(d.rate);
           });
     }  // end stateMapRendering
 
