@@ -477,7 +477,7 @@ function addUSMap(map, args) {
             "bbox_h",
             "state_id",
             "name",
-            "rate",
+            "crimerate",
             "population",
             "geomstr"
         ],
