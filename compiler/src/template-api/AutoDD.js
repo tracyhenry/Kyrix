@@ -319,9 +319,18 @@ function AutoDD(args) {
     while (this.query.slice(-1) == " " || this.query.slice(-1) == ";")
         this.query = this.query.slice(0, -1);
     this.query += " order by " + args.z.field + " " + args.z.order + ";";
+    // assume query is like select * from tbl order by...
+    this.rawTable = this.query
+        .substring(
+            this.query.indexOf("from") + 4,
+            this.query.indexOf("order by")
+        )
+        .replace(/\s/g, "");
     this.db = args.data.db;
     this.xCol = args.x.field;
     this.yCol = args.y.field;
+    this.zCol = args.z.field;
+    this.zOrder = args.z.order;
     this.clusterMode = args.marks.cluster.mode;
     this.aggDimensionFields = [];
     for (var i = 0; i < this.aggregateParams.aggDimensions.length; i++)

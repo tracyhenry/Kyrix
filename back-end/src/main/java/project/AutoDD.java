@@ -9,10 +9,10 @@ import main.DbConnector;
 public class AutoDD {
 
     private String query, db, rawTable;
-    private String xCol, yCol;
+    private String xCol, yCol, zCol;
     private int bboxW, bboxH;
-    private String clusterMode;
-    private ArrayList<String> columnNames, queriedColumnNames = null;
+    private String clusterMode, zOrder;
+    private ArrayList<String> columnNames, queriedColumnNames = null, columnTypes = null;
     private ArrayList<String> aggDimensionFields, aggMeasureFields;
     private int numLevels, topLevelWidth, topLevelHeight;
     private boolean overlap;
@@ -42,6 +42,18 @@ public class AutoDD {
 
     public int getBboxH() {
         return bboxH;
+    }
+
+    public String getRawTable() {
+        return rawTable;
+    }
+
+    public String getzCol() {
+        return zCol;
+    }
+
+    public String getzOrder() {
+        return zOrder;
     }
 
     public String getClusterMode() {
@@ -80,15 +92,35 @@ public class AutoDD {
             try {
                 queriedColumnNames = new ArrayList<>();
                 Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
-                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, query);
+                ResultSet rs =
+                        DbConnector.getQueryResultIterator(
+                                rawDBStmt, "SELECT * FROM " + rawTable + " limit 1;");
                 int colCount = rs.getMetaData().getColumnCount();
                 for (int i = 1; i <= colCount; i++)
                     queriedColumnNames.add(rs.getMetaData().getColumnName(i));
-                DbConnector.closeConnection(getDb());
+                rawDBStmt.close();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         return queriedColumnNames;
+    }
+
+    public ArrayList<String> getColumnTypes() {
+        if (columnTypes != null) return columnTypes;
+        try {
+            columnTypes = new ArrayList<>();
+            Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
+            ResultSet rs =
+                    DbConnector.getQueryResultIterator(
+                            rawDBStmt, "SELECT * FROM " + rawTable + " limit 1;");
+            int colCount = rs.getMetaData().getColumnCount();
+            for (int i = 1; i <= colCount; i++)
+                columnTypes.add(rs.getMetaData().getColumnTypeName(i));
+            rawDBStmt.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return columnTypes;
     }
 
     public ArrayList<String> getAggDimensionFields() {
