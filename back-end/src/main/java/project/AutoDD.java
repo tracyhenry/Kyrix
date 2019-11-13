@@ -19,6 +19,7 @@ public class AutoDD {
     private double zoomFactor;
     private int xColId = -1, yColId = -1;
     private double loX = Double.NaN, loY, hiX, hiY;
+    private String getCitusSpatialHashKeyBody, singleNodeClusteringBody;
 
     public String getQuery() {
         return query;
@@ -91,14 +92,22 @@ public class AutoDD {
         if (queriedColumnNames == null)
             try {
                 queriedColumnNames = new ArrayList<>();
+                columnTypes = new ArrayList<>();
                 Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
                 ResultSet rs =
                         DbConnector.getQueryResultIterator(
                                 rawDBStmt, "SELECT * FROM " + rawTable + " limit 1;");
                 int colCount = rs.getMetaData().getColumnCount();
-                for (int i = 1; i <= colCount; i++)
-                    queriedColumnNames.add(rs.getMetaData().getColumnName(i));
+                for (int i = 1; i <= colCount; i++) {
+                    String curName = rs.getMetaData().getColumnName(i);
+                    if (curName.equals("cx") || curName.equals("cy") || curName.equals("hash_key"))
+                        continue;
+                    queriedColumnNames.add(curName);
+                    columnTypes.add(rs.getMetaData().getColumnTypeName(i));
+                }
+                rs.close();
                 rawDBStmt.close();
+                DbConnector.closeConnection(getDb());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -107,19 +116,7 @@ public class AutoDD {
 
     public ArrayList<String> getColumnTypes() {
         if (columnTypes != null) return columnTypes;
-        try {
-            columnTypes = new ArrayList<>();
-            Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
-            ResultSet rs =
-                    DbConnector.getQueryResultIterator(
-                            rawDBStmt, "SELECT * FROM " + rawTable + " limit 1;");
-            int colCount = rs.getMetaData().getColumnCount();
-            for (int i = 1; i <= colCount; i++)
-                columnTypes.add(rs.getMetaData().getColumnTypeName(i));
-            rawDBStmt.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        getColumnNames();
         return columnTypes;
     }
 
@@ -161,6 +158,14 @@ public class AutoDD {
 
     public double getHiY() {
         return hiY;
+    }
+
+    public String getGetCitusSpatialHashKeyBody() {
+        return getCitusSpatialHashKeyBody;
+    }
+
+    public String getSingleNodeClusteringBody() {
+        return singleNodeClusteringBody;
     }
 
     // get the canvas coordinate of a raw value

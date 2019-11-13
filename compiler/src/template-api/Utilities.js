@@ -194,11 +194,89 @@ function serializePath(path) {
     }, "");
 }
 
+/**
+ * PLV8 function used by the AutoDDCitusIndexer to calculate Citus
+ * hash keys that result in spatial partitions
+ * @param cx
+ * @param cy
+ * @param partitions
+ * @param hashkeys
+ * @returns {*}
+ */
+function autoDDGetCitusSpatialHashKey(cx, cy, partitions, hashkeys) {
+    for (var i = 0; i < partitions.length; i++)
+        if (
+            cx >= partitions[i][0] &&
+            cx <= partitions[i][2] &&
+            cy >= partitions[i][1] &&
+            cy <= partitions[i][3]
+        )
+            return hashkeys[i];
+    return -1;
+}
+
+function autoDDSingleNodeClustering(clusters, autodd) {
+    // get d3
+    if (!("d3" in plv8)) {
+        plv8.d3 = require("d3");
+    }
+    var d3 = plv8.d3;
+
+    // sort by importance
+    var zOrder = autodd.zOrder;
+    var zCol = autodd.zCol;
+    clusters.sort(function(a, b) {
+        if (zOrder == "asc") return a[zCol] - b[zCol];
+        else return b[zCol] - a[zCol];
+    });
+
+    // initialize a quadtree for existing clusters
+    var zoomFactor = autodd.zoomFactor;
+    var theta = autodd.theta;
+    var bboxH = autodd.bboxH,
+        bboxW = autodd.bboxW;
+    var radius = d3.max([bboxH, bboxW]) * theta;
+    var qt = d3
+        .quadtree()
+        .x(function x(d) {
+            return d.cx;
+        })
+        .y(function y(d) {
+            return d.cy;
+        });
+    for (var i = 0; i < clusters.length; i++) {
+        var x = clusters[i].cx / zoomFactor;
+        var y = clusters[i].cy / zoomFactor;
+        var nn = qt.find(x, y, radius);
+        if (
+            nn != null &&
+            d3.max([
+                Math.abs(x - nn.cx) / bboxW,
+                Math.abs(y - nn.cy) / bboxH
+            ]) <= theta
+        ) {
+            // merge cluster
+            var betaClusterAgg = JSON.parse(nn.cluster_agg);
+            var alphaClusterAgg = JSON.parse(clusters[i].cluster_agg);
+            betaClusterAgg.count += alphaClusterAgg.count;
+            nn.cluster_agg = JSON.stringify(betaClusterAgg);
+        } else {
+            var newCluster = JSON.parse(JSON.stringify(clusters[i]));
+            newCluster.cx /= zoomFactor;
+            newCluster.cy /= zoomFactor;
+            qt.add(newCluster);
+        }
+    }
+    return qt.data();
+}
+
 module.exports = {
     textwrap,
     getBodyStringOfFunction,
     setPropertiesIfNotExists,
     parsePathIntoSegments,
     translatePathSegments,
-    serializePath
+    serializePath,
+    autoDDGetCitusSpatialHashKey,
+    autoDDSingleNodeClustering
 };

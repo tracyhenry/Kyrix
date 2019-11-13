@@ -4,6 +4,9 @@ const setPropertiesIfNotExists = require("./Utilities")
 const parsePathIntoSegments = require("./Utilities").parsePathIntoSegments;
 const translatePathSegments = require("./Utilities").translatePathSegments;
 const serializePath = require("./Utilities").serializePath;
+const getCitusSpatialHashKey = require("./Utilities")
+    .autoDDGetCitusSpatialHashKey;
+const singleNodeClustering = require("./Utilities").autoDDSingleNodeClustering;
 const aggKeyDelimiter = "__";
 
 /**
@@ -362,6 +365,12 @@ function AutoDD(args) {
     this.loY = args.y.extent != null ? args.y.extent[0] : null;
     this.hiX = args.x.extent != null ? args.x.extent[1] : null;
     this.hiY = args.y.extent != null ? args.y.extent[1] : null;
+    this.getCitusSpatialHashKeyBody = getBodyStringOfFunction(
+        getCitusSpatialHashKey
+    );
+    this.singleNodeClusteringBody = getBodyStringOfFunction(
+        singleNodeClustering
+    );
 }
 
 // get rendering function for an autodd layer based on cluster mode

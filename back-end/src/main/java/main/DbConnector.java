@@ -49,7 +49,7 @@ public class DbConnector {
         return conn.prepareStatement(sql);
     }
 
-    private static ArrayList<ArrayList<String>> getQueryResult(Statement stmt, String sql)
+    public static ArrayList<ArrayList<String>> getQueryResult(Statement stmt, String sql)
             throws SQLException, ClassNotFoundException {
 
         ArrayList<ArrayList<String>> result = new ArrayList<>();
