@@ -19,7 +19,9 @@ public class AutoDD {
     private double zoomFactor;
     private int xColId = -1, yColId = -1;
     private double loX = Double.NaN, loY, hiX, hiY;
-    private String getCitusSpatialHashKeyBody, singleNodeClusteringBody;
+    private String getCitusSpatialHashKeyBody,
+            singleNodeClusteringBody,
+            mergeClustersAlongSplitsBody;
 
     public String getQuery() {
         return query;
@@ -100,8 +102,10 @@ public class AutoDD {
                 int colCount = rs.getMetaData().getColumnCount();
                 for (int i = 1; i <= colCount; i++) {
                     String curName = rs.getMetaData().getColumnName(i);
-                    if (curName.equals("cx") || curName.equals("cy") || curName.equals("hash_key"))
-                        continue;
+                    if (curName.equals("cx")
+                            || curName.equals("cy")
+                            || curName.equals("hash_key")
+                            || curName.equals("centroid")) continue;
                     queriedColumnNames.add(curName);
                     columnTypes.add(rs.getMetaData().getColumnTypeName(i));
                 }
@@ -166,6 +170,10 @@ public class AutoDD {
 
     public String getSingleNodeClusteringBody() {
         return singleNodeClusteringBody;
+    }
+
+    public String getMergeClustersAlongSplitsBody() {
+        return mergeClustersAlongSplitsBody;
     }
 
     // get the canvas coordinate of a raw value

@@ -7,6 +7,8 @@ const serializePath = require("./Utilities").serializePath;
 const getCitusSpatialHashKey = require("./Utilities")
     .autoDDGetCitusSpatialHashKey;
 const singleNodeClustering = require("./Utilities").autoDDSingleNodeClustering;
+const mergeClustersAlongSplits = require("./Utilities")
+    .autoDDMergeClustersAlongSplits;
 const aggKeyDelimiter = "__";
 
 /**
@@ -370,6 +372,9 @@ function AutoDD(args) {
     );
     this.singleNodeClusteringBody = getBodyStringOfFunction(
         singleNodeClustering
+    );
+    this.mergeClustersAlongSplitsBody = getBodyStringOfFunction(
+        mergeClustersAlongSplits
     );
 }
 

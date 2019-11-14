@@ -203,7 +203,12 @@ function serializePath(path) {
  * @param hashkeys
  * @returns {*}
  */
-function autoDDGetCitusSpatialHashKey(cx, cy, partitions, hashkeys) {
+function autoDDGetCitusSpatialHashKey(cx, cy) {
+    if (!("partitions" in plv8)) plv8.partitions = REPLACE_ME_partitions;
+    if (!("hashkeys" in plv8)) plv8.hashkeys = REPLACE_ME_hashkeys;
+
+    var partitions = plv8.partitions;
+    var hashkeys = plv8.hashkeys;
     for (var i = 0; i < partitions.length; i++)
         if (
             cx >= partitions[i][0] &&
@@ -215,6 +220,11 @@ function autoDDGetCitusSpatialHashKey(cx, cy, partitions, hashkeys) {
     return -1;
 }
 
+/**
+ * PLV8 function used by the AutoDDCitusIndexer for hierarchical clustering
+ * @param clusters
+ * @param autodd
+ */
 function autoDDSingleNodeClustering(clusters, autodd) {
     // get d3
     if (!("d3" in plv8)) {
@@ -270,6 +280,46 @@ function autoDDSingleNodeClustering(clusters, autodd) {
     return qt.data();
 }
 
+function autoDDMergeClustersAlongSplits(clusters, autodd) {
+    var theta = autodd.theta;
+    var zCol = autodd.zCol;
+    var zOrder = autodd.zOrder;
+    var bboxW = autodd.bboxW;
+    var bboxH = autodd.bboxH;
+    var res = [JSON.parse(JSON.stringify(clusters[0]))];
+    for (var i = 1; i < clusters.length; i++) {
+        var beta = clusters[i];
+        var alpha = res[res.length - 1];
+        var ncd = Math.max(
+            Math.abs(alpha.cx - beta.cx) / bboxW,
+            Math.abs(alpha.cy - beta.cy) / bboxH
+        );
+        if (ncd >= theta)
+            // no conflict
+            res.push(JSON.parse(JSON.stringify(beta)));
+        else {
+            // merge alpha and beta
+            var alphaClusterAgg = JSON.parse(beta.cluster_agg);
+            var betaClusterAgg = JSON.parse(beta.cluster_agg);
+
+            // merge according to importance order
+            if (
+                (+alpha[zCol] > +beta[zCol] && zOrder == "desc") ||
+                (+alpha[zCol] < +beta[zCol] && zOrder == "asc")
+            ) {
+                alphaClusterAgg.count += betaClusterAgg.count;
+                alpha.cluster_agg = JSON.stringify(alphaClusterAgg);
+            } else {
+                betaClusterAgg.count += alphaClusterAgg.count;
+                beta.cluster_agg = JSON.stringify(betaClusterAgg);
+                res[res.length - 1] = JSON.parse(JSON.stringify(beta));
+            }
+        }
+    }
+
+    return res;
+}
+
 module.exports = {
     textwrap,
     getBodyStringOfFunction,
@@ -278,5 +328,6 @@ module.exports = {
     translatePathSegments,
     serializePath,
     autoDDGetCitusSpatialHashKey,
-    autoDDSingleNodeClustering
+    autoDDSingleNodeClustering,
+    autoDDMergeClustersAlongSplits
 };
