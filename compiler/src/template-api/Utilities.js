@@ -286,6 +286,12 @@ function autoDDMergeClustersAlongSplits(clusters, autodd) {
     var zOrder = autodd.zOrder;
     var bboxW = autodd.bboxW;
     var bboxH = autodd.bboxH;
+    var dir = autodd.splitDir;
+    clusters.sort(function(a, b) {
+        if (dir == "vertical") return a.cy - b.cy;
+        else return a.cx - b.cx;
+    });
+
     var res = [JSON.parse(JSON.stringify(clusters[0]))];
     for (var i = 1; i < clusters.length; i++) {
         var beta = clusters[i];
@@ -299,7 +305,7 @@ function autoDDMergeClustersAlongSplits(clusters, autodd) {
             res.push(JSON.parse(JSON.stringify(beta)));
         else {
             // merge alpha and beta
-            var alphaClusterAgg = JSON.parse(beta.cluster_agg);
+            var alphaClusterAgg = JSON.parse(alpha.cluster_agg);
             var betaClusterAgg = JSON.parse(beta.cluster_agg);
 
             // merge according to importance order
