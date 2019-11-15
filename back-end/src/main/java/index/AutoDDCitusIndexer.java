@@ -402,7 +402,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
             kyrixStmt.executeUpdate(sql);
 
             // create table
-            sql = "CREATE TABLE " + tableName + "(";
+            sql = "CREATE UNLOGGED TABLE " + tableName + "(";
             for (int j = 0; j < numRawColumns; j++)
                 sql += columnNames.get(j) + " " + columnTypes.get(j) + ", ";
             sql +=
@@ -729,7 +729,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         System.out.println(sql);
         kyrixStmt.executeUpdate(sql);
         sql =
-                "CREATE TABLE merge_table AS SELECT * FROM "
+                "CREATE UNLOGGED TABLE merge_table AS SELECT * FROM "
                         + tableName
                         + " WHERE centroid <@ "
                         + boxStr
