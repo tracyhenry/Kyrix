@@ -4,11 +4,6 @@ const setPropertiesIfNotExists = require("./Utilities")
 const parsePathIntoSegments = require("./Utilities").parsePathIntoSegments;
 const translatePathSegments = require("./Utilities").translatePathSegments;
 const serializePath = require("./Utilities").serializePath;
-const getCitusSpatialHashKey = require("./Utilities")
-    .autoDDGetCitusSpatialHashKey;
-const singleNodeClustering = require("./Utilities").autoDDSingleNodeClustering;
-const mergeClustersAlongSplits = require("./Utilities")
-    .autoDDMergeClustersAlongSplits;
 const aggKeyDelimiter = "__";
 
 /**
@@ -348,7 +343,7 @@ function AutoDD(args) {
     this.rendering =
         "object" in args.marks.cluster ? args.marks.cluster.object : null;
     this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
-    this.numLevels = "numLevels" in args.config ? args.config.numLevels : 10;
+    this.numLevels = "numLevels" in args.config ? args.config.numLevels : 15;
     this.topLevelWidth =
         "topLevelWidth" in args.config ? args.config.topLevelWidth : 1000;
     this.topLevelHeight =
@@ -1314,6 +1309,168 @@ function getLegendRenderer() {
     if (this.clusterMode == "pie")
         renderFuncBody = getBodyStringOfFunction(pieLegendRendererBody);
     return new Function("svg", "data", "args", renderFuncBody);
+}
+
+/**
+ * PLV8 function used by the AutoDDCitusIndexer to calculate Citus
+ * hash keys that result in spatial partitions
+ * @param cx
+ * @param cy
+ * @param partitions
+ * @param hashkeys
+ * @returns {*}
+ */
+function getCitusSpatialHashKey(cx, cy) {
+    if (!("partitions" in plv8)) plv8.partitions = REPLACE_ME_partitions;
+    if (!("hashkeys" in plv8)) plv8.hashkeys = REPLACE_ME_hashkeys;
+
+    var partitions = plv8.partitions;
+    var hashkeys = plv8.hashkeys;
+    for (var i = 0; i < partitions.length; i++)
+        if (
+            cx >= partitions[i][0] &&
+            cx <= partitions[i][2] &&
+            cy >= partitions[i][1] &&
+            cy <= partitions[i][3]
+        )
+            return hashkeys[i];
+    return -1;
+}
+
+/**
+ * PLV8 function used by the AutoDDCitusIndexer for hierarchical clustering
+ * @param clusters
+ * @param autodd
+ */
+function singleNodeClustering(shard, autodd) {
+    // get d3
+    if (!("d3" in plv8)) {
+        plv8.d3 = require("d3");
+    }
+    var d3 = plv8.d3;
+
+    // fetch in queries
+    var zOrder = autodd.zOrder;
+    var zCol = autodd.zCol;
+    var sql =
+        "SELECT * FROM " + shard + " ORDER BY " + zCol + " " + zOrder + ";";
+    var plan = plv8.prepare(sql);
+    var cursor = plan.cursor();
+
+    // initialize a quadtree for existing clusters
+    var zoomFactor = autodd.zoomFactor;
+    var theta = autodd.theta;
+    var bboxH = autodd.bboxH,
+        bboxW = autodd.bboxW;
+    var radius = d3.max([bboxH, bboxW]) * theta * Math.sqrt(2);
+    var qt = d3
+        .quadtree()
+        .x(function x(d) {
+            return d.cx;
+        })
+        .y(function y(d) {
+            return d.cy;
+        });
+    var cluster;
+    while ((cluster = cursor.fetch())) {
+        var x = cluster.cx / zoomFactor;
+        var y = cluster.cy / zoomFactor;
+        var nn = qt.find(x, y, radius);
+        if (
+            nn != null &&
+            d3.max([
+                Math.abs(x - nn.cx) / bboxW,
+                Math.abs(y - nn.cy) / bboxH
+            ]) <= theta
+        ) {
+            // merge cluster
+            var betaClusterAgg = JSON.parse(nn.cluster_agg);
+            var alphaClusterAgg = JSON.parse(cluster.cluster_agg);
+            betaClusterAgg["count(*)"] += alphaClusterAgg["count(*)"];
+            nn.cluster_agg = JSON.stringify(betaClusterAgg);
+        } else {
+            var newCluster = JSON.parse(JSON.stringify(cluster));
+            newCluster.cx /= zoomFactor;
+            newCluster.cy /= zoomFactor;
+            qt.add(newCluster);
+        }
+    }
+    cursor.close();
+    plan.free();
+
+    // use batch insert to put data into the correct table
+    var newClusters = qt.data();
+    var fields = autodd.fields;
+    var types = autodd.types;
+    var batchSize = 100000;
+    var targetTable = autodd.tableMap[shard];
+    sql = "";
+    for (var i = 0; i < newClusters.length; i++) {
+        if (i % batchSize == 0) {
+            if (sql.length > 0) plv8.execute(sql);
+            sql = "INSERT INTO " + targetTable + "(";
+            for (var j = 0; j < fields.length; j++) sql += fields[j] + ", ";
+            sql += "centroid) VALUES ";
+        }
+        // calculate minx, miny, maxx, maxy;
+        newClusters[i].minx = newClusters[i].cx - bboxW / 2;
+        newClusters[i].miny = newClusters[i].cy - bboxH / 2;
+        newClusters[i].maxx = newClusters[i].cx + bboxW / 2;
+        newClusters[i].maxy = newClusters[i].cy + bboxH / 2;
+        sql += (i % batchSize > 0 ? ", " : "") + "(";
+        for (var j = 0; j < fields.length; j++)
+            sql += "'" + newClusters[i][fields[j]] + "'::" + types[j] + ", ";
+        sql += "point(" + newClusters[i].cx + ", " + newClusters[i].cy + "))";
+    }
+    if (sql.length > 0) plv8.execute(sql);
+
+    return newClusters.length;
+}
+
+function mergeClustersAlongSplits(clusters, autodd) {
+    var theta = autodd.theta;
+    var zCol = autodd.zCol;
+    var zOrder = autodd.zOrder;
+    var bboxW = autodd.bboxW;
+    var bboxH = autodd.bboxH;
+    var dir = autodd.splitDir;
+    clusters.sort(function(a, b) {
+        if (dir == "vertical") return a.cy - b.cy;
+        else return a.cx - b.cx;
+    });
+
+    var res = [JSON.parse(JSON.stringify(clusters[0]))];
+    for (var i = 1; i < clusters.length; i++) {
+        var beta = clusters[i];
+        var alpha = res[res.length - 1];
+        var ncd = Math.max(
+            Math.abs(alpha.cx - beta.cx) / bboxW,
+            Math.abs(alpha.cy - beta.cy) / bboxH
+        );
+        if (ncd >= theta)
+            // no conflict
+            res.push(JSON.parse(JSON.stringify(beta)));
+        else {
+            // merge alpha and beta
+            var alphaClusterAgg = JSON.parse(alpha.cluster_agg);
+            var betaClusterAgg = JSON.parse(beta.cluster_agg);
+
+            // merge according to importance order
+            if (
+                (+alpha[zCol] > +beta[zCol] && zOrder == "desc") ||
+                (+alpha[zCol] < +beta[zCol] && zOrder == "asc")
+            ) {
+                alphaClusterAgg["count(*)"] += betaClusterAgg["count(*)"];
+                alpha.cluster_agg = JSON.stringify(alphaClusterAgg);
+            } else {
+                betaClusterAgg["count(*)"] += alphaClusterAgg["count(*)"];
+                beta.cluster_agg = JSON.stringify(betaClusterAgg);
+                res[res.length - 1] = JSON.parse(JSON.stringify(beta));
+            }
+        }
+    }
+
+    return res;
 }
 
 //define prototype

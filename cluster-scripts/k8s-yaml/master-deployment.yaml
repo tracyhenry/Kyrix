@@ -21,7 +21,7 @@ spec:
       containers:
       - image: tracyhenry/pg11_postgis25_citus811_plv8:latest
         name: citus-master
-        args: ["postgres", "-c", "shared_buffers=2GB"]
+        args: ["postgres", "-c", "shared_buffers=1GB"]
         ports:
         - containerPort: 5432
         resources: {}

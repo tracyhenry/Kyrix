@@ -10,7 +10,7 @@ metadata:
     io.kompose.service: worker
   name: worker
 spec:
-  replicas: 64
+  replicas: 2
   strategy: {}
   template:
     metadata:
@@ -21,8 +21,7 @@ spec:
       containers:
       - image: tracyhenry/pg11_postgis25_citus811_plv8:latest
         name: worker
-#        command: ["postgres", "-c", "shared_buffers=2GB"]
-        args: ["postgres", "-c", "shared_buffers=2GB"]
+        args: ["postgres", "-c", "shared_buffers=1GB"]
         resources: {}
       restartPolicy: Always
 status: {}
