@@ -93,6 +93,9 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
             // running single node clustering in parallel
             runSingleNodeClusteringUDFInParallel(i);
 
+            // build spatial indexes
+            buildSpatialIndexOnLevel(i);
+
             // get count along boundaries
             mergeClustersAlongSplits(root, i);
         }
@@ -101,6 +104,9 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
             // apply single node clustering on
             // all data from level i + 1
             runSingleNodeClusteringUDF(i);
+
+            // build spatial indexes
+            buildSpatialIndexOnLevel(i);
         }
     }
 
@@ -571,7 +577,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         System.out.println("Creating the PLV8 UDF for single node clustering algo...");
         String funcSql =
                 "CREATE OR REPLACE FUNCTION single_node_clustering_algo("
-                        + "shard text, autodd jsonb) returns setof jsonb AS $$ "
+                        + "shard text, autodd jsonb) returns int AS $$ "
                         + autoDD.getSingleNodeClusteringBody()
                         + "$$ LANGUAGE plv8";
         sql = funcSql + " STABLE;";
@@ -623,13 +629,11 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                         + ", \"fields\":[";
         // field names
         for (int j = 0; j < numRawColumns; j++) sql += "\"" + columnNames.get(j) + "\", ";
-        sql +=
-                "\"hash_key\", \"cluster_agg\", \"cx\", \"cy\","
-                        + "\"minx\", \"miny\", \"maxx\", \"maxy\"]";
+        sql += "\"hash_key\", \"cluster_agg\", \"cx\", \"cy\"]";
         // field types
         sql += ", \"types\":[";
         for (int j = 0; j < numRawColumns; j++) sql += "\"" + columnTypes.get(j) + "\", ";
-        sql += "\"int\", \"text\", \"real\", \"real\"," + "\"real\", \"real\", \"real\", \"real\"]";
+        sql += "\"int\", \"text\", \"real\", \"real\"]";
         // map of shard ids
         sql += ", \"tableMap\": {";
         for (int j = 0; j < numPartitions; j++)
@@ -659,25 +663,6 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                         + (System.nanoTime() - st) / 1e9
                         + "s.");
         for (int j = 0; j < res.size(); j++) System.out.println(res.get(j).get(0));
-        System.out.println();
-
-        sql = "DROP INDEX IF EXISTS " + curLevelTableName + "_centroid_gist;";
-        System.out.println(sql);
-        st = System.nanoTime();
-        kyrixStmt.executeUpdate(sql);
-        System.out.println(
-                "Drop existing index on centroid took: " + (System.nanoTime() - st) / 1e9 + "s.");
-        sql =
-                "CREATE INDEX "
-                        + curLevelTableName
-                        + "_centroid_gist ON "
-                        + curLevelTableName
-                        + " USING gist(centroid);";
-        System.out.println(sql);
-        st = System.nanoTime();
-        kyrixStmt.executeUpdate(sql);
-        System.out.println(
-                "Creating gist index on centroid took: " + (System.nanoTime() - st) / 1e9 + "s.");
         System.out.println();
     }
 
@@ -819,13 +804,11 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                         + ", \"fields\":[";
         // field names
         for (int j = 0; j < numRawColumns; j++) sql += "\"" + columnNames.get(j) + "\", ";
-        sql +=
-                "\"hash_key\", \"cluster_agg\", \"cx\", \"cy\","
-                        + "\"minx\", \"miny\", \"maxx\", \"maxy\"]";
+        sql += "\"hash_key\", \"cluster_agg\", \"cx\", \"cy\"]";
         // field types
         sql += ", \"types\":[";
         for (int j = 0; j < numRawColumns; j++) sql += "\"" + columnTypes.get(j) + "\", ";
-        sql += "\"int\", \"text\", \"real\", \"real\"," + "\"real\", \"real\", \"real\", \"real\"]";
+        sql += "\"int\", \"text\", \"real\", \"real\"]";
         // map of shard ids
         sql += ", \"tableMap\": {\"" + lastLevelTableName + "\" : \"" + curLevelTableName + "\"";
         sql += "}}'::jsonb)";
@@ -838,6 +821,32 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                         + (System.nanoTime() - st) / 1e9
                         + "s.");
         System.out.println();
+    }
+
+    private void buildSpatialIndexOnLevel(int i) throws SQLException {
+        System.out.println("Building spatial indexes on level" + i + "...");
+
+        String curLevelTableName = zoomLevelTables.get(i);
+        // update minx, miny, maxx, maxy, centroid && BUILD spatial index
+        st = System.nanoTime();
+        sql =
+                "UPDATE "
+                        + curLevelTableName
+                        + " SET minx = cx - "
+                        + bboxW / 2
+                        + ", miny = cy - "
+                        + bboxH / 2
+                        + ", maxx = cx + "
+                        + bboxW / 2
+                        + ", maxy = cy + "
+                        + bboxH / 2
+                        + ", centroid = point(cx, cy);";
+        System.out.println(sql);
+        kyrixStmt.executeUpdate(sql);
+        System.out.println(
+                "Updating minx, miny, maxx, maxy & centroid took: "
+                        + (System.nanoTime() - st) / 1e9
+                        + "s.");
 
         sql = "DROP INDEX IF EXISTS " + curLevelTableName + "_centroid_gist;";
         System.out.println(sql);
@@ -863,7 +872,66 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     public ArrayList<ArrayList<String>> getDataFromRegion(
             Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox)
             throws Exception {
-        return null;
+        // get column list string
+        String colListStr = "";
+        for (int i = 0; i < columnNames.size(); i++) colListStr += columnNames.get(i) + ", ";
+        colListStr += "cluster_agg, cx, cy, minx, miny, maxx, maxy";
+
+        // construct range query
+        String sql =
+                "SELECT "
+                        + colListStr
+                        + " FROM "
+                        + zoomLevelTables.get(c.getPyramidLevel())
+                        + " WHERE ";
+        sql +=
+                "centroid <@ box('"
+                        + (newBox.getMinx() - bboxW / 2)
+                        + ", "
+                        + (newBox.getMiny() - bboxH / 2)
+                        + ", "
+                        + (newBox.getMaxx() + bboxW / 2)
+                        + ", "
+                        + (newBox.getMaxy() + bboxH / 2)
+                        + "')";
+
+        // don't get anything outside old box
+        if (oldBox.getWidth() > 0) // when there is not an old box, oldBox is set to -1e5, -1e5,...
+        sql +=
+                    " and not (centroid <@ box('"
+                            + (oldBox.getMinx() + bboxW / 2)
+                            + ", "
+                            + (oldBox.getMiny() + bboxH / 2)
+                            + ", "
+                            + (oldBox.getMaxx() - bboxW / 2)
+                            + ", "
+                            + (oldBox.getMaxy() - bboxH / 2)
+                            + "') )";
+
+        // if table is distributed, only hit shards that intersect with newBox
+        if (c.getPyramidLevel() > L) {
+            sql += "and (";
+            int ct = -1;
+            for (KDTree o : q) {
+                ct++;
+                if (o.maxx < newBox.getMinx() - bboxW / 2) continue;
+                if (newBox.getMaxx() + bboxW / 2 < o.minx) continue;
+                if (o.maxy < newBox.getMiny() - bboxH / 2) continue;
+                if (newBox.getMaxy() + bboxH / 2 < o.miny) continue;
+                if (sql.charAt(sql.length() - 1) != '(') sql += " or ";
+                sql += "hash_key = " + citusHashKeys.get(ct);
+            }
+            sql += ")";
+        }
+
+        // predicates
+        if (predicate.length() > 0) sql += " and " + predicate;
+
+        // run sql
+        sql += ",";
+        System.out.println(sql);
+
+        return DbConnector.getQueryResult(kyrixStmt, sql);
     }
 
     @Override

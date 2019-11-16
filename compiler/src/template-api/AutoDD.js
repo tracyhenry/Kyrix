@@ -380,7 +380,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         REPLACE_ME_processClusterAgg();
         var circleSizeInterpolator = d3
             .scaleLinear()
-            .domain([1, params.roughN.toString().length - 1])
+            //.domain([1, params.roughN.toString().length - 1])
+            .domain([1, 7])
             .range([params.circleMinSize, params.circleMaxSize]);
         var g = svg.append("g");
         g.selectAll("circle")
@@ -407,7 +408,20 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .append("text")
             .attr("dy", "0.3em")
             .text(function(d) {
-                return d.clusterAgg["count(*)"];
+                var ct = d.clusterAgg["count(*)"];
+                if (ct < 1000) return ct;
+                if (ct >= 1000 && ct < 1000000) {
+                    ct /= 1000.0;
+                    return ct.toFixed(1) + "K";
+                }
+                if (ct > 1000000 && ct < 1000000000) {
+                    ct /= 1000000.0;
+                    return ct.toFixed(1) + "M";
+                } else {
+                    ct /= 1000000000.0;
+                    return ct.toFixed(1) + "B";
+                }
+                return "";
             })
             .attr("font-size", function(d) {
                 return (
@@ -1397,30 +1411,32 @@ function singleNodeClustering(shard, autodd) {
     }
     cursor.close();
     plan.free();
+    plv8.elog(NOTICE, "Quad tree construction done!!!");
 
     // use batch insert to put data into the correct table
     var newClusters = qt.data();
     var fields = autodd.fields;
     var types = autodd.types;
-    var batchSize = 100000;
+    var batchSize = 300000;
     var targetTable = autodd.tableMap[shard];
     sql = "";
     for (var i = 0; i < newClusters.length; i++) {
         if (i % batchSize == 0) {
             if (sql.length > 0) plv8.execute(sql);
             sql = "INSERT INTO " + targetTable + "(";
-            for (var j = 0; j < fields.length; j++) sql += fields[j] + ", ";
-            sql += "centroid) VALUES ";
+            for (var j = 0; j < fields.length; j++)
+                sql += (j > 0 ? ", " : "") + fields[j];
+            sql += ") VALUES ";
         }
-        // calculate minx, miny, maxx, maxy;
-        newClusters[i].minx = newClusters[i].cx - bboxW / 2;
-        newClusters[i].miny = newClusters[i].cy - bboxH / 2;
-        newClusters[i].maxx = newClusters[i].cx + bboxW / 2;
-        newClusters[i].maxy = newClusters[i].cy + bboxH / 2;
         sql += (i % batchSize > 0 ? ", " : "") + "(";
         for (var j = 0; j < fields.length; j++)
-            sql += "'" + newClusters[i][fields[j]] + "'::" + types[j] + ", ";
-        sql += "point(" + newClusters[i].cx + ", " + newClusters[i].cy + "))";
+            sql +=
+                (j > 0 ? ", " : "") +
+                "'" +
+                newClusters[i][fields[j]] +
+                "'::" +
+                types[j];
+        sql += ")";
     }
     if (sql.length > 0) plv8.execute(sql);
 
