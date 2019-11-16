@@ -19,6 +19,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     public class AutoDDInfo {
         public ArrayList<String> columnNames;
         public ArrayList<String> tableNames;
+        public double zoomFactor;
         public int bboxW, bboxH;
         public ArrayList<Integer> citusHashKeys;
         public ArrayList<KDTree> kdTreeNodes;
@@ -31,12 +32,13 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     private final int virtualViewportSize = 1000;
     private final int numPartitions = 16;
     private final int binarySearchMaxLoop = 8;
+    private final double bottomScale = 1e10;
     private final String aggKeyDelimiter = "__";
     private AutoDD autoDD;
     private Statement kyrixStmt;
     private KDTree root = null;
     private Queue<KDTree> q = null;
-    private double theta = 1.0, bottomScale = 1e10;
+    private double theta = 1.0;
     private double loX, loY, hiX, hiY;
     private String rawTable, sql, xCol, yCol;
     private String curAutoDDId; // autoddIndex + "_0"
@@ -47,7 +49,6 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     private ArrayList<String> citusNodeIPs, citusNodePorts;
     private ArrayList<ArrayList<String>> citusShardIds;
     private ArrayList<String> columnNames, columnTypes, zoomLevelTables;
-    private ArrayList<AutoDDInfo> autoDDInfos = null;
 
     // singleton pattern to ensure only one instance existed
     private AutoDDCitusIndexer() {
@@ -893,6 +894,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         autoDDInfo.tableNames = zoomLevelTables;
         autoDDInfo.bboxW = bboxW;
         autoDDInfo.bboxH = bboxH;
+        autoDDInfo.zoomFactor = autoDD.getZoomFactor();
         autoDDInfo.citusHashKeys = citusHashKeys;
         autoDDInfo.kdTreeNodes = new ArrayList<>();
         for (KDTree o : q) autoDDInfo.kdTreeNodes.add(o);
@@ -984,13 +986,14 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
 
         // if table is distributed, only hit shards that intersect with newBox
         if (c.getPyramidLevel() > L) {
-            sql += "and (";
+            sql += " and (";
+            double zoomFactor = bottomScale / Math.pow(autoDDInfo.zoomFactor, c.getPyramidLevel());
             for (int i = 0; i < autoDDInfo.kdTreeNodes.size(); i++) {
                 KDTree o = autoDDInfo.kdTreeNodes.get(i);
-                if (o.maxx < newBox.getMinx() - bboxW / 2) continue;
-                if (newBox.getMaxx() + bboxW / 2 < o.minx) continue;
-                if (o.maxy < newBox.getMiny() - bboxH / 2) continue;
-                if (newBox.getMaxy() + bboxH / 2 < o.miny) continue;
+                if (o.maxx / zoomFactor < newBox.getMinx() - bboxW / 2) continue;
+                if (newBox.getMaxx() + bboxW / 2 < o.minx / zoomFactor) continue;
+                if (o.maxy / zoomFactor < newBox.getMiny() - bboxH / 2) continue;
+                if (newBox.getMaxy() + bboxH / 2 < o.miny / zoomFactor) continue;
                 if (sql.charAt(sql.length() - 1) != '(') sql += " or ";
                 sql += "hash_key = " + autoDDInfo.citusHashKeys.get(i);
             }
