@@ -381,7 +381,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var circleSizeInterpolator = d3
             .scaleLinear()
             //.domain([1, params.roughN.toString().length - 1])
-            .domain([1, 7])
+            .domain([1, 6])
             .range([params.circleMinSize, params.circleMaxSize]);
         var g = svg.append("g");
         g.selectAll("circle")
@@ -389,7 +389,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .enter()
             .append("circle")
             .attr("r", function(d) {
-                return circleSizeInterpolator(d.clusterAgg["count(*)"].length);
+                return circleSizeInterpolator(
+                    d.clusterAgg["count(*)"].toString().length
+                );
             })
             .attr("cx", function(d) {
                 return d.cx;
@@ -425,7 +427,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             })
             .attr("font-size", function(d) {
                 return (
-                    circleSizeInterpolator(d.clusterAgg["count(*)"].length) / 2
+                    circleSizeInterpolator(
+                        d.clusterAgg["count(*)"].toString().length
+                    ) / 2.2
                 );
             })
             .attr("x", function(d) {
@@ -443,8 +447,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .each(function(d) {
                 params.textwrap(
                     d3.select(this),
-                    circleSizeInterpolator(d.clusterAgg["count(*)"].length) *
-                        1.5
+                    circleSizeInterpolator(
+                        d.clusterAgg["count(*)"].toString().length
+                    ) * 1.5
                 );
             });
 
@@ -1009,7 +1014,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
         data.forEach(d => {
             d.clusterAgg = JSON.parse(d.clusterAgg);
-            d.convexHull = getConvexCoordinates(d);
+            //d.convexHull = getConvexCoordinates(d);
             for (var i = 0; i < params.aggDomain.length; i++)
                 for (var j = 0; j < params.aggMeasures.length; j++) {
                     var curField = params.aggMeasures[j].field;

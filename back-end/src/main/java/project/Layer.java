@@ -1,6 +1,7 @@
 package project;
 
 import index.Indexer;
+import index.PsqlNativeBoxIndexer;
 import java.io.Serializable;
 
 /** Created by wenbo on 4/3/18. */
@@ -12,7 +13,7 @@ public class Layer implements Serializable {
     private boolean deltaBox;
     private Placement placement;
     private String rendering;
-    private Indexer indexer;
+    private transient Indexer indexer;
     private String autoDDId;
     private String indexerType;
 
@@ -45,6 +46,15 @@ public class Layer implements Serializable {
     }
 
     public Indexer getIndexer() {
+        if (indexer == null) {
+            try {
+                System.out.println(indexerType);
+                indexer = Indexer.getIndexerByType(indexerType);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if (indexer == null) indexer = PsqlNativeBoxIndexer.getInstance(false);
+        }
         return indexer;
     }
 

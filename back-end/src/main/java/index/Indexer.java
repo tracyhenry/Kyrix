@@ -101,7 +101,9 @@ public abstract class Indexer implements Serializable {
         Class c = Class.forName("index." + type);
         Method m = c.getMethod("getInstance");
         System.out.println("Indexer type: " + c.getSimpleName());
+        if (c.getSimpleName().equals("PsqlNativeBoxIndexer")) return (Indexer) m.invoke(false);
         return (Indexer) m.invoke(null);
+        // TODO: this is very problematic
     }
 
     // precompute

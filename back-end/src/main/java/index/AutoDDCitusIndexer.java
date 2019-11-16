@@ -1,6 +1,8 @@
 package index;
 
 import box.Box;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import index.util.KDTree;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -14,7 +16,16 @@ import project.Canvas;
 /** Created by wenbo on 11/1/19. */
 public class AutoDDCitusIndexer extends BoundingBoxIndexer {
 
+    public class AutoDDInfo {
+        public ArrayList<String> columnNames;
+        public ArrayList<String> tableNames;
+        public int bboxW, bboxH;
+        public ArrayList<Integer> citusHashKeys;
+        public ArrayList<KDTree> kdTreeNodes;
+    }
+
     private static AutoDDCitusIndexer instance = null;
+    private final Gson gson;
     private final int L = 7;
     private final int objectNumLimit = 4000; // in a 1k by 1k region
     private final int virtualViewportSize = 1000;
@@ -36,9 +47,12 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     private ArrayList<String> citusNodeIPs, citusNodePorts;
     private ArrayList<ArrayList<String>> citusShardIds;
     private ArrayList<String> columnNames, columnTypes, zoomLevelTables;
+    private ArrayList<AutoDDInfo> autoDDInfos = null;
 
     // singleton pattern to ensure only one instance existed
-    private AutoDDCitusIndexer() {}
+    private AutoDDCitusIndexer() {
+        gson = new GsonBuilder().create();
+    }
 
     // thread-safe instance getter
     public static synchronized AutoDDCitusIndexer getInstance() {
@@ -62,6 +76,9 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
 
         // step 2: bottom-up clustering
         bottomUpClustering();
+
+        // save useful info to the database for online querying
+        saveAutoDDInfo();
     }
 
     private void performSpatialPartitioning() throws SQLException, ClassNotFoundException {
@@ -868,21 +885,78 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         System.out.println();
     }
 
+    private void saveAutoDDInfo() throws SQLException {
+        System.out.println("Saving autodd info...");
+
+        AutoDDInfo autoDDInfo = new AutoDDInfo();
+        autoDDInfo.columnNames = columnNames;
+        autoDDInfo.tableNames = zoomLevelTables;
+        autoDDInfo.bboxW = bboxW;
+        autoDDInfo.bboxH = bboxH;
+        autoDDInfo.citusHashKeys = citusHashKeys;
+        autoDDInfo.kdTreeNodes = new ArrayList<>();
+        for (KDTree o : q) autoDDInfo.kdTreeNodes.add(o);
+
+        // create table if not exist
+        sql = "CREATE TABLE IF NOT EXISTS autodd_infos(project_id text, autodd_id int, gson text);";
+        System.out.println(sql);
+        kyrixStmt.execute(sql);
+
+        // delete if exists
+        sql = "DELETE FROM autodd_infos WHERE autodd_id = " + curAutoDDIndex + ";";
+        System.out.println(sql);
+        kyrixStmt.execute(sql);
+
+        // serialize
+        String jsonText = gson.toJson(autoDDInfo);
+        sql =
+                "INSERT INTO autodd_infos VALUES ('"
+                        + Main.getProject().getName()
+                        + "', "
+                        + curAutoDDIndex
+                        + ", '"
+                        + jsonText
+                        + "');";
+        System.out.println(sql);
+        kyrixStmt.execute(sql);
+    }
+
+    public AutoDDInfo getAutoDDInfo(int autoDDIndex) throws SQLException, ClassNotFoundException {
+        sql =
+                "SELECT gson FROM autodd_infos WHERE project_id = '"
+                        + Main.getProject().getName()
+                        + "' and autodd_id = "
+                        + autoDDIndex
+                        + ";";
+        System.out.println(sql);
+        String jsonText = DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0);
+        AutoDDInfo res = gson.fromJson(jsonText, AutoDDInfo.class);
+        return res;
+    }
+
     @Override
     public ArrayList<ArrayList<String>> getDataFromRegion(
             Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox)
             throws Exception {
+        // get autoddInfo if it doesn't exist
+        String autoDDId = c.getLayers().get(layerId).getAutoDDId();
+        int autoDDIndex = Integer.valueOf(autoDDId.substring(0, autoDDId.indexOf("_")));
+        AutoDDInfo autoDDInfo = getAutoDDInfo(autoDDIndex);
+
         // get column list string
         String colListStr = "";
-        for (int i = 0; i < columnNames.size(); i++) colListStr += columnNames.get(i) + ", ";
+        for (int i = 0; i < autoDDInfo.columnNames.size(); i++)
+            colListStr += autoDDInfo.columnNames.get(i) + ", ";
         colListStr += "cluster_agg, cx, cy, minx, miny, maxx, maxy";
 
         // construct range query
+        int bboxW = autoDDInfo.bboxW;
+        int bboxH = autoDDInfo.bboxH;
         String sql =
                 "SELECT "
                         + colListStr
                         + " FROM "
-                        + zoomLevelTables.get(c.getPyramidLevel())
+                        + autoDDInfo.tableNames.get(c.getPyramidLevel())
                         + " WHERE ";
         sql +=
                 "centroid <@ box('"
@@ -911,15 +985,14 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         // if table is distributed, only hit shards that intersect with newBox
         if (c.getPyramidLevel() > L) {
             sql += "and (";
-            int ct = -1;
-            for (KDTree o : q) {
-                ct++;
+            for (int i = 0; i < autoDDInfo.kdTreeNodes.size(); i++) {
+                KDTree o = autoDDInfo.kdTreeNodes.get(i);
                 if (o.maxx < newBox.getMinx() - bboxW / 2) continue;
                 if (newBox.getMaxx() + bboxW / 2 < o.minx) continue;
                 if (o.maxy < newBox.getMiny() - bboxH / 2) continue;
                 if (newBox.getMaxy() + bboxH / 2 < o.miny) continue;
                 if (sql.charAt(sql.length() - 1) != '(') sql += " or ";
-                sql += "hash_key = " + citusHashKeys.get(ct);
+                sql += "hash_key = " + autoDDInfo.citusHashKeys.get(i);
             }
             sql += ")";
         }
@@ -928,10 +1001,10 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         if (predicate.length() > 0) sql += " and " + predicate;
 
         // run sql
-        sql += ",";
+        sql += ";";
         System.out.println(sql);
 
-        return DbConnector.getQueryResult(kyrixStmt, sql);
+        return DbConnector.getQueryResult(Config.databaseName, sql);
     }
 
     @Override

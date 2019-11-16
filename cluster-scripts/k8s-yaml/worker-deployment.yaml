@@ -21,7 +21,7 @@ spec:
       containers:
       - image: tracyhenry/pg11_postgis25_citus811_plv8:latest
         name: worker
-        args: ["postgres", "-c", "max_wal_size=50GB", "-c", "autovacuum_max_workers=2", "-c", "checkpoint_timeout=120min", "-c", "maintenance_work_mem=5GB"]
+        args: ["postgres", "-c", "max_wal_size=50GB", "-c", "autovacuum_max_workers=3", "-c", "checkpoint_timeout=120min", "-c", "maintenance_work_mem=5GB"]
         resources: {}
       restartPolicy: Always
 status: {}
