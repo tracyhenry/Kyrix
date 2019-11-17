@@ -13,7 +13,7 @@ var query = "select * from fifa19;";
 
 var autoDD = {
     data: {
-        db: "fifa19",
+        db: "kyrix",
         query: query
     },
     x: {
@@ -25,7 +25,7 @@ var autoDD = {
         extent: [600, 0]
     },
     z: {
-        field: "cast(wage as int)",
+        field: "wage",
         order: "desc"
     },
     marks: {

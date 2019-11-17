@@ -660,6 +660,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
             ret += "], \"aggMeasureFields\": [";
             for (int j = 0; j < autoDD.getAggMeasureFields().size(); j++)
                 ret += (j > 0 ? ", \"" : "\"") + autoDD.getAggMeasureFields().get(j) + "\"";
+            ret += "]";
         }
 
         return ret;

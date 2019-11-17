@@ -996,7 +996,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function processClusterAgg() {
         function getConvexCoordinates(d) {
-            var coords = JSON.parse(d.clusterAgg.convexHull);
+            var coords = d.clusterAgg.convexHull;
             var convexHull = [];
             for (var i = 0; i < coords.length; i++) {
                 convexHull.push({
@@ -1004,6 +1004,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     y: +coords[i][1]
                 });
             }
+            convexHull.push({x: +coords[0][0], y: +coords[0][1]});
             return convexHull;
         }
 
@@ -1407,8 +1408,10 @@ function singleNodeClustering(shard, autodd) {
         if (Object.keys(ret).length > 1) {
             // not only count(*), and thus not bottom level
             // just scale the convex hull
-            for (var i = 0; i < ret.convexHull.length; i++)
-                ret.convexHull[i] /= zoomFactor;
+            for (var i = 0; i < ret.convexHull.length; i++) {
+                ret.convexHull[i][0] /= zoomFactor;
+                ret.convexHull[i][1] /= zoomFactor;
+            }
             return ret;
         }
 
@@ -1522,13 +1525,13 @@ function singleNodeClustering(shard, autodd) {
             sql += ") VALUES ";
         }
         sql += (i % batchSize > 0 ? ", " : "") + "(";
-        for (var j = 0; j < fields.length; j++)
-            sql +=
-                (j > 0 ? ", " : "") +
-                "'" +
-                newClusters[i][fields[j]] +
-                "'::" +
-                types[j];
+        for (var j = 0; j < fields.length; j++) {
+            sql += (j > 0 ? ", " : "") + "'";
+            var curValue = newClusters[i][fields[j]];
+            if (typeof curValue == "string")
+                curValue = curValue.replace(/\'/g, "''");
+            sql += curValue + "'::" + types[j];
+        }
         sql += ")";
     }
     if (sql.length > 0) plv8.execute(sql);
