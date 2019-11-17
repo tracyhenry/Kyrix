@@ -5,7 +5,6 @@ import com.coveo.nashorn_modules.FilesystemFolder;
 import com.coveo.nashorn_modules.Require;
 import java.io.File;
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -99,10 +98,10 @@ public abstract class Indexer implements Serializable {
     public static Indexer getIndexerByType(String type) throws Exception {
         if (type.isEmpty()) return null;
         Class c = Class.forName("index." + type);
-        Method m = c.getMethod("getInstance");
         System.out.println("Indexer type: " + c.getSimpleName());
-        if (c.getSimpleName().equals("PsqlNativeBoxIndexer")) return (Indexer) m.invoke(false);
-        return (Indexer) m.invoke(null);
+        if (c.getSimpleName().equals("PsqlNativeBoxIndexer"))
+            return PsqlNativeBoxIndexer.getInstance(false);
+        return (Indexer) c.getMethod("getInstance").invoke(null);
         // TODO: this is very problematic
     }
 

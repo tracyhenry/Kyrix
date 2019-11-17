@@ -30,7 +30,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     private final int L = 7;
     private final int objectNumLimit = 4000; // in a 1k by 1k region
     private final int virtualViewportSize = 1000;
-    private final int numPartitions = 16;
+    private final int numPartitions = 4;
     private final int binarySearchMaxLoop = 8;
     private final double bottomScale = 1e10;
     private final String aggKeyDelimiter = "__";
@@ -44,7 +44,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     private String curAutoDDId; // autoddIndex + "_0"
     private int curAutoDDIndex, numLevels, numRawColumns;
     private int topLevelWidth, topLevelHeight, bboxW, bboxH;
-    private long st, st1, st2, numRawRows;
+    private long st, st1, numRawRows;
     private ArrayList<Integer> citusHashKeys;
     private ArrayList<String> citusNodeIPs, citusNodePorts;
     private ArrayList<ArrayList<String>> citusShardIds;
@@ -597,6 +597,9 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                 "CREATE OR REPLACE FUNCTION single_node_clustering_algo("
                         + "shard text, autodd jsonb) returns int AS $$ "
                         + autoDD.getSingleNodeClusteringBody()
+                                .replaceAll(
+                                        "REPLACE_ME_merge_cluster_aggs",
+                                        autoDD.getMergeClusterAggs())
                         + "$$ LANGUAGE plv8";
         sql = funcSql + " STABLE;";
         System.out.println("Creating single_node_clustering_algo on master:\n" + sql);
@@ -614,10 +617,84 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                 "CREATE OR REPLACE FUNCTION merge_clusters_along_splits("
                         + "clusters jsonb[], autodd jsonb) returns setof jsonb AS $$ "
                         + autoDD.getMergeClustersAlongSplitsBody()
+                                .replaceAll(
+                                        "REPLACE_ME_merge_cluster_aggs",
+                                        autoDD.getMergeClusterAggs())
                         + "$$ LANGUAGE plv8";
         sql = sql + " STABLE;";
         System.out.println("Creating merge_clusters_along_splits on master:\n" + sql);
         kyrixStmt.executeUpdate(sql);
+    }
+
+    private String getAutoddJsonStr(double zoomFactor, boolean columnList, boolean aggFields) {
+        String ret = "";
+        ret =
+                "\"zCol\":\""
+                        + autoDD.getzCol()
+                        + "\", \"zOrder\":\""
+                        + autoDD.getzOrder()
+                        + "\", \"zoomFactor\":"
+                        + zoomFactor
+                        + ", \"theta\":"
+                        + theta
+                        + ", \"aggKeyDelimiter\": \""
+                        + aggKeyDelimiter
+                        + "\", \"bboxW\":"
+                        + bboxW
+                        + ", \"bboxH\":"
+                        + bboxH;
+        if (columnList) {
+            ret += ", \"fields\":[";
+            // field names
+            for (int j = 0; j < numRawColumns; j++) ret += "\"" + columnNames.get(j) + "\", ";
+            ret += "\"hash_key\", \"cluster_agg\", \"cx\", \"cy\"]";
+            // field types
+            ret += ", \"types\":[";
+            for (int j = 0; j < numRawColumns; j++) ret += "\"" + columnTypes.get(j) + "\", ";
+            ret += "\"int\", \"text\", \"real\", \"real\"]";
+        }
+        if (aggFields) {
+            ret += ", \"aggDimensionFields\": [";
+            for (int j = 0; j < autoDD.getAggDimensionFields().size(); j++)
+                ret += (j > 0 ? ", \"" : "\"") + autoDD.getAggDimensionFields().get(j) + "\"";
+            ret += "], \"aggMeasureFields\": [";
+            for (int j = 0; j < autoDD.getAggMeasureFields().size(); j++)
+                ret += (j > 0 ? ", \"" : "\"") + autoDD.getAggMeasureFields().get(j) + "\"";
+        }
+
+        return ret;
+    }
+
+    private void runSingleNodeClusteringUDF(int i) throws SQLException {
+        System.out.println(
+                "Applying single_node_clustering_algo directly on master"
+                        + " on clusters in level "
+                        + (i + 1)
+                        + " for level"
+                        + i
+                        + "...");
+
+        double zoomFactor = autoDD.getZoomFactor();
+        if (i == numLevels - 1) zoomFactor = bottomScale / Math.pow(zoomFactor, numLevels - 1);
+
+        String curLevelTableName = zoomLevelTables.get(i);
+        String lastLevelTableName = zoomLevelTables.get(i + 1);
+
+        // then run udf and store results into the current level
+        sql = "SELECT single_node_clustering_algo('" + lastLevelTableName + "', '{";
+        sql += getAutoddJsonStr(zoomFactor, true, true);
+        // map of shard ids
+        sql += ", \"tableMap\": {\"" + lastLevelTableName + "\" : \"" + curLevelTableName + "\"";
+        sql += "}}'::jsonb)";
+
+        System.out.println(sql);
+        st = System.nanoTime();
+        kyrixStmt.executeQuery(sql);
+        System.out.println(
+                "Running single node clustering on Citus master took: "
+                        + (System.nanoTime() - st) / 1e9
+                        + "s.");
+        System.out.println();
     }
 
     private void runSingleNodeClusteringUDFInParallel(int i)
@@ -632,26 +709,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         // run udf with inserts
         sql =
                 "SELECT single_node_clustering_algo('%1$s', '{"
-                        + "\"zCol\":\""
-                        + autoDD.getzCol()
-                        + "\", \"zOrder\":\""
-                        + autoDD.getzOrder()
-                        + "\", \"zoomFactor\":"
-                        + zoomFactor
-                        + ", \"theta\":"
-                        + theta
-                        + ", \"bboxW\":"
-                        + bboxW
-                        + ", \"bboxH\":"
-                        + bboxH
-                        + ", \"fields\":[";
-        // field names
-        for (int j = 0; j < numRawColumns; j++) sql += "\"" + columnNames.get(j) + "\", ";
-        sql += "\"hash_key\", \"cluster_agg\", \"cx\", \"cy\"]";
-        // field types
-        sql += ", \"types\":[";
-        for (int j = 0; j < numRawColumns; j++) sql += "\"" + columnTypes.get(j) + "\", ";
-        sql += "\"int\", \"text\", \"real\", \"real\"]";
+                        + getAutoddJsonStr(zoomFactor, true, true);
         // map of shard ids
         sql += ", \"tableMap\": {";
         for (int j = 0; j < numPartitions; j++)
@@ -763,17 +821,9 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                         + " (v->>'centroid')::point ";
         sql +=
                 "FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"
-                        + "\"zCol\":\""
-                        + autoDD.getzCol()
-                        + "\", \"zOrder\":\""
-                        + autoDD.getzOrder()
-                        + "\", \"theta\":"
-                        + theta
-                        + ", \"bboxW\":"
-                        + bboxW
-                        + ", \"bboxH\":"
-                        + bboxH
-                        + ", \"splitDir\":"
+                        + getAutoddJsonStr(0, false, false);
+        sql +=
+                ", \"splitDir\":"
                         + (o.splitDir == KDTree.SplitDir.VERTICAL
                                 ? "\"vertical\""
                                 : "\"horizontal\"")
@@ -785,60 +835,6 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                 "Running merge_clusters_along_splits took : "
                         + (System.nanoTime() - st) / 1e9
                         + "s.");
-    }
-
-    private void runSingleNodeClusteringUDF(int i) throws SQLException {
-        System.out.println(
-                "Applying single_node_clustering_algo directly on master"
-                        + " on clusters in level "
-                        + (i + 1)
-                        + " for level"
-                        + i
-                        + "...");
-
-        double zoomFactor = autoDD.getZoomFactor();
-        if (i == numLevels - 1) zoomFactor = bottomScale / Math.pow(zoomFactor, numLevels - 1);
-
-        String curLevelTableName = zoomLevelTables.get(i);
-        String lastLevelTableName = zoomLevelTables.get(i + 1);
-
-        // then run udf and store results into the current level
-        sql =
-                "SELECT single_node_clustering_algo('"
-                        + lastLevelTableName
-                        + "', '{"
-                        + "\"zCol\":\""
-                        + autoDD.getzCol()
-                        + "\", \"zOrder\":\""
-                        + autoDD.getzOrder()
-                        + "\", \"zoomFactor\":"
-                        + zoomFactor
-                        + ", \"theta\":"
-                        + theta
-                        + ", \"bboxW\":"
-                        + bboxW
-                        + ", \"bboxH\":"
-                        + bboxH
-                        + ", \"fields\":[";
-        // field names
-        for (int j = 0; j < numRawColumns; j++) sql += "\"" + columnNames.get(j) + "\", ";
-        sql += "\"hash_key\", \"cluster_agg\", \"cx\", \"cy\"]";
-        // field types
-        sql += ", \"types\":[";
-        for (int j = 0; j < numRawColumns; j++) sql += "\"" + columnTypes.get(j) + "\", ";
-        sql += "\"int\", \"text\", \"real\", \"real\"]";
-        // map of shard ids
-        sql += ", \"tableMap\": {\"" + lastLevelTableName + "\" : \"" + curLevelTableName + "\"";
-        sql += "}}'::jsonb)";
-
-        System.out.println(sql);
-        st = System.nanoTime();
-        kyrixStmt.executeQuery(sql);
-        System.out.println(
-                "Running single node clustering on Citus master took: "
-                        + (System.nanoTime() - st) / 1e9
-                        + "s.");
-        System.out.println();
     }
 
     private void buildSpatialIndexOnLevel(int i) throws SQLException {

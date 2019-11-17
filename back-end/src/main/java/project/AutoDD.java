@@ -19,7 +19,8 @@ public class AutoDD {
     private double zoomFactor;
     private int xColId = -1, yColId = -1;
     private double loX = Double.NaN, loY, hiX, hiY;
-    private String getCitusSpatialHashKeyBody,
+    private String mergeClusterAggs,
+            getCitusSpatialHashKeyBody,
             singleNodeClusteringBody,
             mergeClustersAlongSplitsBody;
 
@@ -162,6 +163,10 @@ public class AutoDD {
 
     public double getHiY() {
         return hiY;
+    }
+
+    public String getMergeClusterAggs() {
+        return mergeClusterAggs;
     }
 
     public String getGetCitusSpatialHashKeyBody() {

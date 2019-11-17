@@ -223,8 +223,8 @@ function AutoDD(args) {
         "config" in args.marks.cluster ? args.marks.cluster.config : {};
     if (args.marks.cluster.mode == "circle")
         setPropertiesIfNotExists(this.clusterParams, {
-            circleMinSize: 30,
-            circleMaxSize: 70
+            circleMinSize: 40,
+            circleMaxSize: 100
         });
     if (args.marks.cluster.mode == "contour")
         setPropertiesIfNotExists(this.clusterParams, {
@@ -362,6 +362,7 @@ function AutoDD(args) {
     this.loY = args.y.extent != null ? args.y.extent[0] : null;
     this.hiX = args.x.extent != null ? args.x.extent[1] : null;
     this.hiY = args.y.extent != null ? args.y.extent[1] : null;
+    this.mergeClusterAggs = mergeClusterAggs.toString();
     this.getCitusSpatialHashKeyBody = getBodyStringOfFunction(
         getCitusSpatialHashKey
     );
@@ -379,9 +380,12 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var params = args.renderingParams;
         REPLACE_ME_processClusterAgg();
         var circleSizeInterpolator = d3
-            .scaleLinear()
+            //.scaleLinear()
             //.domain([1, params.roughN.toString().length - 1])
-            .domain([1, 6])
+            //.domain([1, 6])
+            .scaleLinear()
+            //.exponent(1.05)
+            .domain([1, 404591769])
             .range([params.circleMinSize, params.circleMaxSize]);
         var g = svg.append("g");
         g.selectAll("circle")
@@ -389,9 +393,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .enter()
             .append("circle")
             .attr("r", function(d) {
-                return circleSizeInterpolator(
-                    d.clusterAgg["count(*)"].toString().length
-                );
+                return circleSizeInterpolator(d.clusterAgg["count(*)"]);
             })
             .attr("cx", function(d) {
                 return d.cx;
@@ -414,23 +416,19 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 if (ct < 1000) return ct;
                 if (ct >= 1000 && ct < 1000000) {
                     ct /= 1000.0;
-                    return ct.toFixed(1) + "K";
+                    return ct.toFixed(0) + "K";
                 }
                 if (ct > 1000000 && ct < 1000000000) {
                     ct /= 1000000.0;
-                    return ct.toFixed(1) + "M";
+                    return ct.toFixed(0) + "M";
                 } else {
                     ct /= 1000000000.0;
-                    return ct.toFixed(1) + "B";
+                    return ct.toFixed(0) + "B";
                 }
                 return "";
             })
             .attr("font-size", function(d) {
-                return (
-                    circleSizeInterpolator(
-                        d.clusterAgg["count(*)"].toString().length
-                    ) / 2.2
-                );
+                return circleSizeInterpolator(d.clusterAgg["count(*)"]) / 2;
             })
             .attr("x", function(d) {
                 return d.cx;
@@ -447,9 +445,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .each(function(d) {
                 params.textwrap(
                     d3.select(this),
-                    circleSizeInterpolator(
-                        d.clusterAgg["count(*)"].toString().length
-                    ) * 1.5
+                    circleSizeInterpolator(d.clusterAgg["count(*)"]) * 1.5
                 );
             });
 
@@ -1001,12 +997,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function processClusterAgg() {
         function getConvexCoordinates(d) {
             var coords = JSON.parse(d.clusterAgg.convexHull);
-            var size = coords.length / 2;
             var convexHull = [];
-            for (var i = 0; i < size; i++) {
+            for (var i = 0; i < coords.length; i++) {
                 convexHull.push({
-                    x: +coords[i * 2],
-                    y: +coords[i * 2 + 1]
+                    x: +coords[i][0],
+                    y: +coords[i][1]
                 });
             }
             return convexHull;
@@ -1014,7 +1009,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
         data.forEach(d => {
             d.clusterAgg = JSON.parse(d.clusterAgg);
-            //d.convexHull = getConvexCoordinates(d);
+            d.convexHull = getConvexCoordinates(d);
             for (var i = 0; i < params.aggDomain.length; i++)
                 for (var j = 0; j < params.aggMeasures.length; j++) {
                     var curField = params.aggMeasures[j].field;
@@ -1357,16 +1352,106 @@ function getCitusSpatialHashKey(cx, cy) {
 }
 
 /**
+ * Merge cluster b in to cluster a. Both are cluster_agg jsons.
+ * used by singleNodeClustering & mergeClustersAlongSplits
+ * @param a
+ * @param b
+ */
+function mergeClusterAggs(a, b) {
+    // count(*)
+    a["count(*)"] += b["count(*)"];
+
+    // convex hulls
+    a.convexHull = d3.polygonHull(a.convexHull.concat(b.convexHull));
+
+    // numeric aggregations
+    bKeys = Object.keys(b);
+    for (var i = 0; i < bKeys.length; i++) {
+        var aggKey = bKeys[i];
+        if (aggKey == "count(*)" || aggKey == "topk" || aggKey == "convexHull")
+            continue;
+        if (!(aggKey in a)) {
+            a[aggKey] = b[aggKey];
+            continue;
+        }
+        var func = aggKey.substring(
+            aggKey.lastIndexOf(aggKeyDelimiter) + aggKeyDelimiter.length,
+            aggKey.lastIndexOf("(")
+        );
+        var aValue = a[aggKey],
+            bValue = b[aggKey];
+        switch (func) {
+            case "count":
+            case "sum":
+            case "sqrsum":
+                a[aggKey] = aValue + bValue;
+                break;
+            case "min":
+                a[aggKey] = Math.min(aValue, bValue);
+                break;
+            case "max":
+                a[aggKey] = Math.max(aValue, bValue);
+                break;
+        }
+    }
+}
+
+/**
  * PLV8 function used by the AutoDDCitusIndexer for hierarchical clustering
  * @param clusters
  * @param autodd
  */
 function singleNodeClustering(shard, autodd) {
-    // get d3
-    if (!("d3" in plv8)) {
-        plv8.d3 = require("d3");
+    function initClusterAgg(d) {
+        var ret = JSON.parse(d.cluster_agg);
+        if (Object.keys(ret).length > 1) {
+            // not only count(*), and thus not bottom level
+            // just scale the convex hull
+            for (var i = 0; i < ret.convexHull.length; i++)
+                ret.convexHull[i] /= zoomFactor;
+            return ret;
+        }
+
+        // convex hull
+        var minx = d.cx / zoomFactor - bboxW / 2;
+        var miny = d.cy / zoomFactor - bboxH / 2;
+        var maxx = d.cx / zoomFactor + bboxW / 2;
+        var maxy = d.cy / zoomFactor + bboxH / 2;
+        ret.convexHull = [
+            [minx, miny],
+            [minx, maxy],
+            [maxx, maxy],
+            [maxx, miny]
+        ];
+
+        // numerical aggregations
+        var dimStr = "";
+        for (var i = 0; i < aggDimensionFields.length; i++)
+            dimStr += (i > 0 ? aggKeyDelimiter : "") + d[aggDimensionFields[i]];
+        // always calculate count(*)
+        ret[dimStr + aggKeyDelimiter + "count(*)"] = 1;
+        for (var i = 0; i < aggMeasureFields.length; i++) {
+            var curField = aggMeasureFields[i];
+            if (curField == "*") continue;
+            var curValue = d[curField];
+            ret[dimStr + aggKeyDelimiter + "sum(" + curField + ")"] = +curValue;
+            ret[dimStr + aggKeyDelimiter + "max(" + curField + ")"] = +curValue;
+            ret[dimStr + aggKeyDelimiter + "min(" + curField + ")"] = +curValue;
+            ret[dimStr + aggKeyDelimiter + "sqrsum(" + curField + ")"] =
+                curValue * curValue;
+        }
+
+        return ret;
     }
+
+    // get d3
+    if (!("d3" in plv8)) plv8.d3 = require("d3");
     var d3 = plv8.d3;
+
+    // get merge cluster function
+    if (!("mergeClusterAggs" in plv8))
+        plv8.mergeClusterAggs = REPLACE_ME_merge_cluster_aggs;
+    var mergeClusterAggs = plv8.mergeClusterAggs;
 
     // fetch in queries
     var zOrder = autodd.zOrder;
@@ -1381,6 +1466,9 @@ function singleNodeClustering(shard, autodd) {
     var theta = autodd.theta;
     var bboxH = autodd.bboxH,
         bboxW = autodd.bboxW;
+    var aggKeyDelimiter = autodd.aggKeyDelimiter;
+    var aggDimensionFields = autodd.aggDimensionFields;
+    var aggMeasureFields = autodd.aggMeasureFields;
     var radius = d3.max([bboxH, bboxW]) * theta * Math.sqrt(2);
     var qt = d3
         .quadtree()
@@ -1395,6 +1483,7 @@ function singleNodeClustering(shard, autodd) {
         var x = cluster.cx / zoomFactor;
         var y = cluster.cy / zoomFactor;
         var nn = qt.find(x, y, radius);
+        var curClusterAgg = initClusterAgg(cluster);
         if (
             nn != null &&
             d3.max([
@@ -1403,20 +1492,19 @@ function singleNodeClustering(shard, autodd) {
             ]) <= theta
         ) {
             // merge cluster
-            var betaClusterAgg = JSON.parse(nn.cluster_agg);
-            var alphaClusterAgg = JSON.parse(cluster.cluster_agg);
-            betaClusterAgg["count(*)"] += alphaClusterAgg["count(*)"];
-            nn.cluster_agg = JSON.stringify(betaClusterAgg);
+            var nnClusterAgg = JSON.parse(nn.cluster_agg);
+            mergeClusterAggs(nnClusterAgg, curClusterAgg);
+            nn.cluster_agg = JSON.stringify(nnClusterAgg);
         } else {
             var newCluster = JSON.parse(JSON.stringify(cluster));
             newCluster.cx /= zoomFactor;
             newCluster.cy /= zoomFactor;
+            newCluster.cluster_agg = JSON.stringify(curClusterAgg);
             qt.add(newCluster);
         }
     }
     cursor.close();
     plan.free();
-    plv8.elog(NOTICE, "Quad tree construction done!!!");
 
     // use batch insert to put data into the correct table
     var newClusters = qt.data();
@@ -1449,12 +1537,23 @@ function singleNodeClustering(shard, autodd) {
 }
 
 function mergeClustersAlongSplits(clusters, autodd) {
+    // get d3
+    if (!("d3" in plv8)) plv8.d3 = require("d3");
+    var d3 = plv8.d3;
+
+    // get merge cluster function
+    if (!("mergeClusterAggs" in plv8))
+        plv8.mergeClusterAggs = REPLACE_ME_merge_cluster_aggs;
+    var mergeClusterAggs = plv8.mergeClusterAggs;
+
     var theta = autodd.theta;
     var zCol = autodd.zCol;
     var zOrder = autodd.zOrder;
     var bboxW = autodd.bboxW;
     var bboxH = autodd.bboxH;
     var dir = autodd.splitDir;
+    var aggKeyDelimiter = autodd.aggKeyDelimiter;
+
     clusters.sort(function(a, b) {
         if (dir == "vertical") return a.cy - b.cy;
         else return a.cx - b.cx;
@@ -1462,31 +1561,31 @@ function mergeClustersAlongSplits(clusters, autodd) {
 
     var res = [JSON.parse(JSON.stringify(clusters[0]))];
     for (var i = 1; i < clusters.length; i++) {
-        var beta = clusters[i];
-        var alpha = res[res.length - 1];
+        var cur = clusters[i];
+        var last = res[res.length - 1];
         var ncd = Math.max(
-            Math.abs(alpha.cx - beta.cx) / bboxW,
-            Math.abs(alpha.cy - beta.cy) / bboxH
+            Math.abs(last.cx - cur.cx) / bboxW,
+            Math.abs(last.cy - cur.cy) / bboxH
         );
         if (ncd >= theta)
             // no conflict
-            res.push(JSON.parse(JSON.stringify(beta)));
+            res.push(JSON.parse(JSON.stringify(cur)));
         else {
-            // merge alpha and beta
-            var alphaClusterAgg = JSON.parse(alpha.cluster_agg);
-            var betaClusterAgg = JSON.parse(beta.cluster_agg);
+            // merge last and cur
+            var lastClusterAgg = JSON.parse(last.cluster_agg);
+            var curClusterAgg = JSON.parse(cur.cluster_agg);
 
             // merge according to importance order
             if (
-                (+alpha[zCol] > +beta[zCol] && zOrder == "desc") ||
-                (+alpha[zCol] < +beta[zCol] && zOrder == "asc")
+                (+last[zCol] > +cur[zCol] && zOrder == "desc") ||
+                (+last[zCol] < +cur[zCol] && zOrder == "asc")
             ) {
-                alphaClusterAgg["count(*)"] += betaClusterAgg["count(*)"];
-                alpha.cluster_agg = JSON.stringify(alphaClusterAgg);
+                mergeClusterAggs(lastClusterAgg, curClusterAgg);
+                last.cluster_agg = JSON.stringify(lastClusterAgg);
             } else {
-                betaClusterAgg["count(*)"] += alphaClusterAgg["count(*)"];
-                beta.cluster_agg = JSON.stringify(betaClusterAgg);
-                res[res.length - 1] = JSON.parse(JSON.stringify(beta));
+                mergeClusterAggs(curClusterAgg, lastClusterAgg);
+                cur.cluster_agg = JSON.stringify(curClusterAgg);
+                res[res.length - 1] = JSON.parse(JSON.stringify(cur));
             }
         }
     }

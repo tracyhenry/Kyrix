@@ -36,7 +36,8 @@ var autoDD = {
         }
     },
     config: {
-        axis: true
+        axis: true,
+        topLevelWidth: 1500
     }
 };
 
