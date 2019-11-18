@@ -171,7 +171,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                                         / objectNumLimit
                                         / autoDD.getBboxH()
                                         / autoDD.getBboxW()));
-        if (!autoDD.getOverlap()) theta = Math.max(theta, 1);
+        theta = Math.max(theta, autoDD.getOverlap());
         System.out.println("theta = " + theta);
 
         // DB statement
@@ -203,6 +203,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         bboxH = autoDD.getBboxH();
 
         // zoom level table names
+        // TODO: add project name and autodd_ids
         zoomLevelTables = new ArrayList<>();
         for (int i = 0; i < numLevels; i++) zoomLevelTables.add("l" + i);
         zoomLevelTables.add("bottom_level");
@@ -649,7 +650,9 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                         + "\", \"bboxW\":"
                         + bboxW
                         + ", \"bboxH\":"
-                        + bboxH;
+                        + bboxH
+                        + ", \"topk\":"
+                        + autoDD.getTopk();
         if (columnList) {
             ret += ", \"fields\":[";
             // field names

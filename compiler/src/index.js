@@ -267,8 +267,9 @@ function addAutoDD(autoDD, args) {
         textwrap: require("./template-api/Utilities").textwrap
     });
     this.addRenderingParams(autoDD.clusterParams);
-    this.addRenderingParams(autoDD.legendParams);
     this.addRenderingParams(autoDD.aggregateParams);
+    this.addRenderingParams(autoDD.hoverParams);
+    this.addRenderingParams(autoDD.legendParams);
 
     // construct canvases
     var curPyramid = [];

@@ -51,8 +51,8 @@ function playerRendering(svg, data, args) {
     var g = svg.append("g").attr("class", "player object");
     var params = args.renderingParams;
 
-    var basex = d => +d.cx - +params.rectPlayer.w / 2;
-    var basey = d => +d.cy - +params.rectPlayer.h / 2;
+    var basex = d => +d.cx - params.rectPlayer.w / 2;
+    var basey = d => +d.cy - params.rectPlayer.h / 2;
 
     g.selectAll("rect.player-bg")
         .data(data)

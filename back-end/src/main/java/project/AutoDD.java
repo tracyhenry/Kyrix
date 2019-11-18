@@ -11,11 +11,12 @@ public class AutoDD {
     private String query, db, rawTable;
     private String xCol, yCol, zCol;
     private int bboxW, bboxH;
+    private int topk;
     private String clusterMode, zOrder;
     private ArrayList<String> columnNames, queriedColumnNames = null, columnTypes = null;
     private ArrayList<String> aggDimensionFields, aggMeasureFields;
     private int numLevels, topLevelWidth, topLevelHeight;
-    private boolean overlap;
+    private double overlap;
     private double zoomFactor;
     private int xColId = -1, yColId = -1;
     private double loX = Double.NaN, loY, hiX, hiY;
@@ -48,6 +49,10 @@ public class AutoDD {
         return bboxH;
     }
 
+    public int getTopk() {
+        return topk;
+    }
+
     public String getRawTable() {
         return rawTable;
     }
@@ -64,7 +69,7 @@ public class AutoDD {
         return clusterMode;
     }
 
-    public boolean getOverlap() {
+    public double getOverlap() {
         return overlap;
     }
 

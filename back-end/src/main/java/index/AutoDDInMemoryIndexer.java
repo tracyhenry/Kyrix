@@ -79,7 +79,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                                                 / autoDD.getBboxH()
                                                 / autoDD.getBboxW())
                                 - 1);
-        if (!autoDD.getOverlap()) overlappingThreshold = Math.max(overlappingThreshold, 1);
+        overlappingThreshold = Math.max(overlappingThreshold, autoDD.getOverlap());
         System.out.println("Overlapping threshold: " + overlappingThreshold);
 
         // store raw query results into memory
