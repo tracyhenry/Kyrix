@@ -115,7 +115,11 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
             buildSpatialIndexOnLevel(i);
 
             // get count along boundaries
+            st1 = System.nanoTime();
             mergeClustersAlongSplits(root, i);
+            System.out.println("************************************************");
+            System.out.println("Merge splits took: " + (System.nanoTime() - st1) / 1e9 + "s.");
+            System.out.println("************************************************");
         }
 
         for (int i = L; i >= 0; i--) {
@@ -405,8 +409,9 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
             q.add(curNode.rc);
         }
 
-        System.out.println();
+        System.out.println("\n************************************************");
         System.out.println("Building KD-tree took: " + (System.nanoTime() - st) / 1e9 + "s.");
+        System.out.println("************************************************\n");
 
         // print out counts
         for (KDTree node : q) System.out.print(node.count + " ");
@@ -583,12 +588,14 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         System.out.println(sql);
         st = System.nanoTime();
         kyrixStmt.executeUpdate(sql);
+        System.out.println("\n************************************************");
         System.out.println(
                 "Populating "
                         + zoomLevelTables.get(numLevels)
                         + " took: "
                         + (System.nanoTime() - st) / 1e9
                         + "s.");
+        System.out.println("************************************************\n");
     }
 
     private void createSingleNodeClusteringUDF() throws SQLException {
@@ -691,11 +698,12 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         System.out.println(sql);
         st = System.nanoTime();
         kyrixStmt.executeQuery(sql);
+        System.out.println("\n************************************************");
         System.out.println(
                 "Running single node clustering on Citus master took: "
                         + (System.nanoTime() - st) / 1e9
                         + "s.");
-        System.out.println();
+        System.out.println("************************************************\n");
     }
 
     private void runSingleNodeClusteringUDFInParallel(int i)
@@ -735,10 +743,12 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         System.out.println(sql);
         st = System.nanoTime();
         ArrayList<ArrayList<String>> res = DbConnector.getQueryResult(kyrixStmt, sql);
+        System.out.println("\n************************************************");
         System.out.println(
                 "Running single node clustering in parallel took: "
                         + (System.nanoTime() - st) / 1e9
                         + "s.");
+        System.out.println("************************************************\n");
         for (int j = 0; j < res.size(); j++) System.out.println(res.get(j).get(0));
         System.out.println();
     }
