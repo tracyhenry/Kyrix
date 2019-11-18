@@ -57,10 +57,9 @@ var autoDD = {
         hover: {
             rankList: {
                 mode: "tabular",
-                fields: ["name", "nationality", "club", "rating", "wage"],
+                fields: ["name", "nationality", "rating", "wage"],
                 topk: 3,
                 config: {
-                    hoverRankListOrientation: "horizontal",
                     bboxW: 180,
                     bboxH: 240
                 }

@@ -1166,8 +1166,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
         function tabularRankListRenderer(svg, data, args) {
             var params = args.renderingParams;
-            var charW = 15;
-            var charH = 30;
+            var charW = 16;
+            var charH = 25;
             var paddingH = 10;
             var paddingW = 15;
             var headerH = charH + 20;
@@ -1176,30 +1176,27 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .append("g")
                 .attr("id", "tabular_hover")
                 .attr("class", "tabular ranklist");
-            var columnNames = params.columnNames;
             var fields = params.hoverTableFields;
-            var widths = {};
+            var widths = [];
             var totalW = 0,
                 totalH = data.length * (charH + paddingH) + headerH;
             for (var i = 0; i < fields.length; i++) {
                 var maxlen = 0;
-                var index = columnNames.indexOf(fields[i]);
-                for (var j = 0; j < data.length; j++) {
-                    maxlen = d3.max([
-                        data[j][columnNames[index]].length,
-                        maxlen
-                    ]);
-                }
-                maxlen = d3.max([columnNames[index].length, maxlen]);
-                widths[columnNames[index]] = maxlen * charW + paddingW;
-                totalW += maxlen * charW + paddingW;
+                for (var j = 0; j < data.length; j++)
+                    maxlen = Math.max(
+                        maxlen,
+                        data[j][fields[i]].toString().length
+                    );
+                maxlen = Math.max(maxlen, fields[i].length);
+                widths.push(maxlen * charW + paddingW);
+                totalW += widths[i];
             }
             var basex = data[0].cx - totalW / 2;
             var basey = data[0].cy - totalH / 2;
             var runx = basex,
                 runy = basey;
             for (var i = 0; i < fields.length; i++) {
-                var width = widths[fields[i]];
+                var width = widths[i];
                 // th
                 g.append("rect")
                     .attr("x", runx)
