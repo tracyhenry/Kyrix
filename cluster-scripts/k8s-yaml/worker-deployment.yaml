@@ -10,7 +10,7 @@ metadata:
     io.kompose.service: worker
   name: worker
 spec:
-  replicas: 2
+  replicas: 12
   strategy: {}
   template:
     metadata:
