@@ -5,6 +5,7 @@ var param = {};
 param.semanticZoomEnteringDelta = 0.5;
 param.semanticZoomEnteringDuration = 1300;
 param.literalZoomDuration = 500;
+param.slideDuration = 800;
 
 // semantic zoom scale factor
 param.semanticZoomScaleFactor = 4;
@@ -44,6 +45,8 @@ param.semanticZoom = "semantic_zoom";
 param.geometricSemanticZoom = "geometric_semantic_zoom";
 param.load = "load";
 param.highlight = "highlight";
+param.slideLeft = "slide_left";
+param.slideRight = "slide_right";
 
 // epsilon
 param.eps = 1e-5;

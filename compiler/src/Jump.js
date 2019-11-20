@@ -23,7 +23,9 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
     if (
         type == "semantic_zoom" ||
         type == "geometric_semantic_zoom" ||
-        type == "load"
+        type == "load" ||
+        type == "slide_right" ||
+        type == "slide_left"
     )
         if (
             !("selector" in optional) ||

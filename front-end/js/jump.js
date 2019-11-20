@@ -152,8 +152,8 @@ function postJump(viewId, zoomType) {
     }
 }
 
-// animate semantic zoom
-function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
+// animate semantic zoom, and slide left/right jumps
+function animateJump(viewId, jump, predArray, newVpX, newVpY, tuple) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
 
@@ -243,55 +243,91 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
         curViewport[3] / 2.0,
         curViewport[2]
     ];
-    var endView = [
-        minx + (maxx - minx) / 2.0 - curViewport[0],
-        miny + (maxy - miny) / 2.0 - curViewport[1],
-        (maxx - minx) / (enteringAnimation ? param.semanticZoomScaleFactor : 1)
-    ];
     gvd.history[gvd.history.length - 1].startView = startView;
-    gvd.history[gvd.history.length - 1].endView = endView;
 
-    // set up zoom transitions
-    param.zoomDuration = d3.interpolateZoom(startView, endView).duration;
-    param.enteringDelay = Math.round(
-        param.zoomDuration * param.semanticZoomEnteringDelta
-    );
-    d3.transition("zoomInTween_" + viewId)
-        .duration(param.zoomDuration)
-        .tween("zoomInTween", function() {
-            var i = d3.interpolateZoom(startView, endView);
-            return function(t) {
-                zoomAndFade(t, i(t));
-            };
-        })
-        .on("start", function() {
-            // schedule a new entering transition
-            if (enteringAnimation)
-                d3.transition("enterTween_" + viewId)
-                    .delay(param.enteringDelay)
-                    .duration(param.semanticZoomEnteringDuration)
-                    .tween("enterTween", function() {
-                        return function(t) {
-                            enterAndScale(d3.easeCircleOut(t));
-                        };
-                    })
-                    .on("start", function() {
-                        // get the canvas object for the destination canvas
-                        var gotCanvas = getCurCanvas(viewId);
-                        gotCanvas.then(function() {
-                            // static trim
-                            renderStaticLayers(viewId);
+    if (
+        jump.type == param.semanticZoom ||
+        jump.type == param.geometricSemanticZoom
+    ) {
+        var endView = [
+            minx + (maxx - minx) / 2.0 - curViewport[0],
+            miny + (maxy - miny) / 2.0 - curViewport[1],
+            (maxx - minx) /
+                (enteringAnimation ? param.semanticZoomScaleFactor : 1)
+        ];
+        gvd.history[gvd.history.length - 1].endView = endView;
 
-                            // render
-                            RefreshDynamicLayers(viewId, newVpX, newVpY);
+        // set up zoom transitions
+        param.zoomDuration = d3.interpolateZoom(startView, endView).duration;
+        param.enteringDelay = Math.round(
+            param.zoomDuration * param.semanticZoomEnteringDelta
+        );
+        d3.transition("zoomInTween_" + viewId)
+            .duration(param.zoomDuration)
+            .tween("zoomInTween", function() {
+                var i = d3.interpolateZoom(startView, endView);
+                return function(t) {
+                    zoomAndFade(t, i(t));
+                };
+            })
+            .on("start", function() {
+                // schedule a new entering transition
+                if (enteringAnimation)
+                    d3.transition("enterTween_" + viewId)
+                        .delay(param.enteringDelay)
+                        .duration(param.semanticZoomEnteringDuration)
+                        .tween("enterTween", function() {
+                            return function(t) {
+                                enterAndScale(d3.easeCircleOut(t));
+                            };
+                        })
+                        .on("start", function() {
+                            // get the canvas object for the destination canvas
+                            var gotCanvas = getCurCanvas(viewId);
+                            gotCanvas.then(function() {
+                                // static trim
+                                renderStaticLayers(viewId);
+
+                                // render
+                                RefreshDynamicLayers(viewId, newVpX, newVpY);
+                            });
+                        })
+                        .on("end", function() {
+                            postJump(viewId, zoomType);
                         });
-                    })
-                    .on("end", function() {
+            })
+            .on("end", function() {
+                if (!enteringAnimation) {
+                    // get the canvas object for the destination canvas
+                    var gotCanvas = getCurCanvas(viewId);
+                    gotCanvas.then(function() {
+                        // static trim
+                        renderStaticLayers(viewId);
+
+                        // render
+                        RefreshDynamicLayers(viewId, newVpX, newVpY);
+
+                        // clean up
                         postJump(viewId, zoomType);
                     });
-        })
-        .on("end", function() {
-            if (!enteringAnimation) {
+                }
+            });
+    } else if (jump.type == param.slideLeft || jump.type == param.slideRight) {
+        var endView =
+            jump.type == param.slideLeft
+                ? [startView[0] + startView[2], startView[1], startView[2]]
+                : [startView[0] - startView[2], startView[1], startView[2]];
+        gvd.history[gvd.history.length - 1].endView = endView;
+
+        d3.transition("zoomInTween_" + viewId)
+            .duration(param.slideDuration)
+            .tween("zoomInTween", function() {
+                var i = d3.interpolate(startView, endView);
+                return function(t) {
+                    zoomAndFade(t, i(t));
+                };
+            })
+            .on("end", function() {
                 // get the canvas object for the destination canvas
                 var gotCanvas = getCurCanvas(viewId);
                 gotCanvas.then(function() {
@@ -304,8 +340,8 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
                     // clean up
                     postJump(viewId, zoomType);
                 });
-            }
-        });
+            });
+    }
 
     function zoomAndFade(t, v) {
         var vWidth = v[2];
@@ -472,9 +508,11 @@ function startJump(viewId, d, jump, optionalArgs) {
 
     if (
         jump.type == param.semanticZoom ||
-        jump.type == param.geometricSemanticZoom
+        jump.type == param.geometricSemanticZoom ||
+        jump.type == param.slideRight ||
+        jump.type == param.slideLeft
     )
-        semanticZoom(viewId, jump, predArray, newVpX, newVpY, d);
+        animateJump(viewId, jump, predArray, newVpX, newVpY, d);
     else if (jump.type == param.load)
         load(predArray, newVpX, newVpY, 1, jump.destViewId, jump.destId);
     else if (jump.type == param.highlight) highlight(predArray, jump);
@@ -497,6 +535,8 @@ function registerJumps(viewId, svg, layerId) {
             if (
                 (jumps[k].type == param.semanticZoom ||
                     jumps[k].type == param.geometricSemanticZoom ||
+                    jumps[k].type == param.slideRight ||
+                    jumps[k].type == param.slideLeft ||
                     (jumps[k].type == param.load &&
                         jumps[k].sourceViewId == viewId) ||
                     (jumps[k].type == param.highlight &&
@@ -554,6 +594,8 @@ function registerJumps(viewId, svg, layerId) {
                 if (
                     (jumps[k].type != param.semanticZoom &&
                         jumps[k].type != param.geometricSemanticZoom &&
+                        jumps[k].type != param.slideRight &&
+                        jumps[k].type != param.slideLeft &&
                         (jumps[k].type != param.load ||
                             jumps[k].sourceViewId != viewId) &&
                         (jumps[k].type != param.highlight ||
