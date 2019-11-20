@@ -16,11 +16,11 @@ var autoDD = {
     layout: {
         x: {
             field: "seconds",
-            extent: [0, 5000]
+            extent: [0, 10000]
         },
         y: {
             field: "total",
-            extent: [100, 0]
+            extent: [1000, 0]
         },
         z: {
             field: "none",
@@ -37,8 +37,8 @@ var autoDD = {
         }
     },
     config: {
-        topLevelWidth: 1500,
-        topLevelHeight: 1000,
+        topLevelWidth: 1280,
+        topLevelHeight: 720,
         axis: true
     }
 };

@@ -426,7 +426,7 @@ function AutoDD(args) {
     this.clusterCustomRenderer =
         "custom" in args.marks.cluster ? args.marks.cluster.custom : null;
     this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
-    this.numLevels = "numLevels" in args.config ? args.config.numLevels : 9;
+    this.numLevels = "numLevels" in args.config ? args.config.numLevels : 15;
     this.topLevelWidth =
         "topLevelWidth" in args.config ? args.config.topLevelWidth : 1000;
     this.topLevelHeight =
