@@ -426,7 +426,7 @@ function AutoDD(args) {
     this.clusterCustomRenderer =
         "custom" in args.marks.cluster ? args.marks.cluster.custom : null;
     this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
-    this.numLevels = "numLevels" in args.config ? args.config.numLevels : 15;
+    this.numLevels = "numLevels" in args.config ? args.config.numLevels : 9;
     this.topLevelWidth =
         "topLevelWidth" in args.config ? args.config.topLevelWidth : 1000;
     this.topLevelHeight =
@@ -714,13 +714,15 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var alphaCanvas = document.createElement("canvas");
         alphaCanvas.width = heatmapWidth;
         alphaCanvas.height = heatmapHeight;
-        var minWeight = params["REPLACE_ME_autoDDId" + "_minWeight"]; // set in the BGRP (back-end generated rendering params)
-        var maxWeight = params["REPLACE_ME_autoDDId" + "_maxWeight"]; // set in the BGRP
+        var minWeight = 20000;
+        //        var minWeight = params["REPLACE_ME_autoDDId" + "_minWeight"]; // set in the BGRP (back-end generated rendering params)
+        //        var maxWeight = params["REPLACE_ME_autoDDId" + "_maxWeight"]; // set in the BGRP
         var alphaCtx = alphaCanvas.getContext("2d");
         var tpl = _getPointTemplate(radius);
         for (var i = 0; i < translatedData.length; i++) {
             var tplAlpha =
-                (translatedData[i].w - minWeight) / (maxWeight - minWeight);
+                //(translatedData[i].w - minWeight) / (maxWeight - minWeight);
+                translatedData[i].w / minWeight / 5;
             alphaCtx.globalAlpha = tplAlpha < 0.01 ? 0.01 : tplAlpha;
             alphaCtx.drawImage(
                 tpl,
@@ -1166,10 +1168,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
         function tabularRankListRenderer(svg, data, args) {
             var params = args.renderingParams;
-            var charW = 16;
-            var charH = 25;
+            var charW = 8;
+            var charH = 15;
             var paddingH = 10;
-            var paddingW = 15;
+            var paddingW = 14;
             var headerH = charH + 20;
 
             var g = svg
@@ -1454,7 +1456,7 @@ function getLegendRenderer() {
     function pieLegendRendererBody() {
         svg.append("g")
             .attr("class", "legendOrdinal")
-            .attr("transform", "translate(50,50) scale(2.0)");
+            .attr("transform", "translate(1000,25) scale(2.0)");
 
         var params = args.renderingParams;
         var color = d3
@@ -1471,9 +1473,11 @@ function getLegendRenderer() {
             //8.059274488676564 -9.306048591020996,8.059274488676564Z"
             // .shape("path", d3.symbol().type(d3.symbolDiamond).size(150)())
             .shape("rect")
-            .shapePadding(10)
+            .orient("horizontal")
+            .shapePadding(15)
             .title(params.legendTitle)
-            .labelOffset(15)
+            .labelOffset(9)
+            .titleWidth(200)
             // .labelAlign("start")
             .scale(color);
 
@@ -1527,11 +1531,17 @@ function mergeClusterAggs(a, b) {
 
     // topk
     a.topk = a.topk.concat(b.topk);
-    a.topk.sort(function(p, q) {
-        if (zOrder == "asc") return p[zCol] - q[zCol];
-        else return q[zCol] - p[zCol];
-    });
+    if (zCol != "none")
+        a.topk.sort(function(p, q) {
+            if (zOrder == "asc") return p[zCol] < q[zCol] ? -1 : 1;
+            else return p[zCol] > q[zCol] ? -1 : 1;
+        });
     a.topk = a.topk.slice(0, topk);
+
+    // NNM experiments
+    a.xysqrsum += b.xysqrsum;
+    a.sumX += b.sumX;
+    a.sumY += b.sumY;
 
     // numeric aggregations
     bKeys = Object.keys(b);
@@ -1608,6 +1618,11 @@ function singleNodeClustering(shard, autodd) {
         delete dd.centroid;
         ret.topk = [dd];
 
+        // for NNM experiment
+        ret.xysqrsum = d[xCol] * d[xCol] + d[yCol] * d[yCol];
+        ret.sumX = +d[xCol];
+        ret.sumY = +d[yCol];
+
         // numerical aggregations
         var dimStr = "";
         for (var i = 0; i < aggDimensionFields.length; i++)
@@ -1638,10 +1653,15 @@ function singleNodeClustering(shard, autodd) {
     var mergeClusterAggs = plv8.mergeClusterAggs;
 
     // fetch in queries
+    var xCol = autodd.xCol;
+    var yCol = autodd.yCol;
     var zOrder = autodd.zOrder;
     var zCol = autodd.zCol;
     var sql =
-        "SELECT * FROM " + shard + " ORDER BY " + zCol + " " + zOrder + ";";
+        "SELECT * FROM " +
+        shard +
+        (zCol != "none" ? " ORDER BY " + zCol + " " + zOrder : "") +
+        ";";
     var plan = plv8.prepare(sql);
     var cursor = plan.cursor();
 
@@ -1708,11 +1728,14 @@ function singleNodeClustering(shard, autodd) {
         }
         sql += (i % batchSize > 0 ? ", " : "") + "(";
         for (var j = 0; j < fields.length; j++) {
-            sql += (j > 0 ? ", " : "") + "'";
+            sql += j > 0 ? ", " : "";
             var curValue = newClusters[i][fields[j]];
-            if (typeof curValue == "string")
-                curValue = curValue.replace(/\'/g, "''");
-            sql += curValue + "'::" + types[j];
+            if (types[j] == "int4" || types[j] == "float4") sql += curValue;
+            else {
+                if (typeof curValue == "string")
+                    curValue = curValue.replace(/\'/g, "''");
+                sql += "'" + curValue + "'::" + types[j];
+            }
         }
         sql += ")";
     }
@@ -1763,8 +1786,12 @@ function mergeClustersAlongSplits(clusters, autodd) {
 
             // merge according to importance order
             if (
-                (+last[zCol] > +cur[zCol] && zOrder == "desc") ||
-                (+last[zCol] < +cur[zCol] && zOrder == "asc")
+                (zCol == "none" &&
+                    lastClusterAgg["count(*)"] >= curClusterAgg["count(*)"]) ||
+                (zCol != "none" &&
+                    last[zCol] > cur[zCol] &&
+                    zOrder == "desc") ||
+                (zCol != "none" && last[zCol] < cur[zCol] && zOrder == "asc")
             ) {
                 mergeClusterAggs(lastClusterAgg, curClusterAgg);
                 last.cluster_agg = JSON.stringify(lastClusterAgg);

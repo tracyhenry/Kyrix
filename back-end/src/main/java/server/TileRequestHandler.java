@@ -72,12 +72,9 @@ public class TileRequestHandler implements HttpHandler {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         double fetchTime = System.currentTimeMillis() - st;
         int intersectingRows = 0;
-        for (int i = 0; i < data.size(); i++) {
-            intersectingRows += data.get(i).size();
-        }
+        for (int i = 0; i < data.size(); i++) intersectingRows += data.get(i).size();
         System.out.println("Fetch data time: " + fetchTime + "ms.");
         System.out.println("number of intersecting rows in result: " + intersectingRows);
 

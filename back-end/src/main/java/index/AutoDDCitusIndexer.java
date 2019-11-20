@@ -27,11 +27,11 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
 
     private static AutoDDCitusIndexer instance = null;
     private final Gson gson;
-    private final int L = 7;
+    private final int L = 5;
     private final int objectNumLimit = 4000; // in a 1k by 1k region
     private final int virtualViewportSize = 1000;
-    private final int numPartitions = 4;
-    private final int binarySearchMaxLoop = 8;
+    private final int numPartitions = 96;
+    private final int binarySearchMaxLoop = 20;
     private final double bottomScale = 1e10;
     private final String aggKeyDelimiter = "__";
     private AutoDD autoDD;
@@ -361,6 +361,8 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                                     + curNode.miny
                                     + "');";
                 halfCount = Long.valueOf(DbConnector.getQueryResult(kyrixStmt, sql).get(0).get(0));
+                if (Math.abs(halfCount - Double.valueOf(curNode.count) / 2.0) / curNode.count
+                        <= 0.05) break;
                 if (halfCount < curNode.count - halfCount) lo = mid;
                 else hi = mid;
             }
@@ -637,7 +639,11 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     private String getAutoddJsonStr(double zoomFactor, boolean columnList, boolean aggFields) {
         String ret = "";
         ret =
-                "\"zCol\":\""
+                "\"xCol\":\""
+                        + autoDD.getxCol()
+                        + "\", \"yCol\":\""
+                        + autoDD.getyCol()
+                        + "\", \"zCol\":\""
                         + autoDD.getzCol()
                         + "\", \"zOrder\":\""
                         + autoDD.getzOrder()
@@ -1023,6 +1029,12 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     @Override
     public ArrayList<ArrayList<String>> getDataFromTile(
             Canvas c, int layerId, int minx, int miny, String predicate) throws Exception {
-        return null;
+        return getDataFromRegion(
+                c,
+                layerId,
+                "",
+                predicate,
+                new Box(minx, miny, minx + Config.tileW, miny + Config.tileH),
+                new Box(-1e5, -1e5, -1e5, -1e5));
     }
 }

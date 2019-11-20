@@ -314,6 +314,7 @@ function addAutoDD(autoDD, args) {
         // set fetching scheme
         if (autoDD.clusterMode == "contour" || autoDD.clusterMode == "heatmap")
             curLayer.setFetchingScheme("dbox", false);
+        //curLayer.setFetchingScheme("tiling");
 
         // set isAutoDD and autoDD ID
         //curLayer.setIndexerType("AutoDDInMemoryIndexer");
