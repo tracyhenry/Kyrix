@@ -316,7 +316,21 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         double maxx = (topLevelWidth - bboxW / 2.0) * bottomScale;
         double maxy = (topLevelHeight - bboxH / 2.0) * bottomScale;
         System.out.println("KDTree root: " + minx + ", " + miny + ", " + maxx + ", " + maxy);
-        root = new KDTree(minx, miny, maxx, maxy, KDTree.SplitDir.VERTICAL, numRawRows);
+        sql =
+                "SELECT count(*) FROM "
+                        + rawTable
+                        + " WHERE centroid <@ box('"
+                        + minx
+                        + ", "
+                        + miny
+                        + ", "
+                        + maxx
+                        + ", "
+                        + maxy
+                        + "');";
+        System.out.println(sql);
+        long rootCount = Long.valueOf(DbConnector.getQueryResult(kyrixStmt, sql).get(0).get(0));
+        root = new KDTree(minx, miny, maxx, maxy, KDTree.SplitDir.VERTICAL, rootCount);
 
         // use a queue to expand the KD-tree
         st = System.nanoTime();
@@ -557,9 +571,14 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                         + "cx real, cy real)"
                         + " returns int AS $$ ";
         String partitionStr = "[";
-        for (KDTree o : q) {
+        Queue<KDTree> qq = new LinkedList<>();
+        qq.add(root);
+        while (qq.size() > 0) {
+            KDTree o = qq.remove();
             if (partitionStr.charAt(partitionStr.length() - 1) != '[') partitionStr += ",";
             partitionStr += "[" + o.minx + "," + o.miny + ", " + o.maxx + ", " + o.maxy + "]";
+            if (o.lc != null) qq.add(o.lc);
+            if (o.rc != null) qq.add(o.rc);
         }
         partitionStr += "]";
         String hashKeysStr = "[";

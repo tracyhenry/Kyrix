@@ -565,7 +565,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var roughN = params.roughN;
         var bandwidth = params.contourBandwidth;
         var radius = REPLACE_ME_radius;
-        var decayRate = 2.4;
+        var decayRate = 2;
         var cellSize = 2;
         var contourWidth, contourHeight, x, y;
         if ("tileX" in args) {
@@ -598,19 +598,20 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .thresholds(function(v) {
                 // var step = 0.05 / Math.pow(decayRate, +args.pyramidLevel) * 6;
                 // var stop = d3.max(v);
-                var eMax =
-                    (0.07 * roughN) /
-                    1000 /
-                    Math.pow(decayRate, +args.pyramidLevel);
-                return d3.range(1e-4, eMax, eMax / 6);
+                roughN = 1000000000;
+                var eMax = 35000 / Math.pow(decayRate, +args.pyramidLevel);
+                var ret = d3.range(1e-4, eMax, eMax / 4);
+                ret[1] /= 10;
+                ret[2] /= 5;
+                ret[3] /= 2;
+                return ret;
             })(translatedData);
 
         var color = d3
             .scaleSequential(d3[params.contourColorScheme])
             .domain([
                 1e-4,
-                (0.04 * roughN) /
-                    1000 /
+                30000 /
                     Math.pow(decayRate, +args.pyramidLevel) /
                     cellSize /
                     cellSize
@@ -633,7 +634,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .enter()
             .append("path")
             .attr("d", d3.geoPath())
-            .style("fill", d => color(d.value))
+            .style("fill", (d, i) =>
+                color(d.value * (i == 1 ? 10 : i == 2 ? 5 : i == 3 ? 2 : 1))
+            )
             .style("opacity", params.contourOpacity);
 
         ///////////////// uncomment the following for rendering using canvas
@@ -702,7 +705,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             var y = radius;
             tplCanvas.width = tplCanvas.height = radius * 2;
 
-            var gradient = tplCtx.createRadialGradient(x, y, 5, x, y, radius);
+            var gradient = tplCtx.createRadialGradient(x, y, 0, x, y, radius);
             gradient.addColorStop(0, "rgba(0,0,0,1)");
             gradient.addColorStop(1, "rgba(0,0,0,0)");
             tplCtx.fillStyle = gradient;
@@ -714,7 +717,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var alphaCanvas = document.createElement("canvas");
         alphaCanvas.width = heatmapWidth;
         alphaCanvas.height = heatmapHeight;
-        var minWeight = 20000;
+        var minWeight = 200000 / (args.pyramidLevel + 0.75);
         //        var minWeight = params["REPLACE_ME_autoDDId" + "_minWeight"]; // set in the BGRP (back-end generated rendering params)
         //        var maxWeight = params["REPLACE_ME_autoDDId" + "_maxWeight"]; // set in the BGRP
         var alphaCtx = alphaCanvas.getContext("2d");
@@ -723,7 +726,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             var tplAlpha =
                 //(translatedData[i].w - minWeight) / (maxWeight - minWeight);
                 translatedData[i].w / minWeight / 5;
-            alphaCtx.globalAlpha = tplAlpha < 0.01 ? 0.01 : tplAlpha;
+            alphaCtx.globalAlpha =
+                tplAlpha < 0.1 ? 0.1 : tplAlpha > 1 ? 1 : tplAlpha;
             alphaCtx.drawImage(
                 tpl,
                 translatedData[i].x - radius,
@@ -1505,14 +1509,19 @@ function getCitusSpatialHashKey(cx, cy) {
 
     var partitions = plv8.partitions;
     var hashkeys = plv8.hashkeys;
-    for (var i = 0; i < partitions.length; i++)
+    var i = 0;
+    while (true) {
+        if (i * 2 + 1 >= partitions.length)
+            return hashkeys[i - (partitions.length - 1) / 2];
         if (
-            cx >= partitions[i][0] &&
-            cx <= partitions[i][2] &&
-            cy >= partitions[i][1] &&
-            cy <= partitions[i][3]
+            cx >= partitions[i * 2 + 1][0] &&
+            cx <= partitions[i * 2 + 1][2] &&
+            cy >= partitions[i * 2 + 1][1] &&
+            cy <= partitions[i * 2 + 1][3]
         )
-            return hashkeys[i];
+            i = i * 2 + 1;
+        else i = i * 2 + 2;
+    }
     return -1;
 }
 

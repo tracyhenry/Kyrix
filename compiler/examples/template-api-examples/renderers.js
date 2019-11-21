@@ -148,6 +148,19 @@ function playerRendering(svg, data, args) {
     }
 }
 
+var taxiHover = function(svg, data) {
+    var g = svg.append("g");
+    g.append("text")
+        .text(data[0].cx + " " + data[0].cy)
+        .attr("x", +data[0].cx + 300)
+        .attr("y", +data[0].cy)
+        .attr("dy", "1em")
+        .attr("text-anchor", "middle")
+        .classed("kyrix-retainsizezoom", true)
+        .attr("font-size", 20)
+        .datum({cx: data[0].cx, cy: data[0].cy});
+};
+
 var playerRenderingStyles = `
 g.player rect.player-bg {
     fill: #fff;
@@ -160,6 +173,7 @@ text.label {
 }`;
 
 module.exports = {
+    taxiHover,
     playerRendering,
     playerRenderingStyles,
     renderingParams

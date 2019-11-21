@@ -16,11 +16,11 @@ var autoDD = {
     layout: {
         x: {
             field: "seconds",
-            extent: [0, 10000]
+            extent: [0, 3000]
         },
         y: {
             field: "total",
-            extent: [1000, 0]
+            extent: [200, 0]
         },
         z: {
             field: "none",
@@ -29,10 +29,12 @@ var autoDD = {
     },
     marks: {
         cluster: {
-            mode: "heatmap",
+            mode: "contour",
             config: {
-                heatmapRadius: 75
-                // heatmapOpacity: 0.5,
+                contourColorScheme: "interpolateBlues",
+                //contourColorScheme: "interpolateGnBu",
+                contourOpacity: 1,
+                contourBandwidth: 20
             }
         }
     },
