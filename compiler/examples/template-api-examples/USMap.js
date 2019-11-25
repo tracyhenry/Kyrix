@@ -18,10 +18,10 @@ const placements = require("../USMap/placements");    // specify transforms
 // construct project
 var p = new Project("map_template_usmap", "../../../config.txt");
 
-// specify db name to get map data from TODO: separate shapes one
+// specify db name to get map data from 
 var db = "usmap";
 var table = "rates";  
-var rate_col = "crime_rate";   // name of column containing data you with to use
+var rate_col = "rate";   // name of column containing data you with to use
 
 // specify args
 var args = {

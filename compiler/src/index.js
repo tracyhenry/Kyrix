@@ -465,8 +465,15 @@ function addUSMap(map, args) {
     countyMapStateBoundaryLayer.addRenderingFunc(map.getUSMapRenderer("countyMapStateBoundaryRendering"));
     
     // county boundary layer
+    /*var query = "select county.county_id as county_id, county.state_id as state_id, " +
+                "county.name as name, " + 
+                map.table + "." + map.rate_col + " as crimerate, " +
+                "county.population as population, county.geomstr as geomstr " +
+                "from county " +
+                "left join " + map.table + " on county .county_id = " + map.table + ".county_id";*/
+    var query = "select * from county, " + map.table + " where county.county_id = " + map.table + ".county_id";
     var countyMapTransform = new Transform(
-        "select * from county",
+        query,
         map.db,
         map.getUSMapTransformFunc("countyMapTransform"),
         [

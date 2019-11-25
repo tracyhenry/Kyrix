@@ -254,7 +254,7 @@ function getUSMapRenderer(renderer) {
             .attr("text-anchor", "start")
             .attr("font-weight", "bold")
             .attr("font-size", captionFontSize)
-            .text("Crime rate per 100,000 people");
+            .text("Rate per 100,000 people");
 
         // axis ticks
         var axisScale = d3
@@ -356,7 +356,7 @@ function getUSMapRenderer(renderer) {
             .attr("text-anchor", "start")
             .attr("font-weight", "bold")
             .attr("font-size", captionFontSize)
-            .text("Crime rate per 100,000 people");
+            .text("Rate per 100,000 people");
 
         // axis ticks
         var axisScale = d3
