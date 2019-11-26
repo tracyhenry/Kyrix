@@ -13,7 +13,6 @@
 // libraries
 const Project = require("../../src/index").Project;
 const USMap = require("../../src/template-api/USMap").USMap;  // specify template
-const placements = require("../USMap/placements");    // specify transforms
 
 // construct project
 var p = new Project("map_template_usmap", "../../../config.txt");
