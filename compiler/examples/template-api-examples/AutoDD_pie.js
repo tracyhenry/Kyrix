@@ -58,11 +58,7 @@ var autoDD = {
             rankList: {
                 mode: "tabular",
                 fields: ["name", "nationality", "rating", "wage"],
-                topk: 3,
-                config: {
-                    bboxW: 180,
-                    bboxH: 240
-                }
+                topk: 3
             },
             boundary: "convexhull"
         }

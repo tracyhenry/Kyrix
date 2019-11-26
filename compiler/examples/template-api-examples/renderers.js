@@ -148,17 +148,37 @@ function playerRendering(svg, data, args) {
     }
 }
 
-var taxiHover = function(svg, data) {
+var redditHover = function(svg, data, args) {
     var g = svg.append("g");
+    var params = args.renderingParams;
+    var d = data[0];
+    var url =
+        "http://reddit.com/r/" +
+        d.subreddit +
+        "/comments/" +
+        d.link_id +
+        "/c/" +
+        d.comment_id;
+    /*    g.append("a")
+        .attr("xlink:href", url)
+        .attr("target", "_blank")*/
+    var rectW = 600;
+    var rectH = 30;
+    g.append("rect")
+        .attr("x", d.cx - rectW / 2)
+        .attr("y", d.cy - rectH / 2)
+        .attr("width", rectW)
+        .attr("height", rectH)
+        .attr("fill", "white")
+        .attr("fill-opacity", 0.7);
     g.append("text")
-        .text(data[0].cx + " " + data[0].cy)
-        .attr("x", +data[0].cx + 300)
-        .attr("y", +data[0].cy)
-        .attr("dy", "1em")
+        .text(url + " (score: " + d.score + ")")
+        .attr("x", d.cx)
+        .attr("y", d.cy)
+        .attr("dy", "0.3em")
         .attr("text-anchor", "middle")
         .classed("kyrix-retainsizezoom", true)
-        .attr("font-size", 20)
-        .datum({cx: data[0].cx, cy: data[0].cy});
+        .attr("font-size", 20);
 };
 
 var playerRenderingStyles = `
@@ -173,7 +193,7 @@ text.label {
 }`;
 
 module.exports = {
-    taxiHover,
+    redditHover,
     playerRendering,
     playerRenderingStyles,
     renderingParams

@@ -29,6 +29,7 @@ public class BoxandData {
             int numRows = data.get(i).size();
             Layer curLayer = c.getLayers().get(i);
             ArrayList<String> fields;
+            // System.out.println("Layer " + i + " : " + curLayer.getIndexerType());
             if (curLayer.getIndexerType().equals("AutoDDCitusIndexer")) {
                 // citus doesn't support cursor well
                 String autoDDId = curLayer.getAutoDDId();

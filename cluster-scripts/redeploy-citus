@@ -143,8 +143,8 @@ WORK_MEM_RAM=$(echo $WORKER_RAM| perl -ane 'printf("%.2fm", $F[1]/1024/100*3);')
 MAINTENANCE_MEM_RAM=$(echo $WORKER_RAM| perl -ane 'printf("%.2fm", $F[1]/1024/100*10);')
 for w in $CITUS_ALL_NODES; do tune_postgres $w; done > /dev/null
 
-echo "testing citus..."
-./test/test-citus
+#echo "testing citus..."
+#./test/test-citus
 echo "testing plv8..."
 ./test/test-plv8
 #./test/test-postgis

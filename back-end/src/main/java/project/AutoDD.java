@@ -93,18 +93,21 @@ public class AutoDD {
 
     public ArrayList<String> getColumnNames() {
 
+        // System.out.println("getting column names in autodd!!!");
         // if it is specified already, return
         if (columnNames.size() > 0) return columnNames;
-
+        // System.out.println("getting column names in autodd!!!");
         // otherwise fetch the schema from DB
         if (queriedColumnNames == null)
             try {
                 queriedColumnNames = new ArrayList<>();
                 columnTypes = new ArrayList<>();
                 Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
+                // System.out.println("getting column names in autodd!!!");
                 ResultSet rs =
                         DbConnector.getQueryResultIterator(
                                 rawDBStmt, "SELECT * FROM " + rawTable + " limit 1;");
+                // System.out.println("getting column names in autodd!!!");
                 int colCount = rs.getMetaData().getColumnCount();
                 for (int i = 1; i <= colCount; i++) {
                     String curName = rs.getMetaData().getColumnName(i);

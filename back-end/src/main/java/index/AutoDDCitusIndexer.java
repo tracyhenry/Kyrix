@@ -27,12 +27,13 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
 
     private static AutoDDCitusIndexer instance = null;
     private final Gson gson;
-    private final int L = 5;
+    private final int L = 6;
     private final int objectNumLimit = 4000; // in a 1k by 1k region
     private final int virtualViewportSize = 1000;
-    private final int numPartitions = 96;
-    private final int binarySearchMaxLoop = 20;
+    private final int numPartitions = 512;
+    private final int binarySearchMaxLoop = 40;
     private final double bottomScale = 1e10;
+    private final int reshuffleBatchCt = 16;
     private final String aggKeyDelimiter = "__";
     private AutoDD autoDD;
     private Statement kyrixStmt;
@@ -329,8 +330,11 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                         + maxy
                         + "');";
         System.out.println(sql);
+        st = System.nanoTime();
         long rootCount = Long.valueOf(DbConnector.getQueryResult(kyrixStmt, sql).get(0).get(0));
+        System.out.println("Root count: " + rootCount);
         root = new KDTree(minx, miny, maxx, maxy, KDTree.SplitDir.VERTICAL, rootCount);
+        System.out.println("Getting root count took: " + (System.nanoTime() - st) / 1e9 + "s.");
 
         // use a queue to expand the KD-tree
         st = System.nanoTime();
@@ -376,7 +380,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                                     + "');";
                 halfCount = Long.valueOf(DbConnector.getQueryResult(kyrixStmt, sql).get(0).get(0));
                 if (Math.abs(halfCount - Double.valueOf(curNode.count) / 2.0) / curNode.count
-                        <= 0.05) break;
+                        <= 0.01) break;
                 if (halfCount < curNode.count - halfCount) lo = mid;
                 else hi = mid;
             }
@@ -385,7 +389,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
             System.out.println("Binary search took: " + (System.nanoTime() - st1) / 1e9 + "s.");
 
             // set split point && construct left child and right child
-            if (curNode.splitDir.equals(KDTree.SplitDir.HORIZONTAL)) {
+            /*            if (curNode.splitDir.equals(KDTree.SplitDir.HORIZONTAL)) {
                 curNode.lc =
                         new KDTree(
                                 curNode.minx,
@@ -419,7 +423,24 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                                 curNode.maxy,
                                 KDTree.SplitDir.HORIZONTAL,
                                 curNode.count - halfCount);
-            }
+            }*/
+
+            curNode.lc =
+                    new KDTree(
+                            curNode.minx,
+                            curNode.miny,
+                            mid,
+                            curNode.maxy,
+                            KDTree.SplitDir.VERTICAL,
+                            halfCount);
+            curNode.rc =
+                    new KDTree(
+                            mid,
+                            curNode.miny,
+                            curNode.maxx,
+                            curNode.maxy,
+                            KDTree.SplitDir.VERTICAL,
+                            curNode.count - halfCount);
 
             // push left right children into the queue
             q.add(curNode.lc);
@@ -599,17 +620,27 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         kyrixStmt.executeQuery(sql);
 
         // big INSERT INTO bottom_level SELECT * FROM rawTable
-        sql = "INSERT INTO " + zoomLevelTables.get(numLevels) + "(";
-        for (int i = 0; i < numRawColumns; i++) sql += columnNames.get(i) + ", ";
-        sql += "hash_key, cluster_agg, cx, cy) SELECT ";
-        for (int i = 0; i < numRawColumns; i++) sql += columnNames.get(i) + ", ";
-        sql +=
-                "get_citus_spatial_hash_key(cx, cy), '{\"count(*)\":1}', cx, cy FROM "
-                        + rawTable
-                        + ";";
-        System.out.println(sql);
+        // have to insert by batch here by hash modulo because Citus
+        // fetches everything into the memory of coordinator (ouch!)
         st = System.nanoTime();
-        kyrixStmt.executeUpdate(sql);
+        for (int m = 0; m < reshuffleBatchCt; m++) {
+            sql = "INSERT INTO " + zoomLevelTables.get(numLevels) + "(";
+            for (int i = 0; i < numRawColumns; i++) sql += columnNames.get(i) + ", ";
+            sql += "hash_key, cluster_agg, cx, cy) SELECT ";
+            for (int i = 0; i < numRawColumns; i++) sql += columnNames.get(i) + ", ";
+            sql +=
+                    "get_citus_spatial_hash_key(cx, cy), '{\"count(*)\":1}', cx, cy FROM "
+                            + rawTable
+                            + " WHERE mod(hash_key, "
+                            + reshuffleBatchCt
+                            + ") = "
+                            + m
+                            + ";";
+            System.out.println(sql);
+            st1 = System.nanoTime();
+            kyrixStmt.executeUpdate(sql);
+            System.out.println("Batch " + m + " took: " + (System.nanoTime() - st1) / 1e9 + "s.");
+        }
         System.out.println("\n************************************************");
         System.out.println(
                 "Populating "

@@ -44,12 +44,13 @@ public class Transform implements Serializable {
 
     public ArrayList<String> getColumnNames() {
 
+        // System.out.println("getting column names in transform!!!");
         // if it is specified already, return
         if (columnNames.size() > 0) return columnNames;
-
+        // System.out.println("getting column names in transform!!!");
         // if it is an empty transform, return an empty array
         if (getDb().isEmpty()) return columnNames;
-
+        // System.out.println("getting column names in transform!!!");
         // otherwise the transform func is empty, fetch the schema from DB
         if (queriedColumnNames == null)
             try {

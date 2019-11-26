@@ -263,8 +263,8 @@ function AutoDD(args) {
         "config" in args.marks.cluster ? args.marks.cluster.config : {};
     if (args.marks.cluster.mode == "circle")
         setPropertiesIfNotExists(this.clusterParams, {
-            circleMinSize: 40,
-            circleMaxSize: 100
+            circleMinSize: 30,
+            circleMaxSize: 70
         });
     if (args.marks.cluster.mode == "contour")
         setPropertiesIfNotExists(this.clusterParams, {
@@ -362,7 +362,8 @@ function AutoDD(args) {
     }
     if ("boundary" in args.marks.hover)
         this.hoverParams.hoverBoundary = args.marks.hover.boundary;
-    this.topk = this.hoverParams.topk;
+    this.topk = this.hoverParams.topk != null ? this.hoverParams.topk : 0;
+    console.log(this.topk);
 
     /***************************
      * setting legend parameters
@@ -397,7 +398,7 @@ function AutoDD(args) {
     else if (args.marks.cluster.mode == "pie") this.bboxW = this.bboxH = 290; // tuned by hand :)
 
     // assign other fields
-    this.query = args.data.query;
+    this.query = args.data.query.toLowerCase();
     while (this.query.slice(-1) == " " || this.query.slice(-1) == ";")
         this.query = this.query.slice(0, -1);
     this.query +=
@@ -460,15 +461,44 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
         REPLACE_ME_processClusterAgg();
+        var maxSizes = [
+            351049723,
+            183074527,
+            79026376,
+            50763158,
+            26048737,
+            10887406,
+            4948928,
+            2533155,
+            1034445,
+            312617,
+            101434,
+            36103,
+            13629,
+            10300,
+            10000
+        ];
         var circleSizeInterpolator = d3
             //.scaleLinear()
             //.domain([1, params.roughN.toString().length - 1])
             //.domain([1, 6])
-            .scaleLinear()
+            .scalePow()
             //.exponent(1.05)
-            .domain([1, 404591769])
+            .domain([1, maxSizes[args.pyramidLevel]])
             .range([params.circleMinSize, params.circleMaxSize]);
-        var g = svg.append("g");
+        var g = svg.append("g").classed("hovercircle", true);
+
+        // filter
+        var defs = g.append("defs");
+        var filter = defs.append("filter").attr("id", "filter-demo-glow");
+        var feGaussianBlur = filter
+            .append("feGaussianBlur")
+            .attr("stdDeviation", "2")
+            .attr("result", "coloredBlur");
+        var feMerge = filter.append("feMerge");
+        feMerge.append("feMergeNode").attr("in", "coloredBlur");
+        feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
         g.selectAll("circle")
             .data(data)
             .enter()
@@ -482,10 +512,13 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .attr("cy", function(d) {
                 return d.cy;
             })
-            .style("fill-opacity", 0.25)
-            .attr("fill", "honeydew")
-            .attr("stroke", "#ADADAD")
-            .style("stroke-width", "1px")
+            .style("fill-opacity", 0.5)
+            //            .attr("fill", "honeydew")
+            .attr("fill", "#d7dbff")
+            //            .attr("stroke", "#ADADAD")
+            //            .style("stroke-width", "1px")
+            .style("filter", "url(#filter-demo-glow)")
+            .style("pointer-events", "fill")
             .classed("kyrix-retainsizezoom", true);
         g.selectAll("text")
             .data(data)
@@ -520,7 +553,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
             .style("fill-opacity", 1)
-            .style("fill", "navy")
+            //            .style("fill", "navy")
+            .style("fill", "#0f00d0")
             .style("pointer-events", "none")
             .classed("kyrix-retainsizezoom", true)
             .each(function(d) {
@@ -1167,7 +1201,29 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         }
 
         function bboxRenderer(svg, d) {
-            // bbox renderer here....
+            var minx = 1e100,
+                miny = 1e100;
+            var maxx = -1e100,
+                maxy = -1e100;
+            for (var i = 0; i < d.convexHull.length; i++) {
+                minx = Math.min(minx, d.convexHull[i].x);
+                miny = Math.min(miny, d.convexHull[i].y);
+                maxx = Math.max(maxx, d.convexHull[i].x);
+                maxy = Math.max(maxy, d.convexHull[i].y);
+            }
+            g = svg.append("g");
+            g.append("rect")
+                .attr("x", minx)
+                .attr("y", miny)
+                .attr("rx", 5)
+                .attr("ry", 5)
+                .attr("width", maxx - minx)
+                .attr("height", maxy - miny)
+                .style("fill-opacity", 0)
+                .style("stroke-width", 3)
+                .style("stroke-opacity", 0.5)
+                .style("stroke", "grey")
+                .style("pointer-events", "none");
         }
 
         function tabularRankListRenderer(svg, data, args) {
@@ -1248,7 +1304,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 rankListRenderer = tabularRankListRenderer;
             else rankListRenderer = params.hoverCustomRenderer;
             g.selectAll(hoverSelector)
-                .on("mouseover.ranklist", function(d) {
+                .on("mouseenter.ranklist", function(d) {
                     // deal with top-k here
                     // run rankListRenderer for each of the top-k
                     // for tabular renderer, add a header first
@@ -1415,9 +1471,17 @@ function getAxesRenderer(level) {
             axesg.selectAll("path").remove();
         };
         //x
-        var x = d3
+        /*        var x = d3
             .scaleLinear()
             .domain([REPLACE_ME_this_loX, REPLACE_ME_this_hiX])
+            .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);*/
+        var stDate = new Date(0),
+            enDate = new Date(0);
+        stDate.setUTCSeconds(1356998400);
+        enDate.setUTCSeconds(1425167999);
+        var x = d3
+            .scaleTime()
+            .domain([stDate, enDate])
             .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);
         var xAxis = d3.axisBottom().tickSize(-cHeight);
         axes.push({
@@ -1536,16 +1600,20 @@ function mergeClusterAggs(a, b) {
     a["count(*)"] += b["count(*)"];
 
     // convex hulls
-    a.convexHull = d3.polygonHull(a.convexHull.concat(b.convexHull));
+    for (var i = 0; i < b.convexHull.length; i++)
+        a.convexHull.push(b.convexHull[i]);
+    if (a.convexHull.length >= 3) a.convexHull = d3.polygonHull(a.convexHull);
 
     // topk
-    a.topk = a.topk.concat(b.topk);
+    for (var i = 0; i < b.topk.length; i++) a.topk.push(b.topk[i]);
     if (zCol != "none")
         a.topk.sort(function(p, q) {
             if (zOrder == "asc") return p[zCol] < q[zCol] ? -1 : 1;
             else return p[zCol] > q[zCol] ? -1 : 1;
         });
-    a.topk = a.topk.slice(0, topk);
+    var extra = Math.max(a.topk.length - topk, 0);
+    for (var i = 0; i < extra; i++) a.topk.pop();
+    //a.topk = a.topk.slice(0, topk);
 
     // NNM experiments
     a.xysqrsum += b.xysqrsum;
@@ -1556,7 +1624,14 @@ function mergeClusterAggs(a, b) {
     bKeys = Object.keys(b);
     for (var i = 0; i < bKeys.length; i++) {
         var aggKey = bKeys[i];
-        if (aggKey == "count(*)" || aggKey == "topk" || aggKey == "convexHull")
+        if (
+            aggKey == "count(*)" ||
+            aggKey == "topk" ||
+            aggKey == "convexHull" ||
+            aggKey == "xysqrsum" ||
+            aggKey == "sumX" ||
+            aggKey == "sumY"
+        )
             continue;
         if (!(aggKey in a)) {
             a[aggKey] = b[aggKey];
@@ -1591,7 +1666,8 @@ function mergeClusterAggs(a, b) {
  */
 function singleNodeClustering(shard, autodd) {
     function initClusterAgg(d) {
-        var ret = JSON.parse(d.cluster_agg);
+        d.cluster_agg = JSON.parse(d.cluster_agg);
+        ret = d.cluster_agg;
         if (Object.keys(ret).length > 1) {
             // not only count(*), and thus not bottom level
             // just scale the convex hull
@@ -1599,33 +1675,32 @@ function singleNodeClustering(shard, autodd) {
                 ret.convexHull[i][0] /= zoomFactor;
                 ret.convexHull[i][1] /= zoomFactor;
             }
-            return ret;
+            return;
         }
 
         // convex hull
-        var minx = d.cx / zoomFactor - bboxW / 2;
-        var miny = d.cy / zoomFactor - bboxH / 2;
-        var maxx = d.cx / zoomFactor + bboxW / 2;
-        var maxy = d.cy / zoomFactor + bboxH / 2;
-        ret.convexHull = [
-            [minx, miny],
-            [minx, maxy],
-            [maxx, maxy],
-            [maxx, miny]
-        ];
+        ret.convexHull = [[d.cx, d.cy]];
 
         // topk
-        var dd = JSON.parse(JSON.stringify(d));
-        delete dd.hash_key;
-        delete dd.cluster_agg;
-        delete dd.minx;
-        delete dd.miny;
-        delete dd.maxx;
-        delete dd.maxy;
-        delete dd.cx;
-        delete dd.cy;
-        delete dd.centroid;
-        ret.topk = [dd];
+        if (topk > 0) {
+            var dd = {};
+            for (var i = 0; i < fields.length; i++) {
+                if (
+                    fields[i] == "hash_key" ||
+                    fields[i] == "minx" ||
+                    fields[i] == "miny" ||
+                    fields[i] == "maxx" ||
+                    fields[i] == "maxy" ||
+                    fields[i] == "cluster_agg" ||
+                    fields[i] == "cx" ||
+                    fields[i] == "cy" ||
+                    fields[i] == "centroid"
+                )
+                    continue;
+                dd[fields[i]] = d[fields[i]];
+            }
+            ret.topk = [dd];
+        } else ret.topk = [];
 
         // for NNM experiment
         ret.xysqrsum = d[xCol] * d[xCol] + d[yCol] * d[yCol];
@@ -1648,8 +1723,6 @@ function singleNodeClustering(shard, autodd) {
             ret[dimStr + aggKeyDelimiter + "sqrsum(" + curField + ")"] =
                 curValue * curValue;
         }
-
-        return ret;
     }
 
     // get d3
@@ -1666,6 +1739,8 @@ function singleNodeClustering(shard, autodd) {
     var yCol = autodd.yCol;
     var zOrder = autodd.zOrder;
     var zCol = autodd.zCol;
+    var fields = autodd.fields;
+    var types = autodd.types;
     var sql =
         "SELECT * FROM " +
         shard +
@@ -1693,43 +1768,42 @@ function singleNodeClustering(shard, autodd) {
             return d.cy;
         });
     var cluster;
+    //    var cnt = 0;
     while ((cluster = cursor.fetch())) {
-        var x = cluster.cx / zoomFactor;
-        var y = cluster.cy / zoomFactor;
-        var nn = qt.find(x, y, radius);
-        var curClusterAgg = initClusterAgg(cluster);
+        //        cnt ++;
+        //        if (cnt % 1000 == 0)
+        //            plv8.elog(NOTICE, cnt + " " + qt.size() + " " + qt.extent());
+
+        cluster.cx /= zoomFactor;
+        cluster.cy /= zoomFactor;
+        var nn = qt.find(cluster.cx, cluster.cy, radius);
+        initClusterAgg(cluster);
         if (
             nn != null &&
             d3.max([
-                Math.abs(x - nn.cx) / bboxW,
-                Math.abs(y - nn.cy) / bboxH
+                Math.abs(cluster.cx - nn.cx) / bboxW,
+                Math.abs(cluster.cy - nn.cy) / bboxH
             ]) <= theta
-        ) {
+        )
             // merge cluster
-            var nnClusterAgg = JSON.parse(nn.cluster_agg);
-            mergeClusterAggs(nnClusterAgg, curClusterAgg);
-            nn.cluster_agg = JSON.stringify(nnClusterAgg);
-        } else {
-            var newCluster = JSON.parse(JSON.stringify(cluster));
-            newCluster.cx /= zoomFactor;
-            newCluster.cy /= zoomFactor;
-            newCluster.cluster_agg = JSON.stringify(curClusterAgg);
-            qt.add(newCluster);
-        }
+            mergeClusterAggs(nn.cluster_agg, cluster.cluster_agg);
+        else qt.add(cluster);
     }
     cursor.close();
     plan.free();
+    plv8.elog(NOTICE, "QT TREE DONE!!!!");
 
     // use batch insert to put data into the correct table
     var newClusters = qt.data();
-    var fields = autodd.fields;
-    var types = autodd.types;
-    var batchSize = 300000;
+    var batchSize = 3000;
     var targetTable = autodd.tableMap[shard];
     sql = "";
     for (var i = 0; i < newClusters.length; i++) {
         if (i % batchSize == 0) {
-            if (sql.length > 0) plv8.execute(sql);
+            if (sql.length > 0) {
+                // plv8.elog(NOTICE, sql.length);
+                plv8.execute(sql);
+            }
             sql = "INSERT INTO " + targetTable + "(";
             for (var j = 0; j < fields.length; j++)
                 sql += (j > 0 ? ", " : "") + fields[j];
@@ -1741,6 +1815,8 @@ function singleNodeClustering(shard, autodd) {
             var curValue = newClusters[i][fields[j]];
             if (types[j] == "int4" || types[j] == "float4") sql += curValue;
             else {
+                if (fields[j] == "cluster_agg")
+                    curValue = JSON.stringify(curValue);
                 if (typeof curValue == "string")
                     curValue = curValue.replace(/\'/g, "''");
                 sql += "'" + curValue + "'::" + types[j];
@@ -1750,7 +1826,10 @@ function singleNodeClustering(shard, autodd) {
     }
     if (sql.length > 0) plv8.execute(sql);
 
-    return newClusters.length;
+    var ret = newClusters.length;
+    qt = null;
+    newClusters = null;
+    return ret;
 }
 
 function mergeClustersAlongSplits(clusters, autodd) {
