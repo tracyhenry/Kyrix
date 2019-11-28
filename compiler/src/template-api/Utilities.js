@@ -194,11 +194,33 @@ function serializePath(path) {
     }, "");
 }
 
+/**
+ * Convert a big number to K, Million, Billion notation
+ * @param ct
+ * @returns {*}
+ */
+function toLargeNumberNotation(ct) {
+    if (ct < 1000) return ct;
+    if (ct >= 1000 && ct < 1000000) {
+        ct /= 1000.0;
+        return ct.toFixed(0) + "K";
+    }
+    if (ct > 1000000 && ct < 1000000000) {
+        ct /= 1000000.0;
+        return ct.toFixed(0) + "M";
+    } else {
+        ct /= 1000000000.0;
+        return ct.toFixed(0) + "B";
+    }
+    return "";
+}
+
 module.exports = {
     textwrap,
     getBodyStringOfFunction,
     setPropertiesIfNotExists,
     parsePathIntoSegments,
     translatePathSegments,
-    serializePath
+    serializePath,
+    toLargeNumberNotation
 };

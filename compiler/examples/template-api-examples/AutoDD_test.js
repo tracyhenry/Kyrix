@@ -14,17 +14,19 @@ var autoDD = {
         db: "kyrix",
         query: query
     },
-    x: {
-        field: "x",
-        extent: [0, 1000000]
-    },
-    y: {
-        field: "y",
-        extent: [0, 1000000]
-    },
-    z: {
-        field: "z",
-        order: "asc"
+    layout: {
+        x: {
+            field: "x",
+            extent: [0, 1000000]
+        },
+        y: {
+            field: "y",
+            extent: [0, 1000000]
+        },
+        z: {
+            field: "z",
+            order: "asc"
+        }
     },
     marks: {
         cluster: {

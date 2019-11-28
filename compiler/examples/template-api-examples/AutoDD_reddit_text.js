@@ -19,7 +19,7 @@ var autoDD = {
         },
         y: {
             field: "body_len",
-            extent: [49964, 0]
+            extent: [10000, 0]
         },
         z: {
             field: "score",
@@ -28,27 +28,18 @@ var autoDD = {
     },
     marks: {
         cluster: {
-            mode: "circle",
+            mode: "custom",
+            custom: renderer.redditTextRendering,
             config: {
-                circleMinSize: 40,
-                circleMaxSize: 80
+                clusterCount: true,
+                bboxW: 300,
+                bboxH: 65
             }
-        },
-        hover: {
-            rankList: {
-                mode: "custom",
-                custom: renderer.redditHover,
-                topk: 3,
-                config: {
-                    bboxW: 100,
-                    bboxH: 30
-                }
-            },
-            boundary: "bbox"
         }
     },
     config: {
-        topLevelWidth: 1500,
+        topLevelWidth: 1800,
+        numLevels: 20,
         axis: true
     }
 };

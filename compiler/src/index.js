@@ -264,7 +264,9 @@ function addAutoDD(autoDD, args) {
 
     // add stuff to renderingParam
     this.addRenderingParams({
-        textwrap: require("./template-api/Utilities").textwrap
+        textwrap: require("./template-api/Utilities").textwrap,
+        toLargeNumberNotation: require("./template-api/Utilities")
+            .toLargeNumberNotation
     });
     this.addRenderingParams(autoDD.clusterParams);
     this.addRenderingParams(autoDD.aggregateParams);

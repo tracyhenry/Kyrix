@@ -526,20 +526,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .append("text")
             .attr("dy", "0.3em")
             .text(function(d) {
-                var ct = d.clusterAgg["count(*)"];
-                if (ct < 1000) return ct;
-                if (ct >= 1000 && ct < 1000000) {
-                    ct /= 1000.0;
-                    return ct.toFixed(0) + "K";
-                }
-                if (ct > 1000000 && ct < 1000000000) {
-                    ct /= 1000000.0;
-                    return ct.toFixed(0) + "M";
-                } else {
-                    ct /= 1000000000.0;
-                    return ct.toFixed(0) + "B";
-                }
-                return "";
+                return params.toLargeNumberNotation(+d.clusterAgg["count(*)"]);
             })
             .attr("font-size", function(d) {
                 return circleSizeInterpolator(d.clusterAgg["count(*)"]) / 2;
@@ -578,16 +565,18 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .enter()
             .append("text")
             .text(function(d) {
-                return d.clusterAgg["count(*)"];
+                return args.renderingParams.toLargeNumberNotation(
+                    +d.clusterAgg["count(*)"]
+                );
             })
             .attr("x", function(d) {
                 return +d.cx;
             })
             .attr("y", function(d) {
-                return +d.miny;
+                return +d.miny + 13;
             })
             .attr("dy", ".35em")
-            .attr("font-size", 20)
+            .attr("font-size", 18)
             .attr("text-anchor", "middle")
             .attr("fill", "#f47142")
             .style("fill-opacity", 1)
@@ -1758,7 +1747,6 @@ function singleNodeClustering(shard, autodd) {
     var aggKeyDelimiter = autodd.aggKeyDelimiter;
     var aggDimensionFields = autodd.aggDimensionFields;
     var aggMeasureFields = autodd.aggMeasureFields;
-    var radius = d3.max([bboxH, bboxW]) * theta * Math.sqrt(2);
     var qt = d3
         .quadtree()
         .x(function x(d) {
@@ -1776,15 +1764,31 @@ function singleNodeClustering(shard, autodd) {
 
         cluster.cx /= zoomFactor;
         cluster.cy /= zoomFactor;
-        var nn = qt.find(cluster.cx, cluster.cy, radius);
         initClusterAgg(cluster);
-        if (
-            nn != null &&
-            d3.max([
-                Math.abs(cluster.cx - nn.cx) / bboxW,
-                Math.abs(cluster.cy - nn.cy) / bboxH
-            ]) <= theta
-        )
+
+        var x0 = cluster.cx - bboxW,
+            x3 = cluster.cx + bboxW;
+        var y0 = cluster.cy - bboxH,
+            y3 = cluster.cy + bboxH;
+        var nn = null,
+            minNcd = -1;
+        qt.visit(function(node, x1, y1, x2, y2) {
+            if (!node.length) {
+                do {
+                    var d = node.data;
+                    var ncd = d3.max([
+                        Math.abs(cluster.cx - d.cx) / bboxW,
+                        Math.abs(cluster.cy - d.cy) / bboxH
+                    ]);
+                    if (ncd <= theta)
+                        if (nn == null || ncd < minNcd)
+                            (nn = d), (minNcd = ncd);
+                } while ((node = node.next));
+            }
+            return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+        });
+
+        if (nn != null)
             // merge cluster
             mergeClusterAggs(nn.cluster_agg, cluster.cluster_agg);
         else qt.add(cluster);
