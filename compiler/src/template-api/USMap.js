@@ -18,16 +18,22 @@ function USMap(args) {
   var requiredArgTypes = ["string", "string", "string"];
   checkArgs("USMap", requiredArgs, requiredArgTypes, args);
 
-  this.db = args.db
+  this.db = args.db;
   this.table = args.table;
   this.rate_col = args.rate_col;
+  if ("colorScheme" in args && "colorSchemeIndex" in args) {
+    this.colorScheme = args.colorScheme;
+    this.colorSchemeIndex = args.colorSchemeIndex;
+  }
   this.renderingParams = {
     stateMapScale: 2000,
     countyMapScale: 12000,
     stateScaleRange: 550,
     stateScaleStep: 70,
     countyScaleRange: 2000,
-    countyScaleStep: 250
+    countyScaleStep: 250,
+    colorScheme: this.colorScheme,
+    colorSchemeIndex: this.colorSchemeIndex
   };
   this.placements = {
     stateMapPlacement: {
@@ -194,7 +200,7 @@ function getUSMapRenderer(renderer) {
       var color = d3
           .scaleThreshold()
           .domain(d3.range(0, param.stateScaleRange, param.stateScaleStep))
-          .range("colorScheme" in args ? args.colorScheme : d3.schemeYlOrRd[9]);
+          .range("colorScheme" in args.renderingParams ? d3[args.renderingParams.colorScheme][args.renderingParams.colorSchemeIndex] : d3.schemeYlOrRd[9]);
 
       g.selectAll("path")
           .data(data)
@@ -231,7 +237,7 @@ function getUSMapRenderer(renderer) {
         var color = d3
             .scaleThreshold()
             .domain(d3.range(0, param.stateScaleRange, param.stateScaleStep))
-            .range("colorScheme" in args ? args.colorScheme : d3.schemeYlOrRd[9]);
+            .range("colorScheme" in args.renderingParams ? d3[args.renderingParams.colorScheme][args.renderingParams.colorSchemeIndex] : d3.schemeYlOrRd[9]);
         g.selectAll(".legendrect")
             .data(color.range().slice(1))
             .enter()
@@ -333,7 +339,7 @@ function getUSMapRenderer(renderer) {
         var color = d3
             .scaleThreshold()
             .domain(d3.range(0, param.countyScaleRange, param.countyScaleStep))
-            .range(d3.schemeYlOrRd[9]);
+            .range("colorScheme" in args.renderingParams ? d3[args.renderingParams.colorScheme][args.renderingParams.colorSchemeIndex] : d3.schemeYlOrRd[9]);
         g.selectAll(".legendrect")
             .data(color.range().slice(1))
             .enter()
@@ -395,7 +401,7 @@ function getUSMapRenderer(renderer) {
         var color = d3
             .scaleThreshold()
             .domain(d3.range(0, param.countyScaleRange, param.countyScaleStep))
-            .range(d3.schemeYlOrRd[9]);
+            .range("colorScheme" in args.renderingParams ? d3[args.renderingParams.colorScheme][args.renderingParams.colorSchemeIndex] : d3.schemeYlOrRd[9]);
 
         g.selectAll("path")
             .data(data)

@@ -21,12 +21,17 @@ var p = new Project("map_template_usmap", "../../../config.txt");
 var db = "usmap";
 var table = "rates";  
 var rate_col = "rate";   // name of column containing data you with to use
+//var colorScheme = d3.schemeYlOrRd[9];
+var colorScheme = "schemePurples";
+var colorSchemeIndex = 9;
 
 // specify args
 var args = {
   db: db, 
   table: table,
   rate_col: rate_col,
+  colorScheme: colorScheme,
+  colorSchemeIndex: colorSchemeIndex
 };
 
 // build project
