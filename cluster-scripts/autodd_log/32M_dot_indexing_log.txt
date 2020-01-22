@@ -1,0 +1,1656 @@
+7  0%                                             8[0K7  1%                                             8[0K7  3% #                                           8[0K7  5% ##                                          8[0K7  6% ###                                         8[0K7  8% ###                                         8[0K7  9% ####                                        8[0K7 11% ####                                        8[0K7 12% #####                                       8[0K7 14% ######                                      8[0K7 15% ######                                      8[0K7 17% #######                                     8[0K7 18% ########                                    8[0K7 20% ########                                    8[0K7 21% #########                                   8[0K7 23% ##########                                  8[0K7 24% ##########                                  8[0K7 26% ###########                                 8[0K7 27% ############                                8[0K7 28% ############                                8[0K7 30% #############                               8[0K7 31% #############                               8[0K7 31% ##############                              8[0K7 32% ##############                              8[0K7 33% ##############                              8[0K7 34% ##############                              8[0K7 34% ###############                             8[0K7 35% ###############                             8[0K7 36% ###############                             8[0K7 36% ################                            8[0K7 37% ################                            8[0K7 38% ################                            8[0K7 38% #################                           8[0K7 39% #################                           8[0K7 40% #################                           8[0K7 41% ##################                          8[0K7 42% ##################                          8[0K7 43% ##################                          8[0K7 43% ###################                         8[0K7 44% ###################                         8[0K7 45% ###################                         8[0K7 45% ####################                        8[0K7 46% ####################                        8[0K7 47% ####################                        8[0K7 47% #####################                       8[0K7 48% #####################                       8[0K7 49% #####################                       8[0K7 50% ######################                      8[0K7 51% ######################                      8[0K7 52% #######################                     8[0K7 53% #######################                     8[0K7 54% #######################                     8[0K7 54% ########################                    8[0K7 55% ########################                    8[0K7 56% ########################                    8[0K7 56% #########################                   8[0K7 57% #########################                   8[0K7 58% #########################                   8[0K7 59% #########################                   8[0K7 59% ##########################                  8[0K7 60% ##########################                  8[0K7 61% ##########################                  8[0K7 61% ###########################                 8[0K7 62% ###########################                 8[0K7 63% ###########################                 8[0K7 63% ############################                8[0K7 64% ############################                8[0K7 65% ############################                8[0K7 66% #############################               8[0K7 67% #############################               8[0K7 68% #############################               8[0K7 68% ##############################              8[0K7 69% ##############################              8[0K7 70% ##############################              8[0K7 70% ###############################             8[0K7 71% ###############################             8[0K7 72% ###############################             8[0K7 72% ################################            8[0K7 73% ################################            8[0K7 74% ################################            8[0K7 75% #################################           8[0K7 76% #################################           8[0K7 77% ##################################          8[0K7 78% ##################################          8[0K7 79% ##################################          8[0K7 79% ###################################         8[0K7 81% ###################################         8[0K7 81% ####################################        8[0K7 82% ####################################        8[0K7 83% ####################################        8[0K7 84% #####################################       8[0K7 85% #####################################       8[0K7 86% #####################################       8[0K7 86% ######################################      8[0K7 87% ######################################      8[0K7 88% ######################################      8[0K7 89% #######################################     8[0K7 90% #######################################     8[0K7 90% ########################################    8[0K7 91% ########################################    8[0K7 92% ########################################    8[0K7 93% ########################################    8[0K7 93% #########################################   8[0K7 94% #########################################   8[0K7 95% #########################################   8[0K7 95% ##########################################  8[0K7 96% ##########################################  8[0K7 97% ##########################################  8[0K7 97% ########################################### 8[0K7 98% ########################################### 8[0K7 99% ########################################### 8[0K7100% ############################################8[0Kbash-4.4# mvn compile && mvn exec:java -Dexec.mainClass="main.Main"
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--------------------------< [0;36mMITDbG:back-end[0;1m >---------------------------[m
+[[1;34mINFO[m] [1mBuilding back-end 1.0-SNAPSHOT[m
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-resources-plugin:2.6:resources[m [1m(default-resources)[m @ [36mback-end[0;1m ---[m
+[[1;34mINFO[m] Using 'UTF-8' encoding to copy filtered resources.
+[[1;34mINFO[m] Copying 0 resource
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-compiler-plugin:3.2:compile[m [1m(default-compile)[m @ [36mback-end[0;1m ---[m
+[[1;34mINFO[m] Changes detected - recompiling the module!
+[[1;34mINFO[m] Compiling 39 source files to /kyrix/back-end/target/classes
+[[1;34mINFO[m] /kyrix/back-end/src/main/java/index/Indexer.java: Some input files use unchecked or unsafe operations.
+[[1;34mINFO[m] /kyrix/back-end/src/main/java/index/Indexer.java: Recompile with -Xlint:unchecked for details.
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] [1;32mBUILD SUCCESS[m
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] Total time:  2.385 s
+[[1;34mINFO[m] Finished at: 2019-11-29T15:48:23Z
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--------------------------< [0;36mMITDbG:back-end[0;1m >---------------------------[m
+[[1;34mINFO[m] [1mBuilding back-end 1.0-SNAPSHOT[m
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mexec-maven-plugin:1.6.0:java[m [1m(default-cli)[m @ [36mback-end[0;1m ---[m
+Reading config file...
+dbtype: citus  Config.database=CITUS
+Creating tile cache...
+Starting server...
+Backend server started...
+Waiting for project definition...
+
+
+Serving /project
+ New project definition coming...
+Current project set to: autodd_citus
+There is diff that requires recomputing indexes. Shutting down server and recomputing...
+Precomputing...
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+drop table if exists bbox_autodd_citus_autodd0_level0layer0;
+CREATE UNLOGGED TABLE bbox_autodd_citus_autodd0_level0layer0 (citus_distribution_id int, cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)
+Setting common variables...
+numLevels = 10
+numRawColumns = 3
+Raw columns: 
+x int4 y int4 z int4 
+Getting # of raw columns took: 0.043510273s.
+rawTable = dots
+theta = 1.0
+topLevelWidth = 1500
+topLevelHeight = 1000
+[loX, hiX] = [0.0, 1000000.0]
+[loY, hiY] = [0.0, 1000000.0]
+xCol = x
+yCol = y
+SELECT count(*) FROM dots;
+Running count(*) on dots took: 0.390222614s.
+numRawRows = 32000000
+Augmenting raw data table...
+ALTER TABLE dots ADD COLUMN IF NOT EXISTS cx real;
+ALTER TABLE dots ADD COLUMN IF NOT EXISTS cy real;
+ALTER TABLE dots ADD COLUMN IF NOT EXISTS centroid point;
+UPDATE dots SET cx = (1360 * (x - 0.0) / 1000000.0 + 70.0) * 1.0E10, cy = (860 * (y - 0.0) / 1000000.0 + 70.0) * 1.0E10;
+Populating cx, cy column on dots took: 12.039931746s.
+UPDATE dots SET centroid = point(cx, cy);
+Populating centroid column on dots took: 6.226234657s.
+DROP INDEX IF EXISTS rawtable_centroid_gist;
+Drop existing index on centroid took: 0.002689348s.
+CREATE INDEX rawtable_centroid_gist ON dots USING gist(centroid);
+Creating gist index on centroid took: 43.150717844s.
+Building KD tree...
+KDTree root: 7.0E11, 7.0E11, 1.43E13, 9.3E12
+SELECT count(*) FROM dots WHERE centroid <@ box('7.0E11, 7.0E11, 1.43E13, 9.3E12');
+Root count: 31999932
+Getting root count took: 1.14297554s.
+Current KD-tree node being split: KDTree{minx=7.0E11, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=31999932, splitPoint=3.78125E12}
+Binary search took: 4.998299081s.
+Current KD-tree node being split: KDTree{minx=7.0E11, miny=7.0E11, maxx=3.78125E12, maxy=9.3E12, splitDir=VERTICAL, count=15950539, splitPoint=2.240625E12}
+Binary search took: 0.463326095s.
+Current KD-tree node being split: KDTree{minx=3.78125E12, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=16049393, splitPoint=5.342626953125E12}
+Binary search took: 3.806633851s.
+Current KD-tree node being split: KDTree{minx=7.0E11, miny=7.0E11, maxx=2.240625E12, maxy=9.3E12, splitDir=VERTICAL, count=7976557, splitPoint=1.4703125E12}
+Binary search took: 0.341871604s.
+Current KD-tree node being split: KDTree{minx=2.240625E12, miny=7.0E11, maxx=3.78125E12, maxy=9.3E12, splitDir=VERTICAL, count=7973982, splitPoint=3.0109375E12}
+Binary search took: 0.343398135s.
+Current KD-tree node being split: KDTree{minx=3.78125E12, miny=7.0E11, maxx=5.342626953125E12, maxy=9.3E12, splitDir=VERTICAL, count=8087200, splitPoint=4.5619384765625E12}
+Binary search took: 0.349820073s.
+Current KD-tree node being split: KDTree{minx=5.342626953125E12, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=7962193, splitPoint=6.11240119934082E12}
+Binary search took: 2.496597342s.
+Current KD-tree node being split: KDTree{minx=7.0E11, miny=7.0E11, maxx=1.4703125E12, maxy=9.3E12, splitDir=VERTICAL, count=3987625, splitPoint=1.08515625E12}
+Binary search took: 0.273262442s.
+Current KD-tree node being split: KDTree{minx=1.4703125E12, miny=7.0E11, maxx=2.240625E12, maxy=9.3E12, splitDir=VERTICAL, count=3988932, splitPoint=1.85546875E12}
+Binary search took: 0.271091591s.
+Current KD-tree node being split: KDTree{minx=2.240625E12, miny=7.0E11, maxx=3.0109375E12, maxy=9.3E12, splitDir=VERTICAL, count=3986591, splitPoint=2.62578125E12}
+Binary search took: 0.26022395s.
+Current KD-tree node being split: KDTree{minx=3.0109375E12, miny=7.0E11, maxx=3.78125E12, maxy=9.3E12, splitDir=VERTICAL, count=3987391, splitPoint=3.39609375E12}
+Binary search took: 0.272135153s.
+Current KD-tree node being split: KDTree{minx=3.78125E12, miny=7.0E11, maxx=4.5619384765625E12, maxy=9.3E12, splitDir=VERTICAL, count=4045501, splitPoint=4.17159423828125E12}
+Binary search took: 0.273346781s.
+Current KD-tree node being split: KDTree{minx=4.5619384765625E12, miny=7.0E11, maxx=5.342626953125E12, maxy=9.3E12, splitDir=VERTICAL, count=4041699, splitPoint=4.95228271484375E12}
+Binary search took: 0.275367468s.
+Current KD-tree node being split: KDTree{minx=5.342626953125E12, miny=7.0E11, maxx=6.11240119934082E12, maxy=9.3E12, splitDir=VERTICAL, count=3981843, splitPoint=5.72751407623291E12}
+Binary search took: 0.273868921s.
+Current KD-tree node being split: KDTree{minx=6.11240119934082E12, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=3980350, splitPoint=1.007826936841011E13}
+Binary search took: 1.191952026s.
+
+************************************************
+Building KD-tree took: 15.904115572s.
+************************************************
+
+1994163 1993462 1994460 1994472 1993545 1993046 1994099 1993292 2023015 2022486 2019658 2022041 1992606 1989237 1992557 1987793 
+Creating bbox tables for all levels...
+DROP TABLE IF EXISTS bottom_level
+CREATE UNLOGGED TABLE bottom_level(x int4, y int4, z int4, hash_key int, cluster_agg text, cx real, cy real, minx real, miny real, maxx real, maxy real, centroid point);
+SELECT create_distributed_table('bottom_level', 'hash_key');
+DROP TABLE IF EXISTS l9
+CREATE UNLOGGED TABLE l9(x int4, y int4, z int4, hash_key int, cluster_agg text, cx real, cy real, minx real, miny real, maxx real, maxy real, centroid point);
+SELECT create_distributed_table('l9', 'hash_key', colocate_with => 'bottom_level');
+DROP TABLE IF EXISTS l8
+CREATE UNLOGGED TABLE l8(x int4, y int4, z int4, hash_key int, cluster_agg text, cx real, cy real, minx real, miny real, maxx real, maxy real, centroid point);
+SELECT create_distributed_table('l8', 'hash_key', colocate_with => 'bottom_level');
+DROP TABLE IF EXISTS l7
+CREATE UNLOGGED TABLE l7(x int4, y int4, z int4, hash_key int, cluster_agg text, cx real, cy real, minx real, miny real, maxx real, maxy real, centroid point);
+SELECT create_distributed_table('l7', 'hash_key', colocate_with => 'bottom_level');
+DROP TABLE IF EXISTS l6
+CREATE UNLOGGED TABLE l6(x int4, y int4, z int4, hash_key int, cluster_agg text, cx real, cy real, minx real, miny real, maxx real, maxy real, centroid point);
+DROP TABLE IF EXISTS l5
+CREATE UNLOGGED TABLE l5(x int4, y int4, z int4, hash_key int, cluster_agg text, cx real, cy real, minx real, miny real, maxx real, maxy real, centroid point);
+DROP TABLE IF EXISTS l4
+CREATE UNLOGGED TABLE l4(x int4, y int4, z int4, hash_key int, cluster_agg text, cx real, cy real, minx real, miny real, maxx real, maxy real, centroid point);
+DROP TABLE IF EXISTS l3
+CREATE UNLOGGED TABLE l3(x int4, y int4, z int4, hash_key int, cluster_agg text, cx real, cy real, minx real, miny real, maxx real, maxy real, centroid point);
+DROP TABLE IF EXISTS l2
+CREATE UNLOGGED TABLE l2(x int4, y int4, z int4, hash_key int, cluster_agg text, cx real, cy real, minx real, miny real, maxx real, maxy real, centroid point);
+DROP TABLE IF EXISTS l1
+CREATE UNLOGGED TABLE l1(x int4, y int4, z int4, hash_key int, cluster_agg text, cx real, cy real, minx real, miny real, maxx real, maxy real, centroid point);
+DROP TABLE IF EXISTS l0
+CREATE UNLOGGED TABLE l0(x int4, y int4, z int4, hash_key int, cluster_agg text, cx real, cy real, minx real, miny real, maxx real, maxy real, centroid point);
+Generating citus hash keys...
+
+SELECT shardid, nodename, nodeport FROM pg_dist_node, pg_dist_placement WHERE pg_dist_node.groupid = pg_dist_placement.groupid;
+=============== now printing out partitions ===============
+Hash key: 0, Bottom level shard ID: 102030, ip = 10.60.1.3, port = 5432, minx = 7.0E11, miny = 7.0E11, maxx = 1.08515625E12, maxy = 9.3E12,  expected count = 1994163
+Hash key: 1, Bottom level shard ID: 102024, ip = 10.60.1.3, port = 5432, minx = 1.08515625E12, miny = 7.0E11, maxx = 1.4703125E12, maxy = 9.3E12,  expected count = 1993462
+Hash key: 2, Bottom level shard ID: 102036, ip = 10.60.1.3, port = 5432, minx = 1.4703125E12, miny = 7.0E11, maxx = 1.85546875E12, maxy = 9.3E12,  expected count = 1994460
+Hash key: 3, Bottom level shard ID: 102031, ip = 10.60.2.4, port = 5432, minx = 1.85546875E12, miny = 7.0E11, maxx = 2.240625E12, maxy = 9.3E12,  expected count = 1994472
+Hash key: 4, Bottom level shard ID: 102028, ip = 10.60.1.3, port = 5432, minx = 2.240625E12, miny = 7.0E11, maxx = 2.62578125E12, maxy = 9.3E12,  expected count = 1993545
+Hash key: 5, Bottom level shard ID: 102027, ip = 10.60.2.4, port = 5432, minx = 2.62578125E12, miny = 7.0E11, maxx = 3.0109375E12, maxy = 9.3E12,  expected count = 1993046
+Hash key: 6, Bottom level shard ID: 102034, ip = 10.60.1.3, port = 5432, minx = 3.0109375E12, miny = 7.0E11, maxx = 3.39609375E12, maxy = 9.3E12,  expected count = 1994099
+Hash key: 9, Bottom level shard ID: 102038, ip = 10.60.1.3, port = 5432, minx = 3.39609375E12, miny = 7.0E11, maxx = 3.78125E12, maxy = 9.3E12,  expected count = 1993292
+Hash key: 10, Bottom level shard ID: 102026, ip = 10.60.1.3, port = 5432, minx = 3.78125E12, miny = 7.0E11, maxx = 4.17159423828125E12, maxy = 9.3E12,  expected count = 2023015
+Hash key: 11, Bottom level shard ID: 102039, ip = 10.60.2.4, port = 5432, minx = 4.17159423828125E12, miny = 7.0E11, maxx = 4.5619384765625E12, maxy = 9.3E12,  expected count = 2022486
+Hash key: 13, Bottom level shard ID: 102035, ip = 10.60.2.4, port = 5432, minx = 4.5619384765625E12, miny = 7.0E11, maxx = 4.95228271484375E12, maxy = 9.3E12,  expected count = 2019658
+Hash key: 16, Bottom level shard ID: 102029, ip = 10.60.2.4, port = 5432, minx = 4.95228271484375E12, miny = 7.0E11, maxx = 5.342626953125E12, maxy = 9.3E12,  expected count = 2022041
+Hash key: 24, Bottom level shard ID: 102025, ip = 10.60.2.4, port = 5432, minx = 5.342626953125E12, miny = 7.0E11, maxx = 5.72751407623291E12, maxy = 9.3E12,  expected count = 1992606
+Hash key: 28, Bottom level shard ID: 102033, ip = 10.60.2.4, port = 5432, minx = 5.72751407623291E12, miny = 7.0E11, maxx = 6.11240119934082E12, maxy = 9.3E12,  expected count = 1989237
+Hash key: 41, Bottom level shard ID: 102037, ip = 10.60.2.4, port = 5432, minx = 6.11240119934082E12, miny = 7.0E11, maxx = 1.007826936841011E13, maxy = 9.3E12,  expected count = 1992557
+Hash key: 52, Bottom level shard ID: 102032, ip = 10.60.1.3, port = 5432, minx = 1.007826936841011E13, miny = 7.0E11, maxx = 1.43E13, maxy = 9.3E12,  expected count = 1987793
+Creating fake bottom level table...
+Creating get_citus_spatial_hash_key on master:
+CREATE OR REPLACE FUNCTION get_citus_spatial_hash_key(cx real, cy real) returns int AS $$ 
+
+    if (!("partitions" in plv8)) plv8.partitions = [[7.0E11,7.0E11, 1.43E13, 9.3E12],[7.0E11,7.0E11, 3.78125E12, 9.3E12],[3.78125E12,7.0E11, 1.43E13, 9.3E12],[7.0E11,7.0E11, 2.240625E12, 9.3E12],[2.240625E12,7.0E11, 3.78125E12, 9.3E12],[3.78125E12,7.0E11, 5.342626953125E12, 9.3E12],[5.342626953125E12,7.0E11, 1.43E13, 9.3E12],[7.0E11,7.0E11, 1.4703125E12, 9.3E12],[1.4703125E12,7.0E11, 2.240625E12, 9.3E12],[2.240625E12,7.0E11, 3.0109375E12, 9.3E12],[3.0109375E12,7.0E11, 3.78125E12, 9.3E12],[3.78125E12,7.0E11, 4.5619384765625E12, 9.3E12],[4.5619384765625E12,7.0E11, 5.342626953125E12, 9.3E12],[5.342626953125E12,7.0E11, 6.11240119934082E12, 9.3E12],[6.11240119934082E12,7.0E11, 1.43E13, 9.3E12],[7.0E11,7.0E11, 1.08515625E12, 9.3E12],[1.08515625E12,7.0E11, 1.4703125E12, 9.3E12],[1.4703125E12,7.0E11, 1.85546875E12, 9.3E12],[1.85546875E12,7.0E11, 2.240625E12, 9.3E12],[2.240625E12,7.0E11, 2.62578125E12, 9.3E12],[2.62578125E12,7.0E11, 3.0109375E12, 9.3E12],[3.0109375E12,7.0E11, 3.39609375E12, 9.3E12],[3.39609375E12,7.0E11, 3.78125E12, 9.3E12],[3.78125E12,7.0E11, 4.17159423828125E12, 9.3E12],[4.17159423828125E12,7.0E11, 4.5619384765625E12, 9.3E12],[4.5619384765625E12,7.0E11, 4.95228271484375E12, 9.3E12],[4.95228271484375E12,7.0E11, 5.342626953125E12, 9.3E12],[5.342626953125E12,7.0E11, 5.72751407623291E12, 9.3E12],[5.72751407623291E12,7.0E11, 6.11240119934082E12, 9.3E12],[6.11240119934082E12,7.0E11, 1.007826936841011E13, 9.3E12],[1.007826936841011E13,7.0E11, 1.43E13, 9.3E12]];
+    if (!("hashkeys" in plv8)) plv8.hashkeys = [0,1,2,3,4,5,6,9,10,11,13,16,24,28,41,52];
+
+    var partitions = plv8.partitions;
+    var hashkeys = plv8.hashkeys;
+    var i = 0;
+    while (true) {
+        if (i * 2 + 1 >= partitions.length)
+            return hashkeys[i - (partitions.length - 1) / 2];
+        if (
+            cx >= partitions[i * 2 + 1][0] &&
+            cx <= partitions[i * 2 + 1][2] &&
+            cy >= partitions[i * 2 + 1][1] &&
+            cy <= partitions[i * 2 + 1][3]
+        )
+            i = i * 2 + 1;
+        else i = i * 2 + 2;
+    }
+    return -1;
+
+ $$ LANGUAGE plv8 STABLE;
+CREATING get_citus_spatial_hash_key on workers:
+SELECT run_command_on_workers($cmd$ CREATE OR REPLACE FUNCTION get_citus_spatial_hash_key(cx real, cy real) returns int AS $$ 
+
+    if (!("partitions" in plv8)) plv8.partitions = [[7.0E11,7.0E11, 1.43E13, 9.3E12],[7.0E11,7.0E11, 3.78125E12, 9.3E12],[3.78125E12,7.0E11, 1.43E13, 9.3E12],[7.0E11,7.0E11, 2.240625E12, 9.3E12],[2.240625E12,7.0E11, 3.78125E12, 9.3E12],[3.78125E12,7.0E11, 5.342626953125E12, 9.3E12],[5.342626953125E12,7.0E11, 1.43E13, 9.3E12],[7.0E11,7.0E11, 1.4703125E12, 9.3E12],[1.4703125E12,7.0E11, 2.240625E12, 9.3E12],[2.240625E12,7.0E11, 3.0109375E12, 9.3E12],[3.0109375E12,7.0E11, 3.78125E12, 9.3E12],[3.78125E12,7.0E11, 4.5619384765625E12, 9.3E12],[4.5619384765625E12,7.0E11, 5.342626953125E12, 9.3E12],[5.342626953125E12,7.0E11, 6.11240119934082E12, 9.3E12],[6.11240119934082E12,7.0E11, 1.43E13, 9.3E12],[7.0E11,7.0E11, 1.08515625E12, 9.3E12],[1.08515625E12,7.0E11, 1.4703125E12, 9.3E12],[1.4703125E12,7.0E11, 1.85546875E12, 9.3E12],[1.85546875E12,7.0E11, 2.240625E12, 9.3E12],[2.240625E12,7.0E11, 2.62578125E12, 9.3E12],[2.62578125E12,7.0E11, 3.0109375E12, 9.3E12],[3.0109375E12,7.0E11, 3.39609375E12, 9.3E12],[3.39609375E12,7.0E11, 3.78125E12, 9.3E12],[3.78125E12,7.0E11, 4.17159423828125E12, 9.3E12],[4.17159423828125E12,7.0E11, 4.5619384765625E12, 9.3E12],[4.5619384765625E12,7.0E11, 4.95228271484375E12, 9.3E12],[4.95228271484375E12,7.0E11, 5.342626953125E12, 9.3E12],[5.342626953125E12,7.0E11, 5.72751407623291E12, 9.3E12],[5.72751407623291E12,7.0E11, 6.11240119934082E12, 9.3E12],[6.11240119934082E12,7.0E11, 1.007826936841011E13, 9.3E12],[1.007826936841011E13,7.0E11, 1.43E13, 9.3E12]];
+    if (!("hashkeys" in plv8)) plv8.hashkeys = [0,1,2,3,4,5,6,9,10,11,13,16,24,28,41,52];
+
+    var partitions = plv8.partitions;
+    var hashkeys = plv8.hashkeys;
+    var i = 0;
+    while (true) {
+        if (i * 2 + 1 >= partitions.length)
+            return hashkeys[i - (partitions.length - 1) / 2];
+        if (
+            cx >= partitions[i * 2 + 1][0] &&
+            cx <= partitions[i * 2 + 1][2] &&
+            cy >= partitions[i * 2 + 1][1] &&
+            cy <= partitions[i * 2 + 1][3]
+        )
+            i = i * 2 + 1;
+        else i = i * 2 + 2;
+    }
+    return -1;
+
+ $$ LANGUAGE plv8 $cmd$);
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 0;
+Batch 0 took: 6.303259413s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 1;
+Batch 1 took: 7.138310688s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 2;
+Batch 2 took: 6.621653095s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 3;
+Batch 3 took: 6.101651404s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 4;
+Batch 4 took: 6.117032321s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 5;
+Batch 5 took: 7.600126126s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 6;
+Batch 6 took: 5.819263868s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 7;
+Batch 7 took: 5.898188767s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 8;
+Batch 8 took: 6.010160944s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 9;
+Batch 9 took: 6.018595631s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 10;
+Batch 10 took: 5.906518622s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 11;
+Batch 11 took: 6.805354642s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 12;
+Batch 12 took: 5.93624379s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 13;
+Batch 13 took: 6.040872533s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 14;
+Batch 14 took: 5.986018098s.
+INSERT INTO bottom_level(x, y, z, hash_key, cluster_agg, cx, cy) SELECT x, y, z, get_citus_spatial_hash_key(cx, cy), '{"count(*)":1}', cx, cy FROM dots WHERE mod(hash_key, 16) = 15;
+Batch 15 took: 5.815904688s.
+
+************************************************
+Populating bottom_level took: 100.186397228s.
+************************************************
+
+Creating the PLV8 UDF for single node clustering algo...
+Creating single_node_clustering_algo on master:
+CREATE OR REPLACE FUNCTION single_node_clustering_algo(shard text, autodd jsonb) returns int AS $$ 
+
+    function initClusterAgg(d) {
+        d.cluster_agg = JSON.parse(d.cluster_agg);
+        ret = d.cluster_agg;
+        if (Object.keys(ret).length > 1) {
+            // not only count(*), and thus not bottom level
+            // just scale the convex hull
+            for (var i = 0; i < ret.convexHull.length; i++) {
+                ret.convexHull[i][0] /= zoomFactor;
+                ret.convexHull[i][1] /= zoomFactor;
+            }
+            return;
+        }
+
+        // convex hull
+        ret.convexHull = [[d.cx, d.cy]];
+
+        // topk
+        if (topk > 0) {
+            var dd = {};
+            for (var i = 0; i < fields.length; i++) {
+                if (
+                    fields[i] == "hash_key" ||
+                    fields[i] == "minx" ||
+                    fields[i] == "miny" ||
+                    fields[i] == "maxx" ||
+                    fields[i] == "maxy" ||
+                    fields[i] == "cluster_agg" ||
+                    fields[i] == "cx" ||
+                    fields[i] == "cy" ||
+                    fields[i] == "centroid"
+                )
+                    continue;
+                dd[fields[i]] = d[fields[i]];
+            }
+            ret.topk = [dd];
+        } else ret.topk = [];
+
+        // for NNM experiment
+        ret.xysqrsum = d[xCol] * d[xCol] + d[yCol] * d[yCol];
+        ret.sumX = +d[xCol];
+        ret.sumY = +d[yCol];
+
+        // numerical aggregations
+        var dimStr = "";
+        for (var i = 0; i < aggDimensionFields.length; i++)
+            dimStr += (i > 0 ? aggKeyDelimiter : "") + d[aggDimensionFields[i]];
+        // always calculate count(*)
+        ret[dimStr + aggKeyDelimiter + "count(*)"] = 1;
+        for (var i = 0; i < aggMeasureFields.length; i++) {
+            var curField = aggMeasureFields[i];
+            if (curField == "*") continue;
+            var curValue = d[curField];
+            ret[dimStr + aggKeyDelimiter + "sum(" + curField + ")"] = +curValue;
+            ret[dimStr + aggKeyDelimiter + "max(" + curField + ")"] = +curValue;
+            ret[dimStr + aggKeyDelimiter + "min(" + curField + ")"] = +curValue;
+            ret[dimStr + aggKeyDelimiter + "sqrsum(" + curField + ")"] =
+                curValue * curValue;
+        }
+    }
+
+    // get d3
+    if (!("d3" in plv8)) plv8.d3 = require("d3");
+    var d3 = plv8.d3;
+
+    // get merge cluster function
+    if (!("mergeClusterAggs" in plv8))
+        plv8.mergeClusterAggs = function mergeClusterAggs(a, b) {
+    // count(*)
+    a["count(*)"] += b["count(*)"];
+
+    // convex hulls
+    for (var i = 0; i < b.convexHull.length; i++)
+        a.convexHull.push(b.convexHull[i]);
+    if (a.convexHull.length >= 3) a.convexHull = d3.polygonHull(a.convexHull);
+
+    // topk
+    for (var i = 0; i < b.topk.length; i++) a.topk.push(b.topk[i]);
+    if (zCol != "none")
+        a.topk.sort(function(p, q) {
+            if (zOrder == "asc") return p[zCol] < q[zCol] ? -1 : 1;
+            else return p[zCol] > q[zCol] ? -1 : 1;
+        });
+    var extra = Math.max(a.topk.length - topk, 0);
+    for (var i = 0; i < extra; i++) a.topk.pop();
+    //a.topk = a.topk.slice(0, topk);
+
+    // NNM experiments
+    a.xysqrsum += b.xysqrsum;
+    a.sumX += b.sumX;
+    a.sumY += b.sumY;
+
+    // numeric aggregations
+    bKeys = Object.keys(b);
+    for (var i = 0; i < bKeys.length; i++) {
+        var aggKey = bKeys[i];
+        if (
+            aggKey == "count(*)" ||
+            aggKey == "topk" ||
+            aggKey == "convexHull" ||
+            aggKey == "xysqrsum" ||
+            aggKey == "sumX" ||
+            aggKey == "sumY"
+        )
+            continue;
+        if (!(aggKey in a)) {
+            a[aggKey] = b[aggKey];
+            continue;
+        }
+        var func = aggKey.substring(
+            aggKey.lastIndexOf(aggKeyDelimiter) + aggKeyDelimiter.length,
+            aggKey.lastIndexOf("(")
+        );
+        var aValue = a[aggKey],
+            bValue = b[aggKey];
+        switch (func) {
+            case "count":
+            case "sum":
+            case "sqrsum":
+                a[aggKey] = aValue + bValue;
+                break;
+            case "min":
+                a[aggKey] = Math.min(aValue, bValue);
+                break;
+            case "max":
+                a[aggKey] = Math.max(aValue, bValue);
+                break;
+        }
+    }
+};
+    var mergeClusterAggs = plv8.mergeClusterAggs;
+
+    // fetch in queries
+    var xCol = autodd.xCol;
+    var yCol = autodd.yCol;
+    var zOrder = autodd.zOrder;
+    var zCol = autodd.zCol;
+    var fields = autodd.fields;
+    var types = autodd.types;
+    var sql =
+        "SELECT * FROM " +
+        shard +
+        (zCol != "none" ? " ORDER BY " + zCol + " " + zOrder : "") +
+        ";";
+    var plan = plv8.prepare(sql);
+    var cursor = plan.cursor();
+
+    // initialize a quadtree for existing clusters
+    var zoomFactor = autodd.zoomFactor;
+    var theta = autodd.theta;
+    var bboxH = autodd.bboxH,
+        bboxW = autodd.bboxW;
+    var topk = autodd.topk;
+    var aggKeyDelimiter = autodd.aggKeyDelimiter;
+    var aggDimensionFields = autodd.aggDimensionFields;
+    var aggMeasureFields = autodd.aggMeasureFields;
+    var qt = d3
+        .quadtree()
+        .x(function x(d) {
+            return d.cx;
+        })
+        .y(function y(d) {
+            return d.cy;
+        });
+    var cluster;
+    //    var cnt = 0;
+    while ((cluster = cursor.fetch())) {
+        //        cnt ++;
+        //        if (cnt % 1000 == 0)
+        //            plv8.elog(NOTICE, cnt + " " + qt.size() + " " + qt.extent());
+
+        cluster.cx /= zoomFactor;
+        cluster.cy /= zoomFactor;
+        initClusterAgg(cluster);
+
+        var x0 = cluster.cx - bboxW,
+            x3 = cluster.cx + bboxW;
+        var y0 = cluster.cy - bboxH,
+            y3 = cluster.cy + bboxH;
+        var nn = null,
+            minNcd = -1;
+        qt.visit(function(node, x1, y1, x2, y2) {
+            if (!node.length) {
+                do {
+                    var d = node.data;
+                    var ncd = d3.max([
+                        Math.abs(cluster.cx - d.cx) / bboxW,
+                        Math.abs(cluster.cy - d.cy) / bboxH
+                    ]);
+                    if (ncd <= theta)
+                        if (nn == null || ncd < minNcd)
+                            (nn = d), (minNcd = ncd);
+                } while ((node = node.next));
+            }
+            return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+        });
+
+        if (nn != null)
+            // merge cluster
+            mergeClusterAggs(nn.cluster_agg, cluster.cluster_agg);
+        else qt.add(cluster);
+    }
+    cursor.close();
+    plan.free();
+    plv8.elog(NOTICE, "QT TREE DONE!!!!");
+
+    // use batch insert to put data into the correct table
+    var newClusters = qt.data();
+    var batchSize = 3000;
+    var targetTable = autodd.tableMap[shard];
+    sql = "";
+    for (var i = 0; i < newClusters.length; i++) {
+        if (i % batchSize == 0) {
+            if (sql.length > 0) {
+                // plv8.elog(NOTICE, sql.length);
+                plv8.execute(sql);
+            }
+            sql = "INSERT INTO " + targetTable + "(";
+            for (var j = 0; j < fields.length; j++)
+                sql += (j > 0 ? ", " : "") + fields[j];
+            sql += ") VALUES ";
+        }
+        sql += (i % batchSize > 0 ? ", " : "") + "(";
+        for (var j = 0; j < fields.length; j++) {
+            sql += j > 0 ? ", " : "";
+            var curValue = newClusters[i][fields[j]];
+            if (types[j] == "int4" || types[j] == "float4") sql += curValue;
+            else {
+                if (fields[j] == "cluster_agg")
+                    curValue = JSON.stringify(curValue);
+                if (typeof curValue == "string")
+                    curValue = curValue.replace(/\'/g, "''");
+                sql += "'" + curValue + "'::" + types[j];
+            }
+        }
+        sql += ")";
+    }
+    if (sql.length > 0) plv8.execute(sql);
+
+    var ret = newClusters.length;
+    qt = null;
+    newClusters = null;
+    return ret;
+
+$$ LANGUAGE plv8 STABLE;
+Creating single_node_clustering_algo on workers:
+SELECT run_command_on_workers($cmd$ CREATE OR REPLACE FUNCTION single_node_clustering_algo(shard text, autodd jsonb) returns int AS $$ 
+
+    function initClusterAgg(d) {
+        d.cluster_agg = JSON.parse(d.cluster_agg);
+        ret = d.cluster_agg;
+        if (Object.keys(ret).length > 1) {
+            // not only count(*), and thus not bottom level
+            // just scale the convex hull
+            for (var i = 0; i < ret.convexHull.length; i++) {
+                ret.convexHull[i][0] /= zoomFactor;
+                ret.convexHull[i][1] /= zoomFactor;
+            }
+            return;
+        }
+
+        // convex hull
+        ret.convexHull = [[d.cx, d.cy]];
+
+        // topk
+        if (topk > 0) {
+            var dd = {};
+            for (var i = 0; i < fields.length; i++) {
+                if (
+                    fields[i] == "hash_key" ||
+                    fields[i] == "minx" ||
+                    fields[i] == "miny" ||
+                    fields[i] == "maxx" ||
+                    fields[i] == "maxy" ||
+                    fields[i] == "cluster_agg" ||
+                    fields[i] == "cx" ||
+                    fields[i] == "cy" ||
+                    fields[i] == "centroid"
+                )
+                    continue;
+                dd[fields[i]] = d[fields[i]];
+            }
+            ret.topk = [dd];
+        } else ret.topk = [];
+
+        // for NNM experiment
+        ret.xysqrsum = d[xCol] * d[xCol] + d[yCol] * d[yCol];
+        ret.sumX = +d[xCol];
+        ret.sumY = +d[yCol];
+
+        // numerical aggregations
+        var dimStr = "";
+        for (var i = 0; i < aggDimensionFields.length; i++)
+            dimStr += (i > 0 ? aggKeyDelimiter : "") + d[aggDimensionFields[i]];
+        // always calculate count(*)
+        ret[dimStr + aggKeyDelimiter + "count(*)"] = 1;
+        for (var i = 0; i < aggMeasureFields.length; i++) {
+            var curField = aggMeasureFields[i];
+            if (curField == "*") continue;
+            var curValue = d[curField];
+            ret[dimStr + aggKeyDelimiter + "sum(" + curField + ")"] = +curValue;
+            ret[dimStr + aggKeyDelimiter + "max(" + curField + ")"] = +curValue;
+            ret[dimStr + aggKeyDelimiter + "min(" + curField + ")"] = +curValue;
+            ret[dimStr + aggKeyDelimiter + "sqrsum(" + curField + ")"] =
+                curValue * curValue;
+        }
+    }
+
+    // get d3
+    if (!("d3" in plv8)) plv8.d3 = require("d3");
+    var d3 = plv8.d3;
+
+    // get merge cluster function
+    if (!("mergeClusterAggs" in plv8))
+        plv8.mergeClusterAggs = function mergeClusterAggs(a, b) {
+    // count(*)
+    a["count(*)"] += b["count(*)"];
+
+    // convex hulls
+    for (var i = 0; i < b.convexHull.length; i++)
+        a.convexHull.push(b.convexHull[i]);
+    if (a.convexHull.length >= 3) a.convexHull = d3.polygonHull(a.convexHull);
+
+    // topk
+    for (var i = 0; i < b.topk.length; i++) a.topk.push(b.topk[i]);
+    if (zCol != "none")
+        a.topk.sort(function(p, q) {
+            if (zOrder == "asc") return p[zCol] < q[zCol] ? -1 : 1;
+            else return p[zCol] > q[zCol] ? -1 : 1;
+        });
+    var extra = Math.max(a.topk.length - topk, 0);
+    for (var i = 0; i < extra; i++) a.topk.pop();
+    //a.topk = a.topk.slice(0, topk);
+
+    // NNM experiments
+    a.xysqrsum += b.xysqrsum;
+    a.sumX += b.sumX;
+    a.sumY += b.sumY;
+
+    // numeric aggregations
+    bKeys = Object.keys(b);
+    for (var i = 0; i < bKeys.length; i++) {
+        var aggKey = bKeys[i];
+        if (
+            aggKey == "count(*)" ||
+            aggKey == "topk" ||
+            aggKey == "convexHull" ||
+            aggKey == "xysqrsum" ||
+            aggKey == "sumX" ||
+            aggKey == "sumY"
+        )
+            continue;
+        if (!(aggKey in a)) {
+            a[aggKey] = b[aggKey];
+            continue;
+        }
+        var func = aggKey.substring(
+            aggKey.lastIndexOf(aggKeyDelimiter) + aggKeyDelimiter.length,
+            aggKey.lastIndexOf("(")
+        );
+        var aValue = a[aggKey],
+            bValue = b[aggKey];
+        switch (func) {
+            case "count":
+            case "sum":
+            case "sqrsum":
+                a[aggKey] = aValue + bValue;
+                break;
+            case "min":
+                a[aggKey] = Math.min(aValue, bValue);
+                break;
+            case "max":
+                a[aggKey] = Math.max(aValue, bValue);
+                break;
+        }
+    }
+};
+    var mergeClusterAggs = plv8.mergeClusterAggs;
+
+    // fetch in queries
+    var xCol = autodd.xCol;
+    var yCol = autodd.yCol;
+    var zOrder = autodd.zOrder;
+    var zCol = autodd.zCol;
+    var fields = autodd.fields;
+    var types = autodd.types;
+    var sql =
+        "SELECT * FROM " +
+        shard +
+        (zCol != "none" ? " ORDER BY " + zCol + " " + zOrder : "") +
+        ";";
+    var plan = plv8.prepare(sql);
+    var cursor = plan.cursor();
+
+    // initialize a quadtree for existing clusters
+    var zoomFactor = autodd.zoomFactor;
+    var theta = autodd.theta;
+    var bboxH = autodd.bboxH,
+        bboxW = autodd.bboxW;
+    var topk = autodd.topk;
+    var aggKeyDelimiter = autodd.aggKeyDelimiter;
+    var aggDimensionFields = autodd.aggDimensionFields;
+    var aggMeasureFields = autodd.aggMeasureFields;
+    var qt = d3
+        .quadtree()
+        .x(function x(d) {
+            return d.cx;
+        })
+        .y(function y(d) {
+            return d.cy;
+        });
+    var cluster;
+    //    var cnt = 0;
+    while ((cluster = cursor.fetch())) {
+        //        cnt ++;
+        //        if (cnt % 1000 == 0)
+        //            plv8.elog(NOTICE, cnt + " " + qt.size() + " " + qt.extent());
+
+        cluster.cx /= zoomFactor;
+        cluster.cy /= zoomFactor;
+        initClusterAgg(cluster);
+
+        var x0 = cluster.cx - bboxW,
+            x3 = cluster.cx + bboxW;
+        var y0 = cluster.cy - bboxH,
+            y3 = cluster.cy + bboxH;
+        var nn = null,
+            minNcd = -1;
+        qt.visit(function(node, x1, y1, x2, y2) {
+            if (!node.length) {
+                do {
+                    var d = node.data;
+                    var ncd = d3.max([
+                        Math.abs(cluster.cx - d.cx) / bboxW,
+                        Math.abs(cluster.cy - d.cy) / bboxH
+                    ]);
+                    if (ncd <= theta)
+                        if (nn == null || ncd < minNcd)
+                            (nn = d), (minNcd = ncd);
+                } while ((node = node.next));
+            }
+            return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+        });
+
+        if (nn != null)
+            // merge cluster
+            mergeClusterAggs(nn.cluster_agg, cluster.cluster_agg);
+        else qt.add(cluster);
+    }
+    cursor.close();
+    plan.free();
+    plv8.elog(NOTICE, "QT TREE DONE!!!!");
+
+    // use batch insert to put data into the correct table
+    var newClusters = qt.data();
+    var batchSize = 3000;
+    var targetTable = autodd.tableMap[shard];
+    sql = "";
+    for (var i = 0; i < newClusters.length; i++) {
+        if (i % batchSize == 0) {
+            if (sql.length > 0) {
+                // plv8.elog(NOTICE, sql.length);
+                plv8.execute(sql);
+            }
+            sql = "INSERT INTO " + targetTable + "(";
+            for (var j = 0; j < fields.length; j++)
+                sql += (j > 0 ? ", " : "") + fields[j];
+            sql += ") VALUES ";
+        }
+        sql += (i % batchSize > 0 ? ", " : "") + "(";
+        for (var j = 0; j < fields.length; j++) {
+            sql += j > 0 ? ", " : "";
+            var curValue = newClusters[i][fields[j]];
+            if (types[j] == "int4" || types[j] == "float4") sql += curValue;
+            else {
+                if (fields[j] == "cluster_agg")
+                    curValue = JSON.stringify(curValue);
+                if (typeof curValue == "string")
+                    curValue = curValue.replace(/\'/g, "''");
+                sql += "'" + curValue + "'::" + types[j];
+            }
+        }
+        sql += ")";
+    }
+    if (sql.length > 0) plv8.execute(sql);
+
+    var ret = newClusters.length;
+    qt = null;
+    newClusters = null;
+    return ret;
+
+$$ LANGUAGE plv8 $cmd$);
+Creating the PLV8 UDF for merging clusters along splits...
+Creating merge_clusters_along_splits on master:
+CREATE OR REPLACE FUNCTION merge_clusters_along_splits(clusters jsonb[], autodd jsonb) returns setof jsonb AS $$ 
+
+    // get d3
+    if (!("d3" in plv8)) plv8.d3 = require("d3");
+    var d3 = plv8.d3;
+
+    // get merge cluster function
+    if (!("mergeClusterAggs" in plv8))
+        plv8.mergeClusterAggs = function mergeClusterAggs(a, b) {
+    // count(*)
+    a["count(*)"] += b["count(*)"];
+
+    // convex hulls
+    for (var i = 0; i < b.convexHull.length; i++)
+        a.convexHull.push(b.convexHull[i]);
+    if (a.convexHull.length >= 3) a.convexHull = d3.polygonHull(a.convexHull);
+
+    // topk
+    for (var i = 0; i < b.topk.length; i++) a.topk.push(b.topk[i]);
+    if (zCol != "none")
+        a.topk.sort(function(p, q) {
+            if (zOrder == "asc") return p[zCol] < q[zCol] ? -1 : 1;
+            else return p[zCol] > q[zCol] ? -1 : 1;
+        });
+    var extra = Math.max(a.topk.length - topk, 0);
+    for (var i = 0; i < extra; i++) a.topk.pop();
+    //a.topk = a.topk.slice(0, topk);
+
+    // NNM experiments
+    a.xysqrsum += b.xysqrsum;
+    a.sumX += b.sumX;
+    a.sumY += b.sumY;
+
+    // numeric aggregations
+    bKeys = Object.keys(b);
+    for (var i = 0; i < bKeys.length; i++) {
+        var aggKey = bKeys[i];
+        if (
+            aggKey == "count(*)" ||
+            aggKey == "topk" ||
+            aggKey == "convexHull" ||
+            aggKey == "xysqrsum" ||
+            aggKey == "sumX" ||
+            aggKey == "sumY"
+        )
+            continue;
+        if (!(aggKey in a)) {
+            a[aggKey] = b[aggKey];
+            continue;
+        }
+        var func = aggKey.substring(
+            aggKey.lastIndexOf(aggKeyDelimiter) + aggKeyDelimiter.length,
+            aggKey.lastIndexOf("(")
+        );
+        var aValue = a[aggKey],
+            bValue = b[aggKey];
+        switch (func) {
+            case "count":
+            case "sum":
+            case "sqrsum":
+                a[aggKey] = aValue + bValue;
+                break;
+            case "min":
+                a[aggKey] = Math.min(aValue, bValue);
+                break;
+            case "max":
+                a[aggKey] = Math.max(aValue, bValue);
+                break;
+        }
+    }
+};
+    var mergeClusterAggs = plv8.mergeClusterAggs;
+
+    var theta = autodd.theta;
+    var zCol = autodd.zCol;
+    var zOrder = autodd.zOrder;
+    var bboxW = autodd.bboxW;
+    var bboxH = autodd.bboxH;
+    var topk = autodd.topk;
+    var dir = autodd.splitDir;
+    var aggKeyDelimiter = autodd.aggKeyDelimiter;
+
+    clusters.sort(function(a, b) {
+        if (dir == "vertical") return a.cy - b.cy;
+        else return a.cx - b.cx;
+    });
+
+    var res = [JSON.parse(JSON.stringify(clusters[0]))];
+    for (var i = 1; i < clusters.length; i++) {
+        var cur = clusters[i];
+        var last = res[res.length - 1];
+        var ncd = Math.max(
+            Math.abs(last.cx - cur.cx) / bboxW,
+            Math.abs(last.cy - cur.cy) / bboxH
+        );
+        if (ncd >= theta)
+            // no conflict
+            res.push(JSON.parse(JSON.stringify(cur)));
+        else {
+            // merge last and cur
+            var lastClusterAgg = JSON.parse(last.cluster_agg);
+            var curClusterAgg = JSON.parse(cur.cluster_agg);
+
+            // merge according to importance order
+            if (
+                (zCol == "none" &&
+                    lastClusterAgg["count(*)"] >= curClusterAgg["count(*)"]) ||
+                (zCol != "none" &&
+                    last[zCol] > cur[zCol] &&
+                    zOrder == "desc") ||
+                (zCol != "none" && last[zCol] < cur[zCol] && zOrder == "asc")
+            ) {
+                mergeClusterAggs(lastClusterAgg, curClusterAgg);
+                last.cluster_agg = JSON.stringify(lastClusterAgg);
+            } else {
+                mergeClusterAggs(curClusterAgg, lastClusterAgg);
+                cur.cluster_agg = JSON.stringify(curClusterAgg);
+                res[res.length - 1] = JSON.parse(JSON.stringify(cur));
+            }
+        }
+    }
+
+    return res;
+
+$$ LANGUAGE plv8 STABLE;
+Running single_node_clustering_algo across all shards for level9...
+SELECT run_command_on_shards('bottom_level', $$ SELECT single_node_clustering_algo('%1$s', '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":1.953125E7, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "fields":["x", "y", "z", "hash_key", "cluster_agg", "cx", "cy"], "types":["int4", "int4", "int4", "int", "text", "real", "real"], "aggDimensionFields": [], "aggMeasureFields": [], "tableMap": {"bottom_level_102030" : "l9_102046", "bottom_level_102024" : "l9_102040", "bottom_level_102036" : "l9_102052", "bottom_level_102031" : "l9_102047", "bottom_level_102028" : "l9_102044", "bottom_level_102027" : "l9_102043", "bottom_level_102034" : "l9_102050", "bottom_level_102038" : "l9_102054", "bottom_level_102026" : "l9_102042", "bottom_level_102039" : "l9_102055", "bottom_level_102035" : "l9_102051", "bottom_level_102029" : "l9_102045", "bottom_level_102025" : "l9_102041", "bottom_level_102033" : "l9_102049", "bottom_level_102037" : "l9_102053", "bottom_level_102032" : "l9_102048"}}'::jsonb)$$);
+
+************************************************
+Running single node clustering in parallel took: 127.410931063s.
+************************************************
+
+(102024,t,158375)
+(102025,t,158359)
+(102026,t,160769)
+(102027,t,158360)
+(102028,t,158364)
+(102029,t,160511)
+(102030,t,158582)
+(102031,t,158273)
+(102032,t,1082398)
+(102033,t,158109)
+(102034,t,158604)
+(102035,t,160158)
+(102036,t,158229)
+(102037,t,1022280)
+(102038,t,158466)
+(102039,t,160611)
+
+Building spatial indexes on level9...
+UPDATE l9 SET minx = cx - 70, miny = cy - 70, maxx = cx + 70, maxy = cy + 70, centroid = point(cx, cy);
+Updating minx, miny, maxx, maxy & centroid took: 3.302985448s.
+DROP INDEX IF EXISTS l9_centroid_gist;
+Drop existing index on centroid took: 0.003850261s.
+CREATE INDEX l9_centroid_gist ON l9 USING gist(centroid);
+Creating gist index on centroid took: 14.200474736s.
+
+
+Current KD-tree: KDTree{minx=7.0E11, miny=7.0E11, maxx=1.4703125E12, maxy=9.3E12, splitDir=VERTICAL, count=3987625, splitPoint=1.08515625E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('55420.0, 35840.0, 55700.0, 476160.0');
+# objects along this split: 2843
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('55420.0, 35840.0, 55700.0, 476160.0');
+Creating merge_table took: 0.053177315s.
+DELETE FROM l9 WHERE centroid <@ box('55420.0, 35840.0, 55700.0, 476160.0');
+Deleting border clusters took : 0.013317283s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1942 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.228020372s.
+
+Current KD-tree: KDTree{minx=1.4703125E12, miny=7.0E11, maxx=2.240625E12, maxy=9.3E12, splitDir=VERTICAL, count=3988932, splitPoint=1.85546875E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('94860.0, 35840.0, 95140.0, 476160.0');
+# objects along this split: 2848
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('94860.0, 35840.0, 95140.0, 476160.0');
+Creating merge_table took: 0.029210034s.
+DELETE FROM l9 WHERE centroid <@ box('94860.0, 35840.0, 95140.0, 476160.0');
+Deleting border clusters took : 0.009550328s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1985 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.171471173s.
+
+Current KD-tree: KDTree{minx=7.0E11, miny=7.0E11, maxx=2.240625E12, maxy=9.3E12, splitDir=VERTICAL, count=7976557, splitPoint=1.4703125E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('75140.0, 35840.0, 75420.0, 476160.0');
+# objects along this split: 2831
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('75140.0, 35840.0, 75420.0, 476160.0');
+Creating merge_table took: 0.043798659s.
+DELETE FROM l9 WHERE centroid <@ box('75140.0, 35840.0, 75420.0, 476160.0');
+Deleting border clusters took : 0.013691097s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1986 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.280532149s.
+
+Current KD-tree: KDTree{minx=2.240625E12, miny=7.0E11, maxx=3.0109375E12, maxy=9.3E12, splitDir=VERTICAL, count=3986591, splitPoint=2.62578125E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('134300.0, 35840.0, 134580.0, 476160.0');
+# objects along this split: 2797
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('134300.0, 35840.0, 134580.0, 476160.0');
+Creating merge_table took: 0.588664444s.
+DELETE FROM l9 WHERE centroid <@ box('134300.0, 35840.0, 134580.0, 476160.0');
+Deleting border clusters took : 0.009930335s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1961 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.135349291s.
+
+Current KD-tree: KDTree{minx=3.0109375E12, miny=7.0E11, maxx=3.78125E12, maxy=9.3E12, splitDir=VERTICAL, count=3987391, splitPoint=3.39609375E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('173740.0, 35840.0, 174020.0, 476160.0');
+# objects along this split: 2850
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('173740.0, 35840.0, 174020.0, 476160.0');
+Creating merge_table took: 0.039865527s.
+DELETE FROM l9 WHERE centroid <@ box('173740.0, 35840.0, 174020.0, 476160.0');
+Deleting border clusters took : 0.012618287s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+2007 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.152398785s.
+
+Current KD-tree: KDTree{minx=2.240625E12, miny=7.0E11, maxx=3.78125E12, maxy=9.3E12, splitDir=VERTICAL, count=7973982, splitPoint=3.0109375E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('154020.0, 35840.0, 154300.0, 476160.0');
+# objects along this split: 2828
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('154020.0, 35840.0, 154300.0, 476160.0');
+Creating merge_table took: 0.039725278s.
+DELETE FROM l9 WHERE centroid <@ box('154020.0, 35840.0, 154300.0, 476160.0');
+Deleting border clusters took : 0.010952037s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1967 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.138005915s.
+
+Current KD-tree: KDTree{minx=7.0E11, miny=7.0E11, maxx=3.78125E12, maxy=9.3E12, splitDir=VERTICAL, count=15950539, splitPoint=2.240625E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('114580.0, 35840.0, 114860.0, 476160.0');
+# objects along this split: 2816
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('114580.0, 35840.0, 114860.0, 476160.0');
+Creating merge_table took: 0.041944359s.
+DELETE FROM l9 WHERE centroid <@ box('114580.0, 35840.0, 114860.0, 476160.0');
+Deleting border clusters took : 0.009921014s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1977 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.13745102s.
+
+Current KD-tree: KDTree{minx=3.78125E12, miny=7.0E11, maxx=4.5619384765625E12, maxy=9.3E12, splitDir=VERTICAL, count=4045501, splitPoint=4.17159423828125E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('213445.625, 35840.0, 213725.625, 476160.0');
+# objects along this split: 2875
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('213445.625, 35840.0, 213725.625, 476160.0');
+Creating merge_table took: 0.036145236s.
+DELETE FROM l9 WHERE centroid <@ box('213445.625, 35840.0, 213725.625, 476160.0');
+Deleting border clusters took : 0.009849921s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+2036 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.666506547s.
+
+Current KD-tree: KDTree{minx=4.5619384765625E12, miny=7.0E11, maxx=5.342626953125E12, maxy=9.3E12, splitDir=VERTICAL, count=4041699, splitPoint=4.95228271484375E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('253416.875, 35840.0, 253696.875, 476160.0');
+# objects along this split: 2866
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('253416.875, 35840.0, 253696.875, 476160.0');
+Creating merge_table took: 0.046614416s.
+DELETE FROM l9 WHERE centroid <@ box('253416.875, 35840.0, 253696.875, 476160.0');
+Deleting border clusters took : 0.336478117s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+2025 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.150560646s.
+
+Current KD-tree: KDTree{minx=3.78125E12, miny=7.0E11, maxx=5.342626953125E12, maxy=9.3E12, splitDir=VERTICAL, count=8087200, splitPoint=4.5619384765625E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('233431.25, 35840.0, 233711.25, 476160.0');
+# objects along this split: 2833
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('233431.25, 35840.0, 233711.25, 476160.0');
+Creating merge_table took: 0.041107303s.
+DELETE FROM l9 WHERE centroid <@ box('233431.25, 35840.0, 233711.25, 476160.0');
+Deleting border clusters took : 0.44763734s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1939 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.139812089s.
+
+Current KD-tree: KDTree{minx=5.342626953125E12, miny=7.0E11, maxx=6.11240119934082E12, maxy=9.3E12, splitDir=VERTICAL, count=3981843, splitPoint=5.72751407623291E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('293108.720703125, 35840.0, 293388.720703125, 476160.0');
+# objects along this split: 2790
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('293108.720703125, 35840.0, 293388.720703125, 476160.0');
+Creating merge_table took: 0.04672312s.
+DELETE FROM l9 WHERE centroid <@ box('293108.720703125, 35840.0, 293388.720703125, 476160.0');
+Deleting border clusters took : 0.011801944s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1940 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.141145892s.
+
+Current KD-tree: KDTree{minx=6.11240119934082E12, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=3980350, splitPoint=1.007826936841011E13}
+SELECT count(*) FROM l9 WHERE centroid <@ box('515867.3916625976, 35840.0, 516147.3916625976, 476160.0');
+# objects along this split: 1596
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('515867.3916625976, 35840.0, 516147.3916625976, 476160.0');
+Creating merge_table took: 0.02536554s.
+DELETE FROM l9 WHERE centroid <@ box('515867.3916625976, 35840.0, 516147.3916625976, 476160.0');
+Deleting border clusters took : 0.008353854s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1399 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.074494117s.
+
+Current KD-tree: KDTree{minx=5.342626953125E12, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=7962193, splitPoint=6.11240119934082E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('312814.94140625, 35840.0, 313094.94140625, 476160.0');
+# objects along this split: 2866
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('312814.94140625, 35840.0, 313094.94140625, 476160.0');
+Creating merge_table took: 0.045306937s.
+DELETE FROM l9 WHERE centroid <@ box('312814.94140625, 35840.0, 313094.94140625, 476160.0');
+Deleting border clusters took : 0.01053998s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+2006 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.142450245s.
+
+Current KD-tree: KDTree{minx=3.78125E12, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=16049393, splitPoint=5.342626953125E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('273402.5, 35840.0, 273682.5, 476160.0');
+# objects along this split: 2855
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('273402.5, 35840.0, 273682.5, 476160.0');
+Creating merge_table took: 0.03549551s.
+DELETE FROM l9 WHERE centroid <@ box('273402.5, 35840.0, 273682.5, 476160.0');
+Deleting border clusters took : 0.010181858s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+2017 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.139199847s.
+
+Current KD-tree: KDTree{minx=7.0E11, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=31999932, splitPoint=3.78125E12}
+SELECT count(*) FROM l9 WHERE centroid <@ box('193460.0, 35840.0, 193740.0, 476160.0');
+# objects along this split: 2804
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l9 WHERE centroid <@ box('193460.0, 35840.0, 193740.0, 476160.0');
+Creating merge_table took: 0.041296463s.
+DELETE FROM l9 WHERE centroid <@ box('193460.0, 35840.0, 193740.0, 476160.0');
+Deleting border clusters took : 0.013534138s.
+INSERT INTO l9 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1973 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.147583889s.
+************************************************
+Merge splits took: 5.757439851s.
+************************************************
+Running single_node_clustering_algo across all shards for level8...
+SELECT run_command_on_shards('l9', $$ SELECT single_node_clustering_algo('%1$s', '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":2.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "fields":["x", "y", "z", "hash_key", "cluster_agg", "cx", "cy"], "types":["int4", "int4", "int4", "int", "text", "real", "real"], "aggDimensionFields": [], "aggMeasureFields": [], "tableMap": {"l9_102046" : "l8_102062", "l9_102040" : "l8_102056", "l9_102052" : "l8_102068", "l9_102047" : "l8_102063", "l9_102044" : "l8_102060", "l9_102043" : "l8_102059", "l9_102050" : "l8_102066", "l9_102054" : "l8_102070", "l9_102042" : "l8_102058", "l9_102055" : "l8_102071", "l9_102051" : "l8_102067", "l9_102045" : "l8_102061", "l9_102041" : "l8_102057", "l9_102049" : "l8_102065", "l9_102053" : "l8_102069", "l9_102048" : "l8_102064"}}'::jsonb)$$);
+
+************************************************
+Running single node clustering in parallel took: 56.872604177s.
+************************************************
+
+(102040,t,43562)
+(102041,t,43543)
+(102042,t,44068)
+(102043,t,43543)
+(102044,t,43602)
+(102045,t,44260)
+(102046,t,43584)
+(102047,t,43535)
+(102048,t,432003)
+(102049,t,43506)
+(102050,t,43632)
+(102051,t,44062)
+(102052,t,43660)
+(102053,t,405508)
+(102054,t,43452)
+(102055,t,44076)
+
+Building spatial indexes on level8...
+UPDATE l8 SET minx = cx - 70, miny = cy - 70, maxx = cx + 70, maxy = cy + 70, centroid = point(cx, cy);
+Updating minx, miny, maxx, maxy & centroid took: 1.544710282s.
+DROP INDEX IF EXISTS l8_centroid_gist;
+Drop existing index on centroid took: 0.004774748s.
+CREATE INDEX l8_centroid_gist ON l8 USING gist(centroid);
+Creating gist index on centroid took: 4.577378556s.
+
+
+Current KD-tree: KDTree{minx=7.0E11, miny=7.0E11, maxx=1.4703125E12, maxy=9.3E12, splitDir=VERTICAL, count=3987625, splitPoint=1.08515625E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('27640.0, 17920.0, 27920.0, 238080.0');
+# objects along this split: 1513
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('27640.0, 17920.0, 27920.0, 238080.0');
+Creating merge_table took: 0.03179006s.
+DELETE FROM l8 WHERE centroid <@ box('27640.0, 17920.0, 27920.0, 238080.0');
+Deleting border clusters took : 0.011068904s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1131 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.091227624s.
+
+Current KD-tree: KDTree{minx=1.4703125E12, miny=7.0E11, maxx=2.240625E12, maxy=9.3E12, splitDir=VERTICAL, count=3988932, splitPoint=1.85546875E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('47360.0, 17920.0, 47640.0, 238080.0');
+# objects along this split: 1548
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('47360.0, 17920.0, 47640.0, 238080.0');
+Creating merge_table took: 0.025340544s.
+DELETE FROM l8 WHERE centroid <@ box('47360.0, 17920.0, 47640.0, 238080.0');
+Deleting border clusters took : 0.008926907s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1153 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.33901832s.
+
+Current KD-tree: KDTree{minx=7.0E11, miny=7.0E11, maxx=2.240625E12, maxy=9.3E12, splitDir=VERTICAL, count=7976557, splitPoint=1.4703125E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('37500.0, 17920.0, 37780.0, 238080.0');
+# objects along this split: 1525
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('37500.0, 17920.0, 37780.0, 238080.0');
+Creating merge_table took: 0.028950415s.
+DELETE FROM l8 WHERE centroid <@ box('37500.0, 17920.0, 37780.0, 238080.0');
+Deleting border clusters took : 0.023119346s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1145 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.105838439s.
+
+Current KD-tree: KDTree{minx=2.240625E12, miny=7.0E11, maxx=3.0109375E12, maxy=9.3E12, splitDir=VERTICAL, count=3986591, splitPoint=2.62578125E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('67080.0, 17920.0, 67360.0, 238080.0');
+# objects along this split: 1496
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('67080.0, 17920.0, 67360.0, 238080.0');
+Creating merge_table took: 0.027893604s.
+DELETE FROM l8 WHERE centroid <@ box('67080.0, 17920.0, 67360.0, 238080.0');
+Deleting border clusters took : 0.008680855s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1141 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.091106923s.
+
+Current KD-tree: KDTree{minx=3.0109375E12, miny=7.0E11, maxx=3.78125E12, maxy=9.3E12, splitDir=VERTICAL, count=3987391, splitPoint=3.39609375E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('86800.0, 17920.0, 87080.0, 238080.0');
+# objects along this split: 1526
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('86800.0, 17920.0, 87080.0, 238080.0');
+Creating merge_table took: 0.026508783s.
+DELETE FROM l8 WHERE centroid <@ box('86800.0, 17920.0, 87080.0, 238080.0');
+Deleting border clusters took : 0.010832913s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1133 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.096173195s.
+
+Current KD-tree: KDTree{minx=2.240625E12, miny=7.0E11, maxx=3.78125E12, maxy=9.3E12, splitDir=VERTICAL, count=7973982, splitPoint=3.0109375E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('76940.0, 17920.0, 77220.0, 238080.0');
+# objects along this split: 1519
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('76940.0, 17920.0, 77220.0, 238080.0');
+Creating merge_table took: 0.025808108s.
+DELETE FROM l8 WHERE centroid <@ box('76940.0, 17920.0, 77220.0, 238080.0');
+Deleting border clusters took : 0.010062941s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1133 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.093029009s.
+
+Current KD-tree: KDTree{minx=7.0E11, miny=7.0E11, maxx=3.78125E12, maxy=9.3E12, splitDir=VERTICAL, count=15950539, splitPoint=2.240625E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('57220.0, 17920.0, 57500.0, 238080.0');
+# objects along this split: 1494
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('57220.0, 17920.0, 57500.0, 238080.0');
+Creating merge_table took: 0.023579892s.
+DELETE FROM l8 WHERE centroid <@ box('57220.0, 17920.0, 57500.0, 238080.0');
+Deleting border clusters took : 0.008818597s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1134 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.084741987s.
+
+Current KD-tree: KDTree{minx=3.78125E12, miny=7.0E11, maxx=4.5619384765625E12, maxy=9.3E12, splitDir=VERTICAL, count=4045501, splitPoint=4.17159423828125E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('106652.8125, 17920.0, 106932.8125, 238080.0');
+# objects along this split: 1532
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('106652.8125, 17920.0, 106932.8125, 238080.0');
+Creating merge_table took: 0.024009892s.
+DELETE FROM l8 WHERE centroid <@ box('106652.8125, 17920.0, 106932.8125, 238080.0');
+Deleting border clusters took : 0.008857029s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1127 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.085075557s.
+
+Current KD-tree: KDTree{minx=4.5619384765625E12, miny=7.0E11, maxx=5.342626953125E12, maxy=9.3E12, splitDir=VERTICAL, count=4041699, splitPoint=4.95228271484375E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('126638.4375, 17920.0, 126918.4375, 238080.0');
+# objects along this split: 1515
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('126638.4375, 17920.0, 126918.4375, 238080.0');
+Creating merge_table took: 0.031300843s.
+DELETE FROM l8 WHERE centroid <@ box('126638.4375, 17920.0, 126918.4375, 238080.0');
+Deleting border clusters took : 0.008253261s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1110 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.084893296s.
+
+Current KD-tree: KDTree{minx=3.78125E12, miny=7.0E11, maxx=5.342626953125E12, maxy=9.3E12, splitDir=VERTICAL, count=8087200, splitPoint=4.5619384765625E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('116645.625, 17920.0, 116925.625, 238080.0');
+# objects along this split: 1513
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('116645.625, 17920.0, 116925.625, 238080.0');
+Creating merge_table took: 0.023853712s.
+DELETE FROM l8 WHERE centroid <@ box('116645.625, 17920.0, 116925.625, 238080.0');
+Deleting border clusters took : 0.008394252s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1138 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.085009828s.
+
+Current KD-tree: KDTree{minx=5.342626953125E12, miny=7.0E11, maxx=6.11240119934082E12, maxy=9.3E12, splitDir=VERTICAL, count=3981843, splitPoint=5.72751407623291E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('146484.3603515625, 17920.0, 146764.3603515625, 238080.0');
+# objects along this split: 1486
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('146484.3603515625, 17920.0, 146764.3603515625, 238080.0');
+Creating merge_table took: 0.030870061s.
+DELETE FROM l8 WHERE centroid <@ box('146484.3603515625, 17920.0, 146764.3603515625, 238080.0');
+Deleting border clusters took : 0.00913177s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1122 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.08369796s.
+
+Current KD-tree: KDTree{minx=6.11240119934082E12, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=3980350, splitPoint=1.007826936841011E13}
+SELECT count(*) FROM l8 WHERE centroid <@ box('257863.6958312988, 17920.0, 258143.6958312988, 238080.0');
+# objects along this split: 1337
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('257863.6958312988, 17920.0, 258143.6958312988, 238080.0');
+Creating merge_table took: 0.019535468s.
+DELETE FROM l8 WHERE centroid <@ box('257863.6958312988, 17920.0, 258143.6958312988, 238080.0');
+Deleting border clusters took : 0.008052419s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1047 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.062227761s.
+
+Current KD-tree: KDTree{minx=5.342626953125E12, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=7962193, splitPoint=6.11240119934082E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('156337.470703125, 17920.0, 156617.470703125, 238080.0');
+# objects along this split: 1522
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('156337.470703125, 17920.0, 156617.470703125, 238080.0');
+Creating merge_table took: 0.031448469s.
+DELETE FROM l8 WHERE centroid <@ box('156337.470703125, 17920.0, 156617.470703125, 238080.0');
+Deleting border clusters took : 0.009779936s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1114 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.083577881s.
+
+Current KD-tree: KDTree{minx=3.78125E12, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=16049393, splitPoint=5.342626953125E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('136631.25, 17920.0, 136911.25, 238080.0');
+# objects along this split: 1492
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('136631.25, 17920.0, 136911.25, 238080.0');
+Creating merge_table took: 0.030129768s.
+DELETE FROM l8 WHERE centroid <@ box('136631.25, 17920.0, 136911.25, 238080.0');
+Deleting border clusters took : 0.009435331s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1142 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.091270423s.
+
+Current KD-tree: KDTree{minx=7.0E11, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=31999932, splitPoint=3.78125E12}
+SELECT count(*) FROM l8 WHERE centroid <@ box('96660.0, 17920.0, 96940.0, 238080.0');
+# objects along this split: 1514
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l8 WHERE centroid <@ box('96660.0, 17920.0, 96940.0, 238080.0');
+Creating merge_table took: 0.027315765s.
+DELETE FROM l8 WHERE centroid <@ box('96660.0, 17920.0, 96940.0, 238080.0');
+Deleting border clusters took : 0.009988488s.
+INSERT INTO l8 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+1139 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.095950454s.
+************************************************
+Merge splits took: 2.385668839s.
+************************************************
+Running single_node_clustering_algo across all shards for level7...
+SELECT run_command_on_shards('l8', $$ SELECT single_node_clustering_algo('%1$s', '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":2.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "fields":["x", "y", "z", "hash_key", "cluster_agg", "cx", "cy"], "types":["int4", "int4", "int4", "int", "text", "real", "real"], "aggDimensionFields": [], "aggMeasureFields": [], "tableMap": {"l8_102062" : "l7_102078", "l8_102056" : "l7_102072", "l8_102068" : "l7_102084", "l8_102063" : "l7_102079", "l8_102060" : "l7_102076", "l8_102059" : "l7_102075", "l8_102066" : "l7_102082", "l8_102070" : "l7_102086", "l8_102058" : "l7_102074", "l8_102071" : "l7_102087", "l8_102067" : "l7_102083", "l8_102061" : "l7_102077", "l8_102057" : "l7_102073", "l8_102065" : "l7_102081", "l8_102069" : "l7_102085", "l8_102064" : "l7_102080"}}'::jsonb)$$);
+
+************************************************
+Running single node clustering in parallel took: 21.202619568s.
+************************************************
+
+(102056,t,11522)
+(102057,t,11461)
+(102058,t,11613)
+(102059,t,11449)
+(102060,t,11535)
+(102061,t,11650)
+(102062,t,11562)
+(102063,t,11447)
+(102064,t,122610)
+(102065,t,11503)
+(102066,t,11542)
+(102067,t,11622)
+(102068,t,11517)
+(102069,t,115125)
+(102070,t,11449)
+(102071,t,11625)
+
+Building spatial indexes on level7...
+UPDATE l7 SET minx = cx - 70, miny = cy - 70, maxx = cx + 70, maxy = cy + 70, centroid = point(cx, cy);
+Updating minx, miny, maxx, maxy & centroid took: 1.417711401s.
+DROP INDEX IF EXISTS l7_centroid_gist;
+Drop existing index on centroid took: 0.001236603s.
+CREATE INDEX l7_centroid_gist ON l7 USING gist(centroid);
+Creating gist index on centroid took: 2.649888202s.
+
+
+Current KD-tree: KDTree{minx=7.0E11, miny=7.0E11, maxx=1.4703125E12, maxy=9.3E12, splitDir=VERTICAL, count=3987625, splitPoint=1.08515625E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('13750.0, 8960.0, 14030.0, 119040.0');
+# objects along this split: 794
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('13750.0, 8960.0, 14030.0, 119040.0');
+Creating merge_table took: 1.710592095s.
+DELETE FROM l7 WHERE centroid <@ box('13750.0, 8960.0, 14030.0, 119040.0');
+Deleting border clusters took : 0.403882991s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+583 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.063055496s.
+
+Current KD-tree: KDTree{minx=1.4703125E12, miny=7.0E11, maxx=2.240625E12, maxy=9.3E12, splitDir=VERTICAL, count=3988932, splitPoint=1.85546875E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('23610.0, 8960.0, 23890.0, 119040.0');
+# objects along this split: 787
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('23610.0, 8960.0, 23890.0, 119040.0');
+Creating merge_table took: 0.017103881s.
+DELETE FROM l7 WHERE centroid <@ box('23610.0, 8960.0, 23890.0, 119040.0');
+Deleting border clusters took : 0.008314848s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+591 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.054212215s.
+
+Current KD-tree: KDTree{minx=7.0E11, miny=7.0E11, maxx=2.240625E12, maxy=9.3E12, splitDir=VERTICAL, count=7976557, splitPoint=1.4703125E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('18680.0, 8960.0, 18960.0, 119040.0');
+# objects along this split: 830
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('18680.0, 8960.0, 18960.0, 119040.0');
+Creating merge_table took: 0.021669059s.
+DELETE FROM l7 WHERE centroid <@ box('18680.0, 8960.0, 18960.0, 119040.0');
+Deleting border clusters took : 0.009805048s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+594 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.071351682s.
+
+Current KD-tree: KDTree{minx=2.240625E12, miny=7.0E11, maxx=3.0109375E12, maxy=9.3E12, splitDir=VERTICAL, count=3986591, splitPoint=2.62578125E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('33470.0, 8960.0, 33750.0, 119040.0');
+# objects along this split: 799
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('33470.0, 8960.0, 33750.0, 119040.0');
+Creating merge_table took: 0.021312339s.
+DELETE FROM l7 WHERE centroid <@ box('33470.0, 8960.0, 33750.0, 119040.0');
+Deleting border clusters took : 0.008748747s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+563 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.05315641s.
+
+Current KD-tree: KDTree{minx=3.0109375E12, miny=7.0E11, maxx=3.78125E12, maxy=9.3E12, splitDir=VERTICAL, count=3987391, splitPoint=3.39609375E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('43330.0, 8960.0, 43610.0, 119040.0');
+# objects along this split: 805
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('43330.0, 8960.0, 43610.0, 119040.0');
+Creating merge_table took: 0.02117388s.
+DELETE FROM l7 WHERE centroid <@ box('43330.0, 8960.0, 43610.0, 119040.0');
+Deleting border clusters took : 0.010475602s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+586 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.068835169s.
+
+Current KD-tree: KDTree{minx=2.240625E12, miny=7.0E11, maxx=3.78125E12, maxy=9.3E12, splitDir=VERTICAL, count=7973982, splitPoint=3.0109375E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('38400.0, 8960.0, 38680.0, 119040.0');
+# objects along this split: 795
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('38400.0, 8960.0, 38680.0, 119040.0');
+Creating merge_table took: 0.016930563s.
+DELETE FROM l7 WHERE centroid <@ box('38400.0, 8960.0, 38680.0, 119040.0');
+Deleting border clusters took : 0.008155492s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+589 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.048968511s.
+
+Current KD-tree: KDTree{minx=7.0E11, miny=7.0E11, maxx=3.78125E12, maxy=9.3E12, splitDir=VERTICAL, count=15950539, splitPoint=2.240625E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('28540.0, 8960.0, 28820.0, 119040.0');
+# objects along this split: 813
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('28540.0, 8960.0, 28820.0, 119040.0');
+Creating merge_table took: 0.016625039s.
+DELETE FROM l7 WHERE centroid <@ box('28540.0, 8960.0, 28820.0, 119040.0');
+Deleting border clusters took : 0.008715823s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+581 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.052277748s.
+
+Current KD-tree: KDTree{minx=3.78125E12, miny=7.0E11, maxx=4.5619384765625E12, maxy=9.3E12, splitDir=VERTICAL, count=4045501, splitPoint=4.17159423828125E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('53256.40625, 8960.0, 53536.40625, 119040.0');
+# objects along this split: 806
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('53256.40625, 8960.0, 53536.40625, 119040.0');
+Creating merge_table took: 0.019364249s.
+DELETE FROM l7 WHERE centroid <@ box('53256.40625, 8960.0, 53536.40625, 119040.0');
+Deleting border clusters took : 0.008943697s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+603 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.054123641s.
+
+Current KD-tree: KDTree{minx=4.5619384765625E12, miny=7.0E11, maxx=5.342626953125E12, maxy=9.3E12, splitDir=VERTICAL, count=4041699, splitPoint=4.95228271484375E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('63249.21875, 8960.0, 63529.21875, 119040.0');
+# objects along this split: 808
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('63249.21875, 8960.0, 63529.21875, 119040.0');
+Creating merge_table took: 0.022882438s.
+DELETE FROM l7 WHERE centroid <@ box('63249.21875, 8960.0, 63529.21875, 119040.0');
+Deleting border clusters took : 0.00789829s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+597 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.056957873s.
+
+Current KD-tree: KDTree{minx=3.78125E12, miny=7.0E11, maxx=5.342626953125E12, maxy=9.3E12, splitDir=VERTICAL, count=8087200, splitPoint=4.5619384765625E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('58252.8125, 8960.0, 58532.8125, 119040.0');
+# objects along this split: 826
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('58252.8125, 8960.0, 58532.8125, 119040.0');
+Creating merge_table took: 0.021636737s.
+DELETE FROM l7 WHERE centroid <@ box('58252.8125, 8960.0, 58532.8125, 119040.0');
+Deleting border clusters took : 0.008484314s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+589 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.056874049s.
+
+Current KD-tree: KDTree{minx=5.342626953125E12, miny=7.0E11, maxx=6.11240119934082E12, maxy=9.3E12, splitDir=VERTICAL, count=3981843, splitPoint=5.72751407623291E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('73172.18017578125, 8960.0, 73452.18017578125, 119040.0');
+# objects along this split: 785
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('73172.18017578125, 8960.0, 73452.18017578125, 119040.0');
+Creating merge_table took: 0.022028708s.
+DELETE FROM l7 WHERE centroid <@ box('73172.18017578125, 8960.0, 73452.18017578125, 119040.0');
+Deleting border clusters took : 0.008482779s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+581 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.054003516s.
+
+Current KD-tree: KDTree{minx=6.11240119934082E12, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=3980350, splitPoint=1.007826936841011E13}
+SELECT count(*) FROM l7 WHERE centroid <@ box('128861.8479156494, 8960.0, 129141.8479156494, 119040.0');
+# objects along this split: 799
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('128861.8479156494, 8960.0, 129141.8479156494, 119040.0');
+Creating merge_table took: 0.017931452s.
+DELETE FROM l7 WHERE centroid <@ box('128861.8479156494, 8960.0, 129141.8479156494, 119040.0');
+Deleting border clusters took : 0.008465088s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+569 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.048097555s.
+
+Current KD-tree: KDTree{minx=5.342626953125E12, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=7962193, splitPoint=6.11240119934082E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('78098.7353515625, 8960.0, 78378.7353515625, 119040.0');
+# objects along this split: 810
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('78098.7353515625, 8960.0, 78378.7353515625, 119040.0');
+Creating merge_table took: 0.022287732s.
+DELETE FROM l7 WHERE centroid <@ box('78098.7353515625, 8960.0, 78378.7353515625, 119040.0');
+Deleting border clusters took : 0.008060545s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+601 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.056869173s.
+
+Current KD-tree: KDTree{minx=3.78125E12, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=16049393, splitPoint=5.342626953125E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('68245.625, 8960.0, 68525.625, 119040.0');
+# objects along this split: 807
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('68245.625, 8960.0, 68525.625, 119040.0');
+Creating merge_table took: 0.025011028s.
+DELETE FROM l7 WHERE centroid <@ box('68245.625, 8960.0, 68525.625, 119040.0');
+Deleting border clusters took : 0.008447426s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+609 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.057172328s.
+
+Current KD-tree: KDTree{minx=7.0E11, miny=7.0E11, maxx=1.43E13, maxy=9.3E12, splitDir=VERTICAL, count=31999932, splitPoint=3.78125E12}
+SELECT count(*) FROM l7 WHERE centroid <@ box('48260.0, 8960.0, 48540.0, 119040.0');
+# objects along this split: 803
+DROP TABLE IF EXISTS merge_table;
+CREATE UNLOGGED TABLE merge_table AS SELECT * FROM l7 WHERE centroid <@ box('48260.0, 8960.0, 48540.0, 119040.0');
+Creating merge_table took: 0.020695728s.
+DELETE FROM l7 WHERE centroid <@ box('48260.0, 8960.0, 48540.0, 119040.0');
+Deleting border clusters took : 0.009050353s.
+INSERT INTO l7 SELECT (v->>'x')::int4, (v->>'y')::int4, (v->>'z')::int4, (v->>'hash_key')::int, (v->>'cluster_agg'), (v->>'cx')::real, (v->>'cy')::real, (v->>'minx')::real, (v->>'miny')::real, (v->>'maxx')::real, (v->>'maxy')::real, (v->>'centroid')::point FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":0.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "splitDir":"vertical"}'::jsonb)v FROM merge_table) subquery
+608 new clusters inserted back.
+Running merge_clusters_along_splits took : 0.061442071s.
+************************************************
+Merge splits took: 3.704831163s.
+************************************************
+Applying single_node_clustering_algo directly on master on clusters in level 7 for level6...
+SELECT single_node_clustering_algo('l7', '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":2.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "fields":["x", "y", "z", "hash_key", "cluster_agg", "cx", "cy"], "types":["int4", "int4", "int4", "int", "text", "real", "real"], "aggDimensionFields": [], "aggMeasureFields": [], "tableMap": {"l7" : "l6"}}'::jsonb)
+
+************************************************
+Running single node clustering on Citus master took: 19.384091518s.
+************************************************
+
+Building spatial indexes on level6...
+UPDATE l6 SET minx = cx - 70, miny = cy - 70, maxx = cx + 70, maxy = cy + 70, centroid = point(cx, cy);
+Updating minx, miny, maxx, maxy & centroid took: 0.266620284s.
+DROP INDEX IF EXISTS l6_centroid_gist;
+Drop existing index on centroid took: 6.79266E-4s.
+CREATE INDEX l6_centroid_gist ON l6 USING gist(centroid);
+Creating gist index on centroid took: 0.850685476s.
+
+Applying single_node_clustering_algo directly on master on clusters in level 6 for level5...
+SELECT single_node_clustering_algo('l6', '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":2.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "fields":["x", "y", "z", "hash_key", "cluster_agg", "cx", "cy"], "types":["int4", "int4", "int4", "int", "text", "real", "real"], "aggDimensionFields": [], "aggMeasureFields": [], "tableMap": {"l6" : "l5"}}'::jsonb)
+
+************************************************
+Running single node clustering on Citus master took: 4.751928795s.
+************************************************
+
+Building spatial indexes on level5...
+UPDATE l5 SET minx = cx - 70, miny = cy - 70, maxx = cx + 70, maxy = cy + 70, centroid = point(cx, cy);
+Updating minx, miny, maxx, maxy & centroid took: 0.073409848s.
+DROP INDEX IF EXISTS l5_centroid_gist;
+Drop existing index on centroid took: 5.73902E-4s.
+CREATE INDEX l5_centroid_gist ON l5 USING gist(centroid);
+Creating gist index on centroid took: 0.188835542s.
+
+Applying single_node_clustering_algo directly on master on clusters in level 5 for level4...
+SELECT single_node_clustering_algo('l5', '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":2.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "fields":["x", "y", "z", "hash_key", "cluster_agg", "cx", "cy"], "types":["int4", "int4", "int4", "int", "text", "real", "real"], "aggDimensionFields": [], "aggMeasureFields": [], "tableMap": {"l5" : "l4"}}'::jsonb)
+
+************************************************
+Running single node clustering on Citus master took: 1.157129885s.
+************************************************
+
+Building spatial indexes on level4...
+UPDATE l4 SET minx = cx - 70, miny = cy - 70, maxx = cx + 70, maxy = cy + 70, centroid = point(cx, cy);
+Updating minx, miny, maxx, maxy & centroid took: 0.021198849s.
+DROP INDEX IF EXISTS l4_centroid_gist;
+Drop existing index on centroid took: 6.14034E-4s.
+CREATE INDEX l4_centroid_gist ON l4 USING gist(centroid);
+Creating gist index on centroid took: 0.026562779s.
+
+Applying single_node_clustering_algo directly on master on clusters in level 4 for level3...
+SELECT single_node_clustering_algo('l4', '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":2.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "fields":["x", "y", "z", "hash_key", "cluster_agg", "cx", "cy"], "types":["int4", "int4", "int4", "int", "text", "real", "real"], "aggDimensionFields": [], "aggMeasureFields": [], "tableMap": {"l4" : "l3"}}'::jsonb)
+
+************************************************
+Running single node clustering on Citus master took: 0.28585721s.
+************************************************
+
+Building spatial indexes on level3...
+UPDATE l3 SET minx = cx - 70, miny = cy - 70, maxx = cx + 70, maxy = cy + 70, centroid = point(cx, cy);
+Updating minx, miny, maxx, maxy & centroid took: 0.006594858s.
+DROP INDEX IF EXISTS l3_centroid_gist;
+Drop existing index on centroid took: 5.94424E-4s.
+CREATE INDEX l3_centroid_gist ON l3 USING gist(centroid);
+Creating gist index on centroid took: 0.006344308s.
+
+Applying single_node_clustering_algo directly on master on clusters in level 3 for level2...
+SELECT single_node_clustering_algo('l3', '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":2.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "fields":["x", "y", "z", "hash_key", "cluster_agg", "cx", "cy"], "types":["int4", "int4", "int4", "int", "text", "real", "real"], "aggDimensionFields": [], "aggMeasureFields": [], "tableMap": {"l3" : "l2"}}'::jsonb)
+
+************************************************
+Running single node clustering on Citus master took: 0.072307268s.
+************************************************
+
+Building spatial indexes on level2...
+UPDATE l2 SET minx = cx - 70, miny = cy - 70, maxx = cx + 70, maxy = cy + 70, centroid = point(cx, cy);
+Updating minx, miny, maxx, maxy & centroid took: 0.002647422s.
+DROP INDEX IF EXISTS l2_centroid_gist;
+Drop existing index on centroid took: 5.47158E-4s.
+CREATE INDEX l2_centroid_gist ON l2 USING gist(centroid);
+Creating gist index on centroid took: 0.002889236s.
+
+Applying single_node_clustering_algo directly on master on clusters in level 2 for level1...
+SELECT single_node_clustering_algo('l2', '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":2.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "fields":["x", "y", "z", "hash_key", "cluster_agg", "cx", "cy"], "types":["int4", "int4", "int4", "int", "text", "real", "real"], "aggDimensionFields": [], "aggMeasureFields": [], "tableMap": {"l2" : "l1"}}'::jsonb)
+
+************************************************
+Running single node clustering on Citus master took: 0.020010469s.
+************************************************
+
+Building spatial indexes on level1...
+UPDATE l1 SET minx = cx - 70, miny = cy - 70, maxx = cx + 70, maxy = cy + 70, centroid = point(cx, cy);
+Updating minx, miny, maxx, maxy & centroid took: 0.001648371s.
+DROP INDEX IF EXISTS l1_centroid_gist;
+Drop existing index on centroid took: 5.01852E-4s.
+CREATE INDEX l1_centroid_gist ON l1 USING gist(centroid);
+Creating gist index on centroid took: 0.002114395s.
+
+Applying single_node_clustering_algo directly on master on clusters in level 1 for level0...
+SELECT single_node_clustering_algo('l1', '{"xCol":"x", "yCol":"y", "zCol":"z", "zOrder":"asc", "zoomFactor":2.0, "theta":1.0, "aggKeyDelimiter": "__", "bboxW":140, "bboxH":140, "topk":0, "fields":["x", "y", "z", "hash_key", "cluster_agg", "cx", "cy"], "types":["int4", "int4", "int4", "int", "text", "real", "real"], "aggDimensionFields": [], "aggMeasureFields": [], "tableMap": {"l1" : "l0"}}'::jsonb)
+
+************************************************
+Running single node clustering on Citus master took: 0.013230942s.
+************************************************
+
+Building spatial indexes on level0...
+UPDATE l0 SET minx = cx - 70, miny = cy - 70, maxx = cx + 70, maxy = cy + 70, centroid = point(cx, cy);
+Updating minx, miny, maxx, maxy & centroid took: 0.001285112s.
+DROP INDEX IF EXISTS l0_centroid_gist;
+Drop existing index on centroid took: 3.68918E-4s.
+CREATE INDEX l0_centroid_gist ON l0 USING gist(centroid);
+Creating gist index on centroid took: 0.001635734s.
+
+Saving autodd info...
+CREATE TABLE IF NOT EXISTS autodd_infos(project_id text, autodd_id int, gson text);
+DELETE FROM autodd_infos WHERE autodd_id = 0;
+INSERT INTO autodd_infos VALUES ('autodd_citus', 0, '{"columnNames":["x","y","z"],"tableNames":["l0","l1","l2","l3","l4","l5","l6","l7","l8","l9","bottom_level"],"zoomFactor":2.0,"bboxW":140,"bboxH":140,"citusHashKeys":[0,1,2,3,4,5,6,9,10,11,13,16,24,28,41,52],"kdTreeNodes":[{"minx":7.0E11,"miny":7.0E11,"maxx":1.08515625E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":1994163,"splitPoint":0.0},{"minx":1.08515625E12,"miny":7.0E11,"maxx":1.4703125E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":1993462,"splitPoint":0.0},{"minx":1.4703125E12,"miny":7.0E11,"maxx":1.85546875E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":1994460,"splitPoint":0.0},{"minx":1.85546875E12,"miny":7.0E11,"maxx":2.240625E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":1994472,"splitPoint":0.0},{"minx":2.240625E12,"miny":7.0E11,"maxx":2.62578125E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":1993545,"splitPoint":0.0},{"minx":2.62578125E12,"miny":7.0E11,"maxx":3.0109375E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":1993046,"splitPoint":0.0},{"minx":3.0109375E12,"miny":7.0E11,"maxx":3.39609375E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":1994099,"splitPoint":0.0},{"minx":3.39609375E12,"miny":7.0E11,"maxx":3.78125E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":1993292,"splitPoint":0.0},{"minx":3.78125E12,"miny":7.0E11,"maxx":4.17159423828125E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":2023015,"splitPoint":0.0},{"minx":4.17159423828125E12,"miny":7.0E11,"maxx":4.5619384765625E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":2022486,"splitPoint":0.0},{"minx":4.5619384765625E12,"miny":7.0E11,"maxx":4.95228271484375E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":2019658,"splitPoint":0.0},{"minx":4.95228271484375E12,"miny":7.0E11,"maxx":5.342626953125E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":2022041,"splitPoint":0.0},{"minx":5.342626953125E12,"miny":7.0E11,"maxx":5.72751407623291E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":1992606,"splitPoint":0.0},{"minx":5.72751407623291E12,"miny":7.0E11,"maxx":6.11240119934082E12,"maxy":9.3E12,"splitDir":"VERTICAL","count":1989237,"splitPoint":0.0},{"minx":6.11240119934082E12,"miny":7.0E11,"maxx":1.007826936841011E13,"maxy":9.3E12,"splitDir":"VERTICAL","count":1992557,"splitPoint":0.0},{"minx":1.007826936841011E13,"miny":7.0E11,"maxx":1.43E13,"maxy":9.3E12,"splitDir":"VERTICAL","count":1987793,"splitPoint":0.0}]}');
+drop table if exists bbox_autodd_citus_autodd0_level1layer0;
+CREATE UNLOGGED TABLE bbox_autodd_citus_autodd0_level1layer0 (citus_distribution_id int, cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)
+drop table if exists bbox_autodd_citus_autodd0_level2layer0;
+CREATE UNLOGGED TABLE bbox_autodd_citus_autodd0_level2layer0 (citus_distribution_id int, cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)
+drop table if exists bbox_autodd_citus_autodd0_level3layer0;
+CREATE UNLOGGED TABLE bbox_autodd_citus_autodd0_level3layer0 (citus_distribution_id int, cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)
+drop table if exists bbox_autodd_citus_autodd0_level4layer0;
+CREATE UNLOGGED TABLE bbox_autodd_citus_autodd0_level4layer0 (citus_distribution_id int, cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)
+drop table if exists bbox_autodd_citus_autodd0_level5layer0;
+CREATE UNLOGGED TABLE bbox_autodd_citus_autodd0_level5layer0 (citus_distribution_id int, cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)
+drop table if exists bbox_autodd_citus_autodd0_level6layer0;
+CREATE UNLOGGED TABLE bbox_autodd_citus_autodd0_level6layer0 (citus_distribution_id int, cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)
+drop table if exists bbox_autodd_citus_autodd0_level7layer0;
+CREATE UNLOGGED TABLE bbox_autodd_citus_autodd0_level7layer0 (citus_distribution_id int, cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)
+drop table if exists bbox_autodd_citus_autodd0_level8layer0;
+CREATE UNLOGGED TABLE bbox_autodd_citus_autodd0_level8layer0 (citus_distribution_id int, cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)
+drop table if exists bbox_autodd_citus_autodd0_level9layer0;
+CREATE UNLOGGED TABLE bbox_autodd_citus_autodd0_level9layer0 (citus_distribution_id int, cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)
+Indexing took: 456s.
+Done precomputing!
+Completed recomputing indexes. Server restarting...
+Backend server started...
+^Cbash-4.4# exit

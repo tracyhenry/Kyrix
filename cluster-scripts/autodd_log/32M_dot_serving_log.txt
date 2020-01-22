@@ -1,0 +1,890 @@
+7  0%                                             8[0Kbash-4.4# mvn compile && mvn exec:java -Dexec.mainClass="main.Main"
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--------------------------< [0;36mMITDbG:back-end[0;1m >---------------------------[m
+[[1;34mINFO[m] [1mBuilding back-end 1.0-SNAPSHOT[m
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-resources-plugin:2.6:resources[m [1m(default-resources)[m @ [36mback-end[0;1m ---[m
+[[1;34mINFO[m] Using 'UTF-8' encoding to copy filtered resources.
+[[1;34mINFO[m] Copying 0 resource
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-compiler-plugin:3.2:compile[m [1m(default-compile)[m @ [36mback-end[0;1m ---[m
+[[1;34mINFO[m] Changes detected - recompiling the module!
+[[1;34mINFO[m] Compiling 39 source files to /kyrix/back-end/target/classes
+[[1;34mINFO[m] /kyrix/back-end/src/main/java/index/Indexer.java: Some input files use unchecked or unsafe operations.
+[[1;34mINFO[m] /kyrix/back-end/src/main/java/index/Indexer.java: Recompile with -Xlint:unchecked for details.
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] [1;32mBUILD SUCCESS[m
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] Total time:  2.466 s
+[[1;34mINFO[m] Finished at: 2019-11-29T16:18:48Z
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--------------------------< [0;36mMITDbG:back-end[0;1m >---------------------------[m
+[[1;34mINFO[m] [1mBuilding back-end 1.0-SNAPSHOT[m
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mexec-maven-plugin:1.6.0:java[m [1m(default-cli)[m @ [36mback-end[0;1m ---[m
+Reading config file...
+dbtype: citus  Config.database=CITUS
+Creating tile cache...
+Starting server...
+Backend server started...
+Waiting for project definition...
+
+
+Serving /project
+ New project definition coming...
+Current project set to: autodd_citus
+Requesting skip-recompute. Project definition updated. Refresh your web page now!
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Serving /
+/
+Serving /
+/static/css/main.css
+Serving /
+/js/globalVar.js
+Serving /
+/js/parameter.js
+Serving /
+/js/zoom.js
+Serving /
+/js/zoomButton.js
+Serving /
+/js/dynamicLayers.js
+Serving /
+/js/pageOnLoad.js
+Serving /
+/js/staticLayers.js
+Serving /
+/js/jump.js
+Serving /first
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_autodd_citus_autodd0_level0layer0;
+Serving /
+/favicon.ico
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 0
+y : 0
+id : autodd0_level0
+isJumping : true
+0.0 0.0
+-10.0,-10.0,1510.0,1010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l0 WHERE centroid <@ box('-80.0, -80.0, 1580.0, 1080.0');
+Fetch data time: 74.0ms.
+number of intersecting rows in result: 30
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level0','jump',74.0,30);
+database name is: kyrix
+Send response time: 1ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_autodd_citus_autodd0_level1layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 289
+y : 300
+id : autodd0_level1
+isJumping : true
+289.0 300.0
+-10.0,-10.0,2990.0,1990.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l1 WHERE centroid <@ box('-80.0, -80.0, 3060.0, 2060.0');
+Fetch data time: 11.0ms.
+number of intersecting rows in result: 111
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level1','jump',11.0,111);
+database name is: kyrix
+Send response time: 2ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_autodd_citus_autodd0_level2layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 737
+y : 859
+id : autodd0_level2
+isJumping : true
+737.0 859.0
+-10.0,359.0,2990.0,2359.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l2 WHERE centroid <@ box('-80.0, 289.0, 3060.0, 2429.0');
+Fetch data time: 14.0ms.
+number of intersecting rows in result: 137
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level2','jump',14.0,137);
+database name is: kyrix
+Send response time: 2ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : -10
+oboxh : 2000
+predicate0 : 
+oboxy : 359
+x : 762
+y : 1190
+id : autodd0_level2
+isJumping : false
+762.0 1190.0
+12.0,690.0,3012.0,2690.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l2 WHERE centroid <@ box('-58.0, 620.0, 3082.0, 2760.0') and not (centroid <@ box('60.0, 429.0, 2920.0, 2289.0') );
+Fetch data time: 12.0ms.
+number of intersecting rows in result: 38
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level2','pan',12.0,38);
+database name is: kyrix
+Send response time: 1ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_autodd_citus_autodd0_level3layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 2163
+y : 3029
+id : autodd0_level3
+isJumping : true
+2163.0 3029.0
+1413.0,2529.0,4413.0,4529.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l3 WHERE centroid <@ box('1343.0, 2459.0, 4483.0, 4599.0');
+Fetch data time: 8.0ms.
+number of intersecting rows in result: 145
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level3','jump',8.0,145);
+database name is: kyrix
+Send response time: 2ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 1413
+oboxh : 2000
+predicate0 : 
+oboxy : 2529
+x : 1914
+y : 2824
+id : autodd0_level3
+isJumping : false
+1914.0 2824.0
+1164.0,2324.0,4164.0,4324.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l3 WHERE centroid <@ box('1094.0, 2254.0, 4234.0, 4394.0') and not (centroid <@ box('1483.0, 2599.0, 4343.0, 4459.0') );
+Fetch data time: 9.0ms.
+number of intersecting rows in result: 34
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level3','pan',9.0,34);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 1164
+oboxh : 2000
+predicate0 : 
+oboxy : 2324
+x : 1913
+y : 2621
+id : autodd0_level3
+isJumping : false
+1913.0 2621.0
+1163.0,2121.0,4163.0,4121.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l3 WHERE centroid <@ box('1093.0, 2051.0, 4233.0, 4191.0') and not (centroid <@ box('1234.0, 2394.0, 4094.0, 4254.0') );
+Fetch data time: 11.0ms.
+number of intersecting rows in result: 33
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level3','pan',11.0,33);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 1163
+oboxh : 2000
+predicate0 : 
+oboxy : 2121
+x : 2060
+y : 2957
+id : autodd0_level3
+isJumping : false
+2060.0 2957.0
+1310.0,2457.0,4310.0,4457.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l3 WHERE centroid <@ box('1240.0, 2387.0, 4380.0, 4527.0') and not (centroid <@ box('1233.0, 2191.0, 4093.0, 4051.0') );
+Fetch data time: 8.0ms.
+number of intersecting rows in result: 40
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level3','pan',8.0,40);
+database name is: kyrix
+Send response time: 0ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_autodd_citus_autodd0_level4layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 4466
+y : 6872
+id : autodd0_level4
+isJumping : true
+4466.0 6872.0
+3716.0,6372.0,6716.0,8372.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l4 WHERE centroid <@ box('3646.0, 6302.0, 6786.0, 8442.0');
+Fetch data time: 8.0ms.
+number of intersecting rows in result: 151
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level4','jump',8.0,151);
+database name is: kyrix
+Send response time: 1ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_autodd_citus_autodd0_level5layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 9565
+y : 14171
+id : autodd0_level5
+isJumping : true
+9565.0 14171.0
+8815.0,13671.0,11815.0,15671.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l5 WHERE centroid <@ box('8745.0, 13601.0, 11885.0, 15741.0');
+Fetch data time: 8.0ms.
+number of intersecting rows in result: 140
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level5','jump',8.0,140);
+database name is: kyrix
+Send response time: 1ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_autodd_citus_autodd0_level6layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 19304
+y : 28639
+id : autodd0_level6
+isJumping : true
+19304.0 28639.0
+18554.0,28139.0,21554.0,30139.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l6 WHERE centroid <@ box('18484.0, 28069.0, 21624.0, 30209.0');
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 146
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level6','jump',6.0,146);
+database name is: kyrix
+Send response time: 1ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_autodd_citus_autodd0_level7layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 39235
+y : 57875
+id : autodd0_level7
+isJumping : true
+39235.0 57875.0
+38485.0,57375.0,41485.0,59375.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l7 WHERE centroid <@ box('38415.0, 57305.0, 41555.0, 59445.0') and (hash_key = 5 or hash_key = 6);
+Fetch data time: 24.0ms.
+number of intersecting rows in result: 143
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level7','jump',24.0,143);
+database name is: kyrix
+Send response time: 1ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_autodd_citus_autodd0_level8layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 79353
+y : 116549
+id : autodd0_level8
+isJumping : true
+79353.0 116549.0
+78603.0,116049.0,81603.0,118049.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l8 WHERE centroid <@ box('78533.0, 115979.0, 81673.0, 118119.0') and (hash_key = 6);
+Fetch data time: 10.0ms.
+number of intersecting rows in result: 143
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level8','jump',10.0,143);
+database name is: kyrix
+Send response time: 2ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_autodd_citus_autodd0_level9layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 159627
+y : 233297
+id : autodd0_level9
+isJumping : true
+159627.0 233297.0
+158877.0,232797.0,161877.0,234797.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l9 WHERE centroid <@ box('158807.0, 232727.0, 161947.0, 234867.0') and (hash_key = 6);
+Fetch data time: 13.0ms.
+number of intersecting rows in result: 169
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level9','jump',13.0,169);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 79813
+y : 116648
+id : autodd0_level8
+isJumping : true
+79813.0 116648.0
+79063.0,116148.0,82063.0,118148.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l8 WHERE centroid <@ box('78993.0, 116078.0, 82133.0, 118218.0') and (hash_key = 6);
+Fetch data time: 9.0ms.
+number of intersecting rows in result: 149
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level8','jump',9.0,149);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 79063
+oboxh : 2000
+predicate0 : 
+oboxy : 116148
+x : 79577
+y : 116421
+id : autodd0_level8
+isJumping : false
+79577.0 116421.0
+78827.0,115921.0,81827.0,117921.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l8 WHERE centroid <@ box('78757.0, 115851.0, 81897.0, 117991.0') and not (centroid <@ box('79133.0, 116218.0, 81993.0, 118078.0') ) and (hash_key = 6);
+Fetch data time: 8.0ms.
+number of intersecting rows in result: 38
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level8','pan',8.0,38);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 39724
+y : 58148
+id : autodd0_level7
+isJumping : true
+39724.0 58148.0
+38974.0,57648.0,41974.0,59648.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l7 WHERE centroid <@ box('38904.0, 57578.0, 42044.0, 59718.0') and (hash_key = 6);
+Fetch data time: 8.0ms.
+number of intersecting rows in result: 143
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level7','jump',8.0,143);
+database name is: kyrix
+Send response time: 0ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 38974
+oboxh : 2000
+predicate0 : 
+oboxy : 57648
+x : 39458
+y : 57893
+id : autodd0_level7
+isJumping : false
+39458.0 57893.0
+38708.0,57393.0,41708.0,59393.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l7 WHERE centroid <@ box('38638.0, 57323.0, 41778.0, 59463.0') and not (centroid <@ box('39044.0, 57718.0, 41904.0, 59578.0') ) and (hash_key = 6);
+Fetch data time: 8.0ms.
+number of intersecting rows in result: 43
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level7','pan',8.0,43);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 19679
+y : 28899
+id : autodd0_level6
+isJumping : true
+19679.0 28899.0
+18929.0,28399.0,21929.0,30399.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l6 WHERE centroid <@ box('18859.0, 28329.0, 21999.0, 30469.0');
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 147
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level6','jump',6.0,147);
+database name is: kyrix
+Send response time: 37ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 18929
+oboxh : 2000
+predicate0 : 
+oboxy : 28399
+x : 19420
+y : 28650
+id : autodd0_level6
+isJumping : false
+19420.0 28650.0
+18670.0,28150.0,21670.0,30150.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l6 WHERE centroid <@ box('18600.0, 28080.0, 21740.0, 30220.0') and not (centroid <@ box('18999.0, 28469.0, 21859.0, 30329.0') );
+Fetch data time: 7.0ms.
+number of intersecting rows in result: 42
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level6','pan',7.0,42);
+database name is: kyrix
+Send response time: 0ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 9656
+y : 14274
+id : autodd0_level5
+isJumping : true
+9656.0 14274.0
+8906.0,13774.0,11906.0,15774.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l5 WHERE centroid <@ box('8836.0, 13704.0, 11976.0, 15844.0');
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 144
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level5','jump',6.0,144);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 8906
+oboxh : 2000
+predicate0 : 
+oboxy : 13774
+x : 9410
+y : 14037
+id : autodd0_level5
+isJumping : false
+9410.0 14037.0
+8660.0,13537.0,11660.0,15537.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l5 WHERE centroid <@ box('8590.0, 13467.0, 11730.0, 15607.0') and not (centroid <@ box('8976.0, 13844.0, 11836.0, 15704.0') );
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 39
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level5','pan',6.0,39);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 4645
+y : 6961
+id : autodd0_level4
+isJumping : true
+4645.0 6961.0
+3895.0,6461.0,6895.0,8461.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l4 WHERE centroid <@ box('3825.0, 6391.0, 6965.0, 8531.0');
+Fetch data time: 7.0ms.
+number of intersecting rows in result: 150
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level4','jump',7.0,150);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 3895
+oboxh : 2000
+predicate0 : 
+oboxy : 6461
+x : 4399
+y : 6725
+id : autodd0_level4
+isJumping : false
+4399.0 6725.0
+3649.0,6225.0,6649.0,8225.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l4 WHERE centroid <@ box('3579.0, 6155.0, 6719.0, 8295.0') and not (centroid <@ box('3965.0, 6531.0, 6825.0, 8391.0') );
+Fetch data time: 8.0ms.
+number of intersecting rows in result: 41
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level4','pan',8.0,41);
+database name is: kyrix
+Send response time: 0ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 2139
+y : 3305
+id : autodd0_level3
+isJumping : true
+2139.0 3305.0
+1389.0,2805.0,4389.0,4805.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l3 WHERE centroid <@ box('1319.0, 2735.0, 4459.0, 4875.0');
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 146
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level3','jump',6.0,146);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 1389
+oboxh : 2000
+predicate0 : 
+oboxy : 2805
+x : 1895
+y : 3071
+id : autodd0_level3
+isJumping : false
+1895.0 3071.0
+1145.0,2571.0,4145.0,4571.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l3 WHERE centroid <@ box('1075.0, 2501.0, 4215.0, 4641.0') and not (centroid <@ box('1459.0, 2875.0, 4319.0, 4735.0') );
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 37
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level3','pan',6.0,37);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 887
+y : 1477
+id : autodd0_level2
+isJumping : true
+887.0 1477.0
+137.0,977.0,3137.0,2977.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l2 WHERE centroid <@ box('67.0, 907.0, 3207.0, 3047.0');
+Fetch data time: 7.0ms.
+number of intersecting rows in result: 140
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level2','jump',7.0,140);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 137
+oboxh : 2000
+predicate0 : 
+oboxy : 977
+x : 524
+y : 1129
+id : autodd0_level2
+isJumping : false
+524.0 1129.0
+-10.0,629.0,2990.0,2629.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l2 WHERE centroid <@ box('-80.0, 559.0, 3060.0, 2699.0') and not (centroid <@ box('207.0, 1047.0, 3067.0, 2907.0') );
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 28
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level2','pan',6.0,28);
+database name is: kyrix
+Send response time: 0ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 260
+y : 563
+id : autodd0_level1
+isJumping : true
+260.0 563.0
+-10.0,63.0,2990.0,2010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l1 WHERE centroid <@ box('-80.0, -7.0, 3060.0, 2080.0');
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 111
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level1','jump',6.0,111);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : -10
+oboxh : 1947
+predicate0 : 
+oboxy : 63
+x : 23
+y : 335
+id : autodd0_level1
+isJumping : false
+23.0 335.0
+-10.0,-10.0,2990.0,1990.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l1 WHERE centroid <@ box('-80.0, -80.0, 3060.0, 2060.0') and not (centroid <@ box('60.0, 133.0, 2920.0, 1940.0') );
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 0
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level1','pan',6.0,0);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 0
+y : 106
+id : autodd0_level0
+isJumping : true
+0.0 106.0
+-10.0,-10.0,1510.0,1010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'autodd_citus' and autodd_id = 0;
+SELECT x, y, z, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l0 WHERE centroid <@ box('-80.0, -80.0, 1580.0, 1080.0');
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 30
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('autodd_citus','autodd0_level0','jump',6.0,30);
+database name is: kyrix
+Send response time: 0ms.
+
+^Cbash-4.4# exit

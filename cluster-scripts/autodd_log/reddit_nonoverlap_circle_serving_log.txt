@@ -1,0 +1,1313 @@
+7  0%                                             8[0Kbash-4.4# mvn compile && mvn exec:java -Dexec.mainClass="main.Main"
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--------------------------< [0;36mMITDbG:back-end[0;1m >---------------------------[m
+[[1;34mINFO[m] [1mBuilding back-end 1.0-SNAPSHOT[m
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-resources-plugin:2.6:resources[m [1m(default-resources)[m @ [36mback-end[0;1m ---[m
+[[1;34mINFO[m] Using 'UTF-8' encoding to copy filtered resources.
+[[1;34mINFO[m] Copying 0 resource
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-compiler-plugin:3.2:compile[m [1m(default-compile)[m @ [36mback-end[0;1m ---[m
+[[1;34mINFO[m] Changes detected - recompiling the module!
+[[1;34mINFO[m] Compiling 39 source files to /kyrix/back-end/target/classes
+[[1;34mINFO[m] /kyrix/back-end/src/main/java/index/Indexer.java: Some input files use unchecked or unsafe operations.
+[[1;34mINFO[m] /kyrix/back-end/src/main/java/index/Indexer.java: Recompile with -Xlint:unchecked for details.
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] [1;32mBUILD SUCCESS[m
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] Total time:  1.906 s
+[[1;34mINFO[m] Finished at: 2019-11-25T23:46:14Z
+[[1;34mINFO[m] [1m------------------------------------------------------------------------[m
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--------------------------< [0;36mMITDbG:back-end[0;1m >---------------------------[m
+[[1;34mINFO[m] [1mBuilding back-end 1.0-SNAPSHOT[m
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mexec-maven-plugin:1.6.0:java[m [1m(default-cli)[m @ [36mback-end[0;1m ---[m
+Reading config file...
+dbtype: citus  Config.database=CITUS
+Creating tile cache...
+Starting server...
+Backend server started...
+Waiting for project definition...
+Serving /
+/
+Serving /
+/js/globalVar.js
+Serving /
+/static/css/main.css
+Serving /
+/js/zoom.js
+Serving /
+/js/parameter.js
+Serving /
+/js/zoomButton.js
+Serving /
+/js/jump.js
+Serving /
+/js/staticLayers.js
+Serving /
+/js/dynamicLayers.js
+Serving /
+/js/pageOnLoad.js
+Serving /first
+Serving /
+/favicon.ico
+
+
+Serving /project
+ New project definition coming...
+Current project set to: reddit_autodd
+Requesting skip-recompute. Project definition updated. Refresh your web page now!
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+Serving /
+/
+Serving /
+/static/css/main.css
+Serving /
+/js/parameter.js
+Serving /
+/js/globalVar.js
+Serving /
+/js/pageOnLoad.js
+Serving /
+/js/zoom.js
+Serving /
+/js/zoomButton.js
+Serving /
+/js/dynamicLayers.js
+Serving /
+/js/staticLayers.js
+Serving /
+/js/jump.js
+Serving /first
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level0layer0;
+Serving /
+/favicon.ico
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 0
+y : 0
+id : autodd0_level0
+isJumping : true
+0.0 0.0
+-10.0,-10.0,1510.0,1010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l0 WHERE centroid <@ box('-90.0, -90.0, 1590.0, 1090.0');
+Fetch data time: 79.0ms.
+number of intersecting rows in result: 22
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level0','jump',79.0,22);
+database name is: kyrix
+Send response time: 3ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level1layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 1249
+y : 911
+id : autodd0_level1
+isJumping : true
+1249.0 911.0
+499.0,411.0,3010.0,2010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l1 WHERE centroid <@ box('419.0, 331.0, 3090.0, 2090.0');
+Fetch data time: 14.0ms.
+number of intersecting rows in result: 59
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level1','jump',14.0,59);
+database name is: kyrix
+Send response time: 1ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level2layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 3532
+y : 2812
+id : autodd0_level2
+isJumping : true
+3532.0 2812.0
+2782.0,2312.0,5782.0,4010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l2 WHERE centroid <@ box('2702.0, 2232.0, 5862.0, 4090.0');
+Fetch data time: 12.0ms.
+number of intersecting rows in result: 72
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level2','jump',12.0,72);
+database name is: kyrix
+Send response time: 1ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level3layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 8488
+y : 6598
+id : autodd0_level3
+isJumping : true
+8488.0 6598.0
+7738.0,6098.0,10738.0,8010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l3 WHERE centroid <@ box('7658.0, 6018.0, 10818.0, 8090.0');
+Fetch data time: 11.0ms.
+number of intersecting rows in result: 76
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level3','jump',11.0,76);
+database name is: kyrix
+Send response time: 0ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level4layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 18120
+y : 13959
+id : autodd0_level4
+isJumping : true
+18120.0 13959.0
+17370.0,13459.0,20370.0,15459.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l4 WHERE centroid <@ box('17290.0, 13379.0, 20450.0, 15539.0');
+Fetch data time: 11.0ms.
+number of intersecting rows in result: 69
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level4','jump',11.0,69);
+database name is: kyrix
+Send response time: 1ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level5layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 36927
+y : 28612
+id : autodd0_level5
+isJumping : true
+36927.0 28612.0
+36177.0,28112.0,39177.0,30112.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l5 WHERE centroid <@ box('36097.0, 28032.0, 39257.0, 30192.0');
+Fetch data time: 12.0ms.
+number of intersecting rows in result: 76
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level5','jump',12.0,76);
+database name is: kyrix
+Send response time: 1ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level6layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 74518
+y : 57994
+id : autodd0_level6
+isJumping : true
+74518.0 57994.0
+73768.0,57494.0,76768.0,59494.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l6 WHERE centroid <@ box('73688.0, 57414.0, 76848.0, 59574.0');
+Fetch data time: 10.0ms.
+number of intersecting rows in result: 86
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level6','jump',10.0,86);
+database name is: kyrix
+Send response time: 0ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level7layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 149843
+y : 116760
+id : autodd0_level7
+isJumping : true
+149843.0 116760.0
+149093.0,116260.0,152093.0,118260.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l7 WHERE centroid <@ box('149013.0, 116180.0, 152173.0, 118340.0') and (hash_key = 729 or hash_key = 730 or hash_key = 731 or hash_key = 737 or hash_key = 747 or hash_key = 748 or hash_key = 749 or hash_key = 752 or hash_key = 758 or hash_key = 765 or hash_key = 767 or hash_key = 780);
+Fetch data time: 33.0ms.
+number of intersecting rows in result: 75
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level7','jump',33.0,75);
+database name is: kyrix
+Send response time: 0ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level8layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 300447
+y : 234352
+id : autodd0_level8
+isJumping : true
+300447.0 234352.0
+299697.0,233852.0,302697.0,235852.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l8 WHERE centroid <@ box('299617.0, 233772.0, 302777.0, 235932.0') and (hash_key = 737 or hash_key = 747 or hash_key = 748 or hash_key = 749 or hash_key = 752 or hash_key = 758);
+Fetch data time: 16.0ms.
+number of intersecting rows in result: 86
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level8','jump',16.0,86);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 299697
+oboxh : 2000
+predicate0 : 
+oboxy : 233852
+x : 301124
+y : 234553
+id : autodd0_level8
+isJumping : false
+301124.0 234553.0
+300374.0,234053.0,303374.0,236053.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l8 WHERE centroid <@ box('300294.0, 233973.0, 303454.0, 236133.0') and not (centroid <@ box('299777.0, 233932.0, 302617.0, 235772.0') ) and (hash_key = 747 or hash_key = 748 or hash_key = 749 or hash_key = 752 or hash_key = 758 or hash_key = 765);
+Fetch data time: 22.0ms.
+number of intersecting rows in result: 20
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level8','pan',22.0,20);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 300374
+oboxh : 2000
+predicate0 : 
+oboxy : 234053
+x : 300755
+y : 234581
+id : autodd0_level8
+isJumping : false
+300755.0 234581.0
+300005.0,234081.0,303005.0,236081.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l8 WHERE centroid <@ box('299925.0, 234001.0, 303085.0, 236161.0') and not (centroid <@ box('300454.0, 234133.0, 303294.0, 235973.0') ) and (hash_key = 737 or hash_key = 747 or hash_key = 748 or hash_key = 749 or hash_key = 752 or hash_key = 758);
+Fetch data time: 9.0ms.
+number of intersecting rows in result: 21
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level8','pan',9.0,21);
+database name is: kyrix
+Send response time: 0ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level9layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 601455
+y : 469573
+id : autodd0_level9
+isJumping : true
+601455.0 469573.0
+600705.0,469073.0,603705.0,471073.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l9 WHERE centroid <@ box('600625.0, 468993.0, 603785.0, 471153.0') and (hash_key = 747 or hash_key = 748 or hash_key = 749 or hash_key = 752);
+Fetch data time: 16.0ms.
+number of intersecting rows in result: 109
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level9','jump',16.0,109);
+database name is: kyrix
+Send response time: 3ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 600705
+oboxh : 2000
+predicate0 : 
+oboxy : 469073
+x : 601445
+y : 469891
+id : autodd0_level9
+isJumping : false
+601445.0 469891.0
+600695.0,469391.0,603695.0,471391.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l9 WHERE centroid <@ box('600615.0, 469311.0, 603775.0, 471471.0') and not (centroid <@ box('600785.0, 469153.0, 603625.0, 470993.0') ) and (hash_key = 747 or hash_key = 748 or hash_key = 749 or hash_key = 752);
+Fetch data time: 7.0ms.
+number of intersecting rows in result: 11
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level9','pan',7.0,11);
+database name is: kyrix
+Send response time: 0ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level10layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 1203550
+y : 941074
+id : autodd0_level10
+isJumping : true
+1203550.0 941074.0
+1202800.0,940574.0,1205800.0,942574.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l10 WHERE centroid <@ box('1202720.0, 940494.0, 1205880.0, 942654.0') and (hash_key = 747 or hash_key = 748 or hash_key = 749);
+Fetch data time: 15.0ms.
+number of intersecting rows in result: 85
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level10','jump',15.0,85);
+database name is: kyrix
+Send response time: 1ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level11layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 2408242
+y : 1883032
+id : autodd0_level11
+isJumping : true
+2408242.0 1883032.0
+2407492.0,1882532.0,2410492.0,1884532.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l11 WHERE centroid <@ box('2407412.0, 1882452.0, 2410572.0, 1884612.0') and (hash_key = 748 or hash_key = 749);
+Fetch data time: 12.0ms.
+number of intersecting rows in result: 98
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level11','jump',12.0,98);
+database name is: kyrix
+Send response time: 4ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level12layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 4817417
+y : 3766867
+id : autodd0_level12
+isJumping : true
+4817417.0 3766867.0
+4816667.0,3766367.0,4819667.0,3768367.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l12 WHERE centroid <@ box('4816587.0, 3766287.0, 4819747.0, 3768447.0') and (hash_key = 748);
+Fetch data time: 12.0ms.
+number of intersecting rows in result: 105
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level12','jump',12.0,105);
+database name is: kyrix
+Send response time: 1ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level13layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 9635641
+y : 7534699
+id : autodd0_level13
+isJumping : true
+9635641.0 7534699.0
+9634891.0,7534199.0,9637891.0,7536199.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l13 WHERE centroid <@ box('9634811.0, 7534119.0, 9637971.0, 7536279.0') and (hash_key = 748);
+Fetch data time: 12.0ms.
+number of intersecting rows in result: 120
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level13','jump',12.0,120);
+database name is: kyrix
+Send response time: 1ms.
+
+Serving /canvas
+PsqlNativeBoxIndexer
+Indexer type: PsqlNativeBoxIndexer
+select cx, cy, minx, miny, maxx, maxy from bbox_reddit_autodd_autodd0_level14layer0;
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 19272302
+y : 15070119
+id : autodd0_level14
+isJumping : true
+1.9272302E7 1.5070119E7
+1.9271552E7,1.5069619E7,1.9274552E7,1.5071619E7
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l14 WHERE centroid <@ box('1.9271472E7, 1.5069539E7, 1.9274632E7, 1.5071699E7') and (hash_key = 748);
+Fetch data time: 13.0ms.
+number of intersecting rows in result: 160
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level14','jump',13.0,160);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 9636150
+y : 7535059
+id : autodd0_level13
+isJumping : true
+9636150.0 7535059.0
+9635400.0,7534559.0,9638400.0,7536559.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l13 WHERE centroid <@ box('9635320.0, 7534479.0, 9638480.0, 7536639.0') and (hash_key = 748);
+Fetch data time: 10.0ms.
+number of intersecting rows in result: 110
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level13','jump',10.0,110);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 9635400
+oboxh : 2000
+predicate0 : 
+oboxy : 7534559
+x : 9635853
+y : 7534827
+id : autodd0_level13
+isJumping : false
+9635853.0 7534827.0
+9635103.0,7534327.0,9638103.0,7536327.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l13 WHERE centroid <@ box('9635023.0, 7534247.0, 9638183.0, 7536407.0') and not (centroid <@ box('9635480.0, 7534639.0, 9638320.0, 7536479.0') ) and (hash_key = 748);
+Fetch data time: 10.0ms.
+number of intersecting rows in result: 31
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level13','pan',10.0,31);
+database name is: kyrix
+Send response time: 0ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 4817836
+y : 3767343
+id : autodd0_level12
+isJumping : true
+4817836.0 3767343.0
+4817086.0,3766843.0,4820086.0,3768843.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l12 WHERE centroid <@ box('4817006.0, 3766763.0, 4820166.0, 3768923.0') and (hash_key = 748);
+Fetch data time: 9.0ms.
+number of intersecting rows in result: 81
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level12','jump',9.0,81);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 4817086
+oboxh : 2000
+predicate0 : 
+oboxy : 3766843
+x : 4817540
+y : 3767111
+id : autodd0_level12
+isJumping : false
+4817540.0 3767111.0
+4816790.0,3766611.0,4819790.0,3768611.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l12 WHERE centroid <@ box('4816710.0, 3766531.0, 4819870.0, 3768691.0') and not (centroid <@ box('4817166.0, 3766923.0, 4820006.0, 3768763.0') ) and (hash_key = 748);
+Fetch data time: 10.0ms.
+number of intersecting rows in result: 28
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level12','pan',10.0,28);
+database name is: kyrix
+Send response time: 0ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 2408679
+y : 1883485
+id : autodd0_level11
+isJumping : true
+2408679.0 1883485.0
+2407929.0,1882985.0,2410929.0,1884985.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l11 WHERE centroid <@ box('2407849.0, 1882905.0, 2411009.0, 1885065.0') and (hash_key = 748 or hash_key = 749);
+Fetch data time: 8.0ms.
+number of intersecting rows in result: 75
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level11','jump',8.0,75);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 2407929
+oboxh : 2000
+predicate0 : 
+oboxy : 1882985
+x : 2408381
+y : 1883252
+id : autodd0_level11
+isJumping : false
+2408381.0 1883252.0
+2407631.0,1882752.0,2410631.0,1884752.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l11 WHERE centroid <@ box('2407551.0, 1882672.0, 2410711.0, 1884832.0') and not (centroid <@ box('2408009.0, 1883065.0, 2410849.0, 1884905.0') ) and (hash_key = 748 or hash_key = 749);
+Fetch data time: 8.0ms.
+number of intersecting rows in result: 33
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level11','pan',8.0,33);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 1204101
+y : 941556
+id : autodd0_level10
+isJumping : true
+1204101.0 941556.0
+1203351.0,941056.0,1206351.0,943056.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l10 WHERE centroid <@ box('1203271.0, 940976.0, 1206431.0, 943136.0') and (hash_key = 748 or hash_key = 749);
+Fetch data time: 10.0ms.
+number of intersecting rows in result: 61
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level10','jump',10.0,61);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 1203351
+oboxh : 2000
+predicate0 : 
+oboxy : 941056
+x : 1203797
+y : 941318
+id : autodd0_level10
+isJumping : false
+1203797.0 941318.0
+1203047.0,940818.0,1206047.0,942818.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l10 WHERE centroid <@ box('1202967.0, 940738.0, 1206127.0, 942898.0') and not (centroid <@ box('1203431.0, 941136.0, 1206271.0, 942976.0') ) and (hash_key = 747 or hash_key = 748 or hash_key = 749);
+Fetch data time: 11.0ms.
+number of intersecting rows in result: 27
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level10','pan',11.0,27);
+database name is: kyrix
+Send response time: 0ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 601812
+y : 470592
+id : autodd0_level9
+isJumping : true
+601812.0 470592.0
+601062.0,470092.0,604062.0,472092.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l9 WHERE centroid <@ box('600982.0, 470012.0, 604142.0, 472172.0') and (hash_key = 747 or hash_key = 748 or hash_key = 749 or hash_key = 752);
+Fetch data time: 11.0ms.
+number of intersecting rows in result: 51
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level9','jump',11.0,51);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 601062
+oboxh : 2000
+predicate0 : 
+oboxy : 470092
+x : 601510
+y : 470356
+id : autodd0_level9
+isJumping : false
+601510.0 470356.0
+600760.0,469856.0,603760.0,471856.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l9 WHERE centroid <@ box('600680.0, 469776.0, 603840.0, 471936.0') and not (centroid <@ box('601142.0, 470172.0, 603982.0, 472012.0') ) and (hash_key = 747 or hash_key = 748 or hash_key = 749 or hash_key = 752);
+Fetch data time: 8.0ms.
+number of intersecting rows in result: 26
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level9','pan',8.0,26);
+database name is: kyrix
+Send response time: 0ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 300667
+y : 235109
+id : autodd0_level8
+isJumping : true
+300667.0 235109.0
+299917.0,234609.0,302917.0,236609.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l8 WHERE centroid <@ box('299837.0, 234529.0, 302997.0, 236689.0') and (hash_key = 737 or hash_key = 747 or hash_key = 748 or hash_key = 749 or hash_key = 752 or hash_key = 758);
+Fetch data time: 14.0ms.
+number of intersecting rows in result: 48
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level8','jump',14.0,48);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 299917
+oboxh : 2000
+predicate0 : 
+oboxy : 234609
+x : 300361
+y : 234870
+id : autodd0_level8
+isJumping : false
+300361.0 234870.0
+299611.0,234370.0,302611.0,236370.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l8 WHERE centroid <@ box('299531.0, 234290.0, 302691.0, 236450.0') and not (centroid <@ box('299997.0, 234689.0, 302837.0, 236529.0') ) and (hash_key = 731 or hash_key = 737 or hash_key = 747 or hash_key = 748 or hash_key = 749 or hash_key = 752 or hash_key = 758);
+Fetch data time: 9.0ms.
+number of intersecting rows in result: 30
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level8','pan',9.0,30);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 150095
+y : 117368
+id : autodd0_level7
+isJumping : true
+150095.0 117368.0
+149345.0,116868.0,152345.0,118868.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l7 WHERE centroid <@ box('149265.0, 116788.0, 152425.0, 118948.0') and (hash_key = 730 or hash_key = 731 or hash_key = 737 or hash_key = 747 or hash_key = 748 or hash_key = 749 or hash_key = 752 or hash_key = 758 or hash_key = 765 or hash_key = 767 or hash_key = 780 or hash_key = 784);
+Fetch data time: 17.0ms.
+number of intersecting rows in result: 49
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level7','jump',17.0,49);
+database name is: kyrix
+Send response time: 0ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 149345
+oboxh : 2000
+predicate0 : 
+oboxy : 116868
+x : 149798
+y : 117136
+id : autodd0_level7
+isJumping : false
+149798.0 117136.0
+149048.0,116636.0,152048.0,118636.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l7 WHERE centroid <@ box('148968.0, 116556.0, 152128.0, 118716.0') and not (centroid <@ box('149425.0, 116948.0, 152265.0, 118788.0') ) and (hash_key = 729 or hash_key = 730 or hash_key = 731 or hash_key = 737 or hash_key = 747 or hash_key = 748 or hash_key = 749 or hash_key = 752 or hash_key = 758 or hash_key = 765 or hash_key = 767);
+Fetch data time: 9.0ms.
+number of intersecting rows in result: 26
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level7','pan',9.0,26);
+database name is: kyrix
+Send response time: 0ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 74809
+y : 58498
+id : autodd0_level6
+isJumping : true
+74809.0 58498.0
+74059.0,57998.0,77059.0,59998.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l6 WHERE centroid <@ box('73979.0, 57918.0, 77139.0, 60078.0');
+Fetch data time: 5.0ms.
+number of intersecting rows in result: 54
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level6','jump',5.0,54);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 74059
+oboxh : 2000
+predicate0 : 
+oboxy : 57998
+x : 74499
+y : 58256
+id : autodd0_level6
+isJumping : false
+74499.0 58256.0
+73749.0,57756.0,76749.0,59756.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l6 WHERE centroid <@ box('73669.0, 57676.0, 76829.0, 59836.0') and not (centroid <@ box('74139.0, 58078.0, 76979.0, 59918.0') );
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 30
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level6','pan',6.0,30);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 37166
+y : 29062
+id : autodd0_level5
+isJumping : true
+37166.0 29062.0
+36416.0,28562.0,39416.0,30562.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l5 WHERE centroid <@ box('36336.0, 28482.0, 39496.0, 30642.0');
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 53
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level5','jump',6.0,53);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 36416
+oboxh : 2000
+predicate0 : 
+oboxy : 28562
+x : 36868
+y : 28830
+id : autodd0_level5
+isJumping : false
+36868.0 28830.0
+36118.0,28330.0,39118.0,30330.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l5 WHERE centroid <@ box('36038.0, 28250.0, 39198.0, 30410.0') and not (centroid <@ box('36496.0, 28642.0, 39336.0, 30482.0') );
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 23
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level5','pan',6.0,23);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 18344
+y : 14345
+id : autodd0_level4
+isJumping : true
+18344.0 14345.0
+17594.0,13845.0,20594.0,15845.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l4 WHERE centroid <@ box('17514.0, 13765.0, 20674.0, 15925.0');
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 51
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level4','jump',6.0,51);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 17594
+oboxh : 2000
+predicate0 : 
+oboxy : 13845
+x : 18040
+y : 14107
+id : autodd0_level4
+isJumping : false
+18040.0 14107.0
+17290.0,13607.0,20290.0,15607.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l4 WHERE centroid <@ box('17210.0, 13527.0, 20370.0, 15687.0') and not (centroid <@ box('17674.0, 13925.0, 20514.0, 15765.0') );
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 31
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level4','pan',6.0,31);
+database name is: kyrix
+Send response time: 0ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 8933
+y : 6986
+id : autodd0_level3
+isJumping : true
+8933.0 6986.0
+8183.0,6486.0,11183.0,8010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l3 WHERE centroid <@ box('8103.0, 6406.0, 11263.0, 8090.0');
+Fetch data time: 5.0ms.
+number of intersecting rows in result: 57
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level3','jump',5.0,57);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 3000
+viewId : autodd0
+predicate1 : 
+oboxx : 8183
+oboxh : 1524
+predicate0 : 
+oboxy : 6486
+x : 8621
+y : 6742
+id : autodd0_level3
+isJumping : false
+8621.0 6742.0
+7871.0,6242.0,10871.0,8010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l3 WHERE centroid <@ box('7791.0, 6162.0, 10951.0, 8090.0') and not (centroid <@ box('8263.0, 6566.0, 11103.0, 7930.0') );
+Fetch data time: 8.0ms.
+number of intersecting rows in result: 34
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level3','pan',8.0,34);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 4228
+y : 3306
+id : autodd0_level2
+isJumping : true
+4228.0 3306.0
+3478.0,2806.0,6010.0,4010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l2 WHERE centroid <@ box('3398.0, 2726.0, 6090.0, 4090.0');
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 41
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level2','jump',6.0,41);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : 2532
+viewId : autodd0
+predicate1 : 
+oboxx : 3478
+oboxh : 1204
+predicate0 : 
+oboxy : 2806
+x : 3932
+y : 3075
+id : autodd0_level2
+isJumping : false
+3932.0 3075.0
+3182.0,2575.0,6010.0,4010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l2 WHERE centroid <@ box('3102.0, 2495.0, 6090.0, 4090.0') and not (centroid <@ box('3558.0, 2886.0, 5930.0, 3930.0') );
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 21
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level2','pan',6.0,21);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 1875
+y : 1467
+id : autodd0_level1
+isJumping : true
+1875.0 1467.0
+1125.0,967.0,3010.0,2010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l1 WHERE centroid <@ box('1045.0, 887.0, 3090.0, 2090.0');
+Fetch data time: 6.0ms.
+number of intersecting rows in result: 34
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level1','jump',6.0,34);
+database name is: kyrix
+Send response time: 0ms.
+
+
+Serving /dynamic Box
+oboxw : 1885
+viewId : autodd0
+predicate1 : 
+oboxx : 1125
+oboxh : 1043
+predicate0 : 
+oboxy : 967
+x : 1600
+y : 1211
+id : autodd0_level1
+isJumping : false
+1600.0 1211.0
+850.0,711.0,3010.0,2010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l1 WHERE centroid <@ box('770.0, 631.0, 3090.0, 2090.0') and not (centroid <@ box('1205.0, 1047.0, 2930.0, 1930.0') );
+Fetch data time: 7.0ms.
+number of intersecting rows in result: 19
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level1','pan',7.0,19);
+database name is: kyrix
+Send response time: 0ms.
+
+
+Serving /dynamic Box
+oboxw : 2160
+viewId : autodd0
+predicate1 : 
+oboxx : 850
+oboxh : 1299
+predicate0 : 
+oboxy : 711
+x : 1428
+y : 1031
+id : autodd0_level1
+isJumping : false
+1428.0 1031.0
+678.0,531.0,3010.0,2010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l1 WHERE centroid <@ box('598.0, 451.0, 3090.0, 2090.0') and not (centroid <@ box('930.0, 791.0, 2930.0, 1930.0') );
+Fetch data time: 5.0ms.
+number of intersecting rows in result: 21
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level1','pan',5.0,21);
+database name is: kyrix
+Send response time: 1ms.
+
+
+Serving /dynamic Box
+oboxw : -100000
+viewId : autodd0
+predicate1 : 
+oboxx : -100000
+oboxh : -100000
+predicate0 : 
+oboxy : -100000
+x : 699
+y : 499
+id : autodd0_level0
+isJumping : true
+699.0 499.0
+-10.0,-1.0,1510.0,1010.0
+AutoDDCitusIndexer
+Indexer type: AutoDDCitusIndexer
+SELECT gson FROM autodd_infos WHERE project_id = 'reddit_autodd' and autodd_id = 0;
+SELECT body, created_utc, score, body_len, subreddit, link_id, comment_id, cluster_agg, cx, cy, minx, miny, maxx, maxy FROM l0 WHERE centroid <@ box('-90.0, -81.0, 1590.0, 1090.0');
+Fetch data time: 5.0ms.
+number of intersecting rows in result: 22
+stats sql: insert into stats (project_name, canvas_id, query_type, fetch_time_ms, rows_fetched) values ('reddit_autodd','autodd0_level0','jump',5.0,22);
+database name is: kyrix
+Send response time: 0ms.
+
+^Cbash-4.4# exit
