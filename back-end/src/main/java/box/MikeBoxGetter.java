@@ -16,13 +16,11 @@ public class MikeBoxGetter extends BoxGetter {
         int vpW = v.getWidth();
         int vpH = v.getHeight();
         double wrapLength = 0.5;
-        System.out.println(mx + " " + my);
         double minx = Math.max(-10, mx - wrapLength * vpW);
         double miny = Math.max(-10, my - wrapLength * vpH);
         double maxx = Math.min(c.getW() + 10, minx + (1 + 2 * wrapLength) * vpW);
         double maxy = Math.min(c.getH() + 10, miny + (1 + 2 * wrapLength) * vpH);
         Box newBox = new Box(minx, miny, maxx, maxy);
-        System.out.println(newBox.getCSV());
         data = fetchData(c, newBox, oldBox, predicates);
 
         Box box = new Box(minx, miny, maxx, maxy);
