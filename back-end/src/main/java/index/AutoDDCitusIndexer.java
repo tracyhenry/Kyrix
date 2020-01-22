@@ -30,7 +30,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     private final int L = 6;
     private final int objectNumLimit = 4000; // in a 1k by 1k region
     private final int virtualViewportSize = 1000;
-    private final int numPartitions = 128;
+    private final int numPartitions = 8;
     private final int binarySearchMaxLoop = 40;
     private final double bottomScale = 1e10;
     private final int reshuffleBatchCt = 16;

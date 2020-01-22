@@ -38,6 +38,7 @@ var autoDD = {
         }
     },
     config: {
+        numLevels: 13,
         axis: true,
         topLevelWidth: 1500
     }

@@ -33,45 +33,17 @@ var autoDD = {
         z: {
             field: "wage",
             order: "desc"
-        }
+        },
+        overlap: 0.5
     },
     marks: {
         cluster: {
-            mode: "radar",
-            aggregate: {
-                // object notation for measures with same function & extent
-                measures: {
-                    fields: [
-                        "defending",
-                        "general",
-                        "mental",
-                        "passing",
-                        "mobility",
-                        "power",
-                        "rating",
-                        "shooting"
-                    ],
-                    function: "avg",
-                    extent: [0, 100]
-                }
-            },
+            mode: "custom",
+            custom: renderers.playerRendering,
             config: {
-                // radarRadius: 80
-                // radarTicks: 5
+                bboxW: 180,
+                bboxH: 240
             }
-        },
-        hover: {
-            rankList: {
-                mode: "custom",
-                custom: renderers.playerRendering,
-                topk: 3,
-                orientation: "horizontal",
-                config: {
-                    bboxW: 180,
-                    bboxH: 240
-                }
-            }
-            //boundary: "convexhull"
         }
     },
     config: {

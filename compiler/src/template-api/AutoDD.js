@@ -1460,18 +1460,18 @@ function getAxesRenderer(level) {
             axesg.selectAll("path").remove();
         };
         //x
-        /*        var x = d3
+        var x = d3
             .scaleLinear()
             .domain([REPLACE_ME_this_loX, REPLACE_ME_this_hiX])
-            .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);*/
-        var stDate = new Date(0),
+            .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);
+        /*        var stDate = new Date(0),
             enDate = new Date(0);
         stDate.setUTCSeconds(1356998400);
         enDate.setUTCSeconds(1425167999);
         var x = d3
             .scaleTime()
             .domain([stDate, enDate])
-            .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);
+            .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);*/
         var xAxis = d3.axisBottom().tickSize(-cHeight);
         axes.push({
             dim: "x",
