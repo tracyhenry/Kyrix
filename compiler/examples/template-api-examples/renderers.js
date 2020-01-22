@@ -144,89 +144,6 @@ function playerRendering(svg, data, args) {
     }
 }
 
-var redditCircleHover = function(svg, data, args) {
-    var g = svg.append("g");
-    var params = args.renderingParams;
-    var d = data[0];
-    var url =
-        "http://reddit.com/r/" +
-        d.subreddit +
-        "/comments/" +
-        d.link_id +
-        "/c/" +
-        d.comment_id;
-    /*    g.append("a")
-        .attr("xlink:href", url)
-        .attr("target", "_blank")*/
-    var rectW = 600;
-    var rectH = 30;
-    g.append("rect")
-        .attr("x", d.cx - rectW / 2)
-        .attr("y", d.cy - rectH / 2)
-        .attr("width", rectW)
-        .attr("height", rectH)
-        .attr("fill", "white")
-        .attr("fill-opacity", 0.7);
-    g.append("text")
-        .text(url + " (score: " + d.score + ")")
-        .attr("x", d.cx)
-        .attr("y", d.cy)
-        .attr("dy", "0.3em")
-        .attr("text-anchor", "middle")
-        .classed("kyrix-retainsizezoom", true)
-        .attr("font-size", 20);
-};
-
-var redditTextRendering = function(svg, data, args) {
-    var g = svg.append("g");
-    var params = args.renderingParams;
-    /*    g.selectAll("rect")
-        .data(data)
-        .enter()
-        .append("rect")
-        .attr("x", d=>d.cx - 135)
-        .attr("y", d=>d.cy - 30)
-        .attr("width", 270)
-        .attr("height", 60)
-        .attr("fill", "black")
-        .attr("fill-opacity", 0.7);*/
-    var maxBodyLen = 23;
-    g.selectAll(".reddit")
-        .data(data)
-        .enter()
-        .append("a")
-        .attr("xlink:href", function(d) {
-            return (
-                "http://reddit.com/r/" +
-                d.subreddit +
-                "/comments/" +
-                d.link_id +
-                "/c/" +
-                d.comment_id
-            );
-        })
-        .attr("target", "_blank")
-        .append("text")
-        .text(d =>
-            d.body.length <= maxBodyLen
-                ? d.body
-                : d.body
-                      .replace(/(\r\n|\n|\r)/gm, " ")
-                      .substring(0, maxBodyLen) + "..."
-        )
-        .attr("x", d => d.cx)
-        .attr("y", d => d.cy)
-        .attr("fill", "#47634e")
-        .attr("dy", "0.3em")
-        .attr("text-anchor", "middle")
-        .classed("kyrix-retainsizezoom", true)
-        .attr("font-size", 23)
-        .style("opacity", 0)
-        .transition()
-        .duration(300)
-        .style("opacity", 1);
-};
-
 var playerRenderingStyles = `
 g.player rect.player-bg {
     fill: #fff;
@@ -239,8 +156,6 @@ text.label {
 }`;
 
 module.exports = {
-    redditCircleHover,
-    redditTextRendering,
     playerRendering,
     playerRenderingStyles,
     renderingParams
