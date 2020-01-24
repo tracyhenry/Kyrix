@@ -26,7 +26,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     }
 
     private static AutoDDCitusIndexer instance = null;
-    private final transient Gson gson;
+    private final Gson gson;
     private final int L = 6;
     private final int objectNumLimit = 4000; // in a 1k by 1k region
     private final int virtualViewportSize = 1000;

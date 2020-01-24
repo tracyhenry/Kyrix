@@ -12,7 +12,7 @@ public class Layer implements Serializable {
     private boolean deltaBox;
     private Placement placement;
     private String rendering;
-    private Indexer indexer;
+    private transient Indexer indexer;
     private String autoDDId;
     private String indexerType;
 

@@ -120,7 +120,6 @@ public class CanvasRequestHandler implements HttpHandler {
 
             Indexer indexer = l.getIndexer();
             String sql = indexer.getStaticDataQuery(c, i, predicates.get(i));
-            System.out.println(sql);
 
             // run query, add to response
             data.add(DbConnector.getQueryResult(Config.databaseName, sql));
