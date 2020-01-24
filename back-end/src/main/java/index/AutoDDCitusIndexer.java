@@ -26,11 +26,11 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     }
 
     private static AutoDDCitusIndexer instance = null;
-    private final Gson gson;
+    private final transient Gson gson;
     private final int L = 6;
     private final int objectNumLimit = 4000; // in a 1k by 1k region
     private final int virtualViewportSize = 1000;
-    private final int numPartitions = 8;
+    private final int numPartitions = 4;
     private final int binarySearchMaxLoop = 40;
     private final double bottomScale = 1e10;
     private final int reshuffleBatchCt = 16;
@@ -622,6 +622,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         // big INSERT INTO bottom_level SELECT * FROM rawTable
         // have to insert by batch here by hash modulo because Citus
         // fetches everything into the memory of coordinator (ouch!)
+        // also, need to make sure hash_keys are non-negative
         st = System.nanoTime();
         for (int m = 0; m < reshuffleBatchCt; m++) {
             sql = "INSERT INTO " + zoomLevelTables.get(numLevels) + "(";
