@@ -1,12 +1,12 @@
 // libraries
 const Project = require("../../src/index").Project;
 const AutoDD = require("../../src/template-api/AutoDD").AutoDD;
-const renderers = require("../nba/renderers");
 
 // construct a project
 var p = new Project("autodd_citus", "../../../config.txt");
 
 // set up auto drill down
+// note -- for Citus, this query must be SELECT * FROM tbl
 var query = "SELECT * from dots;";
 
 var autoDD = {
@@ -38,7 +38,7 @@ var autoDD = {
         }
     },
     config: {
-        numLevels: 13,
+        numLevels: 8,
         axis: true,
         topLevelWidth: 1500
     }
