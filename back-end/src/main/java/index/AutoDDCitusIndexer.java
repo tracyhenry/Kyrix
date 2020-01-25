@@ -98,6 +98,9 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
 
         // populating a fake bottom level table, using a UDF to generate hash keys
         populateFakeBottomLevelTable();
+
+        // remove extra columns from rawTable
+        cleanUpRawTable();
     }
 
     private void bottomUpClustering() throws SQLException, ClassNotFoundException {
@@ -146,8 +149,15 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
 
         // raw fields
         st = System.nanoTime();
-        columnNames = autoDD.getColumnNames();
-        columnTypes = autoDD.getColumnTypes();
+        ArrayList<String> columnNamesFromAutoDD = autoDD.getColumnNames();
+        ArrayList<String> columnTypesFromAutoDD = autoDD.getColumnTypes();
+        columnNames = new ArrayList<>();
+        columnTypes = new ArrayList<>();
+        for (int i = 0; i < columnNamesFromAutoDD.size(); i++)
+            if (!columnNamesFromAutoDD.get(i).equals("hash_key")) {
+                columnNames.add(columnNamesFromAutoDD.get(i));
+                columnTypes.add(columnTypesFromAutoDD.get(i));
+            }
         numRawColumns = columnNames.size();
         System.out.println("numRawColumns = " + numRawColumns);
         System.out.println("Raw columns: ");
@@ -652,6 +662,19 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         System.out.println("************************************************\n");
     }
 
+    private void cleanUpRawTable() throws SQLException {
+        // drop columns
+        sql = "ALTER TABLE " + rawTable + " DROP COLUMN IF EXISTS cx;";
+        System.out.println(sql);
+        kyrixStmt.executeUpdate(sql);
+        sql = "ALTER TABLE " + rawTable + " DROP COLUMN IF EXISTS cy;";
+        System.out.println(sql);
+        kyrixStmt.executeUpdate(sql);
+        sql = "ALTER TABLE " + rawTable + " DROP COLUMN IF EXISTS centroid;";
+        System.out.println(sql);
+        kyrixStmt.executeUpdate(sql);
+    }
+
     private void createSingleNodeClusteringUDF() throws SQLException {
         System.out.println("Creating the PLV8 UDF for single node clustering algo...");
         String funcSql =
@@ -1016,7 +1039,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         String colListStr = "";
         for (int i = 0; i < autoDDInfo.columnNames.size(); i++)
             colListStr += autoDDInfo.columnNames.get(i) + ", ";
-        colListStr += "cluster_agg, cx, cy, minx, miny, maxx, maxy";
+        colListStr += "hash_key, cluster_agg, cx, cy, minx, miny, maxx, maxy";
 
         // construct range query
         int bboxW = autoDDInfo.bboxW;

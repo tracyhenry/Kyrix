@@ -90,9 +90,7 @@ public abstract class Indexer implements Serializable {
                 l.setIndexerType(indexer.getClass().getSimpleName());
 
                 // pre-run getColumnNames, see issue #84: github.com/tracyhenry/kyrix/issues/84
-                // avoid this for Citus since Citus doesn't support cursors well
-                if (!l.getIndexerType().equals("AutoDDCitusIndexer"))
-                    l.getTransform().getColumnNames();
+                l.getTransform().getColumnNames();
             }
     }
 

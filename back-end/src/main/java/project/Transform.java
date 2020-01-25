@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import main.Config;
 import main.DbConnector;
 
 /** Created by wenbo on 4/3/18. */
@@ -44,19 +45,25 @@ public class Transform implements Serializable {
 
     public ArrayList<String> getColumnNames() {
 
-        // System.out.println("getting column names in transform!!!");
         // if it is specified already, return
         if (columnNames.size() > 0) return columnNames;
-        // System.out.println("getting column names in transform!!!");
+
         // if it is an empty transform, return an empty array
         if (getDb().isEmpty()) return columnNames;
-        // System.out.println("getting column names in transform!!!");
+
         // otherwise the transform func is empty, fetch the schema from DB
         if (queriedColumnNames == null)
             try {
                 queriedColumnNames = new ArrayList<>();
                 Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
-                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, getQuery());
+                String query = getQuery();
+                if (Config.database == Config.Database.CITUS) {
+                    while (query.charAt(query.length() - 1) == ';')
+                        query = query.substring(0, query.length() - 1);
+                    // assuming there is no limit 1
+                    query += " LIMIT 1;";
+                }
+                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, query);
                 int colCount = rs.getMetaData().getColumnCount();
                 for (int i = 1; i <= colCount; i++)
                     queriedColumnNames.add(rs.getMetaData().getColumnName(i));

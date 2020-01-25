@@ -2,7 +2,6 @@ package box;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import main.Main;
 import project.Canvas;
 import project.Layer;
 
@@ -28,14 +27,7 @@ public class BoxandData {
             ret.add(new ArrayList<>());
             int numRows = data.get(i).size();
             Layer curLayer = c.getLayers().get(i);
-            ArrayList<String> fields;
-            // System.out.println("Layer " + i + " : " + curLayer.getIndexerType());
-            if (curLayer.getIndexerType().equals("AutoDDCitusIndexer")) {
-                // citus doesn't support cursor well
-                String autoDDId = curLayer.getAutoDDId();
-                int autoDDIndex = Integer.valueOf(autoDDId.substring(0, autoDDId.indexOf("_")));
-                fields = Main.getProject().getAutoDDs().get(autoDDIndex).getColumnNames();
-            } else fields = curLayer.getTransform().getColumnNames();
+            ArrayList<String> fields = curLayer.getTransform().getColumnNames();
 
             for (int j = 0; j < numRows; j++) {
                 int numFields = fields.size();
@@ -45,8 +37,7 @@ public class BoxandData {
                 for (int k = 0; k < numFields; k++) rowDict.put(fields.get(k), rowArray.get(k));
 
                 // cluster number field for autodd layer
-                if (curLayer.getIndexerType().equals("AutoDDInMemoryIndexer")
-                        || curLayer.getIndexerType().equals("AutoDDCitusIndexer")) {
+                if (curLayer.getIndexerType().contains("AutoDD")) {
                     rowDict.put("clusterAgg", rowArray.get(numFields));
                     numFields++;
                 }

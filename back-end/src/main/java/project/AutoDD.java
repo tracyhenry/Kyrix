@@ -3,6 +3,7 @@ package project;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import main.Config;
 import main.DbConnector;
 
 /** Created by wenbo on 3/31/19. */
@@ -93,29 +94,26 @@ public class AutoDD {
 
     public ArrayList<String> getColumnNames() {
 
-        // System.out.println("getting column names in autodd!!!");
         // if it is specified already, return
         if (columnNames.size() > 0) return columnNames;
-        // System.out.println("getting column names in autodd!!!");
+
         // otherwise fetch the schema from DB
         if (queriedColumnNames == null)
             try {
                 queriedColumnNames = new ArrayList<>();
                 columnTypes = new ArrayList<>();
                 Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
-                // System.out.println("getting column names in autodd!!!");
-                ResultSet rs =
-                        DbConnector.getQueryResultIterator(
-                                rawDBStmt, "SELECT * FROM " + rawTable + " limit 1;");
-                // System.out.println("getting column names in autodd!!!");
+                String query = getQuery();
+                if (Config.database == Config.Database.CITUS) {
+                    while (query.charAt(query.length() - 1) == ';')
+                        query = query.substring(0, query.length() - 1);
+                    // assuming there is no limit 1
+                    query += " LIMIT 1;";
+                }
+                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, query);
                 int colCount = rs.getMetaData().getColumnCount();
                 for (int i = 1; i <= colCount; i++) {
-                    String curName = rs.getMetaData().getColumnName(i);
-                    if (curName.equals("cx")
-                            || curName.equals("cy")
-                            || curName.equals("hash_key")
-                            || curName.equals("centroid")) continue;
-                    queriedColumnNames.add(curName);
+                    queriedColumnNames.add(rs.getMetaData().getColumnName(i));
                     columnTypes.add(rs.getMetaData().getColumnTypeName(i));
                 }
                 rs.close();
