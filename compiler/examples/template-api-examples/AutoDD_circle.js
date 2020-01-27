@@ -46,8 +46,8 @@ var autoDD = {
                 mode: "tabular",
                 fields: ["home_team", "away_team", "home_score", "away_score"],
                 topk: 3
-            }
-            // boundary: "convexhull"
+            },
+            boundary: "convexhull"
         }
     },
     config: {

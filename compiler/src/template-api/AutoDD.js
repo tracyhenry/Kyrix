@@ -363,7 +363,6 @@ function AutoDD(args) {
     if ("boundary" in args.marks.hover)
         this.hoverParams.hoverBoundary = args.marks.hover.boundary;
     this.topk = this.hoverParams.topk != null ? this.hoverParams.topk : 0;
-    console.log(this.topk);
 
     /***************************
      * setting legend parameters
@@ -427,7 +426,7 @@ function AutoDD(args) {
     this.clusterCustomRenderer =
         "custom" in args.marks.cluster ? args.marks.cluster.custom : null;
     this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
-    this.numLevels = "numLevels" in args.config ? args.config.numLevels : 15;
+    this.numLevels = "numLevels" in args.config ? args.config.numLevels : 10;
     this.topLevelWidth =
         "topLevelWidth" in args.config ? args.config.topLevelWidth : 1000;
     this.topLevelHeight =
@@ -461,30 +460,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
         REPLACE_ME_processClusterAgg();
-        var maxSizes = [
-            351049723,
-            183074527,
-            79026376,
-            50763158,
-            26048737,
-            10887406,
-            4948928,
-            2533155,
-            1034445,
-            312617,
-            101434,
-            36103,
-            13629,
-            10300,
-            10000
-        ];
+        var maxSize = params["REPLACE_ME_autoDDId" + "_maxWeight"];
         var circleSizeInterpolator = d3
-            //.scaleLinear()
-            //.domain([1, params.roughN.toString().length - 1])
-            //.domain([1, 6])
-            .scalePow()
-            //.exponent(1.05)
-            .domain([1, maxSizes[args.pyramidLevel]])
+            .scaleSqrt()
+            .domain([1, maxSize])
             .range([params.circleMinSize, params.circleMaxSize]);
         var g = svg.append("g").classed("hovercircle", true);
 
@@ -573,6 +552,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 return +d.cx;
             })
             .attr("y", function(d) {
+                // TODO: y offset needs to be exposed as a parameter
                 return +d.miny + 13;
             })
             .attr("dy", ".35em")
@@ -588,7 +568,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var roughN = params.roughN;
         var bandwidth = params.contourBandwidth;
         var radius = REPLACE_ME_radius;
-        var decayRate = 2;
+        var decayRate = 2.4;
         var cellSize = 2;
         var contourWidth, contourHeight, x, y;
         if ("tileX" in args) {
@@ -621,20 +601,19 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .thresholds(function(v) {
                 // var step = 0.05 / Math.pow(decayRate, +args.pyramidLevel) * 6;
                 // var stop = d3.max(v);
-                roughN = 1000000000;
-                var eMax = 35000 / Math.pow(decayRate, +args.pyramidLevel);
-                var ret = d3.range(1e-4, eMax, eMax / 4);
-                ret[1] /= 10;
-                ret[2] /= 5;
-                ret[3] /= 2;
-                return ret;
+                var eMax =
+                    (0.07 * roughN) /
+                    1000 /
+                    Math.pow(decayRate, +args.pyramidLevel);
+                return d3.range(1e-4, eMax, eMax / 6);
             })(translatedData);
 
         var color = d3
             .scaleSequential(d3[params.contourColorScheme])
             .domain([
                 1e-4,
-                30000 /
+                (0.04 * roughN) /
+                    1000 /
                     Math.pow(decayRate, +args.pyramidLevel) /
                     cellSize /
                     cellSize
@@ -657,9 +636,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .enter()
             .append("path")
             .attr("d", d3.geoPath())
-            .style("fill", (d, i) =>
-                color(d.value * (i == 1 ? 10 : i == 2 ? 5 : i == 3 ? 2 : 1))
-            )
+            .style("fill", d => color(d.value))
             .style("opacity", params.contourOpacity);
 
         ///////////////// uncomment the following for rendering using canvas
@@ -728,7 +705,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             var y = radius;
             tplCanvas.width = tplCanvas.height = radius * 2;
 
-            var gradient = tplCtx.createRadialGradient(x, y, 0, x, y, radius);
+            var gradient = tplCtx.createRadialGradient(x, y, 5, x, y, radius);
             gradient.addColorStop(0, "rgba(0,0,0,1)");
             gradient.addColorStop(1, "rgba(0,0,0,0)");
             tplCtx.fillStyle = gradient;
@@ -740,17 +717,14 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var alphaCanvas = document.createElement("canvas");
         alphaCanvas.width = heatmapWidth;
         alphaCanvas.height = heatmapHeight;
-        var minWeight = 200000 / (args.pyramidLevel + 0.75);
-        //        var minWeight = params["REPLACE_ME_autoDDId" + "_minWeight"]; // set in the BGRP (back-end generated rendering params)
-        //        var maxWeight = params["REPLACE_ME_autoDDId" + "_maxWeight"]; // set in the BGRP
+        var minWeight = params["REPLACE_ME_autoDDId" + "_minWeight"]; // set in the BGRP (back-end generated rendering params)
+        var maxWeight = params["REPLACE_ME_autoDDId" + "_maxWeight"]; // set in the BGRP
         var alphaCtx = alphaCanvas.getContext("2d");
         var tpl = _getPointTemplate(radius);
         for (var i = 0; i < translatedData.length; i++) {
             var tplAlpha =
-                //(translatedData[i].w - minWeight) / (maxWeight - minWeight);
-                translatedData[i].w / minWeight / 5;
-            alphaCtx.globalAlpha =
-                tplAlpha < 0.1 ? 0.1 : tplAlpha > 1 ? 1 : tplAlpha;
+                (translatedData[i].w - minWeight) / (maxWeight - minWeight);
+            alphaCtx.globalAlpha = tplAlpha < 0.01 ? 0.01 : tplAlpha;
             alphaCtx.drawImage(
                 tpl,
                 translatedData[i].x - radius,
@@ -1105,6 +1079,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function processClusterAgg() {
         function getConvexCoordinates(d) {
             var coords = d.clusterAgg.convexHull;
+            if (typeof coords == "string") coords = JSON.parse(coords);
             var convexHull = [];
             for (var i = 0; i < coords.length; i++) {
                 convexHull.push({
@@ -1301,6 +1276,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     // use params.bboxH(W) for bounding box size
                     var g = svg.append("g").attr("id", "autodd_ranklist_hover");
                     var topKData = d.clusterAgg.topk;
+                    if (typeof topKData == "string")
+                        topKData = JSON.parse(topKData);
                     var topk = topKData.length;
                     for (var i = 0; i < topk; i++) {
                         topKData[i].cx = +d.cx;
@@ -1402,10 +1379,12 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             );
     } else if (this.clusterMode == "circle") {
         // render circle
-        renderFuncBody = getBodyStringOfFunction(renderCircleBody).replace(
-            /REPLACE_ME_processClusterAgg/g,
-            "(" + processClusterAgg.toString() + ")"
-        );
+        renderFuncBody = getBodyStringOfFunction(renderCircleBody)
+            .replace(
+                /REPLACE_ME_processClusterAgg/g,
+                "(" + processClusterAgg.toString() + ")"
+            )
+            .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
         renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     } else if (this.clusterMode == "contour") {
         renderFuncBody = getBodyStringOfFunction(renderContourBody).replace(
@@ -1513,7 +1492,7 @@ function getLegendRenderer() {
     function pieLegendRendererBody() {
         svg.append("g")
             .attr("class", "legendOrdinal")
-            .attr("transform", "translate(1000,25) scale(2.0)");
+            .attr("transform", "translate(50,50) scale(2.0)");
 
         var params = args.renderingParams;
         var color = d3
@@ -1530,11 +1509,11 @@ function getLegendRenderer() {
             //8.059274488676564 -9.306048591020996,8.059274488676564Z"
             // .shape("path", d3.symbol().type(d3.symbolDiamond).size(150)())
             .shape("rect")
-            .orient("horizontal")
-            .shapePadding(15)
+            //.orient("horizontal")
+            .shapePadding(10)
             .title(params.legendTitle)
-            .labelOffset(9)
-            .titleWidth(200)
+            .labelOffset(15)
+            //.titleWidth(200)
             // .labelAlign("start")
             .scale(color);
 

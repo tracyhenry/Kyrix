@@ -13,7 +13,7 @@ var query = "select * from fifa19;";
 
 var autoDD = {
     data: {
-        db: "kyrix",
+        db: "fifa19",
         query: query
     },
     layout: {
