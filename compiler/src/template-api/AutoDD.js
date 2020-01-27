@@ -182,6 +182,13 @@ function AutoDD(args) {
         throw new Error(
             "Constructing AutoDD: dimension columns (args.marks.cluster.aggregate.dimensions) not allowed for the given cluster mode."
         );
+    if (
+        args.marks.cluster.mode == "circle" &&
+        args.marks.cluster.aggregate.measures.length > 1
+    )
+        throw new Error(
+            "Constructing AutoDD: more than one measure column specified for circle mode."
+        );
     for (var i = 0; i < args.marks.cluster.aggregate.dimensions.length; i++) {
         if (!("field" in args.marks.cluster.aggregate.dimensions[i]))
             throw new Error(
