@@ -19,17 +19,19 @@ var autoDD = {
         db: "nba",
         query: query
     },
-    x: {
-        field: "home_score",
-        extent: [69, 149]
-    },
-    y: {
-        field: "away_score",
-        extent: [69, 148]
-    },
-    z: {
-        field: "agg_rank",
-        order: "asc"
+    layout: {
+        x: {
+            field: "home_score",
+            extent: [69, 149]
+        },
+        y: {
+            field: "away_score",
+            extent: [69, 148]
+        },
+        z: {
+            field: "agg_rank",
+            order: "asc"
+        }
     },
     marks: {
         cluster: {
@@ -40,8 +42,12 @@ var autoDD = {
             }
         },
         hover: {
-            object: renderers.teamTimelineRendering
-            // convex: true
+            rankList: {
+                mode: "tabular",
+                fields: ["home_team", "away_team", "home_score", "away_score"],
+                topk: 3
+            },
+            boundary: "convexhull"
         }
     },
     config: {

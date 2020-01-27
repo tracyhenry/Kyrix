@@ -29,7 +29,12 @@ public class Canvas implements Serializable {
         bos.close();
         byte[] byteData = bos.toByteArray();
         ByteArrayInputStream bais = new ByteArrayInputStream(byteData);
-        return (Canvas) new ObjectInputStream(bais).readObject();
+        Canvas copy = (Canvas) new ObjectInputStream(bais).readObject();
+        // set indexer again since indexer is transient
+        // and thus ignored by serializer
+        for (int i = 0; i < layers.size(); i++)
+            copy.getLayers().get(i).setIndexer(layers.get(i).getIndexer());
+        return copy;
     }
 
     public void setW(int w) {

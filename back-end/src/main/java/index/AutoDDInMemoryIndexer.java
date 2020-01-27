@@ -6,6 +6,8 @@ import com.github.davidmoten.rtree.geometry.Geometries;
 import com.github.davidmoten.rtree.geometry.Rectangle;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -79,7 +81,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                                                 / autoDD.getBboxH()
                                                 / autoDD.getBboxW())
                                 - 1);
-        if (!autoDD.getOverlap()) overlappingThreshold = Math.max(overlappingThreshold, 1);
+        overlappingThreshold = Math.max(overlappingThreshold, autoDD.getOverlap());
         System.out.println("Overlapping threshold: " + overlappingThreshold);
 
         // store raw query results into memory
@@ -361,9 +363,22 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                         autoDD.getNumLevels(), Double.valueOf(row.get(autoDD.getYColId())), false);
         double minx = cx - autoDD.getBboxW() / 2.0, maxx = cx + autoDD.getBboxW() / 2.0;
         double miny = cy - autoDD.getBboxH() / 2.0, maxy = cy + autoDD.getBboxH() / 2.0;
-        ArrayList<Double> convexHull =
-                new ArrayList<>(Arrays.asList(minx, miny, minx, maxy, maxx, maxy, maxx, miny));
+        ArrayList<ArrayList<Double>> convexHull = new ArrayList<>();
+        convexHull.add(new ArrayList<>(Arrays.asList(minx, miny)));
+        convexHull.add(new ArrayList<>(Arrays.asList(minx, maxy)));
+        convexHull.add(new ArrayList<>(Arrays.asList(maxx, maxy)));
+        convexHull.add(new ArrayList<>(Arrays.asList(maxx, miny)));
         clusterAgg.put("convexHull", gson.toJson(convexHull));
+
+        // topk
+        if (autoDD.getTopk() > 0) {
+            ArrayList<HashMap<String, String>> topk = new ArrayList<>();
+            HashMap<String, String> curMap = new HashMap<>();
+            for (int i = 0; i < row.size(); i++)
+                curMap.put(autoDD.getColumnNames().get(i), row.get(i));
+            topk.add(curMap);
+            clusterAgg.put("topk", gson.toJson(topk));
+        }
 
         // numeric aggregations
         String curDimensionStr = "";
@@ -411,21 +426,61 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         }
 
         // convexHull
-        ArrayList<Double> childConvexHull;
+        ArrayList<ArrayList<Double>> childConvexHull;
         childConvexHull = gson.fromJson(child.get("convexHull"), ArrayList.class);
         for (int i = 0; i < childConvexHull.size(); i++)
-            childConvexHull.set(i, childConvexHull.get(i) / autoDD.getZoomFactor());
+            for (int j = 0; j < 2; j++)
+                childConvexHull
+                        .get(i)
+                        .set(j, childConvexHull.get(i).get(j) / autoDD.getZoomFactor());
+
         if (!parent.containsKey("convexHull"))
             parent.put("convexHull", gson.toJson(childConvexHull));
         else {
-            ArrayList<Double> parentConvexHull;
+            ArrayList<ArrayList<Double>> parentConvexHull;
             parentConvexHull = gson.fromJson(parent.get("convexHull"), ArrayList.class);
             parent.put("convexHull", gson.toJson(mergeConvex(parentConvexHull, childConvexHull)));
         }
 
+        // topk
+        if (!parent.containsKey("topk")) parent.put("topk", child.get("topk"));
+        else {
+            Type topkType = new TypeToken<ArrayList<HashMap<String, String>>>() {}.getType();
+            ArrayList<HashMap<String, String>> parentTopk =
+                    gson.fromJson(parent.get("topk"), topkType);
+            ArrayList<HashMap<String, String>> childTopk =
+                    gson.fromJson(child.get("topk"), topkType);
+            ArrayList<HashMap<String, String>> mergedTopk = new ArrayList<>();
+            String zCol = autoDD.getzCol();
+            String zOrder = autoDD.getzOrder();
+            int topk = autoDD.getTopk();
+            int parentIter = 0, childIter = 0;
+            while ((parentIter < parentTopk.size() || childIter < childTopk.size())
+                    && mergedTopk.size() < topk) {
+                if (parentIter >= parentTopk.size()) mergedTopk.add(childTopk.get(childIter));
+                else if (childIter >= childTopk.size()) mergedTopk.add(parentTopk.get(parentIter));
+                else {
+                    HashMap<String, String> parentHead = parentTopk.get(parentIter);
+                    HashMap<String, String> childHead = childTopk.get(childIter);
+                    double parentValue = Double.valueOf(parentHead.get(zCol));
+                    double childValue = Double.valueOf(childHead.get(zCol));
+                    if ((parentValue <= childValue && zOrder.equals("asc"))
+                            || (parentValue >= childValue && zOrder.equals("desc"))) {
+                        mergedTopk.add(parentHead);
+                        parentIter++;
+                    } else {
+                        mergedTopk.add(childHead);
+                        childIter++;
+                    }
+                }
+            }
+            parent.put("topk", gson.toJson(mergedTopk));
+        }
+
         // numeric aggregations
         for (String aggKey : child.keySet()) {
-            if (aggKey.equals("count(*)") || aggKey.equals("convexHull")) continue;
+            if (aggKey.equals("count(*)") || aggKey.equals("convexHull") || aggKey.equals("topk"))
+                continue;
             if (!parent.containsKey(aggKey)) parent.put(aggKey, child.get(aggKey));
             else {
                 String curFunc =
@@ -451,33 +506,31 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         }
     }
 
-    private ArrayList<Double> mergeConvex(ArrayList<Double> parent, ArrayList<Double> child) {
+    private ArrayList<ArrayList<Double>> mergeConvex(
+            ArrayList<ArrayList<Double>> parent, ArrayList<ArrayList<Double>> child) {
         Geometry parentGeom = getGeometryFromDoubleArray(parent);
         Geometry childGeom = getGeometryFromDoubleArray(child);
         Geometry union = parentGeom.union(childGeom);
         return getCoordsListOfGeometry(union.convexHull());
     }
 
-    private Geometry getGeometryFromDoubleArray(ArrayList<Double> coords) {
+    private Geometry getGeometryFromDoubleArray(ArrayList<ArrayList<Double>> coords) {
         GeometryFactory gf = new GeometryFactory();
-        int size = coords.size() / 2;
         ArrayList<Point> points = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
-            double x = coords.get(i * 2);
-            double y = coords.get(i * 2 + 1);
+        for (int i = 0; i < coords.size(); i++) {
+            double x = coords.get(i).get(0);
+            double y = coords.get(i).get(1);
             points.add(gf.createPoint(new Coordinate(x, y)));
         }
         Geometry geom = gf.createMultiPoint(GeometryFactory.toPointArray(points));
         return geom;
     }
 
-    private ArrayList<Double> getCoordsListOfGeometry(Geometry geometry) {
+    private ArrayList<ArrayList<Double>> getCoordsListOfGeometry(Geometry geometry) {
         Coordinate[] coordinates = geometry.getCoordinates();
-        ArrayList<Double> coordsList = new ArrayList<>();
-        for (Coordinate coordinate : coordinates) {
-            coordsList.add(coordinate.x);
-            coordsList.add(coordinate.y);
-        }
+        ArrayList<ArrayList<Double>> coordsList = new ArrayList<>();
+        for (Coordinate coordinate : coordinates)
+            coordsList.add(new ArrayList<>(Arrays.asList(coordinate.x, coordinate.y)));
         return coordsList;
     }
 }

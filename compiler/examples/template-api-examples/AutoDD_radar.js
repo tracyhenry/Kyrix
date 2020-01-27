@@ -21,17 +21,19 @@ var autoDD = {
         db: "fifa19",
         query: query
     },
-    x: {
-        field: "shooting",
-        extent: [0, 100]
-    },
-    y: {
-        field: "defending",
-        extent: [100, 0]
-    },
-    z: {
-        field: "cast(wage as int)",
-        order: "desc"
+    layout: {
+        x: {
+            field: "shooting",
+            extent: [0, 100]
+        },
+        y: {
+            field: "defending",
+            extent: [100, 0]
+        },
+        z: {
+            field: "wage",
+            order: "desc"
+        }
     },
     marks: {
         cluster: {
@@ -54,13 +56,22 @@ var autoDD = {
                 }
             },
             config: {
-                // radarRadius: 80,
+                // radarRadius: 80
                 // radarTicks: 5
             }
         },
         hover: {
-            object: renderers.playerRendering,
-            convex: true
+            rankList: {
+                mode: "custom",
+                custom: renderers.playerRendering,
+                topk: 3,
+                orientation: "horizontal",
+                config: {
+                    bboxW: 180,
+                    bboxH: 240
+                }
+            }
+            //boundary: "convexhull"
         }
     },
     config: {

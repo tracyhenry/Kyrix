@@ -264,11 +264,14 @@ function addAutoDD(autoDD, args) {
 
     // add stuff to renderingParam
     this.addRenderingParams({
-        textwrap: require("./template-api/Utilities").textwrap
+        textwrap: require("./template-api/Utilities").textwrap,
+        toLargeNumberNotation: require("./template-api/Utilities")
+            .toLargeNumberNotation
     });
     this.addRenderingParams(autoDD.clusterParams);
-    this.addRenderingParams(autoDD.legendParams);
     this.addRenderingParams(autoDD.aggregateParams);
+    this.addRenderingParams(autoDD.hoverParams);
+    this.addRenderingParams(autoDD.legendParams);
 
     // construct canvases
     var curPyramid = [];
@@ -313,9 +316,11 @@ function addAutoDD(autoDD, args) {
         // set fetching scheme
         if (autoDD.clusterMode == "contour" || autoDD.clusterMode == "heatmap")
             curLayer.setFetchingScheme("dbox", false);
+        //curLayer.setFetchingScheme("tiling");
 
         // set isAutoDD and autoDD ID
         curLayer.setIndexerType("AutoDDInMemoryIndexer");
+        //curLayer.setIndexerType("AutoDDCitusIndexer");
         curLayer.setAutoDDId(this.autoDDs.length - 1 + "_" + i);
 
         // dummy placement
@@ -722,12 +727,20 @@ function saveProject() {
             host: config.serverName,
             user: config.userName,
             password: config.password,
-            qdatabase: "postgres"
+            database: "postgres"
         });
 
         // create Kyrix DB and ignore error
         postgresConn.connect(function(err) {
+            if (err)
+                console.error(
+                    "****** Error in connecting to postgres db\n****** Call Stack from Node:"
+                );
+            else console.log("connected");
+            if (err) throw err;
+
             postgresConn.query(createDbQuery, function(err) {
+                // ignoring the error here
                 var dbConn = new psql.Client({
                     host: config.serverName,
                     user: config.userName,
@@ -737,16 +750,20 @@ function saveProject() {
 
                 // connect and pose queries
                 dbConn.connect(function(err) {
-                    // log to console
-                    if (err) console.error("connection error", err.stack);
+                    if (err)
+                        console.error(
+                            "****** Error in connecting to kyrix db\n****** Call Stack from Node:"
+                        );
                     else console.log("connected");
                     if (err) throw err;
 
                     // create a table and ignore the error
                     dbConn.query(createTableQuery, function(err) {
                         if (err)
-                            console.error("error with CREATE TABLE", err.stack);
-                        else console.log("table created");
+                            console.error(
+                                "****** Error in creating the project table\n****** Call Stack from Node:"
+                            );
+                        else console.log("project table created");
                         if (err) throw err;
 
                         // delete the project if exists

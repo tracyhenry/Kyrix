@@ -49,7 +49,7 @@ public class DbConnector {
         return conn.prepareStatement(sql);
     }
 
-    private static ArrayList<ArrayList<String>> getQueryResult(Statement stmt, String sql)
+    public static ArrayList<ArrayList<String>> getQueryResult(Statement stmt, String sql)
             throws SQLException, ClassNotFoundException {
 
         ArrayList<ArrayList<String>> result = new ArrayList<>();
@@ -71,7 +71,7 @@ public class DbConnector {
         Statement stmt = DbConnector.getStmtByDbName(dbName);
         ArrayList<ArrayList<String>> ret = getQueryResult(stmt, sql);
         stmt.close();
-        closeConnection(dbName);
+        // closeConnection(dbName);
         return ret;
     }
 
@@ -94,7 +94,11 @@ public class DbConnector {
             throws SQLException, ClassNotFoundException {
 
         String key = dbName;
-        if (Config.database == Config.Database.PSQL && isBatch) key += "_batch";
+        isBatch =
+                (isBatch
+                        && (Config.database == Config.Database.CITUS
+                                || Config.database == Config.Database.PSQL));
+        if (isBatch) key += "_batch";
         if (connections.containsKey(key)) return connections.get(key);
         Connection dbConn = null;
         if (Config.database == Config.Database.PSQL || Config.database == Config.Database.CITUS) {
@@ -121,7 +125,7 @@ public class DbConnector {
                             password);
         }
         // to enable fetching data in batch in Postgres, autocommit must be set to false
-        if (isBatch && Config.database == Config.Database.PSQL) dbConn.setAutoCommit(false);
+        if (isBatch) dbConn.setAutoCommit(false);
         connections.put(key, dbConn);
         return dbConn;
     }

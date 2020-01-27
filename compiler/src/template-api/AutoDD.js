@@ -26,7 +26,7 @@ function AutoDD(args) {
             "Constructing AutoDD: cluster mode (marks.cluster.mode) missing."
         );
     var allClusterModes = new Set([
-        "object",
+        "custom",
         "circle",
         "contour",
         "heatmap",
@@ -82,12 +82,12 @@ function AutoDD(args) {
     var requiredArgs = [
         ["data", "query"],
         ["data", "db"],
-        ["x", "field"],
-        ["x", "extent"],
-        ["y", "field"],
-        ["y", "extent"],
-        ["z", "field"],
-        ["z", "order"]
+        ["layout", "x", "field"],
+        ["layout", "x", "extent"],
+        ["layout", "y", "field"],
+        ["layout", "y", "extent"],
+        ["layout", "z", "field"],
+        ["layout", "z", "order"]
     ];
     var requiredArgsTypes = [
         "string",
@@ -130,38 +130,38 @@ function AutoDD(args) {
      * other constraints
      *******************/
     if (
-        args.x.extent != null &&
-        (!Array.isArray(args.x.extent) ||
-            args.x.extent.length != 2 ||
-            typeof args.x.extent[0] != "number" ||
-            typeof args.x.extent[1] != "number")
+        args.layout.x.extent != null &&
+        (!Array.isArray(args.layout.x.extent) ||
+            args.layout.x.extent.length != 2 ||
+            typeof args.layout.x.extent[0] != "number" ||
+            typeof args.layout.x.extent[1] != "number")
     )
         throw new Error("Constructing AutoDD: malformed x.extent");
     if (
-        args.y.extent != null &&
-        (!Array.isArray(args.y.extent) ||
-            args.y.extent.length != 2 ||
-            typeof args.y.extent[0] != "number" ||
-            typeof args.y.extent[1] != "number")
+        args.layout.y.extent != null &&
+        (!Array.isArray(args.layout.y.extent) ||
+            args.layout.y.extent.length != 2 ||
+            typeof args.layout.y.extent[0] != "number" ||
+            typeof args.layout.y.extent[1] != "number")
     )
         throw new Error("Constructing AutoDD: malformed y.extent");
     if (
         "axis" in args.marks &&
-        (args.x.extent == null || args.y.extent == null)
+        (args.layout.x.extent == null || args.layout.y.extent == null)
     )
         throw new Error(
             "Constructing AutoDD: raw data domain needs to be specified for rendering an axis."
         );
     if (
-        (args.x.extent != null && args.y.extent == null) ||
-        (args.x.extent == null && args.y.extent != null)
+        (args.layout.x.extent != null && args.layout.y.extent == null) ||
+        (args.layout.x.extent == null && args.layout.y.extent != null)
     )
         throw new Error(
             "Constructing AutoDD: x extent and y extent must both be provided."
         );
     if (
-        args.marks.cluster.mode == "object" &&
-        !("object" in args.marks.cluster)
+        args.marks.cluster.mode == "custom" &&
+        !("custom" in args.marks.cluster)
     )
         throw new Error(
             "Constructing AutoDD: object renderer (marks.cluster.object) missing."
@@ -176,7 +176,7 @@ function AutoDD(args) {
     if (
         (args.marks.cluster.mode == "radar" ||
             args.marks.cluster.mode == "circle" ||
-            args.marks.cluster.mode == "object") &&
+            args.marks.cluster.mode == "custom") &&
         args.marks.cluster.aggregate.dimensions.length > 0
     )
         throw new Error(
@@ -215,6 +215,46 @@ function AutoDD(args) {
         throw new Error(
             "Constructing AutoDD: there must be exactly 1 aggregate measure for pie charts."
         );
+    if ("rankList" in args.marks.hover) {
+        if (!("mode" in args.marks.hover.rankList))
+            throw new Error(
+                "Constructing AutoDD: hover rankList mode (marks.hover.rankList.mode) is missing."
+            );
+        if (args.marks.hover.rankList.mode == "custom") {
+            if (!("custom" in args.marks.hover.rankList))
+                throw new Error(
+                    "Constructing AutoDD: custom hover rankList renderer (marks.hover.rankList.custom) is missing."
+                );
+            if (typeof args.marks.hover.rankList.custom != "function")
+                throw new Error(
+                    "Constructing AutoDD: hover object renderer (marks.cluster.hover.rankList.custom) is not a function."
+                );
+            if (
+                !("config" in args.marks.hover.rankList) ||
+                !("bboxH" in args.marks.hover.rankList.config) ||
+                !("bboxW" in args.marks.hover.rankList.config)
+            )
+                throw new Error(
+                    "Constructing AutoDD: custom hover ranklist bounding box size missing."
+                );
+        }
+        if (
+            args.marks.hover.rankList.mode == "tabular" &&
+            !("fields" in args.marks.hover.rankList)
+        )
+            throw new Error(
+                "Constructing AutoDD: fields for tabular hover rankList (marks.hover.rankList.fields) is missing."
+            );
+    }
+    if ("boundary" in args.marks.hover)
+        if (
+            !(args.marks.hover.boundary == "convexhull") &&
+            !(args.marks.hover.boundary == "bbox")
+        )
+            throw new Error(
+                "Constructing AutoDD: unrecognized hover boundary type " +
+                    args.marks.hover.boundary
+            );
 
     /************************
      * setting cluster params
@@ -279,20 +319,65 @@ function AutoDD(args) {
         for (var i = pos + 1; i < dimensions.length; i++) pointers[i] = 0;
     }
 
+    /************************
+     * setting hover params
+     ************************/
+    this.hoverParams = {};
+    if ("rankList" in args.marks.hover) {
+        // get in everything in config
+        if ("config" in args.marks.hover.rankList)
+            this.hoverParams = args.marks.hover.rankList.config;
+
+        // mode: currently either tabular or custom
+        this.hoverParams.hoverRankListMode = args.marks.hover.rankList.mode;
+
+        // table fields
+        if (args.marks.hover.rankList.mode == "tabular")
+            this.hoverParams.hoverTableFields =
+                args.marks.hover.rankList.fields;
+
+        // custom topk renderer
+        if (args.marks.hover.rankList.mode == "custom")
+            this.hoverParams.hoverCustomRenderer =
+                args.marks.hover.rankList.custom;
+
+        // topk is 1 by default if unspecified
+        this.hoverParams.topk =
+            "topk" in args.marks.hover.rankList
+                ? args.marks.hover.rankList.topk
+                : 1;
+
+        // orientation of custom ranks
+        this.hoverParams.hoverRankListOrientation =
+            "orientation" in args.marks.hover.rankList
+                ? args.marks.hover.rankList.orientation
+                : "vertical";
+
+        // less important cosmetic parameters are in marks.hover.rankList.config
+        // and we set default values here if unspecified:
+        setPropertiesIfNotExists(this.hoverParams, {
+            // hoverTableCellWidth: 100  <-- change
+            // hoverTableCellHeight: 50  <-- change
+        });
+    }
+    if ("boundary" in args.marks.hover)
+        this.hoverParams.hoverBoundary = args.marks.hover.boundary;
+    this.topk = this.hoverParams.topk != null ? this.hoverParams.topk : 0;
+
     /***************************
      * setting legend parameters
      ***************************/
     // TODO: legend params for different templates
     this.legendParams = {};
     this.legendParams.legendTitle =
-        "title" in args.legend ? args.legend.title : "Legend";
-    if ("domain" in args.legend)
-        this.legendParams.legendDomain = args.legend.domain;
+        "legendTitle" in args.config ? args.config.legendTitle : "Legend";
+    if ("legendDomain" in args.config)
+        this.legendParams.legendDomain = args.config.legendDomain;
 
     /****************
      * setting bboxes
      ****************/
-    if (args.marks.cluster.mode == "object") {
+    if (args.marks.cluster.mode == "custom") {
         if (
             !("bboxW" in args.marks.cluster.config) ||
             !("bboxH" in args.marks.cluster.config)
@@ -312,16 +397,23 @@ function AutoDD(args) {
     else if (args.marks.cluster.mode == "pie") this.bboxW = this.bboxH = 290; // tuned by hand :)
 
     // assign other fields
-    this.hover = args.marks.hover;
-    setPropertiesIfNotExists(this.hover, {convex: false, object: null});
-    this.isHover = this.hover.object != null || this.hover.convex;
-    this.query = args.data.query;
+    this.query = args.data.query.toLowerCase();
     while (this.query.slice(-1) == " " || this.query.slice(-1) == ";")
         this.query = this.query.slice(0, -1);
-    this.query += " order by " + args.z.field + " " + args.z.order + ";";
+    this.query +=
+        " order by " + args.layout.z.field + " " + args.layout.z.order + ";";
+    // assume query is like select * from tbl order by...
+    this.rawTable = this.query
+        .substring(
+            this.query.indexOf("from") + 4,
+            this.query.indexOf("order by")
+        )
+        .replace(/\s/g, "");
     this.db = args.data.db;
-    this.xCol = args.x.field;
-    this.yCol = args.y.field;
+    this.xCol = args.layout.x.field;
+    this.yCol = args.layout.y.field;
+    this.zCol = args.layout.z.field;
+    this.zOrder = args.layout.z.order;
     this.clusterMode = args.marks.cluster.mode;
     this.aggDimensionFields = [];
     for (var i = 0; i < this.aggregateParams.aggDimensions.length; i++)
@@ -331,8 +423,8 @@ function AutoDD(args) {
     this.aggMeasureFields = [];
     for (var i = 0; i < this.aggregateParams.aggMeasures.length; i++)
         this.aggMeasureFields.push(this.aggregateParams.aggMeasures[i].field);
-    this.rendering =
-        "object" in args.marks.cluster ? args.marks.cluster.object : null;
+    this.clusterCustomRenderer =
+        "custom" in args.marks.cluster ? args.marks.cluster.custom : null;
     this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
     this.numLevels = "numLevels" in args.config ? args.config.numLevels : 10;
     this.topLevelWidth =
@@ -341,18 +433,26 @@ function AutoDD(args) {
         "topLevelHeight" in args.config ? args.config.topLevelHeight : 1000;
     this.zoomFactor = "zoomFactor" in args.config ? args.config.zoomFactor : 2;
     this.overlap =
-        "overlap" in this.clusterParams
-            ? this.clusterParams.overlap
-                ? true
-                : false
+        "overlap" in args.layout
+            ? args.layout.overlap
             : this.clusterMode == "contour" || this.clusterMode == "heatmap"
-            ? true
-            : false;
+            ? 0
+            : 1;
     this.axis = "axis" in args.config ? args.config.axis : false;
-    this.loX = args.x.extent != null ? args.x.extent[0] : null;
-    this.loY = args.y.extent != null ? args.y.extent[0] : null;
-    this.hiX = args.x.extent != null ? args.x.extent[1] : null;
-    this.hiY = args.y.extent != null ? args.y.extent[1] : null;
+    this.loX = args.layout.x.extent != null ? args.layout.x.extent[0] : null;
+    this.loY = args.layout.y.extent != null ? args.layout.y.extent[0] : null;
+    this.hiX = args.layout.x.extent != null ? args.layout.x.extent[1] : null;
+    this.hiY = args.layout.y.extent != null ? args.layout.y.extent[1] : null;
+    this.mergeClusterAggs = mergeClusterAggs.toString();
+    this.getCitusSpatialHashKeyBody = getBodyStringOfFunction(
+        getCitusSpatialHashKey
+    );
+    this.singleNodeClusteringBody = getBodyStringOfFunction(
+        singleNodeClustering
+    );
+    this.mergeClustersAlongSplitsBody = getBodyStringOfFunction(
+        mergeClustersAlongSplits
+    );
 }
 
 // get rendering function for an autodd layer based on cluster mode
@@ -360,17 +460,30 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
         REPLACE_ME_processClusterAgg();
+        var maxSize = params["REPLACE_ME_autoDDId" + "_maxWeight"];
         var circleSizeInterpolator = d3
-            .scaleLinear()
-            .domain([1, params.roughN.toString().length - 1])
+            .scaleSqrt()
+            .domain([1, maxSize])
             .range([params.circleMinSize, params.circleMaxSize]);
-        var g = svg.append("g");
+        var g = svg.append("g").classed("hovercircle", true);
+
+        // filter
+        var defs = g.append("defs");
+        var filter = defs.append("filter").attr("id", "filter-demo-glow");
+        var feGaussianBlur = filter
+            .append("feGaussianBlur")
+            .attr("stdDeviation", "2")
+            .attr("result", "coloredBlur");
+        var feMerge = filter.append("feMerge");
+        feMerge.append("feMergeNode").attr("in", "coloredBlur");
+        feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
         g.selectAll("circle")
             .data(data)
             .enter()
             .append("circle")
             .attr("r", function(d) {
-                return circleSizeInterpolator(d.clusterAgg["count(*)"].length);
+                return circleSizeInterpolator(d.clusterAgg["count(*)"]);
             })
             .attr("cx", function(d) {
                 return d.cx;
@@ -378,10 +491,13 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .attr("cy", function(d) {
                 return d.cy;
             })
-            .style("fill-opacity", 0.25)
-            .attr("fill", "honeydew")
-            .attr("stroke", "#ADADAD")
-            .style("stroke-width", "1px")
+            .style("fill-opacity", 0.5)
+            //            .attr("fill", "honeydew")
+            .attr("fill", "#d7dbff")
+            //            .attr("stroke", "#ADADAD")
+            //            .style("stroke-width", "1px")
+            .style("filter", "url(#filter-demo-glow)")
+            .style("pointer-events", "fill")
             .classed("kyrix-retainsizezoom", true);
         g.selectAll("text")
             .data(data)
@@ -389,12 +505,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .append("text")
             .attr("dy", "0.3em")
             .text(function(d) {
-                return d.clusterAgg["count(*)"];
+                return params.toLargeNumberNotation(+d.clusterAgg["count(*)"]);
             })
             .attr("font-size", function(d) {
-                return (
-                    circleSizeInterpolator(d.clusterAgg["count(*)"].length) / 2
-                );
+                return circleSizeInterpolator(d.clusterAgg["count(*)"]) / 2;
             })
             .attr("x", function(d) {
                 return d.cx;
@@ -405,14 +519,14 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
             .style("fill-opacity", 1)
-            .style("fill", "navy")
+            //            .style("fill", "navy")
+            .style("fill", "#0f00d0")
             .style("pointer-events", "none")
             .classed("kyrix-retainsizezoom", true)
             .each(function(d) {
                 params.textwrap(
                     d3.select(this),
-                    circleSizeInterpolator(d.clusterAgg["count(*)"].length) *
-                        1.5
+                    circleSizeInterpolator(d.clusterAgg["count(*)"]) * 1.5
                 );
             });
 
@@ -430,16 +544,19 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .enter()
             .append("text")
             .text(function(d) {
-                return d.clusterAgg["count(*)"];
+                return args.renderingParams.toLargeNumberNotation(
+                    +d.clusterAgg["count(*)"]
+                );
             })
             .attr("x", function(d) {
                 return +d.cx;
             })
             .attr("y", function(d) {
-                return +d.miny;
+                // TODO: y offset needs to be exposed as a parameter
+                return +d.miny + 13;
             })
             .attr("dy", ".35em")
-            .attr("font-size", 20)
+            .attr("font-size", 18)
             .attr("text-anchor", "middle")
             .attr("fill", "#f47142")
             .style("fill-opacity", 1)
@@ -510,42 +627,40 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 "translate(" + (x - radius) + " " + (y - radius) + ")"
             );
 
-        var isHover = REPLACE_ME_is_hover;
-        if (isHover) {
-            g.attr("fill", "none")
-                .attr("stroke", "black")
-                .attr("stroke-opacity", 0)
-                .attr("stroke-linejoin", "round")
-                .selectAll("path")
-                .data(contours)
-                .enter()
-                .append("path")
-                .attr("d", d3.geoPath())
-                .style("fill", d => color(d.value))
-                .style("opacity", params.contourOpacity);
-        } else {
-            var canvas = document.createElement("canvas");
-            var ctx = canvas.getContext("2d");
-            (canvas.width = contourWidth), (canvas.height = contourHeight);
-            g.append("foreignObject")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", contourWidth)
-                .attr("height", contourHeight)
-                .style("overflow", "auto")
-                .node()
-                .appendChild(canvas);
-            d3.select(canvas).style("opacity", REPLACE_ME_CONTOUR_OPACITY);
-            var path = d3.geoPath().context(ctx);
-            for (var i = 0; i < contours.length; i++) {
-                var contour = contours[i];
-                var threshold = contour.value;
-                ctx.beginPath(),
-                    (ctx.fillStyle = color(threshold)),
-                    path(contour),
-                    ctx.fill();
-            }
-        }
+        g.attr("fill", "none")
+            .attr("stroke", "black")
+            .attr("stroke-opacity", 0)
+            .attr("stroke-linejoin", "round")
+            .selectAll("path")
+            .data(contours)
+            .enter()
+            .append("path")
+            .attr("d", d3.geoPath())
+            .style("fill", d => color(d.value))
+            .style("opacity", params.contourOpacity);
+
+        ///////////////// uncomment the following for rendering using canvas
+        // var canvas = document.createElement("canvas");
+        // var ctx = canvas.getContext("2d");
+        // (canvas.width = contourWidth), (canvas.height = contourHeight);
+        // g.append("foreignObject")
+        //     .attr("x", 0)
+        //     .attr("y", 0)
+        //     .attr("width", contourWidth)
+        //     .attr("height", contourHeight)
+        //     .style("overflow", "auto")
+        //     .node()
+        //     .appendChild(canvas);
+        // d3.select(canvas).style("opacity", REPLACE_ME_CONTOUR_OPACITY);
+        // var path = d3.geoPath().context(ctx);
+        // for (var i = 0; i < contours.length; i++) {
+        //     var contour = contours[i];
+        //     var threshold = contour.value;
+        //     ctx.beginPath(),
+        //         (ctx.fillStyle = color(threshold)),
+        //         path(contour),
+        //         ctx.fill();
+        // }
     }
 
     function renderHeatmapBody() {
@@ -963,15 +1078,16 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function processClusterAgg() {
         function getConvexCoordinates(d) {
-            var coords = JSON.parse(d.clusterAgg.convexHull);
-            var size = coords.length / 2;
+            var coords = d.clusterAgg.convexHull;
+            if (typeof coords == "string") coords = JSON.parse(coords);
             var convexHull = [];
-            for (var i = 0; i < size; i++) {
+            for (var i = 0; i < coords.length; i++) {
                 convexHull.push({
-                    x: +coords[i * 2],
-                    y: +coords[i * 2 + 1]
+                    x: +coords[i][0],
+                    y: +coords[i][1]
                 });
             }
+            convexHull.push({x: +coords[0][0], y: +coords[0][1]});
             return convexHull;
         }
 
@@ -1030,7 +1146,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function regularHoverBody() {
-        function showConvex(svg, d) {
+        function convexRenderer(svg, d) {
             var line = d3
                 .line()
                 .x(d => d.x)
@@ -1039,7 +1155,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             g.append("path")
                 .datum(d)
                 .attr("class", "convexHull")
-                .attr("id", "autodd_convexHull")
+                .attr("id", "autodd_boundary_hover")
                 .attr("d", d => line(d.convexHull))
                 .style("fill-opacity", 0)
                 .style("stroke-width", 3)
@@ -1047,29 +1163,176 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .style("stroke", "grey")
                 .style("pointer-events", "none");
         }
-        var objectRenderer = REPLACE_ME_this_rendering;
-        g.selectAll(hoverSelector)
-            .on("mouseover", function(d) {
-                if (REPLACE_ME_show_convex) showConvex(svg, d);
-                objectRenderer(svg, [d], args);
-                svg.selectAll("g:last-of-type")
-                    .attr("id", "autodd_tooltip")
-                    .style("opacity", 0.8)
-                    .style("pointer-events", "none")
-                    .selectAll("*")
-                    .classed("kyrix-retainsizezoom", true)
-                    .each(function() {
-                        zoomRescale(args.viewId, this);
-                    });
-            })
-            .on("mouseleave", function() {
-                d3.selectAll("#autodd_tooltip").remove();
-                d3.selectAll("#autodd_convexHull").remove();
-            });
+
+        function bboxRenderer(svg, d) {
+            var minx = 1e100,
+                miny = 1e100;
+            var maxx = -1e100,
+                maxy = -1e100;
+            for (var i = 0; i < d.convexHull.length; i++) {
+                minx = Math.min(minx, d.convexHull[i].x);
+                miny = Math.min(miny, d.convexHull[i].y);
+                maxx = Math.max(maxx, d.convexHull[i].x);
+                maxy = Math.max(maxy, d.convexHull[i].y);
+            }
+            g = svg.append("g");
+            g.append("rect")
+                .attr("x", minx)
+                .attr("y", miny)
+                .attr("rx", 5)
+                .attr("ry", 5)
+                .attr("width", maxx - minx)
+                .attr("height", maxy - miny)
+                .style("fill-opacity", 0)
+                .style("stroke-width", 3)
+                .style("stroke-opacity", 0.5)
+                .style("stroke", "grey")
+                .style("pointer-events", "none");
+        }
+
+        function tabularRankListRenderer(svg, data, args) {
+            var params = args.renderingParams;
+            var charW = 8;
+            var charH = 15;
+            var paddingH = 10;
+            var paddingW = 14;
+            var headerH = charH + 20;
+
+            var g = svg
+                .append("g")
+                .attr("id", "tabular_hover")
+                .attr("class", "tabular ranklist");
+            var fields = params.hoverTableFields;
+            var widths = [];
+            var totalW = 0,
+                totalH = data.length * (charH + paddingH) + headerH;
+            for (var i = 0; i < fields.length; i++) {
+                var maxlen = 0;
+                for (var j = 0; j < data.length; j++)
+                    maxlen = Math.max(
+                        maxlen,
+                        data[j][fields[i]].toString().length
+                    );
+                maxlen = Math.max(maxlen, fields[i].length);
+                widths.push(maxlen * charW + paddingW);
+                totalW += widths[i];
+            }
+            var basex = data[0].cx - totalW / 2;
+            var basey = data[0].cy - totalH / 2;
+            var runx = basex,
+                runy = basey;
+            for (var i = 0; i < fields.length; i++) {
+                var width = widths[i];
+                // th
+                g.append("rect")
+                    .attr("x", runx)
+                    .attr("y", runy)
+                    .attr("width", width)
+                    .attr("height", headerH)
+                    .attr("style", "fill: #888888; stroke: #c0c4c3;");
+                g.append("text")
+                    .text(fields[i])
+                    .attr("x", runx + width / 2)
+                    .attr("y", runy + headerH / 2)
+                    .attr("style", "fill: #f8f4ed;")
+                    .style("text-anchor", "middle")
+                    .style("font-size", charH + "px")
+                    .attr("dy", "0.35em");
+                runy += headerH;
+                // tr
+                for (var j = 0; j < data.length; j++) {
+                    g.append("rect")
+                        .attr("x", runx)
+                        .attr("y", runy)
+                        .attr("width", width)
+                        .attr("height", charH + paddingH)
+                        .attr("style", "fill: #ebebeb; stroke: #c0c4c3;");
+                    g.append("text")
+                        .text(data[j][fields[i]])
+                        .attr("x", runx + width / 2)
+                        .attr("y", runy + (charH + paddingH) / 2)
+                        .style("text-anchor", "middle")
+                        .style("font-size", charH + "px")
+                        .attr("dy", "0.35em");
+                    runy += charH + paddingH;
+                }
+                runx += width;
+                runy = basey;
+            }
+        }
+
+        // ranklist
+        if ("hoverRankListMode" in params) {
+            var rankListRenderer;
+            if (params.hoverRankListMode == "tabular")
+                rankListRenderer = tabularRankListRenderer;
+            else rankListRenderer = params.hoverCustomRenderer;
+            g.selectAll(hoverSelector)
+                .on("mouseenter.ranklist", function(d) {
+                    // deal with top-k here
+                    // run rankListRenderer for each of the top-k
+                    // for tabular renderer, add a header first
+                    // use params.hoverRankListOrientation for deciding layout
+                    // use params.bboxH(W) for bounding box size
+                    var g = svg.append("g").attr("id", "autodd_ranklist_hover");
+                    var topKData = d.clusterAgg.topk;
+                    if (typeof topKData == "string")
+                        topKData = JSON.parse(topKData);
+                    var topk = topKData.length;
+                    for (var i = 0; i < topk; i++) {
+                        topKData[i].cx = +d.cx;
+                        topKData[i].cy = +d.cy;
+                    }
+                    if (params.hoverRankListMode == "tabular")
+                        rankListRenderer(g, topKData, args);
+                    else {
+                        var orientation = params.hoverRankListOrientation;
+                        var bboxW = params.bboxW;
+                        var bboxH = params.bboxH;
+                        for (var i = 0; i < topk; i++) {
+                            var transX = 0,
+                                transY = 0;
+                            if (orientation == "vertical")
+                                transY = bboxH * (-topk / 2.0 + 0.5 + i);
+                            else transX = bboxW * (-topk / 2.0 + 0.5 + i);
+                            topKData[i].cx += transX;
+                            topKData[i].cy += transY;
+                            rankListRenderer(g, [topKData[i]], args);
+                        }
+                    }
+                    g.style("opacity", 0.8)
+                        .style("pointer-events", "none")
+                        .selectAll("g")
+                        .selectAll("*")
+                        .datum({cx: +d.cx, cy: +d.cy})
+                        .classed("kyrix-retainsizezoom", true)
+                        .each(function() {
+                            zoomRescale(args.viewId, this);
+                        });
+                })
+                .on("mouseleave.ranklist", function() {
+                    d3.selectAll("#autodd_ranklist_hover").remove();
+                });
+        }
+
+        // boundary
+        if ("hoverBoundary" in params)
+            g.selectAll(hoverSelector)
+                .on("mouseover.boundary", function(d) {
+                    var g = svg.append("g").attr("id", "autodd_boundary_hover");
+                    if (params.hoverBoundary == "convexhull")
+                        convexRenderer(g, d);
+                    else if (params.hoverBoundary == "bbox") bboxRenderer(g, d);
+                })
+                .on("mouseleave.boundary", function() {
+                    d3.selectAll("#autodd_boundary_hover").remove();
+                });
     }
 
     function KDEObjectHoverBody() {
-        var objectRenderer = REPLACE_ME_this_rendering;
+        // no topk for KDE for now
+        var objectRenderer = params.hoverCustomRenderer;
+        if (objectRenderer == null) return;
         var hiddenRectSize = 100;
         svg.append("g")
             .selectAll("rect")
@@ -1105,9 +1368,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     var renderFuncBody;
-    if (this.clusterMode == "object") {
+    if (this.clusterMode == "custom") {
         renderFuncBody =
-            "(" + this.rendering.toString() + ")(svg, data, args);\n";
+            "(" +
+            this.clusterCustomRenderer.toString() +
+            ")(svg, data, args);\n";
         if (this.clusterParams.clusterCount)
             renderFuncBody += getBodyStringOfFunction(
                 renderObjectClusterNumBody
@@ -1116,69 +1381,33 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         // render circle
         renderFuncBody = getBodyStringOfFunction(renderCircleBody)
             .replace(
-                /REPLACE_ME_this_rendering/g,
-                this.hover.object != null
-                    ? this.hover.object.toString()
-                    : "null;"
-            )
-            .replace(
                 /REPLACE_ME_processClusterAgg/g,
                 "(" + processClusterAgg.toString() + ")"
-            );
-        if (this.isHover)
-            renderFuncBody += getBodyStringOfFunction(regularHoverBody)
-                .replace(
-                    /REPLACE_ME_this_rendering/g,
-                    this.hover.object.toString()
-                )
-                .replace(/REPLACE_ME_show_convex/g, this.hover.convex);
+            )
+            .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
+        renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     } else if (this.clusterMode == "contour") {
-        renderFuncBody = getBodyStringOfFunction(renderContourBody)
-            .replace(/REPLACE_ME_radius/g, this.bboxH)
-            .replace(/REPLACE_ME_is_hover/g, this.isHover);
-        if (this.isHover)
-            renderFuncBody += getBodyStringOfFunction(
-                KDEObjectHoverBody
-            ).replace(
-                /REPLACE_ME_this_rendering/g,
-                this.hover.object.toString()
-            );
+        renderFuncBody = getBodyStringOfFunction(renderContourBody).replace(
+            /REPLACE_ME_radius/g,
+            this.bboxH
+        );
+        renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody);
     } else if (this.clusterMode == "heatmap") {
         renderFuncBody = getBodyStringOfFunction(renderHeatmapBody).replace(
             /REPLACE_ME_autoDDId/g,
             autoDDArrayIndex + "_" + level
         );
-        if (this.isHover)
-            renderFuncBody += getBodyStringOfFunction(
-                KDEObjectHoverBody
-            ).replace(
-                /REPLACE_ME_this_rendering/g,
-                this.hover.object.toString()
-            );
+        renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody);
     } else if (this.clusterMode == "radar") {
         renderFuncBody = getBodyStringOfFunction(renderRadarBody)
-            .replace(
-                /REPLACE_ME_this_rendering/g,
-                this.hover.object ? this.hover.object.toString() : "null;"
-            )
             .replace(
                 /REPLACE_ME_processClusterAgg/g,
                 "(" + processClusterAgg.toString() + ")"
             )
             .replace(/REPLACE_ME_agg_key_delimiter/g, aggKeyDelimiter);
-        if (this.isHover)
-            renderFuncBody += getBodyStringOfFunction(regularHoverBody)
-                .replace(
-                    /REPLACE_ME_this_rendering/g,
-                    this.hover.object.toString()
-                )
-                .replace(/REPLACE_ME_show_convex/g, this.hover.convex);
+        renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     } else if (this.clusterMode == "pie") {
         renderFuncBody = getBodyStringOfFunction(renderPieBody)
-            .replace(
-                /REPLACE_ME_this_rendering/g,
-                this.hover.object ? this.hover.object.toString() : "null;"
-            )
             .replace(
                 /REPLACE_ME_processClusterAgg/g,
                 "(" + processClusterAgg.toString() + ")"
@@ -1190,13 +1419,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 translatePathSegments.toString()
             )
             .replace(/REPLACE_ME_serialize_func/g, serializePath.toString());
-        if (this.isHover)
-            renderFuncBody += getBodyStringOfFunction(regularHoverBody)
-                .replace(
-                    /REPLACE_ME_this_rendering/g,
-                    this.hover.object.toString()
-                )
-                .replace(/REPLACE_ME_show_convex/g, this.hover.convex);
+        renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     }
     return new Function("svg", "data", "args", renderFuncBody);
 }
@@ -1220,6 +1443,14 @@ function getAxesRenderer(level) {
             .scaleLinear()
             .domain([REPLACE_ME_this_loX, REPLACE_ME_this_hiX])
             .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);
+        /*        var stDate = new Date(0),
+            enDate = new Date(0);
+        stDate.setUTCSeconds(1356998400);
+        enDate.setUTCSeconds(1425167999);
+        var x = d3
+            .scaleTime()
+            .domain([stDate, enDate])
+            .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);*/
         var xAxis = d3.axisBottom().tickSize(-cHeight);
         axes.push({
             dim: "x",
@@ -1278,9 +1509,11 @@ function getLegendRenderer() {
             //8.059274488676564 -9.306048591020996,8.059274488676564Z"
             // .shape("path", d3.symbol().type(d3.symbolDiamond).size(150)())
             .shape("rect")
+            //.orient("horizontal")
             .shapePadding(10)
             .title(params.legendTitle)
             .labelOffset(15)
+            //.titleWidth(200)
             // .labelAlign("start")
             .scale(color);
 
@@ -1291,6 +1524,357 @@ function getLegendRenderer() {
     if (this.clusterMode == "pie")
         renderFuncBody = getBodyStringOfFunction(pieLegendRendererBody);
     return new Function("svg", "data", "args", renderFuncBody);
+}
+
+/**
+ * PLV8 function used by the AutoDDCitusIndexer to calculate Citus
+ * hash keys that result in spatial partitions
+ * @param cx
+ * @param cy
+ * @param partitions
+ * @param hashkeys
+ * @returns {*}
+ */
+function getCitusSpatialHashKey(cx, cy) {
+    if (!("partitions" in plv8)) plv8.partitions = REPLACE_ME_partitions;
+    if (!("hashkeys" in plv8)) plv8.hashkeys = REPLACE_ME_hashkeys;
+
+    var partitions = plv8.partitions;
+    var hashkeys = plv8.hashkeys;
+    var i = 0;
+    while (true) {
+        if (i * 2 + 1 >= partitions.length)
+            return hashkeys[i - (partitions.length - 1) / 2];
+        if (
+            cx >= partitions[i * 2 + 1][0] &&
+            cx <= partitions[i * 2 + 1][2] &&
+            cy >= partitions[i * 2 + 1][1] &&
+            cy <= partitions[i * 2 + 1][3]
+        )
+            i = i * 2 + 1;
+        else i = i * 2 + 2;
+    }
+    return -1;
+}
+
+/**
+ * Merge cluster b in to cluster a. Both are cluster_agg jsons.
+ * used by singleNodeClustering & mergeClustersAlongSplits
+ * @param a
+ * @param b
+ */
+function mergeClusterAggs(a, b) {
+    // count(*)
+    a["count(*)"] += b["count(*)"];
+
+    // convex hulls
+    for (var i = 0; i < b.convexHull.length; i++)
+        a.convexHull.push(b.convexHull[i]);
+    if (a.convexHull.length >= 3) a.convexHull = d3.polygonHull(a.convexHull);
+
+    // topk
+    for (var i = 0; i < b.topk.length; i++) a.topk.push(b.topk[i]);
+    if (zCol != "none")
+        a.topk.sort(function(p, q) {
+            if (zOrder == "asc") return p[zCol] < q[zCol] ? -1 : 1;
+            else return p[zCol] > q[zCol] ? -1 : 1;
+        });
+    var extra = Math.max(a.topk.length - topk, 0);
+    for (var i = 0; i < extra; i++) a.topk.pop();
+    //a.topk = a.topk.slice(0, topk);
+
+    // NNM experiments
+    a.xysqrsum += b.xysqrsum;
+    a.sumX += b.sumX;
+    a.sumY += b.sumY;
+
+    // numeric aggregations
+    bKeys = Object.keys(b);
+    for (var i = 0; i < bKeys.length; i++) {
+        var aggKey = bKeys[i];
+        if (
+            aggKey == "count(*)" ||
+            aggKey == "topk" ||
+            aggKey == "convexHull" ||
+            aggKey == "xysqrsum" ||
+            aggKey == "sumX" ||
+            aggKey == "sumY"
+        )
+            continue;
+        if (!(aggKey in a)) {
+            a[aggKey] = b[aggKey];
+            continue;
+        }
+        var func = aggKey.substring(
+            aggKey.lastIndexOf(aggKeyDelimiter) + aggKeyDelimiter.length,
+            aggKey.lastIndexOf("(")
+        );
+        var aValue = a[aggKey],
+            bValue = b[aggKey];
+        switch (func) {
+            case "count":
+            case "sum":
+            case "sqrsum":
+                a[aggKey] = aValue + bValue;
+                break;
+            case "min":
+                a[aggKey] = Math.min(aValue, bValue);
+                break;
+            case "max":
+                a[aggKey] = Math.max(aValue, bValue);
+                break;
+        }
+    }
+}
+
+/**
+ * PLV8 function used by the AutoDDCitusIndexer for hierarchical clustering
+ * @param clusters
+ * @param autodd
+ */
+function singleNodeClustering(shard, autodd) {
+    function initClusterAgg(d) {
+        d.cluster_agg = JSON.parse(d.cluster_agg);
+        ret = d.cluster_agg;
+        if (Object.keys(ret).length > 1) {
+            // not only count(*), and thus not bottom level
+            // just scale the convex hull
+            for (var i = 0; i < ret.convexHull.length; i++) {
+                ret.convexHull[i][0] /= zoomFactor;
+                ret.convexHull[i][1] /= zoomFactor;
+            }
+            return;
+        }
+
+        // convex hull
+        ret.convexHull = [[d.cx, d.cy]];
+
+        // topk
+        if (topk > 0) {
+            var dd = {};
+            for (var i = 0; i < fields.length; i++) {
+                if (
+                    fields[i] == "hash_key" ||
+                    fields[i] == "minx" ||
+                    fields[i] == "miny" ||
+                    fields[i] == "maxx" ||
+                    fields[i] == "maxy" ||
+                    fields[i] == "cluster_agg" ||
+                    fields[i] == "cx" ||
+                    fields[i] == "cy" ||
+                    fields[i] == "centroid"
+                )
+                    continue;
+                dd[fields[i]] = d[fields[i]];
+            }
+            ret.topk = [dd];
+        } else ret.topk = [];
+
+        // for NNM experiment
+        ret.xysqrsum = d[xCol] * d[xCol] + d[yCol] * d[yCol];
+        ret.sumX = +d[xCol];
+        ret.sumY = +d[yCol];
+
+        // numerical aggregations
+        var dimStr = "";
+        for (var i = 0; i < aggDimensionFields.length; i++)
+            dimStr += (i > 0 ? aggKeyDelimiter : "") + d[aggDimensionFields[i]];
+        // always calculate count(*)
+        ret[dimStr + aggKeyDelimiter + "count(*)"] = 1;
+        for (var i = 0; i < aggMeasureFields.length; i++) {
+            var curField = aggMeasureFields[i];
+            if (curField == "*") continue;
+            var curValue = d[curField];
+            ret[dimStr + aggKeyDelimiter + "sum(" + curField + ")"] = +curValue;
+            ret[dimStr + aggKeyDelimiter + "max(" + curField + ")"] = +curValue;
+            ret[dimStr + aggKeyDelimiter + "min(" + curField + ")"] = +curValue;
+            ret[dimStr + aggKeyDelimiter + "sqrsum(" + curField + ")"] =
+                curValue * curValue;
+        }
+    }
+
+    // get d3
+    if (!("d3" in plv8)) plv8.d3 = require("d3");
+    var d3 = plv8.d3;
+
+    // get merge cluster function
+    if (!("mergeClusterAggs" in plv8))
+        plv8.mergeClusterAggs = REPLACE_ME_merge_cluster_aggs;
+    var mergeClusterAggs = plv8.mergeClusterAggs;
+
+    // fetch in queries
+    var xCol = autodd.xCol;
+    var yCol = autodd.yCol;
+    var zOrder = autodd.zOrder;
+    var zCol = autodd.zCol;
+    var fields = autodd.fields;
+    var types = autodd.types;
+    var sql =
+        "SELECT * FROM " +
+        shard +
+        (zCol != "none" ? " ORDER BY " + zCol + " " + zOrder : "") +
+        ";";
+    var plan = plv8.prepare(sql);
+    var cursor = plan.cursor();
+
+    // initialize a quadtree for existing clusters
+    var zoomFactor = autodd.zoomFactor;
+    var theta = autodd.theta;
+    var bboxH = autodd.bboxH,
+        bboxW = autodd.bboxW;
+    var topk = autodd.topk;
+    var aggKeyDelimiter = autodd.aggKeyDelimiter;
+    var aggDimensionFields = autodd.aggDimensionFields;
+    var aggMeasureFields = autodd.aggMeasureFields;
+    var qt = d3
+        .quadtree()
+        .x(function x(d) {
+            return d.cx;
+        })
+        .y(function y(d) {
+            return d.cy;
+        });
+    var cluster;
+    //    var cnt = 0;
+    while ((cluster = cursor.fetch())) {
+        //        cnt ++;
+        //        if (cnt % 1000 == 0)
+        //            plv8.elog(NOTICE, cnt + " " + qt.size() + " " + qt.extent());
+
+        cluster.cx /= zoomFactor;
+        cluster.cy /= zoomFactor;
+        initClusterAgg(cluster);
+
+        var x0 = cluster.cx - bboxW,
+            x3 = cluster.cx + bboxW;
+        var y0 = cluster.cy - bboxH,
+            y3 = cluster.cy + bboxH;
+        var nn = null,
+            minNcd = -1;
+        qt.visit(function(node, x1, y1, x2, y2) {
+            if (!node.length) {
+                do {
+                    var d = node.data;
+                    var ncd = d3.max([
+                        Math.abs(cluster.cx - d.cx) / bboxW,
+                        Math.abs(cluster.cy - d.cy) / bboxH
+                    ]);
+                    if (ncd <= theta)
+                        if (nn == null || ncd < minNcd)
+                            (nn = d), (minNcd = ncd);
+                } while ((node = node.next));
+            }
+            return x1 >= x3 || y1 >= y3 || x2 < x0 || y2 < y0;
+        });
+
+        if (nn != null)
+            // merge cluster
+            mergeClusterAggs(nn.cluster_agg, cluster.cluster_agg);
+        else qt.add(cluster);
+    }
+    cursor.close();
+    plan.free();
+    plv8.elog(NOTICE, "QT TREE DONE!!!!");
+
+    // use batch insert to put data into the correct table
+    var newClusters = qt.data();
+    var batchSize = 3000;
+    var targetTable = autodd.tableMap[shard];
+    sql = "";
+    for (var i = 0; i < newClusters.length; i++) {
+        if (i % batchSize == 0) {
+            if (sql.length > 0) {
+                // plv8.elog(NOTICE, sql.length);
+                plv8.execute(sql);
+            }
+            sql = "INSERT INTO " + targetTable + "(";
+            for (var j = 0; j < fields.length; j++)
+                sql += (j > 0 ? ", " : "") + fields[j];
+            sql += ") VALUES ";
+        }
+        sql += (i % batchSize > 0 ? ", " : "") + "(";
+        for (var j = 0; j < fields.length; j++) {
+            sql += j > 0 ? ", " : "";
+            var curValue = newClusters[i][fields[j]];
+            if (types[j] == "int4" || types[j] == "float4") sql += curValue;
+            else {
+                if (fields[j] == "cluster_agg")
+                    curValue = JSON.stringify(curValue);
+                if (typeof curValue == "string")
+                    curValue = curValue.replace(/\'/g, "''");
+                sql += "'" + curValue + "'::" + types[j];
+            }
+        }
+        sql += ")";
+    }
+    if (sql.length > 0) plv8.execute(sql);
+
+    var ret = newClusters.length;
+    qt = null;
+    newClusters = null;
+    return ret;
+}
+
+function mergeClustersAlongSplits(clusters, autodd) {
+    // get d3
+    if (!("d3" in plv8)) plv8.d3 = require("d3");
+    var d3 = plv8.d3;
+
+    // get merge cluster function
+    if (!("mergeClusterAggs" in plv8))
+        plv8.mergeClusterAggs = REPLACE_ME_merge_cluster_aggs;
+    var mergeClusterAggs = plv8.mergeClusterAggs;
+
+    var theta = autodd.theta;
+    var zCol = autodd.zCol;
+    var zOrder = autodd.zOrder;
+    var bboxW = autodd.bboxW;
+    var bboxH = autodd.bboxH;
+    var topk = autodd.topk;
+    var dir = autodd.splitDir;
+    var aggKeyDelimiter = autodd.aggKeyDelimiter;
+
+    clusters.sort(function(a, b) {
+        if (dir == "vertical") return a.cy - b.cy;
+        else return a.cx - b.cx;
+    });
+
+    var res = [JSON.parse(JSON.stringify(clusters[0]))];
+    for (var i = 1; i < clusters.length; i++) {
+        var cur = clusters[i];
+        var last = res[res.length - 1];
+        var ncd = Math.max(
+            Math.abs(last.cx - cur.cx) / bboxW,
+            Math.abs(last.cy - cur.cy) / bboxH
+        );
+        if (ncd >= theta)
+            // no conflict
+            res.push(JSON.parse(JSON.stringify(cur)));
+        else {
+            // merge last and cur
+            var lastClusterAgg = JSON.parse(last.cluster_agg);
+            var curClusterAgg = JSON.parse(cur.cluster_agg);
+
+            // merge according to importance order
+            if (
+                (zCol == "none" &&
+                    lastClusterAgg["count(*)"] >= curClusterAgg["count(*)"]) ||
+                (zCol != "none" &&
+                    last[zCol] > cur[zCol] &&
+                    zOrder == "desc") ||
+                (zCol != "none" && last[zCol] < cur[zCol] && zOrder == "asc")
+            ) {
+                mergeClusterAggs(lastClusterAgg, curClusterAgg);
+                last.cluster_agg = JSON.stringify(lastClusterAgg);
+            } else {
+                mergeClusterAggs(curClusterAgg, lastClusterAgg);
+                cur.cluster_agg = JSON.stringify(curClusterAgg);
+                res[res.length - 1] = JSON.parse(JSON.stringify(cur));
+            }
+        }
+    }
+
+    return res;
 }
 
 //define prototype

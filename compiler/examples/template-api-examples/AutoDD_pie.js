@@ -16,17 +16,19 @@ var autoDD = {
         db: "fifa19",
         query: query
     },
-    x: {
-        field: "rating",
-        extent: [40, 100]
-    },
-    y: {
-        field: "wage",
-        extent: [600, 0]
-    },
-    z: {
-        field: "cast(wage as int)",
-        order: "desc"
+    layout: {
+        x: {
+            field: "rating",
+            extent: [40, 100]
+        },
+        y: {
+            field: "wage",
+            extent: [600, 0]
+        },
+        z: {
+            field: "wage",
+            order: "desc"
+        }
     },
     marks: {
         cluster: {
@@ -53,18 +55,20 @@ var autoDD = {
             }
         },
         hover: {
-            object: renderers.playerRendering,
-            convex: true
+            rankList: {
+                mode: "tabular",
+                fields: ["name", "nationality", "rating", "wage"],
+                topk: 3
+            },
+            boundary: "convexhull"
         }
-    },
-    legend: {
-        title: "Age Groups of Soccer Players in FIFA 2019"
-        //domain: ["Under 20", "Under 23", "Under 29", "Older"]
     },
     config: {
         topLevelWidth: 1500,
         topLevelHeight: 1000,
-        axis: true
+        axis: true,
+        legendTitle: "Age Groups of Soccer Players in FIFA 2019",
+        legendDomain: ["Under 20", "Under 23", "Under 29", "Older"]
     }
 };
 

@@ -21,6 +21,7 @@ function Layer(transform, isStatic) {
     this.fetchingScheme = "dbox";
     this.deltaBox = true;
     this.indexerType = "";
+    this.autoDDId = "";
 }
 
 /**
