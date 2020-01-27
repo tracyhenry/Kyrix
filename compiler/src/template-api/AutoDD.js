@@ -182,6 +182,13 @@ function AutoDD(args) {
         throw new Error(
             "Constructing AutoDD: dimension columns (args.marks.cluster.aggregate.dimensions) not allowed for the given cluster mode."
         );
+    if (
+        args.marks.cluster.mode == "circle" &&
+        args.marks.cluster.aggregate.measures.length > 1
+    )
+        throw new Error(
+            "Constructing AutoDD: more than one measure column specified for circle mode."
+        );
     for (var i = 0; i < args.marks.cluster.aggregate.dimensions.length; i++) {
         if (!("field" in args.marks.cluster.aggregate.dimensions[i]))
             throw new Error(
@@ -459,13 +466,23 @@ function AutoDD(args) {
 function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
+        var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
         REPLACE_ME_processClusterAgg();
-        var maxSize = params["REPLACE_ME_autoDDId" + "_maxWeight"];
+        var agg;
+        if (params.aggMeasures.length == 0) agg = "count(*)";
+        else {
+            var curMeasure = params.aggMeasures[0];
+            agg = curMeasure.function + "(" + curMeasure.field + ")";
+        }
+        var minDomain = params["REPLACE_ME_autoDDId_" + agg + "_min"];
+        var maxDomain = params["REPLACE_ME_autoDDId_" + agg + "_max"];
+        agg = aggKeyDelimiter + agg;
         var circleSizeInterpolator = d3
             .scaleSqrt()
-            .domain([1, maxSize])
+            .domain([minDomain, maxDomain])
             .range([params.circleMinSize, params.circleMaxSize]);
         var g = svg.append("g").classed("hovercircle", true);
+        g.style("opacity", 0);
 
         // filter
         var defs = g.append("defs");
@@ -483,7 +500,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .enter()
             .append("circle")
             .attr("r", function(d) {
-                return circleSizeInterpolator(d.clusterAgg["count(*)"]);
+                return circleSizeInterpolator(d.clusterAgg[agg]);
             })
             .attr("cx", function(d) {
                 return d.cx;
@@ -496,7 +513,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .attr("fill", "#d7dbff")
             //            .attr("stroke", "#ADADAD")
             //            .style("stroke-width", "1px")
-            .style("filter", "url(#filter-demo-glow)")
+            //            .style("filter", "url(#filter-demo-glow)")
             .style("pointer-events", "fill")
             .classed("kyrix-retainsizezoom", true);
         g.selectAll("text")
@@ -505,10 +522,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .append("text")
             .attr("dy", "0.3em")
             .text(function(d) {
-                return params.toLargeNumberNotation(+d.clusterAgg["count(*)"]);
+                return params.toLargeNumberNotation(+d.clusterAgg[agg]);
             })
             .attr("font-size", function(d) {
-                return circleSizeInterpolator(d.clusterAgg["count(*)"]) / 2;
+                return circleSizeInterpolator(d.clusterAgg[agg]) / 2;
             })
             .attr("x", function(d) {
                 return d.cx;
@@ -526,9 +543,14 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .each(function(d) {
                 params.textwrap(
                     d3.select(this),
-                    circleSizeInterpolator(d.clusterAgg["count(*)"]) * 1.5
+                    circleSizeInterpolator(d.clusterAgg[agg]) * 1.5
                 );
             });
+
+        // fade in
+        g.transition()
+            .duration(params.fadeInDuration)
+            .style("opacity", 1);
 
         // for hover
         var hoverSelector = "circle";
@@ -717,8 +739,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var alphaCanvas = document.createElement("canvas");
         alphaCanvas.width = heatmapWidth;
         alphaCanvas.height = heatmapHeight;
-        var minWeight = params["REPLACE_ME_autoDDId" + "_minWeight"]; // set in the BGRP (back-end generated rendering params)
-        var maxWeight = params["REPLACE_ME_autoDDId" + "_maxWeight"]; // set in the BGRP
+        var minWeight = params["REPLACE_ME_autoDDId" + "_count(*)_min"]; // set in the BGRP (back-end generated rendering params)
+        var maxWeight = params["REPLACE_ME_autoDDId" + "_count(*)_max"]; // set in the BGRP
         var alphaCtx = alphaCanvas.getContext("2d");
         var tpl = _getPointTemplate(radius);
         for (var i = 0; i < translatedData.length; i++) {
@@ -810,6 +832,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var params = args.renderingParams;
         var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
         var g = svg.append("g");
+        g.style("opacity", 0);
 
         // Step 1: Pre-process clusterAgg
         REPLACE_ME_processClusterAgg();
@@ -957,6 +980,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .classed("kyrix-retainsizezoom", true);
         });
 
+        // fade in
+        g.transition()
+            .duration(params.fadeInDuration)
+            .style("opacity", 1);
+
         // for hover
         g.selectAll(".radarhover")
             .data(data)
@@ -979,6 +1007,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var serialize = REPLACE_ME_serialize_func;
 
         var g = svg.append("g");
+        g.style("opacity", 0);
 
         // Step 1: Pre-process clusterAgg
         REPLACE_ME_processClusterAgg();
@@ -1062,6 +1091,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .style("fill", "grey")
             .style("pointer-events", "none")
             .classed("kyrix-retainsizezoom", true);
+
+        // fade in
+        g.transition()
+            .duration(params.fadeInDuration)
+            .style("opacity", 1);
 
         // for hover
         g.selectAll(".piehover")
@@ -1384,6 +1418,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 /REPLACE_ME_processClusterAgg/g,
                 "(" + processClusterAgg.toString() + ")"
             )
+            .replace(/REPLACE_ME_agg_key_delimiter/g, aggKeyDelimiter)
             .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
         renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     } else if (this.clusterMode == "contour") {
