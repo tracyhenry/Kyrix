@@ -482,6 +482,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .domain([minDomain, maxDomain])
             .range([params.circleMinSize, params.circleMaxSize]);
         var g = svg.append("g").classed("hovercircle", true);
+        g.style("opacity", 0);
 
         // filter
         var defs = g.append("defs");
@@ -512,7 +513,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .attr("fill", "#d7dbff")
             //            .attr("stroke", "#ADADAD")
             //            .style("stroke-width", "1px")
-            .style("filter", "url(#filter-demo-glow)")
+            //            .style("filter", "url(#filter-demo-glow)")
             .style("pointer-events", "fill")
             .classed("kyrix-retainsizezoom", true);
         g.selectAll("text")
@@ -545,6 +546,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     circleSizeInterpolator(d.clusterAgg[agg]) * 1.5
                 );
             });
+
+        // fade in
+        g.transition()
+            .duration(params.fadeInDuration)
+            .style("opacity", 1);
 
         // for hover
         var hoverSelector = "circle";
@@ -826,6 +832,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var params = args.renderingParams;
         var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
         var g = svg.append("g");
+        g.style("opacity", 0);
 
         // Step 1: Pre-process clusterAgg
         REPLACE_ME_processClusterAgg();
@@ -973,6 +980,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 .classed("kyrix-retainsizezoom", true);
         });
 
+        // fade in
+        g.transition()
+            .duration(params.fadeInDuration)
+            .style("opacity", 1);
+
         // for hover
         g.selectAll(".radarhover")
             .data(data)
@@ -995,6 +1007,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var serialize = REPLACE_ME_serialize_func;
 
         var g = svg.append("g");
+        g.style("opacity", 0);
 
         // Step 1: Pre-process clusterAgg
         REPLACE_ME_processClusterAgg();
@@ -1078,6 +1091,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .style("fill", "grey")
             .style("pointer-events", "none")
             .classed("kyrix-retainsizezoom", true);
+
+        // fade in
+        g.transition()
+            .duration(params.fadeInDuration)
+            .style("opacity", 1);
 
         // for hover
         g.selectAll(".piehover")

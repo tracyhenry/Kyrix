@@ -5,6 +5,7 @@ var param = {};
 param.semanticZoomEnteringDelta = 0.5;
 param.semanticZoomEnteringDuration = 1300;
 param.literalZoomDuration = 500;
+param.literalZoomFadeOutDuration = 150;
 
 // semantic zoom scale factor
 param.semanticZoomScaleFactor = 4;

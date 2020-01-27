@@ -268,6 +268,7 @@ function addAutoDD(autoDD, args) {
         toLargeNumberNotation: require("./template-api/Utilities")
             .toLargeNumberNotation
     });
+    this.addRenderingParams({fadeInDuration: 200});
     this.addRenderingParams(autoDD.clusterParams);
     this.addRenderingParams(autoDD.aggregateParams);
     this.addRenderingParams(autoDD.hoverParams);

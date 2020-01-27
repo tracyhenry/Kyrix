@@ -571,6 +571,10 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
     if (tilePromise != null || dboxPromise != null)
         Promise.all([tilePromise, dboxPromise]).then(function() {
             if (gvd.animation != param.semanticZoom)
-                d3.selectAll(viewClass + ".oldlayerg").remove();
+                d3.selectAll(viewClass + ".oldlayerg")
+                    .transition()
+                    .duration(param.literalZoomFadeOutDuration)
+                    .style("opacity", 0)
+                    .remove();
         });
 }
