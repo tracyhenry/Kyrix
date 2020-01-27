@@ -32,7 +32,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     private final int virtualViewportSize = 1000;
     private double overlappingThreshold = 1.0;
     private final String aggKeyDelimiter = "__";
-    private final transient Gson gson;
+    private final Gson gson;
+    private int autoDDIndex, numLevels;
 
     // One Rtree per level to store samples
     // https://github.com/davidmoten/rtree
@@ -61,9 +62,9 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         if (levelId > 0) return;
 
         // get current AutoDD object
-        int autoDDIndex = Integer.valueOf(curAutoDDId.substring(0, curAutoDDId.indexOf("_")));
+        autoDDIndex = Integer.valueOf(curAutoDDId.substring(0, curAutoDDId.indexOf("_")));
         autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
-        int numLevels = autoDD.getNumLevels();
+        numLevels = autoDD.getNumLevels();
         int numRawColumns = autoDD.getColumnNames().size();
 
         System.out.println("aggDimensionFields: " + autoDD.getAggDimensionFields());
@@ -86,13 +87,11 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
         // store raw query results into memory
         rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
-        // add row number as a BGRP
-        Main.getProject().addBGRP("roughN", String.valueOf(rawRows.size()));
 
         // sample for each level
         Rtrees = new ArrayList<>();
         for (int i = 0; i < numLevels; i++) Rtrees.add(RTree.create());
-        for (int i = 0; i < numLevels; i++) createMVForLevel(i, autoDDIndex);
+        for (int i = 0; i < numLevels; i++) createMVForLevel(i);
 
         // compute cluster Aggregate
         // a fake bottom level for non-sampled objects
@@ -106,13 +105,12 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
         }
 
-        for (int i = numLevels; i >= 0; i--) {
+        for (int i = numLevels; i > 0; i--) {
             // all samples
             Iterable<Entry<ArrayList<String>, Rectangle>> curSamples =
                     Rtrees.get(i).entries().toBlocking().toIterable();
 
             // for renderers
-            int minWeight = Integer.MAX_VALUE, maxWeight = Integer.MIN_VALUE;
             for (Entry<ArrayList<String>, Rectangle> o : curSamples) {
                 ArrayList<String> curRow = o.value();
 
@@ -120,11 +118,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 String curAggStr = curRow.get(numRawColumns);
                 HashMap<String, String> curClusterAgg;
                 curClusterAgg = gson.fromJson(curAggStr, HashMap.class);
-
-                int count = Integer.valueOf(curClusterAgg.get("count(*)"));
-                minWeight = Math.min(minWeight, count);
-                maxWeight = Math.max(maxWeight, count);
-                if (i == 0) continue;
 
                 // find its nearest neighbor in one level up
                 // using binary search + Rtree
@@ -169,13 +162,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 mergeClusterAgg(nnAggMap, curClusterAgg);
                 nearestNeighbor.set(numRawColumns, gson.toJson(nnAggMap));
             }
-
-            // add min & max weight into rendering params
-            if (i < numLevels) {
-                curAutoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(i);
-                Main.getProject().addBGRP(curAutoDDId + "_minWeight", String.valueOf(minWeight));
-                Main.getProject().addBGRP(curAutoDDId + "_maxWeight", String.valueOf(maxWeight));
-            }
         }
 
         // create tables
@@ -186,7 +172,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         bboxStmt.executeUpdate(psql);
         for (int i = 0; i < numLevels; i++) {
             // step 0: create tables for storing bboxes
-            String bboxTableName = getAutoDDBboxTableName(autoDDIndex, i);
+            String bboxTableName = getAutoDDBboxTableName(i);
 
             // drop table if exists
             String sql = "drop table if exists " + bboxTableName + ";";
@@ -205,7 +191,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         // insert samples
         for (int i = 0; i < numLevels; i++) {
 
-            String bboxTableName = getAutoDDBboxTableName(autoDDIndex, i);
+            String bboxTableName = getAutoDDBboxTableName(i);
             String insertSql = "insert into " + bboxTableName + " values (";
             for (int j = 0; j < numRawColumns + 7; j++) insertSql += "?, ";
             insertSql += "ST_GeomFromText(?));";
@@ -251,6 +237,9 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             bboxStmt.executeUpdate(sql);
         }
 
+        // calculate BGRP
+        calculateBGRP();
+
         // commit & close connections
         bboxStmt.close();
         DbConnector.closeConnection(Config.databaseName);
@@ -261,8 +250,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         autoDD = null;
     }
 
-    private void createMVForLevel(int level, int autoDDIndex)
-            throws SQLException, ClassNotFoundException {
+    private void createMVForLevel(int level) throws SQLException, ClassNotFoundException {
 
         System.out.println("Sampling for level " + level + "...");
         AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
@@ -326,7 +314,74 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         }
     }
 
-    private String getAutoDDBboxTableName(int autoDDIndex, int level) {
+    private void calculateBGRP() throws SQLException, ClassNotFoundException {
+
+        // add row number as a BGRP
+        Main.getProject().addBGRP("roughN", String.valueOf(rawRows.size()));
+
+        // add min & max weight into rendering params
+        // min/max sum/count for all measure fields
+        // no grouping at this point
+        // TODO: more agg functions
+        for (int i = 0; i < numLevels; i++) {
+            String tableName = getAutoDDBboxTableName(i);
+            String curAutoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(i);
+
+            // min count(*)
+            String sql =
+                    "SELECT min((clusterAgg::jsonb->>'count(*)')::int) FROM " + tableName + ";";
+            long retInt =
+                    Long.valueOf(
+                            DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0));
+            Main.getProject().addBGRP(curAutoDDId + "_count(*)_min", String.valueOf(retInt));
+
+            // max count(*)
+            sql = "SELECT max((clusterAgg::jsonb->>'count(*)')::int) FROM " + tableName + ";";
+            retInt =
+                    Long.valueOf(
+                            DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0));
+            Main.getProject().addBGRP(curAutoDDId + "_count(*)_max", String.valueOf(retInt));
+
+            for (int j = 0; j < autoDD.getAggMeasureFields().size(); j++) {
+                String curField = autoDD.getAggMeasureFields().get(j);
+                if (curField.equals("*")) continue;
+
+                // min sum(curField)
+                sql =
+                        "SELECT min((clusterAgg::jsonb->>'"
+                                + aggKeyDelimiter
+                                + "sum("
+                                + curField
+                                + ")')::float) FROM "
+                                + tableName
+                                + ";";
+                double retDbl =
+                        Double.valueOf(
+                                DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0));
+                Main.getProject()
+                        .addBGRP(
+                                curAutoDDId + "_sum(" + curField + ")_min", String.valueOf(retDbl));
+
+                // max sum(curField)
+                sql =
+                        "SELECT max((clusterAgg::jsonb->>'"
+                                + aggKeyDelimiter
+                                + "sum("
+                                + curField
+                                + ")')::float) FROM "
+                                + tableName
+                                + ";";
+                retDbl =
+                        Double.valueOf(
+                                DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0));
+                Main.getProject()
+                        .addBGRP(
+                                curAutoDDId + "_sum(" + curField + ")_max", String.valueOf(retDbl));
+            }
+        }
+    }
+
+    private String getAutoDDBboxTableName(int level) {
 
         String autoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(level);
         for (Canvas c : Main.getProject().getCanvases()) {
