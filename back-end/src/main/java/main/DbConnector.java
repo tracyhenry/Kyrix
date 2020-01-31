@@ -68,7 +68,7 @@ public class DbConnector {
     public static ArrayList<ArrayList<String>> getQueryResult(String dbName, String sql)
             throws SQLException, ClassNotFoundException {
 
-        Statement stmt = DbConnector.getStmtByDbName(dbName);
+        Statement stmt = DbConnector.getStmtByDbName(dbName, true);
         ArrayList<ArrayList<String>> ret = getQueryResult(stmt, sql);
         stmt.close();
         // closeConnection(dbName);

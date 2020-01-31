@@ -200,7 +200,7 @@ function serializePath(path) {
  * @returns {*}
  */
 function toLargeNumberNotation(ct) {
-    if (ct < 1000) return ct;
+    if (ct < 1000) return ct.toFixed(1);
     if (ct >= 1000 && ct < 1000000) {
         ct /= 1000.0;
         return ct.toFixed(0) + "K";

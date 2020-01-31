@@ -476,7 +476,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         }
         var minDomain = params["REPLACE_ME_autoDDId_" + agg + "_min"];
         var maxDomain = params["REPLACE_ME_autoDDId_" + agg + "_max"];
-        agg = aggKeyDelimiter + agg;
+        if (agg !== "count(*)") agg = aggKeyDelimiter + agg;
         var circleSizeInterpolator = d3
             .scaleSqrt()
             .domain([minDomain, maxDomain])
@@ -485,7 +485,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         g.style("opacity", 0);
 
         // filter
-        var defs = g.append("defs");
+        /*        var defs = g.append("defs");
         var filter = defs.append("filter").attr("id", "filter-demo-glow");
         var feGaussianBlur = filter
             .append("feGaussianBlur")
@@ -493,7 +493,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .attr("result", "coloredBlur");
         var feMerge = filter.append("feMerge");
         feMerge.append("feMergeNode").attr("in", "coloredBlur");
-        feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+        feMerge.append("feMergeNode").attr("in", "SourceGraphic"); */
 
         g.selectAll("circle")
             .data(data)
@@ -1242,11 +1242,17 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 totalH = data.length * (charH + paddingH) + headerH;
             for (var i = 0; i < fields.length; i++) {
                 var maxlen = 0;
-                for (var j = 0; j < data.length; j++)
+                for (var j = 0; j < data.length; j++) {
+                    if (!isNaN(data[j][fields[i]]))
+                        data[j][fields[i]] =
+                            Math.round(
+                                (+data[j][fields[i]] + Number.EPSILON) * 100
+                            ) / 100;
                     maxlen = Math.max(
                         maxlen,
                         data[j][fields[i]].toString().length
                     );
+                }
                 maxlen = Math.max(maxlen, fields[i].length);
                 widths.push(maxlen * charW + paddingW);
                 totalW += widths[i];

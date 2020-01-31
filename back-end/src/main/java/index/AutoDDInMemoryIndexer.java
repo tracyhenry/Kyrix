@@ -350,7 +350,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 sql =
                         "SELECT min((clusterAgg::jsonb->>'"
                                 + aggKeyDelimiter
-                                + "sum("
+                                + "avg("
                                 + curField
                                 + ")')::float) FROM "
                                 + tableName
@@ -360,13 +360,13 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                                 DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0));
                 Main.getProject()
                         .addBGRP(
-                                curAutoDDId + "_sum(" + curField + ")_min", String.valueOf(retDbl));
+                                curAutoDDId + "_avg(" + curField + ")_min", String.valueOf(retDbl));
 
                 // max sum(curField)
                 sql =
                         "SELECT max((clusterAgg::jsonb->>'"
                                 + aggKeyDelimiter
-                                + "sum("
+                                + "avg("
                                 + curField
                                 + ")')::float) FROM "
                                 + tableName
@@ -376,7 +376,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                                 DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0));
                 Main.getProject()
                         .addBGRP(
-                                curAutoDDId + "_sum(" + curField + ")_max", String.valueOf(retDbl));
+                                curAutoDDId + "_avg(" + curField + ")_max", String.valueOf(retDbl));
             }
         }
     }
@@ -454,6 +454,9 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                         curDimensionStr + aggKeyDelimiter + "sum(" + curMeasureField + ")",
                         curValue);
                 clusterAgg.put(
+                        curDimensionStr + aggKeyDelimiter + "avg(" + curMeasureField + ")",
+                        curValue);
+                /*                clusterAgg.put(
                         curDimensionStr + aggKeyDelimiter + "max(" + curMeasureField + ")",
                         curValue);
                 clusterAgg.put(
@@ -461,7 +464,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                         curValue);
                 clusterAgg.put(
                         curDimensionStr + aggKeyDelimiter + "sqrsum(" + curMeasureField + ")",
-                        String.valueOf(Double.valueOf(curValue) * Double.valueOf(curValue)));
+                        String.valueOf(Double.valueOf(curValue) * Double.valueOf(curValue)));*/
             }
         }
 
@@ -549,6 +552,17 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     case "sum":
                     case "sqrsum":
                         parent.put(aggKey, String.valueOf(parentValue + childValue));
+                        break;
+                    case "avg":
+                        String countKey =
+                                aggKey.substring(0, aggKey.lastIndexOf("avg")) + "count(*)";
+                        double parentCount = Double.valueOf(parent.get(countKey));
+                        double childCount = Double.valueOf(child.get(countKey));
+                        parent.put(
+                                aggKey,
+                                String.valueOf(
+                                        (parentValue * parentCount + childValue * childCount)
+                                                / (parentCount + childCount)));
                         break;
                     case "min":
                         parent.put(aggKey, String.valueOf(Math.min(parentValue, childValue)));
