@@ -468,6 +468,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var params = args.renderingParams;
         var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
         REPLACE_ME_processClusterAgg();
+
+        // set up d3.scale for circle/text size
         var agg;
         if (params.aggMeasures.length == 0) agg = "count(*)";
         else {
@@ -481,20 +483,10 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .scaleSqrt()
             .domain([minDomain, maxDomain])
             .range([params.circleMinSize, params.circleMaxSize]);
+
+        // append circles & text
         var g = svg.append("g").classed("hovercircle", true);
         g.style("opacity", 0);
-
-        // filter
-        /*        var defs = g.append("defs");
-        var filter = defs.append("filter").attr("id", "filter-demo-glow");
-        var feGaussianBlur = filter
-            .append("feGaussianBlur")
-            .attr("stdDeviation", "2")
-            .attr("result", "coloredBlur");
-        var feMerge = filter.append("feMerge");
-        feMerge.append("feMergeNode").attr("in", "coloredBlur");
-        feMerge.append("feMergeNode").attr("in", "SourceGraphic"); */
-
         g.selectAll("circle")
             .data(data)
             .enter()
@@ -513,7 +505,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .attr("fill", "#d7dbff")
             //            .attr("stroke", "#ADADAD")
             //            .style("stroke-width", "1px")
-            //            .style("filter", "url(#filter-demo-glow)")
             .style("pointer-events", "fill")
             .classed("kyrix-retainsizezoom", true);
         g.selectAll("text")

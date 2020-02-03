@@ -33,7 +33,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     private double overlappingThreshold = 1.0;
     private final String aggKeyDelimiter = "__";
     private final Gson gson;
-    private int autoDDIndex, numLevels;
+    private int autoDDIndex, numLevels, numRawColumns;
+    private Statement bboxStmt;
 
     // One Rtree per level to store samples
     // https://github.com/davidmoten/rtree
@@ -60,12 +61,32 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         String curAutoDDId = c.getLayers().get(layerId).getAutoDDId();
         int levelId = Integer.valueOf(curAutoDDId.substring(curAutoDDId.indexOf("_") + 1));
         if (levelId > 0) return;
-
-        // get current AutoDD object
         autoDDIndex = Integer.valueOf(curAutoDDId.substring(0, curAutoDDId.indexOf("_")));
+
+        // set common variables
+        setCommonVariables();
+
+        // sample for levels
+        sampleForLevels();
+
+        // compute cluster aggregations
+        computeClusterAggs();
+
+        // write stuff to the database
+        writeToDB();
+
+        // calculate BGRP
+        calculateBGRP();
+
+        // clean up
+        cleanUp();
+    }
+
+    private void setCommonVariables() throws SQLException, ClassNotFoundException {
+        // get current AutoDD object
         autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
         numLevels = autoDD.getNumLevels();
-        int numRawColumns = autoDD.getColumnNames().size();
+        numRawColumns = autoDD.getColumnNames().size();
 
         System.out.println("aggDimensionFields: " + autoDD.getAggDimensionFields());
         System.out.println("aggMeasureFields: " + autoDD.getAggMeasureFields());
@@ -87,13 +108,15 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
         // store raw query results into memory
         rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
+    }
+
+    private void sampleForLevels() throws SQLException, ClassNotFoundException {
 
         // sample for each level
         Rtrees = new ArrayList<>();
         for (int i = 0; i < numLevels; i++) Rtrees.add(RTree.create());
-        for (int i = 0; i < numLevels; i++) createMVForLevel(i);
+        for (int i = 0; i < numLevels; i++) sampleForLevel(i);
 
-        // compute cluster Aggregate
         // a fake bottom level for non-sampled objects
         Rtrees.add(RTree.create());
         for (ArrayList<String> rawRow : rawRows) {
@@ -104,7 +127,75 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     numLevels,
                     Rtrees.get(numLevels).add(bboxRow, Geometries.rectangle(0, 0, 0, 0)));
         }
+    }
 
+    private void sampleForLevel(int level) throws SQLException, ClassNotFoundException {
+
+        System.out.println("Sampling for level " + level + "...");
+        AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
+        int numLevels = autoDD.getNumLevels();
+
+        // loop through raw query results, sample one by one.
+        for (ArrayList<String> rawRow : rawRows) {
+
+            ArrayList<String> bboxRow = new ArrayList<>();
+            for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
+
+            // place holder for cluster aggregate field
+            bboxRow.add(gson.toJson(getInitialClusterAgg(rawRow, false)));
+
+            // centroid of this tuple
+            double cx =
+                    autoDD.getCanvasCoordinate(
+                            level, Double.valueOf(rawRow.get(autoDD.getXColId())), true);
+            double cy =
+                    autoDD.getCanvasCoordinate(
+                            level, Double.valueOf(rawRow.get(autoDD.getYColId())), false);
+
+            // check overlap
+            double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
+            double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
+            double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
+            double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
+            Iterable<Entry<ArrayList<String>, Rectangle>> overlappingSamples =
+                    Rtrees.get(level)
+                            .search(Geometries.rectangle(minx, miny, maxx, maxy))
+                            .toBlocking()
+                            .toIterable();
+            if (overlappingSamples.iterator().hasNext()) continue;
+
+            // sample this object, insert to all levels below this level
+            for (int i = level; i < numLevels; i++) {
+                cx =
+                        autoDD.getCanvasCoordinate(
+                                i, Double.valueOf(bboxRow.get(autoDD.getXColId())), true);
+                cy =
+                        autoDD.getCanvasCoordinate(
+                                i, Double.valueOf(bboxRow.get(autoDD.getYColId())), false);
+                minx = cx - autoDD.getBboxW() / 2;
+                miny = cy - autoDD.getBboxH() / 2;
+                maxx = cx + autoDD.getBboxW() / 2;
+                maxy = cy + autoDD.getBboxH() / 2;
+                ArrayList<String> curRow = new ArrayList<>(bboxRow);
+                curRow.add(String.valueOf(cx));
+                curRow.add(String.valueOf(cy));
+                curRow.add(String.valueOf(minx));
+                curRow.add(String.valueOf(miny));
+                curRow.add(String.valueOf(maxx));
+                curRow.add(String.valueOf(maxy));
+                minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
+                miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
+                maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
+                maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
+                Rtrees.set(
+                        i, Rtrees.get(i).add(curRow, Geometries.rectangle(minx, miny, maxx, maxy)));
+            }
+        }
+    }
+
+    private void computeClusterAggs() {
+
+        // compute cluster Aggregate
         for (int i = numLevels; i > 0; i--) {
             // all samples
             Iterable<Entry<ArrayList<String>, Rectangle>> curSamples =
@@ -163,9 +254,11 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 nearestNeighbor.set(numRawColumns, gson.toJson(nnAggMap));
             }
         }
+    }
 
+    private void writeToDB() throws SQLException, ClassNotFoundException {
         // create tables
-        Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
+        bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
         String psql = "CREATE EXTENSION if not exists postgis;";
         bboxStmt.executeUpdate(psql);
         psql = "CREATE EXTENSION if not exists postgis_topology;";
@@ -236,82 +329,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
             bboxStmt.executeUpdate(sql);
         }
-
-        // calculate BGRP
-        calculateBGRP();
-
-        // commit & close connections
-        bboxStmt.close();
-        DbConnector.closeConnection(Config.databaseName);
-
-        // release memory
-        Rtrees = null;
-        rawRows = null;
-        autoDD = null;
-    }
-
-    private void createMVForLevel(int level) throws SQLException, ClassNotFoundException {
-
-        System.out.println("Sampling for level " + level + "...");
-        AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
-        int numLevels = autoDD.getNumLevels();
-
-        // loop through raw query results, sample one by one.
-        for (ArrayList<String> rawRow : rawRows) {
-
-            ArrayList<String> bboxRow = new ArrayList<>();
-            for (int i = 0; i < rawRow.size(); i++) bboxRow.add(rawRow.get(i));
-
-            // place holder for cluster aggregate field
-            bboxRow.add(gson.toJson(getInitialClusterAgg(rawRow, false)));
-
-            // centroid of this tuple
-            double cx =
-                    autoDD.getCanvasCoordinate(
-                            level, Double.valueOf(rawRow.get(autoDD.getXColId())), true);
-            double cy =
-                    autoDD.getCanvasCoordinate(
-                            level, Double.valueOf(rawRow.get(autoDD.getYColId())), false);
-
-            // check overlap
-            double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
-            double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
-            double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
-            double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
-            Iterable<Entry<ArrayList<String>, Rectangle>> overlappingSamples =
-                    Rtrees.get(level)
-                            .search(Geometries.rectangle(minx, miny, maxx, maxy))
-                            .toBlocking()
-                            .toIterable();
-            if (overlappingSamples.iterator().hasNext()) continue;
-
-            // sample this object, insert to all levels below this level
-            for (int i = level; i < numLevels; i++) {
-                cx =
-                        autoDD.getCanvasCoordinate(
-                                i, Double.valueOf(bboxRow.get(autoDD.getXColId())), true);
-                cy =
-                        autoDD.getCanvasCoordinate(
-                                i, Double.valueOf(bboxRow.get(autoDD.getYColId())), false);
-                minx = cx - autoDD.getBboxW() / 2;
-                miny = cy - autoDD.getBboxH() / 2;
-                maxx = cx + autoDD.getBboxW() / 2;
-                maxy = cy + autoDD.getBboxH() / 2;
-                ArrayList<String> curRow = new ArrayList<>(bboxRow);
-                curRow.add(String.valueOf(cx));
-                curRow.add(String.valueOf(cy));
-                curRow.add(String.valueOf(minx));
-                curRow.add(String.valueOf(miny));
-                curRow.add(String.valueOf(maxx));
-                curRow.add(String.valueOf(maxy));
-                minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
-                miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
-                maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
-                maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
-                Rtrees.set(
-                        i, Rtrees.get(i).add(curRow, Geometries.rectangle(minx, miny, maxx, maxy)));
-            }
-        }
     }
 
     private void calculateBGRP() throws SQLException, ClassNotFoundException {
@@ -379,6 +396,17 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                                 curAutoDDId + "_avg(" + curField + ")_max", String.valueOf(retDbl));
             }
         }
+    }
+
+    private void cleanUp() throws SQLException {
+        // commit & close connections
+        bboxStmt.close();
+        DbConnector.closeConnection(Config.databaseName);
+
+        // release memory
+        Rtrees = null;
+        rawRows = null;
+        autoDD = null;
     }
 
     private String getAutoDDBboxTableName(int level) {
