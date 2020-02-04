@@ -1104,7 +1104,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function processClusterAgg() {
         function getConvexCoordinates(d) {
             var coords = d.clusterAgg.convexHull;
-            if (typeof coords == "string") coords = JSON.parse(coords);
             var convexHull = [];
             for (var i = 0; i < coords.length; i++) {
                 convexHull.push({
@@ -1307,8 +1306,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     // use params.bboxH(W) for bounding box size
                     var g = svg.append("g").attr("id", "autodd_ranklist_hover");
                     var topKData = d.clusterAgg.topk;
-                    if (typeof topKData == "string")
-                        topKData = JSON.parse(topKData);
                     var topk = topKData.length;
                     for (var i = 0; i < topk; i++) {
                         topKData[i].cx = +d.cx;
