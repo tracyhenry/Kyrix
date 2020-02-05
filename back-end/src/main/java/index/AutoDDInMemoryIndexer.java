@@ -33,19 +33,12 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
         ArrayList<ArrayList<Double>> convexHull;
         ArrayList<HashMap<String, String>> topk;
 
-        RTreeData() {
-            row = new ArrayList<>();
-            numericalAggs = new HashMap<>();
-            convexHull = new ArrayList<>();
-            topk = new ArrayList<>();
-        }
-
         RTreeData(ArrayList<String> _row) {
             row = new ArrayList<>();
             for (int i = 0; i < _row.size(); i++) row.add(_row.get(i));
-            numericalAggs = new HashMap<>();
-            convexHull = new ArrayList<>();
-            topk = new ArrayList<>();
+            numericalAggs = null;
+            convexHull = null;
+            topk = null;
         }
 
         public String getClusterAggString() {
@@ -477,6 +470,9 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
     private void setInitialClusterAgg(RTreeData rd) {
         ArrayList<String> row = rd.row;
+        rd.numericalAggs = new HashMap<>();
+        rd.convexHull = new ArrayList<>();
+        rd.topk = new ArrayList<>();
 
         // count(*)
         rd.numericalAggs.put("count(*)", 1.0);
@@ -540,6 +536,11 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     // this function assumes that convexHull of child
     // is from one level lower than parent
     private void mergeClusterAgg(RTreeData parent, RTreeData child) {
+
+        // initialize parents
+        if (parent.numericalAggs == null) parent.numericalAggs = new HashMap<>();
+        if (parent.convexHull == null) parent.convexHull = new ArrayList<>();
+        if (parent.topk == null) parent.topk = new ArrayList<>();
 
         // count(*)
         if (!parent.numericalAggs.containsKey("count(*)"))
