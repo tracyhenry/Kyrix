@@ -25,7 +25,7 @@ import project.AutoDD;
 import project.Canvas;
 
 /** Created by wenbo on 5/6/19. */
-public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
+public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
     private class RTreeData {
         ArrayList<String> row;
@@ -293,10 +293,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
     private void writeToDB() throws SQLException, ClassNotFoundException {
         // create tables
         bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
-        String psql = "CREATE EXTENSION if not exists postgis;";
-        bboxStmt.executeUpdate(psql);
-        psql = "CREATE EXTENSION if not exists postgis_topology;";
-        bboxStmt.executeUpdate(psql);
         for (int i = 0; i < numLevels; i++) {
             // step 0: create tables for storing bboxes
             String bboxTableName = getAutoDDBboxTableName(i);
@@ -311,7 +307,7 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                 sql += autoDD.getColumnNames().get(j) + " text, ";
             sql +=
                     "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
-                            + "maxx double precision, maxy double precision, geom geometry(polygon));";
+                            + "maxx double precision, maxy double precision, geom box);";
             bboxStmt.executeUpdate(sql);
         }
 
@@ -320,8 +316,8 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
 
             String bboxTableName = getAutoDDBboxTableName(i);
             String insertSql = "insert into " + bboxTableName + " values (";
-            for (int j = 0; j < numRawColumns + 7; j++) insertSql += "?, ";
-            insertSql += "ST_GeomFromText(?));";
+            for (int j = 0; j < numRawColumns + 6; j++) insertSql += "?, ";
+            insertSql += "?);";
             PreparedStatement preparedStmt =
                     DbConnector.getPreparedStatement(Config.databaseName, insertSql);
             int insertCount = 0;
@@ -343,11 +339,6 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
                     preparedStmt.setDouble(
                             numRawColumns + k + 1,
                             Double.valueOf(rd.row.get(numRawColumns + k - 1)));
-                double minx = Double.valueOf(rd.row.get(numRawColumns + 2));
-                double miny = Double.valueOf(rd.row.get(numRawColumns + 3));
-                double maxx = Double.valueOf(rd.row.get(numRawColumns + 4));
-                double maxy = Double.valueOf(rd.row.get(numRawColumns + 5));
-                preparedStmt.setString(numRawColumns + 8, getPolygonText(minx, miny, maxx, maxy));
 
                 // batch commit
                 preparedStmt.addBatch();
@@ -357,8 +348,15 @@ public class AutoDDInMemoryIndexer extends PsqlSpatialIndexer {
             preparedStmt.executeBatch();
             preparedStmt.close();
 
-            // build spatial index
+            // update box
             String sql =
+                    "UPDATE "
+                            + bboxTableName
+                            + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
+            bboxStmt.executeUpdate(sql);
+
+            // build spatial index
+            sql =
                     "create index sp_"
                             + bboxTableName
                             + " on "
