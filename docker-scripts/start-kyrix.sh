@@ -75,7 +75,7 @@ fi
 
 # cleanup maven opts
 rm /etc/mavenrc
-echo $MAVEN_OPTS > /etc/mavenrc
+echo $KYRIX_MAVEN_OPTS > /etc/mavenrc
 
 # starting the backend
 cd /kyrix/back-end
