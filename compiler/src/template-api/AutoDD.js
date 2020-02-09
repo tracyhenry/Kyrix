@@ -176,14 +176,15 @@ function AutoDD(args) {
     if (
         (args.marks.cluster.mode == "radar" ||
             args.marks.cluster.mode == "circle" ||
-            args.marks.cluster.mode == "custom") &&
+            args.marks.cluster.mode == "heatmap" ||
+            args.marks.cluster.mode == "contour") &&
         args.marks.cluster.aggregate.dimensions.length > 0
     )
         throw new Error(
             "Constructing AutoDD: dimension columns (args.marks.cluster.aggregate.dimensions) not allowed for the given cluster mode."
         );
     if (
-        args.marks.cluster.mode == "circle" &&
+        args.marks.cluster.mode == "circle" && //TODO: heatmap and contour are suject to this too
         args.marks.cluster.aggregate.measures.length > 1
     )
         throw new Error(
@@ -304,8 +305,20 @@ function AutoDD(args) {
         aggDimensions: args.marks.cluster.aggregate.dimensions,
         aggMeasures: args.marks.cluster.aggregate.measures
     };
-    this.aggregateParams.aggDomain = [];
+
+    // add count(*) to measure if not present
+    var hasCount = false;
+    for (var i = 0; i < this.aggregateParams.aggMeasures.length; i++)
+        if (this.aggregateParams.aggMeasures[i].function == "count")
+            hasCount = true;
+    if (!hasCount)
+        this.aggregateParams.aggMeasures.push({
+            function: "count",
+            field: "*"
+        });
+
     // combinations of domain values from all columns
+    this.aggregateParams.aggDomain = [];
     var dimensions = args.marks.cluster.aggregate.dimensions;
     var pointers = [];
     for (var i = 0; i < dimensions.length; i++) pointers.push(0);
@@ -428,8 +441,11 @@ function AutoDD(args) {
             this.aggregateParams.aggDimensions[i].field
         );
     this.aggMeasureFields = [];
-    for (var i = 0; i < this.aggregateParams.aggMeasures.length; i++)
+    this.aggMeasureFuncs = [];
+    for (var i = 0; i < this.aggregateParams.aggMeasures.length; i++) {
         this.aggMeasureFields.push(this.aggregateParams.aggMeasures[i].field);
+        this.aggMeasureFuncs.push(this.aggregateParams.aggMeasures[i].function);
+    }
     this.clusterCustomRenderer =
         "custom" in args.marks.cluster ? args.marks.cluster.custom : null;
     this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
@@ -466,19 +482,14 @@ function AutoDD(args) {
 function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
-        var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
         REPLACE_ME_processClusterAgg();
 
         // set up d3.scale for circle/text size
         var agg;
-        if (params.aggMeasures.length == 0) agg = "count(*)";
-        else {
-            var curMeasure = params.aggMeasures[0];
-            agg = curMeasure.function + "(" + curMeasure.field + ")";
-        }
+        var curMeasure = params.aggMeasures[0];
+        agg = curMeasure.function + "(" + curMeasure.field + ")";
         var minDomain = params["REPLACE_ME_autoDDId_" + agg + "_min"];
         var maxDomain = params["REPLACE_ME_autoDDId_" + agg + "_max"];
-        if (agg !== "count(*)") agg = aggKeyDelimiter + agg;
         var circleSizeInterpolator = d3
             .scaleSqrt()
             .domain([minDomain, maxDomain])
@@ -852,12 +863,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             var coordinates = [];
             for (var i = 0; i < params.aggMeasures.length; i++) {
                 var curMeasure = params.aggMeasures[i];
+                if (!("extent" in curMeasure)) continue;
                 var curAggKey =
-                    aggKeyDelimiter +
-                    curMeasure.function +
-                    "(" +
-                    curMeasure.field +
-                    ")";
+                    curMeasure.function + "(" + curMeasure.field + ")";
                 var angle =
                     Math.PI / 2 + (2 * Math.PI * i) / params.aggMeasures.length;
                 // average
@@ -900,6 +908,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             // axis & labels
             for (var i = 0; i < params.aggMeasures.length; i++) {
                 var curMeasure = params.aggMeasures[i];
+                if (!("extent" in curMeasure)) continue;
                 var angle =
                     Math.PI / 2 + (2 * Math.PI * i) / params.aggMeasures.length;
                 var lineCoords = angleToCoordinate(
@@ -1012,7 +1021,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         for (var i = 0; i < params.aggDomain.length; i++)
             aggKeys.push(
                 params.aggDomain[i] +
-                    aggKeyDelimiter +
+                    (params.aggDomain[i] == "" ? "" : aggKeyDelimiter) +
                     params.aggMeasures[0].function +
                     "(" +
                     params.aggMeasures[0].field +
@@ -1124,7 +1133,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     var curFunc = params.aggMeasures[j].function;
                     var curKey =
                         params.aggDomain[i] +
-                        aggKeyDelimiter +
+                        (params.aggDomain[i] == "" ? "" : aggKeyDelimiter) +
                         curFunc +
                         "(" +
                         curField +
@@ -1133,6 +1142,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                         switch (curFunc) {
                             case "count":
                             case "sum":
+                            case "avg":
                             case "sqrsum":
                                 d.clusterAgg[curKey] = 0;
                                 break;
@@ -1141,27 +1151,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                                 break;
                             case "max":
                                 d.clusterAgg[curKey] = Number.MAX_VALUE;
-                                break;
-                            case "avg":
-                                var sumKey =
-                                    params.aggDomain[i] +
-                                    aggKeyDelimiter +
-                                    "sum(" +
-                                    curField +
-                                    ")";
-                                var countKey =
-                                    params.aggDomain[i] +
-                                    aggKeyDelimiter +
-                                    "count(*)";
-                                if (
-                                    !(sumKey in d.clusterAgg) ||
-                                    !(countKey in d.clusterAgg)
-                                )
-                                    d.clusterAgg[curKey] = 0;
-                                else
-                                    d.clusterAgg[curKey] =
-                                        d.clusterAgg[sumKey] /
-                                        d.clusterAgg[countKey];
                                 break;
                         }
                     }
@@ -1412,7 +1401,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 /REPLACE_ME_processClusterAgg/g,
                 "(" + processClusterAgg.toString() + ")"
             )
-            .replace(/REPLACE_ME_agg_key_delimiter/g, aggKeyDelimiter)
             .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
         renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     } else if (this.clusterMode == "contour") {

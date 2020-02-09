@@ -142,6 +142,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         System.out.println("aggDimensionFields: " + autoDD.getAggDimensionFields());
         System.out.println("aggMeasureFields: " + autoDD.getAggMeasureFields());
+        System.out.println("aggMeasureFuncs: " + autoDD.getAggMeasureFuncs());
 
         // calculate overlapping threshold
         overlappingThreshold =
@@ -375,36 +376,25 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // add min & max weight into rendering params
         // min/max sum/count for all measure fields
-        // no grouping at this point
-        // TODO: more agg functions
+        // only for circle, heatmap & contour right now
+        // no grouping needed at this point
+        if (!autoDD.getClusterMode().equals("circle")
+                && !autoDD.getClusterMode().equals("contour")
+                && !autoDD.getClusterMode().equals("heatmap")) return;
+
         for (int i = 0; i < numLevels; i++) {
             String tableName = getAutoDDBboxTableName(i);
             String curAutoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(i);
 
-            // min count(*)
-            String sql =
-                    "SELECT min((clusterAgg::jsonb->>'count(*)')::float) FROM " + tableName + ";";
-            long retInt =
-                    Long.valueOf(
-                            DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0));
-            Main.getProject().addBGRP(curAutoDDId + "_count(*)_min", String.valueOf(retInt));
-
-            // max count(*)
-            sql = "SELECT max((clusterAgg::jsonb->>'count(*)')::float) FROM " + tableName + ";";
-            retInt =
-                    Long.valueOf(
-                            DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0));
-            Main.getProject().addBGRP(curAutoDDId + "_count(*)_max", String.valueOf(retInt));
-
             for (int j = 0; j < autoDD.getAggMeasureFields().size(); j++) {
                 String curField = autoDD.getAggMeasureFields().get(j);
-                if (curField.equals("*")) continue;
+                String curFunction = autoDD.getAggMeasureFuncs().get(j);
 
-                // min sum(curField)
-                sql =
+                // min curFunction(curField)
+                String sql =
                         "SELECT min((clusterAgg::jsonb->>'"
-                                + aggKeyDelimiter
-                                + "avg("
+                                + curFunction
+                                + "("
                                 + curField
                                 + ")')::float) FROM "
                                 + tableName
@@ -414,13 +404,14 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                                 DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0));
                 Main.getProject()
                         .addBGRP(
-                                curAutoDDId + "_avg(" + curField + ")_min", String.valueOf(retDbl));
+                                curAutoDDId + "_" + curFunction + "(" + curField + ")_min",
+                                String.valueOf(retDbl));
 
                 // max sum(curField)
                 sql =
                         "SELECT max((clusterAgg::jsonb->>'"
-                                + aggKeyDelimiter
-                                + "avg("
+                                + curFunction
+                                + "("
                                 + curField
                                 + ")')::float) FROM "
                                 + tableName
@@ -430,7 +421,8 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                                 DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0));
                 Main.getProject()
                         .addBGRP(
-                                curAutoDDId + "_avg(" + curField + ")_max", String.valueOf(retDbl));
+                                curAutoDDId + "_" + curFunction + "(" + curField + ")_max",
+                                String.valueOf(retDbl));
             }
         }
     }
@@ -472,9 +464,6 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         rd.convexHull = new ArrayList<>();
         rd.topk = new ArrayList<>();
 
-        // count(*)
-        rd.numericalAggs.put("count(*)", 1.0);
-
         // convexHull
         double cx =
                 autoDD.getCanvasCoordinate(
@@ -503,31 +492,29 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
             if (curDimensionStr.length() > 0) curDimensionStr += aggKeyDelimiter;
             curDimensionStr += row.get(autoDD.getColumnNames().indexOf(dimension));
         }
+
         int numMeasures = autoDD.getAggMeasureFields().size();
         for (int i = 0; i < numMeasures; i++) {
-            // always calculate count(*)
-            rd.numericalAggs.put(curDimensionStr + aggKeyDelimiter + "count(*)", 1.0);
-
-            // calculate other stuff if current measure is not count(*)
             String curMeasureField = autoDD.getAggMeasureFields().get(i);
-            if (!curMeasureField.equals("*")) {
-                String curValue = row.get(autoDD.getColumnNames().indexOf(curMeasureField));
-                rd.numericalAggs.put(
-                        curDimensionStr + aggKeyDelimiter + "sum(" + curMeasureField + ")",
-                        Double.valueOf(curValue));
-                rd.numericalAggs.put(
-                        curDimensionStr + aggKeyDelimiter + "avg(" + curMeasureField + ")",
-                        Double.valueOf(curValue));
-                /*                rd.numericalAggs.put(
-                        curDimensionStr + aggKeyDelimiter + "max(" + curMeasureField + ")",
-                        Double.valueOf(curValue));
-                rd.numericalAggs.put(
-                        curDimensionStr + aggKeyDelimiter + "min(" + curMeasureField + ")",
-                        Double.valueOf(curValue));
-                rd.numericalAggs.put(
-                        curDimensionStr + aggKeyDelimiter + "sqrsum(" + curMeasureField + ")",
-                        Double.valueOf(curValue) * Double.valueOf(curValue));*/
-            }
+            String curMeasureFunction = autoDD.getAggMeasureFuncs().get(i);
+            String curKey =
+                    curDimensionStr
+                            + (curDimensionStr.isEmpty() ? "" : aggKeyDelimiter)
+                            + curMeasureFunction
+                            + "("
+                            + curMeasureField
+                            + ")";
+            double curValue =
+                    (curMeasureFunction.equals("count")
+                            ? 1.0
+                            : Double.valueOf(
+                                    row.get(autoDD.getColumnNames().indexOf(curMeasureField))));
+
+            if (curMeasureFunction.equals("sqrsum"))
+                rd.numericalAggs.put(curKey, curValue * curValue);
+            else
+                // sum, avg, max, min, count
+                rd.numericalAggs.put(curKey, curValue);
         }
     }
 
@@ -539,15 +526,6 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         if (parent.numericalAggs == null) parent.numericalAggs = new HashMap<>();
         if (parent.convexHull == null) parent.convexHull = new ArrayList<>();
         if (parent.topk == null) parent.topk = new ArrayList<>();
-
-        // count(*)
-        if (!parent.numericalAggs.containsKey("count(*)"))
-            parent.numericalAggs.put("count(*)", child.numericalAggs.get("count(*)"));
-        else {
-            double parentCount = parent.numericalAggs.get("count(*)");
-            double childCount = child.numericalAggs.get("count(*)");
-            parent.numericalAggs.put("count(*)", parentCount + childCount);
-        }
 
         // convexHull
         ArrayList<ArrayList<Double>> childConvexHull = new ArrayList<>();
@@ -595,14 +573,16 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // numeric aggregations
         for (String aggKey : child.numericalAggs.keySet()) {
-            if (aggKey.equals("count(*)") || aggKey.equals("convexHull") || aggKey.equals("topk"))
-                continue;
+            if (aggKey.equals("convexHull") || aggKey.equals("topk")) continue;
             if (!parent.numericalAggs.containsKey(aggKey))
                 parent.numericalAggs.put(aggKey, child.numericalAggs.get(aggKey));
             else {
                 String curFunc =
                         aggKey.substring(
-                                aggKey.lastIndexOf(aggKeyDelimiter) + aggKeyDelimiter.length(),
+                                (aggKey.contains(aggKeyDelimiter)
+                                        ? aggKey.lastIndexOf(aggKeyDelimiter)
+                                                + aggKeyDelimiter.length()
+                                        : 0),
                                 aggKey.lastIndexOf("("));
                 double parentValue = parent.numericalAggs.get(aggKey);
                 double childValue = child.numericalAggs.get(aggKey);

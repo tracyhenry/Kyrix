@@ -52,7 +52,7 @@ do
             KYRIX_MAVEN_OPTS="$2"
             shift
             shift
-            ;
+            ;;
         *)
             echo "Wrong argument name $key"
             exit
