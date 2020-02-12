@@ -516,6 +516,8 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                 // sum, avg, max, min, count
                 rd.numericalAggs.put(curKey, curValue);
         }
+        // add count(*) if does not exist
+        if (!rd.numericalAggs.containsKey("count(*)")) rd.numericalAggs.put("count(*)", 1.0);
     }
 
     // this function assumes that convexHull of child
