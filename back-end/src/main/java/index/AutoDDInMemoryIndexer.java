@@ -80,9 +80,9 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
     private int autoDDIndex, numLevels, numRawColumns;
     private Statement bboxStmt;
 
-    // One Rtree per level to store samples
+    // One Rtree per level to store clusters
     // https://github.com/davidmoten/rtree
-    private ArrayList<RTree<RTreeData, Rectangle>> Rtrees;
+    private RTree<RTreeData, Rectangle> rtree0, rtree1;
     private ArrayList<ArrayList<String>> rawRows;
     private AutoDD autoDD;
 
@@ -110,20 +110,10 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         // set common variables
         setCommonVariables();
 
-        long st = System.nanoTime();
-        // sample for levels
-        sampleForLevels();
-        System.out.println("Sampling took " + (System.nanoTime() - st) / 1e9 + "s.");
-
         // compute cluster aggregations
-        st = System.nanoTime();
+        long st = System.nanoTime();
         computeClusterAggs();
         System.out.println("Computer ClusterAggs took " + (System.nanoTime() - st) / 1e9 + "s.");
-
-        // write stuff to the database
-        st = System.nanoTime();
-        writeToDB();
-        System.out.println("Writing to DB took " + (System.nanoTime() - st) / 1e9 + "s.");
 
         // calculate BGRP
         st = System.nanoTime();
@@ -163,96 +153,31 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
     }
 
-    private void sampleForLevels() throws SQLException, ClassNotFoundException {
+    private void computeClusterAggs() throws SQLException, ClassNotFoundException {
 
-        // sample for each level
-        Rtrees = new ArrayList<>();
-        for (int i = 0; i < numLevels; i++) Rtrees.add(RTree.create());
-        for (int i = 0; i < numLevels; i++) sampleForLevel(i);
-
-        // a fake bottom level for non-sampled objects
-        Rtrees.add(RTree.create());
+        // initialize R-tree0
+        rtree0 = RTree.create();
         for (ArrayList<String> rawRow : rawRows) {
             RTreeData rd = new RTreeData(rawRow);
+            for (int i = 0; i < 6; i++) rd.row.add("");
             setInitialClusterAgg(rd);
-            Rtrees.set(numLevels, Rtrees.get(numLevels).add(rd, Geometries.rectangle(0, 0, 0, 0)));
+            rtree0 = rtree0.add(rd, Geometries.rectangle(0, 0, 0, 0));
         }
-    }
 
-    private void sampleForLevel(int level) throws SQLException, ClassNotFoundException {
-
-        System.out.println("Sampling for level " + level + "...");
-        AutoDD autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
-        int numLevels = autoDD.getNumLevels();
-
-        // loop through raw query results, sample one by one.
-        for (ArrayList<String> rawRow : rawRows) {
-
-            // centroid of this tuple
-            double cx =
-                    autoDD.getCanvasCoordinate(
-                            level, Double.valueOf(rawRow.get(autoDD.getXColId())), true);
-            double cy =
-                    autoDD.getCanvasCoordinate(
-                            level, Double.valueOf(rawRow.get(autoDD.getYColId())), false);
-
-            // check overlap
-            double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
-            double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
-            double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
-            double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
-            Iterable<Entry<RTreeData, Rectangle>> overlappingSamples =
-                    Rtrees.get(level)
-                            .search(Geometries.rectangle(minx, miny, maxx, maxy))
-                            .toBlocking()
-                            .toIterable();
-            if (overlappingSamples.iterator().hasNext()) continue;
-
-            // sample this object, insert to all levels below this level
-            for (int i = level; i < numLevels; i++) {
-                cx =
-                        autoDD.getCanvasCoordinate(
-                                i, Double.valueOf(rawRow.get(autoDD.getXColId())), true);
-                cy =
-                        autoDD.getCanvasCoordinate(
-                                i, Double.valueOf(rawRow.get(autoDD.getYColId())), false);
-                minx = cx - autoDD.getBboxW() / 2;
-                miny = cy - autoDD.getBboxH() / 2;
-                maxx = cx + autoDD.getBboxW() / 2;
-                maxy = cy + autoDD.getBboxH() / 2;
-
-                RTreeData rd = new RTreeData(rawRow);
-                rd.row.add(String.valueOf(cx));
-                rd.row.add(String.valueOf(cy));
-                rd.row.add(String.valueOf(minx));
-                rd.row.add(String.valueOf(miny));
-                rd.row.add(String.valueOf(maxx));
-                rd.row.add(String.valueOf(maxy));
-                minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
-                miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
-                maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
-                maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
-                Rtrees.set(i, Rtrees.get(i).add(rd, Geometries.rectangle(minx, miny, maxx, maxy)));
-            }
-        }
-    }
-
-    private void computeClusterAggs() {
-
-        // compute cluster Aggregate
+        // bottom-up clustering
         for (int i = numLevels; i > 0; i--) {
-            // all samples
-            Iterable<Entry<RTreeData, Rectangle>> curSamples =
-                    Rtrees.get(i).entries().toBlocking().toIterable();
+            // all clusters from this level
+            Iterable<Entry<RTreeData, Rectangle>> curClusters =
+                    rtree0.entries().toBlocking().toIterable();
 
-            // for renderers
-            for (Entry<RTreeData, Rectangle> o : curSamples) {
+            // an Rtree for merged clusters
+            rtree1 = RTree.create();
+
+            // linear scan -- merge or insert
+            for (Entry<RTreeData, Rectangle> o : curClusters) {
                 RTreeData rd = o.value();
 
-                // find its nearest neighbor in one level up
-                // using binary search + Rtree
-                double minDistance = Double.MAX_VALUE;
-                RTreeData nearestNeighbor = null;
+                // find its nearest neighbor in the merged clusters
                 double cx =
                         autoDD.getCanvasCoordinate(
                                 i - 1, Double.valueOf(rd.row.get(autoDD.getXColId())), true);
@@ -264,10 +189,11 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                 double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
                 double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
                 Iterable<Entry<RTreeData, Rectangle>> neighbors =
-                        Rtrees.get(i - 1)
-                                .search(Geometries.rectangle(minx, miny, maxx, maxy))
+                        rtree1.search(Geometries.rectangle(minx, miny, maxx, maxy))
                                 .toBlocking()
                                 .toIterable();
+                double minDistance = Double.MAX_VALUE;
+                RTreeData nearestNeighbor = null;
                 for (Entry<RTreeData, Rectangle> nb : neighbors) {
                     RTreeData neighborRd = nb.value();
                     double curCx =
@@ -280,93 +206,106 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                                     i - 1,
                                     Double.valueOf(neighborRd.row.get(autoDD.getYColId())),
                                     false);
-                    double curDistance = (cx - curCx) * (cx - curCx) + (cy - curCy) * (cy - curCy);
+                    double curDistance =
+                            Math.max(
+                                    Math.abs(curCx - cx) / autoDD.getBboxW(),
+                                    Math.abs(curCy - cy) / autoDD.getBboxH());
                     if (curDistance < minDistance) {
                         minDistance = curDistance;
                         nearestNeighbor = neighborRd;
                     }
                 }
-                mergeClusterAgg(nearestNeighbor, rd);
+                if (nearestNeighbor == null) {
+                    // scale the convex hulls
+                    for (int j = 0; j < rd.convexHull.size(); j++)
+                        for (int k = 0; k < 2; k++)
+                            rd.convexHull
+                                    .get(j)
+                                    .set(k, rd.convexHull.get(j).get(k) / autoDD.getZoomFactor());
+
+                    // add bbox coordinates
+                    rd.row.set(numRawColumns, String.valueOf(cx));
+                    rd.row.add(numRawColumns + 1, String.valueOf(cy));
+                    rd.row.add(numRawColumns + 2, String.valueOf(minx));
+                    rd.row.add(numRawColumns + 3, String.valueOf(miny));
+                    rd.row.add(numRawColumns + 4, String.valueOf(maxx));
+                    rd.row.add(numRawColumns + 5, String.valueOf(maxy));
+
+                    // add it to current level
+                    rtree1 = rtree1.add(rd, Geometries.rectangle(minx, miny, maxx, maxy));
+                } else mergeClusterAgg(nearestNeighbor, rd);
             }
+
+            // write current level to db
+            writeToDB(i - 1);
+
+            // assign rtree1 to rtree0
+            rtree0 = rtree1;
+            rtree1 = null;
         }
     }
 
-    private void writeToDB() throws SQLException, ClassNotFoundException {
+    private void writeToDB(int level) throws SQLException, ClassNotFoundException {
         // create tables
         bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
-        for (int i = 0; i < numLevels; i++) {
-            // step 0: create tables for storing bboxes
-            String bboxTableName = getAutoDDBboxTableName(i);
 
-            // drop table if exists
-            String sql = "drop table if exists " + bboxTableName + ";";
-            bboxStmt.executeUpdate(sql);
+        // step 0: create tables for storing bboxes
+        String bboxTableName = getAutoDDBboxTableName(level);
 
-            // create the bbox table
-            sql = "create unlogged table " + bboxTableName + " (";
-            for (int j = 0; j < autoDD.getColumnNames().size(); j++)
-                sql += autoDD.getColumnNames().get(j) + " text, ";
-            sql +=
-                    "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
-                            + "maxx double precision, maxy double precision, geom box);";
-            bboxStmt.executeUpdate(sql);
+        // drop table if exists
+        String sql = "drop table if exists " + bboxTableName + ";";
+        bboxStmt.executeUpdate(sql);
+
+        // create the bbox table
+        sql = "create unlogged table " + bboxTableName + " (";
+        for (int j = 0; j < autoDD.getColumnNames().size(); j++)
+            sql += autoDD.getColumnNames().get(j) + " text, ";
+        sql +=
+                "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
+                        + "maxx double precision, maxy double precision, geom box);";
+        bboxStmt.executeUpdate(sql);
+
+        // insert clusters
+        String insertSql = "insert into " + bboxTableName + " values (";
+        for (int j = 0; j < numRawColumns + 6; j++) insertSql += "?, ";
+        insertSql += "?);";
+        PreparedStatement preparedStmt =
+                DbConnector.getPreparedStatement(Config.databaseName, insertSql);
+        int insertCount = 0;
+        Iterable<Entry<RTreeData, Rectangle>> clusters = rtree1.entries().toBlocking().toIterable();
+        for (Entry<RTreeData, Rectangle> o : clusters) {
+            RTreeData rd = o.value();
+
+            // raw data fields
+            for (int k = 0; k < numRawColumns; k++)
+                preparedStmt.setString(k + 1, rd.row.get(k).replaceAll("\'", "\'\'"));
+
+            // cluster agg
+            preparedStmt.setString(
+                    numRawColumns + 1, rd.getClusterAggString().replaceAll("\'", "\'\'"));
+
+            // bounding box fields
+            for (int k = 1; k <= 6; k++)
+                preparedStmt.setDouble(
+                        numRawColumns + k + 1, Double.valueOf(rd.row.get(numRawColumns + k - 1)));
+
+            // batch commit
+            preparedStmt.addBatch();
+            insertCount++;
+            if ((insertCount + 1) % Config.bboxBatchSize == 0) preparedStmt.executeBatch();
         }
+        preparedStmt.executeBatch();
+        preparedStmt.close();
 
-        // insert samples
-        for (int i = 0; i < numLevels; i++) {
+        // update box
+        sql = "UPDATE " + bboxTableName + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
+        bboxStmt.executeUpdate(sql);
 
-            String bboxTableName = getAutoDDBboxTableName(i);
-            String insertSql = "insert into " + bboxTableName + " values (";
-            for (int j = 0; j < numRawColumns + 6; j++) insertSql += "?, ";
-            insertSql += "?);";
-            PreparedStatement preparedStmt =
-                    DbConnector.getPreparedStatement(Config.databaseName, insertSql);
-            int insertCount = 0;
-            Iterable<Entry<RTreeData, Rectangle>> samples =
-                    Rtrees.get(i).entries().toBlocking().toIterable();
-            for (Entry<RTreeData, Rectangle> o : samples) {
-                RTreeData rd = o.value();
-
-                // raw data fields
-                for (int k = 0; k < numRawColumns; k++)
-                    preparedStmt.setString(k + 1, rd.row.get(k).replaceAll("\'", "\'\'"));
-
-                // cluster agg
-                preparedStmt.setString(
-                        numRawColumns + 1, rd.getClusterAggString().replaceAll("\'", "\'\'"));
-
-                // bounding box fields
-                for (int k = 1; k <= 6; k++)
-                    preparedStmt.setDouble(
-                            numRawColumns + k + 1,
-                            Double.valueOf(rd.row.get(numRawColumns + k - 1)));
-
-                // batch commit
-                preparedStmt.addBatch();
-                insertCount++;
-                if ((insertCount + 1) % Config.bboxBatchSize == 0) preparedStmt.executeBatch();
-            }
-            preparedStmt.executeBatch();
-            preparedStmt.close();
-
-            // update box
-            String sql =
-                    "UPDATE "
-                            + bboxTableName
-                            + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
-            bboxStmt.executeUpdate(sql);
-
-            // build spatial index
-            sql =
-                    "create index sp_"
-                            + bboxTableName
-                            + " on "
-                            + bboxTableName
-                            + " using gist (geom);";
-            bboxStmt.executeUpdate(sql);
-            sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
-            bboxStmt.executeUpdate(sql);
-        }
+        // build spatial index
+        sql = "create index sp_" + bboxTableName + " on " + bboxTableName + " using gist (geom);";
+        bboxStmt.executeUpdate(sql);
+        sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
+        bboxStmt.executeUpdate(sql);
     }
 
     private void calculateBGRP() throws SQLException, ClassNotFoundException {
@@ -433,7 +372,8 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         DbConnector.closeConnection(Config.databaseName);
 
         // release memory
-        Rtrees = null;
+        rtree0 = null;
+        rtree1 = null;
         rawRows = null;
         autoDD = null;
     }
@@ -481,7 +421,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         // topk
         if (autoDD.getTopk() > 0) {
             HashMap<String, String> curMap = new HashMap<>();
-            for (int i = 0; i < row.size(); i++)
+            for (int i = 0; i < numRawColumns; i++)
                 curMap.put(autoDD.getColumnNames().get(i), row.get(i));
             rd.topk.add(curMap);
         }
