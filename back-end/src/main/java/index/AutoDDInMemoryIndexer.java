@@ -28,17 +28,40 @@ import project.Canvas;
 public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
     private class RTreeData {
-        ArrayList<String> row;
-        HashMap<String, Double> numericalAggs;
-        ArrayList<ArrayList<Double>> convexHull;
-        ArrayList<HashMap<String, String>> topk;
+        int rowId;
+        float cx, cy, minx, miny, maxx, maxy;
+        HashMap<String, Float> numericalAggs;
+        ArrayList<ArrayList<Float>> convexHull;
+        ArrayList<Integer> topk;
 
-        RTreeData(ArrayList<String> _row) {
-            row = new ArrayList<>();
-            for (int i = 0; i < _row.size(); i++) row.add(_row.get(i));
+        RTreeData(int _rowId) {
+            rowId = _rowId;
+            cx = cy = minx = miny = maxx = maxy = 0;
             numericalAggs = null;
             convexHull = null;
             topk = null;
+        }
+
+        public RTreeData clone() {
+            RTreeData ret = new RTreeData(rowId);
+            if (numericalAggs != null) {
+                ret.numericalAggs = new HashMap<>();
+                for (String key : numericalAggs.keySet())
+                    ret.numericalAggs.put(key, numericalAggs.get(key));
+            }
+            if (convexHull != null) {
+                ret.convexHull = new ArrayList<>();
+                for (int i = 0; i < convexHull.size(); i++)
+                    ret.convexHull.add(
+                            new ArrayList<>(
+                                    Arrays.asList(
+                                            convexHull.get(i).get(0), convexHull.get(i).get(1))));
+            }
+            if (topk != null) {
+                ret.topk = new ArrayList<>();
+                for (int i = 0; i < topk.size(); i++) ret.topk.add(topk.get(i));
+            }
+            return ret;
         }
 
         public String getClusterAggString() {
@@ -62,7 +85,9 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
             JsonArray topkArr = new JsonArray();
             for (int i = 0; i < topk.size(); i++) {
                 JsonObject obj = new JsonObject();
-                for (String key : topk.get(i).keySet()) obj.addProperty(key, topk.get(i).get(key));
+                ArrayList<String> curRow = rawRows.get(topk.get(i));
+                for (int j = 0; j < numRawColumns; j++)
+                    obj.addProperty(autoDD.getColumnNames().get(j), curRow.get(j));
                 topkArr.add(obj);
             }
             jsonObj.add("topk", topkArr);
@@ -156,22 +181,22 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
     private void computeClusterAggs() throws SQLException, ClassNotFoundException {
 
         // initialize R-tree0
-        rtree0 = RTree.create();
-        for (ArrayList<String> rawRow : rawRows) {
-            RTreeData rd = new RTreeData(rawRow);
-            for (int i = 0; i < 6; i++) rd.row.add("");
+        rtree0 = RTree.star().create();
+        for (int i = 0; i < rawRows.size(); i++) {
+            RTreeData rd = new RTreeData(i);
             setInitialClusterAgg(rd);
-            rtree0 = rtree0.add(rd, Geometries.rectangle(0, 0, 0, 0));
+            rtree0 = rtree0.add(rd, Geometries.rectangle(0f, 0f, 0f, 0f));
         }
 
         // bottom-up clustering
         for (int i = numLevels; i > 0; i--) {
+            System.out.println("merging level " + i + "...");
             // all clusters from this level
             Iterable<Entry<RTreeData, Rectangle>> curClusters =
                     rtree0.entries().toBlocking().toIterable();
 
             // an Rtree for merged clusters
-            rtree1 = RTree.create();
+            rtree1 = RTree.star().create();
 
             // linear scan -- merge or insert
             for (Entry<RTreeData, Rectangle> o : curClusters) {
@@ -180,10 +205,14 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                 // find its nearest neighbor in the merged clusters
                 double cx =
                         autoDD.getCanvasCoordinate(
-                                i - 1, Double.valueOf(rd.row.get(autoDD.getXColId())), true);
+                                i - 1,
+                                Double.valueOf(rawRows.get(rd.rowId).get(autoDD.getXColId())),
+                                true);
                 double cy =
                         autoDD.getCanvasCoordinate(
-                                i - 1, Double.valueOf(rd.row.get(autoDD.getYColId())), false);
+                                i - 1,
+                                Double.valueOf(rawRows.get(rd.rowId).get(autoDD.getYColId())),
+                                false);
                 double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
                 double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
                 double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
@@ -199,12 +228,14 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                     double curCx =
                             autoDD.getCanvasCoordinate(
                                     i - 1,
-                                    Double.valueOf(neighborRd.row.get(autoDD.getXColId())),
+                                    Double.valueOf(
+                                            rawRows.get(neighborRd.rowId).get(autoDD.getXColId())),
                                     true);
                     double curCy =
                             autoDD.getCanvasCoordinate(
                                     i - 1,
-                                    Double.valueOf(neighborRd.row.get(autoDD.getYColId())),
+                                    Double.valueOf(
+                                            rawRows.get(neighborRd.rowId).get(autoDD.getYColId())),
                                     false);
                     double curDistance =
                             Math.max(
@@ -216,32 +247,45 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                     }
                 }
                 if (nearestNeighbor == null) {
+                    RTreeData rdClone = rd.clone();
                     // scale the convex hulls
-                    for (int j = 0; j < rd.convexHull.size(); j++)
+                    for (int j = 0; j < rdClone.convexHull.size(); j++)
                         for (int k = 0; k < 2; k++)
-                            rd.convexHull
+                            rdClone.convexHull
                                     .get(j)
-                                    .set(k, rd.convexHull.get(j).get(k) / autoDD.getZoomFactor());
+                                    .set(
+                                            k,
+                                            rd.convexHull.get(j).get(k)
+                                                    / (float) autoDD.getZoomFactor());
 
                     // add bbox coordinates
-                    rd.row.set(numRawColumns, String.valueOf(cx));
-                    rd.row.add(numRawColumns + 1, String.valueOf(cy));
-                    rd.row.add(numRawColumns + 2, String.valueOf(minx));
-                    rd.row.add(numRawColumns + 3, String.valueOf(miny));
-                    rd.row.add(numRawColumns + 4, String.valueOf(maxx));
-                    rd.row.add(numRawColumns + 5, String.valueOf(maxy));
+                    rdClone.cx = (float) cx;
+                    rdClone.cy = (float) cy;
+                    rdClone.minx = (float) minx;
+                    rdClone.miny = (float) miny;
+                    rdClone.maxx = (float) maxx;
+                    rdClone.maxy = (float) maxy;
 
                     // add it to current level
-                    rtree1 = rtree1.add(rd, Geometries.rectangle(minx, miny, maxx, maxy));
+                    rtree1 =
+                            rtree1.add(
+                                    rdClone,
+                                    Geometries.rectangle(
+                                            (float) minx,
+                                            (float) miny,
+                                            (float) maxx,
+                                            (float) maxy));
                 } else mergeClusterAgg(nearestNeighbor, rd);
             }
 
-            // write current level to db
-            writeToDB(i - 1);
-
             // assign rtree1 to rtree0
+            rtree0 = null;
             rtree0 = rtree1;
-            rtree1 = null;
+
+            // write current level to db
+            System.out.println("merging done. writing to db....");
+            writeToDB(i - 1);
+            System.out.println("finished writing to db...");
         }
     }
 
@@ -278,16 +322,20 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
             // raw data fields
             for (int k = 0; k < numRawColumns; k++)
-                preparedStmt.setString(k + 1, rd.row.get(k).replaceAll("\'", "\'\'"));
+                preparedStmt.setString(
+                        k + 1, rawRows.get(rd.rowId).get(k).replaceAll("\'", "\'\'"));
 
             // cluster agg
             preparedStmt.setString(
                     numRawColumns + 1, rd.getClusterAggString().replaceAll("\'", "\'\'"));
 
             // bounding box fields
-            for (int k = 1; k <= 6; k++)
-                preparedStmt.setDouble(
-                        numRawColumns + k + 1, Double.valueOf(rd.row.get(numRawColumns + k - 1)));
+            preparedStmt.setDouble(numRawColumns + 2, rd.cx);
+            preparedStmt.setDouble(numRawColumns + 3, rd.cy);
+            preparedStmt.setDouble(numRawColumns + 4, rd.minx);
+            preparedStmt.setDouble(numRawColumns + 5, rd.miny);
+            preparedStmt.setDouble(numRawColumns + 6, rd.maxx);
+            preparedStmt.setDouble(numRawColumns + 7, rd.maxy);
 
             // batch commit
             preparedStmt.addBatch();
@@ -399,7 +447,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
     }
 
     private void setInitialClusterAgg(RTreeData rd) {
-        ArrayList<String> row = rd.row;
+        ArrayList<String> row = rawRows.get(rd.rowId);
         rd.numericalAggs = new HashMap<>();
         rd.convexHull = new ArrayList<>();
         rd.topk = new ArrayList<>();
@@ -411,20 +459,17 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         double cy =
                 autoDD.getCanvasCoordinate(
                         autoDD.getNumLevels(), Double.valueOf(row.get(autoDD.getYColId())), false);
-        double minx = cx - autoDD.getBboxW() / 2.0, maxx = cx + autoDD.getBboxW() / 2.0;
-        double miny = cy - autoDD.getBboxH() / 2.0, maxy = cy + autoDD.getBboxH() / 2.0;
+        float minx = (float) (cx - autoDD.getBboxW() / 2.0),
+                maxx = (float) (cx + autoDD.getBboxW() / 2.0);
+        float miny = (float) (cy - autoDD.getBboxH() / 2.0),
+                maxy = (float) (cy + autoDD.getBboxH() / 2.0);
         rd.convexHull.add(new ArrayList<>(Arrays.asList(minx, miny)));
         rd.convexHull.add(new ArrayList<>(Arrays.asList(minx, maxy)));
         rd.convexHull.add(new ArrayList<>(Arrays.asList(maxx, maxy)));
         rd.convexHull.add(new ArrayList<>(Arrays.asList(maxx, miny)));
 
         // topk
-        if (autoDD.getTopk() > 0) {
-            HashMap<String, String> curMap = new HashMap<>();
-            for (int i = 0; i < numRawColumns; i++)
-                curMap.put(autoDD.getColumnNames().get(i), row.get(i));
-            rd.topk.add(curMap);
-        }
+        if (autoDD.getTopk() > 0) rd.topk.add(rd.rowId);
 
         // numeric aggregations
         String curDimensionStr = "";
@@ -444,10 +489,10 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                             + "("
                             + curMeasureField
                             + ")";
-            double curValue =
+            float curValue =
                     (curMeasureFunction.equals("count")
-                            ? 1.0
-                            : Double.valueOf(
+                            ? 1.0f
+                            : Float.valueOf(
                                     row.get(autoDD.getColumnNames().indexOf(curMeasureField))));
 
             if (curMeasureFunction.equals("sqrsum"))
@@ -457,7 +502,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                 rd.numericalAggs.put(curKey, curValue);
         }
         // add count(*) if does not exist
-        if (!rd.numericalAggs.containsKey("count(*)")) rd.numericalAggs.put("count(*)", 1.0);
+        if (!rd.numericalAggs.containsKey("count(*)")) rd.numericalAggs.put("count(*)", 1.0f);
     }
 
     // this function assumes that convexHull of child
@@ -470,36 +515,43 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         if (parent.topk == null) parent.topk = new ArrayList<>();
 
         // convexHull
-        ArrayList<ArrayList<Double>> childConvexHull = new ArrayList<>();
+        ArrayList<ArrayList<Float>> childConvexHull = new ArrayList<>();
         for (int i = 0; i < child.convexHull.size(); i++) {
             childConvexHull.add(new ArrayList<>());
             for (int j = 0; j < 2; j++)
-                childConvexHull.get(i).add(child.convexHull.get(i).get(j) / autoDD.getZoomFactor());
+                childConvexHull
+                        .get(i)
+                        .add(child.convexHull.get(i).get(j) / (float) autoDD.getZoomFactor());
         }
 
         if (parent.convexHull.size() == 0) parent.convexHull = childConvexHull;
         else parent.convexHull = mergeConvex(parent.convexHull, childConvexHull);
 
         String zCol = autoDD.getzCol();
+        int zColId = autoDD.getColumnNames().indexOf(zCol);
         String zOrder = autoDD.getzOrder();
         int topk = autoDD.getTopk();
 
         // topk
         if (parent.topk.size() == 0) parent.topk = child.topk;
         else {
-            ArrayList<HashMap<String, String>> parentTopk = parent.topk;
-            ArrayList<HashMap<String, String>> childTopk = child.topk;
-            ArrayList<HashMap<String, String>> mergedTopk = new ArrayList<>();
+            ArrayList<Integer> parentTopk = parent.topk;
+            ArrayList<Integer> childTopk = child.topk;
+            ArrayList<Integer> mergedTopk = new ArrayList<>();
             int parentIter = 0, childIter = 0;
             while ((parentIter < parentTopk.size() || childIter < childTopk.size())
                     && mergedTopk.size() < topk) {
-                if (parentIter >= parentTopk.size()) mergedTopk.add(childTopk.get(childIter));
-                else if (childIter >= childTopk.size()) mergedTopk.add(parentTopk.get(parentIter));
-                else {
-                    HashMap<String, String> parentHead = parentTopk.get(parentIter);
-                    HashMap<String, String> childHead = childTopk.get(childIter);
-                    double parentValue = Double.valueOf(parentHead.get(zCol));
-                    double childValue = Double.valueOf(childHead.get(zCol));
+                if (parentIter >= parentTopk.size()) {
+                    mergedTopk.add(childTopk.get(childIter));
+                    childIter++;
+                } else if (childIter >= childTopk.size()) {
+                    mergedTopk.add(parentTopk.get(parentIter));
+                    parentIter++;
+                } else {
+                    int parentHead = parentTopk.get(parentIter);
+                    int childHead = childTopk.get(childIter);
+                    double parentValue = Double.valueOf(rawRows.get(parentHead).get(zColId));
+                    double childValue = Double.valueOf(rawRows.get(childHead).get(zColId));
                     if ((parentValue <= childValue && zOrder.equals("asc"))
                             || (parentValue >= childValue && zOrder.equals("desc"))) {
                         mergedTopk.add(parentHead);
@@ -526,8 +578,8 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                                                 + aggKeyDelimiter.length()
                                         : 0),
                                 aggKey.lastIndexOf("("));
-                double parentValue = parent.numericalAggs.get(aggKey);
-                double childValue = child.numericalAggs.get(aggKey);
+                float parentValue = parent.numericalAggs.get(aggKey);
+                float childValue = child.numericalAggs.get(aggKey);
                 switch (curFunc) {
                     case "count":
                     case "sum":
@@ -537,8 +589,8 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                     case "avg":
                         String countKey =
                                 aggKey.substring(0, aggKey.lastIndexOf("avg")) + "count(*)";
-                        double parentCount = parent.numericalAggs.get(countKey);
-                        double childCount = child.numericalAggs.get(countKey);
+                        float parentCount = parent.numericalAggs.get(countKey);
+                        float childCount = child.numericalAggs.get(countKey);
                         parent.numericalAggs.put(
                                 aggKey,
                                 (parentValue * parentCount + childValue * childCount)
@@ -555,31 +607,32 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         }
     }
 
-    private ArrayList<ArrayList<Double>> mergeConvex(
-            ArrayList<ArrayList<Double>> parent, ArrayList<ArrayList<Double>> child) {
-        Geometry parentGeom = getGeometryFromDoubleArray(parent);
-        Geometry childGeom = getGeometryFromDoubleArray(child);
+    private ArrayList<ArrayList<Float>> mergeConvex(
+            ArrayList<ArrayList<Float>> parent, ArrayList<ArrayList<Float>> child) {
+        Geometry parentGeom = getGeometryFromFloatArray(parent);
+        Geometry childGeom = getGeometryFromFloatArray(child);
         Geometry union = parentGeom.union(childGeom);
         return getCoordsListOfGeometry(union.convexHull());
     }
 
-    private Geometry getGeometryFromDoubleArray(ArrayList<ArrayList<Double>> coords) {
+    private Geometry getGeometryFromFloatArray(ArrayList<ArrayList<Float>> coords) {
         GeometryFactory gf = new GeometryFactory();
         ArrayList<Point> points = new ArrayList<>();
         for (int i = 0; i < coords.size(); i++) {
-            double x = coords.get(i).get(0);
-            double y = coords.get(i).get(1);
+            float x = coords.get(i).get(0);
+            float y = coords.get(i).get(1);
             points.add(gf.createPoint(new Coordinate(x, y)));
         }
         Geometry geom = gf.createMultiPoint(GeometryFactory.toPointArray(points));
         return geom;
     }
 
-    private ArrayList<ArrayList<Double>> getCoordsListOfGeometry(Geometry geometry) {
+    private ArrayList<ArrayList<Float>> getCoordsListOfGeometry(Geometry geometry) {
         Coordinate[] coordinates = geometry.getCoordinates();
-        ArrayList<ArrayList<Double>> coordsList = new ArrayList<>();
+        ArrayList<ArrayList<Float>> coordsList = new ArrayList<>();
         for (Coordinate coordinate : coordinates)
-            coordsList.add(new ArrayList<>(Arrays.asList(coordinate.x, coordinate.y)));
+            coordsList.add(
+                    new ArrayList<>(Arrays.asList((float) coordinate.x, (float) coordinate.y)));
         return coordsList;
     }
 }
