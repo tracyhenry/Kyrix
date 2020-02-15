@@ -31,7 +31,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         float cx, cy, minx, miny, maxx, maxy;
         HashMap<String, Float> numericalAggs;
         float[][] convexHull;
-        ArrayList<Integer> topk;
+        int[] topk;
 
         RTreeData(int _rowId) {
             rowId = _rowId;
@@ -56,8 +56,8 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                 }
             }
             if (topk != null) {
-                ret.topk = new ArrayList<>();
-                for (int i = 0; i < topk.size(); i++) ret.topk.add(topk.get(i));
+                ret.topk = new int[topk.length];
+                for (int i = 0; i < topk.length; i++) ret.topk[i] = topk[i];
             }
             return ret;
         }
@@ -81,9 +81,9 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
             // turn topk into an array of json objects
             JsonArray topkArr = new JsonArray();
-            for (int i = 0; i < topk.size(); i++) {
+            for (int i = 0; i < topk.length; i++) {
                 JsonObject obj = new JsonObject();
-                ArrayList<String> curRow = rawRows.get(topk.get(i));
+                ArrayList<String> curRow = rawRows.get(topk[i]);
                 for (int j = 0; j < numRawColumns; j++)
                     obj.addProperty(autoDD.getColumnNames().get(j), curRow.get(j));
                 topkArr.add(obj);
@@ -457,8 +457,10 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         rd.convexHull = convexHullCopy;
 
         // topk
-        rd.topk = new ArrayList<>();
-        if (autoDD.getTopk() > 0) rd.topk.add(rd.rowId);
+        if (autoDD.getTopk() > 0) {
+            rd.topk = new int[1];
+            rd.topk[0] = rd.rowId;
+        }
 
         // numeric aggregations
         rd.numericalAggs = new HashMap<>();
@@ -499,11 +501,6 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
     // is from one level lower than parent
     private void mergeClusterAgg(RTreeData parent, RTreeData child) {
 
-        // initialize parents
-        if (parent.numericalAggs == null) parent.numericalAggs = new HashMap<>();
-        if (parent.convexHull == null) parent.convexHull = new float[1][2];
-        if (parent.topk == null) parent.topk = new ArrayList<>();
-
         // convexHull
         float[][] childConvexHull = new float[child.convexHull.length][2];
         for (int i = 0; i < child.convexHull.length; i++)
@@ -519,31 +516,29 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         int topk = autoDD.getTopk();
 
         // topk
-        if (parent.topk.size() == 0) parent.topk = child.topk;
-        else {
-            ArrayList<Integer> parentTopk = parent.topk;
-            ArrayList<Integer> childTopk = child.topk;
-            ArrayList<Integer> mergedTopk = new ArrayList<>();
-            int parentIter = 0, childIter = 0;
-            while ((parentIter < parentTopk.size() || childIter < childTopk.size())
-                    && mergedTopk.size() < topk) {
-                if (parentIter >= parentTopk.size()) {
-                    mergedTopk.add(childTopk.get(childIter));
-                    childIter++;
-                } else if (childIter >= childTopk.size()) {
-                    mergedTopk.add(parentTopk.get(parentIter));
-                    parentIter++;
-                } else {
-                    int parentHead = parentTopk.get(parentIter);
-                    int childHead = childTopk.get(childIter);
+        if (autoDD.getTopk() > 0) {
+            int[] parentTopk = parent.topk;
+            int[] childTopk = child.topk;
+            int[] mergedTopk =
+                    new int[Math.min(parentTopk.length + childTopk.length, autoDD.getTopk())];
+            int parentIter = 0, childIter = 0, mergedIter = 0;
+            while ((parentIter < parentTopk.length || childIter < childTopk.length)
+                    && mergedIter < mergedTopk.length) {
+                if (parentIter >= parentTopk.length)
+                    mergedTopk[mergedIter++] = childTopk[childIter++];
+                else if (childIter >= childTopk.length)
+                    mergedTopk[mergedIter++] = parentTopk[parentIter++];
+                else {
+                    int parentHead = parentTopk[parentIter];
+                    int childHead = childTopk[childIter];
                     double parentValue = Double.valueOf(rawRows.get(parentHead).get(zColId));
                     double childValue = Double.valueOf(rawRows.get(childHead).get(zColId));
                     if ((parentValue <= childValue && zOrder.equals("asc"))
                             || (parentValue >= childValue && zOrder.equals("desc"))) {
-                        mergedTopk.add(parentHead);
+                        mergedTopk[mergedIter++] = parentHead;
                         parentIter++;
                     } else {
-                        mergedTopk.add(childHead);
+                        mergedTopk[mergedIter++] = childHead;
                         childIter++;
                     }
                 }
