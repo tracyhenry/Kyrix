@@ -12,7 +12,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import main.Config;
 import main.DbConnector;
 import main.Main;
@@ -22,20 +21,21 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import project.AutoDD;
 import project.Canvas;
+import vlsi.utils.CompactHashMap;
 
 /** Created by wenbo on 5/6/19. */
 public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
     private class RTreeData {
         int rowId;
-        float cx, cy, minx, miny, maxx, maxy;
-        HashMap<String, Float> numericalAggs;
+        float minx, miny, maxx, maxy;
+        CompactHashMap<String, Float> numericalAggs;
         float[][] convexHull;
         int[] topk;
 
         RTreeData(int _rowId) {
             rowId = _rowId;
-            cx = cy = minx = miny = maxx = maxy = 0;
+            minx = miny = maxx = maxy = 0;
             numericalAggs = null;
             convexHull = null;
             topk = null;
@@ -44,7 +44,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         public RTreeData clone() {
             RTreeData ret = new RTreeData(rowId);
             if (numericalAggs != null) {
-                ret.numericalAggs = new HashMap<>();
+                ret.numericalAggs = new CompactHashMap<>();
                 for (String key : numericalAggs.keySet())
                     ret.numericalAggs.put(key, numericalAggs.get(key));
             }
@@ -174,6 +174,11 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // store raw query results into memory
         rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
+
+        //        System.gc();
+        //        System.out.println("Memory consumed storing query results: " +
+        // (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 +
+        // "MB.");
     }
 
     private void computeClusterAggs() throws SQLException, ClassNotFoundException {
@@ -188,6 +193,11 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // bottom-up clustering
         for (int i = numLevels; i > 0; i--) {
+            //            System.gc();
+            //            System.out.println("Memory consumed before clustering level" + i + ": " +
+            // (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 /
+            // 1024 + "MB.");
+
             System.out.println("merging level " + i + "...");
             // all clusters from this level
             Iterable<Entry<RTreeData, Rectangle>> curClusters =
@@ -252,8 +262,6 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                             rdClone.convexHull[j][k] /= autoDD.getZoomFactor();
 
                     // add bbox coordinates
-                    rdClone.cx = (float) cx;
-                    rdClone.cy = (float) cy;
                     rdClone.minx = (float) minx;
                     rdClone.miny = (float) miny;
                     rdClone.maxx = (float) maxx;
@@ -279,6 +287,11 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
             System.out.println("merging done. writing to db....");
             writeToDB(i - 1);
             System.out.println("finished writing to db...");
+
+            //            System.gc();
+            //            System.out.println("Memory consumed after clustering level" + i + ": " +
+            // (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 /
+            // 1024 + "MB.");
         }
     }
 
@@ -323,8 +336,8 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                     numRawColumns + 1, rd.getClusterAggString().replaceAll("\'", "\'\'"));
 
             // bounding box fields
-            preparedStmt.setDouble(numRawColumns + 2, rd.cx);
-            preparedStmt.setDouble(numRawColumns + 3, rd.cy);
+            preparedStmt.setDouble(numRawColumns + 2, (rd.minx + rd.maxx) / 2.0);
+            preparedStmt.setDouble(numRawColumns + 3, (rd.miny + rd.maxy) / 2.0);
             preparedStmt.setDouble(numRawColumns + 4, rd.minx);
             preparedStmt.setDouble(numRawColumns + 5, rd.miny);
             preparedStmt.setDouble(numRawColumns + 6, rd.maxx);
@@ -460,10 +473,10 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         if (autoDD.getTopk() > 0) {
             rd.topk = new int[1];
             rd.topk[0] = rd.rowId;
-        }
+        } else rd.topk = new int[0];
 
         // numeric aggregations
-        rd.numericalAggs = new HashMap<>();
+        rd.numericalAggs = new CompactHashMap<>();
         String curDimensionStr = "";
         for (String dimension : autoDD.getAggDimensionFields()) {
             if (curDimensionStr.length() > 0) curDimensionStr += aggKeyDelimiter;
@@ -513,7 +526,6 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         String zCol = autoDD.getzCol();
         int zColId = autoDD.getColumnNames().indexOf(zCol);
         String zOrder = autoDD.getzOrder();
-        int topk = autoDD.getTopk();
 
         // topk
         if (autoDD.getTopk() > 0) {
