@@ -184,7 +184,10 @@ function AutoDD(args) {
             "Constructing AutoDD: dimension columns (args.marks.cluster.aggregate.dimensions) not allowed for the given cluster mode."
         );
     if (
-        args.marks.cluster.mode == "circle" && //TODO: heatmap and contour are suject to this too
+        (args.marks.cluster.mode == "circle" ||
+            args.marks.cluster.mode == "heatmap" ||
+            args.marks.cluster.mode == "contour" ||
+            args.marks.cluster.mode == "pie") &&
         args.marks.cluster.aggregate.measures.length > 1
     )
         throw new Error(
