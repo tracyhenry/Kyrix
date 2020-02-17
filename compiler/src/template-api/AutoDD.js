@@ -572,6 +572,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function renderObjectClusterNumBody() {
         var g = svg.select("g:last-of-type");
+        var params = args.renderingParams;
         data.forEach(d => {
             d.clusterAgg = JSON.parse(d.clusterAgg);
         });
