@@ -12,6 +12,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import main.Config;
 import main.DbConnector;
 import main.Main;
@@ -91,6 +93,23 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
             jsonObj.add("topk", topkArr);
 
             return gson.toJson(jsonObj);
+        }
+    }
+
+    public class SortByZ implements Comparator<RTreeData> {
+
+        @Override
+        public int compare(RTreeData o1, RTreeData o2) {
+
+            String zCol = autoDD.getzCol();
+            int zColId = autoDD.getColumnNames().indexOf(zCol);
+            String zOrder = autoDD.getzOrder();
+
+            float v1 = Float.valueOf(rawRows.get(o1.rowId).get(zColId));
+            float v2 = Float.valueOf(rawRows.get(o2.rowId).get(zColId));
+            if (v1 == v2) return 0;
+            if (zOrder.equals("asc")) return v1 < v2 ? -1 : 1;
+            else return v1 < v2 ? 1 : -1;
         }
     }
 
@@ -174,11 +193,6 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // store raw query results into memory
         rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
-
-        //        System.gc();
-        //        System.out.println("Memory consumed storing query results: " +
-        // (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 +
-        // "MB.");
     }
 
     private void computeClusterAggs() throws SQLException, ClassNotFoundException {
@@ -193,22 +207,26 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // bottom-up clustering
         for (int i = numLevels; i > 0; i--) {
-            //            System.gc();
-            //            System.out.println("Memory consumed before clustering level" + i + ": " +
-            // (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 /
-            // 1024 + "MB.");
-
+            //            Main.printUsedMemory("Memory consumed before clustering level" + i);
             System.out.println("merging level " + i + "...");
+
             // all clusters from this level
-            Iterable<Entry<RTreeData, Rectangle>> curClusters =
+            Iterable<Entry<RTreeData, Rectangle>> curClustersIterable =
                     rtree0.entries().toBlocking().toIterable();
+            RTreeData[] curClusters = new RTreeData[rtree0.size()];
+            int idx = 0;
+            for (Entry<RTreeData, Rectangle> o : curClustersIterable)
+                curClusters[idx++] = o.value();
+
+            // only sort for custom
+            if (autoDD.getClusterMode().equals("custom")) Arrays.sort(curClusters, new SortByZ());
 
             // an Rtree for merged clusters
             rtree1 = RTree.star().create();
 
             // linear scan -- merge or insert
-            for (Entry<RTreeData, Rectangle> o : curClusters) {
-                RTreeData rd = o.value();
+            for (int j = 0; j < curClusters.length; j++) {
+                RTreeData rd = curClusters[j];
 
                 // find its nearest neighbor in the merged clusters
                 double cx =
@@ -257,9 +275,9 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                 if (nearestNeighbor == null) {
                     RTreeData rdClone = rd.clone();
                     // scale the convex hulls
-                    for (int j = 0; j < rdClone.convexHull.length; j++)
+                    for (int p = 0; p < rdClone.convexHull.length; p++)
                         for (int k = 0; k < 2; k++)
-                            rdClone.convexHull[j][k] /= autoDD.getZoomFactor();
+                            rdClone.convexHull[p][k] /= autoDD.getZoomFactor();
 
                     // add bbox coordinates
                     rdClone.minx = (float) minx;
@@ -288,10 +306,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
             writeToDB(i - 1);
             System.out.println("finished writing to db...");
 
-            //            System.gc();
-            //            System.out.println("Memory consumed after clustering level" + i + ": " +
-            // (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 /
-            // 1024 + "MB.");
+            //            Main.printUsedMemory("Memory consumed after clustering level" + i);
         }
     }
 

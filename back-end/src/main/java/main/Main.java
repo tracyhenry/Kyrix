@@ -59,6 +59,17 @@ public class Main {
         DbConnector.executeUpdate(Config.databaseName, sql);
     }
 
+    public static void printUsedMemory(String message) {
+        System.gc();
+        System.out.println(
+                message
+                        + ": "
+                        + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
+                                / 1024
+                                / 1024
+                        + "MB.");
+    }
+
     private static void readConfigFile() throws IOException {
 
         // read config file
