@@ -573,8 +573,8 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
             if (gvd.animation != param.semanticZoom)
                 d3.selectAll(viewClass + ".oldlayerg")
                     .transition()
-                    .duration(param.literalZoomFadeOutDuration + 200)
-                    //                    .style("opacity", 0)
+                    .duration(param.literalZoomFadeOutDuration)
+                    .style("opacity", 0)
                     .remove();
         });
 }
