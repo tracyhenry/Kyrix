@@ -157,11 +157,6 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         computeClusterAggs();
         System.out.println("Computer ClusterAggs took " + (System.nanoTime() - st) / 1e9 + "s.");
 
-        // calculate BGRP
-        st = System.nanoTime();
-        calculateBGRP();
-        System.out.println("Calculating BGRP took " + (System.nanoTime() - st) / 1e9 + "s.");
-
         // clean up
         cleanUp();
     }
@@ -193,6 +188,9 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // store raw query results into memory
         rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
+
+        // add row number as a BGRP
+        Main.getProject().addBGRP("roughN", String.valueOf(rawRows.size()));
     }
 
     private void computeClusterAggs() throws SQLException, ClassNotFoundException {
@@ -206,7 +204,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         }
 
         // bottom-up clustering
-        for (int i = numLevels; i > 0; i--) {
+        for (int i = numLevels; i >= 0; i--) {
             //            Main.printUsedMemory("Memory consumed before clustering level" + i);
             System.out.println("merging level " + i + "...");
 
@@ -218,6 +216,11 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
             for (Entry<RTreeData, Rectangle> o : curClustersIterable)
                 curClusters[idx++] = o.value();
 
+            // add BGRP
+            calculateBGRP(curClusters, i);
+
+            if (i == 0) break;
+
             // only sort for custom
             if (autoDD.getClusterMode().equals("custom")) Arrays.sort(curClusters, new SortByZ());
 
@@ -225,9 +228,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
             rtree1 = RTree.star().create();
 
             // linear scan -- merge or insert
-            for (int j = 0; j < curClusters.length; j++) {
-                RTreeData rd = curClusters[j];
-
+            for (RTreeData rd : curClusters) {
                 // find its nearest neighbor in the merged clusters
                 double cx =
                         autoDD.getCanvasCoordinate(
@@ -377,10 +378,8 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         bboxStmt.executeUpdate(sql);
     }
 
-    private void calculateBGRP() throws SQLException, ClassNotFoundException {
-
-        // add row number as a BGRP
-        Main.getProject().addBGRP("roughN", String.valueOf(rawRows.size()));
+    private void calculateBGRP(RTreeData[] rds, int level)
+            throws SQLException, ClassNotFoundException {
 
         // add min & max weight into rendering params
         // min/max sum/count for all measure fields
@@ -390,48 +389,28 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                 && !autoDD.getClusterMode().equals("contour")
                 && !autoDD.getClusterMode().equals("heatmap")) return;
 
-        for (int i = 0; i < numLevels; i++) {
-            String tableName = getAutoDDBboxTableName(i);
-            String curAutoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(i);
+        String curAutoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(level);
+        for (int i = 0; i < autoDD.getAggMeasureFields().size(); i++) {
+            String curField = autoDD.getAggMeasureFields().get(i);
+            String curFunction = autoDD.getAggMeasureFuncs().get(i);
 
-            for (int j = 0; j < autoDD.getAggMeasureFields().size(); j++) {
-                String curField = autoDD.getAggMeasureFields().get(j);
-                String curFunction = autoDD.getAggMeasureFuncs().get(j);
-
-                // min curFunction(curField)
-                String sql =
-                        "SELECT min((clusterAgg::jsonb->>'"
-                                + curFunction
-                                + "("
-                                + curField
-                                + ")')::float) FROM "
-                                + tableName
-                                + ";";
-                double retDbl =
-                        Double.valueOf(
-                                DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0));
-                Main.getProject()
-                        .addBGRP(
-                                curAutoDDId + "_" + curFunction + "(" + curField + ")_min",
-                                String.valueOf(retDbl));
-
-                // max sum(curField)
-                sql =
-                        "SELECT max((clusterAgg::jsonb->>'"
-                                + curFunction
-                                + "("
-                                + curField
-                                + ")')::float) FROM "
-                                + tableName
-                                + ";";
-                retDbl =
-                        Double.valueOf(
-                                DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0));
-                Main.getProject()
-                        .addBGRP(
-                                curAutoDDId + "_" + curFunction + "(" + curField + ")_max",
-                                String.valueOf(retDbl));
+            // min
+            float minAgg = Float.MAX_VALUE;
+            float maxAgg = Float.MIN_VALUE;
+            for (RTreeData rd : rds) {
+                minAgg = Math.min(minAgg, rd.numericalAggs.get(curFunction + "(" + curField + ")"));
+                maxAgg = Math.max(maxAgg, rd.numericalAggs.get(curFunction + "(" + curField + ")"));
             }
+
+            Main.getProject()
+                    .addBGRP(
+                            curAutoDDId + "_" + curFunction + "(" + curField + ")_min",
+                            String.valueOf(minAgg));
+
+            Main.getProject()
+                    .addBGRP(
+                            curAutoDDId + "_" + curFunction + "(" + curField + ")_max",
+                            String.valueOf(maxAgg));
         }
     }
 
