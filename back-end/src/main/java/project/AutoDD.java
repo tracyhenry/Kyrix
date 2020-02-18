@@ -15,7 +15,7 @@ public class AutoDD {
     private int topk;
     private String clusterMode, zOrder;
     private ArrayList<String> columnNames, queriedColumnNames = null, columnTypes = null;
-    private ArrayList<String> aggDimensionFields, aggMeasureFields;
+    private ArrayList<String> aggDimensionFields, aggMeasureFields, aggMeasureFuncs;
     private int numLevels, topLevelWidth, topLevelHeight;
     private double overlap;
     private double zoomFactor;
@@ -137,6 +137,10 @@ public class AutoDD {
 
     public ArrayList<String> getAggMeasureFields() {
         return aggMeasureFields;
+    }
+
+    public ArrayList<String> getAggMeasureFuncs() {
+        return aggMeasureFuncs;
     }
 
     public int getNumLevels() {

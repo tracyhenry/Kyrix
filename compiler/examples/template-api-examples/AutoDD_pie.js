@@ -4,7 +4,7 @@ const AutoDD = require("../../src/template-api/AutoDD").AutoDD;
 const renderers = require("./renderers");
 
 // construct a project
-var p = new Project("fifa_autodd", "../../../config.txt");
+var p = new Project("autodd_pie", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
 p.addStyles(renderers.playerRenderingStyles);
 

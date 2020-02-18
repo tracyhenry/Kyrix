@@ -68,10 +68,18 @@ public class DbConnector {
     public static ArrayList<ArrayList<String>> getQueryResult(String dbName, String sql)
             throws SQLException, ClassNotFoundException {
 
-        Statement stmt = DbConnector.getStmtByDbName(dbName);
+        Statement stmt = DbConnector.getStmtByDbName(dbName, true);
         ArrayList<ArrayList<String>> ret = getQueryResult(stmt, sql);
         stmt.close();
-        // closeConnection(dbName);
+
+        // We do not close connections here because otherwise
+        // indexers will have to reopen every time before
+        // calling getQueryResult(statement, sql);
+        // It's indexer's job to close the connection at the end
+        // so that the kyrix db (Config.databaseName) is not locked.
+        // At runtime this function is also called by getDataFromRegion().
+        // Closing the connection is then done by Server.java
+        // every time there is a new project request coming in
         return ret;
     }
 

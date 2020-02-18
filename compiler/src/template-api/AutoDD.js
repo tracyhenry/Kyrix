@@ -176,14 +176,18 @@ function AutoDD(args) {
     if (
         (args.marks.cluster.mode == "radar" ||
             args.marks.cluster.mode == "circle" ||
-            args.marks.cluster.mode == "custom") &&
+            args.marks.cluster.mode == "heatmap" ||
+            args.marks.cluster.mode == "contour") &&
         args.marks.cluster.aggregate.dimensions.length > 0
     )
         throw new Error(
             "Constructing AutoDD: dimension columns (args.marks.cluster.aggregate.dimensions) not allowed for the given cluster mode."
         );
     if (
-        args.marks.cluster.mode == "circle" &&
+        (args.marks.cluster.mode == "circle" ||
+            args.marks.cluster.mode == "heatmap" ||
+            args.marks.cluster.mode == "contour" ||
+            args.marks.cluster.mode == "pie") &&
         args.marks.cluster.aggregate.measures.length > 1
     )
         throw new Error(
@@ -268,6 +272,11 @@ function AutoDD(args) {
      ************************/
     this.clusterParams =
         "config" in args.marks.cluster ? args.marks.cluster.config : {};
+    // precision parameters
+    setPropertiesIfNotExists(this.clusterParams, {
+        precisionDecimal0: 1,
+        precisionDecimal1: 0
+    });
     if (args.marks.cluster.mode == "circle")
         setPropertiesIfNotExists(this.clusterParams, {
             circleMinSize: 30,
@@ -304,8 +313,20 @@ function AutoDD(args) {
         aggDimensions: args.marks.cluster.aggregate.dimensions,
         aggMeasures: args.marks.cluster.aggregate.measures
     };
-    this.aggregateParams.aggDomain = [];
+
+    // add count(*) to measure if not present
+    var hasCount = false;
+    for (var i = 0; i < this.aggregateParams.aggMeasures.length; i++)
+        if (this.aggregateParams.aggMeasures[i].function == "count")
+            hasCount = true;
+    if (!hasCount)
+        this.aggregateParams.aggMeasures.push({
+            function: "count",
+            field: "*"
+        });
+
     // combinations of domain values from all columns
+    this.aggregateParams.aggDomain = [];
     var dimensions = args.marks.cluster.aggregate.dimensions;
     var pointers = [];
     for (var i = 0; i < dimensions.length; i++) pointers.push(0);
@@ -428,8 +449,11 @@ function AutoDD(args) {
             this.aggregateParams.aggDimensions[i].field
         );
     this.aggMeasureFields = [];
-    for (var i = 0; i < this.aggregateParams.aggMeasures.length; i++)
+    this.aggMeasureFuncs = [];
+    for (var i = 0; i < this.aggregateParams.aggMeasures.length; i++) {
         this.aggMeasureFields.push(this.aggregateParams.aggMeasures[i].field);
+        this.aggMeasureFuncs.push(this.aggregateParams.aggMeasures[i].function);
+    }
     this.clusterCustomRenderer =
         "custom" in args.marks.cluster ? args.marks.cluster.custom : null;
     this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
@@ -466,35 +490,22 @@ function AutoDD(args) {
 function getLayerRenderer(level, autoDDArrayIndex) {
     function renderCircleBody() {
         var params = args.renderingParams;
-        var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
         REPLACE_ME_processClusterAgg();
+
+        // set up d3.scale for circle/text size
         var agg;
-        if (params.aggMeasures.length == 0) agg = "count(*)";
-        else {
-            var curMeasure = params.aggMeasures[0];
-            agg = curMeasure.function + "(" + curMeasure.field + ")";
-        }
+        var curMeasure = params.aggMeasures[0];
+        agg = curMeasure.function + "(" + curMeasure.field + ")";
         var minDomain = params["REPLACE_ME_autoDDId_" + agg + "_min"];
         var maxDomain = params["REPLACE_ME_autoDDId_" + agg + "_max"];
-        agg = aggKeyDelimiter + agg;
         var circleSizeInterpolator = d3
             .scaleSqrt()
             .domain([minDomain, maxDomain])
             .range([params.circleMinSize, params.circleMaxSize]);
+
+        // append circles & text
         var g = svg.append("g").classed("hovercircle", true);
         g.style("opacity", 0);
-
-        // filter
-        var defs = g.append("defs");
-        var filter = defs.append("filter").attr("id", "filter-demo-glow");
-        var feGaussianBlur = filter
-            .append("feGaussianBlur")
-            .attr("stdDeviation", "2")
-            .attr("result", "coloredBlur");
-        var feMerge = filter.append("feMerge");
-        feMerge.append("feMergeNode").attr("in", "coloredBlur");
-        feMerge.append("feMergeNode").attr("in", "SourceGraphic");
-
         g.selectAll("circle")
             .data(data)
             .enter()
@@ -513,7 +524,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .attr("fill", "#d7dbff")
             //            .attr("stroke", "#ADADAD")
             //            .style("stroke-width", "1px")
-            //            .style("filter", "url(#filter-demo-glow)")
             .style("pointer-events", "fill")
             .classed("kyrix-retainsizezoom", true);
         g.selectAll("text")
@@ -522,7 +532,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .append("text")
             .attr("dy", "0.3em")
             .text(function(d) {
-                return params.toLargeNumberNotation(+d.clusterAgg[agg]);
+                return params.toLargeNumberNotation(
+                    +d.clusterAgg[agg],
+                    params.precisionDecimal0,
+                    params.precisionDecimal1
+                );
             })
             .attr("font-size", function(d) {
                 return circleSizeInterpolator(d.clusterAgg[agg]) / 2;
@@ -558,6 +572,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function renderObjectClusterNumBody() {
         var g = svg.select("g:last-of-type");
+        var params = args.renderingParams;
         data.forEach(d => {
             d.clusterAgg = JSON.parse(d.clusterAgg);
         });
@@ -567,7 +582,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .append("text")
             .text(function(d) {
                 return args.renderingParams.toLargeNumberNotation(
-                    +d.clusterAgg["count(*)"]
+                    +d.clusterAgg["count(*)"],
+                    params.precisionDecimal0,
+                    params.precisionDecimal1
                 );
             })
             .attr("x", function(d) {
@@ -861,12 +878,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             var coordinates = [];
             for (var i = 0; i < params.aggMeasures.length; i++) {
                 var curMeasure = params.aggMeasures[i];
+                if (!("extent" in curMeasure)) continue;
                 var curAggKey =
-                    aggKeyDelimiter +
-                    curMeasure.function +
-                    "(" +
-                    curMeasure.field +
-                    ")";
+                    curMeasure.function + "(" + curMeasure.field + ")";
                 var angle =
                     Math.PI / 2 + (2 * Math.PI * i) / params.aggMeasures.length;
                 // average
@@ -909,6 +923,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             // axis & labels
             for (var i = 0; i < params.aggMeasures.length; i++) {
                 var curMeasure = params.aggMeasures[i];
+                if (!("extent" in curMeasure)) continue;
                 var angle =
                     Math.PI / 2 + (2 * Math.PI * i) / params.aggMeasures.length;
                 var lineCoords = angleToCoordinate(
@@ -963,7 +978,11 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             d3.select(nodes[j])
                 .append("text")
                 .text(function(d) {
-                    return d.clusterAgg["count(*)"];
+                    return params.toLargeNumberNotation(
+                        d.clusterAgg["count(*)"],
+                        params.precisionDecimal0,
+                        params.precisionDecimal1
+                    );
                 })
                 .attr("font-size", 25)
                 .attr("x", function(d) {
@@ -1021,7 +1040,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         for (var i = 0; i < params.aggDomain.length; i++)
             aggKeys.push(
                 params.aggDomain[i] +
-                    aggKeyDelimiter +
+                    (params.aggDomain[i] == "" ? "" : aggKeyDelimiter) +
                     params.aggMeasures[0].function +
                     "(" +
                     params.aggMeasures[0].field +
@@ -1081,7 +1100,13 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .enter()
             .append("text")
             .classed("cluster_num", true)
-            .text(d => d.clusterAgg["count(*)"])
+            .text(d =>
+                params.toLargeNumberNotation(
+                    +d.clusterAgg["count(*)"],
+                    params.precisionDecimal0,
+                    params.precisionDecimal1
+                )
+            )
             .attr("x", d => +d.cx)
             .attr("y", d => +d.cy - params.pieOuterRadius)
             // .attr("dy", ".35em")
@@ -1113,7 +1138,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function processClusterAgg() {
         function getConvexCoordinates(d) {
             var coords = d.clusterAgg.convexHull;
-            if (typeof coords == "string") coords = JSON.parse(coords);
             var convexHull = [];
             for (var i = 0; i < coords.length; i++) {
                 convexHull.push({
@@ -1134,7 +1158,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     var curFunc = params.aggMeasures[j].function;
                     var curKey =
                         params.aggDomain[i] +
-                        aggKeyDelimiter +
+                        (params.aggDomain[i] == "" ? "" : aggKeyDelimiter) +
                         curFunc +
                         "(" +
                         curField +
@@ -1143,6 +1167,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                         switch (curFunc) {
                             case "count":
                             case "sum":
+                            case "avg":
                             case "sqrsum":
                                 d.clusterAgg[curKey] = 0;
                                 break;
@@ -1151,27 +1176,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                                 break;
                             case "max":
                                 d.clusterAgg[curKey] = Number.MAX_VALUE;
-                                break;
-                            case "avg":
-                                var sumKey =
-                                    params.aggDomain[i] +
-                                    aggKeyDelimiter +
-                                    "sum(" +
-                                    curField +
-                                    ")";
-                                var countKey =
-                                    params.aggDomain[i] +
-                                    aggKeyDelimiter +
-                                    "count(*)";
-                                if (
-                                    !(sumKey in d.clusterAgg) ||
-                                    !(countKey in d.clusterAgg)
-                                )
-                                    d.clusterAgg[curKey] = 0;
-                                else
-                                    d.clusterAgg[curKey] =
-                                        d.clusterAgg[sumKey] /
-                                        d.clusterAgg[countKey];
                                 break;
                         }
                     }
@@ -1242,11 +1246,18 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 totalH = data.length * (charH + paddingH) + headerH;
             for (var i = 0; i < fields.length; i++) {
                 var maxlen = 0;
-                for (var j = 0; j < data.length; j++)
+                for (var j = 0; j < data.length; j++) {
+                    if (!isNaN(data[j][fields[i]]))
+                        data[j][fields[i]] = params.toLargeNumberNotation(
+                            +data[j][fields[i]],
+                            params.precisionDecimal0,
+                            params.precisionDecimal1
+                        );
                     maxlen = Math.max(
                         maxlen,
                         data[j][fields[i]].toString().length
                     );
+                }
                 maxlen = Math.max(maxlen, fields[i].length);
                 widths.push(maxlen * charW + paddingW);
                 totalW += widths[i];
@@ -1310,8 +1321,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     // use params.bboxH(W) for bounding box size
                     var g = svg.append("g").attr("id", "autodd_ranklist_hover");
                     var topKData = d.clusterAgg.topk;
-                    if (typeof topKData == "string")
-                        topKData = JSON.parse(topKData);
                     var topk = topKData.length;
                     for (var i = 0; i < topk; i++) {
                         topKData[i].cx = +d.cx;
@@ -1418,7 +1427,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 /REPLACE_ME_processClusterAgg/g,
                 "(" + processClusterAgg.toString() + ")"
             )
-            .replace(/REPLACE_ME_agg_key_delimiter/g, aggKeyDelimiter)
             .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
         renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     } else if (this.clusterMode == "contour") {

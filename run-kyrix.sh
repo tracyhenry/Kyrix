@@ -6,6 +6,7 @@
 # --kyrixport PORT_NUMBER: Specify the host port number of the kyrix backend container.
 # --postgis: Start the DB container with postgis. You need to either start from scratch or run with --build to let docker rebuild the images.
 # --build: Rebuild the docker images before starting.
+# --mavenopts: Pass in custom Maven configuration.
 
 echo -e "\nStopping existing containers..."
 docker-compose stop
@@ -19,6 +20,7 @@ KYRIX_PORT=8000
 START_APP=0
 BUILD_STAGE="pg-plv8"
 REBUILD=""
+KYRIX_MAVEN_OPTS="-Xmx2048m"
 
 while [[ $# -gt 0 ]]
 do
@@ -46,6 +48,11 @@ do
             REBUILD="--build"
             shift
             ;;
+        --mavenopts)
+            KYRIX_MAVEN_OPTS="$2"
+            shift
+            shift
+            ;;
         *)
             echo "Wrong argument name $key"
             exit
@@ -53,7 +60,7 @@ do
     esac
 done
 
-START_APP=$START_APP DB_PORT=$DB_PORT KYRIX_PORT=$KYRIX_PORT BUILD_STAGE=$BUILD_STAGE docker-compose up $REBUILD -d
+START_APP=$START_APP DB_PORT=$DB_PORT KYRIX_PORT=$KYRIX_PORT BUILD_STAGE=$BUILD_STAGE KYRIX_MAVEN_OPTS=$KYRIX_MAVEN_OPTS docker-compose up $REBUILD -d
 
 source docker-scripts/spinner.sh
 # waiting for kyrix_db_1 to start

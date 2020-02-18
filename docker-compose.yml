@@ -65,4 +65,5 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kyrixftw}
       KYRIX_PORT: ${KYRIX_PORT:-8000}
       START_APP: ${START_APP:-0}
+      KYRIX_MAVEN_OPTS: ${KYRIX_MAVEN_OPTS:-"-Xmx512m"}   # default 512M JVM memory
     entrypoint: sh -c 'sleep 5; /wait-for-postgres db:5432 -t 60 -- /start-kyrix.sh; tail -f /dev/null'

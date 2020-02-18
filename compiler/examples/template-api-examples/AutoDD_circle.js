@@ -4,7 +4,7 @@ const AutoDD = require("../../src/template-api/AutoDD").AutoDD;
 const renderers = require("../nba/renderers");
 
 // construct a project
-var p = new Project("nba_autodd", "../../../config.txt");
+var p = new Project("autodd_circle", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
 p.addStyles("../nba/nba.css");
 

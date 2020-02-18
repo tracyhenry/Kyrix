@@ -40,6 +40,7 @@ public class Server {
             while (!terminated) terminationLock.wait();
         }
         Server.stopServer();
+        DbConnector.closeConnection(Config.databaseName);
         Indexer.precompute();
         Main.setProjectClean();
         System.out.println("Completed recomputing indexes. Server restarting...");

@@ -199,18 +199,24 @@ function serializePath(path) {
  * @param ct
  * @returns {*}
  */
-function toLargeNumberNotation(ct) {
-    if (ct < 1000) return ct;
+function toLargeNumberNotation(ct, d0 = 1, d1 = 0) {
+    // d0 is the number of decimals for ct < 1000
+    // d1 is the number of decimals for ct > 1000
+    if (ct < 1000)
+        return (
+            Math.round((ct + Number.EPSILON) * Math.pow(10, d0)) /
+            Math.pow(10, d0)
+        );
     if (ct >= 1000 && ct < 1000000) {
         ct /= 1000.0;
-        return ct.toFixed(0) + "K";
+        return ct.toFixed(d1) + "K";
     }
     if (ct > 1000000 && ct < 1000000000) {
         ct /= 1000000.0;
-        return ct.toFixed(0) + "M";
+        return ct.toFixed(d1) + "M";
     } else {
         ct /= 1000000000.0;
-        return ct.toFixed(0) + "B";
+        return ct.toFixed(d1) + "B";
     }
     return "";
 }

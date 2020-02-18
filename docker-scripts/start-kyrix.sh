@@ -73,6 +73,11 @@ if [ "x$START_APP" = "x1" ] || [ "x$SRCDATA_PROJECT_NAME" = "xnba" ]; then
     fi
 fi
 
+# cleanup maven opts
+rm /etc/mavenrc
+echo $KYRIX_MAVEN_OPTS > /etc/mavenrc
+export MAVEN_OPTS=$KYRIX_MAVEN_OPTS
+
 # starting the backend
 cd /kyrix/back-end
 
