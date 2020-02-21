@@ -28,7 +28,7 @@ services:
       - "-c"
       - "effective_cache_size=15GB"
       - "-c"
-      - "shared_buffers=7GB"
+      - "shared_buffers=1GB"
       - "-c"
       - "work_mem=1GB"
       - "-c"
@@ -45,7 +45,7 @@ services:
     ports: # comment-out for extra security or to avoid conflicts with host OS
      - "${DB_PORT:-5432}:5432"
     environment:
-      POSTGRES_PASS: ${POSTGRES_PASSWORD:-kyrixftw}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kyrixftw}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
 # for backup - requires special config on MacOS host OSs
 #    volumes:
