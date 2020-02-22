@@ -20,7 +20,7 @@ KYRIX_PORT=8000
 START_APP=0
 BUILD_STAGE="pg-plv8"
 REBUILD=""
-KYRIX_MAVEN_OPTS="-Xmx2048m"
+KYRIX_MAVEN_OPTS="-Xmx512m"
 
 while [[ $# -gt 0 ]]
 do
