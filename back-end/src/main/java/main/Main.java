@@ -39,7 +39,8 @@ public class Main {
 
     public static void setProject(Project newProject) {
 
-        System.out.println("Current project set to: " + newProject.getName());
+        System.out.println(
+                "Current project set to: " + (newProject != null ? newProject.getName() : "null"));
         project = newProject;
 
         // clear cache whenever there is a project switch
