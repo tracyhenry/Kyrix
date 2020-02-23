@@ -44,9 +44,9 @@ public class ProjectRequestHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
 
-        try {
-            System.out.println("\n\nServing /project\n New project definition coming...");
+        System.out.println("\n\nServing /project\n New project definition coming...");
 
+        try {
             // check if this is a POST request
             if (!httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
                 Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
@@ -104,6 +104,8 @@ public class ProjectRequestHandler implements HttpHandler {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            System.out.println("\n\n" + e.getMessage() + "\n");
+            Server.printServingErrorMessage();
         }
     }
 
