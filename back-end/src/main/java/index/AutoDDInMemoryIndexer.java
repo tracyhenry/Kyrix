@@ -11,9 +11,11 @@ import com.google.gson.JsonObject;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Locale;
 import main.Config;
 import main.DbConnector;
 import main.Main;
@@ -105,8 +107,8 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
             int zColId = autoDD.getColumnNames().indexOf(zCol);
             String zOrder = autoDD.getzOrder();
 
-            float v1 = Float.valueOf(rawRows.get(o1.rowId).get(zColId));
-            float v2 = Float.valueOf(rawRows.get(o2.rowId).get(zColId));
+            float v1 = parseFloat(rawRows.get(o1.rowId).get(zColId));
+            float v2 = parseFloat(rawRows.get(o2.rowId).get(zColId));
             if (v1 == v2) return 0;
             if (zOrder.equals("asc")) return v1 < v2 ? -1 : 1;
             else return v1 < v2 ? 1 : -1;
@@ -188,6 +190,9 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // store raw query results into memory
         rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
+        for (int i = 0; i < rawRows.size(); i++)
+            for (int j = 0; j < numRawColumns; j++)
+                if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
 
         // add row number as a BGRP
         Main.getProject().addBGRP("roughN", String.valueOf(rawRows.size()));
@@ -233,12 +238,12 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                 double cx =
                         autoDD.getCanvasCoordinate(
                                 i - 1,
-                                Double.valueOf(rawRows.get(rd.rowId).get(autoDD.getXColId())),
+                                parseFloat(rawRows.get(rd.rowId).get(autoDD.getXColId())),
                                 true);
                 double cy =
                         autoDD.getCanvasCoordinate(
                                 i - 1,
-                                Double.valueOf(rawRows.get(rd.rowId).get(autoDD.getYColId())),
+                                parseFloat(rawRows.get(rd.rowId).get(autoDD.getYColId())),
                                 false);
                 double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
                 double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
@@ -255,13 +260,13 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                     double curCx =
                             autoDD.getCanvasCoordinate(
                                     i - 1,
-                                    Double.valueOf(
+                                    parseFloat(
                                             rawRows.get(neighborRd.rowId).get(autoDD.getXColId())),
                                     true);
                     double curCy =
                             autoDD.getCanvasCoordinate(
                                     i - 1,
-                                    Double.valueOf(
+                                    parseFloat(
                                             rawRows.get(neighborRd.rowId).get(autoDD.getYColId())),
                                     false);
                     double curDistance =
@@ -452,10 +457,11 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         // convexHull
         double cx =
                 autoDD.getCanvasCoordinate(
-                        autoDD.getNumLevels(), Double.valueOf(row.get(autoDD.getXColId())), true);
+                        autoDD.getNumLevels(), parseFloat(row.get(autoDD.getXColId())), true);
         double cy =
                 autoDD.getCanvasCoordinate(
-                        autoDD.getNumLevels(), Double.valueOf(row.get(autoDD.getYColId())), false);
+                        autoDD.getNumLevels(), parseFloat(row.get(autoDD.getYColId())), false);
+
         float minx = (float) (cx - autoDD.getBboxW() / 2.0),
                 maxx = (float) (cx + autoDD.getBboxW() / 2.0);
         float miny = (float) (cy - autoDD.getBboxH() / 2.0),
@@ -491,7 +497,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
             float curValue =
                     (curMeasureFunction.equals("count")
                             ? 1.0f
-                            : Float.valueOf(
+                            : parseFloat(
                                     row.get(autoDD.getColumnNames().indexOf(curMeasureField))));
 
             if (curMeasureFunction.equals("sqrsum"))
@@ -537,8 +543,8 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                 else {
                     int parentHead = parentTopk[parentIter];
                     int childHead = childTopk[childIter];
-                    double parentValue = Double.valueOf(rawRows.get(parentHead).get(zColId));
-                    double childValue = Double.valueOf(rawRows.get(childHead).get(zColId));
+                    double parentValue = parseFloat(rawRows.get(parentHead).get(zColId));
+                    double childValue = parseFloat(rawRows.get(childHead).get(zColId));
                     if ((parentValue <= childValue && zOrder.equals("asc"))
                             || (parentValue >= childValue && zOrder.equals("desc"))) {
                         mergedTopk[mergedIter++] = parentHead;
@@ -621,5 +627,14 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
             coordsList[i][1] = (float) coordinates[i].y;
         }
         return coordsList;
+    }
+
+    private float parseFloat(String s) {
+        NumberFormat nf = NumberFormat.getInstance(Locale.US);
+        try {
+            return nf.parse(s).floatValue();
+        } catch (Exception e) {
+            return 0;
+        }
     }
 }

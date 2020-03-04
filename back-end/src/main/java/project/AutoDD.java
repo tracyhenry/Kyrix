@@ -19,7 +19,7 @@ public class AutoDD {
     private int numLevels, topLevelWidth, topLevelHeight;
     private double overlap;
     private double zoomFactor;
-    private int xColId = -1, yColId = -1;
+    private int xColId = -1, yColId = -1, zColId = -1;
     private double loX = Double.NaN, loY, hiX, hiY;
     private String mergeClusterAggs,
             getCitusSpatialHashKeyBody,
@@ -78,7 +78,7 @@ public class AutoDD {
 
         if (xColId < 0) {
             ArrayList<String> colNames = getColumnNames();
-            for (int i = 0; i < colNames.size(); i++) if (colNames.get(i).equals(xCol)) xColId = i;
+            xColId = colNames.indexOf(xCol);
         }
         return xColId;
     }
@@ -87,9 +87,18 @@ public class AutoDD {
 
         if (yColId < 0) {
             ArrayList<String> colNames = getColumnNames();
-            for (int i = 0; i < colNames.size(); i++) if (colNames.get(i).equals(yCol)) yColId = i;
+            yColId = colNames.indexOf(yCol);
         }
         return yColId;
+    }
+
+    public int getZColId() {
+
+        if (zColId < 0) {
+            ArrayList<String> colNames = getColumnNames();
+            zColId = colNames.indexOf(zCol);
+        }
+        return zColId;
     }
 
     public ArrayList<String> getColumnNames() {
