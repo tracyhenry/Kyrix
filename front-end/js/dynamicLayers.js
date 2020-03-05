@@ -10,7 +10,8 @@ function renderAxes(viewId, viewportX, viewportY, vWidth, vHeight) {
     var axesFunc = gvd.curCanvas.axes;
     if (axesFunc == "") return;
 
-    var axes = axesFunc.parseFunction()(getOptionalArgs(viewId));
+    var args = getOptionalArgs(viewId);
+    var axes = axesFunc.parseFunction()(args);
     for (var i = 0; i < axes.length; i++) {
         // create g element
         var curg = axesg
@@ -59,7 +60,7 @@ function renderAxes(viewId, viewportX, viewportY, vWidth, vHeight) {
         curg.call(axes[i].axis.scale(newScale));
 
         // styling
-        if ("styling" in axes[i]) axes[i].styling(curg);
+        if ("styling" in axes[i]) axes[i].styling(curg, axes[i].dim, i, args);
     }
 }
 

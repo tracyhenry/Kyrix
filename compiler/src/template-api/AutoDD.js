@@ -470,6 +470,10 @@ function AutoDD(args) {
             ? 0
             : 1;
     this.axis = "axis" in args.config ? args.config.axis : false;
+    this.xAxisTitle =
+        "xAxisTitle" in args.config ? args.config.xAxisTitle : this.xCol;
+    this.yAxisTitle =
+        "yAxisTitle" in args.config ? args.config.yAxisTitle : this.yCol;
     this.loX = args.layout.x.extent != null ? args.layout.x.extent[0] : null;
     this.loY = args.layout.y.extent != null ? args.layout.y.extent[0] : null;
     this.hiX = args.layout.x.extent != null ? args.layout.x.extent[1] : null;
@@ -1473,18 +1477,40 @@ function getAxesRenderer(level) {
         var cWidth = args.canvasW,
             cHeight = args.canvasH,
             axes = [];
-        var styling = function(axesg) {
+        var styling = function(axesg, dim, id, args) {
             axesg
                 .selectAll(".tick line")
                 .attr("stroke", "#CCC")
                 .attr("stroke-dasharray", "5, 5")
                 .style("opacity", 0.3);
-            axesg.style("font", "16px arial");
+            axesg.attr("font-family", "Open Sans").attr("font-size", "13");
             axesg
                 .selectAll("g")
                 .selectAll("text")
                 .style("fill", "#999");
             axesg.selectAll("path").remove();
+            xAxisTitle = "REPLACE_ME_X_TITLE";
+            yAxisTitle = "REPLACE_ME_Y_TITLE";
+            if (dim == "x")
+                axesg
+                    .append("text")
+                    .text(xAxisTitle)
+                    .attr("fill", "black")
+                    .attr("text-anchor", "middle")
+                    .attr(
+                        "transform",
+                        "translate(" + args.viewportW / 2 + ", 40)"
+                    );
+            else
+                axesg
+                    .append("text")
+                    .text(yAxisTitle)
+                    .attr("fill", "black")
+                    .attr("text-anchor", "middle")
+                    .attr(
+                        "transform",
+                        "translate(-60, " + args.viewportH / 2 + ") rotate(-90)"
+                    );
         };
         //x
         var x = d3
@@ -1510,6 +1536,7 @@ function getAxesRenderer(level) {
             translate: [0, args.viewportH],
             styling: styling
         });
+
         //y
         var y = d3
             .scaleLinear()
@@ -1538,7 +1565,9 @@ function getAxesRenderer(level) {
         .replace(/REPLACE_ME_this_loY/g, this.loY)
         .replace(/REPLACE_ME_this_hiY/g, this.hiY)
         .replace(/REPLACE_ME_xOffset/g, xOffset)
-        .replace(/REPLACE_ME_yOffset/g, yOffset);
+        .replace(/REPLACE_ME_yOffset/g, yOffset)
+        .replace(/REPLACE_ME_X_TITLE/g, this.xAxisTitle)
+        .replace(/REPLACE_ME_Y_TITLE/g, this.yAxisTitle);
     return new Function("args", axesFuncBody);
 }
 

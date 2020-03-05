@@ -71,7 +71,7 @@ p.setInitialStates(view, stateMapCanvas, 0, 0);
 
 var rightView = new View(
     "county",
-    stateMapWidth + 100,
+    stateMapWidth + 150,
     0,
     stateMapWidth,
     stateMapHeight
