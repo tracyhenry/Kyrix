@@ -1476,9 +1476,14 @@ function getAxesRenderer(level) {
         var styling = function(axesg) {
             axesg
                 .selectAll(".tick line")
-                .attr("stroke", "#777")
-                .attr("stroke-dasharray", "3,10");
-            axesg.style("font", "20px arial");
+                .attr("stroke", "#CCC")
+                .attr("stroke-dasharray", "5, 5")
+                .style("opacity", 0.3);
+            axesg.style("font", "16px arial");
+            axesg
+                .selectAll("g")
+                .selectAll("text")
+                .style("fill", "#999");
             axesg.selectAll("path").remove();
         };
         //x
@@ -1494,7 +1499,10 @@ function getAxesRenderer(level) {
             .scaleTime()
             .domain([stDate, enDate])
             .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);*/
-        var xAxis = d3.axisBottom().tickSize(-cHeight);
+        var xAxis = d3
+            .axisBottom()
+            .tickSize(-cHeight)
+            .tickFormat(d3.format("~s"));
         axes.push({
             dim: "x",
             scale: x,
@@ -1507,7 +1515,10 @@ function getAxesRenderer(level) {
             .scaleLinear()
             .domain([REPLACE_ME_this_loY, REPLACE_ME_this_hiY])
             .range([REPLACE_ME_yOffset, cHeight - REPLACE_ME_yOffset]);
-        var yAxis = d3.axisLeft().tickSize(-cWidth);
+        var yAxis = d3
+            .axisLeft()
+            .tickSize(-cWidth)
+            .tickFormat(d3.format("~s"));
         axes.push({
             dim: "y",
             scale: y,
