@@ -40,11 +40,54 @@ public class Server {
             while (!terminated) terminationLock.wait();
         }
         Server.stopServer();
-        DbConnector.closeConnection(Config.databaseName);
-        Indexer.precompute();
-        Main.setProjectClean();
-        System.out.println("Completed recomputing indexes. Server restarting...");
+        try {
+            DbConnector.closeConnection(Config.databaseName);
+            Indexer.precompute();
+            Main.setProjectClean();
+            System.out.println("Completed recomputing indexes. Server restarting...");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("\n\n" + e.getMessage() + "\n");
+            printIndexingErrorMessage();
+            Main.setProject(null);
+            DbConnector.closeAllConnections();
+            System.out.println("Server restarting....");
+        }
         Server.startServer(Config.portNumber);
+    }
+
+    public static void printIndexingErrorMessage() {
+        System.out.println(
+                "+---------------------------------------------------------+\n"
+                        + "|ERROR!!! An exception occurred while indexing.           |\n"
+                        + "|This is likely due to errors in database related things, |\n"
+                        + "|e.g. a mis-formed SQL query in the specification, a non- |\n"
+                        + "|existent column you specified, or the data isn't loaded  |\n"
+                        + "|into the database.                                       |\n"
+                        + "|                                                         |\n"
+                        + "|Indexing is now terminated and the server is restarted.  |\n"
+                        + "|Please inspect your spec and database, and then recompile|\n"
+                        + "|the project.If you can't figure out the issue, feel free |\n"
+                        + "|to contact Kyrix maintainers.                            |\n"
+                        + "|                                                         |\n"
+                        + "|Github: https://github.com/tracyhenry/kyrix              |\n"
+                        + "+---------------------------------------------------------+");
+    }
+
+    public static void printServingErrorMessage() {
+        System.out.println(
+                "+-------------------------------------------------------------+\n"
+                        + "|ERROR!!! An exception occurred while serving an HTTP request.|\n"
+                        + "|This is likely due to errors in database related things,     |\n"
+                        + "|e.g. a non-existent column you specified, or deleted/-       |\n"
+                        + "|corrupted database indexes.                                  |\n"
+                        + "|                                                             |\n"
+                        + "|The server will continue running, but the error will likely  |\n"
+                        + "|occur again. You can recompile the project to recompute the  |\n"
+                        + "|indexes, or reach out to the kyrix maintainers for help.     |\n"
+                        + "|                                                             |\n"
+                        + "|Github: https://github.com/tracyhenry/kyrix                  |\n"
+                        + "+-------------------------------------------------------------+");
     }
 
     public static void terminate() {

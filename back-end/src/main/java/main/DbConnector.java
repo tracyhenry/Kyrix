@@ -149,4 +149,11 @@ public class DbConnector {
             connections.remove(dbName + "_batch");
         }
     }
+
+    public static void closeAllConnections() throws SQLException {
+        for (String connName : connections.keySet()) {
+            connections.get(connName).close();
+        }
+        connections.clear();
+    }
 }
