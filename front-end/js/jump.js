@@ -47,6 +47,7 @@ function preJump(viewId, zoomType) {
     d3.selectAll("button" + viewClass).attr("disabled", true);
 
     gvd.animation = zoomType;
+    gvd.initialScale = null;
 }
 
 function postJump(viewId, zoomType) {
@@ -67,9 +68,7 @@ function postJump(viewId, zoomType) {
         // in the future we shouldn't need these if-elses
         // gvd.initialScale should be set prior to all jumps.
         // relevant: https://github.com/tracyhenry/Kyrix/issues/12
-        else if (zoomType == param.load)
-            setupZoom(viewId, gvd.initialScale || 1);
-        else setupZoom(viewId, 1);
+        else setupZoom(viewId, gvd.initialScale || 1);
 
         // set up button states
         setBackButtonState(viewId);
@@ -322,9 +321,10 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
         // change viewBox of static layers
         minx = v[0] - vWidth / 2.0;
         miny = v[1] - vHeight / 2.0;
+        var k = gvd.viewportWidth / curViewport[2];
         d3.selectAll(viewClass + ".oldmainsvg.static").attr(
             "viewBox",
-            minx + " " + miny + " " + vWidth + " " + vHeight
+            minx * k + " " + miny * k + " " + vWidth * k + " " + vHeight * k
         );
 
         // change opacity

@@ -274,7 +274,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     tileSvg.style("opacity", 1.0);
 
                     // register jumps
-                    if (!globalVar.animation) registerJumps(viewId, tileSvg, i);
+                    if (!gvd.animation) registerJumps(viewId, tileSvg, i);
 
                     // highlight
                     highlightLowestSvg(viewId, tileSvg, i);
