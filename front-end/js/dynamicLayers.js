@@ -277,7 +277,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     if (curLayer.tooltipColumns.length > 0)
                         makeTooltips(
                             tileSvg.selectAll("*"),
-                            curLayer.tooltipColunms,
+                            curLayer.tooltipColumns,
                             curLayer.tooltipAliases
                         );
 
@@ -493,7 +493,7 @@ function renderDynamicBoxes(
                     if (curLayer.tooltipColumns.length > 0)
                         makeTooltips(
                             dboxSvg.select("g:last-of-type").selectAll("*"),
-                            curLayer.tooltipColunms,
+                            curLayer.tooltipColumns,
                             curLayer.tooltipAliases
                         );
 
