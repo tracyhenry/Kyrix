@@ -273,6 +273,14 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     );
                     tileSvg.style("opacity", 1.0);
 
+                    // tooltip
+                    if (curLayer.tooltipColumns.length > 0)
+                        makeTooltips(
+                            tileSvg.selectAll("*"),
+                            curLayer.tooltipColunms,
+                            curLayer.tooltipAliases
+                        );
+
                     // register jumps
                     if (!gvd.animation) registerJumps(viewId, tileSvg, i);
 
@@ -480,6 +488,14 @@ function renderDynamicBoxes(
                         renderData[i],
                         optionalArgsWithBoxWHXY
                     );
+
+                    // tooltip
+                    if (curLayer.tooltipColumns.length > 0)
+                        makeTooltips(
+                            dboxSvg.select("g:last-of-type").selectAll("*"),
+                            curLayer.tooltipColunms,
+                            curLayer.tooltipAliases
+                        );
 
                     // register jumps
                     if (!gvd.animation) registerJumps(viewId, dboxSvg, i);

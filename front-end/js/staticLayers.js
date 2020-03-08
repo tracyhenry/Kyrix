@@ -22,6 +22,14 @@ function renderStaticLayers(viewId) {
         var curSvg = d3.select(viewClass + ".layerg.layer" + i).select("svg");
         renderFunc(curSvg, gvd.curStaticData[i], getOptionalArgs(viewId));
 
+        // tooltips
+        if (curLayer.tooltipColumns.length > 0)
+            makeTooltips(
+                curSvg.selectAll("*"),
+                curLayer.tooltipColumns,
+                curLayer.tooltipAliases
+            );
+
         // register jump
         if (!gvd.animation) registerJumps(viewId, curSvg, i);
 
