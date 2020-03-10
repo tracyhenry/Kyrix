@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpServer;
 import index.Indexer;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
@@ -148,15 +149,17 @@ public class Server {
     }
 
     // https://stackoverflow.com/questions/11640025/how-to-obtain-the-query-string-in-a-get-with-java-httpserver-httpexchange
-    public static Map<String, String> queryToMap(String query) {
+    public static Map<String, String> queryToMap(String query) throws UnsupportedEncodingException {
 
         Map<String, String> result = new HashMap<>();
         // check if query is null
         if (query == null) return result;
         for (String param : query.split("&")) {
+            param = java.net.URLDecoder.decode(param, "UTF-8");
             int pos = param.indexOf("=");
             result.put(param.substring(0, pos), param.substring(pos + 1));
         }
+
         return result;
     }
 

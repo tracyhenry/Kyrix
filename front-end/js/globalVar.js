@@ -53,7 +53,14 @@ function getOptionalArgs(viewId) {
 
 // get SQL predicates from a predicate dictionary
 function getSqlPredicate(p) {
-    if ("==" in p) return "(" + p["=="][0] + "='" + p["=="][1] + "')";
+    if ("==" in p)
+        return (
+            "(" +
+            p["=="][0].replace(/&/g, "%26") +
+            "='" +
+            p["=="][1].replace(/&/g, "%26") +
+            "')"
+        );
     if ("AND" in p)
         return (
             "(" +
@@ -143,7 +150,7 @@ function makeTooltips(selection, columns, aliases) {
 
         // column values
         rows.append("td")
-            .html(p => (!isNaN(d[p]) ? d3.format(".2f")(d[p]) : d[p]))
+            .html(p => (!isNaN(d[p]) ? d3.format(",.2f")(d[p]) : d[p]))
             .style("font-weight", "900")
             .style("padding-left", "2px")
             .style("padding-right", "10px")
