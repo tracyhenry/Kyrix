@@ -1,11 +1,11 @@
 function removePopovers(viewId) {
-    var selector = ".popover";
+    var selector = ".popover,.kyrixtooltip";
     if (viewId != null) selector += ".view_" + viewId;
     d3.selectAll(selector).remove();
 }
 
 function removePopoversSmooth(viewId) {
-    var selector = ".popover";
+    var selector = ".popover,.kyrixtooltip";
     if (viewId != null) selector += ".view_" + viewId;
     d3.selectAll(selector)
         .transition()
@@ -43,7 +43,10 @@ function preJump(viewId, zoomType) {
     d3.select(viewClass + ".viewsvg")
         .selectAll("*")
         .style("cursor", "auto")
-        .on("click", null);
+        .on("click", null)
+        .on("mouseover", null)
+        .on("mouseout", null)
+        .on("mousemove", null);
     d3.selectAll("button" + viewClass).attr("disabled", true);
 
     gvd.animation = zoomType;
@@ -209,6 +212,13 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
             .split(" ");
     for (var i = 0; i < curViewport.length; i++)
         curViewport[i] = +curViewport[i];
+    if (
+        !("minx" in tuple) ||
+        !("miny" in tuple) ||
+        !("maxx" in tuple) ||
+        !("maxy" in tuple)
+    )
+        tuple.minx = tuple.miny = tuple.maxx = tuple.maxy = 0;
     var tupleWidth = +tuple.maxx - tuple.minx;
     var tupleHeight = +tuple.maxy - tuple.miny;
     var minx, maxx, miny, maxy;
