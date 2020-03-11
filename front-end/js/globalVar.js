@@ -114,7 +114,7 @@ function getJumpsByCanvasId(canvasId) {
 // make tooltips after rendering functions are called
 function makeTooltips(selection, columns, aliases) {
     var createTooltip = function(d) {
-        if (d == null) return;
+        if (d == null || typeof d !== "object") return;
         // remove all tool tips first
         d3.select("body")
             .selectAll(".kyrixtooltip")
@@ -169,13 +169,13 @@ function makeTooltips(selection, columns, aliases) {
     selection
         .on("mouseover", d => createTooltip(d))
         .on("mousemove", function(d) {
-            if (d == null) return;
+            if (d == null || typeof d !== "object") return;
             d3.select(".kyrixtooltip")
                 .style("left", d3.event.pageX + "px")
                 .style("top", d3.event.pageY + "px");
         })
         .on("mouseout", function(d) {
-            if (d == null) return;
+            if (d == null || typeof d !== "object") return;
             d3.select(".kyrixtooltip").remove();
         });
 }
