@@ -56,9 +56,9 @@ function getSqlPredicate(p) {
     if ("==" in p)
         return (
             "(" +
-            p["=="][0].replace(/&/g, "%26") +
+            p["=="][0].toString().replace(/&/g, "%26") +
             "='" +
-            p["=="][1].replace(/&/g, "%26") +
+            p["=="][1].toString().replace(/&/g, "%26") +
             "')"
         );
     if ("AND" in p)
