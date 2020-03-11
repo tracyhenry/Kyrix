@@ -13,7 +13,7 @@ function textwrap(text, width) {
         var text = d3.select(this),
             words = text
                 .text()
-                .split(/(?=[A-Z])/)
+                .split(/\s+/)
                 .reverse(),
             word,
             line = [],
@@ -32,14 +32,14 @@ function textwrap(text, width) {
                     .attr("x", x)
                     .attr("y", y);
             line.push(word);
-            tspan.text(line.join(""));
+            tspan.text(line.join(" "));
             if (tspan.node().getComputedTextLength() > width) {
                 var popped = false;
                 if (line.length > 1) {
                     line.pop();
                     popped = true;
                 }
-                tspan.text(line.join(""));
+                tspan.text(line.join(" "));
                 if (popped) {
                     line = [word];
                     tspan = text
