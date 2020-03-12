@@ -171,6 +171,7 @@ function backspace(viewId) {
                     enterAndZoom(t, i(t));
                 };
             })
+            .ease(d3.easeSinIn)
             .on("start", function() {
                 // set up layer layouts
                 setupLayerLayouts(viewId);

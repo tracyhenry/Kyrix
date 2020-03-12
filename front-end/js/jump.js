@@ -273,6 +273,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
                 zoomAndFade(t, i(t));
             };
         })
+        .ease(d3.easeSinOut)
         .on("start", function() {
             // schedule a new entering transition
             if (enteringAnimation)
