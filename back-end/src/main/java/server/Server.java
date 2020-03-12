@@ -47,10 +47,18 @@ public class Server {
             Main.setProjectClean();
             System.out.println("Completed recomputing indexes. Server restarting...");
         } catch (Exception e) {
+            // print out stack trace
             e.printStackTrace();
             System.out.println("\n\n" + e.getMessage() + "\n");
+
+            // print out indexing error message
             printIndexingErrorMessage();
+
+            // clear project history and set current project to null
+            ProjectRequestHandler.clearProjectHistoryDueToException(Main.getProject().getName());
             Main.setProject(null);
+
+            // close db connections
             DbConnector.closeAllConnections();
             System.out.println("Server restarting....");
         }
