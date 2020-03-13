@@ -334,7 +334,9 @@ function addAutoDD(autoDD, args) {
 
         // construct rendering function
         curLayer.addRenderingFunc(
-            autoDD.getLayerRenderer(i, this.autoDDs.length - 1)
+            autoDD.getLayerRenderer(i, this.autoDDs.length - 1),
+            autoDD.tooltipColumns,
+            autoDD.tooltipAliases
         );
 
         // axes

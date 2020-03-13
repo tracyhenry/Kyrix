@@ -227,6 +227,10 @@ function AutoDD(args) {
             "Constructing AutoDD: there must be exactly 1 aggregate measure for pie charts."
         );
     if ("rankList" in args.marks.hover) {
+        if ("tooltip" in args.marks.hover)
+            throw new Error(
+                "Constructing AutoDD: rankList and tooltip cannot be specified together."
+            );
         if (!("mode" in args.marks.hover.rankList))
             throw new Error(
                 "Constructing AutoDD: hover rankList mode (marks.hover.rankList.mode) is missing."
@@ -266,6 +270,23 @@ function AutoDD(args) {
                 "Constructing AutoDD: unrecognized hover boundary type " +
                     args.marks.hover.boundary
             );
+    if ("tooltip" in args.marks.hover) {
+        if (!("columns" in args.marks.hover.tooltip))
+            throw new Error(
+                "Constructing AutoDD: tooltip columns (marks.hover.tooltip.columns) missing."
+            );
+        if (!Array.isArray(args.marks.hover.tooltip.columns))
+            throw new Error(
+                "Constructing AutoDD: tooltip columns (marks.hover.tooltip.columns) must be an array."
+            );
+        if (
+            "aliases" in args.marks.hover.tooltip &&
+            !Array.isArray(args.marks.hover.tooltip.aliases)
+        )
+            throw new Error(
+                "Constructing AutoDD: tooltip aliases (marks.hover.tooltip.aliases) must be an array."
+            );
+    }
 
     /************************
      * setting cluster params
@@ -391,6 +412,13 @@ function AutoDD(args) {
     if ("boundary" in args.marks.hover)
         this.hoverParams.hoverBoundary = args.marks.hover.boundary;
     this.topk = this.hoverParams.topk != null ? this.hoverParams.topk : 0;
+    this.tooltipColumns = this.tooltipAliases = null;
+    if ("tooltip" in args.marks.hover) {
+        this.tooltipColumns = args.marks.hover.tooltip.columns;
+        if ("aliases" in args.marks.hover.tooltip)
+            this.tooltipAliases = args.marks.hover.tooltip.aliases;
+        else this.tooltipAliases = this.tooltipColumns;
+    }
 
     /***************************
      * setting legend parameters
