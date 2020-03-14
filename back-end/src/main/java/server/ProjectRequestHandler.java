@@ -26,7 +26,7 @@ public class ProjectRequestHandler implements HttpHandler {
         gson = new GsonBuilder().create();
     };
 
-    public static void clearProjectHistoryDueToException(String projectName) {
+    public static void clearProjectHistory(String projectName) {
         projects.remove(projectName);
     }
 

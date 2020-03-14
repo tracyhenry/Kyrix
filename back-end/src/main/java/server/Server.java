@@ -55,7 +55,7 @@ public class Server {
             printIndexingErrorMessage();
 
             // clear project history and set current project to null
-            ProjectRequestHandler.clearProjectHistoryDueToException(Main.getProject().getName());
+            ProjectRequestHandler.clearProjectHistory(Main.getProject().getName());
             Main.setProject(null);
 
             // close db connections
