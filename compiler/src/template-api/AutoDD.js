@@ -293,10 +293,8 @@ function AutoDD(args) {
      ************************/
     this.clusterParams =
         "config" in args.marks.cluster ? args.marks.cluster.config : {};
-    // precision parameters
     setPropertiesIfNotExists(this.clusterParams, {
-        precisionDecimal0: 1,
-        precisionDecimal1: 0
+        numberFormat: "~s"
     });
     if (args.marks.cluster.mode == "circle")
         setPropertiesIfNotExists(this.clusterParams, {
@@ -564,11 +562,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .append("text")
             .attr("dy", "0.3em")
             .text(function(d) {
-                return params.toLargeNumberNotation(
-                    +d.clusterAgg[agg],
-                    params.precisionDecimal0,
-                    params.precisionDecimal1
-                );
+                return d3.format(params.numberFormat)(+d.clusterAgg[agg]);
             })
             .attr("font-size", function(d) {
                 return circleSizeInterpolator(d.clusterAgg[agg]) / 2;
@@ -613,11 +607,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .enter()
             .append("text")
             .text(function(d) {
-                return args.renderingParams.toLargeNumberNotation(
-                    +d.clusterAgg["count(*)"],
-                    params.precisionDecimal0,
-                    params.precisionDecimal1
-                );
+                return d3.format(
+                    params.numberFormat
+                )(+d.clusterAgg["count(*)"]);
             })
             .attr("x", function(d) {
                 return +d.cx;
@@ -1010,11 +1002,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             d3.select(nodes[j])
                 .append("text")
                 .text(function(d) {
-                    return params.toLargeNumberNotation(
-                        d.clusterAgg["count(*)"],
-                        params.precisionDecimal0,
-                        params.precisionDecimal1
-                    );
+                    return d3.format(
+                        params.numberFormat
+                    )(d.clusterAgg["count(*)"]);
                 })
                 .attr("font-size", 25)
                 .attr("x", function(d) {
@@ -1133,11 +1123,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .append("text")
             .classed("cluster_num", true)
             .text(d =>
-                params.toLargeNumberNotation(
-                    +d.clusterAgg["count(*)"],
-                    params.precisionDecimal0,
-                    params.precisionDecimal1
-                )
+                d3.format(params.numberFormat)(+d.clusterAgg["count(*)"])
             )
             .attr("x", d => +d.cx)
             .attr("y", d => +d.cy - params.pieOuterRadius)
@@ -1280,10 +1266,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 var maxlen = 0;
                 for (var j = 0; j < data.length; j++) {
                     if (!isNaN(data[j][fields[i]]))
-                        data[j][fields[i]] = params.toLargeNumberNotation(
-                            +data[j][fields[i]],
-                            params.precisionDecimal0,
-                            params.precisionDecimal1
+                        data[j][fields[i]] = d3.format(params.numberFormat)(
+                            +data[j][fields[i]]
                         );
                     maxlen = Math.max(
                         maxlen,
