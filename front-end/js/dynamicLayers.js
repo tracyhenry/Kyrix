@@ -266,6 +266,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     );
                     optionalArgsWithTileXY["tileX"] = x;
                     optionalArgsWithTileXY["tileY"] = y;
+                    optionalArgsWithTileXY["autoDDId"] = curLayer.autoDDId;
                     curLayer.rendering.parseFunction()(
                         tileSvg,
                         renderData[i],
@@ -483,6 +484,7 @@ function renderDynamicBoxes(
                     optionalArgsWithBoxWHXY["boxY"] = y;
                     optionalArgsWithBoxWHXY["boxW"] = response.boxW;
                     optionalArgsWithBoxWHXY["boxH"] = response.boxH;
+                    optionalArgsWithBoxWHXY["autoDDId"] = curLayer.autoDDId;
                     curLayer.rendering.parseFunction()(
                         dboxSvg,
                         renderData[i],

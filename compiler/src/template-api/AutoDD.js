@@ -1,10 +1,6 @@
 const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
 const setPropertiesIfNotExists = require("./Utilities")
     .setPropertiesIfNotExists;
-const parsePathIntoSegments = require("./Utilities").parsePathIntoSegments;
-const translatePathSegments = require("./Utilities").translatePathSegments;
-const serializePath = require("./Utilities").serializePath;
-const aggKeyDelimiter = "__";
 
 /**
  * Constructor of an AutoDD object
@@ -289,6 +285,12 @@ function AutoDD(args) {
     }
 
     /************************
+     * setting generic params
+     ************************/
+    this.aggKeyDelimiter = "__";
+    this.processClusterAgg = processClusterAgg;
+
+    /************************
      * setting cluster params
      ************************/
     this.clusterParams =
@@ -304,6 +306,7 @@ function AutoDD(args) {
     if (args.marks.cluster.mode == "contour")
         setPropertiesIfNotExists(this.clusterParams, {
             contourBandwidth: 30,
+            contourRadius: 30 * 4,
             contourColorScheme: "interpolateViridis",
             contourOpacity: 1
         });
@@ -352,7 +355,7 @@ function AutoDD(args) {
     while (true) {
         var curDomain = "";
         for (var i = 0; i < dimensions.length; i++) {
-            if (i > 0) curDomain += aggKeyDelimiter;
+            if (i > 0) curDomain += this.aggKeyDelimiter;
             curDomain += dimensions[i].domain[pointers[i]];
         }
         this.aggregateParams.aggDomain.push(curDomain);
@@ -442,7 +445,7 @@ function AutoDD(args) {
     } else if (args.marks.cluster.mode == "circle")
         this.bboxW = this.bboxH = this.clusterParams.circleMaxSize * 2;
     else if (args.marks.cluster.mode == "contour")
-        this.bboxW = this.bboxH = this.clusterParams.contourBandwidth * 8;
+        this.bboxW = this.bboxH = this.clusterParams.contourRadius * 2;
     else if (args.marks.cluster.mode == "heatmap")
         this.bboxW = this.bboxH = this.clusterParams.heatmapRadius * 2 + 1;
     else if (args.marks.cluster.mode == "radar")
@@ -516,18 +519,67 @@ function AutoDD(args) {
     );
 }
 
+// function used for process cluster aggs
+function processClusterAgg(data, params) {
+    function getConvexCoordinates(d) {
+        var coords = d.clusterAgg.convexHull;
+        var convexHull = [];
+        for (var i = 0; i < coords.length; i++) {
+            convexHull.push({
+                x: +coords[i][0],
+                y: +coords[i][1]
+            });
+        }
+        convexHull.push({x: +coords[0][0], y: +coords[0][1]});
+        return convexHull;
+    }
+
+    data.forEach(d => {
+        d.clusterAgg = JSON.parse(d.clusterAgg);
+        d.convexHull = getConvexCoordinates(d);
+        for (var i = 0; i < params.aggDomain.length; i++)
+            for (var j = 0; j < params.aggMeasures.length; j++) {
+                var curField = params.aggMeasures[j].field;
+                var curFunc = params.aggMeasures[j].function;
+                var curKey =
+                    params.aggDomain[i] +
+                    (params.aggDomain[i] == "" ? "" : params.aggKeyDelimiter) +
+                    curFunc +
+                    "(" +
+                    curField +
+                    ")";
+                if (!(curKey in d.clusterAgg)) {
+                    switch (curFunc) {
+                        case "count":
+                        case "sum":
+                        case "avg":
+                        case "sqrsum":
+                            d.clusterAgg[curKey] = 0;
+                            break;
+                        case "min":
+                            d.clusterAgg[curKey] = Number.MIN_VALUE;
+                            break;
+                        case "max":
+                            d.clusterAgg[curKey] = Number.MAX_VALUE;
+                            break;
+                    }
+                }
+            }
+    });
+}
+
 // get rendering function for an autodd layer based on cluster mode
-function getLayerRenderer(level, autoDDArrayIndex) {
+function getLayerRenderer() {
     function renderCircleBody() {
         var params = args.renderingParams;
-        REPLACE_ME_processClusterAgg();
+        params.processClusterAgg(data, params);
 
         // set up d3.scale for circle/text size
         var agg;
         var curMeasure = params.aggMeasures[0];
         agg = curMeasure.function + "(" + curMeasure.field + ")";
-        var minDomain = params["REPLACE_ME_autoDDId_" + agg + "_min"];
-        var maxDomain = params["REPLACE_ME_autoDDId_" + agg + "_max"];
+        var minDomain = params[args.autoDDId + "_" + agg + "_min"];
+        var maxDomain = params[args.autoDDId + "_" + agg + "_max"];
         var circleSizeInterpolator = d3
             .scaleSqrt()
             .domain([minDomain, maxDomain])
@@ -630,7 +682,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var params = args.renderingParams;
         var roughN = params.roughN;
         var bandwidth = params.contourBandwidth;
-        var radius = REPLACE_ME_radius;
+        var radius = params.contourRadius;
         var decayRate = 2.4;
         var cellSize = 2;
         var contourWidth, contourHeight, x, y;
@@ -780,8 +832,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var alphaCanvas = document.createElement("canvas");
         alphaCanvas.width = heatmapWidth;
         alphaCanvas.height = heatmapHeight;
-        var minWeight = params["REPLACE_ME_autoDDId" + "_count(*)_min"]; // set in the BGRP (back-end generated rendering params)
-        var maxWeight = params["REPLACE_ME_autoDDId" + "_count(*)_max"]; // set in the BGRP
+        var minWeight = params[args.autoDDId + "_count(*)_min"]; // set in the BGRP (back-end generated rendering params)
+        var maxWeight = params[args.autoDDId + "_count(*)_max"]; // set in the BGRP
         var alphaCtx = alphaCanvas.getContext("2d");
         var tpl = _getPointTemplate(radius);
         for (var i = 0; i < translatedData.length; i++) {
@@ -871,12 +923,12 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function renderRadarBody() {
         if (!data || data.length == 0) return;
         var params = args.renderingParams;
-        var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
+        var aggKeyDelimiter = params.aggKeyDelimiter;
         var g = svg.append("g");
         g.style("opacity", 0);
 
         // Step 1: Pre-process clusterAgg
-        REPLACE_ME_processClusterAgg();
+        params.processClusterAgg(data, params);
 
         // Step 2: append radars
         var radars = g
@@ -1042,16 +1094,16 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     function renderPieBody() {
         if (!data || data.length == 0) return;
         var params = args.renderingParams;
-        var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
-        var parse = REPLACE_ME_parse_func;
-        var translate = REPLACE_ME_translate_func;
-        var serialize = REPLACE_ME_serialize_func;
+        var aggKeyDelimiter = params.aggKeyDelimiter;
+        var parse = params.parsePathIntoSegments;
+        var translate = params.translatePathSegments;
+        var serialize = params.serializePath;
 
         var g = svg.append("g");
         g.style("opacity", 0);
 
         // Step 1: Pre-process clusterAgg
-        REPLACE_ME_processClusterAgg();
+        params.processClusterAgg(data, params);
 
         // Step 2: append pies
         var pie = d3.pie().value(function(d) {
@@ -1151,54 +1203,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .attr("r", params.pieOuterRadius)
             .style("opacity", 0);
         var hoverSelector = ".piehover";
-    }
-
-    function processClusterAgg() {
-        function getConvexCoordinates(d) {
-            var coords = d.clusterAgg.convexHull;
-            var convexHull = [];
-            for (var i = 0; i < coords.length; i++) {
-                convexHull.push({
-                    x: +coords[i][0],
-                    y: +coords[i][1]
-                });
-            }
-            convexHull.push({x: +coords[0][0], y: +coords[0][1]});
-            return convexHull;
-        }
-
-        data.forEach(d => {
-            d.clusterAgg = JSON.parse(d.clusterAgg);
-            d.convexHull = getConvexCoordinates(d);
-            for (var i = 0; i < params.aggDomain.length; i++)
-                for (var j = 0; j < params.aggMeasures.length; j++) {
-                    var curField = params.aggMeasures[j].field;
-                    var curFunc = params.aggMeasures[j].function;
-                    var curKey =
-                        params.aggDomain[i] +
-                        (params.aggDomain[i] == "" ? "" : aggKeyDelimiter) +
-                        curFunc +
-                        "(" +
-                        curField +
-                        ")";
-                    if (!(curKey in d.clusterAgg)) {
-                        switch (curFunc) {
-                            case "count":
-                            case "sum":
-                            case "avg":
-                            case "sqrsum":
-                                d.clusterAgg[curKey] = 0;
-                                break;
-                            case "min":
-                                d.clusterAgg[curKey] = Number.MIN_VALUE;
-                                break;
-                            case "max":
-                                d.clusterAgg[curKey] = Number.MAX_VALUE;
-                                break;
-                        }
-                    }
-                }
-        });
     }
 
     function regularHoverBody() {
@@ -1438,46 +1442,19 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             );
     } else if (this.clusterMode == "circle") {
         // render circle
-        renderFuncBody = getBodyStringOfFunction(renderCircleBody)
-            .replace(
-                /REPLACE_ME_processClusterAgg/g,
-                "(" + processClusterAgg.toString() + ")"
-            )
-            .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
+        renderFuncBody = getBodyStringOfFunction(renderCircleBody);
         renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     } else if (this.clusterMode == "contour") {
-        renderFuncBody = getBodyStringOfFunction(renderContourBody).replace(
-            /REPLACE_ME_radius/g,
-            this.bboxH
-        );
+        renderFuncBody = getBodyStringOfFunction(renderContourBody);
         renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody);
     } else if (this.clusterMode == "heatmap") {
-        renderFuncBody = getBodyStringOfFunction(renderHeatmapBody).replace(
-            /REPLACE_ME_autoDDId/g,
-            autoDDArrayIndex + "_" + level
-        );
+        renderFuncBody = getBodyStringOfFunction(renderHeatmapBody);
         renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody);
     } else if (this.clusterMode == "radar") {
-        renderFuncBody = getBodyStringOfFunction(renderRadarBody)
-            .replace(
-                /REPLACE_ME_processClusterAgg/g,
-                "(" + processClusterAgg.toString() + ")"
-            )
-            .replace(/REPLACE_ME_agg_key_delimiter/g, aggKeyDelimiter);
+        renderFuncBody = getBodyStringOfFunction(renderRadarBody);
         renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     } else if (this.clusterMode == "pie") {
-        renderFuncBody = getBodyStringOfFunction(renderPieBody)
-            .replace(
-                /REPLACE_ME_processClusterAgg/g,
-                "(" + processClusterAgg.toString() + ")"
-            )
-            .replace(/REPLACE_ME_agg_key_delimiter/g, aggKeyDelimiter)
-            .replace(/REPLACE_ME_parse_func/g, parsePathIntoSegments.toString())
-            .replace(
-                /REPLACE_ME_translate_func/g,
-                translatePathSegments.toString()
-            )
-            .replace(/REPLACE_ME_serialize_func/g, serializePath.toString());
+        renderFuncBody = getBodyStringOfFunction(renderPieBody);
         renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     }
     return new Function("svg", "data", "args", renderFuncBody);

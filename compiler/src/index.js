@@ -264,9 +264,16 @@ function addAutoDD(autoDD, args) {
 
     // add stuff to renderingParam
     this.addRenderingParams({
-        textwrap: require("./template-api/Utilities").textwrap
+        textwrap: require("./template-api/Utilities").textwrap,
+        processClusterAgg: autoDD.processClusterAgg,
+        serializePath: require("./template-api/Utilities").serializePath,
+        translatePathSegments: require("./template-api/Utilities")
+            .translatePathSegments,
+        parsePathIntoSegments: require("./template-api/Utilities")
+            .parsePathIntoSegments,
+        aggKeyDelimiter: autoDD.aggKeyDelimiter,
+        fadeInDuration: 200
     });
-    this.addRenderingParams({fadeInDuration: 200});
     this.addRenderingParams(autoDD.clusterParams);
     this.addRenderingParams(autoDD.aggregateParams);
     this.addRenderingParams(autoDD.hoverParams);
@@ -332,7 +339,7 @@ function addAutoDD(autoDD, args) {
 
         // construct rendering function
         curLayer.addRenderingFunc(
-            autoDD.getLayerRenderer(i, this.autoDDs.length - 1),
+            autoDD.getLayerRenderer(),
             autoDD.tooltipColumns,
             autoDD.tooltipAliases
         );
