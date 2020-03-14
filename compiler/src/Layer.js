@@ -52,7 +52,7 @@ function addPlacement(placement) {
  * add a rendering function to a layer object
  * @param rendering - a javascript function that adds an <g> element to an existing svg. See spec api for details on input/output.
  * @param tooltipColumns - an array of column names to be displayed in the tooltip
- * @param tooltipAliases - an array of alias to tooltipColumns
+ * @param tooltipAliases - an array of aliases to tooltipColumns
  */
 function addRenderingFunc(rendering, tooltipColumns, tooltipAliases) {
     if (typeof rendering !== "function")

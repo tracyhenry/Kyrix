@@ -294,7 +294,7 @@ function AutoDD(args) {
     this.clusterParams =
         "config" in args.marks.cluster ? args.marks.cluster.config : {};
     setPropertiesIfNotExists(this.clusterParams, {
-        numberFormat: "~s"
+        numberFormat: ".2~s"
     });
     if (args.marks.cluster.mode == "circle")
         setPropertiesIfNotExists(this.clusterParams, {
