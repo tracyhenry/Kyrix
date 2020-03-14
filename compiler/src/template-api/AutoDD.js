@@ -227,6 +227,10 @@ function AutoDD(args) {
             "Constructing AutoDD: there must be exactly 1 aggregate measure for pie charts."
         );
     if ("rankList" in args.marks.hover) {
+        if ("tooltip" in args.marks.hover)
+            throw new Error(
+                "Constructing AutoDD: rankList and tooltip cannot be specified together."
+            );
         if (!("mode" in args.marks.hover.rankList))
             throw new Error(
                 "Constructing AutoDD: hover rankList mode (marks.hover.rankList.mode) is missing."
@@ -266,16 +270,31 @@ function AutoDD(args) {
                 "Constructing AutoDD: unrecognized hover boundary type " +
                     args.marks.hover.boundary
             );
+    if ("tooltip" in args.marks.hover) {
+        if (!("columns" in args.marks.hover.tooltip))
+            throw new Error(
+                "Constructing AutoDD: tooltip columns (marks.hover.tooltip.columns) missing."
+            );
+        if (!Array.isArray(args.marks.hover.tooltip.columns))
+            throw new Error(
+                "Constructing AutoDD: tooltip columns (marks.hover.tooltip.columns) must be an array."
+            );
+        if (
+            "aliases" in args.marks.hover.tooltip &&
+            !Array.isArray(args.marks.hover.tooltip.aliases)
+        )
+            throw new Error(
+                "Constructing AutoDD: tooltip aliases (marks.hover.tooltip.aliases) must be an array."
+            );
+    }
 
     /************************
      * setting cluster params
      ************************/
     this.clusterParams =
         "config" in args.marks.cluster ? args.marks.cluster.config : {};
-    // precision parameters
     setPropertiesIfNotExists(this.clusterParams, {
-        precisionDecimal0: 1,
-        precisionDecimal1: 0
+        numberFormat: ".2~s"
     });
     if (args.marks.cluster.mode == "circle")
         setPropertiesIfNotExists(this.clusterParams, {
@@ -391,6 +410,13 @@ function AutoDD(args) {
     if ("boundary" in args.marks.hover)
         this.hoverParams.hoverBoundary = args.marks.hover.boundary;
     this.topk = this.hoverParams.topk != null ? this.hoverParams.topk : 0;
+    this.tooltipColumns = this.tooltipAliases = null;
+    if ("tooltip" in args.marks.hover) {
+        this.tooltipColumns = args.marks.hover.tooltip.columns;
+        if ("aliases" in args.marks.hover.tooltip)
+            this.tooltipAliases = args.marks.hover.tooltip.aliases;
+        else this.tooltipAliases = this.tooltipColumns;
+    }
 
     /***************************
      * setting legend parameters
@@ -470,6 +496,10 @@ function AutoDD(args) {
             ? 0
             : 1;
     this.axis = "axis" in args.config ? args.config.axis : false;
+    this.xAxisTitle =
+        "xAxisTitle" in args.config ? args.config.xAxisTitle : this.xCol;
+    this.yAxisTitle =
+        "yAxisTitle" in args.config ? args.config.yAxisTitle : this.yCol;
     this.loX = args.layout.x.extent != null ? args.layout.x.extent[0] : null;
     this.loY = args.layout.y.extent != null ? args.layout.y.extent[0] : null;
     this.hiX = args.layout.x.extent != null ? args.layout.x.extent[1] : null;
@@ -532,11 +562,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .append("text")
             .attr("dy", "0.3em")
             .text(function(d) {
-                return params.toLargeNumberNotation(
-                    +d.clusterAgg[agg],
-                    params.precisionDecimal0,
-                    params.precisionDecimal1
-                );
+                return d3.format(params.numberFormat)(+d.clusterAgg[agg]);
             })
             .attr("font-size", function(d) {
                 return circleSizeInterpolator(d.clusterAgg[agg]) / 2;
@@ -581,11 +607,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .enter()
             .append("text")
             .text(function(d) {
-                return args.renderingParams.toLargeNumberNotation(
-                    +d.clusterAgg["count(*)"],
-                    params.precisionDecimal0,
-                    params.precisionDecimal1
-                );
+                return d3.format(
+                    params.numberFormat
+                )(+d.clusterAgg["count(*)"]);
             })
             .attr("x", function(d) {
                 return +d.cx;
@@ -978,11 +1002,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             d3.select(nodes[j])
                 .append("text")
                 .text(function(d) {
-                    return params.toLargeNumberNotation(
-                        d.clusterAgg["count(*)"],
-                        params.precisionDecimal0,
-                        params.precisionDecimal1
-                    );
+                    return d3.format(
+                        params.numberFormat
+                    )(d.clusterAgg["count(*)"]);
                 })
                 .attr("font-size", 25)
                 .attr("x", function(d) {
@@ -1101,11 +1123,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             .append("text")
             .classed("cluster_num", true)
             .text(d =>
-                params.toLargeNumberNotation(
-                    +d.clusterAgg["count(*)"],
-                    params.precisionDecimal0,
-                    params.precisionDecimal1
-                )
+                d3.format(params.numberFormat)(+d.clusterAgg["count(*)"])
             )
             .attr("x", d => +d.cx)
             .attr("y", d => +d.cy - params.pieOuterRadius)
@@ -1248,10 +1266,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                 var maxlen = 0;
                 for (var j = 0; j < data.length; j++) {
                     if (!isNaN(data[j][fields[i]]))
-                        data[j][fields[i]] = params.toLargeNumberNotation(
-                            +data[j][fields[i]],
-                            params.precisionDecimal0,
-                            params.precisionDecimal1
+                        data[j][fields[i]] = d3.format(params.numberFormat)(
+                            +data[j][fields[i]]
                         );
                     maxlen = Math.max(
                         maxlen,
@@ -1473,13 +1489,40 @@ function getAxesRenderer(level) {
         var cWidth = args.canvasW,
             cHeight = args.canvasH,
             axes = [];
-        var styling = function(axesg) {
+        var styling = function(axesg, dim, id, args) {
             axesg
                 .selectAll(".tick line")
-                .attr("stroke", "#777")
-                .attr("stroke-dasharray", "3,10");
-            axesg.style("font", "20px arial");
+                .attr("stroke", "#CCC")
+                .attr("stroke-dasharray", "5, 5")
+                .style("opacity", 0.3);
+            axesg.attr("font-family", "Open Sans").attr("font-size", "13");
+            axesg
+                .selectAll("g")
+                .selectAll("text")
+                .style("fill", "#999");
             axesg.selectAll("path").remove();
+            xAxisTitle = "REPLACE_ME_X_TITLE";
+            yAxisTitle = "REPLACE_ME_Y_TITLE";
+            if (dim == "x")
+                axesg
+                    .append("text")
+                    .text(xAxisTitle)
+                    .attr("fill", "black")
+                    .attr("text-anchor", "middle")
+                    .attr(
+                        "transform",
+                        "translate(" + args.viewportW / 2 + ", 40)"
+                    );
+            else
+                axesg
+                    .append("text")
+                    .text(yAxisTitle)
+                    .attr("fill", "black")
+                    .attr("text-anchor", "middle")
+                    .attr(
+                        "transform",
+                        "translate(-60, " + args.viewportH / 2 + ") rotate(-90)"
+                    );
         };
         //x
         var x = d3
@@ -1494,7 +1537,10 @@ function getAxesRenderer(level) {
             .scaleTime()
             .domain([stDate, enDate])
             .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);*/
-        var xAxis = d3.axisBottom().tickSize(-cHeight);
+        var xAxis = d3
+            .axisBottom()
+            .tickSize(-cHeight)
+            .tickFormat(d3.format("~s"));
         axes.push({
             dim: "x",
             scale: x,
@@ -1502,12 +1548,16 @@ function getAxesRenderer(level) {
             translate: [0, args.viewportH],
             styling: styling
         });
+
         //y
         var y = d3
             .scaleLinear()
             .domain([REPLACE_ME_this_loY, REPLACE_ME_this_hiY])
             .range([REPLACE_ME_yOffset, cHeight - REPLACE_ME_yOffset]);
-        var yAxis = d3.axisLeft().tickSize(-cWidth);
+        var yAxis = d3
+            .axisLeft()
+            .tickSize(-cWidth)
+            .tickFormat(d3.format("~s"));
         axes.push({
             dim: "y",
             scale: y,
@@ -1527,7 +1577,9 @@ function getAxesRenderer(level) {
         .replace(/REPLACE_ME_this_loY/g, this.loY)
         .replace(/REPLACE_ME_this_hiY/g, this.hiY)
         .replace(/REPLACE_ME_xOffset/g, xOffset)
-        .replace(/REPLACE_ME_yOffset/g, yOffset);
+        .replace(/REPLACE_ME_yOffset/g, yOffset)
+        .replace(/REPLACE_ME_X_TITLE/g, this.xAxisTitle)
+        .replace(/REPLACE_ME_Y_TITLE/g, this.yAxisTitle);
     return new Function("args", axesFuncBody);
 }
 

@@ -2,6 +2,7 @@ package project;
 
 import index.Indexer;
 import java.io.Serializable;
+import java.util.ArrayList;
 
 /** Created by wenbo on 4/3/18. */
 public class Layer implements Serializable {
@@ -12,6 +13,7 @@ public class Layer implements Serializable {
     private boolean deltaBox;
     private Placement placement;
     private String rendering;
+    private ArrayList<String> tooltipColumns, tooltipAliases;
     private transient Indexer indexer;
     private String autoDDId;
     private String indexerType;

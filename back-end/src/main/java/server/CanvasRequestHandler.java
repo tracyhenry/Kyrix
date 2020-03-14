@@ -41,7 +41,7 @@ public class CanvasRequestHandler implements HttpHandler {
             }
 
             // get data of the current request
-            String query = httpExchange.getRequestURI().getQuery();
+            String query = httpExchange.getRequestURI().getRawQuery();
             Map<String, String> queryMap = Server.queryToMap(query);
             String canvasId = queryMap.get("id");
 

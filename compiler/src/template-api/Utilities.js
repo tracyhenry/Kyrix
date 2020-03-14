@@ -13,7 +13,7 @@ function textwrap(text, width) {
         var text = d3.select(this),
             words = text
                 .text()
-                .split(/(?=[A-Z])/)
+                .split(/\s+/)
                 .reverse(),
             word,
             line = [],
@@ -32,14 +32,14 @@ function textwrap(text, width) {
                     .attr("x", x)
                     .attr("y", y);
             line.push(word);
-            tspan.text(line.join(""));
+            tspan.text(line.join(" "));
             if (tspan.node().getComputedTextLength() > width) {
                 var popped = false;
                 if (line.length > 1) {
                     line.pop();
                     popped = true;
                 }
-                tspan.text(line.join(""));
+                tspan.text(line.join(" "));
                 if (popped) {
                     line = [word];
                     tspan = text
@@ -194,39 +194,11 @@ function serializePath(path) {
     }, "");
 }
 
-/**
- * Convert a big number to K, Million, Billion notation
- * @param ct
- * @returns {*}
- */
-function toLargeNumberNotation(ct, d0 = 1, d1 = 0) {
-    // d0 is the number of decimals for ct < 1000
-    // d1 is the number of decimals for ct > 1000
-    if (ct < 1000)
-        return (
-            Math.round((ct + Number.EPSILON) * Math.pow(10, d0)) /
-            Math.pow(10, d0)
-        );
-    if (ct >= 1000 && ct < 1000000) {
-        ct /= 1000.0;
-        return ct.toFixed(d1) + "K";
-    }
-    if (ct > 1000000 && ct < 1000000000) {
-        ct /= 1000000.0;
-        return ct.toFixed(d1) + "M";
-    } else {
-        ct /= 1000000000.0;
-        return ct.toFixed(d1) + "B";
-    }
-    return "";
-}
-
 module.exports = {
     textwrap,
     getBodyStringOfFunction,
     setPropertiesIfNotExists,
     parsePathIntoSegments,
     translatePathSegments,
-    serializePath,
-    toLargeNumberNotation
+    serializePath
 };

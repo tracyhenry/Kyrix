@@ -264,9 +264,7 @@ function addAutoDD(autoDD, args) {
 
     // add stuff to renderingParam
     this.addRenderingParams({
-        textwrap: require("./template-api/Utilities").textwrap,
-        toLargeNumberNotation: require("./template-api/Utilities")
-            .toLargeNumberNotation
+        textwrap: require("./template-api/Utilities").textwrap
     });
     this.addRenderingParams({fadeInDuration: 200});
     this.addRenderingParams(autoDD.clusterParams);
@@ -334,7 +332,9 @@ function addAutoDD(autoDD, args) {
 
         // construct rendering function
         curLayer.addRenderingFunc(
-            autoDD.getLayerRenderer(i, this.autoDDs.length - 1)
+            autoDD.getLayerRenderer(i, this.autoDDs.length - 1),
+            autoDD.tooltipColumns,
+            autoDD.tooltipAliases
         );
 
         // axes

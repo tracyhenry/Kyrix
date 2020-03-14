@@ -26,6 +26,10 @@ public class ProjectRequestHandler implements HttpHandler {
         gson = new GsonBuilder().create();
     };
 
+    public static void clearProjectHistory(String projectName) {
+        projects.remove(projectName);
+    }
+
     private Project getLastProjectObject(String projectName) {
 
         if (!projects.containsKey(projectName)) return null;
