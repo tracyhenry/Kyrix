@@ -288,7 +288,10 @@ function AutoDD(args) {
      * setting generic params
      ************************/
     this.aggKeyDelimiter = "__";
-    this.processClusterAgg = processClusterAgg;
+    this.loX = args.layout.x.extent != null ? args.layout.x.extent[0] : null;
+    this.loY = args.layout.y.extent != null ? args.layout.y.extent[0] : null;
+    this.hiX = args.layout.x.extent != null ? args.layout.x.extent[1] : null;
+    this.hiY = args.layout.y.extent != null ? args.layout.y.extent[1] : null;
 
     /************************
      * setting cluster params
@@ -431,6 +434,20 @@ function AutoDD(args) {
     if ("legendDomain" in args.config)
         this.legendParams.legendDomain = args.config.legendDomain;
 
+    /***************************
+     * setting axis parameters
+     ***************************/
+    this.axisParams = {};
+    this.axis = "axis" in args.config ? args.config.axis : false;
+    this.axisParams.xAxisTitle =
+        "xAxisTitle" in args.config
+            ? args.config.xAxisTitle
+            : args.layout.x.field;
+    this.axisParams.yAxisTitle =
+        "yAxisTitle" in args.config
+            ? args.config.yAxisTitle
+            : args.layout.y.field;
+
     /****************
      * setting bboxes
      ****************/
@@ -498,15 +515,6 @@ function AutoDD(args) {
             : this.clusterMode == "contour" || this.clusterMode == "heatmap"
             ? 0
             : 1;
-    this.axis = "axis" in args.config ? args.config.axis : false;
-    this.xAxisTitle =
-        "xAxisTitle" in args.config ? args.config.xAxisTitle : this.xCol;
-    this.yAxisTitle =
-        "yAxisTitle" in args.config ? args.config.yAxisTitle : this.yCol;
-    this.loX = args.layout.x.extent != null ? args.layout.x.extent[0] : null;
-    this.loY = args.layout.y.extent != null ? args.layout.y.extent[0] : null;
-    this.hiX = args.layout.x.extent != null ? args.layout.x.extent[1] : null;
-    this.hiY = args.layout.y.extent != null ? args.layout.y.extent[1] : null;
     this.mergeClusterAggs = mergeClusterAggs.toString();
     this.getCitusSpatialHashKeyBody = getBodyStringOfFunction(
         getCitusSpatialHashKey
@@ -1465,7 +1473,8 @@ function getAxesRenderer(level) {
     function axesRendererBodyTemplate() {
         var cWidth = args.canvasW,
             cHeight = args.canvasH,
-            axes = [];
+            axes = [],
+            params = args.renderingParams;
         var styling = function(axesg, dim, id, args) {
             axesg
                 .selectAll(".tick line")
@@ -1478,12 +1487,10 @@ function getAxesRenderer(level) {
                 .selectAll("text")
                 .style("fill", "#999");
             axesg.selectAll("path").remove();
-            xAxisTitle = "REPLACE_ME_X_TITLE";
-            yAxisTitle = "REPLACE_ME_Y_TITLE";
             if (dim == "x")
                 axesg
                     .append("text")
-                    .text(xAxisTitle)
+                    .text(args.renderingParams.xAxisTitle)
                     .attr("fill", "black")
                     .attr("text-anchor", "middle")
                     .attr(
@@ -1493,7 +1500,7 @@ function getAxesRenderer(level) {
             else
                 axesg
                     .append("text")
-                    .text(yAxisTitle)
+                    .text(args.renderingParams.yAxisTitle)
                     .attr("fill", "black")
                     .attr("text-anchor", "middle")
                     .attr(
@@ -1501,11 +1508,15 @@ function getAxesRenderer(level) {
                         "translate(-60, " + args.viewportH / 2 + ") rotate(-90)"
                     );
         };
+        var xOffset =
+            (params.bboxW / 2) * Math.pow(params.zoomFactor, args.pyramidLevel);
+        var yOffset =
+            (params.bboxH / 2) * Math.pow(params.zoomFactor, args.pyramidLevel);
         //x
         var x = d3
             .scaleLinear()
-            .domain([REPLACE_ME_this_loX, REPLACE_ME_this_hiX])
-            .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);
+            .domain([params.loX, params.hiX])
+            .range([xOffset, cWidth - xOffset]);
         /*        var stDate = new Date(0),
             enDate = new Date(0);
         stDate.setUTCSeconds(1356998400);
@@ -1529,8 +1540,8 @@ function getAxesRenderer(level) {
         //y
         var y = d3
             .scaleLinear()
-            .domain([REPLACE_ME_this_loY, REPLACE_ME_this_hiY])
-            .range([REPLACE_ME_yOffset, cHeight - REPLACE_ME_yOffset]);
+            .domain([params.loY, params.hiY])
+            .range([yOffset, cHeight - yOffset]);
         var yAxis = d3
             .axisLeft()
             .tickSize(-cWidth)
@@ -1545,18 +1556,7 @@ function getAxesRenderer(level) {
         return axes;
     }
 
-    var xOffset = (this.bboxW / 2) * Math.pow(this.zoomFactor, level);
-    var yOffset = (this.bboxH / 2) * Math.pow(this.zoomFactor, level);
     var axesFuncBody = getBodyStringOfFunction(axesRendererBodyTemplate);
-    axesFuncBody = axesFuncBody
-        .replace(/REPLACE_ME_this_loX/g, this.loX)
-        .replace(/REPLACE_ME_this_hiX/g, this.hiX)
-        .replace(/REPLACE_ME_this_loY/g, this.loY)
-        .replace(/REPLACE_ME_this_hiY/g, this.hiY)
-        .replace(/REPLACE_ME_xOffset/g, xOffset)
-        .replace(/REPLACE_ME_yOffset/g, yOffset)
-        .replace(/REPLACE_ME_X_TITLE/g, this.xAxisTitle)
-        .replace(/REPLACE_ME_Y_TITLE/g, this.yAxisTitle);
     return new Function("args", axesFuncBody);
 }
 
@@ -1958,5 +1958,6 @@ AutoDD.prototype = {
 
 // exports
 module.exports = {
-    AutoDD
+    AutoDD,
+    processClusterAgg
 };

@@ -265,19 +265,27 @@ function addAutoDD(autoDD, args) {
     // add stuff to renderingParam
     this.addRenderingParams({
         textwrap: require("./template-api/Utilities").textwrap,
-        processClusterAgg: autoDD.processClusterAgg,
+        processClusterAgg: require("./template-api/AutoDD").processClusterAgg,
         serializePath: require("./template-api/Utilities").serializePath,
         translatePathSegments: require("./template-api/Utilities")
             .translatePathSegments,
         parsePathIntoSegments: require("./template-api/Utilities")
             .parsePathIntoSegments,
         aggKeyDelimiter: autoDD.aggKeyDelimiter,
+        loX: autoDD.loX,
+        loY: autoDD.loY,
+        hiX: autoDD.hiX,
+        hiY: autoDD.hiY,
+        bboxW: autoDD.bboxW,
+        bboxH: autoDD.bboxH,
+        zoomFactor: autoDD.zoomFactor,
         fadeInDuration: 200
     });
     this.addRenderingParams(autoDD.clusterParams);
     this.addRenderingParams(autoDD.aggregateParams);
     this.addRenderingParams(autoDD.hoverParams);
     this.addRenderingParams(autoDD.legendParams);
+    this.addRenderingParams(autoDD.axisParams);
 
     // construct canvases
     var curPyramid = [];
