@@ -346,11 +346,10 @@ function addAutoDD(autoDD, args) {
         });
 
         // construct rendering function
-        curLayer.addRenderingFunc(
-            autoDD.getLayerRenderer(),
-            autoDD.tooltipColumns,
-            autoDD.tooltipAliases
-        );
+        curLayer.addRenderingFunc(autoDD.getLayerRenderer());
+
+        // tooltips
+        curLayer.addTooltip(autoDD.tooltipColumns, autoDD.tooltipAliases);
 
         // axes
         if (autoDD.axis) {
