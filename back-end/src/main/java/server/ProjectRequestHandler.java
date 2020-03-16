@@ -19,7 +19,7 @@ public class ProjectRequestHandler implements HttpHandler {
 
     private final Gson gson;
     private static HashMap<String, ArrayList<Project>> projects = new HashMap<>();
-    private static HashMap<String, String> BGRP = new HashMap<>();
+    private static HashMap<String, HashMap<String, HashMap<String, String>>> BGRP = new HashMap<>();
 
     public ProjectRequestHandler() {
 

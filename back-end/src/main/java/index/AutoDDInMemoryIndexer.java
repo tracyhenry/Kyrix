@@ -121,6 +121,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
     private double overlappingThreshold = 1.0;
     private final String aggKeyDelimiter = "__";
     private final Gson gson;
+    private String rpKey;
     private int autoDDIndex, numLevels, numRawColumns;
     private Statement bboxStmt;
 
@@ -150,6 +151,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         int levelId = Integer.valueOf(curAutoDDId.substring(curAutoDDId.indexOf("_") + 1));
         if (levelId > 0) return;
         autoDDIndex = Integer.valueOf(curAutoDDId.substring(0, curAutoDDId.indexOf("_")));
+        rpKey = "ssv_" + String.valueOf(autoDDIndex);
 
         // set common variables
         setCommonVariables();
@@ -195,7 +197,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                 if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
 
         // add row number as a BGRP
-        Main.getProject().addBGRP("roughN", String.valueOf(rawRows.size()));
+        Main.getProject().addBGRP(rpKey, "roughN", String.valueOf(rawRows.size()));
     }
 
     private void computeClusterAggs() throws SQLException, ClassNotFoundException {
@@ -409,11 +411,13 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
             Main.getProject()
                     .addBGRP(
+                            rpKey,
                             curAutoDDId + "_" + curFunction + "(" + curField + ")_min",
                             String.valueOf(minAgg));
 
             Main.getProject()
                     .addBGRP(
+                            rpKey,
                             curAutoDDId + "_" + curFunction + "(" + curField + ")_max",
                             String.valueOf(maxAgg));
         }

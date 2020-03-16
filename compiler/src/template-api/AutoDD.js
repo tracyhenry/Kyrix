@@ -579,7 +579,9 @@ function processClusterAgg(data, params) {
 // get rendering function for an autodd layer based on cluster mode
 function getLayerRenderer() {
     function renderCircleBody() {
-        var params = args.renderingParams;
+        var rpKey =
+            "ssv_" + args.autoDDId.substring(0, args.autoDDId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
         params.processClusterAgg(data, params);
 
         // set up d3.scale for circle/text size
@@ -658,7 +660,9 @@ function getLayerRenderer() {
 
     function renderObjectClusterNumBody() {
         var g = svg.select("g:last-of-type");
-        var params = args.renderingParams;
+        var rpKey =
+            "ssv_" + args.autoDDId.substring(0, args.autoDDId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
         data.forEach(d => {
             d.clusterAgg = JSON.parse(d.clusterAgg);
         });
@@ -687,7 +691,9 @@ function getLayerRenderer() {
     }
 
     function renderContourBody() {
-        var params = args.renderingParams;
+        var rpKey =
+            "ssv_" + args.autoDDId.substring(0, args.autoDDId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
         var roughN = params.roughN;
         var bandwidth = params.contourBandwidth;
         var radius = params.contourRadius;
@@ -787,7 +793,9 @@ function getLayerRenderer() {
     }
 
     function renderHeatmapBody() {
-        var params = args.renderingParams;
+        var rpKey =
+            "ssv_" + args.autoDDId.substring(0, args.autoDDId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
         var radius = params.heatmapRadius;
         var heatmapWidth, heatmapHeight, x, y;
         if ("tileX" in args) {
@@ -930,7 +938,9 @@ function getLayerRenderer() {
 
     function renderRadarBody() {
         if (!data || data.length == 0) return;
-        var params = args.renderingParams;
+        var rpKey =
+            "ssv_" + args.autoDDId.substring(0, args.autoDDId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
         var aggKeyDelimiter = params.aggKeyDelimiter;
         var g = svg.append("g");
         g.style("opacity", 0);
@@ -1101,7 +1111,9 @@ function getLayerRenderer() {
 
     function renderPieBody() {
         if (!data || data.length == 0) return;
-        var params = args.renderingParams;
+        var rpKey =
+            "ssv_" + args.autoDDId.substring(0, args.autoDDId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
         var aggKeyDelimiter = params.aggKeyDelimiter;
         var parse = params.parsePathIntoSegments;
         var translate = params.translatePathSegments;
@@ -1259,7 +1271,9 @@ function getLayerRenderer() {
         }
 
         function tabularRankListRenderer(svg, data, args) {
-            var params = args.renderingParams;
+            var rpKey =
+                "ssv_" + args.autoDDId.substring(0, args.autoDDId.indexOf("_"));
+            var params = args.renderingParams[rpKey];
             var charW = 8;
             var charH = 15;
             var paddingH = 10;
@@ -1473,8 +1487,10 @@ function getAxesRenderer(level) {
     function axesRendererBodyTemplate() {
         var cWidth = args.canvasW,
             cHeight = args.canvasH,
-            axes = [],
-            params = args.renderingParams;
+            axes = [];
+        var rpKey = args.axesAutoDDRPKey;
+        var params = args.renderingParams[rpKey];
+
         var styling = function(axesg, dim, id, args) {
             axesg
                 .selectAll(".tick line")
@@ -1490,7 +1506,7 @@ function getAxesRenderer(level) {
             if (dim == "x")
                 axesg
                     .append("text")
-                    .text(args.renderingParams.xAxisTitle)
+                    .text(params.xAxisTitle)
                     .attr("fill", "black")
                     .attr("text-anchor", "middle")
                     .attr(
@@ -1500,7 +1516,7 @@ function getAxesRenderer(level) {
             else
                 axesg
                     .append("text")
-                    .text(args.renderingParams.yAxisTitle)
+                    .text(params.yAxisTitle)
                     .attr("fill", "black")
                     .attr("text-anchor", "middle")
                     .attr(
@@ -1566,7 +1582,9 @@ function getLegendRenderer() {
             .attr("class", "legendOrdinal")
             .attr("transform", "translate(50,50) scale(2.0)");
 
-        var params = args.renderingParams;
+        var rpKey =
+            "ssv_" + args.autoDDId.substring(0, args.autoDDId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
         var color = d3
             .scaleOrdinal(d3.schemeTableau10)
             .domain(

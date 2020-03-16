@@ -24,7 +24,8 @@ public class Project {
     private ArrayList<AutoDD> autoDDs;
     private ArrayList<Table> tables;
     private String renderingParams;
-    private String BGRP = "{}"; // Back-end Generated Rendering parameters
+    private HashMap<String, HashMap<String, String>> BGRP =
+            new HashMap<>(); // Back-end Generated Rendering parameters
     private ArrayList<String> styles;
 
     public String getName() {
@@ -55,21 +56,18 @@ public class Project {
         return renderingParams;
     }
 
-    public String getBGRP() {
+    public HashMap<String, HashMap<String, String>> getBGRP() {
         return BGRP;
     }
 
-    public void setBGRP(String BGRP) {
+    public void setBGRP(HashMap<String, HashMap<String, String>> BGRP) {
         this.BGRP = BGRP;
     }
 
-    public void addBGRP(String key, String val) {
+    public void addBGRP(String key1, String key2, String val) {
 
-        String newBGRP = BGRP;
-        newBGRP = newBGRP.substring(0, newBGRP.length() - 1);
-        if (newBGRP.length() > 1) newBGRP += ",";
-        newBGRP += "\"" + key + "\": " + val + "}";
-        BGRP = newBGRP;
+        if (!BGRP.containsKey(key1)) BGRP.put(key1, new HashMap<>());
+        BGRP.get(key1).put(key2, val);
     }
 
     public ArrayList<String> getStyles() {

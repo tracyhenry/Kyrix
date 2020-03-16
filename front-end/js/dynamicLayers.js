@@ -11,6 +11,8 @@ function renderAxes(viewId, viewportX, viewportY, vWidth, vHeight) {
     if (axesFunc == "") return;
 
     var args = getOptionalArgs(viewId);
+    if (gvd.curCanvas.axesAutoDDRPKey != "")
+        args.axesAutoDDRPKey = gvd.curCanvas.axesAutoDDRPKey;
     var axes = axesFunc.parseFunction()(args);
     for (var i = 0; i < axes.length; i++) {
         // create g element

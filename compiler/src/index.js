@@ -263,7 +263,7 @@ function addAutoDD(autoDD, args) {
     this.autoDDs.push(autoDD);
 
     // add stuff to renderingParam
-    this.addRenderingParams({
+    var renderingParams = {
         textwrap: require("./template-api/Utilities").textwrap,
         processClusterAgg: require("./template-api/AutoDD").processClusterAgg,
         serializePath: require("./template-api/Utilities").serializePath,
@@ -280,12 +280,19 @@ function addAutoDD(autoDD, args) {
         bboxH: autoDD.bboxH,
         zoomFactor: autoDD.zoomFactor,
         fadeInDuration: 200
-    });
-    this.addRenderingParams(autoDD.clusterParams);
-    this.addRenderingParams(autoDD.aggregateParams);
-    this.addRenderingParams(autoDD.hoverParams);
-    this.addRenderingParams(autoDD.legendParams);
-    this.addRenderingParams(autoDD.axisParams);
+    };
+    renderingParams = {
+        ...renderingParams,
+        ...autoDD.clusterParams,
+        ...autoDD.aggregateParams,
+        ...autoDD.hoverParams,
+        ...autoDD.legendParams,
+        ...autoDD.axisParams
+    };
+    var rpKey = "ssv_" + (this.autoDDs.length - 1);
+    var rpDict = {};
+    rpDict[rpKey] = renderingParams;
+    this.addRenderingParams(rpDict);
 
     // construct canvases
     var curPyramid = [];
@@ -322,6 +329,7 @@ function addAutoDD(autoDD, args) {
         var staticLayer = new Layer(null, true);
         curCanvas.addLayer(staticLayer);
         staticLayer.addRenderingFunc(autoDD.getLegendRenderer());
+        staticLayer.setAutoDDId(this.autoDDs.length - 1 + "_" + i);
 
         // create one layer
         var curLayer = new Layer(transform, false);
@@ -353,7 +361,10 @@ function addAutoDD(autoDD, args) {
 
         // axes
         if (autoDD.axis) {
-            curCanvas.addAxes(autoDD.getAxesRenderer(i));
+            curCanvas.addAxes(
+                autoDD.getAxesRenderer(i),
+                "ssv_" + (this.autoDDs.length - 1)
+            );
         }
     }
 
