@@ -95,10 +95,9 @@ public abstract class Indexer implements Serializable {
     }
 
     public static Indexer getIndexerByType(String type) throws Exception {
-        if (type.isEmpty()) return null;
+        if (type.isEmpty() || type.equals("PsqlNativeBoxIndexer")) return null;
         Class c = Class.forName("index." + type);
         Method m = c.getMethod("getInstance");
-        System.out.println("Indexer type: " + c.getSimpleName());
         return (Indexer) m.invoke(null);
     }
 
