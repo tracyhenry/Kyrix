@@ -15,7 +15,7 @@ public class Layer implements Serializable {
     private String rendering;
     private ArrayList<String> tooltipColumns, tooltipAliases;
     private transient Indexer indexer;
-    private String autoDDId;
+    private String ssvId;
     private String indexerType;
 
     public Transform getTransform() {
@@ -50,8 +50,8 @@ public class Layer implements Serializable {
         return indexer;
     }
 
-    public String getAutoDDId() {
-        return autoDDId;
+    public String getSSVId() {
+        return ssvId;
     }
 
     public void setIndexerType(String indexerType) {
@@ -67,7 +67,7 @@ public class Layer implements Serializable {
         String colListStr = "";
         for (String col : transform.getColumnNames())
             colListStr += (tableName.isEmpty() ? "" : tableName + ".") + col + ", ";
-        if (getIndexerType().equals("AutoDDInMemoryIndexer")) colListStr += "clusterAgg, ";
+        if (getIndexerType().equals("SSVInMemoryIndexer")) colListStr += "clusterAgg, ";
         colListStr += "cx, cy, minx, miny, maxx, maxy";
         return colListStr;
     }
@@ -88,8 +88,8 @@ public class Layer implements Serializable {
                 + ", rendering='"
                 + rendering
                 + '\''
-                + ", autoDDId="
-                + autoDDId
+                + ", ssvId="
+                + ssvId
                 + '}';
     }
 }

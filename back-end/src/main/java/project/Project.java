@@ -21,7 +21,7 @@ public class Project {
     private ArrayList<View> views;
     private ArrayList<Canvas> canvases;
     private ArrayList<Jump> jumps;
-    private ArrayList<AutoDD> autoDDs;
+    private ArrayList<SSV> ssvs;
     private ArrayList<Table> tables;
     private String renderingParams;
     private HashMap<String, HashMap<String, String>> BGRP =
@@ -44,8 +44,8 @@ public class Project {
         return jumps;
     }
 
-    public ArrayList<AutoDD> getAutoDDs() {
-        return autoDDs;
+    public ArrayList<SSV> getSsvs() {
+        return ssvs;
     }
 
     public ArrayList<Table> getTables() {
@@ -117,8 +117,8 @@ public class Project {
                 + canvases
                 + ", jumps="
                 + jumps
-                + ", autoDDs="
-                + autoDDs
+                + ", ssvs="
+                + ssvs
                 + ", renderingParams='"
                 + renderingParams
                 + '\''

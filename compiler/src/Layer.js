@@ -24,7 +24,7 @@ function Layer(transform, isStatic) {
     this.tooltipColumns = [];
     this.tooltipAliases = [];
     this.indexerType = "";
-    this.autoDDId = "";
+    this.ssvId = "";
 }
 
 /**
@@ -86,11 +86,11 @@ function setFetchingScheme(fetchingScheme, deltaBox) {
 }
 
 /**
- * set autoDD ID
- * @param autoDDId
+ * set ssv ID
+ * @param ssvId
  */
-function setAutoDDId(autoDDId) {
-    this.autoDDId = autoDDId;
+function setSSVId(ssvId) {
+    this.ssvId = ssvId;
 }
 
 /**
@@ -111,7 +111,7 @@ Layer.prototype = {
     addRenderingFunc,
     addTooltip,
     setFetchingScheme,
-    setAutoDDId,
+    setSSVId,
     setIndexerType
 };
 

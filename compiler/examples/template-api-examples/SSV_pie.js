@@ -1,17 +1,17 @@
 // libraries
 const Project = require("../../src/index").Project;
-const AutoDD = require("../../src/template-api/AutoDD").AutoDD;
+const SSV = require("../../src/template-api/SSV").SSV;
 const renderers = require("./renderers");
 
 // construct a project
-var p = new Project("autodd_pie", "../../../config.txt");
+var p = new Project("ssv_pie", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
 p.addStyles(renderers.playerRenderingStyles);
 
-// set up auto drill down
+// set up ssv
 var query = "select * from fifa19;";
 
-var autoDD = {
+var ssv = {
     data: {
         db: "fifa19",
         query: query
@@ -72,5 +72,5 @@ var autoDD = {
     }
 };
 
-p.addAutoDD(new AutoDD(autoDD));
+p.addSSV(new SSV(ssv));
 p.saveProject();

@@ -36,8 +36,8 @@ public class BoxandData {
                 HashMap<String, String> rowDict = new HashMap<>();
                 for (int k = 0; k < numFields; k++) rowDict.put(fields.get(k), rowArray.get(k));
 
-                // cluster number field for autodd layer
-                if (curLayer.getIndexerType().contains("AutoDD")) {
+                // cluster number field for ssv layer
+                if (curLayer.getIndexerType().contains("SSV")) {
                     rowDict.put("clusterAgg", rowArray.get(numFields));
                     numFields++;
                 }

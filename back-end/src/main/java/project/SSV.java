@@ -7,7 +7,7 @@ import main.Config;
 import main.DbConnector;
 
 /** Created by wenbo on 3/31/19. */
-public class AutoDD {
+public class SSV {
 
     private String query, db, rawTable;
     private String xCol, yCol, zCol;
@@ -216,7 +216,7 @@ public class AutoDD {
         // calculate range if have not
         if (Double.isNaN(loX)) {
 
-            System.out.println("\n Calculating autoDD x & y ranges...\n");
+            System.out.println("\n Calculating SSV x & y ranges...\n");
             loX = loY = Double.MAX_VALUE;
             hiX = hiY = Double.MIN_VALUE;
             try {
@@ -240,7 +240,7 @@ public class AutoDD {
 
     @Override
     public String toString() {
-        return "AutoDD{"
+        return "SSV{"
                 + "query='"
                 + query
                 + '\''

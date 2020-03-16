@@ -10,13 +10,13 @@ import java.util.*;
 import main.Config;
 import main.DbConnector;
 import main.Main;
-import project.AutoDD;
 import project.Canvas;
+import project.SSV;
 
 /** Created by wenbo on 11/1/19. */
-public class AutoDDCitusIndexer extends BoundingBoxIndexer {
+public class SSVCitusIndexer extends BoundingBoxIndexer {
 
-    public class AutoDDInfo {
+    public class SSVInfo {
         public ArrayList<String> columnNames;
         public ArrayList<String> tableNames;
         public double zoomFactor;
@@ -25,7 +25,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         public ArrayList<KDTree> kdTreeNodes;
     }
 
-    private static AutoDDCitusIndexer instance = null;
+    private static SSVCitusIndexer instance = null;
     private final Gson gson;
     private final int L = 6;
     private final int objectNumLimit = 4000; // in a 1k by 1k region
@@ -35,15 +35,15 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     private final double bottomScale = 1e10;
     private final int reshuffleBatchCt = 16;
     private final String aggKeyDelimiter = "__";
-    private AutoDD autoDD;
+    private SSV ssv;
     private Statement kyrixStmt;
     private KDTree root = null;
     private Queue<KDTree> q = null;
     private double theta = 1.0;
     private double loX, loY, hiX, hiY;
     private String rawTable, sql, xCol, yCol;
-    private String curAutoDDId; // autoddIndex + "_0"
-    private int curAutoDDIndex, numLevels, numRawColumns;
+    private String curSSVId; // ssvIndex + "_0"
+    private int curSSVIndex, numLevels, numRawColumns;
     private int topLevelWidth, topLevelHeight, bboxW, bboxH;
     private long st, st1, numRawRows;
     private ArrayList<Integer> citusHashKeys;
@@ -52,25 +52,25 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     private ArrayList<String> columnNames, columnTypes, zoomLevelTables;
 
     // singleton pattern to ensure only one instance existed
-    private AutoDDCitusIndexer() {
+    private SSVCitusIndexer() {
         gson = new GsonBuilder().create();
     }
 
     // thread-safe instance getter
-    public static synchronized AutoDDCitusIndexer getInstance() {
+    public static synchronized SSVCitusIndexer getInstance() {
 
-        if (instance == null) instance = new AutoDDCitusIndexer();
+        if (instance == null) instance = new SSVCitusIndexer();
         return instance;
     }
 
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
 
-        // create MV for all autoDD layers at once
-        curAutoDDId = c.getLayers().get(layerId).getAutoDDId();
-        if (!curAutoDDId.substring(curAutoDDId.indexOf("_") + 1).equals("0")) return;
+        // create MV for all ssv layers at once
+        curSSVId = c.getLayers().get(layerId).getSSVId();
+        if (!curSSVId.substring(curSSVId.indexOf("_") + 1).equals("0")) return;
 
-        // set some commonly accessed variables, such as autoDD, numLevels, numRawColumns, etc.
+        // set some commonly accessed variables, such as ssv, numLevels, numRawColumns, etc.
         setCommonVariables();
 
         // step 1: spatial partitioning
@@ -80,7 +80,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         bottomUpClustering();
 
         // save useful info to the database for online querying
-        saveAutoDDInfo();
+        saveSSVInfo();
     }
 
     private void performSpatialPartitioning() throws SQLException, ClassNotFoundException {
@@ -139,24 +139,24 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     private void setCommonVariables() throws SQLException, ClassNotFoundException {
         System.out.println("Setting common variables...");
 
-        // get current AutoDD object
-        curAutoDDIndex = Integer.valueOf(curAutoDDId.substring(0, curAutoDDId.indexOf("_")));
-        autoDD = Main.getProject().getAutoDDs().get(curAutoDDIndex);
+        // get current SSV object
+        curSSVIndex = Integer.valueOf(curSSVId.substring(0, curSSVId.indexOf("_")));
+        ssv = Main.getProject().getSsvs().get(curSSVIndex);
 
         // number of levels
-        numLevels = autoDD.getNumLevels();
+        numLevels = ssv.getNumLevels();
         System.out.println("numLevels = " + numLevels);
 
         // raw fields
         st = System.nanoTime();
-        ArrayList<String> columnNamesFromAutoDD = autoDD.getColumnNames();
-        ArrayList<String> columnTypesFromAutoDD = autoDD.getColumnTypes();
+        ArrayList<String> columnNamesFromSSV = ssv.getColumnNames();
+        ArrayList<String> columnTypesFromSSV = ssv.getColumnTypes();
         columnNames = new ArrayList<>();
         columnTypes = new ArrayList<>();
-        for (int i = 0; i < columnNamesFromAutoDD.size(); i++)
-            if (!columnNamesFromAutoDD.get(i).equals("hash_key")) {
-                columnNames.add(columnNamesFromAutoDD.get(i));
-                columnTypes.add(columnTypesFromAutoDD.get(i));
+        for (int i = 0; i < columnNamesFromSSV.size(); i++)
+            if (!columnNamesFromSSV.get(i).equals("hash_key")) {
+                columnNames.add(columnNamesFromSSV.get(i));
+                columnTypes.add(columnTypesFromSSV.get(i));
             }
         numRawColumns = columnNames.size();
         System.out.println("numRawColumns = " + numRawColumns);
@@ -168,7 +168,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                 "Getting # of raw columns took: " + (System.nanoTime() - st) / 1e9 + "s.");
 
         // raw table
-        rawTable = autoDD.getRawTable();
+        rawTable = ssv.getRawTable();
         System.out.println("rawTable = " + rawTable);
 
         // calculate overlapping threshold
@@ -177,44 +177,44 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                         0.2,
                         Math.sqrt(
                                 4
-                                        * (virtualViewportSize + autoDD.getBboxW() * 2)
-                                        * (virtualViewportSize + autoDD.getBboxH() * 2)
+                                        * (virtualViewportSize + ssv.getBboxW() * 2)
+                                        * (virtualViewportSize + ssv.getBboxH() * 2)
                                         / objectNumLimit
-                                        / autoDD.getBboxH()
-                                        / autoDD.getBboxW()));
-        theta = Math.max(theta, autoDD.getOverlap());
+                                        / ssv.getBboxH()
+                                        / ssv.getBboxW()));
+        theta = Math.max(theta, ssv.getOverlap());
         System.out.println("theta = " + theta);
 
         // DB statement
         kyrixStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
         // toplevel size
-        topLevelWidth = autoDD.getTopLevelWidth();
-        topLevelHeight = autoDD.getTopLevelHeight();
+        topLevelWidth = ssv.getTopLevelWidth();
+        topLevelHeight = ssv.getTopLevelHeight();
         System.out.println("topLevelWidth = " + topLevelWidth);
         System.out.println("topLevelHeight = " + topLevelHeight);
 
         // raw XY extent
-        autoDD.setXYExtent();
-        loX = autoDD.getLoX();
-        loY = autoDD.getLoY();
-        hiX = autoDD.getHiX();
-        hiY = autoDD.getHiY();
+        ssv.setXYExtent();
+        loX = ssv.getLoX();
+        loY = ssv.getLoY();
+        hiX = ssv.getHiX();
+        hiY = ssv.getHiY();
         System.out.println("[loX, hiX] = [" + loX + ", " + hiX + "]");
         System.out.println("[loY, hiY] = [" + loY + ", " + hiY + "]");
 
         // xCol, yCol
-        xCol = autoDD.getxCol();
-        yCol = autoDD.getyCol();
+        xCol = ssv.getxCol();
+        yCol = ssv.getyCol();
         System.out.println("xCol = " + xCol);
         System.out.println("yCol = " + yCol);
 
         // bboxW, bboxH
-        bboxW = autoDD.getBboxW();
-        bboxH = autoDD.getBboxH();
+        bboxW = ssv.getBboxW();
+        bboxH = ssv.getBboxH();
 
         // zoom level table names
-        // TODO: add project name and autodd_ids
+        // TODO: add project name and ssvIds
         zoomLevelTables = new ArrayList<>();
         for (int i = 0; i < numLevels; i++) zoomLevelTables.add("l" + i);
         zoomLevelTables.add("bottom_level");
@@ -617,7 +617,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
             hashKeysStr += (i > 0 ? "," : "") + citusHashKeys.get(i);
         hashKeysStr += "]";
         funcSql +=
-                autoDD.getGetCitusSpatialHashKeyBody()
+                ssv.getGetCitusSpatialHashKeyBody()
                         .replaceAll("REPLACE_ME_partitions", partitionStr)
                         .replaceAll("REPLACE_ME_hashkeys", hashKeysStr);
         funcSql += " $$ LANGUAGE plv8";
@@ -679,11 +679,10 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         System.out.println("Creating the PLV8 UDF for single node clustering algo...");
         String funcSql =
                 "CREATE OR REPLACE FUNCTION single_node_clustering_algo("
-                        + "shard text, autodd jsonb) returns int AS $$ "
-                        + autoDD.getSingleNodeClusteringBody()
+                        + "shard text, ssv jsonb) returns int AS $$ "
+                        + ssv.getSingleNodeClusteringBody()
                                 .replaceAll(
-                                        "REPLACE_ME_merge_cluster_aggs",
-                                        autoDD.getMergeClusterAggs())
+                                        "REPLACE_ME_merge_cluster_aggs", ssv.getMergeClusterAggs())
                         + "$$ LANGUAGE plv8";
         sql = funcSql + " STABLE;";
         System.out.println("Creating single_node_clustering_algo on master:\n" + sql);
@@ -699,28 +698,27 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
 
         sql =
                 "CREATE OR REPLACE FUNCTION merge_clusters_along_splits("
-                        + "clusters jsonb[], autodd jsonb) returns setof jsonb AS $$ "
-                        + autoDD.getMergeClustersAlongSplitsBody()
+                        + "clusters jsonb[], ssv jsonb) returns setof jsonb AS $$ "
+                        + ssv.getMergeClustersAlongSplitsBody()
                                 .replaceAll(
-                                        "REPLACE_ME_merge_cluster_aggs",
-                                        autoDD.getMergeClusterAggs())
+                                        "REPLACE_ME_merge_cluster_aggs", ssv.getMergeClusterAggs())
                         + "$$ LANGUAGE plv8";
         sql = sql + " STABLE;";
         System.out.println("Creating merge_clusters_along_splits on master:\n" + sql);
         kyrixStmt.executeUpdate(sql);
     }
 
-    private String getAutoddJsonStr(double zoomFactor, boolean columnList, boolean aggFields) {
+    private String getSSVJsonStr(double zoomFactor, boolean columnList, boolean aggFields) {
         String ret = "";
         ret =
                 "\"xCol\":\""
-                        + autoDD.getxCol()
+                        + ssv.getxCol()
                         + "\", \"yCol\":\""
-                        + autoDD.getyCol()
+                        + ssv.getyCol()
                         + "\", \"zCol\":\""
-                        + autoDD.getzCol()
+                        + ssv.getzCol()
                         + "\", \"zOrder\":\""
-                        + autoDD.getzOrder()
+                        + ssv.getzOrder()
                         + "\", \"zoomFactor\":"
                         + zoomFactor
                         + ", \"theta\":"
@@ -732,7 +730,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                         + ", \"bboxH\":"
                         + bboxH
                         + ", \"topk\":"
-                        + autoDD.getTopk();
+                        + ssv.getTopk();
         if (columnList) {
             ret += ", \"fields\":[";
             // field names
@@ -745,11 +743,11 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         }
         if (aggFields) {
             ret += ", \"aggDimensionFields\": [";
-            for (int j = 0; j < autoDD.getAggDimensionFields().size(); j++)
-                ret += (j > 0 ? ", \"" : "\"") + autoDD.getAggDimensionFields().get(j) + "\"";
+            for (int j = 0; j < ssv.getAggDimensionFields().size(); j++)
+                ret += (j > 0 ? ", \"" : "\"") + ssv.getAggDimensionFields().get(j) + "\"";
             ret += "], \"aggMeasureFields\": [";
-            for (int j = 0; j < autoDD.getAggMeasureFields().size(); j++)
-                ret += (j > 0 ? ", \"" : "\"") + autoDD.getAggMeasureFields().get(j) + "\"";
+            for (int j = 0; j < ssv.getAggMeasureFields().size(); j++)
+                ret += (j > 0 ? ", \"" : "\"") + ssv.getAggMeasureFields().get(j) + "\"";
             ret += "]";
         }
 
@@ -765,7 +763,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                         + i
                         + "...");
 
-        double zoomFactor = autoDD.getZoomFactor();
+        double zoomFactor = ssv.getZoomFactor();
         if (i == numLevels - 1) zoomFactor = bottomScale / Math.pow(zoomFactor, numLevels - 1);
 
         String curLevelTableName = zoomLevelTables.get(i);
@@ -773,7 +771,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
 
         // then run udf and store results into the current level
         sql = "SELECT single_node_clustering_algo('" + lastLevelTableName + "', '{";
-        sql += getAutoddJsonStr(zoomFactor, true, true);
+        sql += getSSVJsonStr(zoomFactor, true, true);
         // map of shard ids
         sql += ", \"tableMap\": {\"" + lastLevelTableName + "\" : \"" + curLevelTableName + "\"";
         sql += "}}'::jsonb)";
@@ -795,13 +793,13 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                 "Running single_node_clustering_algo across all shards for level" + i + "...");
 
         String curLevelTableName = zoomLevelTables.get(i);
-        double zoomFactor = autoDD.getZoomFactor();
+        double zoomFactor = ssv.getZoomFactor();
         if (i == numLevels - 1) zoomFactor = bottomScale / Math.pow(zoomFactor, numLevels - 1);
 
         // run udf with inserts
         sql =
                 "SELECT single_node_clustering_algo('%1$s', '{"
-                        + getAutoddJsonStr(zoomFactor, true, true);
+                        + getSSVJsonStr(zoomFactor, true, true);
         // map of shard ids
         sql += ", \"tableMap\": {";
         for (int j = 0; j < numPartitions; j++)
@@ -847,7 +845,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         System.out.println();
         System.out.println("Current KD-tree: " + o);
         String tableName = zoomLevelTables.get(i);
-        double zoomFactor = bottomScale / Math.pow(autoDD.getZoomFactor(), i);
+        double zoomFactor = bottomScale / Math.pow(ssv.getZoomFactor(), i);
 
         // get how many objects there are along the split
         String boxStr = "box('";
@@ -915,7 +913,7 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
                         + " (v->>'centroid')::point ";
         sql +=
                 "FROM (SELECT merge_clusters_along_splits(array_agg(to_jsonb(merge_table)), '{"
-                        + getAutoddJsonStr(0, false, false);
+                        + getSSVJsonStr(0, false, false);
         sql +=
                 ", \"splitDir\":"
                         + (o.splitDir == KDTree.SplitDir.VERTICAL
@@ -976,36 +974,36 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         System.out.println();
     }
 
-    private void saveAutoDDInfo() throws SQLException {
-        System.out.println("Saving autodd info...");
+    private void saveSSVInfo() throws SQLException {
+        System.out.println("Saving ssv info...");
 
-        AutoDDInfo autoDDInfo = new AutoDDInfo();
-        autoDDInfo.columnNames = columnNames;
-        autoDDInfo.tableNames = zoomLevelTables;
-        autoDDInfo.bboxW = bboxW;
-        autoDDInfo.bboxH = bboxH;
-        autoDDInfo.zoomFactor = autoDD.getZoomFactor();
-        autoDDInfo.citusHashKeys = citusHashKeys;
-        autoDDInfo.kdTreeNodes = new ArrayList<>();
-        for (KDTree o : q) autoDDInfo.kdTreeNodes.add(o);
+        SSVInfo ssvInfo = new SSVInfo();
+        ssvInfo.columnNames = columnNames;
+        ssvInfo.tableNames = zoomLevelTables;
+        ssvInfo.bboxW = bboxW;
+        ssvInfo.bboxH = bboxH;
+        ssvInfo.zoomFactor = ssv.getZoomFactor();
+        ssvInfo.citusHashKeys = citusHashKeys;
+        ssvInfo.kdTreeNodes = new ArrayList<>();
+        for (KDTree o : q) ssvInfo.kdTreeNodes.add(o);
 
         // create table if not exist
-        sql = "CREATE TABLE IF NOT EXISTS autodd_infos(project_id text, autodd_id int, gson text);";
+        sql = "CREATE TABLE IF NOT EXISTS ssv_infos(project_id text, ssv_id int, gson text);";
         System.out.println(sql);
         kyrixStmt.execute(sql);
 
         // delete if exists
-        sql = "DELETE FROM autodd_infos WHERE autodd_id = " + curAutoDDIndex + ";";
+        sql = "DELETE FROM ssv_infos WHERE ssv_id = " + curSSVIndex + ";";
         System.out.println(sql);
         kyrixStmt.execute(sql);
 
         // serialize
-        String jsonText = gson.toJson(autoDDInfo);
+        String jsonText = gson.toJson(ssvInfo);
         sql =
-                "INSERT INTO autodd_infos VALUES ('"
+                "INSERT INTO ssv_infos VALUES ('"
                         + Main.getProject().getName()
                         + "', "
-                        + curAutoDDIndex
+                        + curSSVIndex
                         + ", '"
                         + jsonText
                         + "');";
@@ -1013,16 +1011,16 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         kyrixStmt.execute(sql);
     }
 
-    public AutoDDInfo getAutoDDInfo(int autoDDIndex) throws SQLException, ClassNotFoundException {
+    public SSVInfo getSSVInfo(int ssvIndex) throws SQLException, ClassNotFoundException {
         sql =
-                "SELECT gson FROM autodd_infos WHERE project_id = '"
+                "SELECT gson FROM ssv_infos WHERE project_id = '"
                         + Main.getProject().getName()
-                        + "' and autodd_id = "
-                        + autoDDIndex
+                        + "' and ssv_id = "
+                        + ssvIndex
                         + ";";
         System.out.println(sql);
         String jsonText = DbConnector.getQueryResult(Config.databaseName, sql).get(0).get(0);
-        AutoDDInfo res = gson.fromJson(jsonText, AutoDDInfo.class);
+        SSVInfo res = gson.fromJson(jsonText, SSVInfo.class);
         return res;
     }
 
@@ -1030,25 +1028,25 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
     public ArrayList<ArrayList<String>> getDataFromRegion(
             Canvas c, int layerId, String regionWKT, String predicate, Box newBox, Box oldBox)
             throws Exception {
-        // get autoddInfo if it doesn't exist
-        String autoDDId = c.getLayers().get(layerId).getAutoDDId();
-        int autoDDIndex = Integer.valueOf(autoDDId.substring(0, autoDDId.indexOf("_")));
-        AutoDDInfo autoDDInfo = getAutoDDInfo(autoDDIndex);
+        // get ssvInfo if it doesn't exist
+        String ssvId = c.getLayers().get(layerId).getSSVId();
+        int ssvIndex = Integer.valueOf(ssvId.substring(0, ssvId.indexOf("_")));
+        SSVInfo ssvInfo = getSSVInfo(ssvIndex);
 
         // get column list string
         String colListStr = "";
-        for (int i = 0; i < autoDDInfo.columnNames.size(); i++)
-            colListStr += autoDDInfo.columnNames.get(i) + ", ";
+        for (int i = 0; i < ssvInfo.columnNames.size(); i++)
+            colListStr += ssvInfo.columnNames.get(i) + ", ";
         colListStr += "hash_key, cluster_agg, cx, cy, minx, miny, maxx, maxy";
 
         // construct range query
-        int bboxW = autoDDInfo.bboxW;
-        int bboxH = autoDDInfo.bboxH;
+        int bboxW = ssvInfo.bboxW;
+        int bboxH = ssvInfo.bboxH;
         String sql =
                 "SELECT "
                         + colListStr
                         + " FROM "
-                        + autoDDInfo.tableNames.get(c.getPyramidLevel())
+                        + ssvInfo.tableNames.get(c.getPyramidLevel())
                         + " WHERE ";
         sql +=
                 "centroid <@ box('"
@@ -1077,15 +1075,15 @@ public class AutoDDCitusIndexer extends BoundingBoxIndexer {
         // if table is distributed, only hit shards that intersect with newBox
         if (c.getPyramidLevel() > L) {
             sql += " and (";
-            double zoomFactor = bottomScale / Math.pow(autoDDInfo.zoomFactor, c.getPyramidLevel());
-            for (int i = 0; i < autoDDInfo.kdTreeNodes.size(); i++) {
-                KDTree o = autoDDInfo.kdTreeNodes.get(i);
+            double zoomFactor = bottomScale / Math.pow(ssvInfo.zoomFactor, c.getPyramidLevel());
+            for (int i = 0; i < ssvInfo.kdTreeNodes.size(); i++) {
+                KDTree o = ssvInfo.kdTreeNodes.get(i);
                 if (o.maxx / zoomFactor < newBox.getMinx() - bboxW / 2) continue;
                 if (newBox.getMaxx() + bboxW / 2 < o.minx / zoomFactor) continue;
                 if (o.maxy / zoomFactor < newBox.getMiny() - bboxH / 2) continue;
                 if (newBox.getMaxy() + bboxH / 2 < o.miny / zoomFactor) continue;
                 if (sql.charAt(sql.length() - 1) != '(') sql += " or ";
-                sql += "hash_key = " + autoDDInfo.citusHashKeys.get(i);
+                sql += "hash_key = " + ssvInfo.citusHashKeys.get(i);
             }
             sql += ")";
         }

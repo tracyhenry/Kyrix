@@ -76,7 +76,7 @@ var teamTimelineRendering = function(svg, data, args) {
         .attr("ry", 10)
         .attr("width", rectWidth)
         .attr("height", rectHeight + dateHeight)
-        .classed("kyrix-retainsizezoom", true); // for NBA autoDD
+        .classed("kyrix-retainsizezoom", true); // for NBA SSVs
 
     // home logo
     g.selectAll(".homeimage")
@@ -98,7 +98,7 @@ var teamTimelineRendering = function(svg, data, args) {
                 ".svg"
             );
         })
-        .classed("kyrix-retainsizezoom", true); // for NBA autoDD
+        .classed("kyrix-retainsizezoom", true); // for NBA SSVs
 
     // away logo
     g.selectAll(".awayimage")
@@ -120,7 +120,7 @@ var teamTimelineRendering = function(svg, data, args) {
                 ".svg"
             );
         })
-        .classed("kyrix-retainsizezoom", true); // for NBA autoDD
+        .classed("kyrix-retainsizezoom", true); // for NBA SSVs
 
     // home score
     g.selectAll(".homescore")
@@ -139,7 +139,7 @@ var teamTimelineRendering = function(svg, data, args) {
         })
         .attr("font-size", scoreFontSize)
         .attr("dy", ".35em")
-        .classed("kyrix-retainsizezoom", true); // for NBA autoDD
+        .classed("kyrix-retainsizezoom", true); // for NBA SSVs
 
     // away score
     g.selectAll(".awayscore")
@@ -158,7 +158,7 @@ var teamTimelineRendering = function(svg, data, args) {
         })
         .attr("font-size", scoreFontSize)
         .attr("dy", ".35em")
-        .classed("kyrix-retainsizezoom", true); // for NBA autoDD
+        .classed("kyrix-retainsizezoom", true); // for NBA SSVs
 
     // date
     g.selectAll(".date")
@@ -178,9 +178,9 @@ var teamTimelineRendering = function(svg, data, args) {
             return +d.cy - d2Delta + rectHeight / 2 + dateYDelta;
         })
         .attr("dy", ".35em")
-        .classed("kyrix-retainsizezoom", true); // for NBA autoDD
+        .classed("kyrix-retainsizezoom", true); // for NBA SSVs
 
-    // line -- for nba app, autodd doesn't need this
+    // line -- for nba app, SSVs don't need this
     if (data.length > 0 && "timeline" in data[0])
         g.selectAll("line")
             .data(data)

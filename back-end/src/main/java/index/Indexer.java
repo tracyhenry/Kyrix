@@ -68,8 +68,8 @@ public abstract class Indexer implements Serializable {
                                             + Config.indexingScheme.toString()
                                             + " not supported for PSQL.");
                     } else if (Config.database == Config.Database.MYSQL) {
-                        if (l.getIndexerType().equals("AutoDDInMemoryIndexer"))
-                            throw new Exception("AutoDD is not supported by MySQL indexers.");
+                        if (l.getIndexerType().equals("SSVInMemoryIndexer"))
+                            throw new Exception("SSV is not supported by MySQL indexers.");
                         else if (l.getIndexerType().equals("PsqlPredicatedTableIndexer"))
                             throw new Exception(
                                     "PredicatedTable is not supported by MySQL indexers.");
