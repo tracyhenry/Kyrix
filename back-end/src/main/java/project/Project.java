@@ -24,9 +24,17 @@ public class Project {
     private ArrayList<SSV> ssvs;
     private ArrayList<Table> tables;
     private String renderingParams;
-    private HashMap<String, HashMap<String, String>> BGRP =
-            new HashMap<>(); // Back-end Generated Rendering parameters
     private ArrayList<String> styles;
+
+    // Back-end Generated Rendering parameters
+    // The key of the hashmap is used to minimize occupied
+    // namespace of the global rendering parameter dictionary
+    // currently, it's only used by SSV indexers, which registers
+    // keys like "ssv_0", "ssv_1", "ssv_2"...
+    // the value of the hashmap is a regular dictionary mapping from
+    // names to values. This is merged with compiler generated ones
+    // in the frontend (pageOnLoad.js)
+    private HashMap<String, HashMap<String, String>> BGRP = new HashMap<>();
 
     public String getName() {
         return name;
