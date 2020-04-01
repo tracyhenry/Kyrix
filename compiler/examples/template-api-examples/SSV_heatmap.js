@@ -1,20 +1,20 @@
 // libraries
 const Project = require("../../src/index").Project;
-const AutoDD = require("../../src/template-api/AutoDD").AutoDD;
+const SSV = require("../../src/template-api/SSV").SSV;
 const renderers = require("../nba/renderers");
 
 // construct a project
-var p = new Project("autodd_circle", "../../../config.txt");
+var p = new Project("ssv_heatmap", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
 p.addStyles("../nba/nba.css");
 
-// set up auto drill down
+// set up ssv
 var query =
     "select game_id, year, month, day, team1.abbr as home_team, team2.abbr as away_team, home_score, away_score, team1.rank + team2.rank as agg_rank " +
     "from games, teams as team1, teams as team2 " +
     "where games.home_team = team1.abbr and games.away_team = team2.abbr ";
 
-var autoDD = {
+var ssv = {
     data: {
         db: "nba",
         query: query
@@ -35,19 +35,21 @@ var autoDD = {
     },
     marks: {
         cluster: {
-            mode: "circle",
+            mode: "heatmap",
             config: {
-                // circleMinSize: 30,
-                // circleMaxSize: 70
+                // heatmapRadius: 90,
+                // heatmapOpacity: 0.5,
             }
         },
         hover: {
             rankList: {
-                mode: "tabular",
-                fields: ["home_team", "away_team", "home_score", "away_score"],
-                topk: 3
-            },
-            boundary: "convexhull"
+                mode: "custom",
+                custom: renderers.teamTimelineRendering,
+                config: {
+                    bboxW: 162,
+                    bboxH: 132
+                }
+            }
         }
     },
     config: {
@@ -55,5 +57,5 @@ var autoDD = {
     }
 };
 
-p.addAutoDD(new AutoDD(autoDD));
+p.addSSV(new SSV(ssv));
 p.saveProject();

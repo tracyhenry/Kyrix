@@ -20,7 +20,9 @@ function renderStaticLayers(viewId) {
         // render
         var renderFunc = curLayer.rendering.parseFunction();
         var curSvg = d3.select(viewClass + ".layerg.layer" + i).select("svg");
-        renderFunc(curSvg, gvd.curStaticData[i], getOptionalArgs(viewId));
+        var args = getOptionalArgs(viewId);
+        args["ssvId"] = curLayer.ssvId;
+        renderFunc(curSvg, gvd.curStaticData[i], args);
 
         // tooltips
         if (curLayer.tooltipColumns.length > 0)

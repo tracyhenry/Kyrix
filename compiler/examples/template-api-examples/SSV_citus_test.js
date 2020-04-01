@@ -1,15 +1,15 @@
 // libraries
 const Project = require("../../src/index").Project;
-const AutoDD = require("../../src/template-api/AutoDD").AutoDD;
+const SSV = require("../../src/template-api/SSV").SSV;
 
 // construct a project
-var p = new Project("autodd_citus", "../../../config.txt");
+var p = new Project("ssv_citus", "../../../config.txt");
 
-// set up auto drill down
+// set up ssv
 // note -- for Citus, this query must be SELECT * FROM tbl
 var query = "SELECT * from dots;";
 
-var autoDD = {
+var ssv = {
     data: {
         db: "kyrix",
         query: query
@@ -44,5 +44,5 @@ var autoDD = {
     }
 };
 
-p.addAutoDD(new AutoDD(autoDD));
+p.addSSV(new SSV(ssv));
 p.saveProject();

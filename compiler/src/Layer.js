@@ -20,8 +20,11 @@ function Layer(transform, isStatic) {
     else this.isStatic = isStatic;
     this.fetchingScheme = "dbox";
     this.deltaBox = true;
+    this.rendering = "";
+    this.tooltipColumns = [];
+    this.tooltipAliases = [];
     this.indexerType = "";
-    this.autoDDId = "";
+    this.ssvId = "";
 }
 
 /**
@@ -51,16 +54,21 @@ function addPlacement(placement) {
 /**
  * add a rendering function to a layer object
  * @param rendering - a javascript function that adds an <g> element to an existing svg. See spec api for details on input/output.
- * @param tooltipColumns - an array of column names to be displayed in the tooltip
- * @param tooltipAliases - an array of aliases to tooltipColumns
  */
-function addRenderingFunc(rendering, tooltipColumns, tooltipAliases) {
+function addRenderingFunc(rendering) {
     if (typeof rendering !== "function")
         throw new Error(
             "Constructing Layer: rendering must be a javascript function."
         );
 
     this.rendering = rendering;
+}
+
+/**
+ * @param tooltipColumns - an array of column names to be displayed in the tooltip
+ * @param tooltipAliases - an array of aliases to tooltipColumns
+ */
+function addTooltip(tooltipColumns, tooltipAliases) {
     this.tooltipColumns = tooltipColumns == null ? [] : tooltipColumns;
     this.tooltipAliases =
         tooltipAliases == null ? tooltipColumns : tooltipAliases;
@@ -78,11 +86,11 @@ function setFetchingScheme(fetchingScheme, deltaBox) {
 }
 
 /**
- * set autoDD ID
- * @param autoDDId
+ * set ssv ID
+ * @param ssvId
  */
-function setAutoDDId(autoDDId) {
-    this.autoDDId = autoDDId;
+function setSSVId(ssvId) {
+    this.ssvId = ssvId;
 }
 
 /**
@@ -101,8 +109,9 @@ function setIndexerType(indexerType) {
 Layer.prototype = {
     addPlacement,
     addRenderingFunc,
+    addTooltip,
     setFetchingScheme,
-    setAutoDDId,
+    setSSVId,
     setIndexerType
 };
 

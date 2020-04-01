@@ -167,14 +167,14 @@ function makeTooltips(selection, columns, aliases) {
     };
 
     selection
-        .on("mouseover", d => createTooltip(d))
-        .on("mousemove", function(d) {
+        .on("mouseover.kyrixtooltip", d => createTooltip(d))
+        .on("mousemove.kyrixtooltip", function(d) {
             if (d == null || typeof d !== "object") return;
             d3.select(".kyrixtooltip")
                 .style("left", d3.event.pageX + "px")
                 .style("top", d3.event.pageY + "px");
         })
-        .on("mouseout", function(d) {
+        .on("mouseout.kyrixtooltip", function(d) {
             if (d == null || typeof d !== "object") return;
             d3.select(".kyrixtooltip").remove();
         });

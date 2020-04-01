@@ -23,12 +23,12 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
-import project.AutoDD;
 import project.Canvas;
+import project.SSV;
 import vlsi.utils.CompactHashMap;
 
 /** Created by wenbo on 5/6/19. */
-public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
+public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
 
     private class RTreeData {
         int rowId;
@@ -89,7 +89,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                 JsonObject obj = new JsonObject();
                 ArrayList<String> curRow = rawRows.get(topk[i]);
                 for (int j = 0; j < numRawColumns; j++)
-                    obj.addProperty(autoDD.getColumnNames().get(j), curRow.get(j));
+                    obj.addProperty(ssv.getColumnNames().get(j), curRow.get(j));
                 topkArr.add(obj);
             }
             jsonObj.add("topk", topkArr);
@@ -103,9 +103,9 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         @Override
         public int compare(RTreeData o1, RTreeData o2) {
 
-            String zCol = autoDD.getzCol();
-            int zColId = autoDD.getColumnNames().indexOf(zCol);
-            String zOrder = autoDD.getzOrder();
+            String zCol = ssv.getzCol();
+            int zColId = ssv.getColumnNames().indexOf(zCol);
+            String zOrder = ssv.getzOrder();
 
             float v1 = parseFloat(rawRows.get(o1.rowId).get(zColId));
             float v2 = parseFloat(rawRows.get(o2.rowId).get(zColId));
@@ -115,41 +115,43 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         }
     }
 
-    private static AutoDDInMemoryIndexer instance = null;
+    private static SSVInMemoryIndexer instance = null;
     private final int objectNumLimit = 4000; // in a 1k by 1k region
     private final int virtualViewportSize = 1000;
     private double overlappingThreshold = 1.0;
     private final String aggKeyDelimiter = "__";
     private final Gson gson;
-    private int autoDDIndex, numLevels, numRawColumns;
+    private String rpKey;
+    private int ssvIndex, numLevels, numRawColumns;
     private Statement bboxStmt;
 
     // One Rtree per level to store clusters
     // https://github.com/davidmoten/rtree
     private RTree<RTreeData, Rectangle> rtree0, rtree1;
     private ArrayList<ArrayList<String>> rawRows;
-    private AutoDD autoDD;
+    private SSV ssv;
 
     // singleton pattern to ensure only one instance existed
-    private AutoDDInMemoryIndexer() {
+    private SSVInMemoryIndexer() {
         gson = new GsonBuilder().create();
     }
 
     // thread-safe instance getter
-    public static synchronized AutoDDInMemoryIndexer getInstance() {
+    public static synchronized SSVInMemoryIndexer getInstance() {
 
-        if (instance == null) instance = new AutoDDInMemoryIndexer();
+        if (instance == null) instance = new SSVInMemoryIndexer();
         return instance;
     }
 
     @Override
     public void createMV(Canvas c, int layerId) throws Exception {
 
-        // create MV for all autoDD layers at once
-        String curAutoDDId = c.getLayers().get(layerId).getAutoDDId();
-        int levelId = Integer.valueOf(curAutoDDId.substring(curAutoDDId.indexOf("_") + 1));
+        // create MV for all ssv layers at once
+        String curSSVId = c.getLayers().get(layerId).getSSVId();
+        int levelId = Integer.valueOf(curSSVId.substring(curSSVId.indexOf("_") + 1));
         if (levelId > 0) return;
-        autoDDIndex = Integer.valueOf(curAutoDDId.substring(0, curAutoDDId.indexOf("_")));
+        ssvIndex = Integer.valueOf(curSSVId.substring(0, curSSVId.indexOf("_")));
+        rpKey = "ssv_" + String.valueOf(ssvIndex);
 
         // set common variables
         setCommonVariables();
@@ -164,14 +166,14 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
     }
 
     private void setCommonVariables() throws SQLException, ClassNotFoundException {
-        // get current AutoDD object
-        autoDD = Main.getProject().getAutoDDs().get(autoDDIndex);
-        numLevels = autoDD.getNumLevels();
-        numRawColumns = autoDD.getColumnNames().size();
+        // get current SSV object
+        ssv = Main.getProject().getSsvs().get(ssvIndex);
+        numLevels = ssv.getNumLevels();
+        numRawColumns = ssv.getColumnNames().size();
 
-        System.out.println("aggDimensionFields: " + autoDD.getAggDimensionFields());
-        System.out.println("aggMeasureFields: " + autoDD.getAggMeasureFields());
-        System.out.println("aggMeasureFuncs: " + autoDD.getAggMeasureFuncs());
+        System.out.println("aggDimensionFields: " + ssv.getAggDimensionFields());
+        System.out.println("aggMeasureFields: " + ssv.getAggMeasureFields());
+        System.out.println("aggMeasureFuncs: " + ssv.getAggMeasureFuncs());
 
         // calculate overlapping threshold
         overlappingThreshold =
@@ -179,23 +181,23 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                         0.2,
                         Math.sqrt(
                                         4
-                                                * (virtualViewportSize + autoDD.getBboxW() * 2)
-                                                * (virtualViewportSize + autoDD.getBboxH() * 2)
+                                                * (virtualViewportSize + ssv.getBboxW() * 2)
+                                                * (virtualViewportSize + ssv.getBboxH() * 2)
                                                 / objectNumLimit
-                                                / autoDD.getBboxH()
-                                                / autoDD.getBboxW())
+                                                / ssv.getBboxH()
+                                                / ssv.getBboxW())
                                 - 1);
-        overlappingThreshold = Math.max(overlappingThreshold, autoDD.getOverlap());
+        overlappingThreshold = Math.max(overlappingThreshold, ssv.getOverlap());
         System.out.println("Overlapping threshold: " + overlappingThreshold);
 
         // store raw query results into memory
-        rawRows = DbConnector.getQueryResult(autoDD.getDb(), autoDD.getQuery());
+        rawRows = DbConnector.getQueryResult(ssv.getDb(), ssv.getQuery());
         for (int i = 0; i < rawRows.size(); i++)
             for (int j = 0; j < numRawColumns; j++)
                 if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
 
         // add row number as a BGRP
-        Main.getProject().addBGRP("roughN", String.valueOf(rawRows.size()));
+        Main.getProject().addBGRP(rpKey, "roughN", String.valueOf(rawRows.size()));
     }
 
     private void computeClusterAggs() throws SQLException, ClassNotFoundException {
@@ -227,7 +229,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
             if (i == 0) break;
 
             // only sort for custom
-            if (autoDD.getClusterMode().equals("custom")) Arrays.sort(curClusters, new SortByZ());
+            if (ssv.getClusterMode().equals("custom")) Arrays.sort(curClusters, new SortByZ());
 
             // an Rtree for merged clusters
             rtree1 = RTree.star().create();
@@ -236,19 +238,19 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
             for (RTreeData rd : curClusters) {
                 // find its nearest neighbor in the merged clusters
                 double cx =
-                        autoDD.getCanvasCoordinate(
+                        ssv.getCanvasCoordinate(
                                 i - 1,
-                                parseFloat(rawRows.get(rd.rowId).get(autoDD.getXColId())),
+                                parseFloat(rawRows.get(rd.rowId).get(ssv.getXColId())),
                                 true);
                 double cy =
-                        autoDD.getCanvasCoordinate(
+                        ssv.getCanvasCoordinate(
                                 i - 1,
-                                parseFloat(rawRows.get(rd.rowId).get(autoDD.getYColId())),
+                                parseFloat(rawRows.get(rd.rowId).get(ssv.getYColId())),
                                 false);
-                double minx = cx - autoDD.getBboxW() * overlappingThreshold / 2;
-                double miny = cy - autoDD.getBboxH() * overlappingThreshold / 2;
-                double maxx = cx + autoDD.getBboxW() * overlappingThreshold / 2;
-                double maxy = cy + autoDD.getBboxH() * overlappingThreshold / 2;
+                double minx = cx - ssv.getBboxW() * overlappingThreshold / 2;
+                double miny = cy - ssv.getBboxH() * overlappingThreshold / 2;
+                double maxx = cx + ssv.getBboxW() * overlappingThreshold / 2;
+                double maxy = cy + ssv.getBboxH() * overlappingThreshold / 2;
                 Iterable<Entry<RTreeData, Rectangle>> neighbors =
                         rtree1.search(Geometries.rectangle(minx, miny, maxx, maxy))
                                 .toBlocking()
@@ -258,21 +260,19 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                 for (Entry<RTreeData, Rectangle> nb : neighbors) {
                     RTreeData neighborRd = nb.value();
                     double curCx =
-                            autoDD.getCanvasCoordinate(
+                            ssv.getCanvasCoordinate(
                                     i - 1,
-                                    parseFloat(
-                                            rawRows.get(neighborRd.rowId).get(autoDD.getXColId())),
+                                    parseFloat(rawRows.get(neighborRd.rowId).get(ssv.getXColId())),
                                     true);
                     double curCy =
-                            autoDD.getCanvasCoordinate(
+                            ssv.getCanvasCoordinate(
                                     i - 1,
-                                    parseFloat(
-                                            rawRows.get(neighborRd.rowId).get(autoDD.getYColId())),
+                                    parseFloat(rawRows.get(neighborRd.rowId).get(ssv.getYColId())),
                                     false);
                     double curDistance =
                             Math.max(
-                                    Math.abs(curCx - cx) / autoDD.getBboxW(),
-                                    Math.abs(curCy - cy) / autoDD.getBboxH());
+                                    Math.abs(curCx - cx) / ssv.getBboxW(),
+                                    Math.abs(curCy - cy) / ssv.getBboxH());
                     if (curDistance < minDistance) {
                         minDistance = curDistance;
                         nearestNeighbor = neighborRd;
@@ -282,8 +282,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
                     RTreeData rdClone = rd.clone();
                     // scale the convex hulls
                     for (int p = 0; p < rdClone.convexHull.length; p++)
-                        for (int k = 0; k < 2; k++)
-                            rdClone.convexHull[p][k] /= autoDD.getZoomFactor();
+                        for (int k = 0; k < 2; k++) rdClone.convexHull[p][k] /= ssv.getZoomFactor();
 
                     // add bbox coordinates
                     rdClone.minx = (float) minx;
@@ -321,7 +320,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
         // step 0: create tables for storing bboxes
-        String bboxTableName = getAutoDDBboxTableName(level);
+        String bboxTableName = getSSVBboxTableName(level);
 
         // drop table if exists
         String sql = "drop table if exists " + bboxTableName + ";";
@@ -329,8 +328,8 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // create the bbox table
         sql = "create unlogged table " + bboxTableName + " (";
-        for (int j = 0; j < autoDD.getColumnNames().size(); j++)
-            sql += autoDD.getColumnNames().get(j) + " text, ";
+        for (int j = 0; j < ssv.getColumnNames().size(); j++)
+            sql += ssv.getColumnNames().get(j) + " text, ";
         sql +=
                 "clusterAgg text, cx double precision, cy double precision, minx double precision, miny double precision, "
                         + "maxx double precision, maxy double precision, geom box);";
@@ -390,14 +389,14 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         // min/max sum/count for all measure fields
         // only for circle, heatmap & contour right now
         // no grouping needed at this point
-        if (!autoDD.getClusterMode().equals("circle")
-                && !autoDD.getClusterMode().equals("contour")
-                && !autoDD.getClusterMode().equals("heatmap")) return;
+        if (!ssv.getClusterMode().equals("circle")
+                && !ssv.getClusterMode().equals("contour")
+                && !ssv.getClusterMode().equals("heatmap")) return;
 
-        String curAutoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(level);
-        for (int i = 0; i < autoDD.getAggMeasureFields().size(); i++) {
-            String curField = autoDD.getAggMeasureFields().get(i);
-            String curFunction = autoDD.getAggMeasureFuncs().get(i);
+        String curSSVId = String.valueOf(ssvIndex) + "_" + String.valueOf(level);
+        for (int i = 0; i < ssv.getAggMeasureFields().size(); i++) {
+            String curField = ssv.getAggMeasureFields().get(i);
+            String curFunction = ssv.getAggMeasureFuncs().get(i);
 
             // min
             float minAgg = Float.MAX_VALUE;
@@ -409,12 +408,14 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
             Main.getProject()
                     .addBGRP(
-                            curAutoDDId + "_" + curFunction + "(" + curField + ")_min",
+                            rpKey,
+                            curSSVId + "_" + curFunction + "(" + curField + ")_min",
                             String.valueOf(minAgg));
 
             Main.getProject()
                     .addBGRP(
-                            curAutoDDId + "_" + curFunction + "(" + curField + ")_max",
+                            rpKey,
+                            curSSVId + "_" + curFunction + "(" + curField + ")_max",
                             String.valueOf(maxAgg));
         }
     }
@@ -428,18 +429,19 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         rtree0 = null;
         rtree1 = null;
         rawRows = null;
-        autoDD = null;
+        ssv = null;
     }
 
-    private String getAutoDDBboxTableName(int level) {
+    private String getSSVBboxTableName(int level) {
 
-        String autoDDId = String.valueOf(autoDDIndex) + "_" + String.valueOf(level);
+        String ssvId = String.valueOf(ssvIndex) + "_" + String.valueOf(level);
         for (Canvas c : Main.getProject().getCanvases()) {
             int numLayers = c.getLayers().size();
             for (int layerId = 0; layerId < numLayers; layerId++) {
-                String curAutoDDId = c.getLayers().get(layerId).getAutoDDId();
-                if (curAutoDDId == null) continue;
-                if (curAutoDDId.equals(autoDDId))
+                if (c.getLayers().get(layerId).isStatic()) continue;
+                String curSSVId = c.getLayers().get(layerId).getSSVId();
+                if (curSSVId == null) continue;
+                if (curSSVId.equals(ssvId))
                     return "bbox_"
                             + Main.getProject().getName()
                             + "_"
@@ -456,21 +458,21 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // convexHull
         double cx =
-                autoDD.getCanvasCoordinate(
-                        autoDD.getNumLevels(), parseFloat(row.get(autoDD.getXColId())), true);
+                ssv.getCanvasCoordinate(
+                        ssv.getNumLevels(), parseFloat(row.get(ssv.getXColId())), true);
         double cy =
-                autoDD.getCanvasCoordinate(
-                        autoDD.getNumLevels(), parseFloat(row.get(autoDD.getYColId())), false);
+                ssv.getCanvasCoordinate(
+                        ssv.getNumLevels(), parseFloat(row.get(ssv.getYColId())), false);
 
-        float minx = (float) (cx - autoDD.getBboxW() / 2.0),
-                maxx = (float) (cx + autoDD.getBboxW() / 2.0);
-        float miny = (float) (cy - autoDD.getBboxH() / 2.0),
-                maxy = (float) (cy + autoDD.getBboxH() / 2.0);
+        float minx = (float) (cx - ssv.getBboxW() / 2.0),
+                maxx = (float) (cx + ssv.getBboxW() / 2.0);
+        float miny = (float) (cy - ssv.getBboxH() / 2.0),
+                maxy = (float) (cy + ssv.getBboxH() / 2.0);
         float[][] convexHullCopy = {{minx, miny}, {minx, maxy}, {maxx, maxy}, {maxx, miny}};
         rd.convexHull = convexHullCopy;
 
         // topk
-        if (autoDD.getTopk() > 0) {
+        if (ssv.getTopk() > 0) {
             rd.topk = new int[1];
             rd.topk[0] = rd.rowId;
         } else rd.topk = new int[0];
@@ -478,15 +480,15 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         // numeric aggregations
         rd.numericalAggs = new CompactHashMap<>();
         String curDimensionStr = "";
-        for (String dimension : autoDD.getAggDimensionFields()) {
+        for (String dimension : ssv.getAggDimensionFields()) {
             if (curDimensionStr.length() > 0) curDimensionStr += aggKeyDelimiter;
-            curDimensionStr += row.get(autoDD.getColumnNames().indexOf(dimension));
+            curDimensionStr += row.get(ssv.getColumnNames().indexOf(dimension));
         }
 
-        int numMeasures = autoDD.getAggMeasureFields().size();
+        int numMeasures = ssv.getAggMeasureFields().size();
         for (int i = 0; i < numMeasures; i++) {
-            String curMeasureField = autoDD.getAggMeasureFields().get(i);
-            String curMeasureFunction = autoDD.getAggMeasureFuncs().get(i);
+            String curMeasureField = ssv.getAggMeasureFields().get(i);
+            String curMeasureFunction = ssv.getAggMeasureFuncs().get(i);
             String curKey =
                     curDimensionStr
                             + (curDimensionStr.isEmpty() ? "" : aggKeyDelimiter)
@@ -497,8 +499,7 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
             float curValue =
                     (curMeasureFunction.equals("count")
                             ? 1.0f
-                            : parseFloat(
-                                    row.get(autoDD.getColumnNames().indexOf(curMeasureField))));
+                            : parseFloat(row.get(ssv.getColumnNames().indexOf(curMeasureField))));
 
             if (curMeasureFunction.equals("sqrsum"))
                 rd.numericalAggs.put(curKey, curValue * curValue);
@@ -518,21 +519,21 @@ public class AutoDDInMemoryIndexer extends PsqlNativeBoxIndexer {
         float[][] childConvexHull = new float[child.convexHull.length][2];
         for (int i = 0; i < child.convexHull.length; i++)
             for (int j = 0; j < 2; j++)
-                childConvexHull[i][j] = child.convexHull[i][j] / (float) autoDD.getZoomFactor();
+                childConvexHull[i][j] = child.convexHull[i][j] / (float) ssv.getZoomFactor();
 
         if (parent.convexHull.length == 0) parent.convexHull = childConvexHull;
         else parent.convexHull = mergeConvex(parent.convexHull, childConvexHull);
 
-        String zCol = autoDD.getzCol();
-        int zColId = autoDD.getColumnNames().indexOf(zCol);
-        String zOrder = autoDD.getzOrder();
+        String zCol = ssv.getzCol();
+        int zColId = ssv.getColumnNames().indexOf(zCol);
+        String zOrder = ssv.getzOrder();
 
         // topk
-        if (autoDD.getTopk() > 0) {
+        if (ssv.getTopk() > 0) {
             int[] parentTopk = parent.topk;
             int[] childTopk = child.topk;
             int[] mergedTopk =
-                    new int[Math.min(parentTopk.length + childTopk.length, autoDD.getTopk())];
+                    new int[Math.min(parentTopk.length + childTopk.length, ssv.getTopk())];
             int parentIter = 0, childIter = 0, mergedIter = 0;
             while ((parentIter < parentTopk.length || childIter < childTopk.length)
                     && mergedIter < mergedTopk.length) {

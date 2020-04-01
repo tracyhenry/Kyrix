@@ -1,17 +1,13 @@
 const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
 const setPropertiesIfNotExists = require("./Utilities")
     .setPropertiesIfNotExists;
-const parsePathIntoSegments = require("./Utilities").parsePathIntoSegments;
-const translatePathSegments = require("./Utilities").translatePathSegments;
-const serializePath = require("./Utilities").serializePath;
-const aggKeyDelimiter = "__";
 
 /**
- * Constructor of an AutoDD object
+ * Constructor of an SSV object
  * @param args
  * @constructor
  */
-function AutoDD(args) {
+function SSV(args) {
     if (args == null) args = {};
 
     /******************************
@@ -23,7 +19,7 @@ function AutoDD(args) {
         !("mode" in args.marks.cluster)
     )
         throw new Error(
-            "Constructing AutoDD: cluster mode (marks.cluster.mode) missing."
+            "Constructing SSV: cluster mode (marks.cluster.mode) missing."
         );
     var allClusterModes = new Set([
         "custom",
@@ -34,7 +30,7 @@ function AutoDD(args) {
         "pie"
     ]);
     if (!allClusterModes.has(args.marks.cluster.mode))
-        throw new Error("Constructing AutoDD: unsupported cluster mode.");
+        throw new Error("Constructing SSV: unsupported cluster mode.");
 
     /**************************************************************
      * augment args with optional stuff that is omitted in the spec
@@ -56,7 +52,7 @@ function AutoDD(args) {
             !("function" in args.marks.cluster.aggregate.measures)
         )
             throw new Error(
-                "Constructing AutoDD: fields or function not found" +
+                "Constructing SSV: fields or function not found" +
                     "in the object notation of args.marks.cluster.aggregate.measures."
             );
         var measureArray = [];
@@ -104,14 +100,14 @@ function AutoDD(args) {
         for (var j = 0; j < requiredArgs[i].length; j++)
             if (!(requiredArgs[i][j] in curObj))
                 throw new Error(
-                    "Constructing AutoDD: " +
+                    "Constructing SSV: " +
                         requiredArgs[i].join(".") +
                         " missing."
                 );
             else curObj = curObj[requiredArgs[i][j]];
         if (typeof curObj !== requiredArgsTypes[i])
             throw new Error(
-                "Constructing AutoDD: " +
+                "Constructing SSV: " +
                     requiredArgs[i].join(".") +
                     " must be typed " +
                     requiredArgsTypes[i] +
@@ -120,7 +116,7 @@ function AutoDD(args) {
         if (requiredArgsTypes[i] == "string")
             if (curObj.length == 0)
                 throw new Error(
-                    "Constructing AutoDD: " +
+                    "Constructing SSV: " +
                         requiredArgs[i].join(".") +
                         " cannot be an empty string."
                 );
@@ -136,7 +132,7 @@ function AutoDD(args) {
             typeof args.layout.x.extent[0] != "number" ||
             typeof args.layout.x.extent[1] != "number")
     )
-        throw new Error("Constructing AutoDD: malformed x.extent");
+        throw new Error("Constructing SSV: malformed x.extent");
     if (
         args.layout.y.extent != null &&
         (!Array.isArray(args.layout.y.extent) ||
@@ -144,34 +140,34 @@ function AutoDD(args) {
             typeof args.layout.y.extent[0] != "number" ||
             typeof args.layout.y.extent[1] != "number")
     )
-        throw new Error("Constructing AutoDD: malformed y.extent");
+        throw new Error("Constructing SSV: malformed y.extent");
     if (
         "axis" in args.marks &&
         (args.layout.x.extent == null || args.layout.y.extent == null)
     )
         throw new Error(
-            "Constructing AutoDD: raw data domain needs to be specified for rendering an axis."
+            "Constructing SSV: raw data domain needs to be specified for rendering an axis."
         );
     if (
         (args.layout.x.extent != null && args.layout.y.extent == null) ||
         (args.layout.x.extent == null && args.layout.y.extent != null)
     )
         throw new Error(
-            "Constructing AutoDD: x extent and y extent must both be provided."
+            "Constructing SSV: x extent and y extent must both be provided."
         );
     if (
         args.marks.cluster.mode == "custom" &&
         !("custom" in args.marks.cluster)
     )
         throw new Error(
-            "Constructing AutoDD: object renderer (marks.cluster.object) missing."
+            "Constructing SSV: object renderer (marks.cluster.object) missing."
         );
     if (
         "object" in args.marks.hover &&
         typeof args.marks.hover.object != "function"
     )
         throw new Error(
-            "Constructing AutoDD: hover object renderer (marks.cluster.hover.object) is not a function."
+            "Constructing SSV: hover object renderer (marks.cluster.hover.object) is not a function."
         );
     if (
         (args.marks.cluster.mode == "radar" ||
@@ -181,7 +177,7 @@ function AutoDD(args) {
         args.marks.cluster.aggregate.dimensions.length > 0
     )
         throw new Error(
-            "Constructing AutoDD: dimension columns (args.marks.cluster.aggregate.dimensions) not allowed for the given cluster mode."
+            "Constructing SSV: dimension columns (args.marks.cluster.aggregate.dimensions) not allowed for the given cluster mode."
         );
     if (
         (args.marks.cluster.mode == "circle" ||
@@ -191,58 +187,58 @@ function AutoDD(args) {
         args.marks.cluster.aggregate.measures.length > 1
     )
         throw new Error(
-            "Constructing AutoDD: more than one measure column specified for circle mode."
+            "Constructing SSV: more than one measure column specified for circle mode."
         );
     for (var i = 0; i < args.marks.cluster.aggregate.dimensions.length; i++) {
         if (!("field" in args.marks.cluster.aggregate.dimensions[i]))
             throw new Error(
-                "Constructing AutoDD: field not found in aggregate dimensions."
+                "Constructing SSV: field not found in aggregate dimensions."
             );
         if (!("domain" in args.marks.cluster.aggregate.dimensions[i]))
             throw new Error(
-                "Constructing AutoDD: domain not found in aggregate dimensions."
+                "Constructing SSV: domain not found in aggregate dimensions."
             );
     }
     for (var i = 0; i < args.marks.cluster.aggregate.measures.length; i++) {
         if (!("field" in args.marks.cluster.aggregate.measures[i]))
             throw new Error(
-                "Constructing AutoDD: field not found in aggregate measures."
+                "Constructing SSV: field not found in aggregate measures."
             );
         if (!("function" in args.marks.cluster.aggregate.measures[i]))
             throw new Error(
-                "Constructing AutoDD: function not found in aggregate measures."
+                "Constructing SSV: function not found in aggregate measures."
             );
     }
     if (args.marks.cluster.mode == "radar")
         for (var i = 0; i < args.marks.cluster.aggregate.measures.length; i++)
             if (!("extent" in args.marks.cluster.aggregate.measures[i]))
                 throw new Error(
-                    "Constructing AutoDD: extent in aggregate measures required for radar charts."
+                    "Constructing SSV: extent in aggregate measures required for radar charts."
                 );
     if (
         args.marks.cluster.mode == "pie" &&
         args.marks.cluster.aggregate.measures.length != 1
     )
         throw new Error(
-            "Constructing AutoDD: there must be exactly 1 aggregate measure for pie charts."
+            "Constructing SSV: there must be exactly 1 aggregate measure for pie charts."
         );
     if ("rankList" in args.marks.hover) {
         if ("tooltip" in args.marks.hover)
             throw new Error(
-                "Constructing AutoDD: rankList and tooltip cannot be specified together."
+                "Constructing SSV: rankList and tooltip cannot be specified together."
             );
         if (!("mode" in args.marks.hover.rankList))
             throw new Error(
-                "Constructing AutoDD: hover rankList mode (marks.hover.rankList.mode) is missing."
+                "Constructing SSV: hover rankList mode (marks.hover.rankList.mode) is missing."
             );
         if (args.marks.hover.rankList.mode == "custom") {
             if (!("custom" in args.marks.hover.rankList))
                 throw new Error(
-                    "Constructing AutoDD: custom hover rankList renderer (marks.hover.rankList.custom) is missing."
+                    "Constructing SSV: custom hover rankList renderer (marks.hover.rankList.custom) is missing."
                 );
             if (typeof args.marks.hover.rankList.custom != "function")
                 throw new Error(
-                    "Constructing AutoDD: hover object renderer (marks.cluster.hover.rankList.custom) is not a function."
+                    "Constructing SSV: hover object renderer (marks.cluster.hover.rankList.custom) is not a function."
                 );
             if (
                 !("config" in args.marks.hover.rankList) ||
@@ -250,7 +246,7 @@ function AutoDD(args) {
                 !("bboxW" in args.marks.hover.rankList.config)
             )
                 throw new Error(
-                    "Constructing AutoDD: custom hover ranklist bounding box size missing."
+                    "Constructing SSV: custom hover ranklist bounding box size missing."
                 );
         }
         if (
@@ -258,7 +254,7 @@ function AutoDD(args) {
             !("fields" in args.marks.hover.rankList)
         )
             throw new Error(
-                "Constructing AutoDD: fields for tabular hover rankList (marks.hover.rankList.fields) is missing."
+                "Constructing SSV: fields for tabular hover rankList (marks.hover.rankList.fields) is missing."
             );
     }
     if ("boundary" in args.marks.hover)
@@ -267,26 +263,35 @@ function AutoDD(args) {
             !(args.marks.hover.boundary == "bbox")
         )
             throw new Error(
-                "Constructing AutoDD: unrecognized hover boundary type " +
+                "Constructing SSV: unrecognized hover boundary type " +
                     args.marks.hover.boundary
             );
     if ("tooltip" in args.marks.hover) {
         if (!("columns" in args.marks.hover.tooltip))
             throw new Error(
-                "Constructing AutoDD: tooltip columns (marks.hover.tooltip.columns) missing."
+                "Constructing SSV: tooltip columns (marks.hover.tooltip.columns) missing."
             );
         if (!Array.isArray(args.marks.hover.tooltip.columns))
             throw new Error(
-                "Constructing AutoDD: tooltip columns (marks.hover.tooltip.columns) must be an array."
+                "Constructing SSV: tooltip columns (marks.hover.tooltip.columns) must be an array."
             );
         if (
             "aliases" in args.marks.hover.tooltip &&
             !Array.isArray(args.marks.hover.tooltip.aliases)
         )
             throw new Error(
-                "Constructing AutoDD: tooltip aliases (marks.hover.tooltip.aliases) must be an array."
+                "Constructing SSV: tooltip aliases (marks.hover.tooltip.aliases) must be an array."
             );
     }
+
+    /************************
+     * setting generic params
+     ************************/
+    this.aggKeyDelimiter = "__";
+    this.loX = args.layout.x.extent != null ? args.layout.x.extent[0] : null;
+    this.loY = args.layout.y.extent != null ? args.layout.y.extent[0] : null;
+    this.hiX = args.layout.x.extent != null ? args.layout.x.extent[1] : null;
+    this.hiY = args.layout.y.extent != null ? args.layout.y.extent[1] : null;
 
     /************************
      * setting cluster params
@@ -304,6 +309,7 @@ function AutoDD(args) {
     if (args.marks.cluster.mode == "contour")
         setPropertiesIfNotExists(this.clusterParams, {
             contourBandwidth: 30,
+            contourRadius: 30 * 4,
             contourColorScheme: "interpolateViridis",
             contourOpacity: 1
         });
@@ -352,7 +358,7 @@ function AutoDD(args) {
     while (true) {
         var curDomain = "";
         for (var i = 0; i < dimensions.length; i++) {
-            if (i > 0) curDomain += aggKeyDelimiter;
+            if (i > 0) curDomain += this.aggKeyDelimiter;
             curDomain += dimensions[i].domain[pointers[i]];
         }
         this.aggregateParams.aggDomain.push(curDomain);
@@ -428,6 +434,20 @@ function AutoDD(args) {
     if ("legendDomain" in args.config)
         this.legendParams.legendDomain = args.config.legendDomain;
 
+    /***************************
+     * setting axis parameters
+     ***************************/
+    this.axisParams = {};
+    this.axis = "axis" in args.config ? args.config.axis : false;
+    this.axisParams.xAxisTitle =
+        "xAxisTitle" in args.config
+            ? args.config.xAxisTitle
+            : args.layout.x.field;
+    this.axisParams.yAxisTitle =
+        "yAxisTitle" in args.config
+            ? args.config.yAxisTitle
+            : args.layout.y.field;
+
     /****************
      * setting bboxes
      ****************/
@@ -436,13 +456,13 @@ function AutoDD(args) {
             !("bboxW" in args.marks.cluster.config) ||
             !("bboxH" in args.marks.cluster.config)
         )
-            throw new Error("Constructing AutoDD: bboxW or bboxH missing");
+            throw new Error("Constructing SSV: bboxW or bboxH missing");
         this.bboxW = args.marks.cluster.config.bboxW;
         this.bboxH = args.marks.cluster.config.bboxH;
     } else if (args.marks.cluster.mode == "circle")
         this.bboxW = this.bboxH = this.clusterParams.circleMaxSize * 2;
     else if (args.marks.cluster.mode == "contour")
-        this.bboxW = this.bboxH = this.clusterParams.contourBandwidth * 8;
+        this.bboxW = this.bboxH = this.clusterParams.contourRadius * 2;
     else if (args.marks.cluster.mode == "heatmap")
         this.bboxW = this.bboxH = this.clusterParams.heatmapRadius * 2 + 1;
     else if (args.marks.cluster.mode == "radar")
@@ -495,15 +515,6 @@ function AutoDD(args) {
             : this.clusterMode == "contour" || this.clusterMode == "heatmap"
             ? 0
             : 1;
-    this.axis = "axis" in args.config ? args.config.axis : false;
-    this.xAxisTitle =
-        "xAxisTitle" in args.config ? args.config.xAxisTitle : this.xCol;
-    this.yAxisTitle =
-        "yAxisTitle" in args.config ? args.config.yAxisTitle : this.yCol;
-    this.loX = args.layout.x.extent != null ? args.layout.x.extent[0] : null;
-    this.loY = args.layout.y.extent != null ? args.layout.y.extent[0] : null;
-    this.hiX = args.layout.x.extent != null ? args.layout.x.extent[1] : null;
-    this.hiY = args.layout.y.extent != null ? args.layout.y.extent[1] : null;
     this.mergeClusterAggs = mergeClusterAggs.toString();
     this.getCitusSpatialHashKeyBody = getBodyStringOfFunction(
         getCitusSpatialHashKey
@@ -516,18 +527,69 @@ function AutoDD(args) {
     );
 }
 
-// get rendering function for an autodd layer based on cluster mode
-function getLayerRenderer(level, autoDDArrayIndex) {
+// function used for process cluster aggs
+function processClusterAgg(data, params) {
+    function getConvexCoordinates(d) {
+        var coords = d.clusterAgg.convexHull;
+        var convexHull = [];
+        for (var i = 0; i < coords.length; i++) {
+            convexHull.push({
+                x: +coords[i][0],
+                y: +coords[i][1]
+            });
+        }
+        convexHull.push({x: +coords[0][0], y: +coords[0][1]});
+        return convexHull;
+    }
+
+    data.forEach(d => {
+        d.clusterAgg = JSON.parse(d.clusterAgg);
+        d.convexHull = getConvexCoordinates(d);
+        for (var i = 0; i < params.aggDomain.length; i++)
+            for (var j = 0; j < params.aggMeasures.length; j++) {
+                var curField = params.aggMeasures[j].field;
+                var curFunc = params.aggMeasures[j].function;
+                var curKey =
+                    params.aggDomain[i] +
+                    (params.aggDomain[i] == "" ? "" : params.aggKeyDelimiter) +
+                    curFunc +
+                    "(" +
+                    curField +
+                    ")";
+                if (!(curKey in d.clusterAgg)) {
+                    switch (curFunc) {
+                        case "count":
+                        case "sum":
+                        case "avg":
+                        case "sqrsum":
+                            d.clusterAgg[curKey] = 0;
+                            break;
+                        case "min":
+                            d.clusterAgg[curKey] = Number.MIN_VALUE;
+                            break;
+                        case "max":
+                            d.clusterAgg[curKey] = Number.MAX_VALUE;
+                            break;
+                    }
+                }
+            }
+    });
+}
+
+// get rendering function for an SSV layer based on cluster mode
+function getLayerRenderer() {
     function renderCircleBody() {
-        var params = args.renderingParams;
-        REPLACE_ME_processClusterAgg();
+        var rpKey =
+            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
+        params.processClusterAgg(data, params);
 
         // set up d3.scale for circle/text size
         var agg;
         var curMeasure = params.aggMeasures[0];
         agg = curMeasure.function + "(" + curMeasure.field + ")";
-        var minDomain = params["REPLACE_ME_autoDDId_" + agg + "_min"];
-        var maxDomain = params["REPLACE_ME_autoDDId_" + agg + "_max"];
+        var minDomain = params[args.ssvId + "_" + agg + "_min"];
+        var maxDomain = params[args.ssvId + "_" + agg + "_max"];
         var circleSizeInterpolator = d3
             .scaleSqrt()
             .domain([minDomain, maxDomain])
@@ -598,7 +660,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function renderObjectClusterNumBody() {
         var g = svg.select("g:last-of-type");
-        var params = args.renderingParams;
+        var rpKey =
+            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
         data.forEach(d => {
             d.clusterAgg = JSON.parse(d.clusterAgg);
         });
@@ -627,10 +691,12 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function renderContourBody() {
-        var params = args.renderingParams;
+        var rpKey =
+            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
         var roughN = params.roughN;
         var bandwidth = params.contourBandwidth;
-        var radius = REPLACE_ME_radius;
+        var radius = params.contourRadius;
         var decayRate = 2.4;
         var cellSize = 2;
         var contourWidth, contourHeight, x, y;
@@ -727,7 +793,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
     }
 
     function renderHeatmapBody() {
-        var params = args.renderingParams;
+        var rpKey =
+            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
         var radius = params.heatmapRadius;
         var heatmapWidth, heatmapHeight, x, y;
         if ("tileX" in args) {
@@ -780,8 +848,8 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var alphaCanvas = document.createElement("canvas");
         alphaCanvas.width = heatmapWidth;
         alphaCanvas.height = heatmapHeight;
-        var minWeight = params["REPLACE_ME_autoDDId" + "_count(*)_min"]; // set in the BGRP (back-end generated rendering params)
-        var maxWeight = params["REPLACE_ME_autoDDId" + "_count(*)_max"]; // set in the BGRP
+        var minWeight = params[args.ssvId + "_count(*)_min"]; // set in the BGRP (back-end generated rendering params)
+        var maxWeight = params[args.ssvId + "_count(*)_max"]; // set in the BGRP
         var alphaCtx = alphaCanvas.getContext("2d");
         var tpl = _getPointTemplate(radius);
         for (var i = 0; i < translatedData.length; i++) {
@@ -870,13 +938,15 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function renderRadarBody() {
         if (!data || data.length == 0) return;
-        var params = args.renderingParams;
-        var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
+        var rpKey =
+            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
+        var aggKeyDelimiter = params.aggKeyDelimiter;
         var g = svg.append("g");
         g.style("opacity", 0);
 
         // Step 1: Pre-process clusterAgg
-        REPLACE_ME_processClusterAgg();
+        params.processClusterAgg(data, params);
 
         // Step 2: append radars
         var radars = g
@@ -1041,17 +1111,19 @@ function getLayerRenderer(level, autoDDArrayIndex) {
 
     function renderPieBody() {
         if (!data || data.length == 0) return;
-        var params = args.renderingParams;
-        var aggKeyDelimiter = "REPLACE_ME_agg_key_delimiter";
-        var parse = REPLACE_ME_parse_func;
-        var translate = REPLACE_ME_translate_func;
-        var serialize = REPLACE_ME_serialize_func;
+        var rpKey =
+            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
+        var aggKeyDelimiter = params.aggKeyDelimiter;
+        var parse = params.parsePathIntoSegments;
+        var translate = params.translatePathSegments;
+        var serialize = params.serializePath;
 
         var g = svg.append("g");
         g.style("opacity", 0);
 
         // Step 1: Pre-process clusterAgg
-        REPLACE_ME_processClusterAgg();
+        params.processClusterAgg(data, params);
 
         // Step 2: append pies
         var pie = d3.pie().value(function(d) {
@@ -1153,54 +1225,6 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         var hoverSelector = ".piehover";
     }
 
-    function processClusterAgg() {
-        function getConvexCoordinates(d) {
-            var coords = d.clusterAgg.convexHull;
-            var convexHull = [];
-            for (var i = 0; i < coords.length; i++) {
-                convexHull.push({
-                    x: +coords[i][0],
-                    y: +coords[i][1]
-                });
-            }
-            convexHull.push({x: +coords[0][0], y: +coords[0][1]});
-            return convexHull;
-        }
-
-        data.forEach(d => {
-            d.clusterAgg = JSON.parse(d.clusterAgg);
-            d.convexHull = getConvexCoordinates(d);
-            for (var i = 0; i < params.aggDomain.length; i++)
-                for (var j = 0; j < params.aggMeasures.length; j++) {
-                    var curField = params.aggMeasures[j].field;
-                    var curFunc = params.aggMeasures[j].function;
-                    var curKey =
-                        params.aggDomain[i] +
-                        (params.aggDomain[i] == "" ? "" : aggKeyDelimiter) +
-                        curFunc +
-                        "(" +
-                        curField +
-                        ")";
-                    if (!(curKey in d.clusterAgg)) {
-                        switch (curFunc) {
-                            case "count":
-                            case "sum":
-                            case "avg":
-                            case "sqrsum":
-                                d.clusterAgg[curKey] = 0;
-                                break;
-                            case "min":
-                                d.clusterAgg[curKey] = Number.MIN_VALUE;
-                                break;
-                            case "max":
-                                d.clusterAgg[curKey] = Number.MAX_VALUE;
-                                break;
-                        }
-                    }
-                }
-        });
-    }
-
     function regularHoverBody() {
         function convexRenderer(svg, d) {
             var line = d3
@@ -1211,7 +1235,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             g.append("path")
                 .datum(d)
                 .attr("class", "convexHull")
-                .attr("id", "autodd_boundary_hover")
+                .attr("id", "ssv_boundary_hover")
                 .attr("d", d => line(d.convexHull))
                 .style("fill-opacity", 0)
                 .style("stroke-width", 3)
@@ -1247,7 +1271,9 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         }
 
         function tabularRankListRenderer(svg, data, args) {
-            var params = args.renderingParams;
+            var rpKey =
+                "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+            var params = args.renderingParams[rpKey];
             var charW = 8;
             var charH = 15;
             var paddingH = 10;
@@ -1335,7 +1361,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     // for tabular renderer, add a header first
                     // use params.hoverRankListOrientation for deciding layout
                     // use params.bboxH(W) for bounding box size
-                    var g = svg.append("g").attr("id", "autodd_ranklist_hover");
+                    var g = svg.append("g").attr("id", "ssv_ranklist_hover");
                     var topKData = d.clusterAgg.topk;
                     var topk = topKData.length;
                     for (var i = 0; i < topk; i++) {
@@ -1370,7 +1396,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                         });
                 })
                 .on("mouseleave.ranklist", function() {
-                    d3.selectAll("#autodd_ranklist_hover").remove();
+                    d3.selectAll("#ssv_ranklist_hover").remove();
                 });
         }
 
@@ -1378,13 +1404,13 @@ function getLayerRenderer(level, autoDDArrayIndex) {
         if ("hoverBoundary" in params)
             g.selectAll(hoverSelector)
                 .on("mouseover.boundary", function(d) {
-                    var g = svg.append("g").attr("id", "autodd_boundary_hover");
+                    var g = svg.append("g").attr("id", "ssv_boundary_hover");
                     if (params.hoverBoundary == "convexhull")
                         convexRenderer(g, d);
                     else if (params.hoverBoundary == "bbox") bboxRenderer(g, d);
                 })
                 .on("mouseleave.boundary", function() {
-                    d3.selectAll("#autodd_boundary_hover").remove();
+                    d3.selectAll("#ssv_boundary_hover").remove();
                 });
     }
 
@@ -1412,7 +1438,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     svgNode.node().childElementCount - 1
                 ];
                 d3.select(lastG)
-                    .attr("id", "autodd_tooltip")
+                    .attr("id", "ssv_tooltip")
                     .style("opacity", 0.8)
                     .style("pointer-events", "none")
                     .selectAll("*")
@@ -1422,7 +1448,7 @@ function getLayerRenderer(level, autoDDArrayIndex) {
                     });
             })
             .on("mouseleave", function() {
-                d3.select("#autodd_tooltip").remove();
+                d3.select("#ssv_tooltip").remove();
             });
     }
 
@@ -1438,57 +1464,33 @@ function getLayerRenderer(level, autoDDArrayIndex) {
             );
     } else if (this.clusterMode == "circle") {
         // render circle
-        renderFuncBody = getBodyStringOfFunction(renderCircleBody)
-            .replace(
-                /REPLACE_ME_processClusterAgg/g,
-                "(" + processClusterAgg.toString() + ")"
-            )
-            .replace(/REPLACE_ME_autoDDId/g, autoDDArrayIndex + "_" + level);
+        renderFuncBody = getBodyStringOfFunction(renderCircleBody);
         renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     } else if (this.clusterMode == "contour") {
-        renderFuncBody = getBodyStringOfFunction(renderContourBody).replace(
-            /REPLACE_ME_radius/g,
-            this.bboxH
-        );
+        renderFuncBody = getBodyStringOfFunction(renderContourBody);
         renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody);
     } else if (this.clusterMode == "heatmap") {
-        renderFuncBody = getBodyStringOfFunction(renderHeatmapBody).replace(
-            /REPLACE_ME_autoDDId/g,
-            autoDDArrayIndex + "_" + level
-        );
+        renderFuncBody = getBodyStringOfFunction(renderHeatmapBody);
         renderFuncBody += getBodyStringOfFunction(KDEObjectHoverBody);
     } else if (this.clusterMode == "radar") {
-        renderFuncBody = getBodyStringOfFunction(renderRadarBody)
-            .replace(
-                /REPLACE_ME_processClusterAgg/g,
-                "(" + processClusterAgg.toString() + ")"
-            )
-            .replace(/REPLACE_ME_agg_key_delimiter/g, aggKeyDelimiter);
+        renderFuncBody = getBodyStringOfFunction(renderRadarBody);
         renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     } else if (this.clusterMode == "pie") {
-        renderFuncBody = getBodyStringOfFunction(renderPieBody)
-            .replace(
-                /REPLACE_ME_processClusterAgg/g,
-                "(" + processClusterAgg.toString() + ")"
-            )
-            .replace(/REPLACE_ME_agg_key_delimiter/g, aggKeyDelimiter)
-            .replace(/REPLACE_ME_parse_func/g, parsePathIntoSegments.toString())
-            .replace(
-                /REPLACE_ME_translate_func/g,
-                translatePathSegments.toString()
-            )
-            .replace(/REPLACE_ME_serialize_func/g, serializePath.toString());
+        renderFuncBody = getBodyStringOfFunction(renderPieBody);
         renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     }
     return new Function("svg", "data", "args", renderFuncBody);
 }
 
 // get axes renderer
-function getAxesRenderer(level) {
+function getAxesRenderer() {
     function axesRendererBodyTemplate() {
         var cWidth = args.canvasW,
             cHeight = args.canvasH,
             axes = [];
+        var rpKey = args.axesSSVRPKey;
+        var params = args.renderingParams[rpKey];
+
         var styling = function(axesg, dim, id, args) {
             axesg
                 .selectAll(".tick line")
@@ -1501,12 +1503,10 @@ function getAxesRenderer(level) {
                 .selectAll("text")
                 .style("fill", "#999");
             axesg.selectAll("path").remove();
-            xAxisTitle = "REPLACE_ME_X_TITLE";
-            yAxisTitle = "REPLACE_ME_Y_TITLE";
             if (dim == "x")
                 axesg
                     .append("text")
-                    .text(xAxisTitle)
+                    .text(params.xAxisTitle)
                     .attr("fill", "black")
                     .attr("text-anchor", "middle")
                     .attr(
@@ -1516,7 +1516,7 @@ function getAxesRenderer(level) {
             else
                 axesg
                     .append("text")
-                    .text(yAxisTitle)
+                    .text(params.yAxisTitle)
                     .attr("fill", "black")
                     .attr("text-anchor", "middle")
                     .attr(
@@ -1524,11 +1524,15 @@ function getAxesRenderer(level) {
                         "translate(-60, " + args.viewportH / 2 + ") rotate(-90)"
                     );
         };
+        var xOffset =
+            (params.bboxW / 2) * Math.pow(params.zoomFactor, args.pyramidLevel);
+        var yOffset =
+            (params.bboxH / 2) * Math.pow(params.zoomFactor, args.pyramidLevel);
         //x
         var x = d3
             .scaleLinear()
-            .domain([REPLACE_ME_this_loX, REPLACE_ME_this_hiX])
-            .range([REPLACE_ME_xOffset, cWidth - REPLACE_ME_xOffset]);
+            .domain([params.loX, params.hiX])
+            .range([xOffset, cWidth - xOffset]);
         /*        var stDate = new Date(0),
             enDate = new Date(0);
         stDate.setUTCSeconds(1356998400);
@@ -1552,8 +1556,8 @@ function getAxesRenderer(level) {
         //y
         var y = d3
             .scaleLinear()
-            .domain([REPLACE_ME_this_loY, REPLACE_ME_this_hiY])
-            .range([REPLACE_ME_yOffset, cHeight - REPLACE_ME_yOffset]);
+            .domain([params.loY, params.hiY])
+            .range([yOffset, cHeight - yOffset]);
         var yAxis = d3
             .axisLeft()
             .tickSize(-cWidth)
@@ -1568,18 +1572,7 @@ function getAxesRenderer(level) {
         return axes;
     }
 
-    var xOffset = (this.bboxW / 2) * Math.pow(this.zoomFactor, level);
-    var yOffset = (this.bboxH / 2) * Math.pow(this.zoomFactor, level);
     var axesFuncBody = getBodyStringOfFunction(axesRendererBodyTemplate);
-    axesFuncBody = axesFuncBody
-        .replace(/REPLACE_ME_this_loX/g, this.loX)
-        .replace(/REPLACE_ME_this_hiX/g, this.hiX)
-        .replace(/REPLACE_ME_this_loY/g, this.loY)
-        .replace(/REPLACE_ME_this_hiY/g, this.hiY)
-        .replace(/REPLACE_ME_xOffset/g, xOffset)
-        .replace(/REPLACE_ME_yOffset/g, yOffset)
-        .replace(/REPLACE_ME_X_TITLE/g, this.xAxisTitle)
-        .replace(/REPLACE_ME_Y_TITLE/g, this.yAxisTitle);
     return new Function("args", axesFuncBody);
 }
 
@@ -1589,7 +1582,9 @@ function getLegendRenderer() {
             .attr("class", "legendOrdinal")
             .attr("transform", "translate(50,50) scale(2.0)");
 
-        var params = args.renderingParams;
+        var rpKey =
+            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
         var color = d3
             .scaleOrdinal(d3.schemeTableau10)
             .domain(
@@ -1622,7 +1617,7 @@ function getLegendRenderer() {
 }
 
 /**
- * PLV8 function used by the AutoDDCitusIndexer to calculate Citus
+ * PLV8 function used by the SSVCitusIndexer to calculate Citus
  * hash keys that result in spatial partitions
  * @param cx
  * @param cy
@@ -1723,11 +1718,11 @@ function mergeClusterAggs(a, b) {
 }
 
 /**
- * PLV8 function used by the AutoDDCitusIndexer for hierarchical clustering
+ * PLV8 function used by the SSVCitusIndexer for hierarchical clustering
  * @param clusters
- * @param autodd
+ * @param ssv
  */
-function singleNodeClustering(shard, autodd) {
+function singleNodeClustering(shard, ssv) {
     function initClusterAgg(d) {
         d.cluster_agg = JSON.parse(d.cluster_agg);
         ret = d.cluster_agg;
@@ -1798,12 +1793,12 @@ function singleNodeClustering(shard, autodd) {
     var mergeClusterAggs = plv8.mergeClusterAggs;
 
     // fetch in queries
-    var xCol = autodd.xCol;
-    var yCol = autodd.yCol;
-    var zOrder = autodd.zOrder;
-    var zCol = autodd.zCol;
-    var fields = autodd.fields;
-    var types = autodd.types;
+    var xCol = ssv.xCol;
+    var yCol = ssv.yCol;
+    var zOrder = ssv.zOrder;
+    var zCol = ssv.zCol;
+    var fields = ssv.fields;
+    var types = ssv.types;
     var sql =
         "SELECT * FROM " +
         shard +
@@ -1813,14 +1808,14 @@ function singleNodeClustering(shard, autodd) {
     var cursor = plan.cursor();
 
     // initialize a quadtree for existing clusters
-    var zoomFactor = autodd.zoomFactor;
-    var theta = autodd.theta;
-    var bboxH = autodd.bboxH,
-        bboxW = autodd.bboxW;
-    var topk = autodd.topk;
-    var aggKeyDelimiter = autodd.aggKeyDelimiter;
-    var aggDimensionFields = autodd.aggDimensionFields;
-    var aggMeasureFields = autodd.aggMeasureFields;
+    var zoomFactor = ssv.zoomFactor;
+    var theta = ssv.theta;
+    var bboxH = ssv.bboxH,
+        bboxW = ssv.bboxW;
+    var topk = ssv.topk;
+    var aggKeyDelimiter = ssv.aggKeyDelimiter;
+    var aggDimensionFields = ssv.aggDimensionFields;
+    var aggMeasureFields = ssv.aggMeasureFields;
     var qt = d3
         .quadtree()
         .x(function x(d) {
@@ -1874,7 +1869,7 @@ function singleNodeClustering(shard, autodd) {
     // use batch insert to put data into the correct table
     var newClusters = qt.data();
     var batchSize = 3000;
-    var targetTable = autodd.tableMap[shard];
+    var targetTable = ssv.tableMap[shard];
     sql = "";
     for (var i = 0; i < newClusters.length; i++) {
         if (i % batchSize == 0) {
@@ -1910,7 +1905,7 @@ function singleNodeClustering(shard, autodd) {
     return ret;
 }
 
-function mergeClustersAlongSplits(clusters, autodd) {
+function mergeClustersAlongSplits(clusters, ssv) {
     // get d3
     if (!("d3" in plv8)) plv8.d3 = require("d3");
     var d3 = plv8.d3;
@@ -1920,14 +1915,14 @@ function mergeClustersAlongSplits(clusters, autodd) {
         plv8.mergeClusterAggs = REPLACE_ME_merge_cluster_aggs;
     var mergeClusterAggs = plv8.mergeClusterAggs;
 
-    var theta = autodd.theta;
-    var zCol = autodd.zCol;
-    var zOrder = autodd.zOrder;
-    var bboxW = autodd.bboxW;
-    var bboxH = autodd.bboxH;
-    var topk = autodd.topk;
-    var dir = autodd.splitDir;
-    var aggKeyDelimiter = autodd.aggKeyDelimiter;
+    var theta = ssv.theta;
+    var zCol = ssv.zCol;
+    var zOrder = ssv.zOrder;
+    var bboxW = ssv.bboxW;
+    var bboxH = ssv.bboxH;
+    var topk = ssv.topk;
+    var dir = ssv.splitDir;
+    var aggKeyDelimiter = ssv.aggKeyDelimiter;
 
     clusters.sort(function(a, b) {
         if (dir == "vertical") return a.cy - b.cy;
@@ -1973,7 +1968,7 @@ function mergeClustersAlongSplits(clusters, autodd) {
 }
 
 //define prototype
-AutoDD.prototype = {
+SSV.prototype = {
     getLayerRenderer,
     getAxesRenderer,
     getLegendRenderer
@@ -1981,5 +1976,6 @@ AutoDD.prototype = {
 
 // exports
 module.exports = {
-    AutoDD
+    SSV,
+    processClusterAgg
 };

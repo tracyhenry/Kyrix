@@ -41,8 +41,8 @@ function Project(name, configFile) {
     // set of jump transitions
     this.jumps = [];
 
-    // set of autoDDs
-    this.autoDDs = [];
+    // set of ssv(s)
+    this.ssvs = [];
 
     // set of tables
     this.tables = [];
@@ -251,38 +251,59 @@ function addTable(table, args) {
 }
 
 /**
- * Add an autoDD to a project, this will create a hierarchy of canvases that form a pyramid shape
- * @param autoDD an AutoDD object
+ * Add an ssv to a project, this will create a hierarchy of canvases that form a pyramid shape
+ * @param ssv an SSV object
  * @param args an dictionary that contains customization parameters, see doc
  * @returns {Array} an array of canvas objects that correspond to the hierarchy
  */
-function addAutoDD(autoDD, args) {
+function addSSV(ssv, args) {
     if (args == null) args = {};
 
     // add to project
-    this.autoDDs.push(autoDD);
+    this.ssvs.push(ssv);
 
     // add stuff to renderingParam
-    this.addRenderingParams({
-        textwrap: require("./template-api/Utilities").textwrap
-    });
-    this.addRenderingParams({fadeInDuration: 200});
-    this.addRenderingParams(autoDD.clusterParams);
-    this.addRenderingParams(autoDD.aggregateParams);
-    this.addRenderingParams(autoDD.hoverParams);
-    this.addRenderingParams(autoDD.legendParams);
+    var renderingParams = {
+        textwrap: require("./template-api/Utilities").textwrap,
+        processClusterAgg: require("./template-api/SSV").processClusterAgg,
+        serializePath: require("./template-api/Utilities").serializePath,
+        translatePathSegments: require("./template-api/Utilities")
+            .translatePathSegments,
+        parsePathIntoSegments: require("./template-api/Utilities")
+            .parsePathIntoSegments,
+        aggKeyDelimiter: ssv.aggKeyDelimiter,
+        loX: ssv.loX,
+        loY: ssv.loY,
+        hiX: ssv.hiX,
+        hiY: ssv.hiY,
+        bboxW: ssv.bboxW,
+        bboxH: ssv.bboxH,
+        zoomFactor: ssv.zoomFactor,
+        fadeInDuration: 200
+    };
+    renderingParams = {
+        ...renderingParams,
+        ...ssv.clusterParams,
+        ...ssv.aggregateParams,
+        ...ssv.hoverParams,
+        ...ssv.legendParams,
+        ...ssv.axisParams
+    };
+    var rpKey = "ssv_" + (this.ssvs.length - 1);
+    var rpDict = {};
+    rpDict[rpKey] = renderingParams;
+    this.addRenderingParams(rpDict);
 
     // construct canvases
     var curPyramid = [];
-    var transform = new Transform(autoDD.query, autoDD.db, "", [], true);
+    var transform = new Transform(ssv.query, ssv.db, "", [], true);
     var numLevels = Math.min(
-        autoDD.numLevels,
+        ssv.numLevels,
         args.pyramid ? args.pyramid.length : 1e10
     );
     for (var i = 0; i < numLevels; i++) {
-        var width = (autoDD.topLevelWidth * Math.pow(autoDD.zoomFactor, i)) | 0;
-        var height =
-            (autoDD.topLevelHeight * Math.pow(autoDD.zoomFactor, i)) | 0;
+        var width = (ssv.topLevelWidth * Math.pow(ssv.zoomFactor, i)) | 0;
+        var height = (ssv.topLevelHeight * Math.pow(ssv.zoomFactor, i)) | 0;
 
         // construct a new canvas
         var curCanvas;
@@ -292,10 +313,10 @@ function addAutoDD(autoDD, args) {
                 Math.abs(curCanvas.width - width) > 1e-3 ||
                 Math.abs(curCanvas.height - height) > 1e-3
             )
-                throw new Error("Adding AutoDD: Canvas sizes do not match.");
+                throw new Error("Adding SSV: Canvas sizes do not match.");
         } else {
             curCanvas = new Canvas(
-                "autodd" + (this.autoDDs.length - 1) + "_" + "level" + i,
+                "ssv" + (this.ssvs.length - 1) + "_" + "level" + i,
                 width,
                 height
             );
@@ -306,21 +327,22 @@ function addAutoDD(autoDD, args) {
         // add static legend layer
         var staticLayer = new Layer(null, true);
         curCanvas.addLayer(staticLayer);
-        staticLayer.addRenderingFunc(autoDD.getLegendRenderer());
+        staticLayer.addRenderingFunc(ssv.getLegendRenderer());
+        staticLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
 
         // create one layer
         var curLayer = new Layer(transform, false);
         curCanvas.addLayer(curLayer);
 
         // set fetching scheme
-        if (autoDD.clusterMode == "contour" || autoDD.clusterMode == "heatmap")
+        if (ssv.clusterMode == "contour" || ssv.clusterMode == "heatmap")
             curLayer.setFetchingScheme("dbox", false);
         //curLayer.setFetchingScheme("tiling");
 
-        // set isAutoDD and autoDD ID
-        curLayer.setIndexerType("AutoDDInMemoryIndexer");
-        //curLayer.setIndexerType("AutoDDCitusIndexer");
-        curLayer.setAutoDDId(this.autoDDs.length - 1 + "_" + i);
+        // set ssv ID
+        curLayer.setIndexerType("SSVInMemoryIndexer");
+        //curLayer.setIndexerType("SSVCitusIndexer");
+        curLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
 
         // dummy placement
         curLayer.addPlacement({
@@ -331,20 +353,22 @@ function addAutoDD(autoDD, args) {
         });
 
         // construct rendering function
-        curLayer.addRenderingFunc(
-            autoDD.getLayerRenderer(i, this.autoDDs.length - 1),
-            autoDD.tooltipColumns,
-            autoDD.tooltipAliases
-        );
+        curLayer.addRenderingFunc(ssv.getLayerRenderer());
+
+        // tooltips
+        curLayer.addTooltip(ssv.tooltipColumns, ssv.tooltipAliases);
 
         // axes
-        if (autoDD.axis) {
-            curCanvas.addAxes(autoDD.getAxesRenderer(i));
+        if (ssv.axis) {
+            curCanvas.addAxes(
+                ssv.getAxesRenderer(i),
+                "ssv_" + (this.ssvs.length - 1)
+            );
         }
     }
 
     // literal zooms
-    for (var i = 0; i + 1 < autoDD.numLevels; i++) {
+    for (var i = 0; i + 1 < ssv.numLevels; i++) {
         var hasLiteralZoomIn = false;
         var hasLiteralZoomOut = false;
         for (var j = 0; j < this.jumps.length; j++) {
@@ -354,7 +378,7 @@ function addAutoDD(autoDD, args) {
             ) {
                 if (this.jumps[j].destId != curPyramid[i + 1].id)
                     throw new Error(
-                        "Adding AutoDD: malformed literal zoom pyramid."
+                        "Adding SSV: malformed literal zoom pyramid."
                     );
                 hasLiteralZoomIn = true;
             }
@@ -364,7 +388,7 @@ function addAutoDD(autoDD, args) {
             ) {
                 if (this.jumps[j].destId != curPyramid[i].id)
                     throw new Error(
-                        "Adding AutoDD: malformed literal zoom pyramid."
+                        "Adding SSV: malformed literal zoom pyramid."
                     );
                 hasLiteralZoomOut = true;
             }
@@ -381,19 +405,19 @@ function addAutoDD(autoDD, args) {
 
     // create a new view if specified
     if (!args.view) {
-        var viewId = "autodd" + (this.autoDDs.length - 1);
+        var viewId = "ssv" + (this.ssvs.length - 1);
         var view = new View(
             viewId,
             0,
             0,
-            autoDD.topLevelWidth,
-            autoDD.topLevelHeight
+            ssv.topLevelWidth,
+            ssv.topLevelHeight
         );
         this.addView(view);
         // initialize view
         this.setInitialStates(view, curPyramid[0], 0, 0);
     } else if (!(args.view instanceof View))
-        throw new Error("Constructing AutoDD: view must be a View object");
+        throw new Error("Constructing SSV: view must be a View object");
 
     return {pyramid: curPyramid, view: args.view ? args.view : view};
 }
@@ -538,7 +562,7 @@ function saveProject() {
     var config = this.config;
 
     // final checks before saving
-    if (this.autoDDs.length > 0 && config.database == "mysql")
+    if (this.ssvs.length > 0 && config.database == "mysql")
         throw new Error(
             "Auto drill down for MySQL is not supported right now."
         );
@@ -810,7 +834,7 @@ Project.prototype = {
     addCanvas,
     addJump,
     addTable,
-    addAutoDD,
+    addSSV,
     addRenderingParams,
     addStyles,
     setInitialStates,

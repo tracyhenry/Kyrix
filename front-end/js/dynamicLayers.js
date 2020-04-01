@@ -11,6 +11,8 @@ function renderAxes(viewId, viewportX, viewportY, vWidth, vHeight) {
     if (axesFunc == "") return;
 
     var args = getOptionalArgs(viewId);
+    if (gvd.curCanvas.axesSSVRPKey != "")
+        args.axesSSVRPKey = gvd.curCanvas.axesSSVRPKey;
     var axes = axesFunc.parseFunction()(args);
     for (var i = 0; i < axes.length; i++) {
         // create g element
@@ -266,6 +268,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     );
                     optionalArgsWithTileXY["tileX"] = x;
                     optionalArgsWithTileXY["tileY"] = y;
+                    optionalArgsWithTileXY["ssvId"] = curLayer.ssvId;
                     curLayer.rendering.parseFunction()(
                         tileSvg,
                         renderData[i],
@@ -483,6 +486,7 @@ function renderDynamicBoxes(
                     optionalArgsWithBoxWHXY["boxY"] = y;
                     optionalArgsWithBoxWHXY["boxW"] = response.boxW;
                     optionalArgsWithBoxWHXY["boxH"] = response.boxH;
+                    optionalArgsWithBoxWHXY["ssvId"] = curLayer.ssvId;
                     curLayer.rendering.parseFunction()(
                         dboxSvg,
                         renderData[i],

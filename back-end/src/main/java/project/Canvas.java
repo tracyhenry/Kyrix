@@ -14,7 +14,7 @@ public class Canvas implements Serializable {
     private double zoomInFactorX, zoomInFactorY;
     private double zoomOutFactorX, zoomOutFactorY;
     private ArrayList<Layer> layers;
-    private String axes;
+    private String axes, axesSSVRPKey;
 
     // https://stackoverflow.com/questions/64036/how-do-you-make-a-deep-copy-of-an-object-in-java
     // this method ensures that the canvas objects are not modified by request handlers in anyway
