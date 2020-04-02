@@ -517,9 +517,9 @@ var teamTimelineStaticBkg = function(svg, data) {
 
     // axis line
     g.append("line")
-        .attr("x1", -1000)
+        .attr("x1", 0)
         .attr("y1", 625)
-        .attr("x2", 2000)
+        .attr("x2", 1000)
         .attr("y2", 625)
         .style("stroke", "#CCC")
         .style("stroke-width", 3);

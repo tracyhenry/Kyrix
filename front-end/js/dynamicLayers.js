@@ -591,7 +591,10 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
     );
     if (tilePromise != null || dboxPromise != null)
         Promise.all([tilePromise, dboxPromise]).then(function() {
-            if (gvd.animation != param.semanticZoom)
+            if (
+                gvd.animation != param.semanticZoom &&
+                gvd.animation != param.slide
+            )
                 d3.selectAll(viewClass + ".oldlayerg")
                     .transition()
                     .duration(param.literalZoomFadeOutDuration)
