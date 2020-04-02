@@ -4,9 +4,9 @@ var param = {};
 // animation durations, delays
 param.semanticZoomEnteringDelta = 0.5;
 param.semanticZoomEnteringDuration = 1300;
-param.slideFadingDuration = 700;
+param.slideExitDuration = 700;
 param.slideEnteringDuration = 700;
-param.slideEnteringDelay = 200;
+param.slideSwitchDelay = 200;
 param.literalZoomDuration = 500;
 param.literalZoomFadeOutDuration = 150;
 

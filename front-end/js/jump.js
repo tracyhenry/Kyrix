@@ -438,7 +438,7 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
     preJump(viewId, zoomType);
 
     d3.transition("zoomInTween_" + viewId)
-        .duration(param.slideFadingDuration)
+        .duration(param.slideExitDuration)
         .tween("zoomInTween", function() {
             return function(t) {
                 zoomAndFade(t);
@@ -448,11 +448,12 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
         .on("start", function() {
             // schedule a new entering transition
             d3.transition("enterTween_" + viewId)
-                .delay(param.slideEnteringDelay)
+                .delay(param.slideSwitchDelay)
                 .duration(param.slideEnteringDuration)
+                .ease(d3.easeLinear)
                 .tween("enterTween", function() {
                     return function(t) {
-                        enterAndScale(d3.easeLinear(t));
+                        enterAndScale(t);
                     };
                 })
                 .on("start", function() {
