@@ -153,7 +153,7 @@ function postJump(viewId, zoomType) {
 }
 
 // animate semantic zoom
-function animateSemanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
+function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
 
@@ -596,7 +596,7 @@ function startJump(viewId, d, jump, optionalArgs) {
         jump.type == param.semanticZoom ||
         jump.type == param.geometricSemanticZoom
     )
-        animateJump(viewId, jump, predArray, newVpX, newVpY, d);
+        semanticZoom(viewId, jump, predArray, newVpX, newVpY, d);
     else if (jump.type == param.slide)
         animateSlide(viewId, jump, predArray, newVpX, newVpY);
     else if (jump.type == param.load)
