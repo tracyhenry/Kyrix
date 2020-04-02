@@ -312,9 +312,9 @@ function animateJump(viewId, jump, predArray, newVpX, newVpY, tuple) {
                     });
                 }
             });
-    } else if (jump.type == param.slideLeft || jump.type == param.slideRight) {
+    } else if (jump.type == param.slide) {
         var endView =
-            jump.type == param.slideLeft
+            jump.type == param.slide
                 ? [startView[0] + startView[2], startView[1], startView[2]]
                 : [startView[0] - startView[2], startView[1], startView[2]];
         gvd.history[gvd.history.length - 1].endView = endView;
@@ -509,8 +509,7 @@ function startJump(viewId, d, jump, optionalArgs) {
     if (
         jump.type == param.semanticZoom ||
         jump.type == param.geometricSemanticZoom ||
-        jump.type == param.slideRight ||
-        jump.type == param.slideLeft
+        jump.type == param.slide
     )
         animateJump(viewId, jump, predArray, newVpX, newVpY, d);
     else if (jump.type == param.load)
@@ -535,8 +534,7 @@ function registerJumps(viewId, svg, layerId) {
             if (
                 (jumps[k].type == param.semanticZoom ||
                     jumps[k].type == param.geometricSemanticZoom ||
-                    jumps[k].type == param.slideRight ||
-                    jumps[k].type == param.slideLeft ||
+                    jumps[k].type == param.slide ||
                     (jumps[k].type == param.load &&
                         jumps[k].sourceViewId == viewId) ||
                     (jumps[k].type == param.highlight &&
@@ -594,8 +592,7 @@ function registerJumps(viewId, svg, layerId) {
                 if (
                     (jumps[k].type != param.semanticZoom &&
                         jumps[k].type != param.geometricSemanticZoom &&
-                        jumps[k].type != param.slideRight &&
-                        jumps[k].type != param.slideLeft &&
+                        jumps[k].type != param.slide &&
                         (jumps[k].type != param.load ||
                             jumps[k].sourceViewId != viewId) &&
                         (jumps[k].type != param.highlight ||

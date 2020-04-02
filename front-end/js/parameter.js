@@ -45,8 +45,7 @@ param.semanticZoom = "semantic_zoom";
 param.geometricSemanticZoom = "geometric_semantic_zoom";
 param.load = "load";
 param.highlight = "highlight";
-param.slideLeft = "slide_left";
-param.slideRight = "slide_right";
+param.slide = "slide";
 
 // epsilon
 param.eps = 1e-5;
