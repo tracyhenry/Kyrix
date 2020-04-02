@@ -1,32 +1,34 @@
 // libraries
 const Project = require("../../src/index").Project;
-const AutoDD = require("../../src/template-api/AutoDD").AutoDD;
+const SSV = require("../../src/template-api/SSV").SSV;
 const renderers = require("./renderers");
 
 // construct a project
-var p = new Project("fifa_autodd", "../../../config.txt");
+var p = new Project("ssv_pie", "../../../config.txt");
 p.addRenderingParams(renderers.renderingParams);
 p.addStyles(renderers.playerRenderingStyles);
 
-// set up auto drill down
+// set up ssv
 var query = "select * from fifa19;";
 
-var autoDD = {
+var ssv = {
     data: {
         db: "fifa19",
         query: query
     },
-    x: {
-        field: "rating",
-        extent: [40, 100]
-    },
-    y: {
-        field: "wage",
-        extent: [600, 0]
-    },
-    z: {
-        field: "cast(wage as int)",
-        order: "desc"
+    layout: {
+        x: {
+            field: "rating",
+            extent: [40, 100]
+        },
+        y: {
+            field: "wage",
+            extent: [600, 0]
+        },
+        z: {
+            field: "wage",
+            order: "desc"
+        }
     },
     marks: {
         cluster: {
@@ -53,20 +55,22 @@ var autoDD = {
             }
         },
         hover: {
-            object: renderers.playerRendering,
-            convex: true
+            rankList: {
+                mode: "tabular",
+                fields: ["name", "nationality", "rating", "wage"],
+                topk: 3
+            },
+            boundary: "convexhull"
         }
-    },
-    legend: {
-        title: "Age Groups of Soccer Players in FIFA 2019"
-        //domain: ["Under 20", "Under 23", "Under 29", "Older"]
     },
     config: {
         topLevelWidth: 1500,
         topLevelHeight: 1000,
-        axis: true
+        axis: true,
+        legendTitle: "Age Groups of Soccer Players in FIFA 2019",
+        legendDomain: ["Under 20", "Under 23", "Under 29", "Older"]
     }
 };
 
-p.addAutoDD(new AutoDD(autoDD));
+p.addSSV(new SSV(ssv));
 p.saveProject();

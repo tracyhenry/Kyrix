@@ -3,22 +3,28 @@ package project;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import main.Config;
 import main.DbConnector;
 
 /** Created by wenbo on 3/31/19. */
-public class AutoDD {
+public class SSV {
 
-    private String query, db;
-    private String xCol, yCol;
+    private String query, db, rawTable;
+    private String xCol, yCol, zCol;
     private int bboxW, bboxH;
-    private String clusterMode;
-    private ArrayList<String> columnNames, queriedColumnNames = null;
-    private ArrayList<String> aggDimensionFields, aggMeasureFields;
+    private int topk;
+    private String clusterMode, zOrder;
+    private ArrayList<String> columnNames, queriedColumnNames = null, columnTypes = null;
+    private ArrayList<String> aggDimensionFields, aggMeasureFields, aggMeasureFuncs;
     private int numLevels, topLevelWidth, topLevelHeight;
-    private boolean overlap;
+    private double overlap;
     private double zoomFactor;
-    private int xColId = -1, yColId = -1;
+    private int xColId = -1, yColId = -1, zColId = -1;
     private double loX = Double.NaN, loY, hiX, hiY;
+    private String mergeClusterAggs,
+            getCitusSpatialHashKeyBody,
+            singleNodeClusteringBody,
+            mergeClustersAlongSplitsBody;
 
     public String getQuery() {
         return query;
@@ -44,11 +50,27 @@ public class AutoDD {
         return bboxH;
     }
 
+    public int getTopk() {
+        return topk;
+    }
+
+    public String getRawTable() {
+        return rawTable;
+    }
+
+    public String getzCol() {
+        return zCol;
+    }
+
+    public String getzOrder() {
+        return zOrder;
+    }
+
     public String getClusterMode() {
         return clusterMode;
     }
 
-    public boolean getOverlap() {
+    public double getOverlap() {
         return overlap;
     }
 
@@ -56,7 +78,7 @@ public class AutoDD {
 
         if (xColId < 0) {
             ArrayList<String> colNames = getColumnNames();
-            for (int i = 0; i < colNames.size(); i++) if (colNames.get(i).equals(xCol)) xColId = i;
+            xColId = colNames.indexOf(xCol);
         }
         return xColId;
     }
@@ -65,9 +87,18 @@ public class AutoDD {
 
         if (yColId < 0) {
             ArrayList<String> colNames = getColumnNames();
-            for (int i = 0; i < colNames.size(); i++) if (colNames.get(i).equals(yCol)) yColId = i;
+            yColId = colNames.indexOf(yCol);
         }
         return yColId;
+    }
+
+    public int getZColId() {
+
+        if (zColId < 0) {
+            ArrayList<String> colNames = getColumnNames();
+            zColId = colNames.indexOf(zCol);
+        }
+        return zColId;
     }
 
     public ArrayList<String> getColumnNames() {
@@ -79,16 +110,34 @@ public class AutoDD {
         if (queriedColumnNames == null)
             try {
                 queriedColumnNames = new ArrayList<>();
+                columnTypes = new ArrayList<>();
                 Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
-                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, getQuery());
+                String query = getQuery();
+                if (Config.database == Config.Database.CITUS) {
+                    while (query.charAt(query.length() - 1) == ';')
+                        query = query.substring(0, query.length() - 1);
+                    // assuming there is no limit 1
+                    query += " LIMIT 1;";
+                }
+                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, query);
                 int colCount = rs.getMetaData().getColumnCount();
-                for (int i = 1; i <= colCount; i++)
+                for (int i = 1; i <= colCount; i++) {
                     queriedColumnNames.add(rs.getMetaData().getColumnName(i));
+                    columnTypes.add(rs.getMetaData().getColumnTypeName(i));
+                }
+                rs.close();
+                rawDBStmt.close();
                 DbConnector.closeConnection(getDb());
             } catch (Exception e) {
                 e.printStackTrace();
             }
         return queriedColumnNames;
+    }
+
+    public ArrayList<String> getColumnTypes() {
+        if (columnTypes != null) return columnTypes;
+        getColumnNames();
+        return columnTypes;
     }
 
     public ArrayList<String> getAggDimensionFields() {
@@ -97,6 +146,10 @@ public class AutoDD {
 
     public ArrayList<String> getAggMeasureFields() {
         return aggMeasureFields;
+    }
+
+    public ArrayList<String> getAggMeasureFuncs() {
+        return aggMeasureFuncs;
     }
 
     public int getNumLevels() {
@@ -115,13 +168,55 @@ public class AutoDD {
         return zoomFactor;
     }
 
+    public double getLoX() {
+        return loX;
+    }
+
+    public double getLoY() {
+        return loY;
+    }
+
+    public double getHiX() {
+        return hiX;
+    }
+
+    public double getHiY() {
+        return hiY;
+    }
+
+    public String getMergeClusterAggs() {
+        return mergeClusterAggs;
+    }
+
+    public String getGetCitusSpatialHashKeyBody() {
+        return getCitusSpatialHashKeyBody;
+    }
+
+    public String getSingleNodeClusteringBody() {
+        return singleNodeClusteringBody;
+    }
+
+    public String getMergeClustersAlongSplitsBody() {
+        return mergeClustersAlongSplitsBody;
+    }
+
     // get the canvas coordinate of a raw value
     public double getCanvasCoordinate(int level, double v, boolean isX) {
 
+        setXYExtent();
+        if (isX)
+            return ((topLevelWidth - bboxW) * (v - loX) / (hiX - loX) + bboxW / 2.0)
+                    * Math.pow(zoomFactor, level);
+        else
+            return ((topLevelHeight - bboxH) * (v - loY) / (hiY - loY) + bboxH / 2.0)
+                    * Math.pow(zoomFactor, level);
+    }
+
+    public void setXYExtent() {
         // calculate range if have not
         if (Double.isNaN(loX)) {
 
-            System.out.println("\n Calculating autoDD x & y ranges...\n");
+            System.out.println("\n Calculating SSV x & y ranges...\n");
             loX = loY = Double.MAX_VALUE;
             hiX = hiY = Double.MIN_VALUE;
             try {
@@ -141,17 +236,11 @@ public class AutoDD {
                 e.printStackTrace();
             }
         }
-        if (isX)
-            return ((topLevelWidth - bboxW) * (v - loX) / (hiX - loX) + bboxW / 2.0)
-                    * Math.pow(zoomFactor, level);
-        else
-            return ((topLevelHeight - bboxH) * (v - loY) / (hiY - loY) + bboxH / 2.0)
-                    * Math.pow(zoomFactor, level);
     }
 
     @Override
     public String toString() {
-        return "AutoDD{"
+        return "SSV{"
                 + "query='"
                 + query
                 + '\''

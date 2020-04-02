@@ -6,6 +6,7 @@ param.semanticZoomEnteringDelta = 0.5;
 param.semanticZoomEnteringDuration = 1300;
 param.literalZoomDuration = 500;
 param.slideDuration = 800;
+param.literalZoomFadeOutDuration = 150;
 
 // semantic zoom scale factor
 param.semanticZoomScaleFactor = 4;
@@ -36,7 +37,7 @@ param.dimOpacity = 0.4;
 param.extraTiles = 0;
 
 // padding for the container svg
-param.viewPadding = 50;
+param.viewPadding = 100;
 
 // jump types
 param.literalZoomIn = "literal_zoom_in";

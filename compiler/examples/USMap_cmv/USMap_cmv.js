@@ -63,6 +63,7 @@ var countyBoundaryLayer = new Layer(transforms.countyMapTransform, false);
 countyMapCanvas.addLayer(countyBoundaryLayer);
 countyBoundaryLayer.addPlacement(placements.countyMapPlacement);
 countyBoundaryLayer.addRenderingFunc(renderers.countyMapRendering);
+countyBoundaryLayer.addTooltip(["name", "crimerate"], ["County", "Crime Rate"]);
 
 // ================== Views ===================
 var view = new View("state", 0, 0, stateMapWidth, stateMapHeight);
@@ -71,7 +72,7 @@ p.setInitialStates(view, stateMapCanvas, 0, 0);
 
 var rightView = new View(
     "county",
-    stateMapWidth + 100,
+    stateMapWidth + 150,
     0,
     stateMapWidth,
     stateMapHeight

@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpServer;
 import index.Indexer;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,10 +41,62 @@ public class Server {
             while (!terminated) terminationLock.wait();
         }
         Server.stopServer();
-        Indexer.precompute();
-        Main.setProjectClean();
-        System.out.println("Completed recomputing indexes. Server restarting...");
+        try {
+            DbConnector.closeConnection(Config.databaseName);
+            Indexer.precompute();
+            Main.setProjectClean();
+            System.out.println("Completed recomputing indexes. Server restarting...");
+        } catch (Exception e) {
+            // print out stack trace
+            e.printStackTrace();
+            System.out.println("\n\n" + e.getMessage() + "\n");
+
+            // print out indexing error message
+            printIndexingErrorMessage();
+
+            // clear project history and set current project to null
+            ProjectRequestHandler.clearProjectHistory(Main.getProject().getName());
+            Main.setProject(null);
+
+            // close db connections
+            DbConnector.closeAllConnections();
+            System.out.println("Server restarting....");
+        }
         Server.startServer(Config.portNumber);
+    }
+
+    public static void printIndexingErrorMessage() {
+        System.out.println(
+                "+---------------------------------------------------------+\n"
+                        + "|ERROR!!! An exception occurred while indexing.           |\n"
+                        + "|This is likely due to errors in database related things, |\n"
+                        + "|e.g. a mis-formed SQL query in the specification, a non- |\n"
+                        + "|existent column you specified, or the data isn't loaded  |\n"
+                        + "|into the database.                                       |\n"
+                        + "|                                                         |\n"
+                        + "|Indexing is now terminated and the server is restarted.  |\n"
+                        + "|Please inspect your spec and database, and then recompile|\n"
+                        + "|the project.If you can't figure out the issue, feel free |\n"
+                        + "|to contact Kyrix maintainers.                            |\n"
+                        + "|                                                         |\n"
+                        + "|Github: https://github.com/tracyhenry/kyrix              |\n"
+                        + "+---------------------------------------------------------+");
+    }
+
+    public static void printServingErrorMessage() {
+        System.out.println(
+                "+-------------------------------------------------------------+\n"
+                        + "|ERROR!!! An exception occurred while serving an HTTP request.|\n"
+                        + "|This is likely due to errors in database related things,     |\n"
+                        + "|e.g. a non-existent column you specified, or deleted/-       |\n"
+                        + "|corrupted database indexes.                                  |\n"
+                        + "|                                                             |\n"
+                        + "|The server will continue running, but the error will likely  |\n"
+                        + "|occur again. You can recompile the project to recompute the  |\n"
+                        + "|indexes, or reach out to the kyrix maintainers for help.     |\n"
+                        + "|                                                             |\n"
+                        + "|Github: https://github.com/tracyhenry/kyrix                  |\n"
+                        + "+-------------------------------------------------------------+");
     }
 
     public static void terminate() {
@@ -104,15 +157,17 @@ public class Server {
     }
 
     // https://stackoverflow.com/questions/11640025/how-to-obtain-the-query-string-in-a-get-with-java-httpserver-httpexchange
-    public static Map<String, String> queryToMap(String query) {
+    public static Map<String, String> queryToMap(String query) throws UnsupportedEncodingException {
 
         Map<String, String> result = new HashMap<>();
         // check if query is null
         if (query == null) return result;
         for (String param : query.split("&")) {
+            param = java.net.URLDecoder.decode(param, "UTF-8");
             int pos = param.indexOf("=");
             result.put(param.substring(0, pos), param.substring(pos + 1));
         }
+
         return result;
     }
 

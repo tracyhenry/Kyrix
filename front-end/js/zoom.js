@@ -4,9 +4,11 @@ function zoomRescale(viewId, ele, oldGScaleX, oldGScaleY) {
 
     var cx = d3.select(ele).datum().cx;
     var cy = d3.select(ele).datum().cy; // finding center of element
-    var transform = d3.zoomTransform(d3.select(viewClass + ".maing").node());
-    var scaleX = 1 / transform.k;
-    var scaleY = 1 / transform.k;
+    var k = gvd.initialScale || 1;
+    if (!gvd.animation)
+        k = d3.zoomTransform(d3.select(viewClass + ".maing").node()).k;
+    var scaleX = 1 / k;
+    var scaleY = 1 / k;
 
     if (gvd.curCanvas.zoomInFactorX <= 1 && gvd.curCanvas.zoomOutFactorX >= 1)
         scaleX = 1;

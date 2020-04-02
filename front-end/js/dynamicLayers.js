@@ -10,7 +10,10 @@ function renderAxes(viewId, viewportX, viewportY, vWidth, vHeight) {
     var axesFunc = gvd.curCanvas.axes;
     if (axesFunc == "") return;
 
-    var axes = axesFunc.parseFunction()(getOptionalArgs(viewId));
+    var args = getOptionalArgs(viewId);
+    if (gvd.curCanvas.axesSSVRPKey != "")
+        args.axesSSVRPKey = gvd.curCanvas.axesSSVRPKey;
+    var axes = axesFunc.parseFunction()(args);
     for (var i = 0; i < axes.length; i++) {
         // create g element
         var curg = axesg
@@ -59,7 +62,7 @@ function renderAxes(viewId, viewportX, viewportY, vWidth, vHeight) {
         curg.call(axes[i].axis.scale(newScale));
 
         // styling
-        if ("styling" in axes[i]) axes[i].styling(curg);
+        if ("styling" in axes[i]) axes[i].styling(curg, axes[i].dim, i, args);
     }
 }
 
@@ -265,6 +268,7 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     );
                     optionalArgsWithTileXY["tileX"] = x;
                     optionalArgsWithTileXY["tileY"] = y;
+                    optionalArgsWithTileXY["ssvId"] = curLayer.ssvId;
                     curLayer.rendering.parseFunction()(
                         tileSvg,
                         renderData[i],
@@ -272,8 +276,16 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     );
                     tileSvg.style("opacity", 1.0);
 
+                    // tooltip
+                    if (curLayer.tooltipColumns.length > 0)
+                        makeTooltips(
+                            tileSvg.selectAll("*"),
+                            curLayer.tooltipColumns,
+                            curLayer.tooltipAliases
+                        );
+
                     // register jumps
-                    if (!globalVar.animation) registerJumps(viewId, tileSvg, i);
+                    if (!gvd.animation) registerJumps(viewId, tileSvg, i);
 
                     // highlight
                     highlightLowestSvg(viewId, tileSvg, i);
@@ -474,11 +486,20 @@ function renderDynamicBoxes(
                     optionalArgsWithBoxWHXY["boxY"] = y;
                     optionalArgsWithBoxWHXY["boxW"] = response.boxW;
                     optionalArgsWithBoxWHXY["boxH"] = response.boxH;
+                    optionalArgsWithBoxWHXY["ssvId"] = curLayer.ssvId;
                     curLayer.rendering.parseFunction()(
                         dboxSvg,
                         renderData[i],
                         optionalArgsWithBoxWHXY
                     );
+
+                    // tooltip
+                    if (curLayer.tooltipColumns.length > 0)
+                        makeTooltips(
+                            dboxSvg.select("g:last-of-type").selectAll("*"),
+                            curLayer.tooltipColumns,
+                            curLayer.tooltipAliases
+                        );
 
                     // register jumps
                     if (!gvd.animation) registerJumps(viewId, dboxSvg, i);
@@ -571,6 +592,10 @@ function RefreshDynamicLayers(viewId, viewportX, viewportY) {
     if (tilePromise != null || dboxPromise != null)
         Promise.all([tilePromise, dboxPromise]).then(function() {
             if (gvd.animation != param.semanticZoom)
-                d3.selectAll(viewClass + ".oldlayerg").remove();
+                d3.selectAll(viewClass + ".oldlayerg")
+                    .transition()
+                    .duration(param.literalZoomFadeOutDuration)
+                    .style("opacity", 0)
+                    .remove();
         });
 }

@@ -21,11 +21,20 @@ public class Project {
     private ArrayList<View> views;
     private ArrayList<Canvas> canvases;
     private ArrayList<Jump> jumps;
-    private ArrayList<AutoDD> autoDDs;
+    private ArrayList<SSV> ssvs;
     private ArrayList<Table> tables;
     private String renderingParams;
-    private String BGRP = "{}"; // Back-end Generated Rendering parameters
     private ArrayList<String> styles;
+
+    // Back-end Generated Rendering parameters
+    // The key of the hashmap is used to minimize occupied
+    // namespace of the global rendering parameter dictionary
+    // currently, it's only used by SSV indexers, which registers
+    // keys like "ssv_0", "ssv_1", "ssv_2"...
+    // the value of the hashmap is a regular dictionary mapping from
+    // names to values. This is merged with compiler generated ones
+    // in the frontend (pageOnLoad.js)
+    private HashMap<String, HashMap<String, String>> BGRP = new HashMap<>();
 
     public String getName() {
         return name;
@@ -43,8 +52,8 @@ public class Project {
         return jumps;
     }
 
-    public ArrayList<AutoDD> getAutoDDs() {
-        return autoDDs;
+    public ArrayList<SSV> getSsvs() {
+        return ssvs;
     }
 
     public ArrayList<Table> getTables() {
@@ -55,21 +64,18 @@ public class Project {
         return renderingParams;
     }
 
-    public String getBGRP() {
+    public HashMap<String, HashMap<String, String>> getBGRP() {
         return BGRP;
     }
 
-    public void setBGRP(String BGRP) {
+    public void setBGRP(HashMap<String, HashMap<String, String>> BGRP) {
         this.BGRP = BGRP;
     }
 
-    public void addBGRP(String key, String val) {
+    public void addBGRP(String key1, String key2, String val) {
 
-        String newBGRP = BGRP;
-        newBGRP = newBGRP.substring(0, newBGRP.length() - 1);
-        if (newBGRP.length() > 1) newBGRP += ",";
-        newBGRP += "\"" + key + "\": " + val + "}";
-        BGRP = newBGRP;
+        if (!BGRP.containsKey(key1)) BGRP.put(key1, new HashMap<>());
+        BGRP.get(key1).put(key2, val);
     }
 
     public ArrayList<String> getStyles() {
@@ -119,8 +125,8 @@ public class Project {
                 + canvases
                 + ", jumps="
                 + jumps
-                + ", autoDDs="
-                + autoDDs
+                + ", ssvs="
+                + ssvs
                 + ", renderingParams='"
                 + renderingParams
                 + '\''

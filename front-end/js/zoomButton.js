@@ -76,6 +76,9 @@ function logHistory(viewId, zoom_type) {
     curHistory.canvasObj = gvd.curCanvas;
     curHistory.jumps = gvd.curJump;
     curHistory.staticData = gvd.curStaticData;
+    curHistory.initialScale = d3.zoomTransform(
+        d3.select(viewClass + ".maing").node()
+    ).k;
 
     // save current viewport
     var curViewport = [0, 0, gvd.viewportWidth, gvd.viewportHeight];
@@ -116,6 +119,7 @@ function backspace(viewId) {
     gvd.highlightPredicates = curHistory.highlightPredicates;
     gvd.initialViewportX = curHistory.viewportX;
     gvd.initialViewportY = curHistory.viewportY;
+    gvd.initialScale = curHistory.initialScale;
 
     // get current viewport
     var curViewport = [0, 0, gvd.viewportWidth, gvd.viewportHeight];
@@ -167,6 +171,7 @@ function backspace(viewId) {
                     enterAndZoom(t, i(t));
                 };
             })
+            .ease(d3.easeSinIn)
             .on("start", function() {
                 // set up layer layouts
                 setupLayerLayouts(viewId);
@@ -201,9 +206,10 @@ function backspace(viewId) {
         // change viewBox of static layers
         minx = v[0] - vWidth / 2.0;
         miny = v[1] - vHeight / 2.0;
+        var k = gvd.initialScale || 1;
         d3.selectAll(viewClass + ".mainsvg.static").attr(
             "viewBox",
-            minx + " " + miny + " " + vWidth + " " + vHeight
+            minx * k + " " + miny * k + " " + vWidth * k + " " + vHeight * k
         );
 
         // change opacity
@@ -229,6 +235,7 @@ function backspace(viewId) {
         var miny = +curViewport[1] + gvd.viewportHeight / 2.0 - vHeight / 2.0;
 
         // change viewBox of old dynamic layers
+        // TODO: this'll probably fail when zooming back from a literal zoom canvas
         d3.selectAll(viewClass + ".oldmainsvg:not(.static)").attr(
             "viewBox",
             minx + " " + miny + " " + vWidth + " " + vHeight
