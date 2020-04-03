@@ -57,10 +57,10 @@ function setBackButtonState(viewId) {
         d3.select(viewClass + ".gobackbutton")
             .attr("disabled", null)
             .on("click", function() {
-                var zoomType = gvd.history[gvd.history.length - 1].zoomType;
+                var jumpType = gvd.history[gvd.history.length - 1].jumpType;
                 if (
-                    zoomType == param.semanticZoom ||
-                    zoomType == param.geometricSemanticZoom
+                    jumpType == param.semanticZoom ||
+                    jumpType == param.geometricSemanticZoom
                 )
                     backspaceSemanticZoom(viewId);
                 else backspaceSlide(viewId);
@@ -70,10 +70,11 @@ function setBackButtonState(viewId) {
 
 // called in completeZoom() and RegisterJump()
 // before global variables are changed
-function logHistory(viewId, zoom_type) {
+function logHistory(viewId, jump) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
-    var curHistory = {zoomType: zoom_type};
+    var jumpType = jump.type;
+    var curHistory = {curJump: jump, jumpType: jumpType};
 
     // save global variables
     curHistory.predicates = gvd.predicates;
@@ -110,11 +111,11 @@ function backspaceSemanticZoom(viewId) {
     var curHistory = gvd.history.pop();
 
     // whether this semantic zoom is also geometric
-    var zoomType = curHistory.zoomType;
-    var fadingAnimation = zoomType == param.semanticZoom ? true : false;
+    var jumpType = curHistory.jumpType;
+    var fadingAnimation = jumpType == param.semanticZoom ? true : false;
 
     // disable and remove stuff
-    preJump(viewId, zoomType);
+    preJump(viewId, jumpType);
 
     // assign back global vars
     gvd.curCanvasId = curHistory.canvasId;
@@ -193,7 +194,7 @@ function backspaceSemanticZoom(viewId) {
                 );
             })
             .on("end", function() {
-                postJump(viewId, zoomType);
+                postJump(viewId, jumpType);
             });
     }
 
@@ -269,10 +270,10 @@ function backspaceSlide(viewId) {
     var curHistory = gvd.history.pop();
 
     // whether this semantic zoom is also geometric
-    var zoomType = curHistory.zoomType;
+    var jumpType = curHistory.jumpType;
 
     // disable and remove stuff
-    preJump(viewId, zoomType);
+    preJump(viewId, jumpType);
 
     // assign back global vars
     gvd.curCanvasId = curHistory.canvasId;
@@ -294,6 +295,9 @@ function backspaceSlide(viewId) {
             .split(" ");
 
     // start a exit & fade transition
+    var dir = ((360 - curHistory.curJump.slideDirection) / 180) * Math.PI;
+    var cos = Math.cos(dir);
+    var sin = Math.sin(dir);
     d3.transition("fadeTween_" + viewId)
         .duration(param.slideEnteringDuration)
         .tween("fadeTween", function() {
@@ -328,14 +332,61 @@ function backspaceSlide(viewId) {
                     );
                 })
                 .on("end", function() {
-                    postJump(viewId, zoomType);
+                    postJump(viewId, jumpType);
                 });
         });
 
+    function exit(t) {
+        var minx, miny;
+        if (Math.abs(cos) > Math.abs(sin)) {
+            minx = +curViewport[0] - curViewport[2] * t * (cos > 0 ? 1 : -1);
+            miny =
+                +curViewport[1] - ((curViewport[2] * t) / Math.abs(cos)) * sin;
+        } else {
+            miny = +curViewport[1] - curViewport[3] * t * (sin > 0 ? 1 : -1);
+            minx =
+                +curViewport[0] - ((curViewport[3] * t) / Math.abs(sin)) * cos;
+        }
+
+        // change viewBox of old dynamic layers
+        d3.selectAll(viewClass + ".oldmainsvg:not(.static)").attr(
+            "viewBox",
+            minx + " " + miny + " " + curViewport[2] + " " + curViewport[3]
+        );
+
+        // change viewBox of old static layers
+        if (Math.abs(cos) > Math.abs(sin)) {
+            minx = -gvd.viewportWidth * t * (cos > 0 ? 1 : -1);
+            miny = ((-gvd.viewportWidth * t) / Math.abs(cos)) * sin;
+        } else {
+            miny = -gvd.viewportHeight * t * (sin > 0 ? 1 : -1);
+            minx = ((-gvd.viewportHeight * t) / Math.abs(sin)) * cos;
+        }
+
+        d3.selectAll(viewClass + ".oldmainsvg.static").attr(
+            "viewBox",
+            minx + " " + miny + " " + curViewport[2] + " " + curViewport[3]
+        );
+    }
+
     function enter(t) {
         var k = gvd.initialScale || 1;
-        var minx = gvd.initialViewportX + ((1 - t) * gvd.viewportWidth) / k;
-        var miny = gvd.initialViewportY;
+        var minx, miny;
+        if (Math.abs(cos) > Math.abs(sin)) {
+            minx =
+                gvd.initialViewportX +
+                (gvd.viewportWidth * (1 - t) * (cos > 0 ? 1 : -1)) / k;
+            miny =
+                gvd.initialViewportY +
+                (((gvd.viewportWidth * (1 - t)) / Math.abs(cos)) * sin) / k;
+        } else {
+            miny =
+                gvd.initialViewportY +
+                (gvd.viewportHeight * (1 - t) * (sin > 0 ? 1 : -1)) / k;
+            minx =
+                gvd.initialViewportX +
+                (((gvd.viewportHeight * (1 - t)) / Math.abs(sin)) * cos) / k;
+        }
 
         // change viewBox of dynamic layers
         d3.selectAll(viewClass + ".mainsvg:not(.static)").attr(
@@ -350,8 +401,13 @@ function backspaceSlide(viewId) {
         );
 
         // change viewBox of static layers
-        minx = (1 - t) * gvd.viewportWidth;
-        miny = 0;
+        if (Math.abs(cos) > Math.abs(sin)) {
+            minx = gvd.viewportWidth * (1 - t) * (cos > 0 ? 1 : -1);
+            miny = ((gvd.viewportWidth * (1 - t)) / Math.abs(cos)) * sin;
+        } else {
+            miny = gvd.viewportHeight * (1 - t) * (sin > 0 ? 1 : -1);
+            minx = ((gvd.viewportHeight * (1 - t)) / Math.abs(sin)) * cos;
+        }
         d3.selectAll(viewClass + ".mainsvg.static").attr(
             "viewBox",
             minx +
@@ -361,25 +417,6 @@ function backspaceSlide(viewId) {
                 gvd.viewportWidth +
                 " " +
                 gvd.viewportHeight
-        );
-    }
-
-    function exit(t) {
-        var minx = +curViewport[0] - t * curViewport[2];
-        var miny = +curViewport[1];
-
-        // change viewBox of old dynamic layers
-        d3.selectAll(viewClass + ".oldmainsvg:not(.static)").attr(
-            "viewBox",
-            minx + " " + miny + " " + curViewport[2] + " " + curViewport[3]
-        );
-
-        // change viewBox of old static layers
-        minx = -t * curViewport[2];
-        miny = 0;
-        d3.selectAll(viewClass + ".oldmainsvg.static").attr(
-            "viewBox",
-            minx + " " + miny + " " + curViewport[2] + " " + curViewport[3]
         );
     }
 }

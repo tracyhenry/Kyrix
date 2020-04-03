@@ -44,6 +44,13 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
             throw new Error(
                 "Constructing Jump: missing customization functions for highlight."
             );
+    if (
+        "slideDirection" in optional &&
+        (optional.slideDirection < 0 || optional.slideDirection >= 360)
+    )
+        throw new Error(
+            "Constructing Jump: slide direction must be a number between 0 and 360."
+        );
 
     this.type = type;
     this.sourceId = sourceCanvas.id;
@@ -55,6 +62,8 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
     this.sourceViewId = "sourceView" in optional ? optional.sourceView.id : "";
     this.destViewId = "destView" in optional ? optional.destView.id : "";
     this.noPrefix = "noPrefix" in optional ? optional.noPrefix : false;
+    this.slideDirection =
+        "slideDirection" in optional ? optional.slideDirection : 0;
 }
 
 // exports

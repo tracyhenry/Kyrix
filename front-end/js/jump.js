@@ -15,7 +15,7 @@ function removePopoversSmooth(viewId) {
 }
 
 // disable and remove stuff before jump
-function preJump(viewId, zoomType) {
+function preJump(viewId, jumpType) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
 
@@ -49,17 +49,17 @@ function preJump(viewId, zoomType) {
         .on("mousemove", null);
     d3.selectAll("button" + viewClass).attr("disabled", true);
 
-    gvd.animation = zoomType;
+    gvd.animation = jumpType;
     gvd.initialScale = null;
 }
 
-function postJump(viewId, zoomType) {
+function postJump(viewId, jumpType) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
 
     function postOldLayerRemoval() {
         // set up zoom
-        if (zoomType == param.literalZoomOut)
+        if (jumpType == param.literalZoomOut)
             setupZoom(
                 viewId,
                 Math.max(
@@ -136,10 +136,10 @@ function postJump(viewId, zoomType) {
             d3.selectAll(viewClass + ".oldlayerg" + ".layer" + i).remove();
     if (
         !(
-            zoomType == param.geometricSemanticZoom ||
-            zoomType == param.literalZoomIn ||
-            zoomType == param.literalZoomOut ||
-            zoomType == param.load
+            jumpType == param.geometricSemanticZoom ||
+            jumpType == param.literalZoomIn ||
+            jumpType == param.literalZoomOut ||
+            jumpType == param.load
         )
     )
         d3.selectAll(viewClass + ".oldlayerg").remove();
@@ -160,7 +160,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     var viewClass = ".view_" + viewId;
 
     // log history
-    logHistory(viewId, jump.type);
+    logHistory(viewId, jump);
 
     // change global vars
     gvd.curCanvasId = jump.destId;
@@ -197,11 +197,11 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     }
 
     // disable stuff before animation
-    var zoomType = gvd.history[gvd.history.length - 1].zoomType;
-    preJump(viewId, zoomType);
+    var jumpType = gvd.history[gvd.history.length - 1].jumpType;
+    preJump(viewId, jumpType);
 
     // whether this semantic zoom is also geometric
-    var enteringAnimation = zoomType == param.semanticZoom ? true : false;
+    var enteringAnimation = jumpType == param.semanticZoom ? true : false;
 
     // calculate tuple boundary
     var curViewport = [0, 0, gvd.viewportWidth, gvd.viewportHeight];
@@ -297,7 +297,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
                         });
                     })
                     .on("end", function() {
-                        postJump(viewId, zoomType);
+                        postJump(viewId, jumpType);
                     });
         })
         .on("end", function() {
@@ -312,7 +312,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
                     RefreshDynamicLayers(viewId, newVpX, newVpY);
 
                     // clean up
-                    postJump(viewId, zoomType);
+                    postJump(viewId, jumpType);
                 });
             }
         });
@@ -387,7 +387,7 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
     var viewClass = ".view_" + viewId;
 
     // log history
-    logHistory(viewId, jump.type);
+    logHistory(viewId, jump);
 
     // change global vars
     gvd.curCanvasId = jump.destId;
@@ -424,7 +424,9 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
     }
 
     // pre jump
-    preJump(viewId, zoomType);
+    // disable stuff before animation
+    var jumpType = gvd.history[gvd.history.length - 1].jumpType;
+    preJump(viewId, jumpType);
 
     // curViewport
     var curViewport = [0, 0, gvd.viewportWidth, gvd.viewportHeight];
@@ -436,11 +438,14 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
     for (var i = 0; i < curViewport.length; i++)
         curViewport[i] = +curViewport[i];
 
-    // disable stuff before animation
-    var zoomType = gvd.history[gvd.history.length - 1].zoomType;
-
+    // start transition
+    var dir = ((360 - jump.slideDirection) / 180) * Math.PI;
+    var cos = Math.cos(dir);
+    var sin = Math.sin(dir);
     d3.transition("zoomInTween_" + viewId)
-        .duration(param.slideExitDuration)
+        .duration(
+            param.slideExitDuration / Math.max(Math.abs(cos), Math.abs(sin))
+        )
         .tween("zoomInTween", function() {
             return function(t) {
                 exit(t);
@@ -470,13 +475,21 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
                     });
                 })
                 .on("end", function() {
-                    postJump(viewId, zoomType);
+                    postJump(viewId, jumpType);
                 });
         });
 
     function exit(t) {
-        var minx = curViewport[0] + curViewport[2] * t;
-        var miny = curViewport[1];
+        var minx, miny;
+        if (Math.abs(cos) > Math.abs(sin)) {
+            minx = curViewport[0] + curViewport[2] * t * (cos > 0 ? 1 : -1);
+            miny =
+                curViewport[1] + ((curViewport[2] * t) / Math.abs(cos)) * sin;
+        } else {
+            miny = curViewport[1] + curViewport[3] * t * (sin > 0 ? 1 : -1);
+            minx =
+                curViewport[0] + ((curViewport[3] * t) / Math.abs(sin)) * cos;
+        }
 
         // change viewBox of dynamic layers
         d3.selectAll(viewClass + ".oldmainsvg:not(.static)").attr(
@@ -485,8 +498,13 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
         );
 
         // change viewBox of static layers
-        minx = gvd.viewportWidth * t;
-        miny = 0;
+        if (Math.abs(cos) > Math.abs(sin)) {
+            minx = gvd.viewportWidth * t * (cos > 0 ? 1 : -1);
+            miny = ((gvd.viewportWidth * t) / Math.abs(cos)) * sin;
+        } else {
+            miny = gvd.viewportHeight * t * (sin > 0 ? 1 : -1);
+            minx = ((gvd.viewportHeight * t) / Math.abs(sin)) * cos;
+        }
         d3.selectAll(viewClass + ".oldmainsvg.static").attr(
             "viewBox",
             minx +
@@ -501,8 +519,14 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
 
     function enter(t) {
         // TODO: right now this assumes initial scale is 1
-        var minx = newVpX - (1 - t) * gvd.viewportWidth;
-        var miny = newVpY;
+        var minx, miny;
+        if (Math.abs(cos) > Math.abs(sin)) {
+            minx = newVpX - curViewport[2] * (1 - t) * (cos > 0 ? 1 : -1);
+            miny = newVpY - ((curViewport[2] * (1 - t)) / Math.abs(cos)) * sin;
+        } else {
+            miny = newVpY - curViewport[3] * (1 - t) * (sin > 0 ? 1 : -1);
+            minx = newVpX - ((curViewport[3] * (1 - t)) / Math.abs(sin)) * cos;
+        }
 
         // change viewBox of dynamic layers
         d3.selectAll(viewClass + ".mainsvg:not(.static)").attr(
@@ -517,8 +541,13 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
         );
 
         // change viewbox of static layers
-        minx = -(1 - t) * gvd.viewportWidth;
-        miny = 0;
+        if (Math.abs(cos) > Math.abs(sin)) {
+            minx = -gvd.viewportWidth * (1 - t) * (cos > 0 ? 1 : -1);
+            miny = ((-gvd.viewportWidth * (1 - t)) / Math.abs(cos)) * sin;
+        } else {
+            miny = -gvd.viewportHeight * (1 - t) * (sin > 0 ? 1 : -1);
+            minx = ((-gvd.viewportHeight * (1 - t)) / Math.abs(sin)) * cos;
+        }
         d3.selectAll(viewClass + ".mainsvg.static").attr(
             "viewBox",
             minx +
