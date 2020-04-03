@@ -423,6 +423,9 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
         });
     }
 
+    // pre jump
+    preJump(viewId, zoomType);
+
     // curViewport
     var curViewport = [0, 0, gvd.viewportWidth, gvd.viewportHeight];
     if (d3.select(viewClass + ".oldmainsvg:not(.static)").size())
@@ -435,25 +438,24 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
 
     // disable stuff before animation
     var zoomType = gvd.history[gvd.history.length - 1].zoomType;
-    preJump(viewId, zoomType);
 
     d3.transition("zoomInTween_" + viewId)
         .duration(param.slideExitDuration)
         .tween("zoomInTween", function() {
             return function(t) {
-                zoomAndFade(t);
+                exit(t);
             };
         })
-        .ease(d3.easeLinear)
+        .ease(d3.easeSinOut)
         .on("start", function() {
             // schedule a new entering transition
             d3.transition("enterTween_" + viewId)
                 .delay(param.slideSwitchDelay)
                 .duration(param.slideEnteringDuration)
-                .ease(d3.easeLinear)
+                .ease(d3.easeSinIn)
                 .tween("enterTween", function() {
                     return function(t) {
-                        enterAndScale(t);
+                        enter(t);
                     };
                 })
                 .on("start", function() {
@@ -472,7 +474,7 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
                 });
         });
 
-    function zoomAndFade(t) {
+    function exit(t) {
         var minx = curViewport[0] + curViewport[2] * t;
         var miny = curViewport[1];
 
@@ -483,30 +485,49 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
         );
 
         // change viewBox of static layers
-        minx = curViewport[2] * t;
+        minx = gvd.viewportWidth * t;
         miny = 0;
         d3.selectAll(viewClass + ".oldmainsvg.static").attr(
             "viewBox",
-            minx + " " + miny + " " + curViewport[2] + " " + curViewport[3]
+            minx +
+                " " +
+                miny +
+                " " +
+                gvd.viewportWidth +
+                " " +
+                gvd.viewportWidth
         );
     }
 
-    function enterAndScale(t) {
-        var minx = newVpX - (1 - t) * curViewport[2];
+    function enter(t) {
+        // TODO: right now this assumes initial scale is 1
+        var minx = newVpX - (1 - t) * gvd.viewportWidth;
         var miny = newVpY;
 
         // change viewBox of dynamic layers
         d3.selectAll(viewClass + ".mainsvg:not(.static)").attr(
             "viewBox",
-            minx + " " + miny + " " + curViewport[2] + " " + curViewport[3]
+            minx +
+                " " +
+                miny +
+                " " +
+                gvd.viewportWidth +
+                " " +
+                gvd.viewportHeight
         );
 
         // change viewbox of static layers
-        minx = -(1 - t) * curViewport[2];
+        minx = -(1 - t) * gvd.viewportWidth;
         miny = 0;
         d3.selectAll(viewClass + ".mainsvg.static").attr(
             "viewBox",
-            minx + " " + miny + " " + curViewport[2] + " " + curViewport[3]
+            minx +
+                " " +
+                miny +
+                " " +
+                gvd.viewportWidth +
+                " " +
+                gvd.viewportHeight
         );
     }
 }
