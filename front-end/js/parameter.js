@@ -7,6 +7,10 @@ param.semanticZoomEnteringDuration = 1300;
 param.slideExitDuration = 700;
 param.slideEnteringDuration = 700;
 param.slideSwitchDelay = 300;
+param.supermanFlyingDuration = 2500;
+param.supermanEnteringTime = 500;
+param.supermanDisplayDelay = 200;
+param.supermanDisplayDuration = 300;
 param.literalZoomDuration = 500;
 param.literalZoomFadeOutDuration = 150;
 
