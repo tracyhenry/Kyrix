@@ -596,7 +596,6 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
                         });
                 })
                 .on("end", function() {
-                    // highwaySvg.remove();
                     supermanSvg.remove();
                     cloudSvg.remove();
                 });

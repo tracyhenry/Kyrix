@@ -295,9 +295,13 @@ function backspaceSlide(viewId) {
             .split(" ");
 
     // start a exit & fade transition
+    var slideDirection = (curHistory.curJump.slideDirection + 180) % 360;
     var dir = ((360 - curHistory.curJump.slideDirection) / 180) * Math.PI;
     var cos = Math.cos(dir);
     var sin = Math.sin(dir);
+    var reverseDir = ((360 - slideDirection) / 180) * Math.PI;
+    var rCos = Math.cos(reverseDir);
+    var rSin = Math.sin(reverseDir);
     d3.transition("fadeTween_" + viewId)
         .duration(param.slideEnteringDuration)
         .tween("fadeTween", function() {
@@ -307,32 +311,153 @@ function backspaceSlide(viewId) {
         })
         .ease(d3.easeSinOut)
         .on("start", function() {
-            // schedule a zoom back transition
-            d3.transition("zoomOutTween_" + viewId)
-                .delay(param.slideSwitchDelay)
-                .duration(param.slideExitDuration)
-                .tween("zoomOutTween", function() {
+            // cloud svg
+            var cloudSvg = d3
+                .select(viewClass + ".oldlayerg")
+                .append("svg")
+                .attr(
+                    "viewBox",
+                    "0 0 " + gvd.viewportWidth + " " + gvd.viewportHeight
+                )
+                .attr("width", gvd.viewportWidth)
+                .attr("height", gvd.viewportHeight)
+                .style("opacity", 0)
+                .attr("id", "cloudsvg");
+
+            // append the images
+            var imgWidth = 256;
+            var imgHeight = 256;
+            var cx = gvd.viewportWidth / 2.0;
+            var cy = gvd.viewportHeight / 2.0;
+            var dx1 = Math.abs(imgHeight * cos * 1.5);
+            var dy1 = Math.abs(imgHeight * sin * 1.5);
+            var dx2 = Math.abs(imgWidth * sin * 1.5);
+            var dy2 = Math.abs(imgHeight * cos * 1.5);
+            for (var i = -10; i < 10; i++)
+                for (var j = -10; j < 10; j++) {
+                    var curX = cx + i * dx1 + i * dx2 + imgWidth;
+                    var curY = cy + j * dy1 + j * dy2 + imgHeight;
+                    cloudSvg
+                        .append("image")
+                        .attr("x", curX - imgWidth / 2.0)
+                        .attr("y", curY - imgHeight / 2.0)
+                        .attr("width", imgWidth)
+                        .attr("height", imgHeight)
+                        .attr(
+                            "xlink:href",
+                            "https://live.staticflickr.com/65535/49735371613_70cb0051b2_b.jpg"
+                        )
+                        .attr(
+                            "transform",
+                            "rotate(" +
+                                (slideDirection > 90 && slideDirection < 270
+                                    ? 360 - ((slideDirection + 180) % 360)
+                                    : 360 - slideDirection) +
+                                ", " +
+                                curX +
+                                ", " +
+                                curY +
+                                ")"
+                        );
+                }
+
+            var supermanSvg = d3
+                .select(viewClass + ".oldlayerg")
+                .append("svg")
+                .attr("id", "supermansvg")
+                .attr("width", gvd.viewportWidth)
+                .attr("height", gvd.viewportHeight)
+                .append("image")
+                .attr("x", gvd.viewportWidth / 2 - 150)
+                .attr("y", gvd.viewportHeight / 2 - 150)
+                .attr("width", 300)
+                .attr("height", 300)
+                .style("opacity", 0);
+            if (slideDirection > 90 && slideDirection < 270)
+                supermanSvg
+                    .attr(
+                        "xlink:href",
+                        "https://live.staticflickr.com/65535/49735899041_e6c9d13323_o.png"
+                    )
+                    .attr(
+                        "transform",
+                        "rotate(" +
+                            ((145 - slideDirection + 360) % 360) +
+                            ", 500, 500)"
+                    );
+            else
+                supermanSvg
+                    .attr(
+                        "xlink:href",
+                        "https://live.staticflickr.com/65535/49735448721_e0ea4f763f_o.png"
+                    )
+                    .attr(
+                        "transform",
+                        "rotate(" +
+                            ((35 - slideDirection + 360) % 360) +
+                            ", 500, 500)"
+                    );
+
+            d3.transition("cloudTween_" + viewId)
+                .duration(param.supermanFlyingDuration)
+                .ease(d3.easeLinear)
+                .tween("cloudTween", function() {
                     return function(t) {
-                        enter(t);
+                        travel(t);
                     };
                 })
-                .ease(d3.easeSinIn)
                 .on("start", function() {
-                    // set up layer layouts
-                    setupLayerLayouts(viewId);
+                    supermanSvg
+                        .transition()
+                        .delay(param.supermanDisplayDelay)
+                        .duration(param.supermanDisplayDuration)
+                        .style("opacity", 1);
 
-                    // static trim
-                    renderStaticLayers(viewId);
+                    cloudSvg
+                        .transition()
+                        .delay(param.supermanDisplayDelay)
+                        .duration(param.supermanDisplayDuration)
+                        .style("opacity", 1);
 
-                    // render
-                    RefreshDynamicLayers(
-                        viewId,
-                        gvd.initialViewportX,
-                        gvd.initialViewportY
-                    );
+                    // schedule a zoom back transition
+                    d3.transition("zoomOutTween_" + viewId)
+                        .delay(
+                            param.supermanFlyingDuration -
+                                param.supermanEnteringTime
+                        )
+                        .duration(param.slideEnteringDuration)
+                        .tween("zoomOutTween", function() {
+                            return function(t) {
+                                enter(t);
+                            };
+                        })
+                        .ease(d3.easeSinIn)
+                        .on("start", function() {
+                            cloudSvg
+                                .transition()
+                                .duration(400)
+                                .style("opacity", 0);
+
+                            // set up layer layouts
+                            setupLayerLayouts(viewId);
+
+                            // static trim
+                            renderStaticLayers(viewId);
+
+                            // render
+                            RefreshDynamicLayers(
+                                viewId,
+                                gvd.initialViewportX,
+                                gvd.initialViewportY
+                            );
+                        })
+                        .on("end", function() {
+                            postJump(viewId, jumpType);
+                        });
                 })
                 .on("end", function() {
-                    postJump(viewId, jumpType);
+                    supermanSvg.remove();
+                    cloudSvg.remove();
                 });
         });
 
@@ -409,6 +534,28 @@ function backspaceSlide(viewId) {
             minx = ((gvd.viewportHeight * (1 - t)) / Math.abs(sin)) * cos;
         }
         d3.selectAll(viewClass + ".mainsvg.static").attr(
+            "viewBox",
+            minx +
+                " " +
+                miny +
+                " " +
+                gvd.viewportWidth +
+                " " +
+                gvd.viewportHeight
+        );
+    }
+
+    function travel(t) {
+        // change viewbox of static layers
+        if (Math.abs(rCos) > Math.abs(rSin)) {
+            minx = -gvd.viewportWidth * (1 - 2 * t) * (rCos > 0 ? 1 : -1);
+            miny = ((-gvd.viewportWidth * (1 - 2 * t)) / Math.abs(rCos)) * rSin;
+        } else {
+            miny = -gvd.viewportHeight * (1 - 2 * t) * (rSin > 0 ? 1 : -1);
+            minx =
+                ((-gvd.viewportHeight * (1 - 2 * t)) / Math.abs(rSin)) * rCos;
+        }
+        d3.select("#cloudsvg").attr(
             "viewBox",
             minx +
                 " " +
