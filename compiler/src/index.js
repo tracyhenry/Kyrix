@@ -472,29 +472,35 @@ function setInitialStates(
     viewportY,
     predicates
 ) {
+    // check whether viewObj is in the project
+    var viewExist = 0;
+    for (var i = 0; i < this.views.length; i++)
+        if (this.views[i].id == viewObj.id) viewExist = 1;
+    if (!viewExist) throw new Error("Initialize view: unidentified viewObj.");
+
     // check whether canvasObj has an id field
     if (canvasObj.id == null)
-        throw new Error("Initial canvas: unidentified canvasObj.");
+        throw new Error("Initialize view: unidentified canvasObj.");
 
     // check if this id exists
     var canvasId = -1;
     for (var i = 0; i < this.canvases.length; i++)
         if (this.canvases[i].id === canvasObj.id) canvasId = i;
     if (canvasId == -1)
-        throw new Error("Initial canvas: unidentified canvasObj.");
+        throw new Error("Initialize view: unidentified canvasObj.");
 
     // check viewport range
     if (
         this.canvases[canvasId].w > 0 &&
         (viewportX < 0 || viewportX + viewObj.width > this.canvases[canvasId].w)
     )
-        throw new Error("Initial canvas: viewportX out of range.");
+        throw new Error("Initialize view: viewportX out of range.");
     if (
         this.canvases[canvasId].h > 0 &&
         (viewportY < 0 ||
             viewportY + viewObj.height > this.canvases[canvasId].h)
     )
-        throw new Error("Initial canvas: viewportY out of range.");
+        throw new Error("Initialize view: viewportY out of range.");
 
     // check if the size of the predicates array equals the number of layers
     if (predicates == null) predicates = {};

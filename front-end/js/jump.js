@@ -15,9 +15,17 @@ function removePopoversSmooth(viewId) {
 }
 
 // disable and remove stuff before jump
-function preJump(viewId, jumpType) {
+function preJump(viewId, jump) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
+
+    // execute jumpstart events
+    if (gvd.onJumpstartHandlers != null) {
+        var subEvts = Object.keys(gvd.onJumpstartHandlers);
+        for (var subEvt of subEvts)
+            if (typeof gvd.onJumpstartHandlers[subEvt] == "function")
+                gvd.onJumpstartHandlers[subEvt](jump);
+    }
 
     // unbind zoom
     d3.select(viewClass + ".maing").on(".zoom", null);
@@ -49,13 +57,14 @@ function preJump(viewId, jumpType) {
         .on("mousemove", null);
     d3.selectAll("button" + viewClass).attr("disabled", true);
 
-    gvd.animation = jumpType;
+    gvd.animation = jump.type;
     gvd.initialScale = null;
 }
 
-function postJump(viewId, jumpType) {
+function postJump(viewId, jump) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
+    var jumpType = jump.type;
 
     function postOldLayerRemoval() {
         // set up zoom
@@ -146,11 +155,11 @@ function postJump(viewId, jumpType) {
     postOldLayerRemoval();
 
     // execute on jump handlers
-    if (gvd.onJumpHandlers != null) {
-        var subEvts = Object.keys(gvd.onJumpHandlers);
+    if (gvd.onJumpendHandlers != null) {
+        var subEvts = Object.keys(gvd.onJumpendHandlers);
         for (var subEvt of subEvts)
-            if (typeof gvd.onJumpHandlers[subEvt] == "function")
-                gvd.onJumpHandlers[subEvt]();
+            if (typeof gvd.onJumpendHandlers[subEvt] == "function")
+                gvd.onJumpendHandlers[subEvt](jump);
     }
 }
 
@@ -197,11 +206,10 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     }
 
     // disable stuff before animation
-    var jumpType = gvd.history[gvd.history.length - 1].jumpType;
-    preJump(viewId, jumpType);
+    preJump(viewId, jump);
 
     // whether this semantic zoom is also geometric
-    var enteringAnimation = jumpType == param.semanticZoom ? true : false;
+    var enteringAnimation = jump.type == param.semanticZoom ? true : false;
 
     // calculate tuple boundary
     var curViewport = [0, 0, gvd.viewportWidth, gvd.viewportHeight];
@@ -297,7 +305,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
                         });
                     })
                     .on("end", function() {
-                        postJump(viewId, jumpType);
+                        postJump(viewId, jump);
                     });
         })
         .on("end", function() {
@@ -312,7 +320,7 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
                     RefreshDynamicLayers(viewId, newVpX, newVpY);
 
                     // clean up
-                    postJump(viewId, jumpType);
+                    postJump(viewId, jump);
                 });
             }
         });
@@ -425,8 +433,8 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
 
     // pre jump
     // disable stuff before animation
-    var jumpType = gvd.history[gvd.history.length - 1].jumpType;
-    preJump(viewId, jumpType);
+    preJump(viewId, jump);
+    var jumpType = jump.type;
 
     // curViewport
     var curViewport = [0, 0, gvd.viewportWidth, gvd.viewportHeight];
@@ -592,7 +600,7 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
                             });
                         })
                         .on("end", function() {
-                            postJump(viewId, jumpType);
+                            postJump(viewId, jump);
                         });
                 })
                 .on("end", function() {
@@ -684,6 +692,7 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
 
     function travel(t) {
         // change viewbox of static layers
+        var minx, miny;
         if (Math.abs(cos) > Math.abs(sin)) {
             minx = -gvd.viewportWidth * (1 - 2 * t) * (cos > 0 ? 1 : -1);
             miny = ((-gvd.viewportWidth * (1 - 2 * t)) / Math.abs(cos)) * sin;
@@ -704,7 +713,7 @@ function animateSlide(viewId, jump, predArray, newVpX, newVpY) {
     }
 }
 
-function load(predArray, newVpX, newVpY, newScale, viewId, canvasId) {
+function load(predArray, newVpX, newVpY, newScale, viewId, canvasId, jump) {
     var destViewId = viewId;
 
     // stop any tweens
@@ -727,7 +736,7 @@ function load(predArray, newVpX, newVpY, newScale, viewId, canvasId) {
     gvd.history = [];
 
     // pre animation
-    preJump(destViewId, param.load);
+    preJump(destViewId, jump);
 
     // draw buttons because they were not created if it was an empty view
     drawZoomButtons(destViewId);
@@ -738,7 +747,7 @@ function load(predArray, newVpX, newVpY, newScale, viewId, canvasId) {
         // render static layers
         renderStaticLayers(destViewId);
         // post animation
-        postJump(destViewId, param.load);
+        postJump(destViewId, jump);
     });
 }
 

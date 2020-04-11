@@ -1,6 +1,7 @@
 // called on page load, and on page resize
 function drawZoomButtons(viewId) {
     var viewClass = ".view_" + viewId;
+    if (viewId == "graphview") return;
     if (globalVar.views[viewId].curCanvasId == "") return;
 
     // create buttons if not existed
@@ -115,7 +116,10 @@ function backspaceSemanticZoom(viewId) {
     var fadingAnimation = jumpType == param.semanticZoom ? true : false;
 
     // disable and remove stuff
-    preJump(viewId, jumpType);
+    var newJump = JSON.parse(JSON.stringify(curHistory.curJump));
+    newJump.type = "semantic_zoom";
+    newJump.backspace = true;
+    preJump(viewId, newJump);
 
     // assign back global vars
     gvd.curCanvasId = curHistory.canvasId;
@@ -194,7 +198,7 @@ function backspaceSemanticZoom(viewId) {
                 );
             })
             .on("end", function() {
-                postJump(viewId, jumpType);
+                postJump(viewId, newJump);
             });
     }
 
@@ -269,11 +273,11 @@ function backspaceSlide(viewId) {
     // get and pop last history object
     var curHistory = gvd.history.pop();
 
-    // whether this semantic zoom is also geometric
-    var jumpType = curHistory.jumpType;
-
     // disable and remove stuff
-    preJump(viewId, jumpType);
+    var newJump = JSON.parse(JSON.stringify(curHistory.curJump));
+    newJump.type = "slide";
+    newJump.backspace = true;
+    preJump(viewId, newJump);
 
     // assign back global vars
     gvd.curCanvasId = curHistory.canvasId;
@@ -452,7 +456,7 @@ function backspaceSlide(viewId) {
                             );
                         })
                         .on("end", function() {
-                            postJump(viewId, jumpType);
+                            postJump(viewId, newJump);
                         });
                 })
                 .on("end", function() {
@@ -547,6 +551,7 @@ function backspaceSlide(viewId) {
 
     function travel(t) {
         // change viewbox of static layers
+        var minx, miny;
         if (Math.abs(rCos) > Math.abs(rSin)) {
             minx = -gvd.viewportWidth * (1 - 2 * t) * (rCos > 0 ? 1 : -1);
             miny = ((-gvd.viewportWidth * (1 - 2 * t)) / Math.abs(rCos)) * rSin;
