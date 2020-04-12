@@ -163,10 +163,9 @@ function postJump(viewId, jump) {
     }
 }
 
-// animate semantic zoom
-function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
+// animate semantic jumps (semantic_zoom, geometric_semantic_zoom, slide)
+function semanticJump(viewId, jump, predArray, newVpX, newVpY, tuple) {
     var gvd = globalVar.views[viewId];
-    var viewClass = ".view_" + viewId;
 
     // log history
     logHistory(viewId, jump);
@@ -209,59 +208,13 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     preJump(viewId, jump);
 
     // animate semantic zoom
-    animateSemanticZoom(viewId, jump, newVpX, newVpY, tuple);
-}
-
-function slide(viewId, jump, predArray, newVpX, newVpY) {
-    // TODO:!!
-    // lots of stuff in this func is duplicate to semantic zoom
-    // just making it easier for merge with master
-    var gvd = globalVar.views[viewId];
-
-    // log history
-    logHistory(viewId, jump);
-
-    // change global vars
-    gvd.curCanvasId = jump.destId;
-    gvd.predicates = predArray;
-    gvd.highlightPredicates = [];
-    gvd.initialViewportX = newVpX;
-    gvd.initialViewportY = newVpY;
-
-    // prefetch canvas object by sending an async request to server
-    var postData = "id=" + gvd.curCanvasId;
-    for (var i = 0; i < gvd.predicates.length; i++)
-        postData += "&predicate" + i + "=" + getSqlPredicate(gvd.predicates[i]);
-    if (!(postData in globalVar.cachedCanvases)) {
-        $.ajax({
-            type: "GET",
-            url: globalVar.serverAddr + "/canvas",
-            data: postData,
-            success: function(data, status) {
-                if (!(postData in globalVar.cachedCanvases)) {
-                    globalVar.cachedCanvases[postData] = {};
-                    globalVar.cachedCanvases[postData].canvasObj = JSON.parse(
-                        data
-                    ).canvas;
-                    globalVar.cachedCanvases[postData].jumps = JSON.parse(
-                        data
-                    ).jump;
-                    globalVar.cachedCanvases[postData].staticData = JSON.parse(
-                        data
-                    ).staticData;
-                }
-            },
-            async: true
-        });
-    }
-
-    // pre jump
-    // disable stuff before animation
-    preJump(viewId, jump);
-    var jumpType = jump.type;
-
-    // start animation
-    animateSlide(viewId, jump.slideDirection, newVpX, newVpY, 1, jump);
+    if (
+        jump.type == param.semanticZoom ||
+        jump.type == param.geometricSemanticZoom
+    )
+        animateSemanticZoom(viewId, jump, newVpX, newVpY, tuple);
+    else if (jump.type == param.slide)
+        animateSlide(viewId, jump.slideDirection, newVpX, newVpY, 1, jump);
 }
 
 function load(predArray, newVpX, newVpY, newScale, viewId, canvasId, jump) {
@@ -368,11 +321,10 @@ function startJump(viewId, d, jump, optionalArgs) {
 
     if (
         jump.type == param.semanticZoom ||
-        jump.type == param.geometricSemanticZoom
+        jump.type == param.geometricSemanticZoom ||
+        jump.type == param.slide
     )
-        semanticZoom(viewId, jump, predArray, newVpX, newVpY, d);
-    else if (jump.type == param.slide)
-        slide(viewId, jump, predArray, newVpX, newVpY);
+        semanticJump(viewId, jump, predArray, newVpX, newVpY, d);
     else if (jump.type == param.load)
         load(predArray, newVpX, newVpY, 1, jump.destViewId, jump.destId);
     else if (jump.type == param.highlight) highlight(predArray, jump);

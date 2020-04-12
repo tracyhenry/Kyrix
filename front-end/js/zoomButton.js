@@ -58,13 +58,7 @@ function setBackButtonState(viewId) {
         d3.select(viewClass + ".gobackbutton")
             .attr("disabled", null)
             .on("click", function() {
-                var jumpType = gvd.history[gvd.history.length - 1].jumpType;
-                if (
-                    jumpType == param.semanticZoom ||
-                    jumpType == param.geometricSemanticZoom
-                )
-                    backspaceSemanticZoom(viewId);
-                else backspaceSlide(viewId);
+                backspaceSemanticJump(viewId);
             });
     else d3.select(viewClass + ".gobackbutton").attr("disabled", true);
 }
@@ -104,9 +98,8 @@ function logHistory(viewId, jump) {
 }
 
 // handler for go back button
-function backspaceSemanticZoom(viewId) {
+function backspaceSemanticJump(viewId) {
     var gvd = globalVar.views[viewId];
-    var viewClass = ".view_" + viewId;
 
     // get and pop last history object
     var curHistory = gvd.history.pop();
@@ -128,57 +121,28 @@ function backspaceSemanticZoom(viewId) {
     gvd.initialScale = curHistory.initialScale;
 
     // start animation
-    animateBackspaceSemanticZoom(
-        viewId,
-        newJump,
-        curHistory.startView,
-        curHistory.endView
-    );
-}
-
-// handler for go back button
-function backspaceSlide(viewId) {
-    var gvd = globalVar.views[viewId];
-    var viewClass = ".view_" + viewId;
-
-    // get and pop last history object
-    var curHistory = gvd.history.pop();
-
-    // disable and remove stuff
-    var newJump = JSON.parse(JSON.stringify(curHistory.curJump));
-    newJump.type = "slide";
-    newJump.backspace = true;
-    preJump(viewId, newJump);
-
-    // assign back global vars
-    gvd.curCanvasId = curHistory.canvasId;
-    gvd.curCanvas = curHistory.canvasObj;
-    gvd.curJump = curHistory.jumps;
-    gvd.curStaticData = curHistory.staticData;
-    gvd.predicates = curHistory.predicates;
-    gvd.highlightPredicates = curHistory.highlightPredicates;
-    gvd.initialViewportX = curHistory.viewportX;
-    gvd.initialViewportY = curHistory.viewportY;
-    gvd.initialScale = curHistory.initialScale;
-
-    // get current viewport
-    var curViewport = [0, 0, gvd.viewportWidth, gvd.viewportHeight];
-    if (d3.select(viewClass + ".oldmainsvg:not(.static)").size())
-        curViewport = d3
-            .select(viewClass + ".oldmainsvg:not(.static)")
-            .attr("viewBox")
-            .split(" ");
-
-    // start a exit & fade transition
-    var slideDirection = (curHistory.curJump.slideDirection + 180) % 360;
-    animateSlide(
-        viewId,
-        slideDirection,
-        gvd.initialViewportX,
-        gvd.initialViewportY,
-        gvd.initialScale || 1,
-        newJump
-    );
+    if (
+        newJump.type == param.semanticZoom ||
+        newJump.type == param.geometricSemanticZoom
+    )
+        animateBackspaceSemanticZoom(
+            viewId,
+            newJump,
+            curHistory.startView,
+            curHistory.endView
+        );
+    else {
+        // start a exit & fade transition
+        var slideDirection = (curHistory.curJump.slideDirection + 180) % 360;
+        animateSlide(
+            viewId,
+            slideDirection,
+            gvd.initialViewportX,
+            gvd.initialViewportY,
+            gvd.initialScale || 1,
+            newJump
+        );
+    }
 }
 
 // handler for zoom in button
