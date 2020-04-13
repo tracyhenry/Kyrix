@@ -1,7 +1,6 @@
 // called on page load, and on page resize
 function drawZoomButtons(viewId) {
     var viewClass = ".view_" + viewId;
-    if (viewId == "graphview") return;
     if (globalVar.views[viewId].curCanvasId == "") return;
 
     // create buttons if not existed
