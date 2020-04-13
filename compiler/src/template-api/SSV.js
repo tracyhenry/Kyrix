@@ -579,8 +579,7 @@ function processClusterAgg(data, params) {
 // get rendering function for an SSV layer based on cluster mode
 function getLayerRenderer() {
     function renderCircleBody() {
-        var rpKey =
-            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
         var params = args.renderingParams[rpKey];
         params.processClusterAgg(data, params);
 
@@ -660,8 +659,7 @@ function getLayerRenderer() {
 
     function renderObjectClusterNumBody() {
         var g = svg.select("g:last-of-type");
-        var rpKey =
-            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
         var params = args.renderingParams[rpKey];
         data.forEach(d => {
             d.clusterAgg = JSON.parse(d.clusterAgg);
@@ -691,8 +689,7 @@ function getLayerRenderer() {
     }
 
     function renderContourBody() {
-        var rpKey =
-            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
         var params = args.renderingParams[rpKey];
         var roughN = params.roughN;
         var bandwidth = params.contourBandwidth;
@@ -793,8 +790,7 @@ function getLayerRenderer() {
     }
 
     function renderHeatmapBody() {
-        var rpKey =
-            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
         var params = args.renderingParams[rpKey];
         var radius = params.heatmapRadius;
         var heatmapWidth, heatmapHeight, x, y;
@@ -938,8 +934,7 @@ function getLayerRenderer() {
 
     function renderRadarBody() {
         if (!data || data.length == 0) return;
-        var rpKey =
-            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
         var params = args.renderingParams[rpKey];
         var aggKeyDelimiter = params.aggKeyDelimiter;
         var g = svg.append("g");
@@ -1111,8 +1106,7 @@ function getLayerRenderer() {
 
     function renderPieBody() {
         if (!data || data.length == 0) return;
-        var rpKey =
-            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
         var params = args.renderingParams[rpKey];
         var aggKeyDelimiter = params.aggKeyDelimiter;
         var parse = params.parsePathIntoSegments;
@@ -1582,8 +1576,7 @@ function getLegendRenderer() {
             .attr("class", "legendOrdinal")
             .attr("transform", "translate(50,50) scale(2.0)");
 
-        var rpKey =
-            "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
         var params = args.renderingParams[rpKey];
         var color = d3
             .scaleOrdinal(d3.schemeTableau10)

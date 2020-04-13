@@ -118,8 +118,10 @@ function completeZoom(viewId, zoomType, oldZoomFactorX, oldZoomFactorY) {
 
     // get the id of the canvas to zoom into
     var jumps = gvd.curJump;
+    var curJump = null;
     for (var i = 0; i < jumps.length; i++)
-        if (jumps[i].type == zoomType) gvd.curCanvasId = jumps[i].destId;
+        if (jumps[i].type == zoomType) curJump = jumps[i];
+    gvd.curCanvasId = curJump.destId;
 
     // get new viewport coordinates
     var curViewport = d3
@@ -130,7 +132,7 @@ function completeZoom(viewId, zoomType, oldZoomFactorX, oldZoomFactorY) {
     gvd.initialViewportY = curViewport[1] * oldZoomFactorY;
 
     // pre animation
-    preJump(viewId, zoomType);
+    preJump(viewId, curJump);
 
     // get the canvas object
     var gotCanvas = getCurCanvas(viewId);
@@ -139,7 +141,7 @@ function completeZoom(viewId, zoomType, oldZoomFactorX, oldZoomFactorY) {
         renderStaticLayers(viewId);
 
         // post animation
-        postJump(viewId, zoomType);
+        postJump(viewId, curJump);
     });
 }
 

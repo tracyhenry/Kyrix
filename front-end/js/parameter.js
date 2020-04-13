@@ -4,6 +4,13 @@ var param = {};
 // animation durations, delays
 param.semanticZoomEnteringDelta = 0.5;
 param.semanticZoomEnteringDuration = 1300;
+param.slideExitDuration = 700;
+param.slideEnteringDuration = 700;
+param.slideSwitchDelay = 230;
+param.supermanFlyingDuration = 2500;
+param.supermanEnteringTime = 500;
+param.supermanDisplayDelay = 200;
+param.supermanDisplayDuration = 300;
 param.literalZoomDuration = 500;
 param.literalZoomFadeOutDuration = 150;
 
@@ -45,6 +52,7 @@ param.semanticZoom = "semantic_zoom";
 param.geometricSemanticZoom = "geometric_semantic_zoom";
 param.load = "load";
 param.highlight = "highlight";
+param.slide = "slide";
 
 // epsilon
 param.eps = 1e-5;

@@ -257,7 +257,8 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
 
             // get raw row
             ArrayList<String> curRawRow = new ArrayList<>();
-            for (int i = 1; i <= numColumn; i++) curRawRow.add(rs.getString(i));
+            for (int i = 1; i <= numColumn; i++)
+                curRawRow.add(rs.getString(i) == null ? "" : rs.getString(i));
 
             // step 3: run transform function on this tuple
             ArrayList<String> transformedRow =

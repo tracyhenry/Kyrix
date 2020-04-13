@@ -147,7 +147,7 @@ export function on(evt, viewId, callback) {
         throw new Error("kyrix.on: unrecognized Kyrix event type.");
     }
     var gvd = globalVar.views[viewId];
-    var evtTypes = ["pan", "zoom", "jump"];
+    var evtTypes = ["pan", "zoom", "jumpstart", "jumpend"];
     for (var evtType of evtTypes)
         if (evt.startsWith(evtType)) {
             if (evt.length > evtType.length && evt[evtType.length] != ".")

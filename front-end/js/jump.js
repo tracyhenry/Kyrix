@@ -15,9 +15,17 @@ function removePopoversSmooth(viewId) {
 }
 
 // disable and remove stuff before jump
-function preJump(viewId, zoomType) {
+function preJump(viewId, jump) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
+
+    // execute jumpstart events
+    if (gvd.onJumpstartHandlers != null) {
+        var subEvts = Object.keys(gvd.onJumpstartHandlers);
+        for (var subEvt of subEvts)
+            if (typeof gvd.onJumpstartHandlers[subEvt] == "function")
+                gvd.onJumpstartHandlers[subEvt](jump);
+    }
 
     // unbind zoom
     d3.select(viewClass + ".maing").on(".zoom", null);
@@ -49,17 +57,18 @@ function preJump(viewId, zoomType) {
         .on("mousemove", null);
     d3.selectAll("button" + viewClass).attr("disabled", true);
 
-    gvd.animation = zoomType;
+    gvd.animation = jump.type;
     gvd.initialScale = null;
 }
 
-function postJump(viewId, zoomType) {
+function postJump(viewId, jump) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
+    var jumpType = jump.type;
 
     function postOldLayerRemoval() {
         // set up zoom
-        if (zoomType == param.literalZoomOut)
+        if (jumpType == param.literalZoomOut)
             setupZoom(
                 viewId,
                 Math.max(
@@ -136,31 +145,30 @@ function postJump(viewId, zoomType) {
             d3.selectAll(viewClass + ".oldlayerg" + ".layer" + i).remove();
     if (
         !(
-            zoomType == param.geometricSemanticZoom ||
-            zoomType == param.literalZoomIn ||
-            zoomType == param.literalZoomOut ||
-            zoomType == param.load
+            jumpType == param.geometricSemanticZoom ||
+            jumpType == param.literalZoomIn ||
+            jumpType == param.literalZoomOut ||
+            jumpType == param.load
         )
     )
         d3.selectAll(viewClass + ".oldlayerg").remove();
     postOldLayerRemoval();
 
     // execute on jump handlers
-    if (gvd.onJumpHandlers != null) {
-        var subEvts = Object.keys(gvd.onJumpHandlers);
+    if (gvd.onJumpendHandlers != null) {
+        var subEvts = Object.keys(gvd.onJumpendHandlers);
         for (var subEvt of subEvts)
-            if (typeof gvd.onJumpHandlers[subEvt] == "function")
-                gvd.onJumpHandlers[subEvt]();
+            if (typeof gvd.onJumpendHandlers[subEvt] == "function")
+                gvd.onJumpendHandlers[subEvt](jump);
     }
 }
 
-// animate semantic zoom
-function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
+// animate semantic jumps (semantic_zoom, geometric_semantic_zoom, slide)
+function semanticJump(viewId, jump, predArray, newVpX, newVpY, tuple) {
     var gvd = globalVar.views[viewId];
-    var viewClass = ".view_" + viewId;
 
     // log history
-    logHistory(viewId, jump.type);
+    logHistory(viewId, jump);
 
     // change global vars
     gvd.curCanvasId = jump.destId;
@@ -197,189 +205,19 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     }
 
     // disable stuff before animation
-    var zoomType = gvd.history[gvd.history.length - 1].zoomType;
-    preJump(viewId, zoomType);
+    preJump(viewId, jump);
 
-    // whether this semantic zoom is also geometric
-    var enteringAnimation = zoomType == param.semanticZoom ? true : false;
-
-    // calculate tuple boundary
-    var curViewport = [0, 0, gvd.viewportWidth, gvd.viewportHeight];
-    if (d3.select(viewClass + ".oldmainsvg:not(.static)").size())
-        curViewport = d3
-            .select(viewClass + ".oldmainsvg:not(.static)")
-            .attr("viewBox")
-            .split(" ");
-    for (var i = 0; i < curViewport.length; i++)
-        curViewport[i] = +curViewport[i];
+    // animate semantic zoom
     if (
-        !("minx" in tuple) ||
-        !("miny" in tuple) ||
-        !("maxx" in tuple) ||
-        !("maxy" in tuple)
+        jump.type == param.semanticZoom ||
+        jump.type == param.geometricSemanticZoom
     )
-        tuple.minx = tuple.miny = tuple.maxx = tuple.maxy = 0;
-    var tupleWidth = +tuple.maxx - tuple.minx;
-    var tupleHeight = +tuple.maxy - tuple.miny;
-    var minx, maxx, miny, maxy;
-    if (tupleWidth == 0 || tupleHeight == 0) {
-        // check when placement func does not exist
-        minx = gvd.curCanvas.w;
-        miny = gvd.curCanvas.h;
-        maxx = maxy = 0;
-        d3.select(viewClass + ".viewsvg")
-            .selectAll("*")
-            .filter(function(d) {
-                return d == tuple;
-            })
-            .each(function() {
-                var bbox = this.getBBox();
-                minx = Math.min(minx, bbox.x);
-                miny = Math.min(miny, bbox.y);
-                maxx = Math.max(maxx, bbox.x + bbox.width);
-                maxy = Math.max(maxy, bbox.y + bbox.height);
-            });
-    } else {
-        minx = +tuple.cx - tupleWidth / 2.0;
-        maxx = +tuple.cx + tupleWidth / 2.0;
-        miny = +tuple.cy - tupleHeight / 2.0;
-        maxy = +tuple.cy + tupleHeight / 2.0;
-    }
-
-    // use tuple boundary to calculate start and end views, and log them to the last history object
-    var startView = [
-        curViewport[2] / 2.0,
-        curViewport[3] / 2.0,
-        curViewport[2]
-    ];
-    var endView = [
-        minx + (maxx - minx) / 2.0 - curViewport[0],
-        miny + (maxy - miny) / 2.0 - curViewport[1],
-        (maxx - minx) / (enteringAnimation ? param.semanticZoomScaleFactor : 1)
-    ];
-    gvd.history[gvd.history.length - 1].startView = startView;
-    gvd.history[gvd.history.length - 1].endView = endView;
-
-    // set up zoom transitions
-    param.zoomDuration = d3.interpolateZoom(startView, endView).duration;
-    param.enteringDelay = Math.round(
-        param.zoomDuration * param.semanticZoomEnteringDelta
-    );
-    d3.transition("zoomInTween_" + viewId)
-        .duration(param.zoomDuration)
-        .tween("zoomInTween", function() {
-            var i = d3.interpolateZoom(startView, endView);
-            return function(t) {
-                zoomAndFade(t, i(t));
-            };
-        })
-        .ease(d3.easeSinOut)
-        .on("start", function() {
-            // schedule a new entering transition
-            if (enteringAnimation)
-                d3.transition("enterTween_" + viewId)
-                    .delay(param.enteringDelay)
-                    .duration(param.semanticZoomEnteringDuration)
-                    .tween("enterTween", function() {
-                        return function(t) {
-                            enterAndScale(d3.easeCircleOut(t));
-                        };
-                    })
-                    .on("start", function() {
-                        // get the canvas object for the destination canvas
-                        var gotCanvas = getCurCanvas(viewId);
-                        gotCanvas.then(function() {
-                            // static trim
-                            renderStaticLayers(viewId);
-
-                            // render
-                            RefreshDynamicLayers(viewId, newVpX, newVpY);
-                        });
-                    })
-                    .on("end", function() {
-                        postJump(viewId, zoomType);
-                    });
-        })
-        .on("end", function() {
-            if (!enteringAnimation) {
-                // get the canvas object for the destination canvas
-                var gotCanvas = getCurCanvas(viewId);
-                gotCanvas.then(function() {
-                    // static trim
-                    renderStaticLayers(viewId);
-
-                    // render
-                    RefreshDynamicLayers(viewId, newVpX, newVpY);
-
-                    // clean up
-                    postJump(viewId, zoomType);
-                });
-            }
-        });
-
-    function zoomAndFade(t, v) {
-        var vWidth = v[2];
-        var vHeight = (gvd.viewportHeight / gvd.viewportWidth) * vWidth;
-        var minx = curViewport[0] + v[0] - vWidth / 2.0;
-        var miny = curViewport[1] + v[1] - vHeight / 2.0;
-
-        // change viewBox of dynamic layers
-        d3.selectAll(viewClass + ".oldmainsvg:not(.static)").attr(
-            "viewBox",
-            minx + " " + miny + " " + vWidth + " " + vHeight
-        );
-
-        // change viewBox of static layers
-        minx = v[0] - vWidth / 2.0;
-        miny = v[1] - vHeight / 2.0;
-        var k = gvd.viewportWidth / curViewport[2];
-        d3.selectAll(viewClass + ".oldmainsvg.static").attr(
-            "viewBox",
-            minx * k + " " + miny * k + " " + vWidth * k + " " + vHeight * k
-        );
-
-        // change opacity
-        if (enteringAnimation) {
-            var threshold = param.fadeThreshold;
-            if (t >= threshold) {
-                d3.selectAll(viewClass + ".oldmainsvg").style(
-                    "opacity",
-                    1.0 - (t - threshold) / (1.0 - threshold)
-                );
-            }
-        }
-    }
-
-    function enterAndScale(t) {
-        var vWidth =
-            (gvd.viewportWidth * param.enteringScaleFactor) /
-            (1.0 + (param.enteringScaleFactor - 1.0) * t);
-        var vHeight =
-            (gvd.viewportHeight * param.enteringScaleFactor) /
-            (1.0 + (param.enteringScaleFactor - 1.0) * t);
-        var minx = newVpX + gvd.viewportWidth / 2.0 - vWidth / 2.0;
-        var miny = newVpY + gvd.viewportHeight / 2.0 - vHeight / 2.0;
-
-        // change viewBox of dynamic layers
-        d3.selectAll(viewClass + ".mainsvg:not(.static)").attr(
-            "viewBox",
-            minx + " " + miny + " " + vWidth + " " + vHeight
-        );
-
-        // change viewbox of static layers
-        minx = gvd.viewportWidth / 2 - vWidth / 2;
-        miny = gvd.viewportHeight / 2 - vHeight / 2;
-        d3.selectAll(viewClass + ".mainsvg.static").attr(
-            "viewBox",
-            minx + " " + miny + " " + vWidth + " " + vHeight
-        );
-
-        // change opacity
-        d3.selectAll(viewClass + ".mainsvg").style("opacity", t);
-    }
+        animateSemanticZoom(viewId, jump, newVpX, newVpY, tuple);
+    else if (jump.type == param.slide)
+        animateSlide(viewId, jump.slideDirection, newVpX, newVpY, 1, jump);
 }
 
-function load(predArray, newVpX, newVpY, newScale, viewId, canvasId) {
+function load(predArray, newVpX, newVpY, newScale, viewId, canvasId, jump) {
     var destViewId = viewId;
 
     // stop any tweens
@@ -402,7 +240,7 @@ function load(predArray, newVpX, newVpY, newScale, viewId, canvasId) {
     gvd.history = [];
 
     // pre animation
-    preJump(destViewId, param.load);
+    preJump(destViewId, jump);
 
     // draw buttons because they were not created if it was an empty view
     drawZoomButtons(destViewId);
@@ -413,7 +251,7 @@ function load(predArray, newVpX, newVpY, newScale, viewId, canvasId) {
         // render static layers
         renderStaticLayers(destViewId);
         // post animation
-        postJump(destViewId, param.load);
+        postJump(destViewId, jump);
     });
 }
 
@@ -483,9 +321,10 @@ function startJump(viewId, d, jump, optionalArgs) {
 
     if (
         jump.type == param.semanticZoom ||
-        jump.type == param.geometricSemanticZoom
+        jump.type == param.geometricSemanticZoom ||
+        jump.type == param.slide
     )
-        semanticZoom(viewId, jump, predArray, newVpX, newVpY, d);
+        semanticJump(viewId, jump, predArray, newVpX, newVpY, d);
     else if (jump.type == param.load)
         load(predArray, newVpX, newVpY, 1, jump.destViewId, jump.destId);
     else if (jump.type == param.highlight) highlight(predArray, jump);
@@ -508,6 +347,7 @@ function registerJumps(viewId, svg, layerId) {
             if (
                 (jumps[k].type == param.semanticZoom ||
                     jumps[k].type == param.geometricSemanticZoom ||
+                    jumps[k].type == param.slide ||
                     (jumps[k].type == param.load &&
                         jumps[k].sourceViewId == viewId) ||
                     (jumps[k].type == param.highlight &&
@@ -565,6 +405,7 @@ function registerJumps(viewId, svg, layerId) {
                 if (
                     (jumps[k].type != param.semanticZoom &&
                         jumps[k].type != param.geometricSemanticZoom &&
+                        jumps[k].type != param.slide &&
                         (jumps[k].type != param.load ||
                             jumps[k].sourceViewId != viewId) &&
                         (jumps[k].type != param.highlight ||
