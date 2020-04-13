@@ -568,16 +568,18 @@ function animateSlide(viewId, slideDirection, newVpX, newVpY, newScale, jump) {
         }
 
         // change viewBox of dynamic layers
-        d3.selectAll(viewClass + ".mainsvg:not(.static)").attr(
-            "viewBox",
-            minx +
-                " " +
-                miny +
-                " " +
-                gvd.viewportWidth / newScale +
-                " " +
-                gvd.viewportHeight / newScale
-        );
+        d3.selectAll(viewClass + ".mainsvg:not(.static)")
+            .attr(
+                "viewBox",
+                minx +
+                    " " +
+                    miny +
+                    " " +
+                    gvd.viewportWidth / newScale +
+                    " " +
+                    gvd.viewportHeight / newScale
+            )
+            .style("opacity", t);
 
         // change viewbox of static layers
         if (Math.abs(cos) > Math.abs(sin)) {
@@ -587,16 +589,18 @@ function animateSlide(viewId, slideDirection, newVpX, newVpY, newScale, jump) {
             miny = -gvd.viewportHeight * (1 - t) * (sin > 0 ? 1 : -1);
             minx = ((-gvd.viewportHeight * (1 - t)) / Math.abs(sin)) * cos;
         }
-        d3.selectAll(viewClass + ".mainsvg.static").attr(
-            "viewBox",
-            minx +
-                " " +
-                miny +
-                " " +
-                gvd.viewportWidth +
-                " " +
-                gvd.viewportHeight
-        );
+        d3.selectAll(viewClass + ".mainsvg.static")
+            .attr(
+                "viewBox",
+                minx +
+                    " " +
+                    miny +
+                    " " +
+                    gvd.viewportWidth +
+                    " " +
+                    gvd.viewportHeight
+            )
+            .style("opacity", t);
     }
 
     function travel(t) {
