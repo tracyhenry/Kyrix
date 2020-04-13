@@ -421,7 +421,11 @@ function animateSlide(viewId, slideDirection, newVpX, newVpY, newScale, jump) {
                     "transform",
                     "rotate(" +
                         ((145 - slideDirection + 360) % 360) +
-                        ", 500, 500)"
+                        ", " +
+                        gvd.viewportWidth / 2 +
+                        ", " +
+                        gvd.viewportHeight / 2 +
+                        ")"
                 );
         else
             supermanSvg
@@ -433,7 +437,11 @@ function animateSlide(viewId, slideDirection, newVpX, newVpY, newScale, jump) {
                     "transform",
                     "rotate(" +
                         ((35 - slideDirection + 360) % 360) +
-                        ", 500, 500)"
+                        ", " +
+                        gvd.viewportWidth / 2 +
+                        ", " +
+                        gvd.viewportHeight / 2 +
+                        ")"
                 );
 
         d3.transition("cloudTween_" + viewId)
@@ -512,10 +520,12 @@ function animateSlide(viewId, slideDirection, newVpX, newVpY, newScale, jump) {
         }
 
         // change viewBox of dynamic layers
-        d3.selectAll(viewClass + ".oldmainsvg:not(.static)").attr(
-            "viewBox",
-            minx + " " + miny + " " + curViewport[2] + " " + curViewport[3]
-        );
+        d3.selectAll(viewClass + ".oldmainsvg:not(.static)")
+            .attr(
+                "viewBox",
+                minx + " " + miny + " " + curViewport[2] + " " + curViewport[3]
+            )
+            .style("opacity", 1 - t);
 
         // change viewBox of static layers
         if (Math.abs(cos) > Math.abs(sin)) {
@@ -525,16 +535,18 @@ function animateSlide(viewId, slideDirection, newVpX, newVpY, newScale, jump) {
             miny = gvd.viewportHeight * t * (sin > 0 ? 1 : -1);
             minx = ((gvd.viewportHeight * t) / Math.abs(sin)) * cos;
         }
-        d3.selectAll(viewClass + ".oldmainsvg.static").attr(
-            "viewBox",
-            minx +
-                " " +
-                miny +
-                " " +
-                gvd.viewportWidth +
-                " " +
-                gvd.viewportWidth
-        );
+        d3.selectAll(viewClass + ".oldmainsvg.static")
+            .attr(
+                "viewBox",
+                minx +
+                    " " +
+                    miny +
+                    " " +
+                    gvd.viewportWidth +
+                    " " +
+                    gvd.viewportWidth
+            )
+            .style("opacity", 1 - t);
     }
 
     function enter(t) {
