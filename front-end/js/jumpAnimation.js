@@ -335,6 +335,7 @@ function animateSlide(viewId, slideDirection, newVpX, newVpY, newScale, jump) {
     var sin = Math.sin(dir);
 
     // start transition
+    // exit transition
     d3.transition("zoomInTween_" + viewId)
         .duration(
             //param.slideExitDuration / Math.max(Math.abs(cos), Math.abs(sin))
@@ -345,153 +346,157 @@ function animateSlide(viewId, slideDirection, newVpX, newVpY, newScale, jump) {
                 exit(t);
             };
         })
-        .ease(d3.easeSinOut)
-        .on("start", function() {
-            // cloud svg
-            var cloudSvg = d3
-                .select(viewClass + ".oldlayerg")
-                .append("svg")
+        .ease(d3.easeSinOut);
+
+    if (jump.slideSuperman) {
+        // cloud svg
+        var cloudSvg = d3
+            .select(viewClass + ".oldlayerg")
+            .append("svg")
+            .attr(
+                "viewBox",
+                "0 0 " + gvd.viewportWidth + " " + gvd.viewportHeight
+            )
+            .attr("width", gvd.viewportWidth)
+            .attr("height", gvd.viewportHeight)
+            .style("opacity", 0)
+            .attr("id", "cloudsvg");
+
+        // append the images
+        var imgWidth = 256;
+        var imgHeight = 256;
+        var cx = gvd.viewportWidth / 2.0;
+        var cy = gvd.viewportHeight / 2.0;
+        var dx1 = Math.abs(imgHeight * cos * 1.5);
+        var dy1 = Math.abs(imgHeight * sin * 1.5);
+        var dx2 = Math.abs(imgWidth * sin * 1.5);
+        var dy2 = Math.abs(imgHeight * cos * 1.5);
+        for (var i = -10; i < 10; i++)
+            for (var j = -10; j < 10; j++) {
+                var curX = cx + i * dx1 + i * dx2 + imgWidth;
+                var curY = cy + j * dy1 + j * dy2 + imgHeight;
+                cloudSvg
+                    .append("image")
+                    .attr("x", curX - imgWidth / 2.0)
+                    .attr("y", curY - imgHeight / 2.0)
+                    .attr("width", imgWidth)
+                    .attr("height", imgHeight)
+                    .attr(
+                        "xlink:href",
+                        "https://live.staticflickr.com/65535/49735371613_70cb0051b2_b.jpg"
+                    )
+                    .attr(
+                        "transform",
+                        "rotate(" +
+                            (slideDirection > 90 && slideDirection < 270
+                                ? 360 - ((slideDirection + 180) % 360)
+                                : 360 - slideDirection) +
+                            ", " +
+                            curX +
+                            ", " +
+                            curY +
+                            ")"
+                    );
+            }
+
+        var supermanSvg = d3
+            .select(viewClass + ".oldlayerg")
+            .append("svg")
+            .attr("id", "supermansvg")
+            .attr("width", gvd.viewportWidth)
+            .attr("height", gvd.viewportHeight)
+            .append("image")
+            .attr("x", gvd.viewportWidth / 2 - 150)
+            .attr("y", gvd.viewportHeight / 2 - 150)
+            .attr("width", 300)
+            .attr("height", 300)
+            .style("opacity", 0);
+        if (slideDirection > 90 && slideDirection < 270)
+            supermanSvg
                 .attr(
-                    "viewBox",
-                    "0 0 " + gvd.viewportWidth + " " + gvd.viewportHeight
+                    "xlink:href",
+                    "https://live.staticflickr.com/65535/49735899041_e6c9d13323_o.png"
                 )
-                .attr("width", gvd.viewportWidth)
-                .attr("height", gvd.viewportHeight)
-                .style("opacity", 0)
-                .attr("id", "cloudsvg");
+                .attr(
+                    "transform",
+                    "rotate(" +
+                        ((145 - slideDirection + 360) % 360) +
+                        ", 500, 500)"
+                );
+        else
+            supermanSvg
+                .attr(
+                    "xlink:href",
+                    "https://live.staticflickr.com/65535/49735448721_e0ea4f763f_o.png"
+                )
+                .attr(
+                    "transform",
+                    "rotate(" +
+                        ((35 - slideDirection + 360) % 360) +
+                        ", 500, 500)"
+                );
 
-            // append the images
-            var imgWidth = 256;
-            var imgHeight = 256;
-            var cx = gvd.viewportWidth / 2.0;
-            var cy = gvd.viewportHeight / 2.0;
-            var dx1 = Math.abs(imgHeight * cos * 1.5);
-            var dy1 = Math.abs(imgHeight * sin * 1.5);
-            var dx2 = Math.abs(imgWidth * sin * 1.5);
-            var dy2 = Math.abs(imgHeight * cos * 1.5);
-            for (var i = -10; i < 10; i++)
-                for (var j = -10; j < 10; j++) {
-                    var curX = cx + i * dx1 + i * dx2 + imgWidth;
-                    var curY = cy + j * dy1 + j * dy2 + imgHeight;
-                    cloudSvg
-                        .append("image")
-                        .attr("x", curX - imgWidth / 2.0)
-                        .attr("y", curY - imgHeight / 2.0)
-                        .attr("width", imgWidth)
-                        .attr("height", imgHeight)
-                        .attr(
-                            "xlink:href",
-                            "https://live.staticflickr.com/65535/49735371613_70cb0051b2_b.jpg"
-                        )
-                        .attr(
-                            "transform",
-                            "rotate(" +
-                                (slideDirection > 90 && slideDirection < 270
-                                    ? 360 - ((slideDirection + 180) % 360)
-                                    : 360 - slideDirection) +
-                                ", " +
-                                curX +
-                                ", " +
-                                curY +
-                                ")"
-                        );
-                }
-
-            var supermanSvg = d3
-                .select(viewClass + ".oldlayerg")
-                .append("svg")
-                .attr("id", "supermansvg")
-                .attr("width", gvd.viewportWidth)
-                .attr("height", gvd.viewportHeight)
-                .append("image")
-                .attr("x", gvd.viewportWidth / 2 - 150)
-                .attr("y", gvd.viewportHeight / 2 - 150)
-                .attr("width", 300)
-                .attr("height", 300)
-                .style("opacity", 0);
-            if (slideDirection > 90 && slideDirection < 270)
+        d3.transition("cloudTween_" + viewId)
+            .duration(param.supermanFlyingDuration)
+            .ease(d3.easeLinear)
+            .tween("cloudTween", function() {
+                return function(t) {
+                    travel(t);
+                };
+            })
+            .on("start", function() {
                 supermanSvg
-                    .attr(
-                        "xlink:href",
-                        "https://live.staticflickr.com/65535/49735899041_e6c9d13323_o.png"
-                    )
-                    .attr(
-                        "transform",
-                        "rotate(" +
-                            ((145 - slideDirection + 360) % 360) +
-                            ", 500, 500)"
-                    );
-            else
-                supermanSvg
-                    .attr(
-                        "xlink:href",
-                        "https://live.staticflickr.com/65535/49735448721_e0ea4f763f_o.png"
-                    )
-                    .attr(
-                        "transform",
-                        "rotate(" +
-                            ((35 - slideDirection + 360) % 360) +
-                            ", 500, 500)"
-                    );
+                    .transition()
+                    .delay(param.supermanDisplayDelay)
+                    .duration(param.supermanDisplayDuration)
+                    .style("opacity", 1);
 
-            d3.transition("cloudTween_" + viewId)
-                .duration(param.supermanFlyingDuration)
-                .ease(d3.easeLinear)
-                .tween("cloudTween", function() {
-                    return function(t) {
-                        travel(t);
-                    };
-                })
-                .on("start", function() {
-                    supermanSvg
-                        .transition()
-                        .delay(param.supermanDisplayDelay)
-                        .duration(param.supermanDisplayDuration)
-                        .style("opacity", 1);
+                cloudSvg
+                    .transition()
+                    .delay(param.supermanDisplayDelay)
+                    .duration(param.supermanDisplayDuration)
+                    .style("opacity", 1);
+            })
+            .on("end", function() {
+                supermanSvg.remove();
+                cloudSvg.remove();
+            });
+    }
 
-                    cloudSvg
-                        .transition()
-                        .delay(param.supermanDisplayDelay)
-                        .duration(param.supermanDisplayDuration)
-                        .style("opacity", 1);
+    // schedule a new entering transition
+    d3.transition("enterTween_" + viewId)
+        .delay(
+            jump.slideSuperman
+                ? param.supermanFlyingDuration - param.supermanEnteringTime
+                : param.slideSwitchDelay
+        )
+        .duration(param.slideEnteringDuration)
+        .ease(d3.easeSinIn)
+        .tween("enterTween", function() {
+            return function(t) {
+                enter(t);
+            };
+        })
+        .on("start", function() {
+            if (jump.slideSuperman) {
+                cloudSvg
+                    .transition()
+                    .duration(400)
+                    .style("opacity", 0);
+            }
 
-                    // schedule a new entering transition
-                    d3.transition("enterTween_" + viewId)
-                        .delay(
-                            param.supermanFlyingDuration -
-                                param.supermanEnteringTime
-                        )
-                        .duration(param.slideEnteringDuration)
-                        .ease(d3.easeSinIn)
-                        .tween("enterTween", function() {
-                            return function(t) {
-                                enter(t);
-                            };
-                        })
-                        .on("start", function() {
-                            cloudSvg
-                                .transition()
-                                .duration(400)
-                                .style("opacity", 0);
+            // get the canvas object for the destination canvas
+            var gotCanvas = getCurCanvas(viewId);
+            gotCanvas.then(function() {
+                // static trim
+                renderStaticLayers(viewId);
 
-                            // get the canvas object for the destination canvas
-                            var gotCanvas = getCurCanvas(viewId);
-                            gotCanvas.then(function() {
-                                // static trim
-                                renderStaticLayers(viewId);
-
-                                // render
-                                RefreshDynamicLayers(viewId, newVpX, newVpY);
-                            });
-                        })
-                        .on("end", function() {
-                            postJump(viewId, jump);
-                        });
-                })
-                .on("end", function() {
-                    supermanSvg.remove();
-                    cloudSvg.remove();
-                });
+                // render
+                RefreshDynamicLayers(viewId, newVpX, newVpY);
+            });
+        })
+        .on("end", function() {
+            postJump(viewId, jump);
         });
 
     function exit(t) {

@@ -51,6 +51,13 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
         throw new Error(
             "Constructing Jump: slide direction must be a number between 0 and 360."
         );
+    if (
+        "slideSuperman" in optional &&
+        typeof optional.slideSuperman != "boolean"
+    )
+        throw new Error(
+            "Constructing Jump: slideSuperman must be true or false"
+        );
 
     this.type = type;
     this.sourceId = sourceCanvas.id;
@@ -64,6 +71,8 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
     this.noPrefix = "noPrefix" in optional ? optional.noPrefix : false;
     this.slideDirection =
         "slideDirection" in optional ? optional.slideDirection : 0;
+    this.slideSuperman =
+        "slideSuperman" in optional ? optional.slideSuperman : false;
 }
 
 // exports
