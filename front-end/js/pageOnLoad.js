@@ -328,9 +328,6 @@ function pageOnLoad(serverAddr) {
 
                 // initialize zoom buttons, must before getCurCanvas is called
                 drawZoomButtons(viewId);
-                d3.select(window).on("resize.zoombutton", function() {
-                    for (var viewId in globalVar.views) drawZoomButtons(viewId);
-                });
 
                 // render this view
                 if (gvd.curCanvasId != "") {
@@ -357,6 +354,7 @@ function pageOnLoad(serverAddr) {
     // add resize event listener to kyrixdiv
     new ResizeSensor(kyrixDiv.node(), function() {
         resizeKyrixSvg();
+        for (var viewId in globalVar.views) drawZoomButtons(viewId);
     });
 
     // return div node instead of selection
