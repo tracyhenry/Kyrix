@@ -376,10 +376,10 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
                         + (isCitus ? " in parallel" : ""));
         startTs = currTs;
 
-        // don't use clustering
-        // sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
-        // System.out.println(sql);
-        // bboxStmt.executeUpdate(sql);
+        Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
+        sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
+        System.out.println(sql);
+        bboxStmt.executeUpdate(sql);
     }
 
     @Override
