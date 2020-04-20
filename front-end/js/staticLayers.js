@@ -21,6 +21,7 @@ function renderStaticLayers(viewId) {
         var renderFunc = curLayer.rendering.parseFunction();
         var curSvg = d3.select(viewClass + ".layerg.layer" + i).select("svg");
         var args = getOptionalArgs(viewId);
+        args["layerId"] = i;
         args["ssvId"] = curLayer.ssvId;
         renderFunc(curSvg, gvd.curStaticData[i], args);
 
