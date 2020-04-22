@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.net.ssl.HttpsURLConnection;
@@ -51,21 +52,26 @@ public class Server {
             e.printStackTrace();
             System.out.println("\n\n" + e.getMessage() + "\n");
 
-            // print out indexing error message
-            printIndexingErrorMessage();
-
             // clear project history and set current project to null
             ProjectRequestHandler.clearProjectHistory(Main.getProject().getName());
             Main.setProject(null);
 
-            // close db connections
-            DbConnector.closeAllConnections();
-            System.out.println("Server restarting....");
+            // print out indexing error message
+            printIndexingErrorMessage();
         }
         Server.startServer(Config.portNumber);
     }
 
     public static void printIndexingErrorMessage() {
+
+        // close db connections
+        try {
+            DbConnector.closeAllConnections();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // print error message
         System.out.println(
                 "+---------------------------------------------------------+\n"
                         + "|ERROR!!! An exception occurred while indexing.           |\n"
@@ -80,10 +86,20 @@ public class Server {
                         + "|to contact Kyrix maintainers.                            |\n"
                         + "|                                                         |\n"
                         + "|Github: https://github.com/tracyhenry/kyrix              |\n"
-                        + "+---------------------------------------------------------+");
+                        + "+---------------------------------------------------------+\n"
+                        + "Server restarting....");
     }
 
     public static void printServingErrorMessage() {
+
+        // close db connections
+        try {
+            DbConnector.closeAllConnections();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // print error message
         System.out.println(
                 "+-------------------------------------------------------------+\n"
                         + "|ERROR!!! An exception occurred while serving an HTTP request.|\n"
@@ -96,7 +112,8 @@ public class Server {
                         + "|indexes, or reach out to the kyrix maintainers for help.     |\n"
                         + "|                                                             |\n"
                         + "|Github: https://github.com/tracyhenry/kyrix                  |\n"
-                        + "+-------------------------------------------------------------+");
+                        + "+-------------------------------------------------------------+\n"
+                        + "Server restarting...");
     }
 
     public static void terminate() {
