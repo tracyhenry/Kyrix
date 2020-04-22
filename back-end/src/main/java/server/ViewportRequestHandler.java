@@ -65,8 +65,16 @@ public class ViewportRequestHandler implements HttpHandler {
             Canvas c = Main.getProject().getCanvas(canvasId);
             for (int i = 0; i < c.getLayers().size(); i++)
                 predicates.add(queryMap.get("predicate" + i));
-            data = getData(canvasId, predicates);
 
+            // check predicates
+            if (!Server.checkPredicates(predicates, c)) {
+                Server.sendResponse(
+                        httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicates.");
+                return;
+            }
+
+            // fetch data
+            data = getData(canvasId, predicates);
             if (data == null) {
                 Server.sendResponse(
                         httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicates.");
