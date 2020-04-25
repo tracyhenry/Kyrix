@@ -48,16 +48,14 @@ public abstract class Indexer implements Serializable {
 
                 // determine indexer for this layer when the indexer is not set in the compiler
                 if (indexer == null) {
-                    if (Config.database == Config.Database.PSQL
-                            || Config.database == Config.Database.CITUS) {
-                        boolean isCitus = (Config.database == Config.Database.CITUS);
+                    if (Config.database == Config.Database.PSQL) {
                         if (Config.indexingScheme == Config.IndexingScheme.POSTGIS_SPATIAL_INDEX)
-                            indexer = PsqlSpatialIndexer.getInstance(isCitus);
+                            indexer = PsqlSpatialIndexer.getInstance();
                         else if (Config.indexingScheme == Config.IndexingScheme.TILE_INDEX)
-                            indexer = PsqlTileIndexer.getInstance(isCitus);
+                            indexer = PsqlTileIndexer.getInstance();
                         else if (Config.indexingScheme
                                 == Config.IndexingScheme.PSQL_NATIVEBOX_INDEX)
-                            indexer = PsqlNativeBoxIndexer.getInstance(isCitus);
+                            indexer = PsqlNativeBoxIndexer.getInstance();
                         // indexer = PsqlPlv8Indexer.getInstance();
                         else if (Config.indexingScheme
                                 == Config.IndexingScheme.PSQL_NATIVECUBE_INDEX)
@@ -67,7 +65,9 @@ public abstract class Indexer implements Serializable {
                                     "Index type "
                                             + Config.indexingScheme.toString()
                                             + " not supported for PSQL.");
-                    } else if (Config.database == Config.Database.MYSQL) {
+                    } else if (Config.database == Config.Database.CITUS)
+                        indexer = PsqlCitusIndexer.getInstance();
+                    else if (Config.database == Config.Database.MYSQL) {
                         if (l.getIndexerType().equals("SSVInMemoryIndexer"))
                             throw new Exception("SSV is not supported by MySQL indexers.");
                         else if (l.getIndexerType().equals("PsqlPredicatedTableIndexer"))
