@@ -118,7 +118,8 @@ public class Server {
                         + "Server restarting...");
     }
 
-    public static boolean checkPredicates(ArrayList<String> predicates, Canvas c) {
+    public static boolean checkPredicates(ArrayList<String> predicates, Canvas c)
+            throws SQLException, ClassNotFoundException {
         boolean allValid = true;
         for (int i = 0; i < predicates.size(); i++) {
             String predicate = predicates.get(i);

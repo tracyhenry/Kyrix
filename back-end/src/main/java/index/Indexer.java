@@ -6,6 +6,7 @@ import com.coveo.nashorn_modules.Require;
 import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +33,8 @@ public abstract class Indexer implements Serializable {
     public abstract ArrayList<ArrayList<String>> getDataFromTile(
             Canvas c, int layerId, int minx, int miny, String predicate) throws Exception;
 
-    public abstract String getStaticDataQuery(Canvas c, int layerId, String predicate);
+    public abstract String getStaticDataQuery(Canvas c, int layerId, String predicate)
+            throws Exception;
 
     // associate each layer with a proper indexer
     public static void associateIndexer() throws Exception {
@@ -156,7 +158,8 @@ public abstract class Indexer implements Serializable {
     }
 
     // calculate bounding box indexes for a given row in a given layer
-    protected static ArrayList<Double> getBboxCoordinates(Layer l, ArrayList<String> row) {
+    protected static ArrayList<Double> getBboxCoordinates(Layer l, ArrayList<String> row)
+            throws SQLException, ClassNotFoundException {
 
         // array to return
         ArrayList<Double> bbox = new ArrayList<>();

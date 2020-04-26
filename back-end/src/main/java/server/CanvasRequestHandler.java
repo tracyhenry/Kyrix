@@ -101,7 +101,7 @@ public class CanvasRequestHandler implements HttpHandler {
     }
 
     private ArrayList<ArrayList<ArrayList<String>>> getStaticData(
-            Canvas c, ArrayList<String> predicates) throws SQLException, ClassNotFoundException {
+            Canvas c, ArrayList<String> predicates) throws Exception {
 
         // container for data
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();

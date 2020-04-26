@@ -136,7 +136,7 @@ public class SSVCitusIndexer extends BoundingBoxIndexer {
         }
     }
 
-    private void setCommonVariables() throws SQLException, ClassNotFoundException {
+    private void setCommonVariables() throws Exception {
         System.out.println("Setting common variables...");
 
         // get current SSV object

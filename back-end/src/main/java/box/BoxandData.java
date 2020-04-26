@@ -1,5 +1,6 @@
 package box;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import project.Canvas;
@@ -19,7 +20,8 @@ public class BoxandData {
     // To enable writing rendering functions using field names,
     // we convert it to an array of arrays of dictionaries (hashMap in Java)
     public static ArrayList<ArrayList<HashMap<String, String>>> getDictionaryFromData(
-            ArrayList<ArrayList<ArrayList<String>>> data, Canvas c) {
+            ArrayList<ArrayList<ArrayList<String>>> data, Canvas c)
+            throws SQLException, ClassNotFoundException {
 
         ArrayList<ArrayList<HashMap<String, String>>> ret = new ArrayList<>();
         int numLayers = data.size();
