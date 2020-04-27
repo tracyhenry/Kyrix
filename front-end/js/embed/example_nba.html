@@ -22,11 +22,17 @@
             href="https://fonts.googleapis.com/css?family=Source Serif Pro"
             rel="stylesheet"
         />
+        <link
+            href="https://fonts.googleapis.com/css?family=Open+Sans"
+            rel="stylesheet"
+        />
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/gpu.js@2.0.0-rc.19/dist/gpu-browser.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.min.js"></script>
         <script src="https://d3js.org/d3.v5.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/css-element-queries@1.2.1/src/ElementQueries.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/css-element-queries@1.2.1/src/ResizeSensor.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.min.js"></script>
         <script src="kyrix.js"></script>
         <script>
             // TODO: change the address where the kyrix backend is running, has to start with http://
@@ -36,7 +42,7 @@
             kyrix.initializeApp(serverAddr);
 
             // logs to console every time a jump is finished
-            kyrix.on("jump", "nba", function() {
+            kyrix.on("jumpstart", "nba", function() {
                 console.log("Jump to " + kyrix.getCurrentCanvasId("nba"));
             });
 
