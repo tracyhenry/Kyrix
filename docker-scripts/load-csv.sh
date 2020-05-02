@@ -1,8 +1,27 @@
 #!/bin/bash
 
-# check input csv file exists
+usage="load-csv.sh: a script to load a CSV file into Kyrix's PostgreSQL container. Usage:
+
+    ./docker-scripts/load-csv.sh CSV_FILE [OPTIONS]  (must be run under root Kyrix folder)
+
+where OPTIONS include:
+    --dbname DBNAME: name of the database that you want to load the CSV file into.
+    --tablename: name of the table that you want to load the CSV file into.
+    --delimiter: the delimiter used in the CVS file, e.g. \"\\t\"
+
+Both --dbname and --tablename default to the name of the CSV file (without the .csv suffix).
+If the database/table does not exist, it will be created. "
+
 CSV_FILE="$1"
 shift
+
+# output usage
+if [ "x$CSV_FILE" = "x-h" ] || [ "x$CSV_FILE" = "x--help" ]; then
+    echo "$usage"
+    exit
+fi
+
+# check input csv file exists
 if [ ! -f $CSV_FILE ]; then
     echo "Input file $CSV_FILE Not found"
     exit

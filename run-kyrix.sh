@@ -1,21 +1,16 @@
 #!/bin/bash
 
-# usage:
-# --nba: Run the NBA example upon start. You would need to wait the indexing for about a minute.
-# --dbport PORT_NUMBER: Specify the host port number of the postgres container.
-# --kyrixport PORT_NUMBER: Specify the host port number of the kyrix backend container.
-# --postgis: Start the DB container with postgis. You need to either start from scratch or run with --build to let docker rebuild the images.
-# --build: Rebuild the docker images before starting.
-# --mavenopts: Pass in custom Maven configuration.
-# --stop: Stop the containers.
-# --down: Remove containers, the network and volumes.
-
-echo -e "\nStopping existing containers..."
-docker-compose stop
-echo -e "Done.\n"
-
-start_time=$(date +%s)
-#echo "Current UNIX timestamp: $start_time"
+usage="
+run-kyrix.sh: a script to start Kyrix docker containers. Usage:
+    --help: show usage.
+    --nba: run the NBA example upon start. You would need to wait the indexing for about a minute.
+    --dbport PORT_NUMBER: specify the host port number of the postgres container. Default 5432.
+    --kyrixport PORT_NUMBER: specify the host port number of the kyrix backend container. Default 8000.
+    --postgis: start the DB container with postgis. You need to either start from scratch or run with --build to let docker rebuild the images.
+    --build: rebuild the docker images before starting.
+    --mavenopts: pass in custom Maven configuration. Default sets memory to 512MB.
+    --stop: stop the containers.
+    --down: remove containers, the network and volumes."
 
 DB_PORT=5432
 KYRIX_PORT=8000
@@ -30,6 +25,10 @@ while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
+        -h|--help)
+            echo "$usage"
+            exit
+            ;;
         --nba)
             START_APP=1
             shift
@@ -71,6 +70,13 @@ do
             ;;
     esac
 done
+
+echo -e "\nStopping existing containers..."
+docker-compose stop
+echo -e "Done.\n"
+
+start_time=$(date +%s)
+#echo "Current UNIX timestamp: $start_time"
 
 # stop
 if [ "x$STOP" = "x1" ]; then
