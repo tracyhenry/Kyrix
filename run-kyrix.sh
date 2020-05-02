@@ -72,7 +72,7 @@ do
 done
 
 echo -e "\nStopping existing containers..."
-docker-compose stop
+docker-compose -p kyrix stop
 echo -e "Done.\n"
 
 start_time=$(date +%s)
@@ -86,12 +86,12 @@ fi
 # down
 if [ "x$DOWN" = "x1" ]; then
     echo -e "\nRemoving containers and networks..."
-    docker-compose down -v
+    docker-compose -p kyrix down -v
     echo -e "Done.\n"
     exit
 fi
 
-START_APP=$START_APP DB_PORT=$DB_PORT KYRIX_PORT=$KYRIX_PORT BUILD_STAGE=$BUILD_STAGE KYRIX_MAVEN_OPTS=$KYRIX_MAVEN_OPTS docker-compose up $REBUILD -d
+START_APP=$START_APP DB_PORT=$DB_PORT KYRIX_PORT=$KYRIX_PORT BUILD_STAGE=$BUILD_STAGE KYRIX_MAVEN_OPTS=$KYRIX_MAVEN_OPTS docker-compose -p kyrix up $REBUILD -d
 
 source docker-scripts/spinner.sh
 pg_start_time=$(date +%s)
