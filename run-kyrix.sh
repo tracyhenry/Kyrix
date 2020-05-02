@@ -7,6 +7,8 @@
 # --postgis: Start the DB container with postgis. You need to either start from scratch or run with --build to let docker rebuild the images.
 # --build: Rebuild the docker images before starting.
 # --mavenopts: Pass in custom Maven configuration.
+# --stop: Stop the containers.
+# --down: Remove containers, the network and volumes.
 
 echo -e "\nStopping existing containers..."
 docker-compose stop
@@ -21,6 +23,8 @@ START_APP=0
 BUILD_STAGE="pg-plv8"
 REBUILD=""
 KYRIX_MAVEN_OPTS="-Xmx512m"
+STOP=0
+DOWN=0
 
 while [[ $# -gt 0 ]]
 do
@@ -53,6 +57,14 @@ do
             shift
             shift
             ;;
+        --stop)
+            STOP=1
+            shift
+            ;;
+        --down)
+            DOWN=1
+            shift
+            ;;
         *)
             echo "Wrong argument name $key"
             exit
@@ -60,15 +72,39 @@ do
     esac
 done
 
+# stop
+if [ "x$STOP" = "x1" ]; then
+    exit
+fi
+
+# down
+if [ "x$DOWN" = "x1" ]; then
+    echo -e "\nRemoving containers and networks..."
+    docker-compose down -v
+    echo -e "Done.\n"
+    exit
+fi
+
 START_APP=$START_APP DB_PORT=$DB_PORT KYRIX_PORT=$KYRIX_PORT BUILD_STAGE=$BUILD_STAGE KYRIX_MAVEN_OPTS=$KYRIX_MAVEN_OPTS docker-compose up $REBUILD -d
 
 source docker-scripts/spinner.sh
+pg_start_time=$(date +%s)
 # waiting for kyrix_db_1 to start
 while [ 1 ]; do
     if docker logs 2>&1 --since $start_time kyrix_db_1 | grep -q "LOG:  database system is ready to accept connections"; then
         break;
     fi;
     spin "waiting for the Postgres container to start (be patient, it might take a few minutes)..."
+    cur_time=$(date +%s)
+    if [ $((cur_time - pg_start_time)) -gt 180 ]; then
+        echo -e "\nPostgres has taken more than 3 minutes to start, which is not normal."
+        echo "Try run 'sudo docker logs kyrix_db_1' in a separate terminal tab to inspect docker logs."
+        echo "If the log looks like there is an error, you should clean up docker (sudo ./run-kyrix.sh --down) and then restart."
+        echo "Note that './run-kyrix --down' will clear the database. If you want to backup the database before restarting,"
+        echo -e "please contact Kyrix maintainers on Github (https://github.com/tracyhenry/kyrix).\n"
+        echo "exiting..."
+        exit
+    fi
 done
 
 # Tune postgres
@@ -82,11 +118,22 @@ echo -e "Done.\n"
 
 # waiting for kyrix back-end to start
 spin_msg_printed=0
+backend_start_time=$(date +%s)
 while [ 1 ]; do
     if docker logs 2>&1 --since $start_time kyrix_kyrix_1 | grep -q "Backend server started"; then
         break;
     fi;
     spin "waiting for Kyrix backend to start..."
+    cur_time=$(date +%s)
+    if [ $((cur_time - backend_start_time)) -gt 180 ]; then
+        echo -e "\nKyrix backend has taken more than 3 minutes to start, which is not normal."
+        echo "Try run 'sudo docker logs kyrix_kyrix_1' in a separate terminal tab to inspect docker logs."
+        echo "If the log looks like there is an error, you should clean up docker (sudo ./run-kyrix.sh --down) and then restart."
+        echo "Note that './run-kyrix --down' will clear the database. If you want to backup the database before restarting,"
+        echo -e "please contact Kyrix maintainers on Github (https://github.com/tracyhenry/kyrix).\n"
+        echo "exiting..."
+        exit
+    fi
 done
 
 # redirect to docker logs
