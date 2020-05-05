@@ -187,7 +187,9 @@ function SSV(args) {
         args.marks.cluster.aggregate.measures.length > 1
     )
         throw new Error(
-            "Constructing SSV: more than one measure column specified for circle mode."
+            "Constructing SSV: more than one measure column specified for " +
+                args.marks.cluster.mode +
+                " mode."
         );
     for (var i = 0; i < args.marks.cluster.aggregate.dimensions.length; i++) {
         if (!("field" in args.marks.cluster.aggregate.dimensions[i]))
@@ -792,6 +794,9 @@ function getLayerRenderer() {
     function renderHeatmapBody() {
         var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
         var params = args.renderingParams[rpKey];
+        var agg;
+        var curMeasure = params.aggMeasures[0];
+        agg = curMeasure.function + "(" + curMeasure.field + ")";
         var radius = params.heatmapRadius;
         var heatmapWidth, heatmapHeight, x, y;
         if ("tileX" in args) {
@@ -811,7 +816,7 @@ function getLayerRenderer() {
         var translatedData = data.map(d => ({
             x: d.cx - (x - radius),
             y: d.cy - (y - radius),
-            w: +JSON.parse(d.clusterAgg)["count(*)"]
+            w: +JSON.parse(d.clusterAgg)[agg]
         }));
 
         // render heatmap
@@ -844,8 +849,8 @@ function getLayerRenderer() {
         var alphaCanvas = document.createElement("canvas");
         alphaCanvas.width = heatmapWidth;
         alphaCanvas.height = heatmapHeight;
-        var minWeight = params[args.ssvId + "_count(*)_min"]; // set in the BGRP (back-end generated rendering params)
-        var maxWeight = params[args.ssvId + "_count(*)_max"]; // set in the BGRP
+        var minWeight = params[args.ssvId + "_" + agg + "_min"]; // set in the BGRP (back-end generated rendering params)
+        var maxWeight = params[args.ssvId + "_" + agg + "_max"]; // set in the BGRP
         var alphaCtx = alphaCanvas.getContext("2d");
         var tpl = _getPointTemplate(radius);
         for (var i = 0; i < translatedData.length; i++) {
