@@ -7,7 +7,7 @@ import project.Layer;
 public abstract class BoundingBoxIndexer extends Indexer {
 
     @Override
-    public String getStaticDataQuery(Canvas c, int layerId, String predicate) {
+    public String getStaticDataQuery(Canvas c, int layerId, String predicate) throws Exception {
 
         Layer l = c.getLayers().get(layerId);
         // get column list string

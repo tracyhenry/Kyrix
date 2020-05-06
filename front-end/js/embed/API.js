@@ -179,6 +179,8 @@ export function reRender(viewId, layerId, additionalArgs) {
     var oldArgs = getOptionalArgs(viewId);
     oldArgs["viewportX"] = curVp["vpX"];
     oldArgs["viewportY"] = curVp["vpY"];
+    oldArgs["layerId"] = layerId;
+    oldArgs["ssvId"] = gvd.curCanvas.layers[layerId].ssvId;
     var allArgs = Object.assign({}, oldArgs, additionalArgs);
 
     // re render the svg

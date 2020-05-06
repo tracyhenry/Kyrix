@@ -67,9 +67,17 @@ public class TileRequestHandler implements HttpHandler {
             for (int i = 0; i < c.getLayers().size(); i++)
                 predicates.add(queryMap.get("predicate" + i));
             Boolean isJumping = Boolean.valueOf(queryMap.get("isJumping"));
+
+            // check predicates
+            if (!Server.checkPredicates(predicates, c)) {
+                Server.sendResponse(
+                        httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicates.");
+                return;
+            }
+
+            // fetch data
             long st = System.currentTimeMillis();
             data = TileCache.getTile(c, minx, miny, predicates);
-
             double fetchTime = System.currentTimeMillis() - st;
             int intersectingRows = 0;
             for (int i = 0; i < data.size(); i++) {

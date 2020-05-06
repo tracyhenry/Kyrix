@@ -2,6 +2,7 @@ package project;
 
 import index.Indexer;
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 /** Created by wenbo on 4/3/18. */
@@ -62,7 +63,7 @@ public class Layer implements Serializable {
         return indexerType;
     }
 
-    public String getColStr(String tableName) {
+    public String getColStr(String tableName) throws SQLException, ClassNotFoundException {
 
         String colListStr = "";
         for (String col : transform.getColumnNames())

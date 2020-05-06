@@ -80,6 +80,13 @@ public class BoxRequestHandler implements HttpHandler {
             Box oldBox = new Box(oMinX, oMinY, oMaxX, oMaxY);
             Boolean isJumping = Boolean.valueOf(queryMap.get("isJumping"));
 
+            // check predicates
+            if (!Server.checkPredicates(predicates, c)) {
+                Server.sendResponse(
+                        httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicates.");
+                return;
+            }
+
             // get box data
             long st = System.currentTimeMillis();
             data = boxGetter.getBox(c, v, minx, miny, oldBox, predicates);

@@ -74,7 +74,7 @@ public class SSV {
         return overlap;
     }
 
-    public int getXColId() {
+    public int getXColId() throws Exception {
 
         if (xColId < 0) {
             ArrayList<String> colNames = getColumnNames();
@@ -83,7 +83,7 @@ public class SSV {
         return xColId;
     }
 
-    public int getYColId() {
+    public int getYColId() throws Exception {
 
         if (yColId < 0) {
             ArrayList<String> colNames = getColumnNames();
@@ -92,7 +92,7 @@ public class SSV {
         return yColId;
     }
 
-    public int getZColId() {
+    public int getZColId() throws Exception {
 
         if (zColId < 0) {
             ArrayList<String> colNames = getColumnNames();
@@ -101,40 +101,38 @@ public class SSV {
         return zColId;
     }
 
-    public ArrayList<String> getColumnNames() {
+    public ArrayList<String> getColumnNames() throws Exception {
 
         // if it is specified already, return
         if (columnNames.size() > 0) return columnNames;
 
         // otherwise fetch the schema from DB
-        if (queriedColumnNames == null)
-            try {
-                queriedColumnNames = new ArrayList<>();
-                columnTypes = new ArrayList<>();
-                Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
-                String query = getQuery();
-                if (Config.database == Config.Database.CITUS) {
-                    while (query.charAt(query.length() - 1) == ';')
-                        query = query.substring(0, query.length() - 1);
-                    // assuming there is no limit 1
-                    query += " LIMIT 1;";
-                }
-                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, query);
-                int colCount = rs.getMetaData().getColumnCount();
-                for (int i = 1; i <= colCount; i++) {
-                    queriedColumnNames.add(rs.getMetaData().getColumnName(i));
-                    columnTypes.add(rs.getMetaData().getColumnTypeName(i));
-                }
-                rs.close();
-                rawDBStmt.close();
-                DbConnector.closeConnection(getDb());
-            } catch (Exception e) {
-                e.printStackTrace();
+        if (queriedColumnNames == null) {
+            queriedColumnNames = new ArrayList<>();
+            columnTypes = new ArrayList<>();
+            Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
+            String query = getQuery();
+            if (Config.database == Config.Database.CITUS) {
+                while (query.charAt(query.length() - 1) == ';')
+                    query = query.substring(0, query.length() - 1);
+                // assuming there is no limit 1
+                query += " LIMIT 1;";
             }
+            ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, query);
+            int colCount = rs.getMetaData().getColumnCount();
+            for (int i = 1; i <= colCount; i++) {
+                queriedColumnNames.add(rs.getMetaData().getColumnName(i));
+                columnTypes.add(rs.getMetaData().getColumnTypeName(i));
+            }
+            rs.close();
+            rawDBStmt.close();
+            DbConnector.closeConnection(getDb());
+        }
+
         return queriedColumnNames;
     }
 
-    public ArrayList<String> getColumnTypes() {
+    public ArrayList<String> getColumnTypes() throws Exception {
         if (columnTypes != null) return columnTypes;
         getColumnNames();
         return columnTypes;
@@ -201,7 +199,7 @@ public class SSV {
     }
 
     // get the canvas coordinate of a raw value
-    public double getCanvasCoordinate(int level, double v, boolean isX) {
+    public double getCanvasCoordinate(int level, double v, boolean isX) throws Exception {
 
         setXYExtent();
         if (isX)
@@ -212,29 +210,25 @@ public class SSV {
                     * Math.pow(zoomFactor, level);
     }
 
-    public void setXYExtent() {
+    public void setXYExtent() throws Exception {
         // calculate range if have not
         if (Double.isNaN(loX)) {
 
             System.out.println("\n Calculating SSV x & y ranges...\n");
             loX = loY = Double.MAX_VALUE;
             hiX = hiY = Double.MIN_VALUE;
-            try {
-                Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
-                ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, getQuery());
-                while (rs.next()) {
-                    double cx = rs.getDouble(getXColId() + 1);
-                    double cy = rs.getDouble(getYColId() + 1);
-                    loX = Math.min(loX, cx);
-                    hiX = Math.max(hiX, cx);
-                    loY = Math.min(loY, cy);
-                    hiY = Math.max(hiY, cy);
-                }
-                rawDBStmt.close();
-                DbConnector.closeConnection(getDb());
-            } catch (Exception e) {
-                e.printStackTrace();
+            Statement rawDBStmt = DbConnector.getStmtByDbName(getDb(), true);
+            ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, getQuery());
+            while (rs.next()) {
+                double cx = rs.getDouble(getXColId() + 1);
+                double cy = rs.getDouble(getYColId() + 1);
+                loX = Math.min(loX, cx);
+                hiX = Math.max(hiX, cx);
+                loY = Math.min(loY, cy);
+                hiY = Math.max(hiY, cy);
             }
+            rawDBStmt.close();
+            DbConnector.closeConnection(getDb());
         }
     }
 

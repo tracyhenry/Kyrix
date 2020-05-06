@@ -36,6 +36,7 @@ function getOptionalArgs(viewId) {
     for (var i = 0; i < gvd.predicates.length; i++)
         predicateDict["layer" + i] = gvd.predicates[i];
     var optionalArgs = {
+        canvasId: gvd.curCanvas.id,
         canvasW: gvd.curCanvas.w,
         canvasH: gvd.curCanvas.h,
         pyramidLevel: gvd.curCanvas.pyramidLevel,

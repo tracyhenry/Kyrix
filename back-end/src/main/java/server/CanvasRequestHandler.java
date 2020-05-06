@@ -54,6 +54,13 @@ public class CanvasRequestHandler implements HttpHandler {
             for (int i = 0; i < c.getLayers().size(); i++)
                 predicates.add(queryMap.get("predicate" + i));
 
+            // check predicates
+            if (!Server.checkPredicates(predicates, c)) {
+                Server.sendResponse(
+                        httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicates.");
+                return;
+            }
+
             // calculate w or h if they are not pre-determined
             if (c.getwSql().length() > 0) {
                 String predicate = queryMap.get("predicate" + c.getwLayerId());
@@ -94,7 +101,7 @@ public class CanvasRequestHandler implements HttpHandler {
     }
 
     private ArrayList<ArrayList<ArrayList<String>>> getStaticData(
-            Canvas c, ArrayList<String> predicates) throws SQLException, ClassNotFoundException {
+            Canvas c, ArrayList<String> predicates) throws Exception {
 
         // container for data
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();

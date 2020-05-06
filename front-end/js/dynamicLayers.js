@@ -262,17 +262,15 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     if (tileSvg.empty()) break;
 
                     // draw current layer
-                    var optionalArgsWithTileXY = Object.assign(
-                        {},
-                        optionalArgs
-                    );
-                    optionalArgsWithTileXY["tileX"] = x;
-                    optionalArgsWithTileXY["tileY"] = y;
-                    optionalArgsWithTileXY["ssvId"] = curLayer.ssvId;
+                    var optionalArgsMore = Object.assign({}, optionalArgs);
+                    optionalArgsMore["tileX"] = x;
+                    optionalArgsMore["tileY"] = y;
+                    optionalArgsMore["layerId"] = i;
+                    optionalArgsMore["ssvId"] = curLayer.ssvId;
                     curLayer.rendering.parseFunction()(
                         tileSvg,
                         renderData[i],
-                        optionalArgsWithTileXY
+                        optionalArgsMore
                     );
                     tileSvg.style("opacity", 1.0);
 
@@ -478,19 +476,17 @@ function renderDynamicBoxes(
                     gvd.renderData[i] = newLayerData;
 
                     // draw current layer
-                    var optionalArgsWithBoxWHXY = Object.assign(
-                        {},
-                        optionalArgs
-                    );
-                    optionalArgsWithBoxWHXY["boxX"] = x;
-                    optionalArgsWithBoxWHXY["boxY"] = y;
-                    optionalArgsWithBoxWHXY["boxW"] = response.boxW;
-                    optionalArgsWithBoxWHXY["boxH"] = response.boxH;
-                    optionalArgsWithBoxWHXY["ssvId"] = curLayer.ssvId;
+                    var optionalArgsMore = Object.assign({}, optionalArgs);
+                    optionalArgsMore["boxX"] = x;
+                    optionalArgsMore["boxY"] = y;
+                    optionalArgsMore["boxW"] = response.boxW;
+                    optionalArgsMore["boxH"] = response.boxH;
+                    optionalArgsMore["layerId"] = i;
+                    optionalArgsMore["ssvId"] = curLayer.ssvId;
                     curLayer.rendering.parseFunction()(
                         dboxSvg,
                         renderData[i],
-                        optionalArgsWithBoxWHXY
+                        optionalArgsMore
                     );
 
                     // tooltip

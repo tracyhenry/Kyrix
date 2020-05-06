@@ -35,11 +35,34 @@ function animateSemanticZoom(viewId, jump, newVpX, newVpY, tuple) {
                 return d == tuple;
             })
             .each(function() {
-                var bbox = this.getBBox();
-                minx = Math.min(minx, bbox.x);
-                miny = Math.min(miny, bbox.y);
-                maxx = Math.max(maxx, bbox.x + bbox.width);
-                maxy = Math.max(maxy, bbox.y + bbox.height);
+                // find the parent main g
+                var ancestor = this.parentElement;
+                while (!ancestor.classList.contains("maing"))
+                    ancestor = ancestor.parentElement;
+
+                // get client dx & dy
+                var thisBox = this.getBoundingClientRect();
+                var ancestorBox = ancestor.getBoundingClientRect();
+                var dx = thisBox.x - ancestorBox.x;
+                var dy = thisBox.y - ancestorBox.y;
+
+                // because here we use client coordinates to infer svg coordinates,
+                // we need to multiply a scale factor
+                // which is how much the svg viewport has been scaled,
+                // which equals to curViewport[2] / containerW (see comments in zoomButton.js)
+                var containerW = d3.select("#containerSvg").attr("width");
+                var curViewport = d3.select("#containerSvg").attr("viewBox");
+                var curViewportW =
+                    curViewport == null
+                        ? containerW
+                        : curViewport.split(" ")[2];
+                var m = curViewportW / containerW;
+
+                // now get minx, miny, maxx, maxy
+                minx = Math.min(minx, dx * m);
+                miny = Math.min(miny, dy * m);
+                maxx = Math.max(maxx, (dx + thisBox.width) * m);
+                maxy = Math.max(maxy, (dy + thisBox.height) * m);
             });
     } else {
         minx = +tuple.cx - tupleWidth / 2.0;

@@ -66,7 +66,7 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
             return ret;
         }
 
-        public String getClusterAggString() {
+        public String getClusterAggString() throws Exception {
             JsonObject jsonObj = new JsonObject();
 
             // add numeric aggs
@@ -104,7 +104,12 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         public int compare(RTreeData o1, RTreeData o2) {
 
             String zCol = ssv.getzCol();
-            int zColId = ssv.getColumnNames().indexOf(zCol);
+            int zColId = 0;
+            try {
+                zColId = ssv.getColumnNames().indexOf(zCol);
+            } catch (Exception e) {
+                return 0; // this will probably cause an exception anyways
+            }
             String zOrder = ssv.getzOrder();
 
             float v1 = parseFloat(rawRows.get(o1.rowId).get(zColId));
@@ -165,7 +170,7 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         cleanUp();
     }
 
-    private void setCommonVariables() throws SQLException, ClassNotFoundException {
+    private void setCommonVariables() throws Exception {
         // get current SSV object
         ssv = Main.getProject().getSsvs().get(ssvIndex);
         numLevels = ssv.getNumLevels();
@@ -200,7 +205,7 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         Main.getProject().addBGRP(rpKey, "roughN", String.valueOf(rawRows.size()));
     }
 
-    private void computeClusterAggs() throws SQLException, ClassNotFoundException {
+    private void computeClusterAggs() throws Exception {
 
         // initialize R-tree0
         rtree0 = RTree.star().create();
@@ -315,7 +320,7 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         }
     }
 
-    private void writeToDB(int level) throws SQLException, ClassNotFoundException {
+    private void writeToDB(int level) throws Exception {
         // create tables
         bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
@@ -453,7 +458,7 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         return "";
     }
 
-    private void setInitialClusterAgg(RTreeData rd) {
+    private void setInitialClusterAgg(RTreeData rd) throws Exception {
         ArrayList<String> row = rawRows.get(rd.rowId);
 
         // convexHull
@@ -513,7 +518,7 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
 
     // this function assumes that convexHull of child
     // is from one level lower than parent
-    private void mergeClusterAgg(RTreeData parent, RTreeData child) {
+    private void mergeClusterAgg(RTreeData parent, RTreeData child) throws Exception {
 
         // convexHull
         float[][] childConvexHull = new float[child.convexHull.length][2];

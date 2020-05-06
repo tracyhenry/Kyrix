@@ -326,7 +326,7 @@ function startJump(viewId, d, jump, optionalArgs) {
     )
         semanticJump(viewId, jump, predArray, newVpX, newVpY, d);
     else if (jump.type == param.load)
-        load(predArray, newVpX, newVpY, 1, jump.destViewId, jump.destId);
+        load(predArray, newVpX, newVpY, 1, jump.destViewId, jump.destId, jump);
     else if (jump.type == param.highlight) highlight(predArray, jump);
 }
 
@@ -453,9 +453,16 @@ function registerJumps(viewId, svg, layerId) {
                 .select(viewClass + "#jumppopover")
                 .node()
                 .getBoundingClientRect().height;
+            var kyrixDivBox = d3
+                .select(".kyrixdiv")
+                .node()
+                .getBoundingClientRect();
             d3.select(viewClass + "#jumppopover")
-                .style("left", d3.event.pageX + "px")
-                .style("top", d3.event.pageY - popoverHeight / 2 + "px");
+                .style("left", d3.event.pageX - kyrixDivBox.left + "px")
+                .style(
+                    "top",
+                    d3.event.pageY - kyrixDivBox.top - popoverHeight / 2 + "px"
+                );
         });
     });
 }
