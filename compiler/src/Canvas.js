@@ -41,6 +41,7 @@ function Canvas(id, w, h, wString, hString) {
     this.zoomOutFactorX = 100; // smaller than 1 to be valid
     this.zoomOutFactorY = 100; // smaller than 1 to be valid
     this.axes = "";
+    this.axesSSVRPKey = "";
 }
 
 // add layer to a canvas
@@ -49,8 +50,9 @@ function addLayer(layer) {
 }
 
 // add an axis function
-function addAxes(axesFunc) {
+function addAxes(axesFunc, rpKey) {
     this.axes = axesFunc;
+    if (rpKey != null) this.axesSSVRPKey = rpKey;
 }
 
 // width/height string processing

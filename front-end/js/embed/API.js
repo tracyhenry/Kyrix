@@ -147,7 +147,7 @@ export function on(evt, viewId, callback) {
         throw new Error("kyrix.on: unrecognized Kyrix event type.");
     }
     var gvd = globalVar.views[viewId];
-    var evtTypes = ["pan", "zoom", "jump"];
+    var evtTypes = ["pan", "zoom", "jumpstart", "jumpend"];
     for (var evtType of evtTypes)
         if (evt.startsWith(evtType)) {
             if (evt.length > evtType.length && evt[evtType.length] != ".")
@@ -179,6 +179,8 @@ export function reRender(viewId, layerId, additionalArgs) {
     var oldArgs = getOptionalArgs(viewId);
     oldArgs["viewportX"] = curVp["vpX"];
     oldArgs["viewportY"] = curVp["vpY"];
+    oldArgs["layerId"] = layerId;
+    oldArgs["ssvId"] = gvd.curCanvas.layers[layerId].ssvId;
     var allArgs = Object.assign({}, oldArgs, additionalArgs);
 
     // re render the svg
@@ -228,4 +230,25 @@ export function getRenderingParameters() {
 
 export function getGlobalVarDictionary(viewId) {
     return globalVar.views[viewId];
+}
+
+export function triggerPredicate(viewId, predDict) {
+    var gvd = globalVar.views[viewId];
+
+    var vp = getCurrentViewport(viewId);
+
+    // step 1: get predicates, viewport, scale
+    var predArray = [];
+    var numLayer = gvd.curCanvas.layers.length;
+    for (var i = 0; i < numLayer; i++)
+        if ("layer" + i in predDict) predArray.push(predDict["layer" + i]);
+        else predArray.push({});
+
+    var newVpX = vp.vpX;
+    var newVpY = vp.vpY;
+    var viewClass = ".view_" + viewId + ".maing";
+    var k = d3.zoomTransform(d3.select(viewClass).node()).k;
+
+    // step 2: load
+    load(predArray, newVpX, newVpY, k, viewId, gvd.curCanvasId);
 }

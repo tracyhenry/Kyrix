@@ -106,6 +106,15 @@ function processRenderingParams() {
         var curValue = globalVar.renderingParams[key];
         if (typeof curValue == "string" && curValue.parseFunction() != null)
             globalVar.renderingParams[key] = curValue.parseFunction();
+        // check if it's ssv parameters
+        // if so, do a nested round of converting
+        if (key.startsWith("ssv_")) {
+            for (key in curValue) {
+                var curV = curValue[key];
+                if (typeof curV == "string" && curV.parseFunction() != null)
+                    curValue[key] = curV.parseFunction();
+            }
+        }
     }
 }
 
@@ -191,11 +200,21 @@ function pageOnLoad(serverAddr) {
             globalVar.project = response.project;
             globalVar.tileW = +response.tileW;
             globalVar.tileH = +response.tileH;
-            globalVar.renderingParams = Object.assign(
-                {},
-                JSON.parse(globalVar.project.renderingParams),
-                JSON.parse(globalVar.project.BGRP)
+            // merge BGRP and rendering params
+            globalVar.renderingParams = JSON.parse(
+                globalVar.project.renderingParams
             );
+            var BGRPKeys = Object.keys(globalVar.project.BGRP);
+            for (var i = 0; i < BGRPKeys.length; i++) {
+                var curBGRPKey = BGRPKeys[i];
+                if (!(curBGRPKey in globalVar.renderingParams))
+                    globalVar.renderingParams[curBGRPKey] = {};
+                var curRPEntry = globalVar.renderingParams[curBGRPKey];
+                globalVar.renderingParams[curBGRPKey] = {
+                    ...curRPEntry,
+                    ...globalVar.project.BGRP[curBGRPKey]
+                };
+            }
             processRenderingParams();
 
             // process user-defined CSS styles
@@ -309,9 +328,6 @@ function pageOnLoad(serverAddr) {
 
                 // initialize zoom buttons, must before getCurCanvas is called
                 drawZoomButtons(viewId);
-                d3.select(window).on("resize.zoombutton", function() {
-                    for (var viewId in globalVar.views) drawZoomButtons(viewId);
-                });
 
                 // render this view
                 if (gvd.curCanvasId != "") {
@@ -338,6 +354,7 @@ function pageOnLoad(serverAddr) {
     // add resize event listener to kyrixdiv
     new ResizeSensor(kyrixDiv.node(), function() {
         resizeKyrixSvg();
+        for (var viewId in globalVar.views) drawZoomButtons(viewId);
     });
 
     // return div node instead of selection

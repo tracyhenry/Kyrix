@@ -21,6 +21,7 @@ spec:
       containers:
       - image: tracyhenry/pg11_postgis25_citus811_plv8:latest
         name: citus-master
+        args: ["postgres", "-c", "max_wal_size=50GB", "-c", "shared_buffers=2GB", "-c", "autovacuum_work_mem=500MB", "-c", "autovacuum_max_workers=3", "-c", "checkpoint_timeout=120min", "-c", "maintenance_work_mem=6GB", "-c", "max_connections=200"]
         ports:
         - containerPort: 5432
         resources: {}

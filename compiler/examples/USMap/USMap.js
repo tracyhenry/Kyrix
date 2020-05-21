@@ -63,6 +63,7 @@ var countyBoundaryLayer = new Layer(transforms.countyMapTransform, false);
 countyMapCanvas.addLayer(countyBoundaryLayer);
 countyBoundaryLayer.addPlacement(placements.countyMapPlacement);
 countyBoundaryLayer.addRenderingFunc(renderers.countyMapRendering);
+countyBoundaryLayer.addTooltip(["name", "crimerate"], ["County", "Crime Rate"]);
 
 // ================== Views ===================
 var view = new View("usmap", 0, 0, stateMapWidth, stateMapHeight);

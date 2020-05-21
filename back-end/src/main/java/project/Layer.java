@@ -2,7 +2,8 @@ package project;
 
 import index.Indexer;
 import java.io.Serializable;
-import third_party.Exclude;
+import java.sql.SQLException;
+import java.util.ArrayList;
 
 /** Created by wenbo on 4/3/18. */
 public class Layer implements Serializable {
@@ -13,8 +14,9 @@ public class Layer implements Serializable {
     private boolean deltaBox;
     private Placement placement;
     private String rendering;
-    @Exclude private Indexer indexer;
-    private String autoDDId;
+    private ArrayList<String> tooltipColumns, tooltipAliases;
+    private transient Indexer indexer;
+    private String ssvId;
     private String indexerType;
 
     public Transform getTransform() {
@@ -49,8 +51,8 @@ public class Layer implements Serializable {
         return indexer;
     }
 
-    public String getAutoDDId() {
-        return autoDDId;
+    public String getSSVId() {
+        return ssvId;
     }
 
     public void setIndexerType(String indexerType) {
@@ -61,12 +63,12 @@ public class Layer implements Serializable {
         return indexerType;
     }
 
-    public String getColStr(String tableName) {
+    public String getColStr(String tableName) throws SQLException, ClassNotFoundException {
 
         String colListStr = "";
         for (String col : transform.getColumnNames())
             colListStr += (tableName.isEmpty() ? "" : tableName + ".") + col + ", ";
-        if (this.getIndexerType().equals("AutoDDInMemoryIndexer")) colListStr += "cluster_num, ";
+        if (getIndexerType().equals("SSVInMemoryIndexer")) colListStr += "clusterAgg, ";
         colListStr += "cx, cy, minx, miny, maxx, maxy";
         return colListStr;
     }
@@ -87,8 +89,8 @@ public class Layer implements Serializable {
                 + ", rendering='"
                 + rendering
                 + '\''
-                + ", autoDDId="
-                + autoDDId
+                + ", ssvId="
+                + ssvId
                 + '}';
     }
 }

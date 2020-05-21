@@ -9,6 +9,34 @@ version: '3.4'
 services:
 
   db:
+    command:
+      - "postgres"
+      - "-c"
+      - "max_parallel_maintenance_workers=24"
+      - "-c"
+      - "checkpoint_timeout=120min"
+      - "-c"
+      - "max_wal_size=50GB"
+      - "-c"
+      - "min_wal_size=80MB"
+      - "-c"
+      - "max_worker_processes=24"
+      - "-c"
+      - "maintenance_work_mem=10GB"
+      - "-c"
+      - "autovacuum_max_workers=1"
+      - "-c"
+      - "effective_cache_size=15GB"
+      - "-c"
+      - "shared_buffers=1GB"
+      - "-c"
+      - "work_mem=1GB"
+      - "-c"
+      - "max_parallel_workers=24"
+      - "-c"
+      - "max_parallel_workers_per_gather=24"
+      - "-c"
+      - "plv8.start_proc=commonjs.plv8_startup"
     build:
       context: .
       dockerfile: docker-scripts/Dockerfile-db
@@ -17,7 +45,7 @@ services:
     ports: # comment-out for extra security or to avoid conflicts with host OS
      - "${DB_PORT:-5432}:5432"
     environment:
-      POSTGRES_PASS: ${POSTGRES_PASSWORD:-kyrixftw}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kyrixftw}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
 # for backup - requires special config on MacOS host OSs
 #    volumes:
@@ -37,4 +65,5 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kyrixftw}
       KYRIX_PORT: ${KYRIX_PORT:-8000}
       START_APP: ${START_APP:-0}
+      KYRIX_MAVEN_OPTS: ${KYRIX_MAVEN_OPTS:-"-Xmx512m"}   # default 512M JVM memory
     entrypoint: sh -c 'sleep 5; /wait-for-postgres db:5432 -t 60 -- /start-kyrix.sh; tail -f /dev/null'

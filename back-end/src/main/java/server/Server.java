@@ -5,13 +5,17 @@ import com.sun.net.httpserver.HttpServer;
 import index.Indexer;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import javax.net.ssl.HttpsURLConnection;
 import main.Config;
 import main.DbConnector;
 import main.Main;
+import project.Canvas;
 
 /** Created by wenbo on 1/8/18. */
 public class Server {
@@ -40,10 +44,150 @@ public class Server {
             while (!terminated) terminationLock.wait();
         }
         Server.stopServer();
-        Indexer.precompute();
-        Main.setProjectClean();
-        System.out.println("Completed recomputing indexes. Server restarting...");
+        try {
+            DbConnector.closeConnection(Config.databaseName);
+            Indexer.precompute();
+            Main.setProjectClean();
+            System.out.println("Completed recomputing indexes. Server restarting...");
+        } catch (Exception e) {
+            // print out stack trace
+            e.printStackTrace();
+            System.out.println("\n\n" + e.getMessage() + "\n");
+
+            // clear project history and set current project to null
+            ProjectRequestHandler.clearProjectHistory(Main.getProject().getName());
+            Main.setProject(null);
+
+            // print out indexing error message
+            printIndexingErrorMessage();
+        }
         Server.startServer(Config.portNumber);
+    }
+
+    public static void printIndexingErrorMessage() {
+
+        // close db connections
+        try {
+            DbConnector.closeAllConnections();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // print error message
+        System.out.println(
+                "+---------------------------------------------------------+\n"
+                        + "|ERROR!!! An exception occurred while indexing.           |\n"
+                        + "|This is likely due to errors in database related things, |\n"
+                        + "|e.g. a mis-formed SQL query in the specification, a non- |\n"
+                        + "|existent column you specified, or the data isn't loaded  |\n"
+                        + "|into the database.                                       |\n"
+                        + "|                                                         |\n"
+                        + "|Indexing is now terminated and the server is restarted.  |\n"
+                        + "|Please inspect your spec and database, and then recompile|\n"
+                        + "|the project.If you can't figure out the issue, feel free |\n"
+                        + "|to contact Kyrix maintainers.                            |\n"
+                        + "|                                                         |\n"
+                        + "|Github: https://github.com/tracyhenry/kyrix              |\n"
+                        + "+---------------------------------------------------------+\n"
+                        + "Server restarting....");
+    }
+
+    public static void printServingErrorMessage() {
+
+        // close db connections
+        try {
+            DbConnector.closeAllConnections();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // print error message
+        System.out.println(
+                "+-------------------------------------------------------------+\n"
+                        + "|ERROR!!! An exception occurred while serving an HTTP request.|\n"
+                        + "|This is likely due to errors in database related things,     |\n"
+                        + "|e.g. a non-existent column you specified, or deleted/-       |\n"
+                        + "|corrupted database indexes.                                  |\n"
+                        + "|                                                             |\n"
+                        + "|The server will continue running, but the error will likely  |\n"
+                        + "|occur again. You can recompile the project to recompute the  |\n"
+                        + "|indexes, or reach out to the kyrix maintainers for help.     |\n"
+                        + "|                                                             |\n"
+                        + "|Github: https://github.com/tracyhenry/kyrix                  |\n"
+                        + "+-------------------------------------------------------------+\n"
+                        + "Server restarting...");
+    }
+
+    public static boolean checkPredicates(ArrayList<String> predicates, Canvas c)
+            throws SQLException, ClassNotFoundException {
+        boolean allValid = true;
+        for (int i = 0; i < predicates.size(); i++) {
+            String predicate = predicates.get(i);
+            if (predicate.isEmpty()) continue;
+            ArrayList<String> colNames = c.getLayers().get(i).getTransform().getColumnNames();
+            if (!checkPredicate(predicate, colNames)) {
+                System.out.println(predicate);
+                System.out.println(colNames);
+                allValid = false;
+                break;
+            }
+        }
+        return allValid;
+    }
+
+    private static boolean checkPredicate(String predicate, ArrayList<String> colNames) {
+
+        int len = predicate.length();
+
+        // length must be >= 2
+        // the boundary of the recursion should be colName='XXX'
+        if (len < 2) return false;
+        if (predicate.charAt(0) != '(' || predicate.charAt(len - 1) != ')') return false;
+
+        // find AND or OR
+        int sumParenthesis = 0;
+        int pos = -1;
+        String operator = "";
+        for (int i = 1; i < len - 1; i++) {
+            if (predicate.charAt(i) == '(') sumParenthesis++;
+            if (predicate.charAt(i) == ')') sumParenthesis--;
+            if (sumParenthesis == 0) {
+                if (i + 5 < len && predicate.substring(i, i + 5).equals(" AND ")) {
+                    pos = i;
+                    operator = "AND";
+                } else if (i + 4 < len && predicate.substring(i, i + 4).equals(" OR ")) {
+                    pos = i;
+                    operator = "OR";
+                } else if (predicate.charAt(i) == '=') {
+                    pos = i;
+                    operator = "=";
+                }
+            }
+        }
+        if (pos == -1) return false;
+        if (operator == "AND") {
+            String l = predicate.substring(1, pos);
+            String r = predicate.substring(pos + 5, len - 1);
+            return checkPredicate(l, colNames) && checkPredicate(r, colNames);
+        } else if (operator == "OR") {
+            String l = predicate.substring(1, pos);
+            String r = predicate.substring(pos + 4, len - 1);
+            return checkPredicate(l, colNames) && checkPredicate(r, colNames);
+        } else if (operator == "=") {
+            String l = predicate.substring(1, pos);
+            String r = predicate.substring(pos + 1, len - 1);
+            // l must be a column
+            boolean isAColumn = false;
+            for (String colName : colNames)
+                if (colName.toLowerCase().equals(l.toLowerCase())) isAColumn = true;
+            if (!isAColumn) return false;
+            // r must begin and end with a single quote
+            if (r.length() < 2) return false;
+            if (r.charAt(0) != '\'' || r.charAt(r.length() - 1) != '\'') return false;
+            return true;
+        }
+
+        return false;
     }
 
     public static void terminate() {
@@ -104,15 +248,17 @@ public class Server {
     }
 
     // https://stackoverflow.com/questions/11640025/how-to-obtain-the-query-string-in-a-get-with-java-httpserver-httpexchange
-    public static Map<String, String> queryToMap(String query) {
+    public static Map<String, String> queryToMap(String query) throws UnsupportedEncodingException {
 
         Map<String, String> result = new HashMap<>();
         // check if query is null
         if (query == null) return result;
         for (String param : query.split("&")) {
+            param = java.net.URLDecoder.decode(param, "UTF-8");
             int pos = param.indexOf("=");
             result.put(param.substring(0, pos), param.substring(pos + 1));
         }
+
         return result;
     }
 

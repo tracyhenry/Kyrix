@@ -19,11 +19,16 @@ public class ProjectRequestHandler implements HttpHandler {
 
     private final Gson gson;
     private static HashMap<String, ArrayList<Project>> projects = new HashMap<>();
+    private static HashMap<String, HashMap<String, HashMap<String, String>>> BGRP = new HashMap<>();
 
     public ProjectRequestHandler() {
 
         gson = new GsonBuilder().create();
     };
+
+    public static void clearProjectHistory(String projectName) {
+        projects.remove(projectName);
+    }
 
     private Project getLastProjectObject(String projectName) {
 
@@ -43,9 +48,9 @@ public class ProjectRequestHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
 
-        try {
-            System.out.println("\n\nServing /project\n New project definition coming...");
+        System.out.println("\n\nServing /project\n New project definition coming...");
 
+        try {
             // check if this is a POST request
             if (!httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
                 Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
@@ -68,6 +73,10 @@ public class ProjectRequestHandler implements HttpHandler {
             Server.sendResponse(
                     httpExchange, HttpsURLConnection.HTTP_OK, "Good, updating main project.");
 
+            // save old project's BGRP
+            if (Main.getProject() != null)
+                BGRP.put(Main.getProject().getName(), Main.getProject().getBGRP());
+
             // set current project
             Main.setProject(newProject);
 
@@ -83,6 +92,8 @@ public class ProjectRequestHandler implements HttpHandler {
                         "Requesting skip-recompute. Project definition updated. Refresh your web page now!");
                 Indexer.associateIndexer();
                 Main.setProjectClean();
+                if (BGRP.containsKey(newProject.getName()))
+                    newProject.setBGRP(BGRP.get(newProject.getName()));
             } else if (needsReIndex(oldProject, newProject)) {
                 System.out.println(
                         "There is diff that requires recomputing indexes. Shutting down server and recomputing...");
@@ -92,9 +103,13 @@ public class ProjectRequestHandler implements HttpHandler {
                         "The diff does not require recompute. Refresh your web page now!");
                 Indexer.associateIndexer();
                 Main.setProjectClean();
+                if (BGRP.containsKey(newProject.getName()))
+                    newProject.setBGRP(BGRP.get(newProject.getName()));
             }
         } catch (Exception e) {
             e.printStackTrace();
+            System.out.println("\n\n" + e.getMessage() + "\n");
+            Server.printServingErrorMessage();
         }
     }
 

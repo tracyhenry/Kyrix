@@ -4,9 +4,11 @@ function zoomRescale(viewId, ele, oldGScaleX, oldGScaleY) {
 
     var cx = d3.select(ele).datum().cx;
     var cy = d3.select(ele).datum().cy; // finding center of element
-    var transform = d3.zoomTransform(d3.select(viewClass + ".maing").node());
-    var scaleX = 1 / transform.k;
-    var scaleY = 1 / transform.k;
+    var k = gvd.initialScale || 1;
+    if (!gvd.animation)
+        k = d3.zoomTransform(d3.select(viewClass + ".maing").node()).k;
+    var scaleX = 1 / k;
+    var scaleY = 1 / k;
 
     if (gvd.curCanvas.zoomInFactorX <= 1 && gvd.curCanvas.zoomOutFactorX >= 1)
         scaleX = 1;
@@ -116,8 +118,10 @@ function completeZoom(viewId, zoomType, oldZoomFactorX, oldZoomFactorY) {
 
     // get the id of the canvas to zoom into
     var jumps = gvd.curJump;
+    var curJump = null;
     for (var i = 0; i < jumps.length; i++)
-        if (jumps[i].type == zoomType) gvd.curCanvasId = jumps[i].destId;
+        if (jumps[i].type == zoomType) curJump = jumps[i];
+    gvd.curCanvasId = curJump.destId;
 
     // get new viewport coordinates
     var curViewport = d3
@@ -128,7 +132,7 @@ function completeZoom(viewId, zoomType, oldZoomFactorX, oldZoomFactorY) {
     gvd.initialViewportY = curViewport[1] * oldZoomFactorY;
 
     // pre animation
-    preJump(viewId, zoomType);
+    preJump(viewId, curJump);
 
     // get the canvas object
     var gotCanvas = getCurCanvas(viewId);
@@ -137,7 +141,7 @@ function completeZoom(viewId, zoomType, oldZoomFactorX, oldZoomFactorY) {
         renderStaticLayers(viewId);
 
         // post animation
-        postJump(viewId, zoomType);
+        postJump(viewId, curJump);
     });
 }
 

@@ -4,7 +4,15 @@ var param = {};
 // animation durations, delays
 param.semanticZoomEnteringDelta = 0.5;
 param.semanticZoomEnteringDuration = 1300;
+param.slideExitDuration = 700;
+param.slideEnteringDuration = 700;
+param.slideSwitchDelay = 230;
+param.supermanFlyingDuration = 2500;
+param.supermanEnteringTime = 500;
+param.supermanDisplayDelay = 200;
+param.supermanDisplayDuration = 300;
 param.literalZoomDuration = 500;
+param.literalZoomFadeOutDuration = 150;
 
 // semantic zoom scale factor
 param.semanticZoomScaleFactor = 4;
@@ -35,7 +43,7 @@ param.dimOpacity = 0.4;
 param.extraTiles = 0;
 
 // padding for the container svg
-param.viewPadding = 50;
+param.viewPadding = 100;
 
 // jump types
 param.literalZoomIn = "literal_zoom_in";
@@ -44,6 +52,7 @@ param.semanticZoom = "semantic_zoom";
 param.geometricSemanticZoom = "geometric_semantic_zoom";
 param.load = "load";
 param.highlight = "highlight";
+param.slide = "slide";
 
 // epsilon
 param.eps = 1e-5;
