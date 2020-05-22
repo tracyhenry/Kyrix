@@ -22,9 +22,7 @@
   "license": "ISC",
   "devDependencies": {},
   "dependencies": {
-    "@turf/rewind": "^5.1.5",
     "d3": "^4.12.2",
-    "geojson-rewind": "^0.3.1",
     "mysql": "^2.15.0",
     "pg": "^7.4.3"
   }
