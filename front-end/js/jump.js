@@ -52,9 +52,7 @@ function preJump(viewId, jump) {
         .selectAll("*")
         .style("cursor", "auto")
         .on("click", null)
-        .on("mouseover", null)
-        .on("mouseout", null)
-        .on("mousemove", null);
+        .on(".kyrixtooltip", null);
     d3.selectAll("button" + viewClass).attr("disabled", true);
 
     gvd.animation = jump.type;
