@@ -250,5 +250,5 @@ export function triggerPredicate(viewId, predDict) {
     var k = d3.zoomTransform(d3.select(viewClass).node()).k;
 
     // step 2: load
-    load(predArray, newVpX, newVpY, k, viewId, gvd.curCanvasId);
+    load(predArray, newVpX, newVpY, k, viewId, gvd.curCanvasId, {type: "load"});
 }
