@@ -27,7 +27,8 @@ var overallMapRendering = function(svg, data, args) {
         })
         .style("stroke", "#000")
         .style("stroke-width", "2")
-        .style("fill", "white");
+        .style("fill", "black")
+        .style("opacity",0.1);
 }
 
 var stationsRendering = function(svg, data, args) {
@@ -61,9 +62,8 @@ var stationsRendering = function(svg, data, args) {
                 .attr("id", "tooltip" + i)
                 .classed("tooltip", true)
                 .style("position", "absolute")
-                .style("width", 300)
+                .style("width", 350)
                 .style("height", 50)
-                .style("pointer-events", "none")
                 .style("opacity", 1)
                 .style("font-size", 24)
                 .style("color", "#0059d6");
@@ -115,7 +115,8 @@ var insetMapRendering = function(svg, data, args) {
         })
         .style("stroke", "#000")
         .style("stroke-width", "3")
-        .style("fill", "white");
+        .style("fill", "black")
+        .style("opacity",0.1);
 }
 
 var ridesInRendering = function(svg, data, args) {
@@ -123,6 +124,13 @@ var ridesInRendering = function(svg, data, args) {
     var width = args.canvasW,
         height = args.canvasH;
     var param = args.renderingParams;
+
+    var min_count = d3.min(data, d => d.count);
+    var max_count = d3.max(data, d => d.count);
+
+    var barWidth = d3.scaleLog()
+        .domain([min_count,max_count])
+        .range([1,10]);
 
     g.selectAll("line")
         .data(data)
@@ -133,7 +141,7 @@ var ridesInRendering = function(svg, data, args) {
         .attr("x2",  function (d) {return d.end_bbox_x;})
         .attr("y2",  function (d) {return d.end_bbox_y;})
         .style("stroke", "green")
-        .style("stroke-width", 1.5)
+        .style("stroke-width", function (d) {return barWidth(d.count);})
         .style("opacity",0.2);
 
     g.selectAll("circle")
@@ -159,7 +167,6 @@ var ridesInRendering = function(svg, data, args) {
                 .style("width", 300)
                 .style("height", 100)
                 .style("background","#C4EBC5")
-                .style("pointer-events", "none")
                 .style("opacity", 1)
                 .style("font-size", 24)
                 .style("color", "black");
@@ -183,6 +190,13 @@ var ridesOutRendering = function(svg, data, args) {
         height = args.canvasH;
     var param = args.renderingParams;
 
+    var min_count = d3.min(data, d => d.count)
+    var max_count = d3.max(data, d => d.count)
+
+    var barWidth = d3.scaleLog()
+        .domain([min_count,max_count])
+        .range([1,10]);
+
     g.selectAll("line")
         .data(data)
         .enter()
@@ -192,7 +206,7 @@ var ridesOutRendering = function(svg, data, args) {
         .attr("x2", function(d) {return d.end_bbox_x;})
         .attr("y2", function(d) {return d.end_bbox_y;})
         .style("stroke", "red")
-        .style("stroke-width", 1.5)
+        .style("stroke-width", function (d) {return barWidth(d);})
         .style("opacity",0.2);
 
     g.selectAll("circle")
@@ -218,7 +232,6 @@ var ridesOutRendering = function(svg, data, args) {
                 .style("background", "#EBC4C4")
                 .style("width", 300)
                 .style("height", 100)
-                .style("pointer-events", "none")
                 .style("opacity", 1)
                 .style("font-size", 24)
                 .style("color", "black");
@@ -238,142 +251,15 @@ var ridesOutRendering = function(svg, data, args) {
 
 var stationNameRendering = function(svg, data) {
     g = svg.append("g")
+        .data(data)
         .append("text")
-        .text(function(d) {return "Station Name";})
-        .attr("x", 610)
+        .text(function(d) {return d.station;})
+        .attr("text-anchor","middle")
+        .attr("x", 500)
         .attr("y", 50)
-        .attr("font-size", 40)
+        .attr("font-size", 30)
         .attr("fill", "#0059d6");
 }
-
-var tableRendering = function(svg, data, args) {
-    // create a new g
-    var g = svg.append("g");
-    var height = args.canvasH;
-    var params = args.renderingParams;
-
-    // precompute some stuff
-    var headerStartHeight =
-        height / 2 -
-        ((data.length + 1) * params.cellHeight + params.headerHeight) / 2;
-    var firstRowHeight = headerStartHeight + params.headerHeight;
-    var fields = [
-        "duration",
-        "start",
-        "end",
-        "birth_year",
-        "gender"
-    ];
-
-    // loop over stats
-    var curLeft = params.playerNameCellWidth;
-    for (var i = 0; i < fields.length; i++) {
-        // display name of the current field
-        var displayName =
-            fields[i] == "turnover"
-                ? "TO"
-                : fields[i] == "plus_minus"
-                ? "+/-"
-                : fields[i] == "start_position"
-                ? "POS"
-                : fields[i].toUpperCase();
-
-        var curColumnWidth = Math.min(
-            displayName.length * params.avgcharwidth,
-            params.statsCellMaxWidth
-        );
-        // stats header bkg rect
-        g.append("rect")
-            .attr("width", curColumnWidth)
-            .attr("height", params.headerHeight)
-            .attr("x", curLeft)
-            .attr("y", headerStartHeight)
-            .style("fill", params.headerbkgcolor);
-
-        // stats header text
-        g.append("text")
-            .text(displayName)
-            .attr("x", curLeft + curColumnWidth / 2)
-            .attr("y", headerStartHeight + params.headerHeight / 2)
-            .attr("dy", ".35em")
-            .attr("font-size", params.headerfontsize)
-            .attr("text-anchor", "middle")
-            .style("fill-opacity", 1)
-            .style("fill", params.headerfontcolor);
-
-        // player stats bkg rect
-        g.selectAll(".playerstatsrect")
-            .data(data)
-            .enter()
-            .append("rect")
-            .attr("width", curColumnWidth)
-            .attr("height", params.cellHeight)
-            .attr("x", curLeft)
-            .attr("y", function(d, i) {
-                return firstRowHeight + i * params.cellHeight;
-            })
-            .style("fill", function(d, i) {
-                if (i % 2 == 0) return params.evenrowcolor;
-                return params.oddrowcolor;
-            });
-
-        // player stats text
-        g.selectAll(".playerstatstext")
-            .data(data)
-            .enter()
-            .append("text")
-            .text(function(d) {
-                return fields[i] == "start_position"
-                    ? d[fields[i]]
-                    : (+d[fields[i]]).toFixed(precision);
-            })
-            .attr("x", curLeft + curColumnWidth / 2)
-            .attr("y", function(d, i) {
-                return firstRowHeight + (i + 0.5) * params.cellHeight;
-            })
-            .attr("font-size", params.bodyfontsize)
-            .attr("text-anchor", "middle")
-            .attr("dy", ".35em")
-            .style("fill-opacity", 1)
-            .style("fill", params.bodyfontcolor);
-
-        // team stats bkg rect
-        var startHeight =
-            height / 2 -
-            ((data.length + 1) * params.cellHeight + params.headerHeight) / 2 +
-            params.headerHeight +
-            params.cellHeight * data.length;
-        g.append("rect")
-            .attr("width", curColumnWidth)
-            .attr("height", params.cellHeight)
-            .attr("x", curLeft)
-            .attr("y", startHeight)
-            .style(
-                "fill",
-                data.length % 2 == 0 ? params.evenrowcolor : params.oddrowcolor
-            );
-
-        // team stats text
-        if (fields[i] != "start_position") {
-            var overall = 0;
-            for (var j = 0; j < data.length; j++)
-                overall += +data[j][fields[i]];
-            if (avg_fields.indexOf(fields[i]) != -1)
-                overall = overall / data.length;
-            else if (fields[i] == "PLUS_MINUS") overall = overall / 5;
-            g.append("text")
-                .text(overall.toFixed(precision))
-                .attr("x", curLeft + curColumnWidth / 2)
-                .attr("y", startHeight + params.cellHeight / 2)
-                .attr("font-size", params.bodyfontsize)
-                .attr("text-anchor", "middle")
-                .attr("dy", ".35em")
-                .style("fill-opacity", 1)
-                .style("fill", params.bodyfontcolor);
-        }
-        curLeft += curColumnWidth;
-    }
-};
 
 module.exports = {
     renderingParams, 
@@ -383,6 +269,5 @@ module.exports = {
     insetMapRendering,
     ridesInRendering,
     ridesOutRendering,
-    stationNameRendering,
-    tableRendering
+    stationNameRendering
 };

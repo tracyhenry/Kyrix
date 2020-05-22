@@ -83,6 +83,35 @@ var insetMapTransform = new Transform(
     true
 );
 
+var countsTransform = new Transform(
+    "select count(*), start_station_name, start_station_latitude, start_station_longitude, end_station_name, end_station_latitude, end_station_longitude from rides group by 2,3,4,5,6,7",
+    "bluebikes",
+    function(row, width, height, param) {
+        var ret = [];
+        ret.push(row[0]);
+        ret.push(row[1]);
+        ret.push(row[4]);
+
+        var projection = d3
+            .geoAlbers()
+            .rotate([71.06, 0])
+            .center([0,42.32])
+            .scale(param.insetMapScale)
+            .translate([width / 2, height / 2]);
+        var start_pixel_location = projection([row[3], row[2]]);
+        var end_pixel_location = projection([row[6], row[5]]);
+        ret.push(!isFinite(start_pixel_location[0]) ? 0 : start_pixel_location[0]);
+        ret.push(!isFinite(start_pixel_location[1]) ? 0 : start_pixel_location[1]);   
+        ret.push(!isFinite(end_pixel_location[0]) ? 0 : end_pixel_location[0]);
+        ret.push(!isFinite(end_pixel_location[1]) ? 0 : end_pixel_location[1]);
+
+        return Java.to(ret, "java.lang.String[]");
+    },
+    ["count","start_station_name","end_station_name","start_bbox_x","start_bbox_y","end_bbox_x","end_bbox_y"],
+    true
+);
+
+
 var ridesTransform = new Transform(
     "select start_station_name, start_station_latitude, start_station_longitude, end_station_name, end_station_latitude, end_station_longitude from rides",
     "bluebikes",
@@ -123,6 +152,7 @@ module.exports = {
     stationsTransform,
     selectStationTransform,
     insetMapTransform,
+    countsTransform,
     ridesTransform,
     tableTransform
 };

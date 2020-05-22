@@ -47,13 +47,13 @@ insetMapCanvas.addLayer(stationNameLayer);
 stationNameLayer.addRenderingFunc(renderers.stationNameRendering);
 
 // rides in layer
-var ridesInLayer = new Layer(transforms.ridesTransform, false);
+var ridesInLayer = new Layer(transforms.countsTransform, false);
 insetMapCanvas.addLayer(ridesInLayer);
 ridesInLayer.addPlacement(placements.ridesPlacement);
 ridesInLayer.addRenderingFunc(renderers.ridesInRendering);
 
 // rides out layer
-var ridesOutLayer = new Layer(transforms.ridesTransform, false);
+var ridesOutLayer = new Layer(transforms.countsTransform, false);
 insetMapCanvas.addLayer(ridesOutLayer);
 ridesOutLayer.addPlacement(placements.ridesPlacement);
 ridesOutLayer.addRenderingFunc(renderers.ridesOutRendering);
@@ -63,27 +63,6 @@ var insetMapLayer = new Layer(transforms.insetMapTransform, false);
 insetMapCanvas.addLayer(insetMapLayer);
 insetMapLayer.addPlacement(placements.mapPlacement);
 insetMapLayer.addRenderingFunc(renderers.insetMapRendering);
-
-/*
-// ================== Table Canvas ===================
-var width = 1750;
-var height = 1000;
-
-// construct a new canvas
-var tableCanvas = new Canvas("table", width, height);
-p.addCanvas(tableCanvas);
-
-// // static pk column layer
-// var boxscorePkColumnLayer = new Layer(transforms.boxscoreTransform, true);
-// tableCanvas.addLayer(boxscorePkColumnLayer);
-// boxscorePkColumnLayer.addRenderingFunc(renderers.boxscorePkRendering);
-
-// pannable stats layer
-var tableLayer = new Layer(transforms.tableTransform, false);
-tableCanvas.addLayer(tableLayer);
-tableLayer.addPlacement(placements.tablePlacement);
-tableLayer.addRenderingFunc(renderers.tableRendering);
-*/
 
 // ================== Views ===================
 var view = new View("bluebikes", 0, 0, width, height);
@@ -108,10 +87,10 @@ var newViewport = function(row, args) {
 };
 
 var newPredicate = function(row) {
-    // var pred0 = {"==": ["station", row.name]};
+    var pred0 = {"==": ["station", row.name]};
     var pred1 = {"==": ["end_station_name", row.name]};
     var pred2 = {"==": ["start_station_name", row.name]};
-    return {layer1: pred1, layer2: pred2};
+    return {layer0: pred0, layer1: pred1, layer2: pred2};
 };
 
 var jumpName = function(row) {
