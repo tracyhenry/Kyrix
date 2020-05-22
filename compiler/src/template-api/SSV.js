@@ -163,13 +163,6 @@ function SSV(args) {
             "Constructing SSV: object renderer (marks.cluster.object) missing."
         );
     if (
-        "object" in args.marks.hover &&
-        typeof args.marks.hover.object != "function"
-    )
-        throw new Error(
-            "Constructing SSV: hover object renderer (marks.cluster.hover.object) is not a function."
-        );
-    if (
         (args.marks.cluster.mode == "radar" ||
             args.marks.cluster.mode == "circle" ||
             args.marks.cluster.mode == "heatmap" ||
