@@ -110,4 +110,6 @@ if [ "x$START_APP" = "x1" ]; then
     fi
 
     echo "*** done! Kyrix ready at: http://$KYRIX_IP:${KYRIX_PORT:-8000}/"
+    echo "Note that you need to open the firewall for port ${KYRIX_PORT:-8000}."
+    echo "If Kyrix is running on your laptop, you can simply visit http://localhost:${KYRIX_PORT:-8000}/"
 fi
