@@ -8,9 +8,12 @@ import index.Indexer;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.net.ssl.HttpsURLConnection;
+import main.Config;
+import main.DbConnector;
 import main.Main;
 import project.*;
 
@@ -19,7 +22,6 @@ public class ProjectRequestHandler implements HttpHandler {
 
     private final Gson gson;
     private static HashMap<String, ArrayList<Project>> projects = new HashMap<>();
-    private static HashMap<String, HashMap<String, HashMap<String, String>>> BGRP = new HashMap<>();
 
     public ProjectRequestHandler() {
 
@@ -73,10 +75,6 @@ public class ProjectRequestHandler implements HttpHandler {
             Server.sendResponse(
                     httpExchange, HttpsURLConnection.HTTP_OK, "Good, updating main project.");
 
-            // save old project's BGRP
-            if (Main.getProject() != null)
-                BGRP.put(Main.getProject().getName(), Main.getProject().getBGRP());
-
             // set current project
             Main.setProject(newProject);
 
@@ -92,8 +90,7 @@ public class ProjectRequestHandler implements HttpHandler {
                         "Requesting skip-recompute. Project definition updated. Refresh your web page now!");
                 Indexer.associateIndexer();
                 Main.setProjectClean();
-                if (BGRP.containsKey(newProject.getName()))
-                    newProject.setBGRP(BGRP.get(newProject.getName()));
+                retrieveBGRP(newProject);
             } else if (needsReIndex(oldProject, newProject)) {
                 System.out.println(
                         "There is diff that requires recomputing indexes. Shutting down server and recomputing...");
@@ -103,14 +100,24 @@ public class ProjectRequestHandler implements HttpHandler {
                         "The diff does not require recompute. Refresh your web page now!");
                 Indexer.associateIndexer();
                 Main.setProjectClean();
-                if (BGRP.containsKey(newProject.getName()))
-                    newProject.setBGRP(BGRP.get(newProject.getName()));
+                retrieveBGRP(newProject);
             }
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("\n\n" + e.getMessage() + "\n");
             Server.printServingErrorMessage();
         }
+    }
+
+    public void retrieveBGRP(Project proj) throws SQLException, ClassNotFoundException {
+
+        String sql = "SELECT gson FROM bgrp WHERE project_id = '" + proj.getName() + "'";
+        ArrayList<ArrayList<String>> ret = DbConnector.getQueryResult(Config.databaseName, sql);
+        if (ret.isEmpty()) return;
+
+        HashMap<String, HashMap<String, String>> curBGRP =
+                gson.fromJson(ret.get(0).get(0), HashMap.class);
+        proj.setBGRP(curBGRP);
     }
 
     // simple check for the need of reindexing. A more sophisticated checker/partial reindexing are

@@ -1,5 +1,7 @@
 package server;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import index.Indexer;
@@ -8,6 +10,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,6 +50,7 @@ public class Server {
         try {
             DbConnector.closeConnection(Config.databaseName);
             Indexer.precompute();
+            saveBGRP();
             Main.setProjectClean();
             System.out.println("Completed recomputing indexes. Server restarting...");
         } catch (Exception e) {
@@ -133,6 +137,38 @@ public class Server {
             }
         }
         return allValid;
+    }
+
+    // save BGPR of the old project to the database
+    private static void saveBGRP() throws SQLException, ClassNotFoundException {
+
+        if (Main.getProject() == null) return;
+
+        // create the bgrp table if not exists
+        String sql = "CREATE TABLE IF NOT EXISTS bgrp(project_id text, gson text);";
+        System.out.println(sql);
+        Statement kyrixStmt = DbConnector.getStmtByDbName(Config.databaseName);
+        kyrixStmt.execute(sql);
+
+        // delete the entry if exists
+        sql = "DELETE FROM bgrp WHERE project_id = '" + Main.getProject().getName() + "';";
+        System.out.println(sql);
+        kyrixStmt.execute(sql);
+
+        Gson gson = new GsonBuilder().create();
+        String jsonText = gson.toJson(Main.getProject().getBGRP());
+        sql =
+                "INSERT INTO bgrp VALUES ('"
+                        + Main.getProject().getName()
+                        + "', '"
+                        + jsonText
+                        + "');";
+        System.out.println(sql);
+        System.out.println("-------");
+        kyrixStmt.execute(sql);
+
+        // close statement
+        kyrixStmt.close();
     }
 
     private static boolean checkPredicate(String predicate, ArrayList<String> colNames) {
