@@ -1,4 +1,4 @@
-# Kyrix - Democratizing Pan/zoom Data Visualizations at Scale
+# Kyrix - Democratizing Details-on-demand Data Visualizations
 
 ![version](https://img.shields.io/badge/release-v1.0.0--beta-orange) 
 ![Build status](https://travis-ci.org/tracyhenry/Kyrix.svg?branch=master) [![code style: 
