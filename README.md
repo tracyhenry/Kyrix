@@ -1,14 +1,11 @@
-# Kyrix - Democratizing Details-on-demand Data Visualizations
+# Kyrix - Democratizing details-on-demand data visualizations
 
 ![version](https://img.shields.io/badge/release-v1.0.0--beta-orange) 
 ![Build status](https://travis-ci.org/tracyhenry/Kyrix.svg?branch=master) [![code style: 
 prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier) [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tracyhenry/Kyrix/blob/master/LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/tracyhenry/Kyrix/wiki/How-to-Contribute)
 
-<p float="left">
-  <img src="https://github.com/tracyhenry/Kyrix/blob/master/img/usmap_demo.gif" width="400" />
-  <img src="https://github.com/tracyhenry/Kyrix/blob/master/img/forest_demo.gif" width="400" height="209.33"/>
-  <img src="https://github.com/tracyhenry/Kyrix/blob/master/img/nba_demo.gif" width="400" height="309.33" />
-  <img src="https://github.com/tracyhenry/Kyrix/blob/master/img/flare_demo.gif" width="400"/>
+<p float="center">
+  <img src="https://media.giphy.com/media/kEiyipSWpgvo1CyUTF/giphy.gif" width="800" />
 </p>
 
 # About
