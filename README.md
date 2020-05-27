@@ -31,6 +31,62 @@ Backend server started...
 *** done! Kyrix ready at: http://<host>:8000/
 ```
 
+Getting started by reading a [tutorial](https://github.com/tracyhenry/Kyrix/wiki/Tutorial). 
+
+## Setup-free big data visualizations
+Kyrix is fully dockerized, with a live PostgreSQL database running right after docker startup. Front-end vis libraries often assume data fits in browser memory, and thus scale to only small data. By working with a database, Kyrix scales to much larger data while being free of the hassle of installing and maintaining databases. 
+
+Docker works by creating fully isolated virtual machines ("containers") on your computer, making it much
+easier to achieve correct installations every time ([learn more](https://opensource.com/resources/what-docker)). See [docker config details](https://github.com/tracyhenry/Kyrix/wiki/Docker-Config-Details). 
+
+## Declarative authoring
+Kyrix offers two declarative grammars for authoring complex details-on-demand visualizations. [Low-level Kyrix grammar](https://github.com/tracyhenry/Kyrix/wiki/API-Reference) is verbose but expressive. [Kyrix-S grammar](https://github.com/tracyhenry/Kyrix/wiki/Kyrix%E2%80%90S-API-Reference) is a high-level and concise grammar designed for zoomable scatterplot visualizations. For example, Kyrix-S turns
+```javascript
+{
+    data: {  
+        db: "nba",  
+        query: “SELECT * FROM games"  
+    },  
+    layout: {  
+        x: {  
+            field: "home_score",  
+            extent: [69, 149]  
+        },  
+        y: {  
+            field: "away_score",  
+            extent: [69, 148]  
+        },  
+        z: {  
+            field: "agg_rank",  
+            order: "asc"  
+        }  
+    },  
+    marks: {  
+        cluster: {  
+            mode: "circle"
+        },  
+        hover: {  
+            rankList: {  
+                mode: "tabular",  
+                fields: ["home_team", "away_team", "home_score", "away_score"],  
+                topk: 3  
+            },  
+            boundary: "convexhull"  
+         }  
+    },  
+    config: {  
+        axis: true  
+    }  
+};
+```
+into
+<p align="center">
+<a href="https://github.com/tracyhenry/Kyrix/tree/master/compiler/examples/nba_cmv">
+<img src="https://media.giphy.com/media/d7xqGWf1Q4sftNOuZd/giphy.gif" width = "375"/>
+</a>
+</p>
+
+
 ## More information
 * [Quick-start Tutorial](https://github.com/tracyhenry/Kyrix/wiki/Tutorial)
 * [API Reference](https://github.com/tracyhenry/Kyrix/wiki/API-Reference)
