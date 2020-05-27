@@ -5,7 +5,7 @@
 prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier) [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tracyhenry/Kyrix/blob/master/LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/tracyhenry/Kyrix/wiki/How-to-Contribute)
 
 <p float="center">
-  <img src="https://media.giphy.com/media/IfmtaKYKIp5QNgOeZ1/giphy.gif" width="800" />
+  <img src="https://github.com/tracyhenry/Kyrix-gallery/blob/master/gallery.gif" width="800" />
 </p>
 
 # About
