@@ -567,7 +567,7 @@ function animateSlide(viewId, slideDirection, newVpX, newVpY, newScale, jump) {
                     " " +
                     gvd.viewportWidth +
                     " " +
-                    gvd.viewportWidth
+                    gvd.viewportHeight
             )
             .style("opacity", 1 - t);
     }
