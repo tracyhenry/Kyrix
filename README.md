@@ -11,11 +11,7 @@ prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://
 </p>
 
 # About
-Kyrix is a system that facilitates the creation of data visualizations with details-on-demand interactions (e.g. pan and zoom, see example demos above). In this paradigm, the user often starts at an overview of the dataset, zooms into a particular region of interest to see more details, zooms out then repeats. As demonstrated by early research, this interaction pattern is easily learnable and particularly effective in reducing users' burden when exploring large datasets, while also preserving their sense of position and context. Many of Pan/zoom visualizations are purpose-built (e.g. Google Maps) and are not easily extensible. Kyrix provides a general framework for easy creation of such visualizations. 
-
-In visualizations of such, the underlying dataset is often large. To deal with large data, Kyrix is focused on optimizing two goals: 1) usable declarative API library for visualization developers and 2) 500ms response time to user interactions, which is required to enable interactive browsing. See our [EuroVis paper](http://web.mit.edu/wenbo/www/kyrix_eurovis.pdf) for more technical details. 
-
-We are working with users from MGH ([30T data vis demo](https://youtu.be/fZ32cE8KEi0)), Paradigm 4, Agero and Recorded Futures to get feedback from serious real-world applications. We look forward to your feedback as well. Take a look at the instructions below to get started and let us know what you think!
+Kyrix facilitates the creation of data visualizations with details-on-demand interactions (e.g. pan and zoom, see example demos above). In visualizations of such, the underlying dataset is often large. To deal with large data, Kyrix is focused on optimizing two goals: 1) usable declarative API library for visualization developers and 2) 500ms response time to user interactions, which is required to enable interactive browsing. 
 
 ## Installation instructions for the impatient
 
@@ -42,3 +38,17 @@ Backend server started...
 * [Parallel Indexing](https://github.com/tracyhenry/Kyrix/wiki/Parallel-Indexing-Instructions)
 * [Web Embedding](https://github.com/tracyhenry/Kyrix/wiki/Web-Embedding)
 * [Docker Config Details](https://github.com/tracyhenry/Kyrix/wiki/Docker-Config-Details)
+
+## Citing Kyrix
+```bibtex
+@inproceedings{tao2019kyrix,
+  title={Kyrix: Interactive pan/zoom visualizations at scale},
+  author={Tao, Wenbo and Liu, Xiaoyu and Wang, Yedi and Battle, Leilani and Demiralp, {\c{C}}a{\u{g}}atay and Chang, Remco and Stonebraker, Michael},
+  booktitle={Computer Graphics Forum},
+  volume={38},
+  number={3},
+  pages={529--540},
+  year={2019},
+  organization={Wiley Online Library}
+}
+```
