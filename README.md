@@ -92,11 +92,32 @@ Kyrix offers [APIs](https://github.com/tracyhenry/Kyrix/wiki/Web-Embedding) to i
 ## Contributing to Kyrix
 We welcome contributions! Please let us know about your change beforehand if it is big. Also, see [contributing guidelines](https://github.com/tracyhenry/Kyrix/wiki/How-to-Contribute). 
 
-Kyrix is maintained by a group of researchers at [MIT's data system group](http://dsg.csail.mit.edu/). The system is not possible without the contribution from the following people:
+Kyrix is maintained by a group of researchers at [MIT's data system group](http://dsg.csail.mit.edu/). The system is not possible without the contribution from the these wonderful developers:
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/tracyhenry"><img src="https://avatars2.githubusercontent.com/u/5410441?s=460&v=4" width="70px;" alt=""/><br /><sub><b>Wenbo Tao</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/asah"><img src="https://avatars3.githubusercontent.com/u/140002?s=400&v=4" width="70px;" alt=""/><br /><sub><b>Adam Sah</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/houxinli"><img src="https://avatars2.githubusercontent.com/u/23057640?s=460&u=9a5f5bb1fef5b1ea70b04157827ec6d9da0438d5&v=4" width="70px;" alt=""/><br /><sub><b>Xinli Hou</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/xiaoyu4321"><img src="https://avatars1.githubusercontent.com/u/29280476?s=460&u=446b5fec827ab6a6b1873b7f064cb4278b0c0179&v=4" width="70px;" alt=""/><br /><sub><b>Xiaoyu Liu</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/yediwang"><img src="https://avatars0.githubusercontent.com/u/31806079?s=460&u=569fb50cd58c0033932381f513f703e1f2dcca36&v=4" width="70px;" alt=""/><br /><sub><b>Yedi Wang</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/peterg17"><img src="https://avatars1.githubusercontent.com/u/2456071?s=460&u=4996c118f8e54c76c8c10839d6992cad3e6fdf5b&v=4" width="70px;" alt=""/><br /><sub><b>Peter Griggs</b></sub></a><br /</td>
+  </tr>
+  <tr>
+        <td align="center"><a href="https://github.com/mschoema"><img src="https://avatars0.githubusercontent.com/u/32960718?s=460&v=4" width="70px;" alt=""/><br /><sub><b>Maxime Schoemans</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/ericazhou7"><img src="https://avatars3.githubusercontent.com/u/37673328?s=460&v=4" width="70px;" alt=""/><br /><sub><b>Erica Zhou</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/abhishek-bassan"><img src="https://avatars0.githubusercontent.com/u/7061250?s=460&v=4" width="70px;" alt=""/><br /><sub><b>Abhishek Bassan</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/ScarlettZ98"><img src="https://avatars3.githubusercontent.com/u/31007583?s=460&u=ab9b1b1720de52a06259757a1dd0331a879bbabc&v=4" width="70px;" alt=""/><br /><sub><b>Scarlett Zhang</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/amyzhaang"><img src="https://avatars3.githubusercontent.com/u/26984692?s=460&v=4" width="70px;" alt=""/><br /><sub><b>Amy Zhang</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/jperaino"><img src="https://avatars0.githubusercontent.com/u/7572179?s=460&u=6d57f8dd49e1c1cdf0f9ce42bb33803f8d777348&v=4" width="70px;" alt=""/><br /><sub><b>Jim Peraino</b></sub></a><br /></td>
 
+  </tr>
+  
+</table>
 
 ## Disclaimer
 The current repo contains research-quality code, and is intended for demo purposes. The code should not be used for large-scale secure serving. Currently, `v1.0.0-beta` only supports data up to 10~100 millions of data points. We plan to release a distributed version of Kyrix in the future. 
+
+
 
 ## More information
 * [Quick-start Tutorial](https://github.com/tracyhenry/Kyrix/wiki/Tutorial)
