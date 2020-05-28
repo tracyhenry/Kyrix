@@ -32,7 +32,7 @@ Backend server started...
 *** done! Kyrix ready at: http://<host>:8000/
 ```
 
-Getting started by reading a [tutorial](https://github.com/tracyhenry/Kyrix/wiki/Tutorial). 
+Getting started by reading a [tutorial](https://github.com/tracyhenry/Kyrix/wiki/Tutorial). More documentations are [here](https://github.com/tracyhenry/Kyrix/wiki).
 
 ## Setup-free big data visualizations
 Kyrix is fully dockerized, with a live PostgreSQL database running right after docker startup. Front-end vis libraries often assume data fits in browser memory, and thus scale to only small data. By working with a containerized database, Kyrix scales to much larger data while being free of the hassle of installing and maintaining databases. 
