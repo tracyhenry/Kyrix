@@ -10,7 +10,9 @@ prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://
   <img src="https://github.com/tracyhenry/Kyrix-gallery/blob/master/gallery.gif" width="700" />
 </p>
 
-Kyrix facilitates the creation of data visualizations with details-on-demand interactions (e.g. pan and zoom, see example demos above). In visualizations of such, the underlying dataset is often large. To deal with large data, Kyrix is focused on optimizing two goals: 1) usable declarative API library for visualization developers and 2) 500ms response time to user interactions, which is required to enable interactive browsing. 
+Kyrix facilitates the creation of data visualizations with details-on-demand interactions (e.g. pan and zoom, see the demo gallery <sup id="a1">[1](#f1)</sup> above). In visualizations of such, the underlying dataset is often large. To deal with large data, Kyrix is focused on optimizing two goals: 1) usable declarative API library for visualization developers and 2) 500ms response time to user interactions, which is required to enable interactive browsing. 
+
+   1. <small id="f1"> _This gallery GIF is itself a Kyrix application._ </small> [↩](#a1)
 
 ## Installation instructions for the impatient
 
@@ -115,7 +117,7 @@ Kyrix is maintained by a group of researchers at [MIT's data system group](http:
 </table>
 
 ## Disclaimer
-The current repo contains research-quality code, and is intended for demo purposes. The code should not be used for large-scale secure serving. Currently, `v1.0.0-beta` only supports data up to 10~100 millions of data points. We plan to release a distributed version of Kyrix in the future. 
+The current `v1.0.0-beta` release contains research-quality code, and is intended for demo purposes. The code should not be used for large-scale secure serving. Currently, `v1.0.0-beta` only supports data up to 10~100 millions of data points. We plan to release a distributed version of Kyrix in the future. 
 
 
 
