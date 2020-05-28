@@ -32,7 +32,7 @@ Backend server started...
 *** done! Kyrix ready at: http://<host>:8000/
 ```
 
-Getting started by reading a [tutorial](https://github.com/tracyhenry/Kyrix/wiki/Tutorial). More documentations are [here](https://github.com/tracyhenry/Kyrix/wiki).
+Getting started by reading a [**tutorial**](https://github.com/tracyhenry/Kyrix/wiki/Tutorial), and [**more documentations**](https://github.com/tracyhenry/Kyrix/wiki).
 
 ## Setup-free big data visualizations
 Kyrix is fully dockerized, with a live PostgreSQL database running right after docker startup. Front-end vis libraries often assume data fits in browser memory, and thus scale to only small data. By working with a containerized database, Kyrix scales to much larger data while being free of the hassle of installing and maintaining databases. 
@@ -90,6 +90,8 @@ into
 ## Embedding into your favourite web app
 Kyrix offers [APIs](https://github.com/tracyhenry/Kyrix/wiki/Web-Embedding) to integrate a kyrix application into a web application. There's no limit on what you can imagine: complex coordinated views, programmatic pan/zoom control, cross filtering...  
 
+## Telling us about your Kyrix app
+We'd like to learn more about your application requirements to make Kyrix better. If you have built a Kyrix app, send us a screenshot on Gitter!
 
 ## Contributing to Kyrix
 We welcome contributions! Please let us know about your change beforehand if it is big. Also, see [contributing guidelines](https://github.com/tracyhenry/Kyrix/wiki/How-to-Contribute). 
@@ -118,16 +120,6 @@ Kyrix is maintained by a group of researchers at [MIT's data system group](http:
 
 ## Disclaimer
 The current `v1.0.0-beta` release contains research-quality code, and is intended for demo purposes. The code should not be used for large-scale secure serving. Currently, `v1.0.0-beta` only supports data with up to 10~100 millions of data points. We plan to release a distributed version of Kyrix in the future. 
-
-
-
-## More information
-* [Quick-start Tutorial](https://github.com/tracyhenry/Kyrix/wiki/Tutorial)
-* [API Reference](https://github.com/tracyhenry/Kyrix/wiki/API-Reference)
-* [How to Contribute](https://github.com/tracyhenry/Kyrix/wiki/How-to-Contribute)
-* [Parallel Indexing](https://github.com/tracyhenry/Kyrix/wiki/Parallel-Indexing-Instructions)
-* [Web Embedding](https://github.com/tracyhenry/Kyrix/wiki/Web-Embedding)
-* [Docker Config Details](https://github.com/tracyhenry/Kyrix/wiki/Docker-Config-Details)
 
 ## Citing Kyrix
 ```bibtex
