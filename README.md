@@ -35,7 +35,7 @@ Backend server started...
 Getting started by reading a [tutorial](https://github.com/tracyhenry/Kyrix/wiki/Tutorial). 
 
 ## Setup-free big data visualizations
-Kyrix is fully dockerized, with a live PostgreSQL database running right after docker startup. Front-end vis libraries often assume data fits in browser memory, and thus scale to only small data. By working with a database, Kyrix scales to much larger data while being free of the hassle of installing and maintaining databases. 
+Kyrix is fully dockerized, with a live PostgreSQL database running right after docker startup. Front-end vis libraries often assume data fits in browser memory, and thus scale to only small data. By working with a containerized database, Kyrix scales to much larger data while being free of the hassle of installing and maintaining databases. 
 
 Docker works by creating fully isolated virtual machines ("containers") on your computer, making it much
 easier to achieve correct installations every time ([learn more](https://opensource.com/resources/what-docker)). See [docker config details](https://github.com/tracyhenry/Kyrix/wiki/Docker-Config-Details). 
@@ -117,7 +117,7 @@ Kyrix is maintained by a group of researchers at [MIT's data system group](http:
 </table>
 
 ## Disclaimer
-The current `v1.0.0-beta` release contains research-quality code, and is intended for demo purposes. The code should not be used for large-scale secure serving. Currently, `v1.0.0-beta` only supports data up to 10~100 millions of data points. We plan to release a distributed version of Kyrix in the future. 
+The current `v1.0.0-beta` release contains research-quality code, and is intended for demo purposes. The code should not be used for large-scale secure serving. Currently, `v1.0.0-beta` only supports data with up to 10~100 millions of data points. We plan to release a distributed version of Kyrix in the future. 
 
 
 
