@@ -89,9 +89,9 @@ public class Server {
                         + "|Indexing is now terminated and the server is restarted.  |\n"
                         + "|Please inspect your spec and database, and then recompile|\n"
                         + "|the project.If you can't figure out the issue, feel free |\n"
-                        + "|to contact Kyrix maintainers.                            |\n"
+                        + "|to contact Kyrix maintainers on Gitter:                  |\n"
                         + "|                                                         |\n"
-                        + "|Github: https://github.com/tracyhenry/kyrix              |\n"
+                        + "|https://gitter.im/kyrix-mit/kyrix                        |\n"
                         + "+---------------------------------------------------------+\n"
                         + "Server restarting....");
     }
@@ -117,7 +117,7 @@ public class Server {
                         + "|occur again. You can recompile the project to recompute the  |\n"
                         + "|indexes, or reach out to the kyrix maintainers for help.     |\n"
                         + "|                                                             |\n"
-                        + "|Github: https://github.com/tracyhenry/kyrix                  |\n"
+                        + "|Chat on Gitter: https://gitter.im/kyrix-mit/kyrix            |\n"
                         + "+-------------------------------------------------------------+\n"
                         + "Server restarting...");
     }
