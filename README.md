@@ -10,7 +10,6 @@ prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://
   <img src="https://github.com/tracyhenry/Kyrix-gallery/blob/master/gallery.gif" width="700" />
 </p>
 
-# About
 Kyrix facilitates the creation of data visualizations with details-on-demand interactions (e.g. pan and zoom, see example demos above). In visualizations of such, the underlying dataset is often large. To deal with large data, Kyrix is focused on optimizing two goals: 1) usable declarative API library for visualization developers and 2) 500ms response time to user interactions, which is required to enable interactive browsing. 
 
 ## Installation instructions for the impatient
@@ -86,6 +85,8 @@ into
 </a>
 </p>
 
+## Embedding into your favourite web app
+Kyrix offers [APIs](https://github.com/tracyhenry/Kyrix/wiki/Web-Embedding) to integrate a kyrix application into a web application. There's no limit on what you can imagine: complex coordinated views, programmatic pan/zoom control, cross filtering...  
 
 ## More information
 * [Quick-start Tutorial](https://github.com/tracyhenry/Kyrix/wiki/Tutorial)
