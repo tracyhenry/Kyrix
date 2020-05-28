@@ -94,7 +94,7 @@ Kyrix offers [APIs](https://github.com/tracyhenry/Kyrix/wiki/Web-Embedding) to i
 ## Contributing to Kyrix
 We welcome contributions! Please let us know about your change beforehand if it is big. Also, see [contributing guidelines](https://github.com/tracyhenry/Kyrix/wiki/How-to-Contribute). 
 
-Kyrix is maintained by a group of researchers at [MIT's data system group](http://dsg.csail.mit.edu/). The system is not possible without the contribution from the these wonderful developers:
+Kyrix is maintained by a group of researchers at [MIT's data system group](http://dsg.csail.mit.edu/). The system is not possible without the contribution from these wonderful developers:
 <table>
   <tr>
     <td align="center"><a href="https://github.com/tracyhenry"><img src="https://avatars2.githubusercontent.com/u/5410441?s=460&v=4" width="70px;" alt=""/><br /><sub><b>Wenbo Tao</b></sub></a><br /></td>
