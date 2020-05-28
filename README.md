@@ -94,10 +94,10 @@ into
 Kyrix offers [APIs](https://github.com/tracyhenry/Kyrix/wiki/Web-Embedding) to integrate a kyrix application into a web application. There's no limit on what you can imagine: complex coordinated views, programmatic pan/zoom control, cross filtering...  
 
 ## Telling us about your Kyrix app
-We'd like to learn more about your application requirements to make Kyrix better. If you have built a Kyrix app, send us a screenshot on Gitter!
+We'd like to learn more about your application requirements to make Kyrix better. If you have built a Kyrix app, send us a screenshot on [Gitter](https://gitter.im/kyrix-mit/kyrix)!
 
 ## Contributing to Kyrix
-We welcome contributions! Please let us know about your change beforehand if it is big. Also, see [contributing guidelines](https://github.com/tracyhenry/Kyrix/wiki/How-to-Contribute). 
+We welcome contributions! Please [let us know](https://gitter.im/kyrix-mit/kyrix) about your change beforehand if it is big. Also, see [contributing guidelines](https://github.com/tracyhenry/Kyrix/wiki/How-to-Contribute). 
 
 Kyrix is maintained by a group of researchers at [MIT's data system group](http://dsg.csail.mit.edu/). The system is not possible without the contribution from these wonderful developers:
 <table>
@@ -122,7 +122,7 @@ Kyrix is maintained by a group of researchers at [MIT's data system group](http:
 </table>
 
 ## Disclaimer
-The current `v1.0.0-beta` release contains research-quality code, and is intended for demo purposes. The code should not be used for large-scale secure serving. Currently, `v1.0.0-beta` only supports data with up to 10~100 millions of data points. We plan to release a distributed version of Kyrix in the future. 
+The current `v1.0.0-beta` release contains research-quality code, and is intended for demo purposes. The code should not be used for large-scale secure serving. Currently, `v1.0.0-beta` only supports data with up to 10~100 millions of data records. We plan to release a distributed version of Kyrix in the future. 
 
 ## Citing Kyrix
 ```bibtex
