@@ -1,10 +1,13 @@
 # Kyrix - Democratizing details-on-demand data visualizations
 
-
-![version](https://img.shields.io/badge/release-v1.0.0--beta-orange) 
-![Build status](https://travis-ci.org/tracyhenry/Kyrix.svg?branch=master) [![code style: 
-prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier) [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/tracyhenry/Kyrix/blob/master/LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/tracyhenry/Kyrix/wiki/How-to-Contribute)
-
+<p align="center">
+<img src="https://img.shields.io/badge/release-v1.0.0--beta-orange" alt="version"/>
+<img src="https://travis-ci.org/tracyhenry/Kyrix.svg?branch=master" alt="build"/>
+<a href="https://github.com/prettier/prettier"><img src="https://img.shields.io/badge/code_style-prettier-ff69b4.svg" alt="codestyle"/></a>
+<a href="https://github.com/tracyhenry/Kyrix/blob/master/LICENSE"><img src="https://img.shields.io/apm/l/atomic-design-ui.svg" alt="license"/></a>
+<a href="https://github.com/tracyhenry/Kyrix/wiki/How-to-Contribute"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" alt="contribution"/></a>
+<a href="https://gitter.im/kyrix-mit/kyrix"><img src="https://img.shields.io/badge/chat-gitter-yellow" alt="gitter"/></a>
+</p>
 
 <p align="center">
   <img src="https://github.com/tracyhenry/Kyrix-gallery/blob/master/gallery.gif" width="700" />
