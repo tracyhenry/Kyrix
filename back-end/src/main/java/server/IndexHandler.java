@@ -26,7 +26,7 @@ public class IndexHandler implements HttpHandler {
 
             String path = httpExchange.getRequestURI().getPath();
             if (path.contains("favicon.ico")) {
-                Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_NO_CONTENT, "no content");
+                Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "");
                 return;
             }
             if (path.equals("/")) path = "/" + Config.indexFileName;
