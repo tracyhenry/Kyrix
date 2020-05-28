@@ -88,6 +88,16 @@ into
 ## Embedding into your favourite web app
 Kyrix offers [APIs](https://github.com/tracyhenry/Kyrix/wiki/Web-Embedding) to integrate a kyrix application into a web application. There's no limit on what you can imagine: complex coordinated views, programmatic pan/zoom control, cross filtering...  
 
+
+## Contributing to Kyrix
+We welcome contributions! Please let us know about your change beforehand if it is big. Also, see [contributing guidelines](https://github.com/tracyhenry/Kyrix/wiki/How-to-Contribute). 
+
+Kyrix is maintained by a group of researchers at [MIT's data system group](http://dsg.csail.mit.edu/). The system is not possible without the contribution from the following people:
+
+
+## Disclaimer
+The current repo contains research-quality code, and is intended for demo purposes. The code should not be used for large-scale secure serving. Currently, `v1.0.0-beta` only supports data up to 10~100 millions of data points. We plan to release a distributed version of Kyrix in the future. 
+
 ## More information
 * [Quick-start Tutorial](https://github.com/tracyhenry/Kyrix/wiki/Tutorial)
 * [API Reference](https://github.com/tracyhenry/Kyrix/wiki/API-Reference)
