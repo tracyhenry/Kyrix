@@ -1,4 +1,4 @@
-# Kyrix - democratizing details-on-demand data visualizations
+<h1 align="center" style="border-bottom: none;"> Kyrix - democratizing details-on-demand data visualizations </h1>
 
 <p align="center">
 <img src="https://img.shields.io/badge/release-v1.0.0--beta-orange" alt="version"/>
