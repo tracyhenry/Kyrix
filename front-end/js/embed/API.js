@@ -195,6 +195,13 @@ export function reRender(viewId, layerId, additionalArgs) {
             // run render function
             renderFunc(d3.select(this), renderData, allArgs);
 
+            // tooltips
+            makeTooltips(
+                d3.select(this).selectAll("*"),
+                gvd.curCanvas.layers[layerId].tooltipColumns,
+                gvd.curCanvas.layers[layerId].tooltipAliases
+            );
+
             // register jumps
             registerJumps(viewId, d3.select(this), layerId);
 
