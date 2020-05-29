@@ -1,3 +1,8 @@
+// To run this example:
+// download this csv file at: https://www.dropbox.com/s/sd5vx2rkdsqcwtv/fifa20.csv
+// then run (in root folder): ./docker-scripts/load-csv.sh fifa20.csv
+// note that the name of the file has to be fifa20.csv
+
 // libraries
 const Project = require("../../src/index").Project;
 const SSV = require("../../src/template-api/SSV").SSV;
@@ -9,11 +14,11 @@ p.addRenderingParams(renderers.renderingParams);
 p.addStyles(renderers.playerRenderingStyles);
 
 // set up ssv
-var query = "select * from fifa19;";
+var query = "select * from fifa20;";
 
 var ssv = {
     data: {
-        db: "fifa19",
+        db: "fifa20",
         query: query
     },
     layout: {
@@ -67,7 +72,7 @@ var ssv = {
         topLevelWidth: 1500,
         topLevelHeight: 1000,
         axis: true,
-        legendTitle: "Age Groups of Soccer Players in FIFA 2019",
+        legendTitle: "Age Groups of Soccer Players in FIFA 2020",
         legendDomain: ["Under 20", "Under 23", "Under 29", "Older"]
     }
 };

@@ -403,7 +403,7 @@ function addSSV(ssv, args) {
             );
     }
 
-    // create a new view if specified
+    // create a new view if not specified
     if (!args.view) {
         var viewId = "ssv" + (this.ssvs.length - 1);
         var view = new View(

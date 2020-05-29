@@ -107,7 +107,7 @@ while [ 1 ]; do
         echo "Try run 'sudo docker logs kyrix_db_1' in a separate terminal tab to inspect docker logs."
         echo "If the log looks like there is an error, you should clean up docker (sudo ./run-kyrix.sh --down) and then restart."
         echo "Note that './run-kyrix --down' will clear the database. If you want to backup the database before restarting,"
-        echo -e "please contact Kyrix maintainers on Github (https://github.com/tracyhenry/kyrix).\n"
+        echo -e "please contact Kyrix maintainers on Gitter (https://gitter.im/kyrix-mit/kyrix).\n"
         echo "exiting..."
         exit
     fi
@@ -136,7 +136,7 @@ while [ 1 ]; do
         echo "Try run 'sudo docker logs kyrix_kyrix_1' in a separate terminal tab to inspect docker logs."
         echo "If the log looks like there is an error, you should clean up docker (sudo ./run-kyrix.sh --down) and then restart."
         echo "Note that './run-kyrix --down' will clear the database. If you want to backup the database before restarting,"
-        echo -e "please contact Kyrix maintainers on Github (https://github.com/tracyhenry/kyrix).\n"
+        echo -e "please contact Kyrix maintainers on Gitter (https://gitter.im/kyrix-mit/kyrix).\n"
         echo "exiting..."
         exit
     fi

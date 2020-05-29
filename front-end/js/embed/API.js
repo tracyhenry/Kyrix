@@ -195,6 +195,13 @@ export function reRender(viewId, layerId, additionalArgs) {
             // run render function
             renderFunc(d3.select(this), renderData, allArgs);
 
+            // tooltips
+            makeTooltips(
+                d3.select(this).selectAll("*"),
+                gvd.curCanvas.layers[layerId].tooltipColumns,
+                gvd.curCanvas.layers[layerId].tooltipAliases
+            );
+
             // register jumps
             registerJumps(viewId, d3.select(this), layerId);
 
@@ -250,5 +257,5 @@ export function triggerPredicate(viewId, predDict) {
     var k = d3.zoomTransform(d3.select(viewClass).node()).k;
 
     // step 2: load
-    load(predArray, newVpX, newVpY, k, viewId, gvd.curCanvasId);
+    load(predArray, newVpX, newVpY, k, viewId, gvd.curCanvasId, {type: "load"});
 }

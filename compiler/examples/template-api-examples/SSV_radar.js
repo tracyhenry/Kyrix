@@ -1,7 +1,7 @@
 // To run this example:
-// download this csv file at: https://www.dropbox.com/s/4cdabhctkybw8tf/fifa19.csv
-// then run (in root folder): ./docker-scripts/load-csv.sh fifa19.csv
-// note that the name of the file has to be fifa19.csv
+// download this csv file at: https://www.dropbox.com/s/sd5vx2rkdsqcwtv/fifa20.csv
+// then run (in root folder): ./docker-scripts/load-csv.sh fifa20.csv
+// note that the name of the file has to be fifa20.csv
 
 // libraries
 const Project = require("../../src/index").Project;
@@ -14,11 +14,11 @@ p.addRenderingParams(renderers.renderingParams);
 p.addStyles(renderers.playerRenderingStyles);
 
 // set up ssv
-var query = "select * from fifa19;";
+var query = "select * from fifa20;";
 
 var ssv = {
     data: {
-        db: "fifa19",
+        db: "fifa20",
         query: query
     },
     layout: {
