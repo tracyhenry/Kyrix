@@ -362,6 +362,63 @@ function registerJumps(viewId, svg, layerId) {
         // make cursor a hand when hovering over this shape
         d3.select(this).style("cursor", "zoom-in");
 
+        // register right click listener -- for update popover
+        d3.select(this).on("contextmenu", function (d) {
+            console.log("right click event happened, modal should appear!");
+            // console.log(d);
+            // stop the right click event from propagating up
+            d3.event.preventDefault();
+            d3.event.stopPropagation();
+
+            // remove all popovers first
+            removePopovers(viewId);
+
+            // create a jumpoption popover using bootstrap
+            d3.select(".kyrixdiv")
+                .append("div")
+                .classed("view_" + viewId + " popover fade right in", true)
+                .attr("role", "tooltip")
+                .attr("id", "updatepopover")
+                .append("div")
+                .classed("view_" + viewId + " arrow popoverarrow", true)
+                .attr("id", "popoverarrow");
+            d3.select(viewClass + "#updatepopover")
+                .append("h2")
+                .classed("view_" + viewId + " popover-title", true)
+                .attr("id", "popovertitle")
+                .html("Update Attributes")
+                .append("a")
+                .classed("view_" + viewId + " close", true)
+                .attr("href", "#")
+                .attr("id", "popoverclose")
+                .html("&times;")
+                .on("click", function() {
+                    removePopovers(viewId);
+                });
+            d3.select(viewClass + "#updatepopover")
+                .append("div")
+                .classed("view_" + viewId + " popover-content list-group", true)
+                .attr("id", "popovercontent");
+
+            // position jump popover according to event x/y and its width/height
+            let updatePopoverHeight = d3
+                .select(viewClass + "#updatepopover")
+                .node()
+                .getBoundingClientRect().height;
+            let kyrixDivBox = d3
+                .select(".kyrixdiv")
+                .node()
+                .getBoundingClientRect();
+            d3.select(viewClass + "#updatepopover")
+                .style("left", d3.event.pageX - kyrixDivBox.left + "px")
+                .style(
+                    "top",
+                    d3.event.pageY - kyrixDivBox.top - updatePopoverHeight / 2 + "px"
+                );
+
+        
+        });
+
         // register onclick listener
         d3.select(this).on("click", function(d) {
             // stop the click event from propagating up

@@ -25,6 +25,11 @@ body {
     opacity: 0.9;
 }
 
+#updatepopover {
+    display: block;
+    opacity: 0.9;
+}
+
 #popoverarrow {
     top: 50%;
 }
@@ -46,6 +51,11 @@ body {
 }
 
 #jumppopover > div {
+    text-align: center;
+    font-family: "Source Serif Pro", sans-serif !important;
+}
+
+#updatepopover > div {
     text-align: center;
     font-family: "Source Serif Pro", sans-serif !important;
 }
