@@ -365,7 +365,28 @@ function registerJumps(viewId, svg, layerId) {
         // register right click listener -- for update popover
         d3.select(this).on("contextmenu", function (d) {
             console.log("right click event happened, modal should appear!");
-            // console.log(d);
+            // p - variable with kyrix shape attributes
+            console.log(p);
+            // gvd - data for current view, current canvas, transform, etc.
+            console.log("gvd: ");
+            console.log(gvd);
+            let queryText = gvd.curCanvas.layers[layerId].transform.query;
+            [_, queryText] = queryText.split("select");
+            [queryText, _] = queryText.split("from");
+            queryText = queryText.replace(/\s+/g, "").trim();
+            let queryFields = queryText.split(",");
+            // console.log("transform query is (shouldnt have select): ", queryFields);
+            let directMappedColumns = {};
+            const objectAttributes = Object.keys(p);
+            for (let idx in queryFields) {
+                const field = queryFields[idx];
+                if (objectAttributes.includes(field)) {
+                    directMappedColumns[field] = p[field];
+                }
+            }
+            console.log("db direct mapped columns -> ", JSON.stringify(directMappedColumns));
+            const directMappedColNames = Object.keys(directMappedColumns);
+
             // stop the right click event from propagating up
             d3.event.preventDefault();
             d3.event.stopPropagation();
@@ -399,6 +420,22 @@ function registerJumps(viewId, svg, layerId) {
                 .append("div")
                 .classed("view_" + viewId + " popover-content list-group", true)
                 .attr("id", "popovercontent");
+
+            // add jump options
+            for (var k = 0; k < directMappedColNames.length; k++) {
+
+                // create table cell and append it to #popovercontent
+                let attrText = "<b>" + directMappedColNames[k] + "</b>";
+                attrText += "   " + directMappedColumns[directMappedColNames[k]];
+                var updateAttrs = d3
+                    .select(viewClass + "#popovercontent")
+                    .append("a")
+                    .classed("list-group-item", true)
+                    .attr("href", "#")
+                    .datum(d)
+                    .attr("data-update-id", k)
+                    .html(attrText);
+            }
 
             // position jump popover according to event x/y and its width/height
             let updatePopoverHeight = d3
