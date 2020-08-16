@@ -397,11 +397,9 @@ function registerJumps(viewId, svg, layerId) {
             console.log("db direct mapped columns -> ", JSON.stringify(directMappedColumns));
             const directMappedColNames = Object.keys(directMappedColumns);
 
-            
-
             // remove all popovers first
             removePopovers(viewId);
-
+    
             // create a jumpoption popover using bootstrap
             d3.select(".kyrixdiv")
                 .append("div")
@@ -430,20 +428,58 @@ function registerJumps(viewId, svg, layerId) {
                 .attr("id", "popovercontent");
 
             // add jump options
-            for (var k = 0; k < directMappedColNames.length; k++) {
+            let k;
+            for (k = 0; k < directMappedColNames.length; k++) {
 
                 // create table cell and append it to #popovercontent
-                let attrText = "<b>" + directMappedColNames[k] + "</b>";
-                attrText += "   " + directMappedColumns[directMappedColNames[k]];
-                var updateAttrs = d3
+                let attrName = "<b>" + directMappedColNames[k] + "</b>";
+                let attrValue = directMappedColumns[directMappedColNames[k]];
+                // var updateAttrs = d3
+                //     .select(viewClass + "#popovercontent")
+                //     .append("a")
+                //     .classed("list-group-item", true)
+                //     .attr("href", "#")
+                //     .datum(d)
+                //     .attr("data-update-id", k)
+                //     .html(attrText);
+
+                let updateAttrs = d3
                     .select(viewClass + "#popovercontent")
-                    .append("a")
-                    .classed("list-group-item", true)
-                    .attr("href", "#")
-                    .datum(d)
-                    .attr("data-update-id", k)
-                    .html(attrText);
+                    .append("div")
+                    .classed("input-group mb-3", true)
+                    .attr("id", "attr-input-" + k);
+                
+                updateAttrs
+                    .append("div")
+                    .classed("input-group-prepend", true)
+                    .append("span")
+                    .classed("input-group-text", true)
+                    .attr("id", "inputGroup-sizing-default")
+                    .html(attrName);
+
+                updateAttrs
+                    .append("input")
+                    .classed("form-control", true)
+                    .attr("type", "text")
+                    .attr("placeholder", attrValue)
+                    .attr("aria-label", "Default")
+                    .attr("aria-describedby", "inputGroup-sizing-default");
             }
+
+            d3.select("#attr-input-" + (k-1))
+                .append("div")
+                .classed("popover-footer", true)
+                .append("button")
+                .classed("btn btn-success", true)
+                .attr("type", "button")
+                .attr("id", "update-button")
+                .html("Save");
+
+            d3.select("#update-button").on("click", function(d) {
+                console.log("should submit data to db here!");
+                d3.event.preventDefault();
+                removePopovers();
+            });
 
             // position jump popover according to event x/y and its width/height
             let updatePopoverHeight = d3
@@ -459,9 +495,7 @@ function registerJumps(viewId, svg, layerId) {
                 .style(
                     "top",
                     d3.event.pageY - kyrixDivBox.top - updatePopoverHeight / 2 + "px"
-                );
-
-        
+                );   
         });
 
         // register onclick listener
