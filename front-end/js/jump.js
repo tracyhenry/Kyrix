@@ -362,14 +362,24 @@ function registerJumps(viewId, svg, layerId) {
         // make cursor a hand when hovering over this shape
         d3.select(this).style("cursor", "zoom-in");
 
+        d3.select(this).on("contextmenu", function(d) {
+            // console.log("disabling context menu!");
+            d3.event.preventDefault();
+        });
+
         // register right click listener -- for update popover
-        d3.select(this).on("contextmenu", function (d) {
+        // used to be "contextmenu"
+        d3.select(this).on("auxclick", function (d) {
+            if (d3.event.button != 2) {
+                return;
+            }
             console.log("right click event happened, modal should appear!");
-            // p - variable with kyrix shape attributes
-            console.log(p);
             // gvd - data for current view, current canvas, transform, etc.
             console.log("gvd: ");
             console.log(gvd);
+            // stop the right click event from propagating up
+            d3.event.preventDefault();
+            d3.event.stopPropagation();
             let queryText = gvd.curCanvas.layers[layerId].transform.query;
             [_, queryText] = queryText.split("select");
             [queryText, _] = queryText.split("from");
@@ -387,9 +397,7 @@ function registerJumps(viewId, svg, layerId) {
             console.log("db direct mapped columns -> ", JSON.stringify(directMappedColumns));
             const directMappedColNames = Object.keys(directMappedColumns);
 
-            // stop the right click event from propagating up
-            d3.event.preventDefault();
-            d3.event.stopPropagation();
+            
 
             // remove all popovers first
             removePopovers(viewId);
