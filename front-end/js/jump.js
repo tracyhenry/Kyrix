@@ -328,6 +328,34 @@ function startJump(viewId, d, jump, optionalArgs) {
     else if (jump.type == param.highlight) highlight(predArray, jump);
 }
 
+// send updates to DB
+function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs) {
+    // find field in newObjAttrs that is the primary key identifier (like "id")
+    let idColumn;
+    const attributes = Object.keys(newObjAttrs);
+    attributes.forEach(function (val, idx) {
+        if (val.includes("id")) {
+            idColumn = val;
+            break;
+        }
+    });
+    const postData = {
+        canvasId: canvasId,
+        layerId: layerId,
+        primaryKeyColumn: idColumn,
+        objectAttributes: newObjAttrs,
+    };
+    $.ajax({
+        type: "POST",
+        url: globalVar.serverAddr + "/update",
+        data: postData,
+        success: function(data, status) {
+            console.log(`update succeeded with data: ${JSON.stringify(data)}`);
+        },
+        async: true
+    });
+}
+
 // register jump info
 function registerJumps(viewId, svg, layerId) {
     var gvd = globalVar.views[viewId];
@@ -373,7 +401,8 @@ function registerJumps(viewId, svg, layerId) {
             if (d3.event.button != 2) {
                 return;
             }
-            console.log("right click event happened, modal should appear!");
+            let canvasId = gvd.curCanvasId;
+            console.log(`right click event happened on canvas: ${canvasId}, modal should appear!`);
             // gvd - data for current view, current canvas, transform, etc.
             console.log("gvd: ");
             console.log(gvd);
@@ -382,7 +411,9 @@ function registerJumps(viewId, svg, layerId) {
             d3.event.stopPropagation();
             let queryText = gvd.curCanvas.layers[layerId].transform.query;
             [_, queryText] = queryText.split("select");
-            [queryText, _] = queryText.split("from");
+            [queryText, tableName] = queryText.split("from");
+            tableName = tableName.replace(/[\s;]+/g, "").trim();
+            console.log("table name for highlighted object is: " + tableName);
             queryText = queryText.replace(/\s+/g, "").trim();
             let queryFields = queryText.split(",");
             // console.log("transform query is (shouldnt have select): ", queryFields);
@@ -434,20 +465,12 @@ function registerJumps(viewId, svg, layerId) {
                 // create table cell and append it to #popovercontent
                 let attrName = "<b>" + directMappedColNames[k] + "</b>";
                 let attrValue = directMappedColumns[directMappedColNames[k]];
-                // var updateAttrs = d3
-                //     .select(viewClass + "#popovercontent")
-                //     .append("a")
-                //     .classed("list-group-item", true)
-                //     .attr("href", "#")
-                //     .datum(d)
-                //     .attr("data-update-id", k)
-                //     .html(attrText);
 
                 let updateAttrs = d3
                     .select(viewClass + "#popovercontent")
                     .append("div")
                     .classed("input-group mb-3", true)
-                    .attr("id", "attr-input-" + k);
+                    .attr("id", "attr-input-group-" + k);
                 
                 updateAttrs
                     .append("div")
@@ -459,14 +482,14 @@ function registerJumps(viewId, svg, layerId) {
 
                 updateAttrs
                     .append("input")
-                    .classed("form-control", true)
+                    .classed("form-control attr-inputs", true)
                     .attr("type", "text")
-                    .attr("placeholder", attrValue)
+                    .attr("value", attrValue)
                     .attr("aria-label", "Default")
                     .attr("aria-describedby", "inputGroup-sizing-default");
             }
 
-            d3.select("#attr-input-" + (k-1))
+            d3.select("#attr-input-group-" + (k-1))
                 .append("div")
                 .classed("popover-footer", true)
                 .append("button")
@@ -478,7 +501,17 @@ function registerJumps(viewId, svg, layerId) {
             d3.select("#update-button").on("click", function(d) {
                 console.log("should submit data to db here!");
                 d3.event.preventDefault();
-                removePopovers();
+
+                let newAttrValues = [];
+                d3.selectAll(".attr-inputs").each(function(d,i) {
+                    newAttrValues.push(d3.select(this).property("value"));
+                });
+                let objAttrs = {};
+                directMappedColNames.forEach((key, i) => objAttrs[key] = newAttrValues[i]);
+                console.log(JSON.stringify(objAttrs));
+                doDBUpdate(viewId, canvasId, layerId, tableName, objAttrs);
+                // TODO: update UI with new data, while DB gets update asynchronously 
+                // what if DB doesn't get update?
             });
 
             // position jump popover according to event x/y and its width/height
