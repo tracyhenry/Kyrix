@@ -390,33 +390,34 @@ function registerJumps(viewId, svg, layerId) {
         // make cursor a hand when hovering over this shape
         d3.select(this).style("cursor", "zoom-in");
 
+        // disable context menu on kyrix objects since we use right clicks for update
         d3.select(this).on("contextmenu", function(d) {
-            // console.log("disabling context menu!");
             d3.event.preventDefault();
         });
 
         // register right click listener -- for update popover
-        // used to be "contextmenu"
         d3.select(this).on("auxclick", function (d) {
+            // only register listener logic if right click
             if (d3.event.button != 2) {
                 return;
             }
-            let canvasId = gvd.curCanvasId;
-            console.log(`right click event happened on canvas: ${canvasId}, modal should appear!`);
-            // gvd - data for current view, current canvas, transform, etc.
-            console.log("gvd: ");
-            console.log(gvd);
+
             // stop the right click event from propagating up
             d3.event.preventDefault();
             d3.event.stopPropagation();
+            
+            // gvd - data for current view, current canvas, transform, etc.
+            let canvasId = gvd.curCanvasId;
             let queryText = gvd.curCanvas.layers[layerId].transform.query;
+
+            // use regex to extract db column names from user-defined transform
             [_, queryText] = queryText.split("select");
             [queryText, tableName] = queryText.split("from");
             tableName = tableName.replace(/[\s;]+/g, "").trim();
-            console.log("table name for highlighted object is: " + tableName);
             queryText = queryText.replace(/\s+/g, "").trim();
             let queryFields = queryText.split(",");
-            // console.log("transform query is (shouldnt have select): ", queryFields);
+
+            // find only directly mapped columns from object attributes
             let directMappedColumns = {};
             const objectAttributes = Object.keys(p);
             for (let idx in queryFields) {
@@ -425,13 +426,12 @@ function registerJumps(viewId, svg, layerId) {
                     directMappedColumns[field] = p[field];
                 }
             }
-            console.log("db direct mapped columns -> ", JSON.stringify(directMappedColumns));
             const directMappedColNames = Object.keys(directMappedColumns);
 
             // remove all popovers first
             removePopovers(viewId);
     
-            // create a jumpoption popover using bootstrap
+            // create popover for editing attributes
             d3.select(".kyrixdiv")
                 .append("div")
                 .classed("view_" + viewId + " popover fade right in", true)
@@ -458,11 +458,9 @@ function registerJumps(viewId, svg, layerId) {
                 .classed("view_" + viewId + " popover-content list-group", true)
                 .attr("id", "popovercontent");
 
-            // add jump options
+            // add attribute input boxes
             let k;
             for (k = 0; k < directMappedColNames.length; k++) {
-
-                // create table cell and append it to #popovercontent
                 let attrName = "<b>" + directMappedColNames[k] + "</b>";
                 let attrValue = directMappedColumns[directMappedColNames[k]];
 
@@ -489,6 +487,7 @@ function registerJumps(viewId, svg, layerId) {
                     .attr("aria-describedby", "inputGroup-sizing-default");
             }
 
+            // add save changes button to bottom of popover
             d3.select("#attr-input-group-" + (k-1))
                 .append("div")
                 .classed("popover-footer", true)
@@ -498,23 +497,24 @@ function registerJumps(viewId, svg, layerId) {
                 .attr("id", "update-button")
                 .html("Save");
 
+            // add listener to save changes button, sends updates to backend
             d3.select("#update-button").on("click", function(d) {
-                console.log("should submit data to db here!");
                 d3.event.preventDefault();
-
                 let newAttrValues = [];
                 d3.selectAll(".attr-inputs").each(function(d,i) {
                     newAttrValues.push(d3.select(this).property("value"));
                 });
-                let objAttrs = {};
-                directMappedColNames.forEach((key, i) => objAttrs[key] = newAttrValues[i]);
-                console.log(JSON.stringify(objAttrs));
-                doDBUpdate(viewId, canvasId, layerId, tableName, objAttrs);
+
+                directMappedColNames.forEach((key, i) => objectAttributes[key] = newAttrValues[i]);
+                console.log(JSON.stringify(objectAttributes));
+
                 // TODO: update UI with new data, while DB gets update asynchronously 
                 // what if DB doesn't get update?
+                doDBUpdate(viewId, canvasId, layerId, tableName, objectAttributes);
+                
             });
 
-            // position jump popover according to event x/y and its width/height
+            // finally position updates popover according to event x/y and its width/height
             let updatePopoverHeight = d3
                 .select(viewClass + "#updatepopover")
                 .node()
