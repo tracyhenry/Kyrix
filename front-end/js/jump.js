@@ -333,12 +333,14 @@ function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs) {
     // find field in newObjAttrs that is the primary key identifier (like "id")
     let idColumn;
     const attributes = Object.keys(newObjAttrs);
-    attributes.forEach(function (val, idx) {
+    for (let idx=0; idx < attributes.length; idx++) {
+        const val = attributes[idx];
         if (val.includes("id")) {
-            idColumn = val;
+            idColumn = val
             break;
         }
-    });
+    }
+    
     const postData = {
         canvasId: canvasId,
         layerId: layerId,
@@ -348,7 +350,7 @@ function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs) {
     $.ajax({
         type: "POST",
         url: globalVar.serverAddr + "/update",
-        data: postData,
+        data: JSON.stringify(postData),
         success: function(data, status) {
             console.log(`update succeeded with data: ${JSON.stringify(data)}`);
         },
@@ -401,6 +403,8 @@ function registerJumps(viewId, svg, layerId) {
             if (d3.event.button != 2) {
                 return;
             }
+            console.log(gvd);
+            console.log("viewid: " + viewId);
 
             // stop the right click event from propagating up
             d3.event.preventDefault();
@@ -501,17 +505,39 @@ function registerJumps(viewId, svg, layerId) {
             d3.select("#update-button").on("click", function(d) {
                 d3.event.preventDefault();
                 let newAttrValues = [];
+                let objectKV = {};
                 d3.selectAll(".attr-inputs").each(function(d,i) {
                     newAttrValues.push(d3.select(this).property("value"));
                 });
 
-                directMappedColNames.forEach((key, i) => objectAttributes[key] = newAttrValues[i]);
-                console.log(JSON.stringify(objectAttributes));
+                console.log(`column names -> ${directMappedColNames}`);
+                console.log(`new attr values -> ${newAttrValues}`);
+
+
+                for (let i = 0; i < directMappedColNames.length; i++) {
+                    let colName = directMappedColNames[i];
+                    objectKV[colName] = newAttrValues[i];
+                }
+
+                console.log(JSON.stringify(objectKV));
 
                 // TODO: update UI with new data, while DB gets update asynchronously 
                 // what if DB doesn't get update?
-                doDBUpdate(viewId, canvasId, layerId, tableName, objectAttributes);
-                
+                doDBUpdate(viewId, canvasId, layerId, tableName, objectKV);
+                // re-load dynamic data from db
+                getCurCanvas(viewId);
+                if (!gvd.animation) {
+                    var curViewport = d3
+                        .select(viewClass + ".mainsvg:not(.static)")
+                        .attr("viewBox")
+                        .split(" ");
+                    RefreshDynamicLayers(
+                        viewId,
+                        curViewport[0],
+                        curViewport[1]
+                    );
+                }
+                removePopovers(viewId);
             });
 
             // finally position updates popover according to event x/y and its width/height

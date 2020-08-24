@@ -2,6 +2,9 @@
 # wrapped as a script for start-kyrix.sh
 # must be run in the same directory as nba_db_psql.sql
 
+# for local builds only
+# PGCONN="postgresql://postgres:@localhost:5432/nba"
+
 if [ "x$PGCONN" = "x" ]; then echo "$0: PGCONN must be set."; exit 1; fi
 if [ "x$PSQL" ]; then PSQL=`which psql`; fi
 if [ ! -x $PSQL ]; then echo "$0: $PSQL not found - consider setting PSQL to the psql(1) path."; exit 1; fi

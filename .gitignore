@@ -157,7 +157,10 @@ back-end/bin/
 ################# Kyrix-specific #################
 config.txt
 mgh_config.txt
+kyrix-started
 back-end/lib
+back-end/mvn-compile.out
+back-end/mvn-exec.out
 .DS_Store
 test.html
 renderer_test.html
