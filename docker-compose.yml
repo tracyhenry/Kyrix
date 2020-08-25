@@ -42,8 +42,8 @@ services:
       dockerfile: docker-scripts/Dockerfile-db
       target: "${BUILD_STAGE:-pg-plv8}"
     restart: always
-    ports: # comment-out for extra security or to avoid conflicts with host OS
-     - "${DB_PORT:-5432}:5432"
+ #   ports: # comment-out for extra security or to avoid conflicts with host OS
+#     - "${DB_PORT:-5432}:5432"
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kyrixftw}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -58,7 +58,8 @@ services:
       context: .
       dockerfile: docker-scripts/Dockerfile-kyrix-alpine
     ports:
-     - "${KYRIX_PORT:-8000}:8000"
+#     - "${KYRIX_PORT:-8000}:8000"
+      - "8000-8011:8000"
     depends_on:
      - db
     environment:
