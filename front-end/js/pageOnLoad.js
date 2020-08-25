@@ -188,6 +188,16 @@ function pageOnLoad(serverAddr) {
         .select("body")
         .append("div")
         .classed("kyrixdiv", true);
+    d3.select("body")
+        .append("div")
+        .style("position", "fixed")
+        .style("bottom", 0)
+        .style("right", 0)
+        .html(
+            '        <p style="text-align: right; position: sticky" >\n' +
+                'Data source: <a target="_blank" href="https://www.kaggle.com/rtatman/188-million-us-wildfires">https://www.kaggle.com/rtatman/188-million-us-wildfires </a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br/>Map tiles by <a target="_blank" href="http://stamen.com">Stamen Design</a>, under <a target="_blank" href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a target="_blank" href="http://openstreetmap.org">OpenStreetMap</a>, under <a target="_blank" href="http://www.openstreetmap.org/copyright">ODbL</a>.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n' +
+                "        </p>\n"
+        );
 
     // get information about the first canvas to render
     $.ajax({

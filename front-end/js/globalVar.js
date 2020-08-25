@@ -151,7 +151,14 @@ function makeTooltips(selection, columns, aliases) {
 
         // column values
         rows.append("td")
-            .html(p => (!isNaN(d[p]) ? d3.format(",.2f")(d[p]) : d[p]))
+            .html(function(p) {
+                if (p != "fire_year" && p != "fire_size") {
+                    if (!isNaN(d[p])) return d3.format(",.2f")(d[p]);
+                    else return d[p];
+                }
+                if (p == "fire_year") return d[p];
+                if (p == "fire_size") return d3.format(",.2f")(d[p]) + " acres";
+            })
             .style("font-weight", "900")
             .style("padding-left", "2px")
             .style("padding-right", "10px")
