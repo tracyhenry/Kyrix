@@ -659,6 +659,10 @@ function getLayerRenderer() {
         data.forEach(d => {
             d.clusterAgg = JSON.parse(d.clusterAgg);
         });
+        var sizeScale = d3
+            .scaleSqrt()
+            .domain([0, 10000])
+            .range([15, 50]);
         g.selectAll(".clusternum")
             .data(data)
             .enter()
@@ -673,12 +677,14 @@ function getLayerRenderer() {
             })
             .attr("y", function(d) {
                 // TODO: y offset needs to be exposed as a parameter
-                return +d.miny + 13;
+                //return +d.miny + 13;
+                return +d.cy + sizeScale(d.fire_size) * 0.2;
             })
             .attr("dy", ".35em")
-            .attr("font-size", 18)
+            .attr("font-size", d => 18 + (3 * sizeScale(d.fire_size)) / 50)
             .attr("text-anchor", "middle")
-            .attr("fill", "#f47142")
+            //.attr("fill", "#f47142")
+            .attr("fill", "#8c7573")
             .style("fill-opacity", 1)
             .classed("kyrix-retainsizezoom", true);
     }

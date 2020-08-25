@@ -13,7 +13,7 @@ var height = 500 * 2;
 
 var ssv = {
     data: {
-        db: "kyrix",
+        db: "fire",
         query:
             "SELECT x, y, fire_name, fire_year, stat_cause_descr, fire_size, latitude, longitude FROM fire_small;"
     },
@@ -32,64 +32,78 @@ var ssv = {
         }
     },
     marks: {
-        cluster: {
-            mode: "pie",
-            aggregate: {
-                dimensions: [
-                    {
-                        field: "stat_cause_descr",
-                        domain: [
-                            "Debris Burning",
-                            "Arson",
-                            "Lightning",
-                            "Equipment Use",
-                            "Miscellaneous"
-                        ]
-                    }
-                ],
-                measures: [
-                    {
-                        field: "*",
-                        function: "count"
-                    }
-                ]
-            },
-            config: {
-                // piePadAngle: 0.05,
-                // pieCornerRadius: 5,
-                // pieOuterRadius: 80,
-                // pieInnerRadius: 1
-            }
-        },
-        hover: {
-            rankList: {
-                mode: "tabular",
-                fields: [
-                    "fire_name",
-                    "fire_year",
-                    "fire_size",
-                    "stat_cause_descr"
-                ],
-                topk: 3
-            },
-            boundary: "convexhull"
-        }
-
         // cluster: {
-        //     mode: "custom",
-        //     custom: require("./renderers").fireRendering,
+        //     mode: "pie",
+        //     aggregate: {
+        //         dimensions: [
+        //             {
+        //                 field: "stat_cause_descr",
+        //                 domain: [
+        //                     "Debris Burning",
+        //                     "Arson",
+        //                     "Lightning",
+        //                     "Equipment Use",
+        //                     "Miscellaneous"
+        //                 ]
+        //             }
+        //         ],
+        //         measures: [
+        //             {
+        //                 field: "*",
+        //                 function: "count"
+        //             }
+        //         ]
+        //     },
         //     config: {
-        //         //clusterCount: true,
-        //         bboxW: 100,
-        //         bboxH: 100
+        //         // piePadAngle: 0.05,
+        //         // pieCornerRadius: 5,
+        //         // pieOuterRadius: 80,
+        //         // pieInnerRadius: 1
         //     }
         // },
         // hover: {
-        //     tooltip: {
-        //         columns: ["fire_name", "fire_year", "stat_cause_descr", "fire_size", "latitude", "longitude"],
-        //         aliases: ["Fire name", "Fire year", "Cause", "Fire size", "Latitude", "Longitude"]
-        //     }
+        //     rankList: {
+        //         mode: "tabular",
+        //         fields: [
+        //             "fire_name",
+        //             "fire_year",
+        //             "fire_size",
+        //             "stat_cause_descr"
+        //         ],
+        //         topk: 3
+        //     },
+        //     boundary: "convexhull"
         // }
+
+        cluster: {
+            mode: "custom",
+            custom: require("./renderers").fireRendering,
+            config: {
+                clusterCount: true,
+                bboxW: 120,
+                bboxH: 120
+            }
+        },
+        hover: {
+            tooltip: {
+                columns: [
+                    "fire_name",
+                    "fire_year",
+                    "stat_cause_descr",
+                    "fire_size",
+                    "latitude",
+                    "longitude"
+                ],
+                aliases: [
+                    "Fire name",
+                    "Fire year",
+                    "Cause",
+                    "Fire size",
+                    "Latitude",
+                    "Longitude"
+                ]
+            }
+        }
     },
     config: {
         numLevels: 13,
