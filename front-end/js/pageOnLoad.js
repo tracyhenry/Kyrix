@@ -195,7 +195,7 @@ function pageOnLoad(serverAddr) {
         .style("right", 0)
         .html(
             '        <p style="text-align: right; position: sticky" >\n' +
-                'Data source: <a target="_blank" href="https://www.kaggle.com/rtatman/188-million-us-wildfires">https://www.kaggle.com/rtatman/188-million-us-wildfires </a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br/>Map tiles by <a target="_blank" href="http://stamen.com">Stamen Design</a>, under <a target="_blank" href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a target="_blank" href="http://openstreetmap.org">OpenStreetMap</a>, under <a target="_blank" href="http://www.openstreetmap.org/copyright">ODbL</a>.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n' +
+                '<br/><br/><br/><br/>Data source: <a target="_blank" href="https://www.kaggle.com/rtatman/188-million-us-wildfires">https://www.kaggle.com/rtatman/188-million-us-wildfires </a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br/>Map tiles by <a target="_blank" href="http://stamen.com">Stamen Design</a>, under <a target="_blank" href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a target="_blank" href="http://openstreetmap.org">OpenStreetMap</a>, under <a target="_blank" href="http://www.openstreetmap.org/copyright">ODbL</a>.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n' +
                 "        </p>\n"
         );
 
@@ -262,7 +262,7 @@ function pageOnLoad(serverAddr) {
             kyrixDiv
                 .append("svg")
                 .attr("id", "containerSvg")
-                .style("top", "0px") // top margin = 0
+                .style("top", "-50px") // top margin = 0
                 .style("left", param.buttonAreaWidth + "px") // left margin == 20 + button_width + 20
                 .attr("width", containerW)
                 .attr("height", containerH);
