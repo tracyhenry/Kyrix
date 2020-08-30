@@ -59,7 +59,7 @@ services:
       dockerfile: docker-scripts/Dockerfile-kyrix-alpine
     ports:
 #     - "${KYRIX_PORT:-8000}:8000"
-      - "8000-8011:8000"
+      - "8000-8001:8000"
     depends_on:
      - db
     environment:
