@@ -79,9 +79,7 @@ function SSV(args) {
         ["data", "query"],
         ["data", "db"],
         ["layout", "x", "field"],
-        ["layout", "x", "extent"],
         ["layout", "y", "field"],
-        ["layout", "y", "extent"],
         ["layout", "z", "field"],
         ["layout", "z", "order"]
     ];
@@ -89,9 +87,7 @@ function SSV(args) {
         "string",
         "string",
         "string",
-        "object",
         "string",
-        "object",
         "string",
         "string"
     ];
@@ -141,19 +137,43 @@ function SSV(args) {
             typeof args.layout.y.extent[1] != "number")
     )
         throw new Error("Constructing SSV: malformed y.extent");
+    if (args.layout.geo != null) {
+        if (!("level" in args.layout.geo))
+            throw new Error(
+                "Constructing SSV: zoom level needs to be specified in layout.geo."
+            );
+        if (!("center" in args.layout.geo))
+            throw new Error(
+                "Constructing SSV: viewport center needs to be specified in layout.geo."
+            );
+        if (args.layout.x.extent != null || args.layout.y.extent != null)
+            throw new Error(
+                "Constructing SSV: extent shouldn't exist when layout.geo exists."
+            );
+        if (args.layout.geo.level < 0 || args.layout.geo.level > 19)
+            throw new Error(
+                "Constructing SSV: geo initial zoom level must be between 0 and 19."
+            );
+        if (!Array.isArray(args.layout.geo.center))
+            throw new Error(
+                "Constructing SSV: geo center must be specified as an array with two float numbers."
+            );
+        if (
+            args.layout.geo.center[0] < -90 ||
+            args.layout.geo.center[0] > 90 ||
+            args.layout.geo.center[1] < -180 ||
+            args.layout.geo.center[1] > 180
+        )
+            throw new Error(
+                "Constructing SSV: invalid lat/lon specified in layout.geo.center."
+            );
+    }
     if (
         "axis" in args.marks &&
         (args.layout.x.extent == null || args.layout.y.extent == null)
     )
         throw new Error(
             "Constructing SSV: raw data domain needs to be specified for rendering an axis."
-        );
-    if (
-        (args.layout.x.extent != null && args.layout.y.extent == null) ||
-        (args.layout.x.extent == null && args.layout.y.extent != null)
-    )
-        throw new Error(
-            "Constructing SSV: x extent and y extent must both be provided."
         );
     if (
         args.marks.cluster.mode == "custom" &&
@@ -479,8 +499,20 @@ function SSV(args) {
         )
         .replace(/\s/g, "");
     this.db = args.data.db;
-    this.xCol = args.layout.x.field;
-    this.yCol = args.layout.y.field;
+    this.geoInitialLevel = "geo" in args.layout ? args.layout.geo.level : -1;
+    this.geoLat = "geo" in args.layout ? args.layout.geo.center[0] : 0;
+    this.geoLon = "geo" in args.layout ? args.layout.geo.center[1] : 0;
+    this.geoLonCol = "geo" in args.layout ? args.layout.x.field : "";
+    this.geoLatCol = "geo" in args.layout ? args.layout.y.field : "";
+    if ("geo" in args.layout) {
+        // add kyrix_geo_x && kyrix_geo_y in the query
+        var selectPos = this.query.toLowerCase().search("select");
+        this.query =
+            "select kyrix_geo_x, kyrix_geo_y, " +
+            this.query.substring(selectPos + 6);
+    }
+    this.xCol = "geo" in args.layout ? "kyrix_geo_x" : args.layout.x.field;
+    this.yCol = "geo" in args.layout ? "kyrix_geo_y" : args.layout.y.field;
     this.zCol = args.layout.z.field;
     this.zOrder = args.layout.z.order;
     this.clusterMode = args.marks.cluster.mode;
@@ -503,6 +535,12 @@ function SSV(args) {
         "topLevelWidth" in args.config ? args.config.topLevelWidth : 1000;
     this.topLevelHeight =
         "topLevelHeight" in args.config ? args.config.topLevelHeight : 1000;
+    if ("geo" in args.layout) {
+        (this.loX = 0), (this.hiX = this.topLevelWidth);
+        (this.loY = 0), (this.hiY = this.topLevelHeight);
+    }
+    this.mapBackground =
+        "geo" in args.layout && ("map" in args.config ? args.config.map : true);
     this.zoomFactor = "zoomFactor" in args.config ? args.config.zoomFactor : 2;
     this.overlap =
         "overlap" in args.layout
@@ -511,6 +549,9 @@ function SSV(args) {
             ? 0
             : 1;
     this.mergeClusterAggs = mergeClusterAggs.toString();
+    this.getCoordinatesFromLatLonBody = getBodyStringOfFunction(
+        getCoordinatesFromLatLon
+    );
     this.getCitusSpatialHashKeyBody = getBodyStringOfFunction(
         getCitusSpatialHashKey
     );
@@ -1607,6 +1648,109 @@ function getLegendRenderer() {
     return new Function("svg", "data", "args", renderFuncBody);
 }
 
+/** d3 renderer for openstreetmap map tiles **/
+function getMapRenderer() {
+    function mapRendererBodyTemplate() {
+        var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
+        var tau = 2 * Math.PI;
+        var projection = d3
+            .geoMercator()
+            .scale(1 / tau)
+            .translate([0, 0]);
+        var vx = args["viewportX"];
+        var vy = args["viewportY"];
+        var vw = args["viewportW"];
+        var vh = args["viewportH"];
+        var level = args["pyramidLevel"];
+        var initialLon = params.geoInitialCenterLon;
+        var initialLat = params.geoInitialCenterLat;
+        var initialLevel = params.geoInitialLevel;
+        var scale = 1 << (initialLevel + level + 8);
+        var cx = (projection([initialLon, initialLat])[0] + 0.5) * scale;
+        var cy = (projection([initialLon, initialLat])[1] + 0.5) * scale;
+
+        // note: vw/3 because dynamic boxes fetch a box slightly larger than viewport
+        var minTileX = Math.floor(
+            (cx - (vw * (1 << level)) / 2 + vx - vw / 3) / 256
+        );
+        var maxTileX = Math.floor(
+            (cx - (vw * (1 << level)) / 2 + vx + vw + vw / 3) / 256
+        );
+        var minTileY = Math.floor(
+            (cy - (vh * (1 << level)) / 2 + vy - vh / 3) / 256
+        );
+        var maxTileY = Math.floor(
+            (cy - (vh * (1 << level)) / 2 + vy + vh + vh / 3) / 256
+        );
+        var tiles = [];
+        for (var i = minTileX; i <= maxTileX; i++)
+            for (var j = minTileY; j <= maxTileY; j++)
+                tiles.push([i, j, initialLevel + level]);
+
+        var raster = svg.selectAll("g");
+        if (raster.size() == 0) raster = svg.append("g");
+        var image = raster.selectAll("image").data(tiles, function(d) {
+            return d;
+        });
+        image.exit().remove();
+
+        var deltaX = image
+            .enter()
+            .append("image")
+            .attr("xlink:href", function(d) {
+                return (
+                    "http://" +
+                    "abc"[d[1] % 3] +
+                    ".tile.openstreetmap.org/" +
+                    d[2] +
+                    "/" +
+                    d[0] +
+                    "/" +
+                    d[1] +
+                    ".png"
+                );
+            })
+            .attr("x", function(d) {
+                return d[0] * 256 - (cx - (vw * (1 << level)) / 2);
+            })
+            .attr("y", function(d) {
+                return d[1] * 256 - (cy - (vh * (1 << level)) / 2);
+            })
+            .attr("width", 256)
+            .attr("height", 256);
+    }
+    var renderFuncBody = getBodyStringOfFunction(mapRendererBodyTemplate);
+    return new Function("svg", "data", "args", renderFuncBody);
+}
+
+/** PLV8 function used by the SSVInMemoryIndexer to transform geo coordinates**/
+function getCoordinatesFromLatLon(lat, lon) {
+    if (!("d3" in plv8)) plv8.d3 = require("d3");
+    var d3 = plv8.d3;
+
+    var tau = 2 * Math.PI;
+    var projection = d3
+        .geoMercator()
+        .scale(1 / tau)
+        .translate([0, 0]);
+
+    var initialLevel = REPLACE_ME_geo_initial_level;
+    var initialCenterLat = REPLACE_ME_geo_initial_center_lat;
+    var initialCenterLon = REPLACE_ME_geo_initial_center_lon;
+    var scale = 1 << (initialLevel + 8);
+    var cx = projection([initialCenterLon, initialCenterLat])[0] * scale;
+    var cy = projection([initialCenterLon, initialCenterLat])[1] * scale;
+
+    var coords = [lon, lat];
+    var px = projection(coords)[0] * scale;
+    var py = projection(coords)[1] * scale;
+    var width = REPLACE_ME_top_level_width;
+    var height = REPLACE_ME_top_level_height;
+
+    return {x: px - (cx - width / 2), y: py - (cy - height / 2)};
+}
+
 /**
  * PLV8 function used by the SSVCitusIndexer to calculate Citus
  * hash keys that result in spatial partitions
@@ -1962,7 +2106,8 @@ function mergeClustersAlongSplits(clusters, ssv) {
 SSV.prototype = {
     getLayerRenderer,
     getAxesRenderer,
-    getLegendRenderer
+    getLegendRenderer,
+    getMapRenderer
 };
 
 // exports

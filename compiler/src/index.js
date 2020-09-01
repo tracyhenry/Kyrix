@@ -279,7 +279,10 @@ function addSSV(ssv, args) {
         bboxW: ssv.bboxW,
         bboxH: ssv.bboxH,
         zoomFactor: ssv.zoomFactor,
-        fadeInDuration: 200
+        fadeInDuration: 200,
+        geoInitialLevel: ssv.geoInitialLevel,
+        geoInitialCenterLat: ssv.geoLat,
+        geoInitialCenterLon: ssv.geoLon
     };
     renderingParams = {
         ...renderingParams,
@@ -357,6 +360,24 @@ function addSSV(ssv, args) {
 
         // tooltips
         curLayer.addTooltip(ssv.tooltipColumns, ssv.tooltipAliases);
+
+        // map layer
+        if (ssv.mapBackground) {
+            var mapLayer = new Layer(
+                require("./Transform").defaultEmptyTransform,
+                false
+            );
+            curCanvas.addLayer(mapLayer);
+            mapLayer.addRenderingFunc(ssv.getMapRenderer());
+            mapLayer.addPlacement({
+                centroid_x: "con:0",
+                centroid_y: "con:0",
+                width: "con:0",
+                height: "con:0"
+            });
+            mapLayer.setFetchingScheme("dbox", false);
+            mapLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
+        }
 
         // axes
         if (ssv.axis) {

@@ -128,7 +128,7 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
     private final Gson gson;
     private String rpKey;
     private int ssvIndex, numLevels, numRawColumns;
-    private Statement bboxStmt;
+    private Statement bboxStmt, rawDbStmt;
 
     // One Rtree per level to store clusters
     // https://github.com/davidmoten/rtree
@@ -160,6 +160,9 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // set common variables
         setCommonVariables();
+
+        // transform geo to screen coordinates if needed
+        if (!ssv.getGeoLatCol().isEmpty()) getGeoCoords();
 
         // compute cluster aggregations
         long st = System.nanoTime();
@@ -203,6 +206,52 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
 
         // add row number as a BGRP
         Main.getProject().addBGRP(rpKey, "roughN", String.valueOf(rawRows.size()));
+    }
+
+    private void getGeoCoords() throws Exception {
+        DbConnector.closeConnection(ssv.getDb());
+        rawDbStmt = DbConnector.getStmtByDbName(ssv.getDb());
+        String sql =
+                "ALTER TABLE " + ssv.getRawTable() + " ADD COLUMN IF NOT EXISTS kyrix_geo_x float;";
+        System.out.println(sql);
+        rawDbStmt.executeUpdate(sql);
+
+        sql = "ALTER TABLE " + ssv.getRawTable() + " ADD COLUMN IF NOT EXISTS kyrix_geo_y float;";
+        System.out.println(sql);
+        rawDbStmt.executeUpdate(sql);
+
+        sql = "DROP FUNCTION get_coord";
+        sql =
+                "CREATE OR REPLACE FUNCTION get_coord(lat float, lon float) returns jsonb as $$"
+                        + ssv.getGetCoordinatesFromLatLonBody()
+                                .replaceAll(
+                                        "REPLACE_ME_geo_initial_level",
+                                        String.valueOf(ssv.getGeoInitialLevel()))
+                                .replaceAll(
+                                        "REPLACE_ME_geo_initial_center_lat",
+                                        String.valueOf(ssv.getGeoLat()))
+                                .replaceAll(
+                                        "REPLACE_ME_geo_initial_center_lon",
+                                        String.valueOf(ssv.getGeoLon()))
+                                .replaceAll(
+                                        "REPLACE_ME_top_level_width",
+                                        String.valueOf(ssv.getTopLevelWidth()))
+                                .replaceAll(
+                                        "REPLACE_ME_top_level_height",
+                                        String.valueOf(ssv.getTopLevelHeight()))
+                        + " $$ language plv8;";
+        System.out.println(sql);
+        rawDbStmt.executeUpdate(sql);
+
+        sql =
+                "UPDATE "
+                        + ssv.getRawTable()
+                        + " SET kyrix_geo_x = ((get_coord(latitude::float, longitude::float)->>'x')::float),"
+                        + "     kyrix_geo_y = ((get_coord(latitude::float, longitude::float)->>'y')::float);";
+        System.out.println(sql);
+        rawDbStmt.executeUpdate(sql);
+        rawDbStmt.close();
+        DbConnector.closeConnection(ssv.getDb());
     }
 
     private void computeClusterAggs() throws Exception {
@@ -427,7 +476,9 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
 
     private void cleanUp() throws SQLException {
         // commit & close connections
+        rawDbStmt.close();
         bboxStmt.close();
+        DbConnector.closeConnection(ssv.getDb());
         DbConnector.closeConnection(Config.databaseName);
 
         // release memory
