@@ -4,5 +4,7 @@ Data for four example application can be found here: [nba](https://www.dropbox.c
 
 To load data of `app` (can be one of `nba`, `usmap`, `forest` or `flare`) into our docker container, run the following under root git directory:
 
-      $ ./docker-scripts/load-sql.sh app.sql --dbname app
+      $ ./docker-scripts/load-sql.sh [appname].sql --dbname app
+      
+Please refer to [the tutorial](https://github.com/tracyhenry/Kyrix/wiki/Tutorial) for more details on how to run an example application. Refer to Section 6 of [this paper](http://web.mit.edu/wenbo/www/kyrix_eurovis.pdf) for more explanation on the example applications. 
 
