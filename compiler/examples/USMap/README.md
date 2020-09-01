@@ -7,7 +7,7 @@
 
 This example app has two canvases. The top-level canvas shows state-level US crime rates, where darker colors indicate higher crime crime rates per 100,000 population. The user can click on a state, and zoom into a detailed county-level crime rate map centered at the clicked state. On the county canvas, the user can pan around. 
 
-# How to get this app running
+# Installation Instructions for the Impatient
 After running `sudo ./run-kyrix.sh --nba`, open another terminal tab and run the following commands:
 ```
 > wget https://www.dropbox.com/s/youvfap909mk1m3/usmap_db_psql.sql     # download data
