@@ -221,6 +221,9 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         rawDbStmt.executeUpdate(sql);
 
         sql = "DROP FUNCTION get_coord";
+        System.out.println(sql);
+        rawDbStmt.executeUpdate(sql);
+
         sql =
                 "CREATE OR REPLACE FUNCTION get_coord(lat float, lon float) returns jsonb as $$"
                         + ssv.getGetCoordinatesFromLatLonBody()
