@@ -22,9 +22,14 @@ public class SSV {
     private int xColId = -1, yColId = -1, zColId = -1;
     private double loX = Double.NaN, loY, hiX, hiY;
     private String mergeClusterAggs,
+            getCoordinatesFromLatLonBody,
             getCitusSpatialHashKeyBody,
             singleNodeClusteringBody,
             mergeClustersAlongSplitsBody;
+    private double geoLat, geoLon;
+    private String geoLatCol, geoLonCol;
+    private int geoInitialLevel;
+    private boolean mapBackground;
 
     public String getQuery() {
         return query;
@@ -182,8 +187,36 @@ public class SSV {
         return hiY;
     }
 
+    public double getGeoLat() {
+        return geoLat;
+    }
+
+    public double getGeoLon() {
+        return geoLon;
+    }
+
+    public String getGeoLatCol() {
+        return geoLatCol;
+    }
+
+    public String getGeoLonCol() {
+        return geoLonCol;
+    }
+
+    public int getGeoInitialLevel() {
+        return geoInitialLevel;
+    }
+
+    public boolean isMapBackground() {
+        return mapBackground;
+    }
+
     public String getMergeClusterAggs() {
         return mergeClusterAggs;
+    }
+
+    public String getGetCoordinatesFromLatLonBody() {
+        return getCoordinatesFromLatLonBody;
     }
 
     public String getGetCitusSpatialHashKeyBody() {
