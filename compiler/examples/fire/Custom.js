@@ -91,6 +91,10 @@ project.addCanvas(stateMapCanvas);
 var stateBoundaryLayer = new Layer(transforms.stateMapTransform, true);
 stateMapCanvas.addLayer(stateBoundaryLayer);
 stateBoundaryLayer.addRenderingFunc(renderers.stateMapRendering);
+stateBoundaryLayer.addTooltip(
+    ["state", "total_fire_size"],
+    ["State", "Acres burned"]
+);
 
 var view = new View("fire", 0, 0, width, height);
 project.addView(view);
