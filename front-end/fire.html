@@ -5,11 +5,15 @@
                 type="range"
                 min="1"
                 max="24"
-                value="3"
+                value="9"
                 class="slider"
                 id="yearSlider"
             />
         </div>
+        <div>
+            <div id="yearContainer">Year 2000</div>
+        </div>
+
         <div id="kyrixContainer"></div>
     </body>
     <head>
@@ -53,6 +57,7 @@
                         stateScaleStep: 40000
                     }
                 });
+                yearContainer.innerHTML = "Year " + fireYear;
             };
         </script>
     </head>

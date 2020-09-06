@@ -1,5 +1,5 @@
 var renderingParams = {
-    fire_year: 1994,
+    fire_year: 2000,
     stateMapScale: 2000,
     stateScaleRange: 300000,
     stateScaleStep: 40000

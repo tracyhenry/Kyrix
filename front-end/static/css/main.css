@@ -4,6 +4,11 @@ body {
     overflow: hidden;
 }
 
+#yearContainer {
+    text-align: center;
+    font-size: 25px;
+}
+
 .kyrixdiv {
     overflow: hidden;
     width: 100%;
