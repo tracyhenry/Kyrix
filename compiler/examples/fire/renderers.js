@@ -37,6 +37,7 @@ var stateMapRendering = function(svg, data, args) {
     var width = args.canvasW,
         height = args.canvasH;
     var params = args.renderingParams;
+    console.log(params);
 
     var projection = d3
         .geoAlbersUsa()
@@ -91,7 +92,7 @@ var stateMapRendering = function(svg, data, args) {
         .style("stroke", "#fff")
         .style("stroke-width", "0.5")
         .style("fill", function(d) {
-            return color(d.total_fire_size);
+            return color(+d.total_fire_size);
         });
 };
 

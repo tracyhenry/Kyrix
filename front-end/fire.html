@@ -1,0 +1,59 @@
+<html>
+    <body>
+        <div id="sliderContainer">
+            <input
+                type="range"
+                min="1"
+                max="24"
+                value="3"
+                class="slider"
+                id="yearSlider"
+            />
+        </div>
+        <div id="kyrixContainer"></div>
+    </body>
+    <head>
+        <link rel="stylesheet" type="text/css" href="static/css/main.css" />
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        />
+        <link
+            href="https://fonts.googleapis.com/css?family=Source Serif Pro"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css?family=Open+Sans"
+            rel="stylesheet"
+        />
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/gpu.js@2.0.0-rc.19/dist/gpu-browser.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.min.js"></script>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/css-element-queries@1.2.1/src/ElementQueries.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/css-element-queries@1.2.1/src/ResizeSensor.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.min.js"></script>
+        <script src="js/embed/kyrix.js"></script>
+        <script>
+            // TODO: change the address where the kyrix backend is running, has to start with http://
+            var serverAddr = "http://127.0.0.1:8000";
+
+            // initializeApp() loads kyrix vis into a div, and returns this div
+            kyrixContainer.appendChild(kyrix.initializeApp(serverAddr));
+
+            yearSlider.onchange = function() {
+                if (kyrix.getCurrentCanvasId("fire") != "statemap") return;
+                var fireYear = +this.value + 1991;
+                kyrix.reRender("fire", 0, {
+                    renderingParams: {
+                        fire_year: fireYear,
+                        stateMapScale: 2000,
+                        stateScaleRange: 300000,
+                        stateScaleStep: 40000
+                    }
+                });
+            };
+        </script>
+    </head>
+</html>
