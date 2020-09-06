@@ -50,11 +50,11 @@ var stateMapRendering = function(svg, data, args) {
         .range(d3.schemeYlOrRd[9]);
 
     var allStates = [];
-    var geomStrs = [];
+    var geomStrs = {};
     for (var i = 0; i < data.length; i++) {
-        if (!allStates.includes(data[i].state)) {
+        if (!allStates.includes(data[i].state) && data[i].geomstr.length > 0) {
             allStates.push(data[i].state);
-            geomStrs.push(data[i].geomstr);
+            geomStrs[data[i].state] = data[i].geomstr;
         }
     }
     var filteredData = [];
@@ -65,6 +65,7 @@ var stateMapRendering = function(svg, data, args) {
                 data[j].year == params.fire_year &&
                 data[j].state == allStates[i]
             ) {
+                data[j].geomstr = geomStrs[data[j].state];
                 filteredData.push(data[j]);
                 hasData = true;
             }
@@ -74,7 +75,7 @@ var stateMapRendering = function(svg, data, args) {
                 state: allStates[i],
                 year: params.fire_year,
                 total_fire_size: 0,
-                geomstr: geomStrs[i]
+                geomstr: geomStrs[allStates[i]]
             });
         }
     }
