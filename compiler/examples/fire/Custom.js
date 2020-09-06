@@ -5,6 +5,9 @@ const Layer = require("../../src/Layer").Layer;
 const View = require("../../src/View").View;
 const SSV = require("../../src/template-api/SSV").SSV;
 
+const renderers = require("./renderers");
+const transforms = require("./transforms");
+
 var project = new Project("fire", "../../../config.txt");
 
 // set up ssv
@@ -15,69 +18,28 @@ var ssv = {
     data: {
         db: "fire",
         query:
-            "SELECT x, y, fire_name, fire_year, stat_cause_descr, fire_size, latitude, longitude FROM fire;"
+            "SELECT x, y, fire_name, fire_year, stat_cause_descr, fire_size, latitude, longitude FROM fire_small;"
     },
     layout: {
         x: {
-            field: "x",
-            extent: [0, width]
+            field: "x"
         },
         y: {
-            field: "y",
-            extent: [0, height]
+            field: "y"
         },
         z: {
             field: "fire_size",
             order: "desc"
+        },
+        geo: {
+            level: 5,
+            center: [39.5, -98.5]
         }
     },
     marks: {
-        // cluster: {
-        //     mode: "pie",
-        //     aggregate: {
-        //         dimensions: [
-        //             {
-        //                 field: "stat_cause_descr",
-        //                 domain: [
-        //                     "Debris Burning",
-        //                     "Arson",
-        //                     "Lightning",
-        //                     "Equipment Use",
-        //                     "Miscellaneous"
-        //                 ]
-        //             }
-        //         ],
-        //         measures: [
-        //             {
-        //                 field: "*",
-        //                 function: "count"
-        //             }
-        //         ]
-        //     },
-        //     config: {
-        //         // piePadAngle: 0.05,
-        //         // pieCornerRadius: 5,
-        //         // pieOuterRadius: 80,
-        //         // pieInnerRadius: 1
-        //     }
-        // },
-        // hover: {
-        //     rankList: {
-        //         mode: "tabular",
-        //         fields: [
-        //             "fire_name",
-        //             "fire_year",
-        //             "fire_size",
-        //             "stat_cause_descr"
-        //         ],
-        //         topk: 3
-        //     },
-        //     boundary: "convexhull"
-        // }
-
         cluster: {
             mode: "custom",
-            custom: require("./renderers").fireRendering,
+            custom: renderers.fireRendering,
             config: {
                 clusterCount: true,
                 bboxW: 120,
@@ -112,11 +74,26 @@ var ssv = {
     }
 };
 
-var ret = project.addSSV(new SSV(ssv));
-var pyramid = ret.pyramid;
+//project.addSSV(new SSV(ssv));
 
-const mapLayer = require("./MapLayer").mapLayer;
+project.addRenderingParams(renderers.renderingParams);
 
-for (var i = 0; i < pyramid.length; i++) pyramid[i].addLayer(mapLayer);
+// ================== state map canvas ===================
+var stateMapCanvas = new Canvas("statemap", width, height);
+project.addCanvas(stateMapCanvas);
+
+// // static legends layer
+// var stateMapLegendLayer = new Layer(null, true);
+// stateMapCanvas.addLayer(stateMapLegendLayer);
+// stateMapLegendLayer.addRenderingFunc(renderers.stateMapLegendRendering);
+
+// state boundary layer
+var stateBoundaryLayer = new Layer(transforms.stateMapTransform, true);
+stateMapCanvas.addLayer(stateBoundaryLayer);
+stateBoundaryLayer.addRenderingFunc(renderers.stateMapRendering);
+
+var view = new View("fire", 0, 0, width, height);
+project.addView(view);
+project.setInitialStates(view, stateMapCanvas, 0, 0);
 
 project.saveProject();

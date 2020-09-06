@@ -1,3 +1,10 @@
+var renderingParams = {
+    fire_year: 1994,
+    stateMapScale: 2000,
+    stateScaleRange: 300000,
+    stateScaleStep: 40000
+};
+
 var fireRendering = function(svg, data, args) {
     var sizeScale = d3
         .scaleSqrt()
@@ -25,4 +32,70 @@ var fireRendering = function(svg, data, args) {
         .style("opacity", 1);
 };
 
-module.exports = {fireRendering};
+var stateMapRendering = function(svg, data, args) {
+    g = svg.append("g");
+    var width = args.canvasW,
+        height = args.canvasH;
+    var params = args.renderingParams;
+
+    var projection = d3
+        .geoAlbersUsa()
+        .scale(params.stateMapScale)
+        .translate([width / 2, height / 2]);
+    var path = d3.geoPath().projection(projection);
+
+    var color = d3
+        .scaleThreshold()
+        .domain(d3.range(0, params.stateScaleRange, params.stateScaleStep))
+        .range(d3.schemeYlOrRd[9]);
+
+    var allStates = [];
+    var geomStrs = [];
+    for (var i = 0; i < data.length; i++) {
+        if (!allStates.includes(data[i].state)) {
+            allStates.push(data[i].state);
+            geomStrs.push(data[i].geomstr);
+        }
+    }
+    var filteredData = [];
+    for (var i = 0; i < allStates.length; i++) {
+        var hasData = false;
+        for (var j = 0; j < data.length; j++) {
+            if (
+                data[j].year == params.fire_year &&
+                data[j].state == allStates[i]
+            ) {
+                filteredData.push(data[j]);
+                hasData = true;
+            }
+        }
+        if (!hasData) {
+            filteredData.push({
+                state: allStates[i],
+                year: params.fire_year,
+                total_fire_size: 0,
+                geomstr: geomStrs[i]
+            });
+        }
+    }
+
+    g.selectAll("path")
+        .data(filteredData)
+        .enter()
+        .append("path")
+        .attr("d", function(d) {
+            var feature = JSON.parse(d.geomstr);
+            return path(feature);
+        })
+        .style("stroke", "#fff")
+        .style("stroke-width", "0.5")
+        .style("fill", function(d) {
+            return color(d.total_fire_size);
+        });
+};
+
+module.exports = {
+    fireRendering,
+    stateMapRendering,
+    renderingParams
+};
