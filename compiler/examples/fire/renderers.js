@@ -37,7 +37,6 @@ var stateMapRendering = function(svg, data, args) {
     var width = args.canvasW,
         height = args.canvasH;
     var params = args.renderingParams;
-    console.log(params);
 
     var projection = d3
         .geoAlbersUsa()
@@ -59,8 +58,7 @@ var stateMapRendering = function(svg, data, args) {
         }
     }
     var filteredData = [];
-    for (var i = 0; i < allStates.length; i++) {
-        var hasData = false;
+    for (var i = 0; i < allStates.length; i++)
         for (var j = 0; j < data.length; j++) {
             if (
                 data[j].year == params.fire_year &&
@@ -68,18 +66,8 @@ var stateMapRendering = function(svg, data, args) {
             ) {
                 data[j].geomstr = geomStrs[data[j].state];
                 filteredData.push(data[j]);
-                hasData = true;
             }
         }
-        if (!hasData) {
-            filteredData.push({
-                state: allStates[i],
-                year: params.fire_year,
-                total_fire_size: 0,
-                geomstr: geomStrs[allStates[i]]
-            });
-        }
-    }
 
     g.selectAll("path")
         .data(filteredData)
@@ -96,8 +84,76 @@ var stateMapRendering = function(svg, data, args) {
         });
 };
 
+var barRendering = function(svg, data, args) {
+    g = svg.append("g");
+    var width = args.canvasW,
+        height = args.canvasH;
+    var params = args.renderingParams;
+
+    var projection = d3
+        .geoAlbersUsa()
+        .scale(params.stateMapScale)
+        .translate([width / 2, height / 2]);
+    var path = d3.geoPath().projection(projection);
+
+    var allStates = [];
+    var geomStrs = [];
+    for (var i = 0; i < data.length; i++) {
+        if (!allStates.includes(data[i].state) && data[i].geomstr.length > 0) {
+            allStates.push(data[i].state);
+            geomStrs.push(JSON.parse(data[i].geomstr));
+        }
+    }
+
+    var causes = ["Debris Burning", "Arson", "Lightning", "Equipment Use"];
+    //var colors = ["#e374c3", "#c3e374", "#74e3b5", "#e38474"];
+    var colors = ["#374e99", "#996237", "#999237", "#8e3799"];
+    var maxArea = d3.max(geomStrs.map(d => path.area(d)));
+    for (var i = 0; i < allStates.length; i++) {
+        // use geomstr to calculate cx, cy
+        var cx = path.centroid(geomStrs[i])[0];
+        var cy = path.centroid(geomStrs[i])[1];
+        var bounds = path.bounds(geomStrs[i]);
+
+        // get values for the 4 causes
+        var cause_map = {};
+        var maxFireSize = 0;
+        for (var j = 0; j < data.length; j++) {
+            if (
+                data[j].state == allStates[i] &&
+                data[j].fire_year == params.fire_year &&
+                causes.includes(data[j].stat_cause_descr)
+            ) {
+                cause_map[data[j].stat_cause_descr] = data[j].total_fire_size;
+                maxFireSize = Math.max(maxFireSize, data[j].total_fire_size);
+            }
+        }
+
+        // add 4 rectangles
+        // var barWidth = 300 * area / maxArea;
+        // var barHeight = 200 * area / maxArea;
+        var barWidth = (bounds[1][0] - bounds[0][0]) * 0.3;
+        var barHeight = (bounds[1][1] - bounds[0][1]) * 0.3;
+        for (var j = 0; j < causes.length; j++)
+            g.append("rect")
+                .attr("fill", colors[j])
+                .attr("x", cx - barWidth / 2 + (j * barWidth) / 4)
+                .attr(
+                    "y",
+                    cy +
+                        barHeight / 2 -
+                        (cause_map[causes[j]] / maxFireSize) * barHeight
+                )
+                .attr("width", barWidth / 4)
+                .attr(
+                    "height",
+                    (cause_map[causes[j]] / maxFireSize) * barHeight
+                );
+    }
+};
 module.exports = {
     fireRendering,
     stateMapRendering,
+    barRendering,
     renderingParams
 };

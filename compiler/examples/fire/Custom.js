@@ -87,6 +87,11 @@ project.addCanvas(stateMapCanvas);
 // stateMapCanvas.addLayer(stateMapLegendLayer);
 // stateMapLegendLayer.addRenderingFunc(renderers.stateMapLegendRendering);
 
+// bar chart layer
+var barLayer = new Layer(transforms.barTransform, true);
+stateMapCanvas.addLayer(barLayer);
+barLayer.addRenderingFunc(renderers.barRendering);
+
 // state boundary layer
 var stateBoundaryLayer = new Layer(transforms.stateMapTransform, true);
 stateMapCanvas.addLayer(stateBoundaryLayer);
