@@ -2,7 +2,8 @@ var renderingParams = {
     fire_year: 2000,
     stateMapScale: 2000,
     stateScaleRange: 300000,
-    stateScaleStep: 40000
+    stateScaleStep: 40000,
+    showBarchart: true
 };
 
 var fireRendering = function(svg, data, args) {
@@ -85,10 +86,11 @@ var stateMapRendering = function(svg, data, args) {
 };
 
 var barRendering = function(svg, data, args) {
-    g = svg.append("g");
+    var params = args.renderingParams;
+    if (!params.showBarchart) return;
     var width = args.canvasW,
         height = args.canvasH;
-    var params = args.renderingParams;
+    g = svg.append("g");
 
     var projection = d3
         .geoAlbersUsa()
@@ -108,7 +110,6 @@ var barRendering = function(svg, data, args) {
     var causes = ["Debris Burning", "Arson", "Lightning", "Equipment Use"];
     //var colors = ["#e374c3", "#c3e374", "#74e3b5", "#e38474"];
     var colors = ["#374e99", "#996237", "#999237", "#8e3799"];
-    var maxArea = d3.max(geomStrs.map(d => path.area(d)));
     for (var i = 0; i < allStates.length; i++) {
         // use geomstr to calculate cx, cy
         var cx = path.centroid(geomStrs[i])[0];
@@ -128,6 +129,8 @@ var barRendering = function(svg, data, args) {
                 maxFireSize = Math.max(maxFireSize, data[j].total_fire_size);
             }
         }
+
+        if (maxFireSize == 0) continue;
 
         // add 4 rectangles
         // var barWidth = 300 * area / maxArea;
