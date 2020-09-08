@@ -82,10 +82,10 @@ project.addRenderingParams(renderers.renderingParams);
 var stateMapCanvas = new Canvas("statemap", width, height);
 project.addCanvas(stateMapCanvas);
 
-// // static legends layer
-// var stateMapLegendLayer = new Layer(null, true);
-// stateMapCanvas.addLayer(stateMapLegendLayer);
-// stateMapLegendLayer.addRenderingFunc(renderers.stateMapLegendRendering);
+// static legends layer
+var stateMapLegendLayer = new Layer(null, true);
+stateMapCanvas.addLayer(stateMapLegendLayer);
+stateMapLegendLayer.addRenderingFunc(renderers.stateMapLegendRendering);
 
 // bar chart layer
 var barLayer = new Layer(transforms.barTransform, true);

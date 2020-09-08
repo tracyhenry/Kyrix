@@ -33,6 +33,97 @@ var fireRendering = function(svg, data, args) {
         .style("opacity", 1);
 };
 
+var stateMapLegendRendering = function(svg, data, args) {
+    // parameters
+    var bkgRectWidth = 600;
+    var bkgRectXOffset = 200;
+    var legendRectStartXOffset = bkgRectWidth + bkgRectXOffset - 60;
+    var legendRectY = 32;
+    var legendRectWidth = 60;
+    var legendRectHeight = 16;
+    var captionY = 20;
+    var captionFontSize = 22;
+    var tickFontSize = 12;
+
+    var g = svg.append("g");
+    var width = args.viewportW;
+    var param = args.renderingParams;
+
+    // rectangles representing colors
+    var color = d3
+        .scaleThreshold()
+        .domain(d3.range(0, param.stateScaleRange, param.stateScaleStep))
+        .range("colorScheme" in args ? args.colorScheme : d3.schemeYlOrRd[9]);
+    g.selectAll(".legendrect")
+        .data(color.range().slice(1))
+        .enter()
+        .append("rect")
+        .attr("x", function(d, i) {
+            return width - legendRectStartXOffset + i * legendRectWidth;
+        })
+        .attr("y", legendRectY)
+        .attr("width", legendRectWidth)
+        .attr("height", legendRectHeight)
+        .attr("fill", function(d) {
+            return d;
+        });
+
+    // caption text
+    g.append("text")
+        .attr("x", width - legendRectStartXOffset) //width - bkgRectWidth - bkgRectXOffset)
+        .attr("y", captionY)
+        .attr("fill", "#000")
+        .attr("text-anchor", "start")
+        .attr("font-weight", "bold")
+        .attr("font-size", captionFontSize)
+        .text("Acres of land burned");
+
+    // axis ticks
+    var axisScale = d3
+        .scaleLinear()
+        .domain([0, 320000])
+        .rangeRound([
+            width - legendRectStartXOffset,
+            width - legendRectStartXOffset + 8 * legendRectWidth
+        ]);
+    var axis = g
+        .append("g")
+        .attr("transform", "translate(0, " + legendRectY + ")")
+        .call(
+            d3
+                .axisBottom(axisScale)
+                .tickSize(23)
+                .tickValues(color.domain())
+        );
+    axis.style("font-size", tickFontSize);
+    axis.select(".domain").remove();
+
+    // bar chart legends
+    if (param.showBarchart) {
+        var causes = ["Debris Burning", "Arson", "Lightning", "Equipment Use"];
+        //var colors = ["#374e99", "#996237", "#999237", "#8e3799"];
+        //var colors = ["#90D7FF", "#98CE00", "#4B644A", "#9C7CA5"];
+        var colors = ["#4026bf", "#a6bf26", "#26bf40", "#bf26a6"];
+
+        var color = d3.scaleOrdinal(colors).domain(causes);
+        var legendOrdinal = d3
+            .legendColor()
+            .shape("rect")
+            .orient("horizontal")
+            .shapePadding(100)
+            .labelOffset(15)
+            //.titleWidth(200)
+            // .labelAlign("start")
+            .scale(color);
+
+        svg.append("g")
+            .attr("transform", "translate(660 0)")
+            .attr("font-size", "22px")
+            .attr("font-weight", "normal")
+            .call(legendOrdinal);
+    }
+};
+
 var stateMapRendering = function(svg, data, args) {
     g = svg.append("g");
     var width = args.canvasW,
@@ -109,12 +200,15 @@ var barRendering = function(svg, data, args) {
 
     var causes = ["Debris Burning", "Arson", "Lightning", "Equipment Use"];
     //var colors = ["#e374c3", "#c3e374", "#74e3b5", "#e38474"];
-    var colors = ["#374e99", "#996237", "#999237", "#8e3799"];
+    //var colors = ["#374e99", "#996237", "#999237", "#8e3799"];
+    //var colors = ["#90D7FF", "#98CE00", "#4B644A", "#9C7CA5"];
+    var colors = ["#4026bf", "#a6bf26", "#26bf40", "#bf26a6"];
     for (var i = 0; i < allStates.length; i++) {
         // use geomstr to calculate cx, cy
         var cx = path.centroid(geomStrs[i])[0];
         var cy = path.centroid(geomStrs[i])[1];
         var bounds = path.bounds(geomStrs[i]);
+        if (allStates[i] == "MI") (cx += 30), (cy += 30);
 
         // get values for the 4 causes
         var cause_map = {};
@@ -156,6 +250,7 @@ var barRendering = function(svg, data, args) {
 };
 module.exports = {
     fireRendering,
+    stateMapLegendRendering,
     stateMapRendering,
     barRendering,
     renderingParams

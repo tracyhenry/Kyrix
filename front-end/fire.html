@@ -59,39 +59,32 @@
             yearSlider.onchange = function() {
                 if (kyrix.getCurrentCanvasId("fire") != "statemap") return;
                 var fireYear = +this.value + 1991;
-                kyrix.reRender("fire", 0, {
-                    renderingParams: {
-                        fire_year: fireYear,
-                        stateMapScale: 2000,
-                        stateScaleRange: 300000,
-                        stateScaleStep: 40000,
-                        showBarchart: barchartCheckbox.checked
-                    }
-                });
-                kyrix.reRender("fire", 1, {
-                    renderingParams: {
-                        fire_year: fireYear,
-                        stateMapScale: 2000,
-                        stateScaleRange: 300000,
-                        stateScaleStep: 40000,
-                        showBarchart: barchartCheckbox.checked
-                    }
-                });
+                for (var i = 0; i < 3; i++)
+                    kyrix.reRender("fire", i, {
+                        renderingParams: {
+                            fire_year: fireYear,
+                            stateMapScale: 2000,
+                            stateScaleRange: 300000,
+                            stateScaleStep: 40000,
+                            showBarchart: barchartCheckbox.checked
+                        }
+                    });
                 yearContainer.innerHTML = "Year " + fireYear;
             };
 
             barchartCheckbox.onchange = function() {
                 if (kyrix.getCurrentCanvasId("fire") != "statemap") return;
                 var fireYear = +yearSlider.value + 1991;
-                kyrix.reRender("fire", 0, {
-                    renderingParams: {
-                        fire_year: fireYear,
-                        stateMapScale: 2000,
-                        stateScaleRange: 300000,
-                        stateScaleStep: 40000,
-                        showBarchart: barchartCheckbox.checked
-                    }
-                });
+                for (var i = 0; i < 2; i++)
+                    kyrix.reRender("fire", i, {
+                        renderingParams: {
+                            fire_year: fireYear,
+                            stateMapScale: 2000,
+                            stateScaleRange: 300000,
+                            stateScaleStep: 40000,
+                            showBarchart: barchartCheckbox.checked
+                        }
+                    });
             };
         </script>
     </head>
