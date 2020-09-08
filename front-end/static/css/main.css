@@ -68,14 +68,24 @@ body {
     font-size: 25px;
 }
 
-#explanation {
+#kyrixintro {
     float: left;
     font-size: 15px;
     color: #bbbbbb;
-    width: 450px;
+    width: 1000px;
+    height: 80px;
+    overflow: visible;
+    text-align: left;
+    margin-left: 20px;
+}
+#explanation {
+    float: right;
+    font-size: 15px;
+    color: #bbbbbb;
+    width: 300px;
     height: 50px;
     overflow: visible;
-    margin-left: 20px;
+    margin-right: 20px;
 }
 
 #checkboxContainer {
