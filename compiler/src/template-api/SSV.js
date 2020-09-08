@@ -1706,11 +1706,24 @@ function getMapRenderer() {
         var deltaX = image
             .enter()
             .append("image")
+            // .attr("xlink:href", function(d) {
+            //     return (
+            //         "http://" +
+            //         "abc"[d[1] % 3] +
+            //         ".tile.openstreetmap.org/" +
+            //         d[2] +
+            //         "/" +
+            //         d[0] +
+            //         "/" +
+            //         d[1] +
+            //         ".png"
+            //     );
+            // })
             .attr("xlink:href", function(d) {
                 return (
                     "http://" +
-                    "abc"[d[1] % 3] +
-                    ".tile.openstreetmap.org/" +
+                    "abcd"[(d[0] + d[1]) % 4] +
+                    ".tile.stamen.com/terrain/" +
                     d[2] +
                     "/" +
                     d[0] +
