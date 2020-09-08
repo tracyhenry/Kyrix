@@ -1670,7 +1670,7 @@ function getMapRenderer() {
         var vh = args["viewportH"];
         var topLevelWidth = params.hiX - params.loX;
         var topLevelHeight = params.hiY - params.loY;
-        var level = args["pyramidLevel"];
+        var level = +args.ssvId.substring(args.ssvId.indexOf("_") + 1);
         var initialLon = params.geoInitialCenterLon;
         var initialLat = params.geoInitialCenterLat;
         var initialLevel = params.geoInitialLevel;

@@ -161,10 +161,12 @@ input[type="range"]:focus::-ms-fill-upper {
 #checkboxContainer {
     text-align: center;
     font-size: 20px;
+    margin: 0;
 }
 
 label {
     font-weight: normal !important;
+    margin-bottom: 0 !important;
 }
 
 /* Base for label styling */

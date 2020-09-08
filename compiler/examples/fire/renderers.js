@@ -139,25 +139,18 @@ var stateMapRendering = function(svg, data, args) {
         .domain(d3.range(0, params.stateScaleRange, params.stateScaleStep))
         .range(d3.schemeYlOrRd[9]);
 
-    var allStates = [];
     var geomStrs = {};
-    for (var i = 0; i < data.length; i++) {
-        if (!allStates.includes(data[i].state) && data[i].geomstr.length > 0) {
-            allStates.push(data[i].state);
+    for (var i = 0; i < data.length; i++)
+        if (data[i].geomstr.length > 0)
             geomStrs[data[i].state] = data[i].geomstr;
+
+    var filteredData = [];
+    for (var j = 0; j < data.length; j++) {
+        if (data[j].year == params.fire_year) {
+            data[j].geomstr = geomStrs[data[j].state];
+            filteredData.push(data[j]);
         }
     }
-    var filteredData = [];
-    for (var i = 0; i < allStates.length; i++)
-        for (var j = 0; j < data.length; j++) {
-            if (
-                data[j].year == params.fire_year &&
-                data[j].state == allStates[i]
-            ) {
-                data[j].geomstr = geomStrs[data[j].state];
-                filteredData.push(data[j]);
-            }
-        }
 
     g.selectAll("path")
         .data(filteredData)

@@ -262,7 +262,7 @@ function pageOnLoad(serverAddr) {
             kyrixDiv
                 .append("svg")
                 .attr("id", "containerSvg")
-                .style("top", "-50px") // top margin = 0
+                .style("top", "-100px") // top margin = 0
                 .style("left", param.buttonAreaWidth + "px") // left margin == 20 + button_width + 20
                 .attr("width", containerW)
                 .attr("height", containerH);
