@@ -15,6 +15,7 @@ var width = 960 * 2;
 var height = 500 * 2;
 
 project.addRenderingParams(renderers.renderingParams);
+project.addRenderingParams(require("./geomstrs").geomstrs);
 
 // ================== state map canvas ===================
 var stateMapCanvas = new Canvas("statemap", width, height);
@@ -30,10 +31,10 @@ var barLayer = new Layer(transforms.barTransform, false);
 stateMapCanvas.addLayer(barLayer);
 barLayer.addRenderingFunc(renderers.barRendering);
 barLayer.addPlacement({
-    centroid_x: "con:0",
-    centroid_y: "con:0",
-    width: "con:0",
-    height: "con:0"
+    centroid_x: "full",
+    centroid_y: "full",
+    width: "full",
+    height: "full"
 });
 
 // state boundary layer
@@ -41,11 +42,12 @@ var stateBoundaryLayer = new Layer(transforms.stateMapTransform, false);
 stateMapCanvas.addLayer(stateBoundaryLayer);
 stateBoundaryLayer.addRenderingFunc(renderers.stateMapRendering);
 stateBoundaryLayer.addPlacement({
-    centroid_x: "con:0",
-    centroid_y: "con:0",
-    width: "con:0",
-    height: "con:0"
+    centroid_x: "full",
+    centroid_y: "full",
+    width: "full",
+    height: "full"
 });
+
 stateBoundaryLayer.addTooltip(
     ["state", "total_fire_size"],
     ["State", "Acres burned"]

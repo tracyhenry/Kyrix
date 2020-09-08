@@ -139,15 +139,10 @@ var stateMapRendering = function(svg, data, args) {
         .domain(d3.range(0, params.stateScaleRange, params.stateScaleStep))
         .range(d3.schemeYlOrRd[9]);
 
-    var geomStrs = {};
-    for (var i = 0; i < data.length; i++)
-        if (data[i].geomstr.length > 0)
-            geomStrs[data[i].state] = data[i].geomstr;
-
     var filteredData = [];
     for (var j = 0; j < data.length; j++) {
         if (data[j].year == params.fire_year) {
-            data[j].geomstr = geomStrs[data[j].state];
+            data[j].geomstr = params.geomstrs[data[j].state];
             filteredData.push(data[j]);
         }
     }
@@ -182,13 +177,8 @@ var barRendering = function(svg, data, args) {
     var path = d3.geoPath().projection(projection);
 
     var allStates = [];
-    var geomStrs = [];
-    for (var i = 0; i < data.length; i++) {
-        if (!allStates.includes(data[i].state) && data[i].geomstr.length > 0) {
-            allStates.push(data[i].state);
-            geomStrs.push(JSON.parse(data[i].geomstr));
-        }
-    }
+    for (var i = 0; i < data.length; i++)
+        if (!allStates.includes(data[i].state)) allStates.push(data[i].state);
 
     var causes = ["Debris Burning", "Arson", "Lightning", "Equipment Use"];
     //var colors = ["#e374c3", "#c3e374", "#74e3b5", "#e38474"];
@@ -197,9 +187,10 @@ var barRendering = function(svg, data, args) {
     var colors = ["#4026bf", "#a6bf26", "#26bf40", "#bf26a6"];
     for (var i = 0; i < allStates.length; i++) {
         // use geomstr to calculate cx, cy
-        var cx = path.centroid(geomStrs[i])[0];
-        var cy = path.centroid(geomStrs[i])[1];
-        var bounds = path.bounds(geomStrs[i]);
+        var geomstr = JSON.parse(params.geomstrs[allStates[i]]);
+        var cx = path.centroid(geomstr)[0];
+        var cy = path.centroid(geomstr)[1];
+        var bounds = path.bounds(geomstr);
         if (allStates[i] == "MI") (cx += 30), (cy += 30);
 
         // get values for the 4 causes
@@ -240,6 +231,7 @@ var barRendering = function(svg, data, args) {
                 );
     }
 };
+
 module.exports = {
     fireRendering,
     stateMapLegendRendering,
