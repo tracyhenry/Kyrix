@@ -61,7 +61,7 @@ var ssv = {
             order: "desc"
         },
         geo: {
-            level: 6,
+            level: 7,
             center: [39.5, -98.5]
         }
     },
@@ -98,8 +98,8 @@ var ssv = {
     },
     config: {
         numLevels: 10,
-        topLevelWidth: width * 2,
-        topLevelHeight: height * 2
+        topLevelWidth: width * 4,
+        topLevelHeight: height * 4
     }
 };
 
@@ -115,7 +115,7 @@ var newPredicates = function() {
 };
 
 var newViewport = function(row, args) {
-    var zoomFactor = 2;
+    var zoomFactor = 4;
     var vpW = args.viewportW;
     var vpH = args.viewportH;
     var projection = d3

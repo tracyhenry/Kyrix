@@ -84,9 +84,7 @@ function animateSemanticZoom(viewId, jump, newVpX, newVpY, tuple) {
     var endView = [
         minx + (maxx - minx) / 2.0 - curViewport[0],
         miny + (maxy - miny) / 2.0 - curViewport[1],
-        ((maxx - minx) /
-            (enteringAnimation ? param.semanticZoomScaleFactor : 1)) *
-            2
+        curViewport[2] / 4
     ];
     gvd.history[gvd.history.length - 1].startView = startView;
     gvd.history[gvd.history.length - 1].endView = endView;
