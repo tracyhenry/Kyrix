@@ -126,14 +126,12 @@ var stateMapLegendRendering = function(svg, data, args) {
 
 var stateMapRendering = function(svg, data, args) {
     g = svg.append("g");
-    var width = args.canvasW,
-        height = args.canvasH;
     var params = args.renderingParams;
 
     var projection = d3
-        .geoAlbersUsa()
-        .scale(params.stateMapScale)
-        .translate([width / 2, height / 2]);
+        .geoMercator()
+        .translate([3201.4222222222224, 1479.8808343133628])
+        .scale((1 << 13) / 2 / Math.PI);
     var path = d3.geoPath().projection(projection);
 
     var color = d3
@@ -184,9 +182,10 @@ var barRendering = function(svg, data, args) {
     g = svg.append("g");
 
     var projection = d3
-        .geoAlbersUsa()
-        .scale(params.stateMapScale)
-        .translate([width / 2, height / 2]);
+        .geoMercator()
+        .translate([3201.4222222222224, 1479.8808343133628])
+        .scale((1 << 13) / 2 / Math.PI);
+
     var path = d3.geoPath().projection(projection);
 
     var allStates = [];
