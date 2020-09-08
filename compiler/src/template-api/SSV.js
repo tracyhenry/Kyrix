@@ -1668,6 +1668,8 @@ function getMapRenderer() {
         var vy = args["viewportY"];
         var vw = args["viewportW"];
         var vh = args["viewportH"];
+        var topLevelWidth = params.hiX - params.loX;
+        var topLevelHeight = params.hiY - params.loY;
         var level = args["pyramidLevel"];
         var initialLon = params.geoInitialCenterLon;
         var initialLat = params.geoInitialCenterLat;
@@ -1678,16 +1680,16 @@ function getMapRenderer() {
 
         // note: vw/3 because dynamic boxes fetch a box slightly larger than viewport
         var minTileX = Math.floor(
-            (cx - (vw * (1 << level)) / 2 + vx - vw / 3) / 256
+            (cx - (topLevelWidth * (1 << level)) / 2 + vx - vw / 3) / 256
         );
         var maxTileX = Math.floor(
-            (cx - (vw * (1 << level)) / 2 + vx + vw + vw / 3) / 256
+            (cx - (topLevelWidth * (1 << level)) / 2 + vx + vw + vw / 3) / 256
         );
         var minTileY = Math.floor(
-            (cy - (vh * (1 << level)) / 2 + vy - vh / 3) / 256
+            (cy - (topLevelHeight * (1 << level)) / 2 + vy - vh / 3) / 256
         );
         var maxTileY = Math.floor(
-            (cy - (vh * (1 << level)) / 2 + vy + vh + vh / 3) / 256
+            (cy - (topLevelHeight * (1 << level)) / 2 + vy + vh + vh / 3) / 256
         );
         var tiles = [];
         for (var i = minTileX; i <= maxTileX; i++)
@@ -1718,10 +1720,10 @@ function getMapRenderer() {
                 );
             })
             .attr("x", function(d) {
-                return d[0] * 256 - (cx - (vw * (1 << level)) / 2);
+                return d[0] * 256 - (cx - (topLevelWidth * (1 << level)) / 2);
             })
             .attr("y", function(d) {
-                return d[1] * 256 - (cy - (vh * (1 << level)) / 2);
+                return d[1] * 256 - (cy - (topLevelHeight * (1 << level)) / 2);
             })
             .attr("width", 256)
             .attr("height", 256);

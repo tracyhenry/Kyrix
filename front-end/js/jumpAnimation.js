@@ -42,7 +42,11 @@ function animateSemanticZoom(viewId, jump, newVpX, newVpY, tuple) {
 
                 // get client dx & dy
                 var thisBox = this.getBoundingClientRect();
-                var ancestorBox = ancestor.getBoundingClientRect();
+                var ancestorBox = d3
+                    .select(ancestor)
+                    .select("rect")
+                    .node()
+                    .getBoundingClientRect();
                 var dx = thisBox.x - ancestorBox.x;
                 var dy = thisBox.y - ancestorBox.y;
 
@@ -80,7 +84,9 @@ function animateSemanticZoom(viewId, jump, newVpX, newVpY, tuple) {
     var endView = [
         minx + (maxx - minx) / 2.0 - curViewport[0],
         miny + (maxy - miny) / 2.0 - curViewport[1],
-        (maxx - minx) / (enteringAnimation ? param.semanticZoomScaleFactor : 1)
+        ((maxx - minx) /
+            (enteringAnimation ? param.semanticZoomScaleFactor : 1)) *
+            2
     ];
     gvd.history[gvd.history.length - 1].startView = startView;
     gvd.history[gvd.history.length - 1].endView = endView;

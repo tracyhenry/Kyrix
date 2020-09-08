@@ -203,6 +203,7 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         for (int i = 0; i < rawRows.size(); i++)
             for (int j = 0; j < numRawColumns; j++)
                 if (rawRows.get(i).get(j) == null) rawRows.get(i).set(j, "");
+        System.out.println("Total raw rows: " + rawRows.size());
 
         // add row number as a BGRP
         Main.getProject().addBGRP(rpKey, "roughN", String.valueOf(rawRows.size()));
@@ -220,7 +221,7 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         System.out.println(sql);
         rawDbStmt.executeUpdate(sql);
 
-        sql = "DROP FUNCTION get_coord";
+        sql = "DROP FUNCTION IF EXISTS get_coord";
         System.out.println(sql);
         rawDbStmt.executeUpdate(sql);
 

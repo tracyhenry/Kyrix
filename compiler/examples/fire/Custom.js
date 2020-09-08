@@ -14,6 +14,35 @@ var project = new Project("fire", "../../../config.txt");
 var width = 960 * 2;
 var height = 500 * 2;
 
+project.addRenderingParams(renderers.renderingParams);
+
+// ================== state map canvas ===================
+var stateMapCanvas = new Canvas("statemap", width, height);
+project.addCanvas(stateMapCanvas);
+
+// static legends layer
+var stateMapLegendLayer = new Layer(null, true);
+stateMapCanvas.addLayer(stateMapLegendLayer);
+stateMapLegendLayer.addRenderingFunc(renderers.stateMapLegendRendering);
+
+// bar chart layer
+var barLayer = new Layer(transforms.barTransform, true);
+stateMapCanvas.addLayer(barLayer);
+barLayer.addRenderingFunc(renderers.barRendering);
+
+// state boundary layer
+var stateBoundaryLayer = new Layer(transforms.stateMapTransform, true);
+stateMapCanvas.addLayer(stateBoundaryLayer);
+stateBoundaryLayer.addRenderingFunc(renderers.stateMapRendering);
+stateBoundaryLayer.addTooltip(
+    ["state", "total_fire_size"],
+    ["State", "Acres burned"]
+);
+
+var view = new View("fire", 0, 0, width, height);
+project.addView(view);
+project.setInitialStates(view, stateMapCanvas, 0, 0);
+
 var ssv = {
     data: {
         db: "fire",
@@ -32,7 +61,7 @@ var ssv = {
             order: "desc"
         },
         geo: {
-            level: 5,
+            level: 6,
             center: [39.5, -98.5]
         }
     },
@@ -68,41 +97,51 @@ var ssv = {
         }
     },
     config: {
-        numLevels: 13,
-        topLevelWidth: width,
-        topLevelHeight: height
+        numLevels: 10,
+        topLevelWidth: width * 2,
+        topLevelHeight: height * 2
     }
 };
 
-//project.addSSV(new SSV(ssv));
+var ret = project.addSSV(new SSV(ssv), {view: view});
 
-project.addRenderingParams(renderers.renderingParams);
+// ================== state -> county ===================
+var selector = function(row, args) {
+    return args.layerId == 2;
+};
 
-// ================== state map canvas ===================
-var stateMapCanvas = new Canvas("statemap", width, height);
-project.addCanvas(stateMapCanvas);
+var newPredicates = function() {
+    return {};
+};
 
-// static legends layer
-var stateMapLegendLayer = new Layer(null, true);
-stateMapCanvas.addLayer(stateMapLegendLayer);
-stateMapLegendLayer.addRenderingFunc(renderers.stateMapLegendRendering);
+var newViewport = function(row, args) {
+    var zoomFactor = 2;
+    var vpW = args.viewportW;
+    var vpH = args.viewportH;
+    var projection = d3
+        .geoMercator()
+        .translate([3201.4222222222224, 1479.8808343133628])
+        .scale((1 << 13) / 2 / Math.PI);
+    var path = d3.geoPath().projection(projection);
+    var cx = path.centroid(JSON.parse(row.geomstr))[0];
+    var cy = path.centroid(JSON.parse(row.geomstr))[1];
 
-// bar chart layer
-var barLayer = new Layer(transforms.barTransform, true);
-stateMapCanvas.addLayer(barLayer);
-barLayer.addRenderingFunc(renderers.barRendering);
+    return {
+        constant: [cx * zoomFactor - vpW / 2, cy * zoomFactor - vpH / 2]
+    };
+};
 
-// state boundary layer
-var stateBoundaryLayer = new Layer(transforms.stateMapTransform, true);
-stateMapCanvas.addLayer(stateBoundaryLayer);
-stateBoundaryLayer.addRenderingFunc(renderers.stateMapRendering);
-stateBoundaryLayer.addTooltip(
-    ["state", "total_fire_size"],
-    ["State", "Acres burned"]
+var jumpName = function(row) {
+    return "Representative wildfires in State " + row.state;
+};
+
+project.addJump(
+    new Jump(stateMapCanvas, ret.pyramid[0], "geometric_semantic_zoom", {
+        selector: selector,
+        viewport: newViewport,
+        predicates: newPredicates,
+        name: jumpName
+    })
 );
-
-var view = new View("fire", 0, 0, width, height);
-project.addView(view);
-project.setInitialStates(view, stateMapCanvas, 0, 0);
 
 project.saveProject();
