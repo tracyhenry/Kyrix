@@ -61,7 +61,7 @@ var ssv = {
     data: {
         db: "fire",
         query:
-            "SELECT x, y, fire_name, fire_year, stat_cause_descr, fire_size, latitude, longitude FROM fire_small;"
+            "SELECT x, y, fire_name, fire_year, stat_cause_descr, fire_size, latitude, longitude FROM fire;"
     },
     layout: {
         x: {

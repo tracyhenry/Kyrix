@@ -5,7 +5,7 @@ public class Config {
 
     // front-end root and file name
     public static String webRoot = "../front-end";
-    public static String indexFileName = "index.html";
+    public static String indexFileName = "fire.html";
 
     // config file name
     public static String configFileName = "../config.txt";

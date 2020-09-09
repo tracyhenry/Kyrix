@@ -43,7 +43,7 @@ param.dimOpacity = 0.4;
 param.extraTiles = 0;
 
 // padding for the container svg
-param.viewPadding = 200;
+param.viewPadding = 250;
 
 // jump types
 param.literalZoomIn = "literal_zoom_in";
