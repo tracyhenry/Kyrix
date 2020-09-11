@@ -26,6 +26,7 @@ module.exports = {
     barTransform
 };
 
+//update state set abbr='PR' where name='Puerto Rico';
 //select state, fire_year into state_year from (select distinct(state) from fire) as a, (select distinct(fire_year) from fire) as b, state where a.state = state.abbr;
 
 //select state, fire_year, stat_cause_descr into state_year_cause from (select distinct(state) from fire) as a, (select distinct(fire_year) from fire) as b, (select distinct(stat_cause_descr) from fire where stat_cause_descr = 'Debris Burning' or stat_cause_descr = 'Arson' or stat_cause_descr = 'Lightning' or stat_cause_descr = 'Equipment Use') as c, state where a.state = state.abbr;
