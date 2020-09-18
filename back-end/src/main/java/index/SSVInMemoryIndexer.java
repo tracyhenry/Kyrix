@@ -249,7 +249,11 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         sql =
                 "UPDATE "
                         + ssv.getRawTable()
-                        + " SET kyrix_geo_x = ((get_coord(latitude::float, longitude::float)->>'x')::float),"
+                        + " SET kyrix_geo_x = ((get_coord("
+                        + ssv.getGeoLatCol()
+                        + "::float, "
+                        + ssv.getGeoLonCol()
+                        + "::float)->>'x')::float),"
                         + "     kyrix_geo_y = ((get_coord(latitude::float, longitude::float)->>'y')::float);";
         System.out.println(sql);
         rawDbStmt.executeUpdate(sql);
