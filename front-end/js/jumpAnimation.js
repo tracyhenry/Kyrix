@@ -42,7 +42,11 @@ function animateSemanticZoom(viewId, jump, newVpX, newVpY, tuple) {
 
                 // get client dx & dy
                 var thisBox = this.getBoundingClientRect();
-                var ancestorBox = ancestor.getBoundingClientRect();
+                var ancestorBox = d3
+                    .select(ancestor)
+                    .select("rect")
+                    .node()
+                    .getBoundingClientRect();
                 var dx = thisBox.x - ancestorBox.x;
                 var dy = thisBox.y - ancestorBox.y;
 
