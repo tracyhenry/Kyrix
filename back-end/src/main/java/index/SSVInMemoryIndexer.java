@@ -161,9 +161,6 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         // set common variables
         setCommonVariables();
 
-        // transform geo to screen coordinates if needed
-        if (!ssv.getGeoLatCol().isEmpty()) getGeoCoords();
-
         // compute cluster aggregations
         long st = System.nanoTime();
         computeClusterAggs();
@@ -197,6 +194,9 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
                                 - 1);
         overlappingThreshold = Math.max(overlappingThreshold, ssv.getOverlap());
         System.out.println("Overlapping threshold: " + overlappingThreshold);
+
+        // transform geo to screen coordinates if needed
+        if (!ssv.getGeoLatCol().isEmpty()) getGeoCoords();
 
         // store raw query results into memory
         rawRows = DbConnector.getQueryResult(ssv.getDb(), ssv.getQuery());
