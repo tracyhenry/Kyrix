@@ -95,7 +95,7 @@ public abstract class Indexer implements Serializable {
                 l.setIndexerType(indexer.getClass().getSimpleName());
 
                 // for geo ssv layers, add kyrix_geo_x/kyrix_geo_y columns first
-                // sot that getTransform().getColumnNames() below can find them
+                // so that getTransform().getColumnNames() below can find them
                 if (!l.getSSVId().isEmpty()) {
                     int ssvIndex =
                             Integer.valueOf(l.getSSVId().substring(0, l.getSSVId().indexOf("_")));
