@@ -220,7 +220,7 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         System.out.println(sql);
         rawDbStmt.executeUpdate(sql);
 
-        sql = "DROP FUNCTION get_coord";
+        sql = "DROP FUNCTION IF EXISTS get_coord;";
         System.out.println(sql);
         rawDbStmt.executeUpdate(sql);
 
