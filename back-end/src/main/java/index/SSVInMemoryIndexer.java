@@ -479,8 +479,8 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
 
     private void cleanUp() throws SQLException {
         // commit & close connections
-        rawDbStmt.close();
-        bboxStmt.close();
+        if (rawDbStmt != null) rawDbStmt.close();
+        if (bboxStmt != null) bboxStmt.close();
         DbConnector.closeConnection(ssv.getDb());
         DbConnector.closeConnection(Config.databaseName);
 
