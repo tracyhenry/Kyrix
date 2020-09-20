@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,10 +16,12 @@ import javax.script.ScriptException;
 import jdk.nashorn.api.scripting.JSObject;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import main.Config;
+import main.DbConnector;
 import main.Main;
 import project.Canvas;
 import project.Layer;
 import project.Placement;
+import project.SSV;
 
 /** Created by wenbo on 12/30/18. */
 public abstract class Indexer implements Serializable {
@@ -90,6 +93,30 @@ public abstract class Indexer implements Serializable {
                 // associate indexer
                 l.setIndexer(indexer);
                 l.setIndexerType(indexer.getClass().getSimpleName());
+
+                // for geo ssv layers, add kyrix_geo_x/kyrix_geo_y columns first
+                // so that getTransform().getColumnNames() below can find them
+                if (!l.getSSVId().isEmpty()) {
+                    int ssvIndex =
+                            Integer.valueOf(l.getSSVId().substring(0, l.getSSVId().indexOf("_")));
+                    SSV curSSV = Main.getProject().getSsvs().get(ssvIndex);
+                    // check if geo component is specified
+                    if (curSSV.getGeoInitialLevel() >= 0) {
+                        String rawTable = curSSV.getRawTable();
+                        String db = curSSV.getDb();
+                        Statement rawDbStmt = DbConnector.getStmtByDbName(db);
+                        String sql =
+                                "ALTER TABLE "
+                                        + rawTable
+                                        + " ADD COLUMN IF NOT EXISTS kyrix_geo_x float;";
+                        rawDbStmt.executeUpdate(sql);
+                        sql =
+                                "ALTER TABLE "
+                                        + rawTable
+                                        + " ADD COLUMN IF NOT EXISTS kyrix_geo_y float;";
+                        rawDbStmt.executeUpdate(sql);
+                    }
+                }
 
                 // pre-run getColumnNames, see issue #84: github.com/tracyhenry/kyrix/issues/84
                 l.getTransform().getColumnNames();

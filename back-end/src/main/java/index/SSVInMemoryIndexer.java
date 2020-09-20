@@ -161,9 +161,6 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         // set common variables
         setCommonVariables();
 
-        // transform geo to screen coordinates if needed
-        if (!ssv.getGeoLatCol().isEmpty()) getGeoCoords();
-
         // compute cluster aggregations
         long st = System.nanoTime();
         computeClusterAggs();
@@ -198,6 +195,9 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         overlappingThreshold = Math.max(overlappingThreshold, ssv.getOverlap());
         System.out.println("Overlapping threshold: " + overlappingThreshold);
 
+        // transform geo to screen coordinates if needed
+        if (!ssv.getGeoLatCol().isEmpty()) getGeoCoords();
+
         // store raw query results into memory
         rawRows = DbConnector.getQueryResult(ssv.getDb(), ssv.getQuery());
         for (int i = 0; i < rawRows.size(); i++)
@@ -220,7 +220,7 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         System.out.println(sql);
         rawDbStmt.executeUpdate(sql);
 
-        sql = "DROP FUNCTION get_coord";
+        sql = "DROP FUNCTION IF EXISTS get_coord;";
         System.out.println(sql);
         rawDbStmt.executeUpdate(sql);
 
@@ -249,7 +249,11 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
         sql =
                 "UPDATE "
                         + ssv.getRawTable()
-                        + " SET kyrix_geo_x = ((get_coord(latitude::float, longitude::float)->>'x')::float),"
+                        + " SET kyrix_geo_x = ((get_coord("
+                        + ssv.getGeoLatCol()
+                        + "::float, "
+                        + ssv.getGeoLonCol()
+                        + "::float)->>'x')::float),"
                         + "     kyrix_geo_y = ((get_coord(latitude::float, longitude::float)->>'y')::float);";
         System.out.println(sql);
         rawDbStmt.executeUpdate(sql);
@@ -479,8 +483,8 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
 
     private void cleanUp() throws SQLException {
         // commit & close connections
-        rawDbStmt.close();
-        bboxStmt.close();
+        if (rawDbStmt != null) rawDbStmt.close();
+        if (bboxStmt != null) bboxStmt.close();
         DbConnector.closeConnection(ssv.getDb());
         DbConnector.closeConnection(Config.databaseName);
 

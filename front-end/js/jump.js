@@ -1,12 +1,14 @@
 function removePopovers(viewId) {
-    var selector = ".popover,.kyrixtooltip";
+    var selector = ".popover";
     if (viewId != null) selector += ".view_" + viewId;
+    selector += ",.kyrixtooltip";
     d3.selectAll(selector).remove();
 }
 
 function removePopoversSmooth(viewId) {
-    var selector = ".popover,.kyrixtooltip";
+    var selector = ".popover";
     if (viewId != null) selector += ".view_" + viewId;
+    selector += ",.kyrixtooltip";
     d3.selectAll(selector)
         .transition()
         .duration(param.popoverOutDuration)

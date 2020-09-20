@@ -593,6 +593,8 @@ function saveProject() {
         throw new Error(
             "Auto drill down for MySQL is not supported right now."
         );
+    if (this.views.length == 0)
+        throw new Error("No view object specified in the project.");
     for (var i = 0; i < this.canvases.length; i++) {
         // a canvas should have at least one layer
         if (this.canvases[i].layers.length == 0)
