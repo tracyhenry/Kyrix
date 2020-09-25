@@ -24,6 +24,7 @@ function getFuncParamNames(func) {
  * @constructor
  */
 function Transform(query, db, transformFunc, columnNames, separable) {
+    let numColumns;
     if (typeof query == "object") {
         if (arguments.length > 1)
             throw new Error(
@@ -50,10 +51,23 @@ function Transform(query, db, transformFunc, columnNames, separable) {
                 "Constructing Transform: transformFunc must take parameters (whose names match the dbsource output)"
             );
 
-        this.columnNames = matches
-            .join(",")
-            .replace(/\/\/ *@result: */g, "")
-            .split(","); // safe bec we restricted the charset above
+        if (Array.isArray(columnNames)) {
+            this.columnNames = matches
+                .join(",")
+                .replace(/\/\/ *@result: */g, "")
+                .split(","); // safe bec we restricted the charset above
+            numColumns = columnNames.length;
+        } else {
+            this.columnNames = Object.keys(columnNames);
+            numColumns = this.columnNames.length;
+            this.reverseFunctions = {}
+            for (let i=0; i < numColumns; i++) {
+                let colName = this.columnNames[i];
+                let funcBody = columnNames[colName].toString(); // get string of function
+                funcBody = "let reverseFunc = " + funcBody;
+                this.reverseFunctions[colName] = funcBody; 
+            }
+        }
         console.log("columnNames=" + this.columnNames);
 
         this.dbsource = query["dbsource"];
@@ -79,13 +93,29 @@ function Transform(query, db, transformFunc, columnNames, separable) {
         return;
     }
 
+    if (Array.isArray(columnNames)) {
+        this.columnNames = columnNames;
+        numColumns = columnNames.length;
+    } else {
+        this.columnNames = Object.keys(columnNames);
+        numColumns = this.columnNames.length;
+        this.reverseFunctions = {}
+        for (let i=0; i < numColumns; i++) {
+            let colName = this.columnNames[i];
+            let funcBody = columnNames[colName].toString(); // get string of function
+            funcBody = "return " + funcBody;
+            this.reverseFunctions[colName] = funcBody; 
+        }
+    }
+    console.log("columnNames=" + this.columnNames);
+
     if (typeof separable !== "boolean")
         throw new Error("Constructing Transform: separable must be boolean.");
-    if (!Array.isArray(columnNames))
-        throw new Error(
-            "Constructing Transform: column names must be an array."
-        );
-    if (columnNames.length == 0 && transformFunc != "")
+    // if (!Array.isArray(columnNames))
+    //     throw new Error(
+    //         "Constructing Transform: column names must be an array."
+    //     );
+    if (numColumns == 0 && transformFunc != "")
         throw new Error(
             "Constructing Transform: column names must be provided if transform function exists."
         );
@@ -93,7 +123,7 @@ function Transform(query, db, transformFunc, columnNames, separable) {
     // assign fields
     this.query = query;
     this.db = db;
-    this.columnNames = columnNames;
+    // this.columnNames = columnNames;
     this.transformFunc = transformFunc;
     if (transformFunc == "") this.transformFuncBody = "";
     else this.transformFuncBody = getBodyStringOfFunction(this.transformFunc);

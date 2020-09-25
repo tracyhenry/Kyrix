@@ -399,6 +399,7 @@ function registerJumps(viewId, svg, layerId) {
 
         // register right click listener -- for update popover
         d3.select(this).on("auxclick", function (d) {
+            let visItem = d3.select(this);
             // only register listener logic if right click
             if (d3.event.button != 2) {
                 return;
@@ -418,19 +419,22 @@ function registerJumps(viewId, svg, layerId) {
             [_, queryText] = queryText.split("select");
             [queryText, tableName] = queryText.split("from");
             tableName = tableName.replace(/[\s;]+/g, "").trim();
-            queryText = queryText.replace(/\s+/g, "").trim();
-            let queryFields = queryText.split(",");
+            // queryText = queryText.replace(/\s+/g, "").trim();
+            // let queryFields = queryText.split(",");
+
+            let visFields = gvd.curCanvas.layers[layerId].transform.columnNames;
 
             // find only directly mapped columns from object attributes
             let directMappedColumns = {};
-            const objectAttributes = Object.keys(p);
-            for (let idx in queryFields) {
-                const field = queryFields[idx];
-                if (objectAttributes.includes(field)) {
-                    directMappedColumns[field] = p[field];
-                }
+            // const objectAttributes = Object.keys(p);
+            for (let idx in visFields) {
+                const field = visFields[idx];
+                // if (objectAttributes.includes(field)) {
+                directMappedColumns[field] = p[field];
+                // }
             }
             const directMappedColNames = Object.keys(directMappedColumns);
+            // const directMappedColNames = Object.keys(p);
 
             // remove all popovers first
             removePopovers(viewId);
@@ -519,12 +523,44 @@ function registerJumps(viewId, svg, layerId) {
                     objectKV[colName] = newAttrValues[i];
                 }
 
-                console.log(JSON.stringify(objectKV));
+                let updatedField;
+                for (let k = 0; k < directMappedColNames.length; k++) {
+                    let attrValue = directMappedColumns[directMappedColNames[k]];
+                    if (attrValue !== objectKV[directMappedColNames[k]]) {
+                        updatedField = directMappedColNames[k];
+                    }
+                }
+                const reverseFuncString = gvd.curCanvas.layers[layerId].transform.reverseFunctions[updatedField];
+                console.log(`reverse function string for attr: ${updatedField} is: ${reverseFuncString}`);
+                const reverseFunc = Function(reverseFuncString)();
+                objectKV = reverseFunc(objectKV);
+
+                // TODO: strip the objectKV variable of front-end vars like x/y and replace with cx/cy
+                let finalObjectKV = {}
+                for (let k = 0; k < directMappedColNames.length; k++) {
+                    const attr = directMappedColNames[k];
+                    let attrValue = objectKV[attr];
+                    finalObjectKV[attr] = attrValue
+                    if (attr == "x") {
+                        finalObjectKV["cx"] = attrValue;
+                    } else if (attr == "y") {
+                        finalObjectKV["cy"] = attrValue;
+                    }
+                }
+                console.log(JSON.stringify(finalObjectKV));
+
 
                 // TODO: update UI with new data, while DB gets update asynchronously 
                 // what if DB doesn't get update?
-                doDBUpdate(viewId, canvasId, layerId, tableName, objectKV);
+                doDBUpdate(viewId, canvasId, layerId, tableName, finalObjectKV);
                 // re-load dynamic data from db
+                // let visItem = svg.selectAll("rect")
+                //                 .filter(function() {
+                //                     return d3.select(this).attr()
+                //                 });
+                console.log("vis item: ");
+                console.log(visItem);
+                visItem.remove();
                 getCurCanvas(viewId);
                 if (!gvd.animation) {
                     var curViewport = d3

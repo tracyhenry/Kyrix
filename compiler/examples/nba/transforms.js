@@ -54,19 +54,23 @@ var teamTimelineTransform = new Transform(
 
         return Java.to(ret, "java.lang.String[]");
     },
-    [
-        "game_id",
-        "x",
-        "y",
-        "year",
-        "month",
-        "day",
-        "home_team",
-        "away_team",
-        "home_score",
-        "away_score",
-        "timeline"
-    ],
+    {
+        "game_id": function (oldRow) { return oldRow; },
+        "x": function (oldRow) {
+            let newRow = oldRow;
+            newRow["year"] = 2080;
+            return newRow;
+        },
+        "y": function (oldRow) { return oldRow; },
+        "year": function (oldRow) { return oldRow; },
+        "month": function (oldRow) { return oldRow; },
+        "day": function (oldRow) { return oldRow; },
+        "home_team": function (oldRow) { return oldRow; },
+        "away_team": function (oldRow) { return oldRow; }, 
+        "home_score": function (oldRow) { return oldRow; },
+        "away_score": function (oldRow) { return oldRow; },
+        "timeline": function (oldRow) { return oldRow; },
+    },
     true
 );
 
