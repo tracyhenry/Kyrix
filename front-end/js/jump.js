@@ -399,7 +399,6 @@ function registerJumps(viewId, svg, layerId) {
 
         // register right click listener -- for update popover
         d3.select(this).on("auxclick", function (d) {
-            let visItem = d3.select(this);
             // only register listener logic if right click
             if (d3.event.button != 2) {
                 return;
@@ -558,22 +557,23 @@ function registerJumps(viewId, svg, layerId) {
                 //                 .filter(function() {
                 //                     return d3.select(this).attr()
                 //                 });
-                console.log("vis item: ");
-                console.log(visItem);
-                visItem.remove();
-                getCurCanvas(viewId);
-                if (!gvd.animation) {
-                    var curViewport = d3
-                        .select(viewClass + ".mainsvg:not(.static)")
-                        .attr("viewBox")
-                        .split(" ");
-                    RefreshDynamicLayers(
-                        viewId,
-                        curViewport[0],
-                        curViewport[1]
-                    );
-                }
-                removePopovers(viewId);
+                // visItem.remove();
+                let canvasProm = getCurCanvas(viewId);
+                canvasProm.then(() => {
+                    if (!gvd.animation) {
+                        var curViewport = d3
+                            .select(viewClass + ".mainsvg:not(.static)")
+                            .attr("viewBox")
+                            .split(" ");
+                        d3.select(viewClass + ".mainsvg:not(.static)").selectAll("*").remove();
+                        RefreshDynamicLayers(
+                            viewId,
+                            curViewport[0],
+                            curViewport[1]
+                        );
+                    }
+                    removePopovers(viewId);
+                });  
             });
 
             // finally position updates popover according to event x/y and its width/height
