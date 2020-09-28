@@ -55,21 +55,32 @@ var teamTimelineTransform = new Transform(
         return Java.to(ret, "java.lang.String[]");
     },
     {
-        "game_id": function (oldRow) { return oldRow; },
-        "x": function (oldRow) {
+        "game_id": function (oldRow, width, height) { return oldRow; },
+        "x": function (oldRow, width, height) {
             let newRow = oldRow;
-            newRow["year"] = 2080;
+            let x = newRow["x"];
+            let reverseDate = d3
+                .scaleLinear()
+                .domain([82, width-82])
+                .range([new Date(2017, 9, 17), new Date(2018, 3, 11)])(x);
+            let month = reverseDate.getUTCMonth() + 1;
+            let day = reverseDate.getUTCDate();
+            let year = reverseDate.getUTCFullYear();
+            newRow["month"] = month;
+            newRow["day"] = day;
+            newRow["year"] = year;
             return newRow;
         },
-        "y": function (oldRow) { return oldRow; },
-        "year": function (oldRow) { return oldRow; },
-        "month": function (oldRow) { return oldRow; },
-        "day": function (oldRow) { return oldRow; },
-        "home_team": function (oldRow) { return oldRow; },
-        "away_team": function (oldRow) { return oldRow; }, 
-        "home_score": function (oldRow) { return oldRow; },
-        "away_score": function (oldRow) { return oldRow; },
-        "timeline": function (oldRow) { return oldRow; },
+        // TODO: provide default function for rows that don't need reversing...
+        "y": function (oldRow, width, height) { return oldRow; },
+        "year": function (oldRow, width, height) { return oldRow; },
+        "month": function (oldRow, width, height) { return oldRow; },
+        "day": function (oldRow, width, height) { return oldRow; },
+        "home_team": function (oldRow, width, height) { return oldRow; },
+        "away_team": function (oldRow, width, height) { return oldRow; }, 
+        "home_score": function (oldRow, width, height) { return oldRow; },
+        "away_score": function (oldRow, width, height) { return oldRow; },
+        "timeline": function (oldRow, width, height) { return oldRow; },
     },
     true
 );

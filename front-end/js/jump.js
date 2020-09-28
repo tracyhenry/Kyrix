@@ -532,7 +532,10 @@ function registerJumps(viewId, svg, layerId) {
                 const reverseFuncString = gvd.curCanvas.layers[layerId].transform.reverseFunctions[updatedField];
                 console.log(`reverse function string for attr: ${updatedField} is: ${reverseFuncString}`);
                 const reverseFunc = Function(reverseFuncString)();
-                objectKV = reverseFunc(objectKV);
+                let width = gvd.curCanvas.w;
+                let height = gvd.curCanvas.h;
+                console.log(`width of cur layer is: ${width} and height is: ${height}`);
+                objectKV = reverseFunc(objectKV, width, height);
 
                 // TODO: strip the objectKV variable of front-end vars like x/y and replace with cx/cy
                 let finalObjectKV = {}
@@ -547,6 +550,7 @@ function registerJumps(viewId, svg, layerId) {
                     }
                 }
                 console.log(JSON.stringify(finalObjectKV));
+                
 
 
                 // TODO: update UI with new data, while DB gets update asynchronously 
@@ -565,7 +569,13 @@ function registerJumps(viewId, svg, layerId) {
                             .select(viewClass + ".mainsvg:not(.static)")
                             .attr("viewBox")
                             .split(" ");
-                        d3.select(viewClass + ".mainsvg:not(.static)").selectAll("*").remove();
+                        // d3.select(viewClass + ".mainsvg:not(.static)").selectAll("*").remove();
+                        d3.select(viewClass + ".viewsvg")
+                            .selectAll("*")
+                            .filter(function(d) {
+                                return d == p
+                            })
+                            .remove();
                         RefreshDynamicLayers(
                             viewId,
                             curViewport[0],
