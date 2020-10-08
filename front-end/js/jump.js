@@ -358,6 +358,30 @@ function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs) {
     });
 }
 
+function dragstarted(event, d) {
+    console.log("starting to drag object");
+    // d3.event.stopPropagation();
+    d3.event.stopPropagation();
+    d3.select(this).raise().attr("stroke", "black");
+  }
+
+function dragged(event, d) {
+    console.log("attempting to drag object");
+    d3.select(this).attr("cx", d.x = event.x).attr("cy", d.y = event.y);
+}
+
+function dragended(event, d) {
+    d3.select(this).attr("stroke", null);
+}
+
+function drag() {
+    return d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended);
+}
+
+
 // register jump info
 function registerJumps(viewId, svg, layerId) {
     var gvd = globalVar.views[viewId];
@@ -367,6 +391,7 @@ function registerJumps(viewId, svg, layerId) {
     var shapes = svg.select("g:last-of-type").selectAll("*");
     var optionalArgs = getOptionalArgs(viewId);
     optionalArgs["layerId"] = layerId;
+
 
     shapes.each(function(p) {
         // check if this shape has jumps
@@ -396,6 +421,21 @@ function registerJumps(viewId, svg, layerId) {
         d3.select(this).on("contextmenu", function(d) {
             d3.event.preventDefault();
         });
+
+        d3.select(viewClass + ".viewsvg")
+                            .selectAll("*")
+                            .filter(function(d) {
+                                return d == p
+                            })
+                            // .call(d3.drag().on("start", dragstarted))
+                            .call(d3.drag().on("drag", dragged));
+                            // .call(d3.drag().on("end", dragended));
+
+
+
+        // d3.select(this).on("start", dragstarted);
+        // d3.select(this).on("drag", dragged);
+        // d3.select(this).on("end", dragended);
 
         // register right click listener -- for update popover
         d3.select(this).on("auxclick", function (d) {
@@ -606,6 +646,7 @@ function registerJumps(viewId, svg, layerId) {
         // register onclick listener
         d3.select(this).on("click", function(d) {
             // stop the click event from propagating up
+            if (d3.event.defaultPrevented) return;
             d3.event.stopPropagation();
 
             // remove all popovers first
