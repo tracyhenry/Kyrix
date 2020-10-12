@@ -361,12 +361,14 @@ function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs) {
 function dragstarted(event, d) {
     console.log("starting to drag object");
     // d3.event.stopPropagation();
-    d3.event.stopPropagation();
+    // d3.event.stopPropagation();
     d3.select(this).raise().attr("stroke", "black");
   }
 
 function dragged(event, d) {
     console.log("attempting to drag object");
+    // event.stopPropagation();
+
     d3.select(this).attr("cx", d.x = event.x).attr("cy", d.y = event.y);
 }
 
@@ -422,16 +424,23 @@ function registerJumps(viewId, svg, layerId) {
             d3.event.preventDefault();
         });
 
+        let currentObject = d3.select(viewClass + ".viewsvg")
+                                .selectAll("*")
+                                .filter(function(d) {
+                                    return d == p
+                                });
+
         d3.select(viewClass + ".viewsvg")
-                            .selectAll("*")
-                            .filter(function(d) {
-                                return d == p
-                            })
-                            // .call(d3.drag().on("start", dragstarted))
-                            .call(d3.drag().on("drag", dragged));
-                            // .call(d3.drag().on("end", dragended));
-
-
+            .selectAll("*")
+            .filter(function(d) {
+                return d == p
+            })
+            .call(d3.drag().on("drag", function(d) {
+                console.log("attempting to drag object");
+                // d3.event.stopPropagation();
+                // console.log(`object data: ${JSON.stringify(d)}`);
+                currentObject.attr("x", d3.event.x).attr("y", d3.event.y).attr("cx", d3.event.x).attr("cy", d3.event.y);                
+            }));
 
         // d3.select(this).on("start", dragstarted);
         // d3.select(this).on("drag", dragged);
