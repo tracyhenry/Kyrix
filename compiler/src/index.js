@@ -47,9 +47,6 @@ function Project(name, configFile) {
     // set of tables
     this.tables = [];
 
-    // set of maps
-    this.maps = [];
-
     // rendering parameters
     this.renderingParams = "{}";
 
@@ -454,9 +451,6 @@ function addSSV(ssv, args) {
  */
 function addUSMap(map, args) {
     if (args == null) args = {};
-
-    this.maps.push(map);
-    map.name = "kyrix_map_" + (this.maps.length - 1);
 
     // rendering params
     this.addRenderingParams(map.renderingParams);
