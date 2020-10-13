@@ -1,6 +1,5 @@
 const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
 const checkArgs = require("./Utilities").checkArgs;
-const Transform = require("../Transform").Transform;
 
 /*
  * Constructor of a USMap
@@ -471,13 +470,9 @@ function getUSMapRenderer(renderer) {
     } // end countyMapRendering
 } // end func getUSMapRenderer
 
-// params: pass in name of placement to retrieve
-function getUSMapPlacement(placement) {} // end func getUSMapPlacement
-
 USMap.prototype = {
     getUSMapTransformFunc,
-    getUSMapRenderer,
-    getUSMapPlacement
+    getUSMapRenderer
 };
 
 module.exports = {

@@ -1,5 +1,4 @@
 const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
-const checkArgs = require("./Utilities").checkArgs;
 
 /*
  * Constructor of a table
@@ -14,8 +13,7 @@ function Table(args) {
     // check required args
     var requiredArgs = ["table", "db", "fields"];
     var requiredArgsTypes = ["string", "string", "object"];
-    checkArgs("Table", requiredArgs, requiredArgTypes, args);
-    /*for (var i = 0; i < requiredArgs.length; i++) {
+    for (var i = 0; i < requiredArgs.length; i++) {
         if (!(requiredArgs[i] in args))
             throw new Error(
                 "Constructing Table: " + requiredArgs[i] + " missing."
@@ -35,7 +33,7 @@ function Table(args) {
                         requiredArgs[i] +
                         " cannot be an empty string."
                 );
-    }*/
+    }
 
     this.table = args.table;
     this.db = args.db;

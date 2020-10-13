@@ -229,6 +229,5 @@ module.exports = {
     setPropertiesIfNotExists,
     parsePathIntoSegments,
     translatePathSegments,
-    serializePath,
-    checkArgs
+    serializePath
 };
