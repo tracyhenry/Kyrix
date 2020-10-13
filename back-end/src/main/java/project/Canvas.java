@@ -14,7 +14,7 @@ public class Canvas implements Serializable {
     private double zoomInFactorX, zoomInFactorY;
     private double zoomOutFactorX, zoomOutFactorY;
     private ArrayList<Layer> layers;
-    private String axes;
+    private String axes, axesSSVRPKey;
 
     // https://stackoverflow.com/questions/64036/how-do-you-make-a-deep-copy-of-an-object-in-java
     // this method ensures that the canvas objects are not modified by request handlers in anyway
@@ -29,7 +29,12 @@ public class Canvas implements Serializable {
         bos.close();
         byte[] byteData = bos.toByteArray();
         ByteArrayInputStream bais = new ByteArrayInputStream(byteData);
-        return (Canvas) new ObjectInputStream(bais).readObject();
+        Canvas copy = (Canvas) new ObjectInputStream(bais).readObject();
+        // set indexer again since indexer is transient
+        // and thus ignored by serializer
+        for (int i = 0; i < layers.size(); i++)
+            copy.getLayers().get(i).setIndexer(layers.get(i).getIndexer());
+        return copy;
     }
 
     public void setW(int w) {
@@ -98,7 +103,7 @@ public class Canvas implements Serializable {
 
     public String getDbByLayerId(String layerId) {
 
-        return this.getLayers().get(Integer.valueOf(layerId)).getTransform().getDb();
+        return getLayers().get(Integer.valueOf(layerId)).getTransform().getDb();
     }
 
     @Override

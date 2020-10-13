@@ -237,36 +237,6 @@ var countyMapRendering = function(svg, data, args) {
         .style("stroke-width", "0.5")
         .style("fill", function(d) {
             return color(d.crimerate);
-        })
-        .on("mouseover", function(d, i) {
-            // remove all tool tips first
-            d3.select("body")
-                .selectAll(".countymaptooltip")
-                .remove();
-            // create a new tooltip
-            var tooltip = d3
-                .select("body")
-                .append("div")
-                .attr("id", "countyMapTooltip" + i)
-                .classed("countymaptooltip", true)
-                .style("position", "absolute")
-                .style("width", "200px")
-                .style("height", "28px")
-                .style("pointer-events", "none")
-                .style("opacity", 0)
-                .style("font-size", "23px")
-                .style("color", "rgb(134, 142, 112)");
-            tooltip
-                .transition()
-                .duration(200)
-                .style("opacity", 0.9);
-            tooltip
-                .html(d.name + "\n" + d.crimerate)
-                .style("left", d3.event.pageX + "px")
-                .style("top", d3.event.pageY + "px");
-        })
-        .on("mouseout", function(d, i) {
-            d3.select("#countyMapTooltip" + i).remove();
         });
 };
 

@@ -1,5 +1,5 @@
 var renderingParams = {
-    textwrap: require("../../src/template-api/Renderers").textwrap
+    textwrap: require("../../src/template-api/Utilities").textwrap
 };
 
 var flarePackRendering = function(svg, data, args) {

@@ -49,7 +49,7 @@ public class DbConnector {
         return conn.prepareStatement(sql);
     }
 
-    private static ArrayList<ArrayList<String>> getQueryResult(Statement stmt, String sql)
+    public static ArrayList<ArrayList<String>> getQueryResult(Statement stmt, String sql)
             throws SQLException, ClassNotFoundException {
 
         ArrayList<ArrayList<String>> result = new ArrayList<>();
@@ -68,10 +68,18 @@ public class DbConnector {
     public static ArrayList<ArrayList<String>> getQueryResult(String dbName, String sql)
             throws SQLException, ClassNotFoundException {
 
-        Statement stmt = DbConnector.getStmtByDbName(dbName);
+        Statement stmt = DbConnector.getStmtByDbName(dbName, true);
         ArrayList<ArrayList<String>> ret = getQueryResult(stmt, sql);
         stmt.close();
-        closeConnection(dbName);
+
+        // We do not close connections here because otherwise
+        // indexers will have to reopen every time before
+        // calling getQueryResult(statement, sql);
+        // It's indexer's job to close the connection at the end
+        // so that the kyrix db (Config.databaseName) is not locked.
+        // At runtime this function is also called by getDataFromRegion().
+        // Closing the connection is then done by Server.java
+        // every time there is a new project request coming in
         return ret;
     }
 
@@ -94,7 +102,11 @@ public class DbConnector {
             throws SQLException, ClassNotFoundException {
 
         String key = dbName;
-        if (Config.database == Config.Database.PSQL && isBatch) key += "_batch";
+        isBatch =
+                (isBatch
+                        && (Config.database == Config.Database.CITUS
+                                || Config.database == Config.Database.PSQL));
+        if (isBatch) key += "_batch";
         if (connections.containsKey(key)) return connections.get(key);
         Connection dbConn = null;
         if (Config.database == Config.Database.PSQL || Config.database == Config.Database.CITUS) {
@@ -121,7 +133,7 @@ public class DbConnector {
                             password);
         }
         // to enable fetching data in batch in Postgres, autocommit must be set to false
-        if (isBatch && Config.database == Config.Database.PSQL) dbConn.setAutoCommit(false);
+        if (isBatch) dbConn.setAutoCommit(false);
         connections.put(key, dbConn);
         return dbConn;
     }
@@ -136,5 +148,12 @@ public class DbConnector {
             connections.get(dbName + "_batch").close();
             connections.remove(dbName + "_batch");
         }
+    }
+
+    public static void closeAllConnections() throws SQLException {
+        for (String connName : connections.keySet()) {
+            connections.get(connName).close();
+        }
+        connections.clear();
     }
 }

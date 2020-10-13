@@ -20,7 +20,11 @@ function Layer(transform, isStatic) {
     else this.isStatic = isStatic;
     this.fetchingScheme = "dbox";
     this.deltaBox = true;
+    this.rendering = "";
+    this.tooltipColumns = [];
+    this.tooltipAliases = [];
     this.indexerType = "";
+    this.ssvId = "";
 }
 
 /**
@@ -60,6 +64,16 @@ function addRenderingFunc(rendering) {
     this.rendering = rendering;
 }
 
+/**
+ * @param tooltipColumns - an array of column names to be displayed in the tooltip
+ * @param tooltipAliases - an array of aliases to tooltipColumns
+ */
+function addTooltip(tooltipColumns, tooltipAliases) {
+    this.tooltipColumns = tooltipColumns == null ? [] : tooltipColumns;
+    this.tooltipAliases =
+        tooltipAliases == null ? tooltipColumns : tooltipAliases;
+}
+
 function setFetchingScheme(fetchingScheme, deltaBox) {
     if (this.isStatic)
         throw new Error(
@@ -72,11 +86,11 @@ function setFetchingScheme(fetchingScheme, deltaBox) {
 }
 
 /**
- * set autoDD ID
- * @param autoDDId
+ * set ssv ID
+ * @param ssvId
  */
-function setAutoDDId(autoDDId) {
-    this.autoDDId = autoDDId;
+function setSSVId(ssvId) {
+    this.ssvId = ssvId;
 }
 
 /**
@@ -95,8 +109,9 @@ function setIndexerType(indexerType) {
 Layer.prototype = {
     addPlacement,
     addRenderingFunc,
+    addTooltip,
     setFetchingScheme,
-    setAutoDDId,
+    setSSVId,
     setIndexerType
 };
 

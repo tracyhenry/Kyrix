@@ -18,37 +18,15 @@ import project.Transform;
 public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
 
     private static PsqlNativeBoxIndexer instance = null;
-    private static boolean isCitus = false;
 
     // singleton pattern to ensure only one instance existed
     protected PsqlNativeBoxIndexer() {}
 
-    private PsqlNativeBoxIndexer(boolean isCitus) {
-        this.isCitus = isCitus;
-    }
-
     // thread-safe instance getter
-    public static synchronized PsqlNativeBoxIndexer getInstance(boolean isCitus) {
+    public static synchronized PsqlNativeBoxIndexer getInstance() {
 
-        if (instance == null) instance = new PsqlNativeBoxIndexer(isCitus);
+        if (instance == null) instance = new PsqlNativeBoxIndexer();
         return instance;
-    }
-
-    void run_citus_dml_ddl(Statement stmt, String sql) throws Exception {
-        System.out.println(sql + " -- also running on workers");
-        System.out.println(sql.replaceAll("\n", " "));
-        stmt.executeUpdate(sql);
-        sql = "select run_command_on_workers($CITUS$ " + sql + " $CITUS$);";
-        System.out.println(sql.replaceAll("\n", " "));
-        stmt.executeQuery(sql);
-    }
-
-    void run_citus_dml_ddl2(Statement stmt, String masterSql, String workerSql) throws Exception {
-        System.out.println(masterSql.replaceAll("\n", " "));
-        stmt.executeUpdate(masterSql);
-        String dworkerSql = "select run_command_on_workers($CITUS$ " + workerSql + " $CITUS$);";
-        System.out.println(dworkerSql.replaceAll("\n", " "));
-        stmt.executeQuery(dworkerSql);
     }
 
     @Override
@@ -56,16 +34,16 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
 
         Layer l = c.getLayers().get(layerId);
         Transform trans = l.getTransform();
+        Statement bboxStmt = DbConnector.getStmtByDbName(Config.databaseName);
 
         // step 0: create tables for storing bboxes and tiles
         String bboxTableName =
                 "bbox_" + Main.getProject().getName() + "_" + c.getId() + "layer" + layerId;
 
         // drop table if exists
-        Statement dropCreateStmt = DbConnector.getStmtByDbName(Config.databaseName);
         String sql = "drop table if exists " + bboxTableName + ";";
         System.out.println(sql);
-        dropCreateStmt.executeUpdate(sql);
+        bboxStmt.executeUpdate(sql);
 
         // create the bbox table
         // yes, citus supports unlogged tables!
@@ -73,148 +51,13 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
         sql = "CREATE UNLOGGED TABLE " + bboxTableName + " (";
         for (int i = 0; i < trans.getColumnNames().size(); i++)
             sql += trans.getColumnNames().get(i) + " text, ";
-        if (isCitus) {
-            sql += "citus_distribution_id int, ";
-        }
         sql +=
                 "cx double precision, cy double precision, minx double precision, miny double precision, maxx double precision, maxy double precision, geom box)";
         System.out.println(sql);
-        dropCreateStmt.executeUpdate(sql);
-        dropCreateStmt.close();
+        bboxStmt.executeUpdate(sql);
 
         // if this is an empty layer, return
         if (trans.getDb().equals("")) return;
-
-        // if this is an empty layer, return
-        if (trans.getDb().equals("src_db_same_as_kyrix")) {
-
-            // TODO: replace me.
-            System.out.println(
-                    "Transform database marked 'src_db_same_as_kyrix' - trying to pushdown...");
-            Statement pushdownIndexStmt = DbConnector.getStmtByDbName(Config.databaseName);
-
-            String transformResultType = bboxTableName + "_transform_response_type";
-            String transformFuncName = bboxTableName + "_transform_func";
-            String bboxFuncName = bboxTableName + "_bbox_func";
-            UnaryOperator<String> tsql =
-                    (sqlstr) -> {
-                        return (sqlstr.replaceAll("transtype", transformResultType)
-                                .replaceAll("transfunc", transformFuncName)
-                                .replaceAll("bboxfunc", bboxFuncName)
-                                .replaceAll("bboxtbl", bboxTableName)
-                                .replaceAll("dbsource", trans.getDbsource()));
-                    };
-
-            // register transform JS function with Postgres/Citus
-            run_citus_dml_ddl(pushdownIndexStmt, tsql.apply("DROP FUNCTION IF EXISTS bboxfunc"));
-            run_citus_dml_ddl(pushdownIndexStmt, tsql.apply("DROP FUNCTION IF EXISTS transfunc"));
-
-            // bbox func
-            sql =
-                    tsql.apply(
-                            "CREATE OR REPLACE FUNCTION bboxfunc(v json) returns double precision[]"
-                                    + " AS $$ return [v.x, v.y, v.x-0.5, v.y-0.5, (+v.x)+0.5, (+v.y)+0.5]"
-                                    + "$$ LANGUAGE plv8");
-            // master needs 'stable' for citus to pushdown to workers
-            // workers need 'volatile' for pg11 to memoize and not call the function repeatedly per
-            // row
-            run_citus_dml_ddl2(
-                    pushdownIndexStmt, sql + " STABLE", sql); // append is safer than replace...
-
-            // transform func
-            sql =
-                    tsql.apply(
-                            "CREATE OR REPLACE FUNCTION transfunc(obj json, cw int, ch int, params json) returns json"
-                                    +
-                                    // TODO(security): SQL injection - perhaps use $foo<hard to
-                                    // guess number>$ ... $foo<#>$ ?
-                                    " AS $$ "
-                                    + trans.getTransformFuncBody()
-                                    + " $$ LANGUAGE plv8");
-            // master needs 'stable' for citus to pushdown to workers
-            // workers need 'volatile' for pg11 to memoize and not call the function repeatedly per
-            // row
-            run_citus_dml_ddl2(
-                    pushdownIndexStmt, sql + " STABLE", sql); // append is safer than replace...
-
-            // by distributing afterwards, loading is ~10x faster (minus a few minutes to distribute
-            // the data)
-            sql =
-                    tsql.apply(
-                            "SELECT create_distributed_table('bboxtbl', 'citus_distribution_id',"
-                                    + "colocate_with => 'dbsource')");
-            System.out.println(sql);
-            pushdownIndexStmt.executeQuery(sql);
-
-            // run transform func, create bboxtbl
-            sql =
-                    tsql.apply(
-                            "INSERT INTO bboxtbl(id,x,y,citus_distribution_id,cx,cy,minx,miny,maxx,maxy) "
-                                    + "SELECT id, x, y, citus_distribution_id, "
-                                    + "coords[1], coords[2], coords[3], coords[4], coords[5], coords[6] "
-                                    + "FROM ("
-                                    + "  SELECT (v->>'id') as id, (v->>'x') as x, (v->>'y') as y, "
-                                    + "         citus_distribution_id, "
-                                    + "         bboxfunc(v) coords"
-                                    + "  FROM ("
-                                    + "    SELECT transfunc(row_to_json(dbsource),"
-                                    + c.getW()
-                                    + ","
-                                    + c.getH()
-                                    + ",\'"
-                                    + Main.getProject()
-                                            .getRenderingParams()
-                                            .replaceAll("\'", "\'\'")
-                                    + "\'::json) v, citus_distribution_id FROM dbsource"
-                                    + "  ) sq1"
-                                    + ") sq2");
-            long startts = System.currentTimeMillis();
-            System.out.println("pipeline/insertion: " + sql);
-            pushdownIndexStmt.executeUpdate(sql);
-            long elapsed = System.currentTimeMillis() - startts;
-            System.out.println("Running transform func took " + elapsed + " msec");
-
-            // compute geom field in the database, where it can happen in parallel
-            Statement setGeomFieldStmt = DbConnector.getStmtByDbName(Config.databaseName);
-            sql =
-                    "UPDATE "
-                            + bboxTableName
-                            + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
-            System.out.println(sql);
-            long startTs = (new Date()).getTime();
-            setGeomFieldStmt.executeUpdate(sql);
-            setGeomFieldStmt.close();
-            long currTs = (new Date()).getTime();
-            System.out.println(
-                    ((currTs - startTs) / 1000)
-                            + " secs for setting geom field"
-                            + (isCitus ? " in parallel" : ""));
-            startTs = currTs;
-
-            // create index - gist/spgist require logged table type
-            // TODO: consider sp-gist
-            Statement createIndexStmt = DbConnector.getStmtByDbName(Config.databaseName);
-            sql =
-                    "CREATE INDEX sp_"
-                            + bboxTableName
-                            + " ON "
-                            + bboxTableName
-                            + " USING gist (geom);";
-            System.out.println(sql);
-            createIndexStmt.executeUpdate(sql);
-            createIndexStmt.close();
-            currTs = (new Date()).getTime();
-            System.out.println(
-                    ((currTs - startTs) / 1000)
-                            + " secs for CREATE INDEX sp_"
-                            + bboxTableName
-                            + " ON "
-                            + bboxTableName
-                            + (isCitus ? " in parallel" : ""));
-            startTs = currTs;
-
-            return;
-        }
 
         // step 1: set up nashorn environment for running javascript code
         NashornScriptEngine engine = null;
@@ -231,10 +74,7 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
         int rowCount = 0;
         String insertSql = "INSERT INTO " + bboxTableName + " VALUES (";
         // for debugging, vary number of spaces after the commas
-        for (int i = 0; i < trans.getColumnNames().size(); i++) {
-            insertSql += "?,";
-        }
-        if (isCitus) insertSql += "?,";
+        for (int i = 0; i < trans.getColumnNames().size(); i++) insertSql += "?,";
         insertSql += "?,?,?,?,?,?)";
         System.out.println(insertSql);
         PreparedStatement preparedStmt =
@@ -259,7 +99,8 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
 
             // get raw row
             ArrayList<String> curRawRow = new ArrayList<>();
-            for (int i = 1; i <= numColumn; i++) curRawRow.add(rs.getString(i));
+            for (int i = 1; i <= numColumn; i++)
+                curRawRow.add(rs.getString(i) == null ? "" : rs.getString(i));
 
             // step 3: run transform function on this tuple
             ArrayList<String> transformedRow =
@@ -276,7 +117,6 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
             int pscol = 1;
             for (int i = 0; i < numcols; i++)
                 preparedStmt.setString(pscol++, transformedRow.get(i).replaceAll("\'", "\'\'"));
-            if (isCitus) preparedStmt.setDouble(pscol++, rowCount);
             for (int i = 0; i < 6; i++) preparedStmt.setDouble(pscol++, curBbox.get(i));
             preparedStmt.addBatch();
             if (rowCount % batchsize == 0) {
@@ -315,57 +155,20 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
 
         startTs = (new Date()).getTime();
 
-        // TODO: move to parallel kyrix-indexing: pushdown this computation into the DB and run on
-        // each shard independently.
-        if (isCitus) {
-            Statement distributeStmt = DbConnector.getStmtByDbName(Config.databaseName);
-
-            // by distributing afterwards, loading is ~10x faster (minus a few minutes to distribute
-            // the data)
-            sql =
-                    "SELECT create_distributed_table('"
-                            + bboxTableName
-                            + "', 'citus_distribution_id');";
-            System.out.println(sql);
-            distributeStmt.executeQuery(sql);
-
-            // citus leaves leftover data on master when distributing non-empty tables - who knows
-            // why?
-            sql =
-                    "BEGIN; SET LOCAL citus.enable_ddl_propagation TO off; TRUNCATE "
-                            + bboxTableName
-                            + "; END;";
-            System.out.println(sql);
-            distributeStmt.executeUpdate(sql);
-            distributeStmt.close();
-
-            currTs = (new Date()).getTime();
-            System.out.println(
-                    ((currTs - startTs) / 1000) + " secs for create_distributed_table()");
-            startTs = currTs;
-        }
-
         // compute geom field in the database, where it can happen in parallel
-        Statement setGeomFieldStmt = DbConnector.getStmtByDbName(Config.databaseName);
         sql = "UPDATE " + bboxTableName + " SET geom=box( point(minx,miny), point(maxx,maxy) );";
         System.out.println(sql);
-        setGeomFieldStmt.executeUpdate(sql);
-        setGeomFieldStmt.close();
+        bboxStmt.executeUpdate(sql);
 
         currTs = (new Date()).getTime();
-        System.out.println(
-                ((currTs - startTs) / 1000)
-                        + " secs for setting geom field"
-                        + (isCitus ? " in parallel" : ""));
+        System.out.println(((currTs - startTs) / 1000) + " secs for setting geom field");
         startTs = currTs;
 
         // create index - gist/spgist require logged table type
         // TODO: consider sp-gist
-        Statement createIndexStmt = DbConnector.getStmtByDbName(Config.databaseName);
         sql = "CREATE INDEX sp_" + bboxTableName + " ON " + bboxTableName + " USING gist (geom);";
         System.out.println(sql);
-        createIndexStmt.executeUpdate(sql);
-        createIndexStmt.close();
+        bboxStmt.executeUpdate(sql);
 
         currTs = (new Date()).getTime();
         System.out.println(
@@ -373,14 +176,12 @@ public class PsqlNativeBoxIndexer extends BoundingBoxIndexer {
                         + " secs for CREATE INDEX sp_"
                         + bboxTableName
                         + " ON "
-                        + bboxTableName
-                        + (isCitus ? " in parallel" : ""));
-        startTs = currTs;
+                        + bboxTableName);
 
-        // don't use clustering
-        // sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
-        // System.out.println(sql);
-        // bboxStmt.executeUpdate(sql);
+        // cluster index
+        sql = "cluster " + bboxTableName + " using sp_" + bboxTableName + ";";
+        System.out.println(sql);
+        bboxStmt.executeUpdate(sql);
     }
 
     @Override

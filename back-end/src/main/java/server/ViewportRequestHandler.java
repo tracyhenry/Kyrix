@@ -33,57 +33,67 @@ public class ViewportRequestHandler implements HttpHandler {
         // TODO: this method should be thread safe, allowing concurrent requests
         System.out.println("Serving /viewport");
 
-        // variable definitions
-        String response;
-        String canvasId;
-        ArrayList<String> predicates = new ArrayList<>();
-        ArrayList<String> data = null;
-
-        // check if this is a POST request
-        if (!httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
-            return;
-        }
-
-        // get data of the current request
-        String query = httpExchange.getRequestURI().getQuery();
-        Map<String, String> queryMap = Server.queryToMap(query);
-        // print
-        for (String s : queryMap.keySet()) System.out.println(s + " : " + queryMap.get(s));
-        System.out.println();
-
-        // check parameters, if not pass, send a bad request response
-        response = checkParameters(queryMap);
-        if (response.length() > 0) {
-            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, response);
-            return;
-        }
-
-        // get data
-        canvasId = queryMap.get("canvasId");
-        Canvas c = Main.getProject().getCanvas(canvasId);
-        for (int i = 0; i < c.getLayers().size(); i++)
-            predicates.add(queryMap.get("predicate" + i));
         try {
+            // variable definitions
+            String response;
+            String canvasId;
+            ArrayList<String> predicates = new ArrayList<>();
+            ArrayList<String> data = null;
+
+            // check if this is a POST request
+            if (!httpExchange.getRequestMethod().equalsIgnoreCase("GET")) {
+                Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
+                return;
+            }
+
+            // get data of the current request
+            String query = httpExchange.getRequestURI().getQuery();
+            Map<String, String> queryMap = Server.queryToMap(query);
+            // print
+            for (String s : queryMap.keySet()) System.out.println(s + " : " + queryMap.get(s));
+            System.out.println();
+
+            // check parameters, if not pass, send a bad request response
+            response = checkParameters(queryMap);
+            if (response.length() > 0) {
+                Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, response);
+                return;
+            }
+
+            // get data
+            canvasId = queryMap.get("canvasId");
+            Canvas c = Main.getProject().getCanvas(canvasId);
+            for (int i = 0; i < c.getLayers().size(); i++)
+                predicates.add(queryMap.get("predicate" + i));
+
+            // check predicates
+            if (!Server.checkPredicates(predicates, c)) {
+                Server.sendResponse(
+                        httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicates.");
+                return;
+            }
+
+            // fetch data
             data = getData(canvasId, predicates);
+            if (data == null) {
+                Server.sendResponse(
+                        httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicates.");
+                return;
+            }
+
+            // construct response
+            Map<String, Object> respMap = new HashMap<>();
+            respMap.put("cx", data.get(0));
+            respMap.put("cy", data.get(1));
+            response = gson.toJson(respMap);
+
+            // send back response
+            Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
         } catch (Exception e) {
             e.printStackTrace();
+            System.out.println("\n\n" + e.getMessage() + "\n");
+            Server.printServingErrorMessage();
         }
-
-        if (data == null) {
-            Server.sendResponse(
-                    httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicates.");
-            return;
-        }
-
-        // construct response
-        Map<String, Object> respMap = new HashMap<>();
-        respMap.put("cx", data.get(0));
-        respMap.put("cy", data.get(1));
-        response = gson.toJson(respMap);
-
-        // send back response
-        Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
     }
 
     private String checkParameters(Map<String, String> queryMap) {
