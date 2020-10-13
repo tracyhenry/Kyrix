@@ -417,37 +417,46 @@ function addUSMap(map, args) {
     // static legends layer
     var stateMapLegendLayer = new Layer(null, true);
     stateMapCanvas.addLayer(stateMapLegendLayer);
-    stateMapLegendLayer.addRenderingFunc(map.getUSMapRenderer("stateMapLegendRendering"));
-    
+    stateMapLegendLayer.addRenderingFunc(
+        map.getUSMapRenderer("stateMapLegendRendering")
+    );
+
     // state boundary layer
     var stateMapTransform = new Transform(
-      "select state.state_id, state.name, stateRate.rate, state.geomstr from (select state_id, cast(avg(cast(" + map.rate_col + " as float)) as float) as rate from " + map.table + " group by state_id) as stateRate, state where state.state_id = stateRate.state_id;",
-      map.db,
-      map.getUSMapTransformFunc("stateMapTransform"),
-      ["id", "bbox_x", "bbox_y", "name", "rate", "geomstr"],
-      true
+        "select state.state_id, state.name, stateRate.rate, state.geomstr from (select state_id, cast(avg(cast(" +
+            map.rate_col +
+            " as float)) as float) as rate from " +
+            map.table +
+            " group by state_id) as stateRate, state where state.state_id = stateRate.state_id;",
+        map.db,
+        map.getUSMapTransformFunc("stateMapTransform"),
+        ["id", "bbox_x", "bbox_y", "name", "rate", "geomstr"],
+        true
     );
     var stateBoundaryLayer = new Layer(stateMapTransform, false);
     stateMapCanvas.addLayer(stateBoundaryLayer);
     stateBoundaryLayer.addPlacement(map.placements.stateMapPlacement);
-    stateBoundaryLayer.addRenderingFunc(map.getUSMapRenderer("stateMapRendering"));
+    stateBoundaryLayer.addRenderingFunc(
+        map.getUSMapRenderer("stateMapRendering")
+    );
 
     // ================== county map canvas ===================
     var zoomFactor =
-        map.renderingParams.countyMapScale /
-        map.renderingParams.stateMapScale;
+        map.renderingParams.countyMapScale / map.renderingParams.stateMapScale;
     var countyMapCanvas = new Canvas(
         "countymap",
         stateMapWidth * zoomFactor,
         stateMapHeight * zoomFactor
     );
     this.addCanvas(countyMapCanvas);
-    
+
     // static legends layer
     var countyMapLegendLayer = new Layer(null, true);
     countyMapCanvas.addLayer(countyMapLegendLayer);
-    countyMapLegendLayer.addRenderingFunc(map.getUSMapRenderer("countyMapLegendRendering"));
-    
+    countyMapLegendLayer.addRenderingFunc(
+        map.getUSMapRenderer("countyMapLegendRendering")
+    );
+
     // thick state boundary layer
     var countyMapStateBoundaryTransform = new Transform(
         "select geomstr from state",
@@ -462,10 +471,19 @@ function addUSMap(map, args) {
     );
     countyMapCanvas.addLayer(countyMapStateBoundaryLayer);
     countyMapStateBoundaryLayer.addPlacement(map.placements.countyMapPlacement);
-    countyMapStateBoundaryLayer.addRenderingFunc(map.getUSMapRenderer("countyMapStateBoundaryRendering"));
-    
+    countyMapStateBoundaryLayer.addRenderingFunc(
+        map.getUSMapRenderer("countyMapStateBoundaryRendering")
+    );
+
     // county boundary layer
-    var query = "select * from county, " + map.table + " where county.county_id = " + map.table + ".county_id and county.state_id = " + map.table + ".state_id";
+    var query =
+        "select * from county, " +
+        map.table +
+        " where county.county_id = " +
+        map.table +
+        ".county_id and county.state_id = " +
+        map.table +
+        ".state_id";
     var countyMapTransform = new Transform(
         query,
         map.db,
@@ -487,7 +505,9 @@ function addUSMap(map, args) {
     var countyBoundaryLayer = new Layer(countyMapTransform, false);
     countyMapCanvas.addLayer(countyBoundaryLayer);
     countyBoundaryLayer.addPlacement(map.placements.countyMapPlacement);
-    countyBoundaryLayer.addRenderingFunc(map.getUSMapRenderer("countyMapRendering"));
+    countyBoundaryLayer.addRenderingFunc(
+        map.getUSMapRenderer("countyMapRendering")
+    );
 
     // ==========  Views ===============
     if (!args.view) {
@@ -502,11 +522,11 @@ function addUSMap(map, args) {
     var selector = function(row, args) {
         return args.layerId == 1;
     };
-    
+
     var newPredicates = function() {
         return {};
     };
-    
+
     var newViewport = function(row, args) {
         var zoomFactor =
             args.renderingParams.countyMapScale /
@@ -520,11 +540,11 @@ function addUSMap(map, args) {
             ]
         };
     };
-    
+
     var jumpName = function(row) {
         return "County map of " + row.name;
     };
-    
+
     this.addJump(
         new Jump(stateMapCanvas, countyMapCanvas, "geometric_semantic_zoom", {
             selector: selector,

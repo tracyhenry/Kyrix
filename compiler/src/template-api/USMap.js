@@ -2,7 +2,7 @@ const getBodyStringOfFunction = require("./Renderers").getBodyStringOfFunction;
 const checkArgs = require("./Renderers").checkArgs;
 const Transform = require("../Transform").Transform;
 
-/* 
+/*
  * Constructor of a USMap
  * @param args
  * @constructor
@@ -11,211 +11,215 @@ const Transform = require("../Transform").Transform;
 
 // return USMap obj for use increating USMap project
 function USMap(args) {
-  if (args == null) args = {};
+    if (args == null) args = {};
 
-  // verify and store args
-  var requiredArgs = ["db", "table", "rate_col"];
-  var requiredArgTypes = ["string", "string", "string"];
-  checkArgs("USMap", requiredArgs, requiredArgTypes, args);
+    // verify and store args
+    var requiredArgs = ["db", "table", "rate_col"];
+    var requiredArgTypes = ["string", "string", "string"];
+    checkArgs("USMap", requiredArgs, requiredArgTypes, args);
 
-  this.db = args.db;
-  this.table = args.table;
-  this.rate_col = args.rate_col;
-  if ("colorScheme" in args && "colorSchemeIndex" in args) {
-    this.colorScheme = args.colorScheme;
-    this.colorSchemeIndex = args.colorSchemeIndex;
-  }
-  this.renderingParams = {
-    stateMapScale: 2000,
-    countyMapScale: 12000,
-    stateScaleRange: 550,
-    stateScaleStep: 70,
-    countyScaleRange: 2000,
-    countyScaleStep: 250,
-    colorScheme: this.colorScheme,
-    colorSchemeIndex: this.colorSchemeIndex
-  };
-  this.placements = {
-    stateMapPlacement: {
-        centroid_x: "col:bbox_x",
-        centroid_y: "col:bbox_y",
-        width: "con:333.33",
-        height: "con:333.33"
-    },
-    countyMapPlacement: {
-        centroid_x: "col:bbox_x",
-        centroid_y: "col:bbox_y",
-        width: "col:bbox_w",
-        height: "col:bbox_h"
+    this.db = args.db;
+    this.table = args.table;
+    this.rate_col = args.rate_col;
+    if ("colorScheme" in args && "colorSchemeIndex" in args) {
+        this.colorScheme = args.colorScheme;
+        this.colorSchemeIndex = args.colorSchemeIndex;
     }
-  };
+    this.renderingParams = {
+        stateMapScale: 2000,
+        countyMapScale: 12000,
+        stateScaleRange: 550,
+        stateScaleStep: 70,
+        countyScaleRange: 2000,
+        countyScaleStep: 250,
+        colorScheme: this.colorScheme,
+        colorSchemeIndex: this.colorSchemeIndex
+    };
+    this.placements = {
+        stateMapPlacement: {
+            centroid_x: "col:bbox_x",
+            centroid_y: "col:bbox_y",
+            width: "con:333.33",
+            height: "con:333.33"
+        },
+        countyMapPlacement: {
+            centroid_x: "col:bbox_x",
+            centroid_y: "col:bbox_y",
+            width: "col:bbox_w",
+            height: "col:bbox_h"
+        }
+    };
 } // end USMap constructor
 
 function getUSMapTransformFunc(transformName) {
-  //------------Transforms--------------------
-  function stateMapTransformFunc(row, width, height, param) {
-      var ret = [];
-      ret.push(row[0]);
+    //------------Transforms--------------------
+    function stateMapTransformFunc(row, width, height, param) {
+        var ret = [];
+        ret.push(row[0]);
 
-      // bounding box columns
-      var projection = d3
-          .geoAlbersUsa()
-          .scale(param.stateMapScale)
-          .translate([width / 2, height / 2]);
-      var path = d3.geoPath().projection(projection);
-      var feature = JSON.parse(row[3]);
-      var centroid = path.centroid(feature);
-      ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
-      ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
-      ret.push(row[1]);
-      ret.push(row[2]);
-      ret.push(row[3]);
+        // bounding box columns
+        var projection = d3
+            .geoAlbersUsa()
+            .scale(param.stateMapScale)
+            .translate([width / 2, height / 2]);
+        var path = d3.geoPath().projection(projection);
+        var feature = JSON.parse(row[3]);
+        var centroid = path.centroid(feature);
+        ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
+        ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
+        ret.push(row[1]);
+        ret.push(row[2]);
+        ret.push(row[3]);
 
-      return Java.to(ret, "java.lang.String[]");
-  }
+        return Java.to(ret, "java.lang.String[]");
+    }
 
-  function countyMapStateBoundaryTransformFunc(row, width, height, param) {
-      var ret = [];
+    function countyMapStateBoundaryTransformFunc(row, width, height, param) {
+        var ret = [];
 
-      // bounding box columns
-      var projection = d3
-          .geoAlbersUsa()
-          .scale(param.countyMapScale)
-          .translate([width / 2, height / 2]);
-      var path = d3.geoPath().projection(projection);
-      var feature = JSON.parse(row[0]);
-      var centroid = path.centroid(feature);
-      var bounds = path.bounds(feature);
-      ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
-      ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
-      ret.push(
-          !isFinite(bounds[0][0]) || !isFinite(bounds[1][0])
-              ? 0
-              : bounds[1][0] - bounds[0][0]
-      );
-      ret.push(
-          !isFinite(bounds[0][1]) || !isFinite(bounds[1][1])
-              ? 0
-              : bounds[1][1] - bounds[0][1]
-      );
-      ret.push(row[0]);
+        // bounding box columns
+        var projection = d3
+            .geoAlbersUsa()
+            .scale(param.countyMapScale)
+            .translate([width / 2, height / 2]);
+        var path = d3.geoPath().projection(projection);
+        var feature = JSON.parse(row[0]);
+        var centroid = path.centroid(feature);
+        var bounds = path.bounds(feature);
+        ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
+        ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
+        ret.push(
+            !isFinite(bounds[0][0]) || !isFinite(bounds[1][0])
+                ? 0
+                : bounds[1][0] - bounds[0][0]
+        );
+        ret.push(
+            !isFinite(bounds[0][1]) || !isFinite(bounds[1][1])
+                ? 0
+                : bounds[1][1] - bounds[0][1]
+        );
+        ret.push(row[0]);
 
-      return Java.to(ret, "java.lang.String[]");
-  }
+        return Java.to(ret, "java.lang.String[]");
+    }
 
-  function countyMapTransformFunc(row, width, height, param) {
-      var ret = [];
-      ret.push(row[0]);
+    function countyMapTransformFunc(row, width, height, param) {
+        var ret = [];
+        ret.push(row[0]);
 
-      // bounding box columns
-      var projection = d3
-          .geoAlbersUsa()
-          .scale(param.countyMapScale)
-          .translate([width / 2, height / 2]);
-      var path = d3.geoPath().projection(projection);
-      var feature = JSON.parse(row[5]);
-      var centroid = path.centroid(feature);
-      var bounds = path.bounds(feature);
-      ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
-      ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
-      ret.push(
-          !isFinite(bounds[0][0]) || !isFinite(bounds[1][0])
-              ? 0
-              : bounds[1][0] - bounds[0][0]
-      );
-      ret.push(
-          !isFinite(bounds[0][1]) || !isFinite(bounds[1][1])
-              ? 0
-              : bounds[1][1] - bounds[0][1]
-      );
-      for (var i = 1; i <= 5; i++) ret.push(row[i]);
+        // bounding box columns
+        var projection = d3
+            .geoAlbersUsa()
+            .scale(param.countyMapScale)
+            .translate([width / 2, height / 2]);
+        var path = d3.geoPath().projection(projection);
+        var feature = JSON.parse(row[5]);
+        var centroid = path.centroid(feature);
+        var bounds = path.bounds(feature);
+        ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
+        ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
+        ret.push(
+            !isFinite(bounds[0][0]) || !isFinite(bounds[1][0])
+                ? 0
+                : bounds[1][0] - bounds[0][0]
+        );
+        ret.push(
+            !isFinite(bounds[0][1]) || !isFinite(bounds[1][1])
+                ? 0
+                : bounds[1][1] - bounds[0][1]
+        );
+        for (var i = 1; i <= 5; i++) ret.push(row[i]);
 
-      return Java.to(ret, "java.lang.String[]");
-  }
+        return Java.to(ret, "java.lang.String[]");
+    }
 
-  //------------Choose Transform----------------
-  var transform;
-  switch (transformName) {
-    case "stateMapTransform":
-      transform = getBodyStringOfFunction(stateMapTransformFunc);
-      break;
-    case "countyMapStateBoundaryTransform":
-      transform = getBodyStringOfFunction(countyMapStateBoundaryTransformFunc);
-      break;
-    case "countyMapTransform":
-      transform = getBodyStringOfFunction(countyMapTransformFunc);
-      break;
-    default:
-      // do nothing
-  }
+    //------------Choose Transform----------------
+    var transform;
+    switch (transformName) {
+        case "stateMapTransform":
+            transform = getBodyStringOfFunction(stateMapTransformFunc);
+            break;
+        case "countyMapStateBoundaryTransform":
+            transform = getBodyStringOfFunction(
+                countyMapStateBoundaryTransformFunc
+            );
+            break;
+        case "countyMapTransform":
+            transform = getBodyStringOfFunction(countyMapTransformFunc);
+            break;
+        default:
+        // do nothing
+    }
 
-  return new Function(
-      "row",
-      "width",
-      "height",
-      "param",
-      transform
-  );
+    return new Function("row", "width", "height", "param", transform);
 } // end func getUSMapTransformFunc
 
 // @param: specify name of renderer
 function getUSMapRenderer(renderer) {
-  // decide which renderer to use
-  var renderFuncBody;
-  switch(renderer) {
-      case "stateMapRendering":
-          renderFuncBody = getBodyStringOfFunction(stateMapRendering);
-          break;
-      case "stateMapLegendRendering":
-          renderFuncBody = getBodyStringOfFunction(stateMapLegendRendering);
-          break;
-      case "countyMapStateBoundaryRendering":
-          renderFuncBody = getBodyStringOfFunction(countyMapStateBoundaryRendering);
-          break;
-      case "countyMapLegendRendering":
-          renderFuncBody = getBodyStringOfFunction(countyMapLegendRendering);
-          break;
-      case "countyMapRendering":
-          renderFuncBody = getBodyStringOfFunction(countyMapRendering);
-          break;
-      default:
-          // do nothing
-  }
+    // decide which renderer to use
+    var renderFuncBody;
+    switch (renderer) {
+        case "stateMapRendering":
+            renderFuncBody = getBodyStringOfFunction(stateMapRendering);
+            break;
+        case "stateMapLegendRendering":
+            renderFuncBody = getBodyStringOfFunction(stateMapLegendRendering);
+            break;
+        case "countyMapStateBoundaryRendering":
+            renderFuncBody = getBodyStringOfFunction(
+                countyMapStateBoundaryRendering
+            );
+            break;
+        case "countyMapLegendRendering":
+            renderFuncBody = getBodyStringOfFunction(countyMapLegendRendering);
+            break;
+        case "countyMapRendering":
+            renderFuncBody = getBodyStringOfFunction(countyMapRendering);
+            break;
+        default:
+        // do nothing
+    }
 
-  return new Function("svg", "data", "args", renderFuncBody);
+    return new Function("svg", "data", "args", renderFuncBody);
 
-  // --------- Rendering Funcs ------------------
-  function stateMapRendering(svg, data, args) {
-      var g = svg.append("g");
-      var width = args.canvasW,
-          height = args.canvasH;
-      var param = args.renderingParams;
+    // --------- Rendering Funcs ------------------
+    function stateMapRendering(svg, data, args) {
+        var g = svg.append("g");
+        var width = args.canvasW,
+            height = args.canvasH;
+        var param = args.renderingParams;
 
-      var projection = d3
-          .geoAlbersUsa()
-          .scale(param.stateMapScale)
-          .translate([width / 2, height / 2]);
-      var path = d3.geoPath().projection(projection);
+        var projection = d3
+            .geoAlbersUsa()
+            .scale(param.stateMapScale)
+            .translate([width / 2, height / 2]);
+        var path = d3.geoPath().projection(projection);
 
-      var color = d3
-          .scaleThreshold()
-          .domain(d3.range(0, param.stateScaleRange, param.stateScaleStep))
-          .range("colorScheme" in args.renderingParams ? d3[args.renderingParams.colorScheme][args.renderingParams.colorSchemeIndex] : d3.schemeYlOrRd[9]);
+        var color = d3
+            .scaleThreshold()
+            .domain(d3.range(0, param.stateScaleRange, param.stateScaleStep))
+            .range(
+                "colorScheme" in args.renderingParams
+                    ? d3[args.renderingParams.colorScheme][
+                          args.renderingParams.colorSchemeIndex
+                      ]
+                    : d3.schemeYlOrRd[9]
+            );
 
-      g.selectAll("path")
-          .data(data)
-          .enter()
-          .append("path")
-          .attr("d", function(d) {
-              var feature = JSON.parse(d.geomstr);
-              return path(feature);
-          })
-          .style("stroke", "#fff")
-          .style("stroke-width", "0.5")
-          .style("fill", function(d) {
-              return color(d.rate);
-          });
-    }  // end stateMapRendering
+        g.selectAll("path")
+            .data(data)
+            .enter()
+            .append("path")
+            .attr("d", function(d) {
+                var feature = JSON.parse(d.geomstr);
+                return path(feature);
+            })
+            .style("stroke", "#fff")
+            .style("stroke-width", "0.5")
+            .style("fill", function(d) {
+                return color(d.rate);
+            });
+    } // end stateMapRendering
 
     function stateMapLegendRendering(svg, data, args) {
         // parameters
@@ -237,7 +241,13 @@ function getUSMapRenderer(renderer) {
         var color = d3
             .scaleThreshold()
             .domain(d3.range(0, param.stateScaleRange, param.stateScaleStep))
-            .range("colorScheme" in args.renderingParams ? d3[args.renderingParams.colorScheme][args.renderingParams.colorSchemeIndex] : d3.schemeYlOrRd[9]);
+            .range(
+                "colorScheme" in args.renderingParams
+                    ? d3[args.renderingParams.colorScheme][
+                          args.renderingParams.colorSchemeIndex
+                      ]
+                    : d3.schemeYlOrRd[9]
+            );
         g.selectAll(".legendrect")
             .data(color.range().slice(1))
             .enter()
@@ -306,7 +316,7 @@ function getUSMapRenderer(renderer) {
             .style("stroke", "#fff")
             .style("stroke-width", "4")
             .style("fill", "none");
-    } // end countyMapStateBoundaryRendering 
+    } // end countyMapStateBoundaryRendering
 
     function countyMapLegendRendering(svg, data, args) {
         // parameters
@@ -339,7 +349,13 @@ function getUSMapRenderer(renderer) {
         var color = d3
             .scaleThreshold()
             .domain(d3.range(0, param.countyScaleRange, param.countyScaleStep))
-            .range("colorScheme" in args.renderingParams ? d3[args.renderingParams.colorScheme][args.renderingParams.colorSchemeIndex] : d3.schemeYlOrRd[9]);
+            .range(
+                "colorScheme" in args.renderingParams
+                    ? d3[args.renderingParams.colorScheme][
+                          args.renderingParams.colorSchemeIndex
+                      ]
+                    : d3.schemeYlOrRd[9]
+            );
         g.selectAll(".legendrect")
             .data(color.range().slice(1))
             .enter()
@@ -383,7 +399,7 @@ function getUSMapRenderer(renderer) {
             );
         axis.style("font-size", tickFontSize);
         axis.select(".domain").remove();
-    } // end countyMapLegendRendering 
+    } // end countyMapLegendRendering
 
     function countyMapRendering(svg, data, args) {
         g = svg.append("g");
@@ -401,7 +417,13 @@ function getUSMapRenderer(renderer) {
         var color = d3
             .scaleThreshold()
             .domain(d3.range(0, param.countyScaleRange, param.countyScaleStep))
-            .range("colorScheme" in args.renderingParams ? d3[args.renderingParams.colorScheme][args.renderingParams.colorSchemeIndex] : d3.schemeYlOrRd[9]);
+            .range(
+                "colorScheme" in args.renderingParams
+                    ? d3[args.renderingParams.colorScheme][
+                          args.renderingParams.colorSchemeIndex
+                      ]
+                    : d3.schemeYlOrRd[9]
+            );
 
         g.selectAll("path")
             .data(data)
@@ -446,20 +468,19 @@ function getUSMapRenderer(renderer) {
             .on("mouseout", function(d, i) {
                 d3.select("#countyMapTooltip" + i).remove();
             });
-    } // end countyMapRendering 
+    } // end countyMapRendering
 } // end func getUSMapRenderer
 
 // params: pass in name of placement to retrieve
-function getUSMapPlacement(placement) {
-} // end func getUSMapPlacement
+function getUSMapPlacement(placement) {} // end func getUSMapPlacement
 
 USMap.prototype = {
-  getUSMapTransformFunc,
-  getUSMapRenderer,
-  getUSMapPlacement
+    getUSMapTransformFunc,
+    getUSMapRenderer,
+    getUSMapPlacement
 };
 
 module.exports = {
-  USMap: USMap,
-  getUSMapRenderer
+    USMap,
+    getUSMapRenderer
 };

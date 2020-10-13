@@ -12,26 +12,26 @@
 
 // libraries
 const Project = require("../../src/index").Project;
-const USMap = require("../../src/template-api/USMap").USMap;  // specify template
+const USMap = require("../../src/template-api/USMap").USMap; // specify template
 
 // construct project
 var p = new Project("map_template_usmap", "../../../config.txt");
 
-// specify db name to get map data from 
+// specify db name to get map data from
 var db = "usmap";
-var table = "rates";  
-var rate_col = "rate";   // name of column containing data you with to use
+var table = "rates";
+var rate_col = "rate"; // name of column containing data you with to use
 //var colorScheme = d3.schemeYlOrRd[9];
 var colorScheme = "schemePurples";
 var colorSchemeIndex = 9;
 
 // specify args
 var args = {
-  db: db, 
-  table: table,
-  rate_col: rate_col,
-  colorScheme: colorScheme,
-  colorSchemeIndex: colorSchemeIndex
+    db: db,
+    table: table,
+    rate_col: rate_col,
+    colorScheme: colorScheme,
+    colorSchemeIndex: colorSchemeIndex
 };
 
 // build project

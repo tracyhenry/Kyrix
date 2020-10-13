@@ -77,7 +77,9 @@ function checkArgs(objName, requiredArgs, requiredArgTypes, args) {
             );
         if (typeof args[requiredArgs[i]] !== requiredArgTypes[i])
             throw new Error(
-                "Constructing " + objName + ": " +
+                "Constructing " +
+                    objName +
+                    ": " +
                     requiredArgs[i] +
                     " must be " +
                     requiredArgTypes[i] +
@@ -86,7 +88,9 @@ function checkArgs(objName, requiredArgs, requiredArgTypes, args) {
         if (requiredArgTypes[i] == "string")
             if (args[requiredArgs[i]].length == 0)
                 throw new Error(
-                    "Constructing " + objName + ": " +
+                    "Constructing " +
+                        objName +
+                        ": " +
                         requiredArgs[i] +
                         " cannot be an empty string."
                 );
