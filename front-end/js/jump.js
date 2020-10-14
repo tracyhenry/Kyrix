@@ -438,6 +438,11 @@ function registerJumps(viewId, svg, layerId) {
                 return d == p
             })
             .call(d3.drag()
+                .on("start", function(d) {
+                    console.log("starting drag");
+                    dx = 0;
+                    dy = 0;
+                })
                 .on("drag", function(d) {
                     console.log("attempting to drag object");
                     // console.log(`object data: ${JSON.stringify(d)}`);
@@ -454,25 +459,141 @@ function registerJumps(viewId, svg, layerId) {
                     // currentObject.attr("x", d3.event.x).attr("y", d3.event.y).attr("cx", d3.event.x).attr("cy", d3.event.y);                
                 })
                 .on("end", function(d) {
-                    if (dx > 50 || dy > 50) {
+                    if (Math.abs(dx) > 50) {
                         console.log("ended object drag!");
+                        currentObject.remove();
                         console.log(d);
-                        console.log(`d's (x,y) are (${d.x}, ${d.y})`);
-                        // currentObject.attr("x", parseInt(d.x) + dx);
-                        // currentObject.attr("y", parseInt(d.y) + dy);  
-                        d.x = parseInt(d.x) + dx;
-                        d.y = parseInt(d.y) + dy;
-                        d.cx = d.x;
-                        d.cy = d.y;
-                        console.log(`d's after (x,y) are (${d.x}, ${d.y})`);     
+                        // console.log(`d's (cx,cy) are (${parseInt(d.cx)+dx}, ${parseInt(d.cy)+dy})`);
+                        // d.x = parseInt(d.x) + dx;
+                        // d.y = parseInt(d.y) + dy;
+                        // d.cx = parseInt(d.x) + dx;
+                        // d.cy = parseInt(d.y) + dy;
+                        // const currX = parseInt(currentObject.attr("x"));
+                        // const currY = parseInt(currentObject.attr("y"));
+                        // currentObject
+                        //     .attr("cx", currX + dx)
+                        //     .attr("cy", currY + dy)
+                        //     .attr("x", currX + dx)
+                        //     .attr("y", currY + dy);
+                        // currentObject
+                        //     .data(d)
+                        //     .enter()
+                        //     .attr("x", function(d) { return d.x+dx; })
+                        //     .attr("y", function(d) { return d.y+dy; })
+                        //     .attr("cx", function(d) { return d.cx+dx; })
+                        //     .attr("cy", function(d) { return d.cy+dx; });
+
+
+                        // gvd - data for current view, current canvas, transform, etc.
+                        let canvasId = gvd.curCanvasId;
+                        let queryText = gvd.curCanvas.layers[layerId].transform.query;
+
+                        // use regex to extract db column names from user-defined transform
+                        [_, queryText] = queryText.split("select");
+                        [queryText, tableName] = queryText.split("from");
+                        tableName = tableName.replace(/[\s;]+/g, "").trim();
+                        // queryText = queryText.replace(/\s+/g, "").trim();
+                        // let queryFields = queryText.split(",");
+
+                        let visFields = gvd.curCanvas.layers[layerId].transform.columnNames;
+
+                        // find only directly mapped columns from object attributes
+                        let directMappedColumns = {};
+                        // const objectAttributes = Object.keys(p);
+                        for (let idx in visFields) {
+                            const field = visFields[idx];
+                            // if (objectAttributes.includes(field)) {
+                            directMappedColumns[field] = p[field];
+                            // }
+                        }
+                        const directMappedColNames = Object.keys(directMappedColumns);
+
+                        let newAttrValues = [];
+                        let objectKV = {};
+                        // d3.selectAll(".attr-inputs").each(function(d,i) {
+                        //     newAttrValues.push(d3.select(this).property("value"));
+                        // });
+                        let data = Object.assign(d, {});
+                        data.x = parseFloat(data.x) + dx;
+                        data.cx = parseFloat(data.x) + dx;
+                        console.log(`data's (x,y) are (${data.x}, ${data.y})`); 
+                        let dataKeys = Object.keys(data);
+                        for (let i=0; i < directMappedColNames.length; i++) {
+                            newAttrValues.push(data[directMappedColNames[i]]);
+                        }
+                                               
+                        console.log(`column names -> ${directMappedColNames}`);
+                        console.log(`new attr values -> ${newAttrValues}`);
+
+
+                        for (let i = 0; i < directMappedColNames.length; i++) {
+                            let colName = directMappedColNames[i];
+                            objectKV[colName] = newAttrValues[i];
+                        }
+
+                        let updatedField = "x";
+                        const reverseFuncString = gvd.curCanvas.layers[layerId].transform.reverseFunctions[updatedField];
+                        console.log(`reverse function string for attr: ${updatedField} is: ${reverseFuncString}`);
+                        const reverseFunc = Function(reverseFuncString)();
+                        let width = gvd.curCanvas.w;
+                        let height = gvd.curCanvas.h;
+                        console.log(`width of cur layer is: ${width} and height is: ${height}`);
+                        objectKV = reverseFunc(objectKV, width, height);
+
+                        // TODO: strip the objectKV variable of front-end vars like x/y and replace with cx/cy
+                        let finalObjectKV = {}
+                        for (let k = 0; k < directMappedColNames.length; k++) {
+                            const attr = directMappedColNames[k];
+                            let attrValue = objectKV[attr];
+                            finalObjectKV[attr] = attrValue
+                            if (attr == "x") {
+                                finalObjectKV["cx"] = attrValue;
+                            } else if (attr == "y") {
+                                finalObjectKV["cy"] = attrValue;
+                            }
+                        }
+                        console.log(JSON.stringify(finalObjectKV));
+                        
+
+
+                        // TODO: update UI with new data, while DB gets update asynchronously 
+                        // what if DB doesn't get update?
+                        doDBUpdate(viewId, canvasId, layerId, tableName, finalObjectKV);
+                        // re-load dynamic data from db
+                        // let visItem = svg.selectAll("rect")
+                        //                 .filter(function() {
+                        //                     return d3.select(this).attr()
+                        //                 });
+                        // visItem.remove();
+                        let canvasProm = getCurCanvas(viewId);
+                        canvasProm.then(() => {
+                            if (!gvd.animation) {
+                                var curViewport = d3
+                                    .select(viewClass + ".mainsvg:not(.static)")
+                                    .attr("viewBox")
+                                    .split(" ");
+                                // d3.select(viewClass + ".mainsvg:not(.static)").selectAll("*").remove();
+                                // d3.select(viewClass + ".viewsvg")
+                                //     .selectAll("*")
+                                //     .filter(function(d) {
+                                //         return d == p
+                                //     })
+                                //     .remove();
+                                RefreshDynamicLayers(
+                                    viewId,
+                                    curViewport[0],
+                                    curViewport[1]
+                                );
+                            }
+                            removePopovers(viewId);
+                        });  
+
+
+                        console.log(`d's after (cx,cy) are (${d.x}, ${d.y})`);     
+                        dx = 0;
+                        dy = 0;
                     }
-
-                    // do actual data updates
-
-
-                    // reset svg translate variables
-                    dx = 0;
-                    dy = 0;
+                    
                 })
             );
 
