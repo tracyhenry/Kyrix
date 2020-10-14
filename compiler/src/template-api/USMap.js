@@ -1,5 +1,6 @@
+const fs = require("fs");
 const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
-const checkArgs = require("./Utilities").checkArgs;
+const formatAjvErrorMessage = require("./Utilities").formatAjvErrorMessage;
 
 /*
  * Constructor of a USMap
@@ -8,15 +9,22 @@ const checkArgs = require("./Utilities").checkArgs;
  * by nyrret on 09/24/19
  */
 
-// return USMap obj for use increating USMap project
-function USMap(args) {
-    if (args == null) args = {};
+function USMap(args_) {
+    // verify against schema
+    // defaults are assigned at the same time
+    var args = JSON.parse(JSON.stringify(args_));
+    var schema = JSON.parse(
+        fs.readFileSync("../../src/template-api/json-schema/USMap.json")
+    );
+    var ajv = new require("ajv")({useDefaults: true});
+    var validator = ajv.compile(schema);
+    var valid = validator(args);
+    if (!valid)
+        throw new Error(
+            "Constructing USMap: " + formatAjvErrorMessage(validator.errors[0])
+        );
 
-    // verify and store args
-    var requiredArgs = ["db", "table", "rate_col"];
-    var requiredArgTypes = ["string", "string", "string"];
-    checkArgs("USMap", requiredArgs, requiredArgTypes, args);
-
+    // assign
     this.db = args.db;
     this.table = args.table;
     this.rate_col = args.rate_col;

@@ -1,0 +1,99 @@
+{
+    "type": "object",
+    "definitions": {
+        "canvas": {
+            "type": "object",
+            "properties": {
+                "table": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "column": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                },
+                "colorCount": {
+                    "default": 7
+                }
+            },
+            "required": ["table", "column", "range"],
+            "additionalProperties": false
+        }
+    },
+    "properties": {
+        "db": {
+            "type": "string",
+            "minLength": 1
+        },
+        "state": {"$ref": "#/definitions/canvas"},
+        "county": {"$ref": "#/definitions/canvas"},
+        "colorScheme": {
+            "enum": [
+                "schemeAccent",
+                "schemeBlues",
+                "schemeBrBG",
+                "schemeBuGn",
+                "schemeBuPu",
+                "schemeCategory10",
+                "schemeDark2",
+                "schemeGnBu",
+                "schemeGreens",
+                "schemeGreys",
+                "schemeOrRd",
+                "schemeOranges",
+                "schemePRGn",
+                "schemePaired",
+                "schemePastel1",
+                "schemePastel2",
+                "schemePiYG",
+                "schemePuBu",
+                "schemePuBuGn",
+                "schemePuOr",
+                "schemePuRd",
+                "schemePurples",
+                "schemeRdBu",
+                "schemeRdGy",
+                "schemeRdPu",
+                "schemeRdYlBu",
+                "schemeRdYlGn",
+                "schemeReds",
+                "schemeSet1",
+                "schemeSet2",
+                "schemeSet3",
+                "schemeSpectral",
+                "schemeTableau10",
+                "schemeYlGn",
+                "schemeYlGnBu",
+                "schemeYlOrBr",
+                "schemeYlOrRd"
+            ],
+            "default": "schemeYlOrRd"
+        },
+        "projection": {
+            "enum": ["geoAlbersUsa", "geoMercator"],
+            "default": "geoAlbersUsa"
+        },
+        "stateMapWidth": {
+            "type": "integer",
+            "default": 2000
+        },
+        "stateMapHeight": {
+            "type": "integer",
+            "default": 1000
+        },
+        "zoomFactor": {
+            "type": "integer",
+            "default": 6
+        }
+    },
+    "required": ["db", "state"],
+    "additionalProperties": false
+}

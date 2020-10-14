@@ -11,15 +11,16 @@ var args = {
     state: {
         table: "stateRate",
         column: "rate",
-        range: [0, 100]
-        // colorScheme: "schemeBlues"
+        range: [0, 10000]
         // colorCount: 7
-        //
     },
     county: {
         table: "countyRate",
-        column: "rate"
+        column: "rate",
+        range: [0, 100]
+        // colorCount: 5
     }
+    // colorScheme: "schemeBlue"
     // projection: "geoAlbersUsa"
     // stateMapWidth: 2000
     // stateMapHeight: 1000
