@@ -393,6 +393,8 @@ function registerJumps(viewId, svg, layerId) {
     var shapes = svg.select("g:last-of-type").selectAll("*");
     var optionalArgs = getOptionalArgs(viewId);
     optionalArgs["layerId"] = layerId;
+    let dx = 0;
+    let dy = 0;
 
 
     shapes.each(function(p) {
@@ -435,12 +437,44 @@ function registerJumps(viewId, svg, layerId) {
             .filter(function(d) {
                 return d == p
             })
-            .call(d3.drag().on("drag", function(d) {
-                console.log("attempting to drag object");
-                // d3.event.stopPropagation();
-                // console.log(`object data: ${JSON.stringify(d)}`);
-                currentObject.attr("x", d3.event.x).attr("y", d3.event.y).attr("cx", d3.event.x).attr("cy", d3.event.y);                
-            }));
+            .call(d3.drag()
+                .on("drag", function(d) {
+                    console.log("attempting to drag object");
+                    // console.log(`object data: ${JSON.stringify(d)}`);
+                    // const newX = parseInt(currentObject.attr("x")) + d3.event.dx;
+                    // const newY = parseInt(currentObject.attr("y")) + d3.event.dy;
+                    dx += d3.event.dx;
+                    dy += d3.event.dy;
+                    currentObject.attr("transform", "translate(" + dx + "," + dy + ")");
+                    // currentObject.attr("x", d3.event.transform.x);
+                    // currentObject.attr("y", d3.event.transform.y);
+                    // currentObject.attr("cx", d3.event.transform.cx)
+                    // currentObject.attr("cy", d3.event.transform.cy);         
+                    
+                    // currentObject.attr("x", d3.event.x).attr("y", d3.event.y).attr("cx", d3.event.x).attr("cy", d3.event.y);                
+                })
+                .on("end", function(d) {
+                    if (dx > 50 || dy > 50) {
+                        console.log("ended object drag!");
+                        console.log(d);
+                        console.log(`d's (x,y) are (${d.x}, ${d.y})`);
+                        // currentObject.attr("x", parseInt(d.x) + dx);
+                        // currentObject.attr("y", parseInt(d.y) + dy);  
+                        d.x = parseInt(d.x) + dx;
+                        d.y = parseInt(d.y) + dy;
+                        d.cx = d.x;
+                        d.cy = d.y;
+                        console.log(`d's after (x,y) are (${d.x}, ${d.y})`);     
+                    }
+
+                    // do actual data updates
+
+
+                    // reset svg translate variables
+                    dx = 0;
+                    dy = 0;
+                })
+            );
 
         // d3.select(this).on("start", dragstarted);
         // d3.select(this).on("drag", dragged);
