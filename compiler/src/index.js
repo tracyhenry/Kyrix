@@ -47,6 +47,9 @@ function Project(name, configFile) {
     // set of tables
     this.tables = [];
 
+    // set of usmaps
+    this.usmaps = [];
+
     // rendering parameters
     this.renderingParams = "{}";
 
@@ -254,7 +257,6 @@ function addTable(table, args) {
  * Add an ssv to a project, this will create a hierarchy of canvases that form a pyramid shape
  * @param ssv an SSV object
  * @param args an dictionary that contains customization parameters, see doc
- * @returns {Array} an array of canvas objects that correspond to the hierarchy
  */
 function addSSV(ssv, args) {
     if (args == null) args = {};
@@ -444,162 +446,169 @@ function addSSV(ssv, args) {
 }
 
 /**
- * Add a USMap visualization to a project
- * @param map a USMap object
+ * Add a USMap template object to a project
+ * @param usmap a USMap object
  * @param args an dictionary that contains customization parameters, see doc
- * @returns canvas object for initial view
  */
-function addUSMap(map, args) {
+function addUSMap(usmap, args) {
     if (args == null) args = {};
+    var numCanvas = "county" in usmap ? 2 : 1;
+    if ("pyramid" in args && args.pyramid.length != numCanvas)
+        throw new Error(
+            "Adding USMap: args.pyramid does not have matching number of canvases"
+        );
+
+    // add to project
+    this.usmaps.push(usmap);
 
     // rendering params
-    this.addRenderingParams(map.renderingParams);
+    var rpKey = "usmap_" + (this.usmaps.length - 1);
+    var rpDict = {};
+    rpDict[rpKey] = usmap.params;
+    this.addRenderingParams(rpDict);
 
-    // ========== state map canvas ================
-    var stateMapWidth = 2000,
-        stateMapHeight = 1000;
-    var stateMapCanvas = new Canvas("statemap", stateMapWidth, stateMapHeight);
+    // ================== state map canvas ===================
+    var stateMapCanvas;
+    if ("pyramid" in args) stateMapCanvas = args.pyramid[0];
+    else
+        stateMapCanvas = new Canvas(
+            "usmap" + (this.usmaps.length - 1) + "_" + "state",
+            usmap.stateMapWidth,
+            usmap.stateMapHeight
+        );
+    if (
+        stateMapCanvas.w != usmap.stateMapWidth ||
+        stateMapCanvas.h != usmap.stateMapHeight
+    )
+        throw new Error("Adding USMap: state canvas sizes do not match");
     this.addCanvas(stateMapCanvas);
 
     // static legends layer
     var stateMapLegendLayer = new Layer(null, true);
     stateMapCanvas.addLayer(stateMapLegendLayer);
     stateMapLegendLayer.addRenderingFunc(
-        map.getUSMapRenderer("stateMapLegendRendering")
+        usmap.getUSMapRenderer("stateMapLegendRendering")
     );
+    stateMapLegendLayer.setUSMapId(this.usmaps.length - 1 + "_" + 0);
 
     // state boundary layer
     var stateMapTransform = new Transform(
-        "select state.state_id, state.name, stateRate.rate, state.geomstr from (select state_id, cast(avg(cast(" +
-            map.rate_col +
-            " as float)) as float) as rate from " +
-            map.table +
-            " group by state_id) as stateRate, state where state.state_id = stateRate.state_id;",
-        map.db,
-        map.getUSMapTransformFunc("stateMapTransform"),
-        ["id", "bbox_x", "bbox_y", "name", "rate", "geomstr"],
+        `SELECT name, ${usmap.stateRateCol}, geomstr 
+         FROM ${usmap.stateTable}`,
+        usmap.db,
+        "",
+        ["name", "rate", "geomstr"],
         true
     );
     var stateBoundaryLayer = new Layer(stateMapTransform, false);
     stateMapCanvas.addLayer(stateBoundaryLayer);
-    stateBoundaryLayer.addPlacement(map.placements.stateMapPlacement);
+    stateBoundaryLayer.addPlacement({
+        centroid_x: "full",
+        centroid_y: "full",
+        width: "full",
+        height: "full"
+    });
     stateBoundaryLayer.addRenderingFunc(
-        map.getUSMapRenderer("stateMapRendering")
+        usmap.getUSMapRenderer("stateMapRendering")
     );
-
-    // ================== county map canvas ===================
-    var zoomFactor =
-        map.renderingParams.countyMapScale / map.renderingParams.stateMapScale;
-    var countyMapCanvas = new Canvas(
-        "countymap",
-        stateMapWidth * zoomFactor,
-        stateMapHeight * zoomFactor
-    );
-    this.addCanvas(countyMapCanvas);
-
-    // static legends layer
-    var countyMapLegendLayer = new Layer(null, true);
-    countyMapCanvas.addLayer(countyMapLegendLayer);
-    countyMapLegendLayer.addRenderingFunc(
-        map.getUSMapRenderer("countyMapLegendRendering")
-    );
-
-    // thick state boundary layer
-    var countyMapStateBoundaryTransform = new Transform(
-        "select geomstr from state",
-        map.db,
-        map.getUSMapTransformFunc("countyMapStateBoundaryTransform"),
-        ["bbox_x", "bbox_y", "bbox_w", "bbox_h", "geomstr"],
-        true
-    );
-    var countyMapStateBoundaryLayer = new Layer(
-        countyMapStateBoundaryTransform,
-        false
-    );
-    countyMapCanvas.addLayer(countyMapStateBoundaryLayer);
-    countyMapStateBoundaryLayer.addPlacement(map.placements.countyMapPlacement);
-    countyMapStateBoundaryLayer.addRenderingFunc(
-        map.getUSMapRenderer("countyMapStateBoundaryRendering")
-    );
-
-    // county boundary layer
-    var query =
-        "select * from county, " +
-        map.table +
-        " where county.county_id = " +
-        map.table +
-        ".county_id and county.state_id = " +
-        map.table +
-        ".state_id";
-    var countyMapTransform = new Transform(
-        query,
-        map.db,
-        map.getUSMapTransformFunc("countyMapTransform"),
-        [
-            "id",
-            "bbox_x",
-            "bbox_y",
-            "bbox_w",
-            "bbox_h",
-            "state_id",
-            "name",
-            "crimerate",
-            "population",
-            "geomstr"
-        ],
-        true
-    );
-    var countyBoundaryLayer = new Layer(countyMapTransform, false);
-    countyMapCanvas.addLayer(countyBoundaryLayer);
-    countyBoundaryLayer.addPlacement(map.placements.countyMapPlacement);
-    countyBoundaryLayer.addRenderingFunc(
-        map.getUSMapRenderer("countyMapRendering")
-    );
+    stateBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 0);
 
     // ==========  Views ===============
-    if (!args.view) {
-        var view = new View("usmap", 0, 0, stateMapWidth, stateMapHeight);
+    if (!("view" in args)) {
+        var view = new View(
+            "usmap" + (this.usmaps.length - 1),
+            0,
+            0,
+            usmap.stateMapWidth,
+            usmap.stateMapHeight
+        );
         this.addView(view);
         this.setInitialStates(view, stateMapCanvas, 0, 0);
     } else if (!(args.view instanceof View)) {
         throw new Error("Constructing USMap: view must be a View object");
     }
 
-    // ================== state -> county jump ===================
-    var selector = function(row, args) {
-        return args.layerId == 1;
-    };
+    // ================== county map canvas ===================
+    if ("countyTable" in usmap) {
+        var countyMapCanvas;
+        if ("pyramid" in args) countyMapCanvas = args.pyramid[1];
+        else
+            countyMapCanvas = new Canvas(
+                "usmap" + (this.usmaps.length - 1) + "_" + "county",
+                usmap.stateMapWidth * usmap.zoomFactor,
+                usmap.stateMapHeight * usmap.zoomFactor
+            );
+        if (
+            countyMapCanvas.w != usmap.stateMapWidth * usmap.zoomFactor ||
+            countyMapCanvas.h != usmap.stateMapHeight * usmap.zoomFactor
+        )
+            throw new Error("Adding USMap: county canvas sizes do not match");
+        this.addCanvas(countyMapCanvas);
 
-    var newPredicates = function() {
-        return {};
-    };
+        // static legends layer
+        var countyMapLegendLayer = new Layer(null, true);
+        countyMapCanvas.addLayer(countyMapLegendLayer);
+        countyMapLegendLayer.addRenderingFunc(
+            usmap.getUSMapRenderer("countyMapLegendRendering")
+        );
+        countyMapLegendLayer.setUSMapId(this.usmaps.length - 1 + "_" + 1);
 
-    var newViewport = function(row, args) {
-        var zoomFactor =
-            args.renderingParams.countyMapScale /
-            args.renderingParams.stateMapScale;
-        var vpW = args.viewportW;
-        var vpH = args.viewportH;
-        return {
-            constant: [
-                row.bbox_x * zoomFactor - vpW / 2,
-                row.bbox_y * zoomFactor - vpH / 2
-            ]
-        };
-    };
+        // thick state boundary layer
+        var countyMapStateBoundaryTransform = new Transform(
+            `SELECT geomstr FROM ${usmap.stateTable}`,
+            usmap.db,
+            usmap.getUSMapTransformFunc("countyMapStateBoundaryTransform"),
+            ["bbox_x", "bbox_y", "bbox_w", "bbox_h", "geomstr"],
+            true
+        );
+        var countyMapStateBoundaryLayer = new Layer(
+            countyMapStateBoundaryTransform,
+            false
+        );
+        countyMapCanvas.addLayer(countyMapStateBoundaryLayer);
+        countyMapStateBoundaryLayer.addPlacement({
+            centroid_x: "col:bbox_x",
+            centroid_y: "col:bbox_y",
+            width: "col:bbox_w",
+            height: "col:bbox_h"
+        });
+        countyMapStateBoundaryLayer.addRenderingFunc(
+            usmap.getUSMapRenderer("countyMapStateBoundaryRendering")
+        );
+        countyMapStateBoundaryLayer.setUSMapId(
+            this.usmaps.length - 1 + "_" + 1
+        );
 
-    var jumpName = function(row) {
-        return "County map of " + row.name;
-    };
+        // county boundary layer
+        var countyMapTransform = new Transform(
+            `SELECT name, ${usmap.countyRateCol}, geomstr
+        FROM ${usmap.countyTable};`,
+            usmap.db,
+            usmap.getUSMapTransformFunc("countyMapTransform"),
+            ["bbox_x", "bbox_y", "bbox_w", "bbox_h", "name", "rate", "geomstr"],
+            true
+        );
+        var countyBoundaryLayer = new Layer(countyMapTransform, false);
+        countyMapCanvas.addLayer(countyBoundaryLayer);
+        countyBoundaryLayer.addPlacement({
+            centroid_x: "col:bbox_x",
+            centroid_y: "col:bbox_y",
+            width: "col:bbox_w",
+            height: "col:bbox_h"
+        });
+        countyBoundaryLayer.addRenderingFunc(
+            usmap.getUSMapRenderer("countyMapRendering")
+        );
+        countyBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 1);
 
-    this.addJump(
-        new Jump(stateMapCanvas, countyMapCanvas, "geometric_semantic_zoom", {
-            selector: selector,
-            viewport: newViewport,
-            predicates: newPredicates,
-            name: jumpName
-        })
-    );
+        // =============== jump ===============
+        this.addJump(
+            new Jump(stateMapCanvas, countyMapCanvas, "literal_zoom_in")
+        );
+        this.addJump(
+            new Jump(countyMapCanvas, stateMapCanvas, "literal_zoom_out")
+        );
+    }
 
     return {canvas: stateMapCanvas, view: args.view ? args.view : view};
 } // end func addUSMap

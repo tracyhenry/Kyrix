@@ -3,24 +3,24 @@ const Project = require("../../src/index").Project;
 const USMap = require("../../src/template-api/USMap").USMap;
 
 // construct project
-var p = new Project("usmap_", "../../../config.txt");
+var p = new Project("usmap_template", "../../../config.txt");
 
 // specify args
 var args = {
     db: "usmap",
     state: {
-        table: "stateRate",
-        column: "rate",
-        range: [0, 10000]
-        // colorCount: 7
+        table: "state",
+        column: "crimerate",
+        range: [0, 582]
+        //        colorCount: 7
     },
     county: {
-        table: "countyRate",
-        column: "rate",
-        range: [0, 100]
-        // colorCount: 5
+        table: "county",
+        column: "crimerate",
+        range: [0, 1792]
+        //        colorCount: 7
     }
-    // colorScheme: "schemeBlue"
+    // colorScheme: "schemeYlOrRd"
     // projection: "geoAlbersUsa"
     // stateMapWidth: 2000
     // stateMapHeight: 1000

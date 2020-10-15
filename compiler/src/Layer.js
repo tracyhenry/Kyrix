@@ -25,6 +25,7 @@ function Layer(transform, isStatic) {
     this.tooltipAliases = [];
     this.indexerType = "";
     this.ssvId = "";
+    this.usmapId = "";
 }
 
 /**
@@ -94,6 +95,14 @@ function setSSVId(ssvId) {
 }
 
 /**
+ * set usmap ID
+ * @param usmapId
+ */
+function setUSMapId(usmapId) {
+    this.usmapId = usmapId;
+}
+
+/**
  * set indexer, which tells the backend that which indexer this layer should use
  * @param indexer
  */
@@ -112,6 +121,7 @@ Layer.prototype = {
     addTooltip,
     setFetchingScheme,
     setSSVId,
+    setUSMapId,
     setIndexerType
 };
 

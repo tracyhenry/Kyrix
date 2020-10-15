@@ -26,69 +26,48 @@ function USMap(args_) {
 
     // assign
     this.db = args.db;
-    this.table = args.table;
-    this.rate_col = args.rate_col;
-    if ("colorScheme" in args && "colorSchemeIndex" in args) {
-        this.colorScheme = args.colorScheme;
-        this.colorSchemeIndex = args.colorSchemeIndex;
+    this.stateTable = args.state.table;
+    this.stateRateCol = args.state.column;
+    this.stateMapWidth = args.stateMapWidth;
+    this.stateMapHeight = args.stateMapHeight;
+    this.zoomFactor = args.zoomFactor;
+    this.params = {
+        colorScheme: args.colorScheme,
+        projection: args.projection,
+        stateColorCount: args.state.colorCount,
+        stateRateRange: args.state.range
+    };
+    if ("county" in args) {
+        this.countyTable = args.county.table;
+        this.countyRateCol = args.county.column;
+        this.params = Object.assign({}, this.params, {
+            countyColorCount: args.county.colorCount,
+            countyRateRange: args.county.range
+        });
     }
-    this.renderingParams = {
-        stateMapScale: 2000,
-        countyMapScale: 12000,
-        stateScaleRange: 550,
-        stateScaleStep: 70,
-        countyScaleRange: 2000,
-        countyScaleStep: 250,
-        colorScheme: this.colorScheme,
-        colorSchemeIndex: this.colorSchemeIndex
-    };
-    this.placements = {
-        stateMapPlacement: {
-            centroid_x: "col:bbox_x",
-            centroid_y: "col:bbox_y",
-            width: "con:333.33",
-            height: "con:333.33"
-        },
-        countyMapPlacement: {
-            centroid_x: "col:bbox_x",
-            centroid_y: "col:bbox_y",
-            width: "col:bbox_w",
-            height: "col:bbox_h"
-        }
-    };
-} // end USMap constructor
+}
 
 function getUSMapTransformFunc(transformName) {
     //------------Transforms--------------------
-    function stateMapTransformFunc(row, width, height, param) {
-        var ret = [];
-        ret.push(row[0]);
 
-        // bounding box columns
-        var projection = d3
-            .geoAlbersUsa()
-            .scale(param.stateMapScale)
-            .translate([width / 2, height / 2]);
-        var path = d3.geoPath().projection(projection);
-        var feature = JSON.parse(row[3]);
-        var centroid = path.centroid(feature);
-        ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
-        ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
-        ret.push(row[1]);
-        ret.push(row[2]);
-        ret.push(row[3]);
-
-        return Java.to(ret, "java.lang.String[]");
-    }
-
-    function countyMapStateBoundaryTransformFunc(row, width, height, param) {
+    function countyMapStateBoundaryTransformFunc(row, width, height) {
         var ret = [];
 
-        // bounding box columns
-        var projection = d3
-            .geoAlbersUsa()
-            .scale(param.countyMapScale)
-            .translate([width / 2, height / 2]);
+        var projectionStr = "REPLACE_ME_projection";
+        var projection;
+        if (projectionStr == "geoAlbersUsa") {
+            projection = d3
+                .geoAlbersUsa()
+                .scale(width)
+                .translate([width / 2, height / 2]);
+        } else {
+            projection = d3
+                .geoMercator()
+                .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
+                .center([-98.5, 39.5])
+                .translate([width / 2, height / 2]);
+        }
+
         var path = d3.geoPath().projection(projection);
         var feature = JSON.parse(row[0]);
         var centroid = path.centroid(feature);
@@ -110,17 +89,26 @@ function getUSMapTransformFunc(transformName) {
         return Java.to(ret, "java.lang.String[]");
     }
 
-    function countyMapTransformFunc(row, width, height, param) {
+    function countyMapTransformFunc(row, width, height) {
         var ret = [];
-        ret.push(row[0]);
 
-        // bounding box columns
-        var projection = d3
-            .geoAlbersUsa()
-            .scale(param.countyMapScale)
-            .translate([width / 2, height / 2]);
+        var projectionStr = "REPLACE_ME_projection";
+        var projection;
+        if (projectionStr == "geoAlbersUsa") {
+            projection = d3
+                .geoAlbersUsa()
+                .scale(width)
+                .translate([width / 2, height / 2]);
+        } else {
+            projection = d3
+                .geoMercator()
+                .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
+                .center([-98.5, 39.5])
+                .translate([width / 2, height / 2]);
+        }
+
         var path = d3.geoPath().projection(projection);
-        var feature = JSON.parse(row[5]);
+        var feature = JSON.parse(row[2]);
         var centroid = path.centroid(feature);
         var bounds = path.bounds(feature);
         ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
@@ -135,7 +123,7 @@ function getUSMapTransformFunc(transformName) {
                 ? 0
                 : bounds[1][1] - bounds[0][1]
         );
-        for (var i = 1; i <= 5; i++) ret.push(row[i]);
+        for (var i = 0; i < 3; i++) ret.push(row[i]);
 
         return Java.to(ret, "java.lang.String[]");
     }
@@ -143,23 +131,23 @@ function getUSMapTransformFunc(transformName) {
     //------------Choose Transform----------------
     var transform;
     switch (transformName) {
-        case "stateMapTransform":
-            transform = getBodyStringOfFunction(stateMapTransformFunc);
-            break;
         case "countyMapStateBoundaryTransform":
             transform = getBodyStringOfFunction(
                 countyMapStateBoundaryTransformFunc
-            );
+            ).replace(/REPLACE_ME_projection/g, this.params.projection);
             break;
         case "countyMapTransform":
-            transform = getBodyStringOfFunction(countyMapTransformFunc);
+            transform = getBodyStringOfFunction(countyMapTransformFunc).replace(
+                /REPLACE_ME_projection/g,
+                this.params.projection
+            );
             break;
         default:
         // do nothing
     }
 
     return new Function("row", "width", "height", "param", transform);
-} // end func getUSMapTransformFunc
+}
 
 // @param: specify name of renderer
 function getUSMapRenderer(renderer) {
@@ -194,24 +182,41 @@ function getUSMapRenderer(renderer) {
         var g = svg.append("g");
         var width = args.canvasW,
             height = args.canvasH;
-        var param = args.renderingParams;
+        var rpKey =
+            "usmap_" + args.usmapId.substring(0, args.usmapId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
 
-        var projection = d3
-            .geoAlbersUsa()
-            .scale(param.stateMapScale)
-            .translate([width / 2, height / 2]);
+        // get projection
+        var projection;
+        if (params.projection == "geoAlbersUsa") {
+            projection = d3
+                .geoAlbersUsa()
+                .scale(width)
+                .translate([width / 2, height / 2]);
+        } else {
+            projection = d3
+                .geoMercator()
+                .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
+                .center([-98.5, 39.5])
+                .translate([width / 2, height / 2]);
+        }
         var path = d3.geoPath().projection(projection);
+
+        // get scale threshold domain
+        var lo = params.stateRateRange[0];
+        var hi = params.stateRateRange[1];
+        var step = (hi - lo) / params.stateColorCount;
+        var scaleDomain = [lo];
+        while (scaleDomain.length < params.stateColorCount) {
+            var last = scaleDomain[scaleDomain.length - 1];
+            last += step;
+            scaleDomain.push(last);
+        }
 
         var color = d3
             .scaleThreshold()
-            .domain(d3.range(0, param.stateScaleRange, param.stateScaleStep))
-            .range(
-                "colorScheme" in args.renderingParams
-                    ? d3[args.renderingParams.colorScheme][
-                          args.renderingParams.colorSchemeIndex
-                      ]
-                    : d3.schemeYlOrRd[9]
-            );
+            .domain(scaleDomain)
+            .range(d3[params.colorScheme][params.stateColorCount + 1]);
 
         g.selectAll("path")
             .data(data)
@@ -226,108 +231,15 @@ function getUSMapRenderer(renderer) {
             .style("fill", function(d) {
                 return color(d.rate);
             });
-    } // end stateMapRendering
+    }
 
     function stateMapLegendRendering(svg, data, args) {
         // parameters
-        var bkgRectWidth = 600;
-        var bkgRectXOffset = 200;
-        var legendRectStartXOffset = bkgRectWidth + bkgRectXOffset - 60;
-        var legendRectY = 32;
-        var legendRectWidth = 60;
-        var legendRectHeight = 16;
-        var captionY = 20;
-        var captionFontSize = 22;
-        var tickFontSize = 12;
+        var rpKey =
+            "usmap_" + args.usmapId.substring(0, args.usmapId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
 
-        var g = svg.append("g");
-        var width = args.viewportW;
-        var param = args.renderingParams;
-
-        // rectangles representing colors
-        var color = d3
-            .scaleThreshold()
-            .domain(d3.range(0, param.stateScaleRange, param.stateScaleStep))
-            .range(
-                "colorScheme" in args.renderingParams
-                    ? d3[args.renderingParams.colorScheme][
-                          args.renderingParams.colorSchemeIndex
-                      ]
-                    : d3.schemeYlOrRd[9]
-            );
-        g.selectAll(".legendrect")
-            .data(color.range().slice(1))
-            .enter()
-            .append("rect")
-            .attr("x", function(d, i) {
-                return width - legendRectStartXOffset + i * legendRectWidth;
-            })
-            .attr("y", legendRectY)
-            .attr("width", legendRectWidth)
-            .attr("height", legendRectHeight)
-            .attr("fill", function(d) {
-                return d;
-            });
-
-        // caption text: crime rate per 100,000 people
-        g.append("text")
-            .attr("x", width - bkgRectWidth - bkgRectXOffset)
-            .attr("y", captionY)
-            .attr("fill", "#000")
-            .attr("text-anchor", "start")
-            .attr("font-weight", "bold")
-            .attr("font-size", captionFontSize)
-            .text("Rate per 100,000 people");
-
-        // axis ticks
-        var axisScale = d3
-            .scaleLinear()
-            .domain([0, 490])
-            .rangeRound([
-                width - legendRectStartXOffset,
-                width - legendRectStartXOffset + 7 * legendRectWidth
-            ]);
-        var axis = g
-            .append("g")
-            .attr("transform", "translate(0, " + legendRectY + ")")
-            .call(
-                d3
-                    .axisBottom(axisScale)
-                    .tickSize(23)
-                    .tickValues(color.domain())
-            );
-        axis.style("font-size", tickFontSize);
-        axis.select(".domain").remove();
-    } // end stateMapLegendRendering
-
-    function countyMapStateBoundaryRendering(svg, data, args) {
-        g = svg.append("g");
-        var width = args.canvasW,
-            height = args.canvasH;
-        var param = args.renderingParams;
-
-        var projection = d3
-            .geoAlbersUsa()
-            .scale(param.countyMapScale)
-            .translate([width / 2, height / 2]);
-        var path = d3.geoPath().projection(projection);
-
-        g.selectAll("path")
-            .data(data)
-            .enter()
-            .append("path")
-            .attr("d", function(d) {
-                var feature = JSON.parse(d.geomstr);
-                return path(feature);
-            })
-            .style("stroke", "#fff")
-            .style("stroke-width", "4")
-            .style("fill", "none");
-    } // end countyMapStateBoundaryRendering
-
-    function countyMapLegendRendering(svg, data, args) {
-        // parameters
-        var bkgRectWidth = 570;
+        var bkgRectWidth = 570 + (params.stateColorCount - 7) * 60;
         var bkgRectHeight = 80;
         var bkgRectXOffset = 50;
         var legendRectStartXOffset = bkgRectWidth + bkgRectXOffset - 60;
@@ -340,9 +252,23 @@ function getUSMapRenderer(renderer) {
 
         var g = svg.append("g");
         var width = args.viewportW;
-        var param = args.renderingParams;
 
-        // append a background rectangle
+        // get scale threshold domain
+        var lo = params.stateRateRange[0];
+        var hi = params.stateRateRange[1];
+        var step = (hi - lo) / params.stateColorCount;
+        var scaleDomain = [lo];
+        while (scaleDomain.length < params.stateColorCount) {
+            var last = scaleDomain[scaleDomain.length - 1];
+            last += step;
+            scaleDomain.push(last);
+        }
+
+        var color = d3
+            .scaleThreshold()
+            .domain(scaleDomain)
+            .range(d3[params.colorScheme][params.stateColorCount + 1]);
+
         g.append("rect")
             .attr("x", width - bkgRectWidth - bkgRectXOffset)
             .attr("y", 0)
@@ -352,17 +278,6 @@ function getUSMapRenderer(renderer) {
             .attr("ry", 10)
             .attr("fill", "#fff");
 
-        // rectangles representing colors
-        var color = d3
-            .scaleThreshold()
-            .domain(d3.range(0, param.countyScaleRange, param.countyScaleStep))
-            .range(
-                "colorScheme" in args.renderingParams
-                    ? d3[args.renderingParams.colorScheme][
-                          args.renderingParams.colorSchemeIndex
-                      ]
-                    : d3.schemeYlOrRd[9]
-            );
         g.selectAll(".legendrect")
             .data(color.range().slice(1))
             .enter()
@@ -385,15 +300,17 @@ function getUSMapRenderer(renderer) {
             .attr("text-anchor", "start")
             .attr("font-weight", "bold")
             .attr("font-size", captionFontSize)
-            .text("Rate per 100,000 people");
+            .text("Crime rate per 100,000 people");
 
         // axis ticks
         var axisScale = d3
             .scaleLinear()
-            .domain([0, 1750])
+            .domain([lo, hi])
             .rangeRound([
                 width - legendRectStartXOffset,
-                width - legendRectStartXOffset + 7 * legendRectWidth
+                width -
+                    legendRectStartXOffset +
+                    params.stateColorCount * legendRectWidth
             ]);
         var axis = g
             .append("g")
@@ -406,31 +323,176 @@ function getUSMapRenderer(renderer) {
             );
         axis.style("font-size", tickFontSize);
         axis.select(".domain").remove();
-    } // end countyMapLegendRendering
+    }
+
+    function countyMapStateBoundaryRendering(svg, data, args) {
+        g = svg.append("g");
+        var width = args.canvasW,
+            height = args.canvasH;
+        var rpKey =
+            "usmap_" + args.usmapId.substring(0, args.usmapId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
+
+        // get projection
+        var projection;
+        if (params.projection == "geoAlbersUsa") {
+            projection = d3
+                .geoAlbersUsa()
+                .scale(width)
+                .translate([width / 2, height / 2]);
+        } else {
+            projection = d3
+                .geoMercator()
+                .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
+                .center([-98.5, 39.5])
+                .translate([width / 2, height / 2]);
+        }
+        var path = d3.geoPath().projection(projection);
+
+        g.selectAll("path")
+            .data(data)
+            .enter()
+            .append("path")
+            .attr("d", function(d) {
+                var feature = JSON.parse(d.geomstr);
+                return path(feature);
+            })
+            .style("stroke", "#fff")
+            .style("stroke-width", "4")
+            .style("fill", "none");
+    }
+
+    function countyMapLegendRendering(svg, data, args) {
+        // parameters
+        var rpKey =
+            "usmap_" + args.usmapId.substring(0, args.usmapId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
+
+        var bkgRectWidth = 570 + (params.countyColorCount - 7) * 60;
+        var bkgRectHeight = 80;
+        var bkgRectXOffset = 50;
+        var legendRectStartXOffset = bkgRectWidth + bkgRectXOffset - 60;
+        var legendRectY = 32;
+        var legendRectWidth = 60;
+        var legendRectHeight = 16;
+        var captionY = 20;
+        var captionFontSize = 22;
+        var tickFontSize = 12;
+
+        var g = svg.append("g");
+        var width = args.viewportW;
+
+        // get scale threshold domain
+        var lo = params.countyRateRange[0];
+        var hi = params.countyRateRange[1];
+        var step = (hi - lo) / params.countyColorCount;
+        var scaleDomain = [lo];
+        while (scaleDomain.length < params.countyColorCount) {
+            var last = scaleDomain[scaleDomain.length - 1];
+            last += step;
+            scaleDomain.push(last);
+        }
+        var color = d3
+            .scaleThreshold()
+            .domain(scaleDomain)
+            .range(d3[params.colorScheme][params.countyColorCount + 1]);
+
+        // append a background rectangle
+        g.append("rect")
+            .attr("x", width - bkgRectWidth - bkgRectXOffset)
+            .attr("y", 0)
+            .attr("width", bkgRectWidth)
+            .attr("height", bkgRectHeight)
+            .attr("rx", 10)
+            .attr("ry", 10)
+            .attr("fill", "#fff");
+
+        g.selectAll(".legendrect")
+            .data(color.range().slice(1))
+            .enter()
+            .append("rect")
+            .attr("x", function(d, i) {
+                return width - legendRectStartXOffset + i * legendRectWidth;
+            })
+            .attr("y", legendRectY)
+            .attr("width", legendRectWidth)
+            .attr("height", legendRectHeight)
+            .attr("fill", function(d) {
+                return d;
+            });
+
+        // caption text: crime rate per 100,000 people
+        g.append("text")
+            .attr("x", width - bkgRectWidth - bkgRectXOffset + 10)
+            .attr("y", captionY)
+            .attr("fill", "#000")
+            .attr("text-anchor", "start")
+            .attr("font-weight", "bold")
+            .attr("font-size", captionFontSize)
+            .text("Crime rate per 100,000 people");
+
+        // axis ticks
+        var axisScale = d3
+            .scaleLinear()
+            .domain([lo, hi])
+            .rangeRound([
+                width - legendRectStartXOffset,
+                width -
+                    legendRectStartXOffset +
+                    params.countyColorCount * legendRectWidth
+            ]);
+        var axis = g
+            .append("g")
+            .attr("transform", "translate(0, " + legendRectY + ")")
+            .call(
+                d3
+                    .axisBottom(axisScale)
+                    .tickSize(23)
+                    .tickValues(color.domain())
+            );
+        axis.style("font-size", tickFontSize);
+        axis.select(".domain").remove();
+    }
 
     function countyMapRendering(svg, data, args) {
         g = svg.append("g");
         var width = args.canvasW,
             height = args.canvasH;
-        var param = args.renderingParams;
+        var rpKey =
+            "usmap_" + args.usmapId.substring(0, args.usmapId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
 
-        var projection = d3
-            .geoAlbersUsa()
-            .scale(param.countyMapScale)
-            .translate([width / 2, height / 2]);
-
+        // get projection
+        var projection;
+        if (params.projection == "geoAlbersUsa") {
+            projection = d3
+                .geoAlbersUsa()
+                .scale(width)
+                .translate([width / 2, height / 2]);
+        } else {
+            projection = d3
+                .geoMercator()
+                .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
+                .center([-98.5, 39.5])
+                .translate([width / 2, height / 2]);
+        }
         var path = d3.geoPath().projection(projection);
+
+        // get scale threshold domain
+        var lo = params.countyRateRange[0];
+        var hi = params.countyRateRange[1];
+        var step = (hi - lo) / params.countyColorCount;
+        var scaleDomain = [lo];
+        while (scaleDomain.length < params.countyColorCount) {
+            var last = scaleDomain[scaleDomain.length - 1];
+            last += step;
+            scaleDomain.push(last);
+        }
 
         var color = d3
             .scaleThreshold()
-            .domain(d3.range(0, param.countyScaleRange, param.countyScaleStep))
-            .range(
-                "colorScheme" in args.renderingParams
-                    ? d3[args.renderingParams.colorScheme][
-                          args.renderingParams.colorSchemeIndex
-                      ]
-                    : d3.schemeYlOrRd[9]
-            );
+            .domain(scaleDomain)
+            .range(d3[params.colorScheme][params.countyColorCount + 1]);
 
         g.selectAll("path")
             .data(data)
@@ -443,40 +505,10 @@ function getUSMapRenderer(renderer) {
             .style("stroke", "#fff")
             .style("stroke-width", "0.5")
             .style("fill", function(d) {
-                return color(d.crimerate);
-            })
-            .on("mouseover", function(d, i) {
-                // remove all tool tips first
-                d3.select("body")
-                    .selectAll(".countymaptooltip")
-                    .remove();
-                // create a new tooltip
-                var tooltip = d3
-                    .select("body")
-                    .append("div")
-                    .attr("id", "countyMapTooltip" + i)
-                    .classed("countymaptooltip", true)
-                    .style("position", "absolute")
-                    .style("width", "200px")
-                    .style("height", "28px")
-                    .style("pointer-events", "none")
-                    .style("opacity", 0)
-                    .style("font-size", "23px")
-                    .style("color", "rgb(134, 142, 112)");
-                tooltip
-                    .transition()
-                    .duration(200)
-                    .style("opacity", 0.9);
-                tooltip
-                    .html(d.name + "\n" + d.crimerate)
-                    .style("left", d3.event.pageX + "px")
-                    .style("top", d3.event.pageY + "px");
-            })
-            .on("mouseout", function(d, i) {
-                d3.select("#countyMapTooltip" + i).remove();
+                return color(d.rate);
             });
-    } // end countyMapRendering
-} // end func getUSMapRenderer
+    }
+}
 
 USMap.prototype = {
     getUSMapTransformFunc,
