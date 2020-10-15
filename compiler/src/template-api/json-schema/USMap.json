@@ -21,7 +21,10 @@
                     "maxItems": 2
                 },
                 "colorCount": {
-                    "default": 7
+                    "type": "integer",
+                    "default": 7,
+                    "minimum": 2,
+                    "maximum": 8
                 }
             },
             "required": ["table", "column", "range"],
@@ -90,10 +93,24 @@
             "default": 1000
         },
         "zoomFactor": {
-            "type": "integer",
-            "default": 6
+            "type": "integer"
         }
     },
     "required": ["db", "state"],
-    "additionalProperties": false
+    "additionalProperties": false,
+    "if": {
+        "required": ["county"]
+    },
+    "then": {
+        "properties": {
+            "zoomFactor": {
+                "default": 6
+            }
+        }
+    },
+    "else": {
+        "properties": {
+            "zoomFactor": {"type": "null"}
+        }
+    }
 }
