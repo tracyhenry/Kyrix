@@ -35,14 +35,16 @@ function USMap(args_) {
         colorScheme: args.colorScheme,
         projection: args.projection,
         stateColorCount: args.state.colorCount,
-        stateRateRange: args.state.range
+        stateRateRange: args.state.range,
+        stateRateStep: args.state.step
     };
     if ("county" in args) {
         this.countyTable = args.county.table;
         this.countyRateCol = args.county.column;
         this.params = Object.assign({}, this.params, {
             countyColorCount: args.county.colorCount,
-            countyRateRange: args.county.range
+            countyRateRange: args.county.range,
+            countyRateStep: args.county.step
         });
     }
 }
@@ -205,18 +207,21 @@ function getUSMapRenderer(renderer) {
         // get scale threshold domain
         var lo = params.stateRateRange[0];
         var hi = params.stateRateRange[1];
-        var step = (hi - lo) / params.stateColorCount;
+        var step;
+        if (params.stateRateStep > 0) step = params.stateRateStep;
+        else step = (hi - lo) / params.stateColorCount;
         var scaleDomain = [lo];
         while (scaleDomain.length < params.stateColorCount) {
             var last = scaleDomain[scaleDomain.length - 1];
             last += step;
+            if (last > hi) break;
             scaleDomain.push(last);
         }
 
         var color = d3
             .scaleThreshold()
             .domain(scaleDomain)
-            .range(d3[params.colorScheme][params.stateColorCount + 1]);
+            .range(d3[params.colorScheme][scaleDomain.length + 1]);
 
         g.selectAll("path")
             .data(data)
@@ -239,10 +244,8 @@ function getUSMapRenderer(renderer) {
             "usmap_" + args.usmapId.substring(0, args.usmapId.indexOf("_"));
         var params = args.renderingParams[rpKey];
 
-        var bkgRectWidth = 570 + (params.stateColorCount - 7) * 60;
         var bkgRectHeight = 80;
         var bkgRectXOffset = 50;
-        var legendRectStartXOffset = bkgRectWidth + bkgRectXOffset - 60;
         var legendRectY = 32;
         var legendRectWidth = 60;
         var legendRectHeight = 16;
@@ -256,19 +259,24 @@ function getUSMapRenderer(renderer) {
         // get scale threshold domain
         var lo = params.stateRateRange[0];
         var hi = params.stateRateRange[1];
-        var step = (hi - lo) / params.stateColorCount;
+        var step;
+        if (params.stateRateStep > 0) step = params.stateRateStep;
+        else step = (hi - lo) / params.stateColorCount;
         var scaleDomain = [lo];
         while (scaleDomain.length < params.stateColorCount) {
             var last = scaleDomain[scaleDomain.length - 1];
             last += step;
+            if (last > hi) break;
             scaleDomain.push(last);
         }
 
         var color = d3
             .scaleThreshold()
             .domain(scaleDomain)
-            .range(d3[params.colorScheme][params.stateColorCount + 1]);
+            .range(d3[params.colorScheme][scaleDomain.length + 1]);
 
+        var bkgRectWidth = 570 + (scaleDomain.length - 7) * 60;
+        var legendRectStartXOffset = bkgRectWidth + bkgRectXOffset - 60;
         g.append("rect")
             .attr("x", width - bkgRectWidth - bkgRectXOffset)
             .attr("y", 0)
@@ -305,12 +313,12 @@ function getUSMapRenderer(renderer) {
         // axis ticks
         var axisScale = d3
             .scaleLinear()
-            .domain([lo, hi])
-            .rangeRound([
+            .domain([lo, scaleDomain[scaleDomain.length - 1]])
+            .range([
                 width - legendRectStartXOffset,
                 width -
                     legendRectStartXOffset +
-                    params.stateColorCount * legendRectWidth
+                    (scaleDomain.length - 1) * legendRectWidth
             ]);
         var axis = g
             .append("g")
@@ -368,10 +376,8 @@ function getUSMapRenderer(renderer) {
             "usmap_" + args.usmapId.substring(0, args.usmapId.indexOf("_"));
         var params = args.renderingParams[rpKey];
 
-        var bkgRectWidth = 570 + (params.countyColorCount - 7) * 60;
         var bkgRectHeight = 80;
         var bkgRectXOffset = 50;
-        var legendRectStartXOffset = bkgRectWidth + bkgRectXOffset - 60;
         var legendRectY = 32;
         var legendRectWidth = 60;
         var legendRectHeight = 16;
@@ -385,19 +391,24 @@ function getUSMapRenderer(renderer) {
         // get scale threshold domain
         var lo = params.countyRateRange[0];
         var hi = params.countyRateRange[1];
-        var step = (hi - lo) / params.countyColorCount;
+        var step;
+        if (params.countyRateStep > 0) step = params.countyRateStep;
+        else step = (hi - lo) / params.countyColorCount;
         var scaleDomain = [lo];
         while (scaleDomain.length < params.countyColorCount) {
             var last = scaleDomain[scaleDomain.length - 1];
             last += step;
+            if (last > hi) break;
             scaleDomain.push(last);
         }
         var color = d3
             .scaleThreshold()
             .domain(scaleDomain)
-            .range(d3[params.colorScheme][params.countyColorCount + 1]);
+            .range(d3[params.colorScheme][scaleDomain.length + 1]);
 
         // append a background rectangle
+        var bkgRectWidth = 570 + (scaleDomain.length - 7) * 60;
+        var legendRectStartXOffset = bkgRectWidth + bkgRectXOffset - 60;
         g.append("rect")
             .attr("x", width - bkgRectWidth - bkgRectXOffset)
             .attr("y", 0)
@@ -434,12 +445,12 @@ function getUSMapRenderer(renderer) {
         // axis ticks
         var axisScale = d3
             .scaleLinear()
-            .domain([lo, hi])
+            .domain([lo, scaleDomain[scaleDomain.length - 1]])
             .rangeRound([
                 width - legendRectStartXOffset,
                 width -
                     legendRectStartXOffset +
-                    params.countyColorCount * legendRectWidth
+                    (scaleDomain.length - 1) * legendRectWidth
             ]);
         var axis = g
             .append("g")
@@ -481,18 +492,21 @@ function getUSMapRenderer(renderer) {
         // get scale threshold domain
         var lo = params.countyRateRange[0];
         var hi = params.countyRateRange[1];
-        var step = (hi - lo) / params.countyColorCount;
+        var step;
+        if (params.countyRateStep > 0) step = params.countyRateStep;
+        else step = (hi - lo) / params.countyColorCount;
         var scaleDomain = [lo];
         while (scaleDomain.length < params.countyColorCount) {
             var last = scaleDomain[scaleDomain.length - 1];
             last += step;
+            if (last > hi) break;
             scaleDomain.push(last);
         }
 
         var color = d3
             .scaleThreshold()
             .domain(scaleDomain)
-            .range(d3[params.colorScheme][params.countyColorCount + 1]);
+            .range(d3[params.colorScheme][scaleDomain.length + 1]);
 
         g.selectAll("path")
             .data(data)

@@ -20,6 +20,10 @@
                     "minItems": 2,
                     "maxItems": 2
                 },
+                "step": {
+                    "type": "number",
+                    "default": 0
+                },
                 "colorCount": {
                     "type": "integer",
                     "default": 7,

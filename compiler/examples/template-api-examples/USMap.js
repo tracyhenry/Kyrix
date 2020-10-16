@@ -12,12 +12,14 @@ var args = {
         table: "state",
         column: "crimerate",
         range: [0, 582]
+        //        step: 0
         //        colorCount: 7
     },
     county: {
         table: "county",
         column: "crimerate",
         range: [0, 1792]
+        //        step: 0
         //        colorCount: 7
     }
     // colorScheme: "schemeYlOrRd"
