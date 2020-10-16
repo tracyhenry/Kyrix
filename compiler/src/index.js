@@ -470,6 +470,7 @@ function addUSMap(usmap, args) {
     this.addRenderingParams(rpDict);
 
     // ================== state map canvas ===================
+    var canvases = [];
     var stateMapCanvas;
     if ("pyramid" in args) stateMapCanvas = args.pyramid[0];
     else
@@ -518,6 +519,9 @@ function addUSMap(usmap, args) {
         ["State", usmap.tooltipAlias]
     );
     stateBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 0);
+
+    // add to canvases (return)
+    canvases.push(stateMapCanvas);
 
     // ==========  Views ===============
     if (!("view" in args)) {
@@ -611,6 +615,9 @@ function addUSMap(usmap, args) {
         );
         countyBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 1);
 
+        // add to canvases (return)
+        canvases.push(countyMapCanvas);
+
         // =============== jump ===============
         if (usmap.zoomType == "literal") {
             this.addJump(
@@ -619,7 +626,7 @@ function addUSMap(usmap, args) {
             this.addJump(
                 new Jump(countyMapCanvas, stateMapCanvas, "literal_zoom_out")
             );
-        } else {
+        } else if (usmap.zoomType == "jump") {
             var selector = new Function(
                 "row",
                 "args",
@@ -666,8 +673,8 @@ function addUSMap(usmap, args) {
         }
     }
 
-    return {canvas: stateMapCanvas, view: args.view ? args.view : view};
-} // end func addUSMap
+    return {pyramid: canvases, view: args.view ? args.view : view};
+}
 
 // Add a rendering parameter object
 function addRenderingParams(renderingParams) {

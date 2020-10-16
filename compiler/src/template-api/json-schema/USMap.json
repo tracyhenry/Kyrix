@@ -90,7 +90,7 @@
             "type": "integer"
         },
         "zoomType": {
-            "enum": ["literal", "jump"]
+            "enum": ["literal", "jump", "none"]
         },
         "legendTitle": {
             "type": "string",

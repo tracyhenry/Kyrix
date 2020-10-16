@@ -1,3 +1,6 @@
+/**
+ * Compared to the example in USMap/USMap.js, this example has more customization.
+ */
 // libraries
 const Project = require("../../src/index").Project;
 const USMap = require("../../src/template-api/USMap").USMap;
@@ -11,24 +14,25 @@ var args = {
     state: {
         table: "state",
         column: "crimerate",
-        range: [0, 582]
-        //        step: 0
-        //        colorCount: 7
+        range: [0, 582],
+        step: 100,
+        colorCount: 6
     },
     county: {
         table: "county",
         column: "crimerate",
-        range: [0, 1792]
-        //        step: 0
-        //        colorCount: 7
+        range: [0, 1792],
+        step: 300,
+        colorCount: 7
     },
     legendTitle: "Crime rate per 100,000 people",
-    tooltipAlias: "Crime rate"
-    // colorScheme: "schemeYlOrRd"
-    // projection: "geoAlbersUsa"
-    // stateMapWidth: 2000
-    // stateMapHeight: 1000
-    // zoomFactor: 6
+    tooltipAlias: "Crime rate",
+    zoomType: "literal",
+    colorScheme: "schemeBlues",
+    projection: "geoMercator",
+    stateMapWidth: 1500,
+    stateMapHeight: 750,
+    zoomFactor: 4
 };
 
 // build project
