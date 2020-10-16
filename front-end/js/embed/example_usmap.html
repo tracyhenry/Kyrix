@@ -120,39 +120,6 @@
                     .attr("y", vp["vpY"] / 6);
             };
             kyrix.on("pan", "county", addRectToState);
-
-            //change rendering color
-            var colors = ["red", "green", "blue"];
-            var colorSchemes = {
-                red: d3.schemeYlOrRd[9],
-                green: d3.schemeYlGn[9],
-                blue: d3.schemePuBu[9]
-            };
-            d3.select("#controldiv")
-                .append("select")
-                .attr(
-                    "style",
-                    "width : 150px; height : 40px; font-size : 30; display: inline-block;"
-                )
-                .on("change", function() {
-                    var colorsChoice = d3.select(this).property("value");
-                    kyrix.reRender("state", 0, {
-                        colorScheme: colorSchemes[colorsChoice]
-                    });
-                    kyrix.reRender("state", 1, {
-                        colorScheme: colorSchemes[colorsChoice]
-                    });
-                })
-                .selectAll("option")
-                .data(colors)
-                .enter()
-                .append("option")
-                .attr("value", function(d) {
-                    return d;
-                })
-                .text(function(d) {
-                    return d;
-                });
         </script>
     </head>
 </html>
