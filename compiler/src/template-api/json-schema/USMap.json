@@ -44,22 +44,16 @@
         "county": {"$ref": "#/definitions/canvas"},
         "colorScheme": {
             "enum": [
-                "schemeAccent",
                 "schemeBlues",
                 "schemeBrBG",
                 "schemeBuGn",
                 "schemeBuPu",
-                "schemeCategory10",
-                "schemeDark2",
                 "schemeGnBu",
                 "schemeGreens",
                 "schemeGreys",
                 "schemeOrRd",
                 "schemeOranges",
                 "schemePRGn",
-                "schemePaired",
-                "schemePastel1",
-                "schemePastel2",
                 "schemePiYG",
                 "schemePuBu",
                 "schemePuBuGn",
@@ -72,11 +66,7 @@
                 "schemeRdYlBu",
                 "schemeRdYlGn",
                 "schemeReds",
-                "schemeSet1",
-                "schemeSet2",
-                "schemeSet3",
                 "schemeSpectral",
-                "schemeTableau10",
                 "schemeYlGn",
                 "schemeYlGnBu",
                 "schemeYlOrBr",
@@ -98,6 +88,11 @@
         },
         "zoomFactor": {
             "type": "integer"
+        },
+        "legendTitle": {
+            "type": "string",
+            "maxLength": 80,
+            "default": ""
         }
     },
     "required": ["db", "state"],

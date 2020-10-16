@@ -34,6 +34,7 @@ function USMap(args_) {
     this.params = {
         colorScheme: args.colorScheme,
         projection: args.projection,
+        legendTitle: args.legendTitle,
         stateColorCount: args.state.colorCount,
         stateRateRange: args.state.range,
         stateRateStep: args.state.step
@@ -300,7 +301,7 @@ function getUSMapRenderer(renderer) {
                 return d;
             });
 
-        // caption text: crime rate per 100,000 people
+        // legend title
         g.append("text")
             .attr("x", width - bkgRectWidth - bkgRectXOffset + 10)
             .attr("y", captionY)
@@ -308,7 +309,7 @@ function getUSMapRenderer(renderer) {
             .attr("text-anchor", "start")
             .attr("font-weight", "bold")
             .attr("font-size", captionFontSize)
-            .text("Crime rate per 100,000 people");
+            .text(params.legendTitle);
 
         // axis ticks
         var axisScale = d3
@@ -432,7 +433,7 @@ function getUSMapRenderer(renderer) {
                 return d;
             });
 
-        // caption text: crime rate per 100,000 people
+        // legend title
         g.append("text")
             .attr("x", width - bkgRectWidth - bkgRectXOffset + 10)
             .attr("y", captionY)
@@ -440,7 +441,7 @@ function getUSMapRenderer(renderer) {
             .attr("text-anchor", "start")
             .attr("font-weight", "bold")
             .attr("font-size", captionFontSize)
-            .text("Crime rate per 100,000 people");
+            .text(params.legendTitle);
 
         // axis ticks
         var axisScale = d3

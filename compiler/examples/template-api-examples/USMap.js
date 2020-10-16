@@ -21,7 +21,8 @@ var args = {
         range: [0, 1792]
         //        step: 0
         //        colorCount: 7
-    }
+    },
+    legendTitle: "Crime rate per 100,000 people"
     // colorScheme: "schemeYlOrRd"
     // projection: "geoAlbersUsa"
     // stateMapWidth: 2000
