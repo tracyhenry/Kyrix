@@ -8,6 +8,8 @@ const View = require("./View").View;
 const Jump = require("./Jump").Jump;
 const Layer = require("./Layer").Layer;
 const Transform = require("./Transform").Transform;
+const getBodyStringOfFunction = require("./template-api/Utilities")
+    .getBodyStringOfFunction;
 
 /**
  *
@@ -496,17 +498,17 @@ function addUSMap(usmap, args) {
         `SELECT name, ${usmap.stateRateCol}, geomstr 
          FROM ${usmap.stateTable}`,
         usmap.db,
-        "",
-        ["name", "rate", "geomstr"],
+        usmap.getUSMapTransformFunc("stateMapTransform"),
+        ["bbox_x", "bbox_y", "name", "rate", "geomstr"],
         true
     );
     var stateBoundaryLayer = new Layer(stateMapTransform, false);
     stateMapCanvas.addLayer(stateBoundaryLayer);
     stateBoundaryLayer.addPlacement({
-        centroid_x: "full",
-        centroid_y: "full",
-        width: "full",
-        height: "full"
+        centroid_x: "col:bbox_x",
+        centroid_y: "col:bbox_y",
+        width: `con:${usmap.stateMapWidth / usmap.zoomFactor}`,
+        height: `con:${usmap.stateMapWidth / usmap.zoomFactor}`
     });
     stateBoundaryLayer.addRenderingFunc(
         usmap.getUSMapRenderer("stateMapRendering")
@@ -610,12 +612,58 @@ function addUSMap(usmap, args) {
         countyBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 1);
 
         // =============== jump ===============
-        this.addJump(
-            new Jump(stateMapCanvas, countyMapCanvas, "literal_zoom_in")
-        );
-        this.addJump(
-            new Jump(countyMapCanvas, stateMapCanvas, "literal_zoom_out")
-        );
+        if (usmap.zoomType == "literal") {
+            this.addJump(
+                new Jump(stateMapCanvas, countyMapCanvas, "literal_zoom_in")
+            );
+            this.addJump(
+                new Jump(countyMapCanvas, stateMapCanvas, "literal_zoom_out")
+            );
+        } else {
+            var selector = new Function(
+                "row",
+                "args",
+                `return args.layerId = ${stateMapCanvas.layers.length - 1}`
+            );
+            var newPredicates = function() {
+                return {};
+            };
+            var newViewportBody = function(row, args) {
+                var zoomFactor = REPLACE_ME_zoomfactor;
+                var vpW = args.viewportW;
+                var vpH = args.viewportH;
+                return {
+                    constant: [
+                        row.bbox_x * zoomFactor - vpW / 2,
+                        row.bbox_y * zoomFactor - vpH / 2
+                    ]
+                };
+            };
+            var newViewport = new Function(
+                "row",
+                "args",
+                getBodyStringOfFunction(newViewportBody).replace(
+                    /REPLACE_ME_zoomfactor/g,
+                    usmap.zoomFactor
+                )
+            );
+            var jumpName = function(row) {
+                return "County map of " + row.name;
+            };
+            this.addJump(
+                new Jump(
+                    stateMapCanvas,
+                    countyMapCanvas,
+                    "geometric_semantic_zoom",
+                    {
+                        selector: selector,
+                        viewport: newViewport,
+                        predicates: newPredicates,
+                        name: jumpName
+                    }
+                )
+            );
+        }
     }
 
     return {canvas: stateMapCanvas, view: args.view ? args.view : view};

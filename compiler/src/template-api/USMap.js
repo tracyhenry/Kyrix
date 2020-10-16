@@ -31,6 +31,7 @@ function USMap(args_) {
     this.stateMapWidth = args.stateMapWidth;
     this.stateMapHeight = args.stateMapHeight;
     this.zoomFactor = args.zoomFactor;
+    this.zoomType = args.zoomType;
     this.tooltipAlias = args.tooltipAlias;
     this.params = {
         colorScheme: args.colorScheme,
@@ -53,6 +54,36 @@ function USMap(args_) {
 
 function getUSMapTransformFunc(transformName) {
     //------------Transforms--------------------
+
+    function stateMapTransformFunc(row, width, height) {
+        var ret = [];
+
+        var projectionStr = "REPLACE_ME_projection";
+        var projection;
+        if (projectionStr == "geoAlbersUsa") {
+            projection = d3
+                .geoAlbersUsa()
+                .scale(width)
+                .translate([width / 2, height / 2]);
+        } else {
+            projection = d3
+                .geoMercator()
+                .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
+                .center([-98.5, 39.5])
+                .translate([width / 2, height / 2]);
+        }
+
+        var path = d3.geoPath().projection(projection);
+        var feature = JSON.parse(row[2]);
+        var centroid = path.centroid(feature);
+        ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
+        ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
+        ret.push(row[0]);
+        ret.push(row[1]);
+        ret.push(row[2]);
+
+        return Java.to(ret, "java.lang.String[]");
+    }
 
     function countyMapStateBoundaryTransformFunc(row, width, height) {
         var ret = [];
@@ -135,6 +166,12 @@ function getUSMapTransformFunc(transformName) {
     //------------Choose Transform----------------
     var transform;
     switch (transformName) {
+        case "stateMapTransform":
+            transform = getBodyStringOfFunction(stateMapTransformFunc).replace(
+                /REPLACE_ME_projection/g,
+                this.params.projection
+            );
+            break;
         case "countyMapStateBoundaryTransform":
             transform = getBodyStringOfFunction(
                 countyMapStateBoundaryTransformFunc

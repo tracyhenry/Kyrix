@@ -89,6 +89,9 @@
         "zoomFactor": {
             "type": "integer"
         },
+        "zoomType": {
+            "enum": ["literal", "jump"]
+        },
         "legendTitle": {
             "type": "string",
             "maxLength": 80,
@@ -109,12 +112,16 @@
         "properties": {
             "zoomFactor": {
                 "default": 6
+            },
+            "zoomType": {
+                "default": "literal"
             }
         }
     },
     "else": {
         "properties": {
-            "zoomFactor": {"type": "null"}
+            "zoomFactor": {"type": "null"},
+            "zoomType": {"type": "null"}
         }
     }
 }
