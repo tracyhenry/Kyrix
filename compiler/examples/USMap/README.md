@@ -10,8 +10,8 @@ This example app has two canvases. The top-level canvas shows state-level US cri
 # Installation Instructions for the Impatient
 After running `sudo ./run-kyrix.sh --nba`, open another terminal tab and run the following commands:
 ```
-wget https://www.dropbox.com/s/youvfap909mk1m3/usmap_db_psql.sql     # download data
-sudo ./docker-scripts/load-sql.sh usmap_db_psql.sql --dbname usmap   # load data into the database, must be run in root folder
+wget https://www.dropbox.com/s/xi7bhcuxza2a0n9/usmap_new.sql         # download data
+sudo ./docker-scripts/load-sql.sh usmap_new.sql --dbname usmap       # load data into the database, must be run in root folder
 cp docker-scripts/compile.sh compiler/examples/USMap/compile.sh      # copy the compile script
 cd compiler/examples/USMap                                           # go to the app directory
 chmod +x compile.sh                                                  # make the compile script excutable
