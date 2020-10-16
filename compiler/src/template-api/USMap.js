@@ -31,6 +31,7 @@ function USMap(args_) {
     this.stateMapWidth = args.stateMapWidth;
     this.stateMapHeight = args.stateMapHeight;
     this.zoomFactor = args.zoomFactor;
+    this.tooltipAlias = args.tooltipAlias;
     this.params = {
         colorScheme: args.colorScheme,
         projection: args.projection,

@@ -511,6 +511,10 @@ function addUSMap(usmap, args) {
     stateBoundaryLayer.addRenderingFunc(
         usmap.getUSMapRenderer("stateMapRendering")
     );
+    stateBoundaryLayer.addTooltip(
+        ["name", "rate"],
+        ["State", usmap.tooltipAlias]
+    );
     stateBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 0);
 
     // ==========  Views ===============
@@ -598,6 +602,10 @@ function addUSMap(usmap, args) {
         });
         countyBoundaryLayer.addRenderingFunc(
             usmap.getUSMapRenderer("countyMapRendering")
+        );
+        countyBoundaryLayer.addTooltip(
+            ["name", "rate"],
+            ["County", usmap.tooltipAlias]
         );
         countyBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 1);
 

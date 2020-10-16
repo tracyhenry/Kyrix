@@ -93,6 +93,11 @@
             "type": "string",
             "maxLength": 80,
             "default": ""
+        },
+        "tooltipAlias": {
+            "type": "string",
+            "maxLength": 20,
+            "default": "Rate"
         }
     },
     "required": ["db", "state"],
