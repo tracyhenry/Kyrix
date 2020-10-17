@@ -194,11 +194,22 @@ function serializePath(path) {
     }, "");
 }
 
+function formatAjvErrorMessage(err) {
+    var errMsg = "args" + err.dataPath + " " + err.message;
+    if ("params" in err && "allowedValues" in err.params)
+        errMsg += " " + err.params.allowedValues.toString();
+    if ("params" in err && "additionalProperty" in err.params)
+        errMsg += " " + err.params.additionalProperty;
+
+    return errMsg;
+}
+
 module.exports = {
     textwrap,
     getBodyStringOfFunction,
     setPropertiesIfNotExists,
     parsePathIntoSegments,
     translatePathSegments,
-    serializePath
+    serializePath,
+    formatAjvErrorMessage
 };

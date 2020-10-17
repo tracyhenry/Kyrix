@@ -37,7 +37,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 cd $GIT_DIR/../
-FILES=$(git diff --cached --name-only --diff-filter=ACM "*.js" "*.jsx" "*.html" "*.css" | sed 's| |\\ |g')
+FILES=$(git diff --cached --name-only --diff-filter=ACM "*.js" "*.jsx" "*.html" "*.css" "*.json" | sed 's| |\\ |g')
 [ -z "$FILES" ] && exit 0
 
 # Prettify all selected files
