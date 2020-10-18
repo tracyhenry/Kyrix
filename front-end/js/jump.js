@@ -461,7 +461,13 @@ function registerJumps(viewId, svg, layerId) {
                 .on("end", function(d) {
                     if (Math.abs(dx) > 50) {
                         console.log("ended object drag!");
-                        currentObject.remove();
+                        // currentObject.remove();
+                        // d3.select(viewClass + ".viewsvg")
+                        //         .selectAll("*")
+                        //         .filter(function(d) {
+                        //             return d == p
+                        //         })
+                        //         .remove();
                         console.log(d);
                         // console.log(`d's (cx,cy) are (${parseInt(d.cx)+dx}, ${parseInt(d.cy)+dy})`);
                         // d.x = parseInt(d.x) + dx;
@@ -558,40 +564,44 @@ function registerJumps(viewId, svg, layerId) {
 
                         // TODO: update UI with new data, while DB gets update asynchronously 
                         // what if DB doesn't get update?
-                        doDBUpdate(viewId, canvasId, layerId, tableName, finalObjectKV);
+                        let dbProm = new Promise(() => {
+                            doDBUpdate(viewId, canvasId, layerId, tableName, finalObjectKV)
+                        });
                         // re-load dynamic data from db
                         // let visItem = svg.selectAll("rect")
                         //                 .filter(function() {
                         //                     return d3.select(this).attr()
                         //                 });
                         // visItem.remove();
-                        let canvasProm = getCurCanvas(viewId);
-                        canvasProm.then(() => {
+                        let canvasProm = new Promise(() => {
+                            getCurCanvas(viewId);
+                        });
+                        dbProm.then(() => {
+                            return canvasProm;
+                        }).then(() => {
                             if (!gvd.animation) {
                                 var curViewport = d3
                                     .select(viewClass + ".mainsvg:not(.static)")
                                     .attr("viewBox")
                                     .split(" ");
-                                // d3.select(viewClass + ".mainsvg:not(.static)").selectAll("*").remove();
                                 // d3.select(viewClass + ".viewsvg")
                                 //     .selectAll("*")
                                 //     .filter(function(d) {
                                 //         return d == p
                                 //     })
                                 //     .remove();
+                                currentObject.remove();
                                 RefreshDynamicLayers(
                                     viewId,
                                     curViewport[0],
                                     curViewport[1]
                                 );
                             }
-                            removePopovers(viewId);
-                        });  
-
-
-                        console.log(`d's after (cx,cy) are (${d.x}, ${d.y})`);     
-                        dx = 0;
-                        dy = 0;
+                            // removePopovers(viewId);
+                            console.log(`d's after (cx,cy) are (${d.x}, ${d.y})`);     
+                            dx = 0;
+                            dy = 0;
+                        });
                     }
                     
                 })
