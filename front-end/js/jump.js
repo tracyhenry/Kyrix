@@ -1,3 +1,4 @@
+
 function removePopovers(viewId) {
     var selector = ".popover,.kyrixtooltip";
     if (viewId != null) selector += ".view_" + viewId;
@@ -115,7 +116,10 @@ function postJump(viewId, jump) {
 
     // set the viewBox & opacity of the new .mainsvgs
     // because d3 tween does not get t to 1.0
-    d3.selectAll(viewClass + ".mainsvg:not(.static)")
+    
+
+    if (jumpType != "drag") {
+        d3.selectAll(viewClass + ".mainsvg:not(.static)")
         .attr(
             "viewBox",
             gvd.initialViewportX +
@@ -127,9 +131,11 @@ function postJump(viewId, jump) {
                 gvd.viewportHeight
         )
         .style("opacity", 1);
-    d3.selectAll(viewClass + ".mainsvg.static")
-        .attr("viewBox", "0 0 " + gvd.viewportWidth + " " + gvd.viewportHeight)
-        .style("opacity", 1);
+        d3.selectAll(viewClass + ".mainsvg.static")
+            .attr("viewBox", "0 0 " + gvd.viewportWidth + " " + gvd.viewportHeight)
+            .style("opacity", 1);
+    }
+    
 
     // display axes
     d3.select(viewClass + ".axesg")
@@ -354,7 +360,7 @@ function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs) {
         success: function(data, status) {
             console.log(`update succeeded with data: ${JSON.stringify(data)}`);
         },
-        async: true
+        async: false
     });
 }
 
@@ -445,50 +451,15 @@ function registerJumps(viewId, svg, layerId) {
                 })
                 .on("drag", function(d) {
                     console.log("attempting to drag object");
-                    // console.log(`object data: ${JSON.stringify(d)}`);
-                    // const newX = parseInt(currentObject.attr("x")) + d3.event.dx;
-                    // const newY = parseInt(currentObject.attr("y")) + d3.event.dy;
                     dx += d3.event.dx;
                     dy += d3.event.dy;
-                    currentObject.attr("transform", "translate(" + dx + "," + dy + ")");
-                    // currentObject.attr("x", d3.event.transform.x);
-                    // currentObject.attr("y", d3.event.transform.y);
-                    // currentObject.attr("cx", d3.event.transform.cx)
-                    // currentObject.attr("cy", d3.event.transform.cy);         
                     
-                    // currentObject.attr("x", d3.event.x).attr("y", d3.event.y).attr("cx", d3.event.x).attr("cy", d3.event.y);                
+                    currentObject.attr("transform", "translate(" + dx + "," + dy + ")"); 
                 })
                 .on("end", function(d) {
                     if (Math.abs(dx) > 50) {
                         console.log("ended object drag!");
-                        // currentObject.remove();
-                        // d3.select(viewClass + ".viewsvg")
-                        //         .selectAll("*")
-                        //         .filter(function(d) {
-                        //             return d == p
-                        //         })
-                        //         .remove();
                         console.log(d);
-                        // console.log(`d's (cx,cy) are (${parseInt(d.cx)+dx}, ${parseInt(d.cy)+dy})`);
-                        // d.x = parseInt(d.x) + dx;
-                        // d.y = parseInt(d.y) + dy;
-                        // d.cx = parseInt(d.x) + dx;
-                        // d.cy = parseInt(d.y) + dy;
-                        // const currX = parseInt(currentObject.attr("x"));
-                        // const currY = parseInt(currentObject.attr("y"));
-                        // currentObject
-                        //     .attr("cx", currX + dx)
-                        //     .attr("cy", currY + dy)
-                        //     .attr("x", currX + dx)
-                        //     .attr("y", currY + dy);
-                        // currentObject
-                        //     .data(d)
-                        //     .enter()
-                        //     .attr("x", function(d) { return d.x+dx; })
-                        //     .attr("y", function(d) { return d.y+dy; })
-                        //     .attr("cx", function(d) { return d.cx+dx; })
-                        //     .attr("cy", function(d) { return d.cy+dx; });
-
 
                         // gvd - data for current view, current canvas, transform, etc.
                         let canvasId = gvd.curCanvasId;
@@ -560,56 +531,56 @@ function registerJumps(viewId, svg, layerId) {
                         }
                         console.log(JSON.stringify(finalObjectKV));
                         
-
-
                         // TODO: update UI with new data, while DB gets update asynchronously 
                         // what if DB doesn't get update?
-                        let dbProm = new Promise(() => {
-                            doDBUpdate(viewId, canvasId, layerId, tableName, finalObjectKV)
+                        doDBUpdate(viewId, canvasId, layerId, tableName, finalObjectKV);
+
+                        // get the canvas object for the destination canvas
+                        var curViewport = d3
+                                .select(viewClass + ".mainsvg:not(.static)")
+                                .attr("viewBox")
+                                .split(" ");
+                        console.log(`viewbox: ${JSON.stringify(curViewport)}`);
+                        console.log(`viewport x: ${curViewport[0]} and viewport y: ${curViewport[1]}`);
+                        // let curViewport = getCurrentViewport(viewId);
+                        let jump = {"type": "drag"};
+                        preJump(viewId, jump);
+                        
+                        var gotCanvas = getCurCanvas(viewId);
+                        gotCanvas.then(function() {
+                            // static trim
+                            renderStaticLayers(viewId);
+
+                            // render
+                            
+                            RefreshDynamicLayers(viewId, curViewport[0], curViewport[1]);
+
+                            // clean up
+                            postJump(viewId, jump);
+
+                            d3.selectAll(viewClass + ".mainsvg:not(.static)")
+                            .attr(
+                                "viewBox",
+                                curViewport[0] +
+                                    " " +
+                                    curViewport[1] +
+                                    " " +
+                                    gvd.viewportWidth +
+                                    " " +
+                                    gvd.viewportHeight
+                            )
+                            .style("opacity", 1);
+                            d3.selectAll(viewClass + ".mainsvg.static")
+                            .attr("viewBox", "0 0 " + gvd.viewportWidth + " " + gvd.viewportHeight)
+                            .style("opacity", 1);
+                            gvd.initialViewportX = curViewport[0];
+                            gvd.initialViewportY = curViewport[1];
                         });
-                        // re-load dynamic data from db
-                        // let visItem = svg.selectAll("rect")
-                        //                 .filter(function() {
-                        //                     return d3.select(this).attr()
-                        //                 });
-                        // visItem.remove();
-                        let canvasProm = new Promise(() => {
-                            getCurCanvas(viewId);
-                        });
-                        dbProm.then(() => {
-                            return canvasProm;
-                        }).then(() => {
-                            if (!gvd.animation) {
-                                var curViewport = d3
-                                    .select(viewClass + ".mainsvg:not(.static)")
-                                    .attr("viewBox")
-                                    .split(" ");
-                                // d3.select(viewClass + ".viewsvg")
-                                //     .selectAll("*")
-                                //     .filter(function(d) {
-                                //         return d == p
-                                //     })
-                                //     .remove();
-                                currentObject.remove();
-                                RefreshDynamicLayers(
-                                    viewId,
-                                    curViewport[0],
-                                    curViewport[1]
-                                );
-                            }
-                            // removePopovers(viewId);
-                            console.log(`d's after (cx,cy) are (${d.x}, ${d.y})`);     
-                            dx = 0;
-                            dy = 0;
-                        });
+                        console.log(`d's after (cx,cy) are (${d.x}, ${d.y})`);     
                     }
                     
                 })
             );
-
-        // d3.select(this).on("start", dragstarted);
-        // d3.select(this).on("drag", dragged);
-        // d3.select(this).on("end", dragended);
 
         // register right click listener -- for update popover
         d3.select(this).on("auxclick", function (d) {
