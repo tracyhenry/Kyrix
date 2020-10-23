@@ -20,7 +20,12 @@ var dotsTransform = new Transform(
         );
         return Java.to(ret, "java.lang.String[]");
     },
-    ["id", "x", "y"],
+    {
+      "id": function (oldRow, width, height) { return oldRow; },
+      "x": function (oldRow, width, height) { return oldRow; },
+      // TODO: provide default function for rows that don't need reversing...
+      "y": function (oldRow, width, height) { return oldRow; },
+  },
     true
 );
 

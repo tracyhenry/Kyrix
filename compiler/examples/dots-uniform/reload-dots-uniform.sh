@@ -1,6 +1,8 @@
 #!/bin/bash
 # wrapped as a script for start-kyrix.sh
 
+PGCONN="postgresql://postgres:@localhost:5432/dots_uniform"
+
 if [ "x$PGCONN" = "x" ]; then echo "$0: PGCONN must be set."; exit 1; fi
 if [ "x$PSQL" ]; then PSQL=`which psql`; fi
 if [ ! -x $PSQL ]; then echo "$0: $PSQL not found - consider setting PSQL to the psql(1) path."; exit 1; fi
