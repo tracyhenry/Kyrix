@@ -370,6 +370,19 @@ function getUSMapRenderer(renderer) {
             );
         axis.style("font-size", tickFontSize);
         axis.select(".domain").remove();
+
+        g.append("g")
+          .append("path")
+          // .attr("x", width - bkgRectWidth - bkgRectXOffset)
+          // .attr("y", 40)
+          .attr("d", d3.symbol().type(d3.symbolCross).size(600))
+          .style("fill", "green")
+          .classed("addObject", true)
+          .attr(
+            "transform",
+            `translate(${width - bkgRectXOffset - 100},${legendRectY + 60})`
+          );
+
     }
 
     function countyMapStateBoundaryRendering(svg, data, args) {
