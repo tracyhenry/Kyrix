@@ -369,6 +369,37 @@ function registerJumps(viewId, svg, layerId) {
             // stop the click event from propagating up
             d3.event.stopPropagation();
 
+            console.log(
+              `selected object is T/F -> ${d3.select(this).classed("addObject")}`
+            );
+      
+            if (d3.select(this).classed("addObject")) {
+              // d3.selectAll(".view_" + viewId + ".layerg.layer" + )
+              // .select(".svg")
+      
+              let newG = svg.append("g");
+              newG
+                .append("path")
+                // .attr("x", width - bkgRectWidth - bkgRectXOffset)
+                // .attr("y", 40)
+                .attr("d", d3.symbol().size(8000).type(d3.symbolTriangle))
+                .style("fill", "lightblue");
+              // .attr("transform", `translate(${gvd.curCanvas.w - 100},${300})`);
+      
+              newG
+                .append("text")
+                .attr("dx", -30)
+                .attr("dy", ".35em")
+                // .attr("x", gvd.curCanvas.w)
+                // .attr("y", 300)
+                // .attr("transform", `translate(${gvd.curCanvas.w - 100 - 12},${300})`)
+                .text("5000\nvoters");
+      
+              newG.attr("transform", `translate(${gvd.curCanvas.w - 100},${300})`);
+      
+              return;
+            }
+
             // remove all popovers first
             removePopovers(viewId);
 
