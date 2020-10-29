@@ -42,6 +42,10 @@ var ssv = {
                 bboxW: 162,
                 bboxH: 132
             }
+        },
+        hover: {
+            boundary: "convexhull",
+            selector: "*"
         }
     },
     config: {

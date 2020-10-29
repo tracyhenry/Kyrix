@@ -265,6 +265,13 @@ function SSV(args) {
                 );
         }
         if (
+            args.marks.cluster.mode == "custom" &&
+            !("selector" in args.marks.hover)
+        )
+            throw new Error(
+                "Constructing SSV: hover selector (marks.hover.selector) missing for the custom cluster mode."
+            );
+        if (
             args.marks.hover.rankList.mode == "tabular" &&
             !("fields" in args.marks.hover.rankList)
         )
@@ -272,7 +279,7 @@ function SSV(args) {
                 "Constructing SSV: fields for tabular hover rankList (marks.hover.rankList.fields) is missing."
             );
     }
-    if ("boundary" in args.marks.hover)
+    if ("boundary" in args.marks.hover) {
         if (
             !(args.marks.hover.boundary == "convexhull") &&
             !(args.marks.hover.boundary == "bbox")
@@ -281,6 +288,14 @@ function SSV(args) {
                 "Constructing SSV: unrecognized hover boundary type " +
                     args.marks.hover.boundary
             );
+        if (
+            args.marks.cluster.mode == "custom" &&
+            !("selector" in args.marks.hover)
+        )
+            throw new Error(
+                "Constructing SSV: hover selector (marks.hover.selector) missing for the custom cluster mode."
+            );
+    }
     if ("tooltip" in args.marks.hover) {
         if (!("columns" in args.marks.hover.tooltip))
             throw new Error(
@@ -431,6 +446,8 @@ function SSV(args) {
     if ("boundary" in args.marks.hover)
         this.hoverParams.hoverBoundary = args.marks.hover.boundary;
     this.topk = this.hoverParams.topk != null ? this.hoverParams.topk : 0;
+    this.hoverSelector =
+        "selector" in args.marks.hover ? args.marks.hover.selector : null;
     this.tooltipColumns = this.tooltipAliases = null;
     if ("tooltip" in args.marks.hover) {
         this.tooltipColumns = args.marks.hover.tooltip.columns;
@@ -697,9 +714,6 @@ function getLayerRenderer() {
         var g = svg.select("g:last-of-type");
         var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
         var params = args.renderingParams[rpKey];
-        data.forEach(d => {
-            d.clusterAgg = JSON.parse(d.clusterAgg);
-        });
         g.selectAll(".clusternum")
             .data(data)
             .enter()
@@ -707,7 +721,7 @@ function getLayerRenderer() {
             .text(function(d) {
                 return d3.format(
                     params.numberFormat
-                )(+d.clusterAgg["count(*)"]);
+                )(+JSON.parse(d.clusterAgg)["count(*)"]);
             })
             .attr("x", function(d) {
                 return +d.cx;
@@ -1447,6 +1461,12 @@ function getLayerRenderer() {
                 });
     }
 
+    function customClusterModeHoverBody() {
+        var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
+        params.processClusterAgg(data, params);
+    }
+
     function KDEObjectHoverBody() {
         // no topk for KDE for now
         var objectRenderer = params.hoverCustomRenderer;
@@ -1495,6 +1515,14 @@ function getLayerRenderer() {
             renderFuncBody += getBodyStringOfFunction(
                 renderObjectClusterNumBody
             );
+        if (this.hoverSelector) {
+            renderFuncBody +=
+                'var hoverSelector = "' + this.hoverSelector + '";\n';
+            renderFuncBody += getBodyStringOfFunction(
+                customClusterModeHoverBody
+            );
+            renderFuncBody += getBodyStringOfFunction(regularHoverBody);
+        }
     } else if (this.clusterMode == "circle") {
         // render circle
         renderFuncBody = getBodyStringOfFunction(renderCircleBody);
