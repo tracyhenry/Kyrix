@@ -378,25 +378,91 @@ function registerJumps(viewId, svg, layerId) {
               // .select(".svg")
       
               let newG = svg.append("g");
-              newG
+
+              let triangleG = newG.append("g");
+
+              let triangle = triangleG
                 .append("path")
                 // .attr("x", width - bkgRectWidth - bkgRectXOffset)
                 // .attr("y", 40)
-                .attr("d", d3.symbol().size(8000).type(d3.symbolTriangle))
+                .attr("d", d3.symbol().size(5000).type(d3.symbolTriangle))
                 .style("fill", "lightblue");
               // .attr("transform", `translate(${gvd.curCanvas.w - 100},${300})`);
       
-              newG
+              let triangleText = triangleG
                 .append("text")
-                .attr("dx", -30)
+                .attr("id", "triangle")
+                .attr("dx", -20)
                 .attr("dy", ".35em")
                 // .attr("x", gvd.curCanvas.w)
                 // .attr("y", 300)
                 // .attr("transform", `translate(${gvd.curCanvas.w - 100 - 12},${300})`)
-                .text("5000\nvoters");
+                .text("2000");
+
+              let updateLabel = triangleG
+                .append("text")
+                .attr("id", "slider-label")
+                .attr("dx", 100)
+                .attr("dy", -200)
+                // .attr("x", gvd.curCanvas.w)
+                // .attr("y", 300)
+                // .attr("transform", `translate(${gvd.curCanvas.w - 100 - 12},${300})`)
+                .text("Increase in Dem. Voters");
+
+              let sliderVertical = d3
+                  .sliderLeft()
+                  .max(1000.00)
+                  .min(10000.00)
+                  .height(300)
+                  .tickFormat(d3.format(',.0f'))
+                  .ticks(10)
+                  .default(5000.00)
+                  .on("onchange", val => {
+                    console.log("in onchange slider")
+                    d3.select("#triangle").text(d3.format(',.0f')(val));
+                  });
+              
+              let gVertical = newG
+                .append("svg")
+                .attr("width", 200)
+                .attr("height", 400)
+                // .append("text")
+                // .attr("dx", 0)
+                // .attr("dy", -100)
+                // .text("Increase in Population")
+                .append("g")
+                .attr("transform", `translate(150,50)`);
+                
+
+              gVertical.call(sliderVertical);
+
+              // Vertical
+            //   var sliderVertical = d3
+            //   .sliderLeft()
+            //   .min(0)
+            //   .max(10000)
+            //   .height(300)
+            //   .tickFormat(d3.format(',.0f'))
+            //   .ticks(5)
+            //   .default(5000)
+            //   .on('onchange', val => {
+            //     console.log("in slider onchange");
+            //     d3.select('text#triangle').text(val);
+            //   });
+
+            // var gVertical = newG
+            //   .append('svg')
+            //   .attr('width', 300)
+            //   .attr('height', 600)
+            //   .append('g')
+            //   .attr('transform', 'translate(60,30)');
+
+            // gVertical.call(sliderVertical);
+
       
-              newG.attr("transform", `translate(${gvd.curCanvas.w - 100},${300})`);
-      
+              newG.attr("transform", `translate(${gvd.curCanvas.w - 250},${200})`);
+              triangleG.attr("transform", "translate(0,200)");
+
               return;
             }
 
