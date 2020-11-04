@@ -386,7 +386,8 @@ function registerJumps(viewId, svg, layerId) {
                 // .attr("x", width - bkgRectWidth - bkgRectXOffset)
                 // .attr("y", 40)
                 .attr("d", d3.symbol().size(5000).type(d3.symbolTriangle))
-                .style("fill", "lightblue");
+                .style("fill", "royalblue")
+                .attr('party', 'dem');
               // .attr("transform", `translate(${gvd.curCanvas.w - 100},${300})`);
       
               let triangleText = triangleG
@@ -397,17 +398,10 @@ function registerJumps(viewId, svg, layerId) {
                 // .attr("x", gvd.curCanvas.w)
                 // .attr("y", 300)
                 // .attr("transform", `translate(${gvd.curCanvas.w - 100 - 12},${300})`)
+                .style('fill', 'white')
                 .text("2000");
 
-              let updateLabel = triangleG
-                .append("text")
-                .attr("id", "slider-label")
-                .attr("dx", 100)
-                .attr("dy", -200)
-                // .attr("x", gvd.curCanvas.w)
-                // .attr("y", 300)
-                // .attr("transform", `translate(${gvd.curCanvas.w - 100 - 12},${300})`)
-                .text("Increase in Dem. Voters");
+              
 
               let sliderVertical = d3
                   .sliderLeft()
@@ -430,39 +424,158 @@ function registerJumps(viewId, svg, layerId) {
                 // .attr("dx", 0)
                 // .attr("dy", -100)
                 // .text("Increase in Population")
-                .append("g")
+                .append("g");
+
+              gVertical
                 .attr("transform", `translate(150,50)`);
+
+              let updateLabel = newG
+              .append("text")
+              .attr("id", "slider-label")
+              // .attr("dx", 0)
+              // .attr("dy", -200)
+              // .attr("x", gvd.curCanvas.w)
+              // .attr("y", 300)
+              // .attr("transform", `translate(${gvd.curCanvas.w - 100 - 12},${300})`)
+              .text("Increase in Dem. Voters");
                 
 
               gVertical.call(sliderVertical);
-
-              // Vertical
-            //   var sliderVertical = d3
-            //   .sliderLeft()
-            //   .min(0)
-            //   .max(10000)
-            //   .height(300)
-            //   .tickFormat(d3.format(',.0f'))
-            //   .ticks(5)
-            //   .default(5000)
-            //   .on('onchange', val => {
-            //     console.log("in slider onchange");
-            //     d3.select('text#triangle').text(val);
-            //   });
-
-            // var gVertical = newG
-            //   .append('svg')
-            //   .attr('width', 300)
-            //   .attr('height', 600)
-            //   .append('g')
-            //   .attr('transform', 'translate(60,30)');
-
-            // gVertical.call(sliderVertical);
-
       
               newG.attr("transform", `translate(${gvd.curCanvas.w - 250},${200})`);
               triangleG.attr("transform", "translate(0,200)");
 
+              // triangle dragging handler
+              let dx = 0;
+              let dy = 0;
+              triangle.call(
+                d3
+                  .drag()
+                  .on("start", function (d) {
+                    console.log("starting drag");
+                    dx = 0;
+                    dy = 0;
+                  })
+                  .on("drag", function (d) {
+                    dx += d3.event.dx;
+                    dy += d3.event.dy;
+                    triangle.attr("transform", "translate(" + dx + "," + dy + ")");
+                    triangleText.attr("transform", "translate(" + dx + "," + dy + ")");
+
+                    const triangle_bbox = triangle.node().getBoundingClientRect();
+                    const tri_minx = triangle_bbox.left;
+                    const tri_miny = triangle_bbox.top;
+                    const tri_maxx = triangle_bbox.right;
+                    const tri_maxy = triangle_bbox.bottom;
+                    // const tri_cx = (tri_minx + tri_maxx) / 2.0  + 650;
+                    // const tri_cy = (tri_miny + tri_maxy) / 2.0  + 250;
+                    const tri_cx = (tri_minx + tri_maxx) / 2.0;
+                    const tri_cy = (tri_miny + tri_maxy) / 2.0;
+                    // let tri_startx = gvd.curCanvas.w - 250;
+                    // let tri_starty = 400;
+                    // let tri_cx = tri_startx + dx;
+                    // let tri_cy = tri_starty + dy;
+                    // let min_dist = 10000.0;
+                    //   let min_obj;
+                    d3.select(".mainsvg").select("g").selectAll("path")
+                        .each((d,i) => {
+                          let currentObject = d3.select(".mainsvg")
+                              .select("g")
+                              .selectAll("path")
+                              .filter(function (data) {
+                                return data == d;
+                            });
+                          const region_bbox = currentObject.node().getBoundingClientRect();
+                          const minx = region_bbox.left;
+                          const miny = region_bbox.top;
+                          const maxx = region_bbox.right;
+                          const maxy = region_bbox.bottom;
+                          const cx = (minx + maxx) / 2.0;
+                          const cy = (miny + maxy) / 2.0;
+                          // const cx = parseFloat(d.cx);
+                          // const cy = parseFloat(d.cy);
+                          // const minx = parseFloat(d.minx);
+                          // const miny = parseFloat(d.miny);
+                          // const maxx = parseFloat(d.maxx);
+                          // const maxy = parseFloat(d.maxy);
+                          const width = maxx - minx;
+                          const height = maxy - miny;
+                          // console.log(`object ${i} has screen bbox: ${JSON.stringify(region_bbox)}`);
+                          // console.log(`kyrix object ${i} has data: ${JSON.stringify(d)}`);
+                          const r = Math.min(width,height) / 2.0;
+                          // let overlapsX = tri_minx >= minx && maxx >= tri_maxx;
+                          // let overlapsY = tri_miny >= miny && maxy >= tri_maxy;
+                          // let tri_dist = Math.sqrt((tri_cx - cx)**2 + (tri_cy - cy)**2);
+                          let tri_dist = Math.abs(tri_cx - cx) + Math.abs(tri_cy - cy);
+                          if (tri_dist < r) {
+                            console.log(`triangle is within ${tri_dist} of object ${i}`);
+                            // min_dist = tri_dist;
+                            // min_obj = d;
+                            // do some stuff
+                            d3.select(".mainsvg").select("g").selectAll("path")
+                            .style("stroke", "white")
+                            .style("stroke-width", "0.5");
+
+                            
+                            currentObject
+                              .style("stroke", "green")
+                              .style("stroke-width", "5.0");
+                          }
+                      });
+
+
+                  })
+                  .on("end", function (d) {
+                    if (Math.abs(dx) > 50 || Math.abs(dy) > 50) {
+                      // console.log("ended object drag");
+                      // console.log(`triangle transform: ${d3.zoomTransform(triangle.node())}`);
+                      d3.select(".mainsvg").select("g").selectAll("path")
+                      .style("stroke", "white")
+                      .style("stroke-width", "0.5");
+
+                      
+                      dx = 0;
+                      dy = 0;
+                      triangle.attr("transform", "translate(0,0)");
+                      triangleText.attr("transform", "translate(0,0)");
+                    }
+                  })
+              );
+
+              triangle.on("click", () => {
+                let party = triangle.attr('party');
+                console.log(`triangle is currently party: ${party}`);
+                if (party == "dem") {
+                  triangle
+                    .style('fill', 'red')
+                    .attr('party', 'rep');
+                  updateLabel
+                    .text("Increase in Rep. Voters");
+                } else {
+                  triangle
+                    .style('fill', 'royalblue')
+                    .attr('party', 'dem');
+                  updateLabel
+                    .text("Increase in Dem. Voters");
+                }
+              });
+              
+
+                // svg.select("g").selectAll("path")
+              //   // .data(data)
+              //   // .enter()
+              //   // .append("path")
+              //   // .attr("d", function(d) {
+              //   //     var feature = JSON.parse(d.geomstr);
+              //   //     return path(feature);
+              //   // })
+              //   .style("stroke", "green")
+              //   .style("stroke-width", "1.0");
+              //   // .style("fill", function(d) {
+              //   //     return color(d.rate);
+              //   // });
+              
+              
               return;
             }
 
