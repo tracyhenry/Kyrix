@@ -23,7 +23,7 @@ flareCanvas.addLayer(flarePackLayer);
 flarePackLayer.addRenderingFunc(renderers.flarePackRendering);
 
 // ================== Views ===================
-var view = new View("flare", 0, 0, 1000, 1000);
+var view = new View("flare", 1000, 1000);
 p.addView(view);
 p.setInitialStates(view, flareCanvas, 0, 0, {
     layer0: {

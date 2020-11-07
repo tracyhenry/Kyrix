@@ -63,7 +63,7 @@ c3BackgroundLayer.addPlacement(placements.c3BackgroundPlacement);
 c3BackgroundLayer.addRenderingFunc(renderers.backgroundRendering);
 
 // ================== Views ===================
-var view = new View("forest", 0, 0, 1400, 800);
+var view = new View("forest", 1400, 800);
 p.addView(view);
 p.setInitialStates(view, c1BackgroundCanvas, 0, 0);
 
