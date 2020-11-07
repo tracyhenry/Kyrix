@@ -185,7 +185,8 @@ function pageOnLoad(serverAddr, kyrixRawDiv) {
     var kyrixDiv = d3.select(kyrixRawDiv).classed("kyrixdiv", true);
 
     // get information about the first canvas to render
-    $.ajax({
+    // and return a promise representing whether kyrix is loaded
+    return $.ajax({
         type: "GET",
         url: globalVar.serverAddr + "/first",
         data: {},
@@ -276,7 +277,7 @@ function pageOnLoad(serverAddr, kyrixRawDiv) {
                         else gvd.predicates.push({});
                 }
 
-                // Set kyrixDiv max size (don't allow div to get bigger than svg)
+                // Set viewdiv max size (don't allow div to get bigger than svg)
                 var visWidth = gvd.viewportWidth + param.viewPadding * 2;
                 var visHeight = gvd.viewportHeight + param.viewPadding * 2;
                 // visDiv
@@ -345,7 +346,4 @@ function pageOnLoad(serverAddr, kyrixRawDiv) {
             }
         }
     });
-
-    // return div node instead of selection
-    return kyrixDiv.node();
 }

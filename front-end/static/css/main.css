@@ -39,6 +39,7 @@ body {
 }
 
 #jumppopover {
+    position: absolute;
     display: block;
     opacity: 0.9;
 }
