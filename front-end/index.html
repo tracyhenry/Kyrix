@@ -1,5 +1,9 @@
 <html>
-    <body></body>
+    <body>
+        <div>
+            <!-- kyrix div -->
+        </div>
+    </body>
     <head>
         <meta name="referrer" content="no-referrer" />
         <link rel="stylesheet" type="text/css" href="/static/css/main.css" />
@@ -33,7 +37,15 @@
         <script src="/js/jump.js"></script>
         <script src="/js/staticLayers.js"></script>
         <script>
-            $(document).ready(pageOnLoad());
+            $(document).ready(
+                pageOnLoad(
+                    "",
+                    d3
+                        .select("body")
+                        .select("div")
+                        .node()
+                )
+            );
         </script>
     </head>
 </html>

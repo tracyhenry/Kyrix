@@ -5,67 +5,53 @@ function drawZoomButtons(viewId) {
 
     // create buttons if not existed
     if (d3.select(viewClass + ".gobackbutton").empty())
-        d3.select(".kyrixdiv")
+        d3.select(viewClass + ".kyrixbuttondiv")
             .append("button")
             .classed("view_" + viewId + " gobackbutton", true)
             .attr("disabled", "true")
             .classed("btn", true)
             .classed("btn-default", true)
-            .classed("btn-lg", true)
             .html('<span class="glyphicon glyphicon-arrow-left"></span>');
     if (d3.select(viewClass + ".zoominbutton").empty())
-        d3.select(".kyrixdiv")
+        d3.select(viewClass + ".kyrixbuttondiv")
             .append("button")
             .classed("view_" + viewId + " zoominbutton", true)
             .attr("disabled", "true")
             .classed("btn", true)
             .classed("btn-default", true)
-            .classed("btn-lg", true)
             .html('<span class="glyphicon glyphicon-zoom-in"></span>');
     if (d3.select(viewClass + ".zoomoutbutton").empty())
-        d3.select(".kyrixdiv")
+        d3.select(viewClass + ".kyrixbuttondiv")
             .append("button")
             .classed("view_" + viewId + " zoomoutbutton", true)
             .attr("disabled", "true")
             .classed("btn", true)
             .classed("btn-default", true)
-            .classed("btn-lg", true)
             .html('<span class="glyphicon glyphicon-zoom-out"></span>');
 
-    // position the buttons at fixed positions in the top-left of the kyrixdiv
+    // deciding button size according to vis size
     var bbox = d3
-        .select("#containerSvg")
+        .select(viewClass + ".kyrixviewdiv")
         .node()
         .getBoundingClientRect();
-
-    // in pageOnLoad.js, we have curViewport[2] = (containerW * containerW) / realW
-    // realW / containerW = (containerW * containerW) / curViewport[2] / containerW
-    //                    = containerW / curViewport[2]
-    var containerW = d3.select("#containerSvg").attr("width");
-    var curViewport = d3.select("#containerSvg").attr("viewBox");
-    var curViewportW;
-    if (curViewport == null) curViewportW = containerW;
-    else curViewportW = curViewport.split(" ")[2];
-    var bLeft =
-        +bbox.left +
-        (+d3.select(viewClass + ".viewsvg").attr("x") * containerW) /
-            curViewportW;
-    var bTop =
-        +bbox.top +
-        (+(+d3.select(viewClass + ".viewsvg").attr("y")) * containerW) /
-            curViewportW;
-    var leftMargin = 50;
-    var topMargin = 80;
-    var dist = 50;
-    d3.select(viewClass + ".gobackbutton")
-        .style("top", bTop + topMargin + "px")
-        .style("left", bLeft - leftMargin + "px");
-    d3.select(viewClass + ".zoominbutton")
-        .style("top", bTop + topMargin + dist + "px")
-        .style("left", bLeft - leftMargin + "px");
-    d3.select(viewClass + ".zoomoutbutton")
-        .style("top", bTop + topMargin + dist * 2 + "px")
-        .style("left", bLeft - leftMargin + "px");
+    var minSize = Math.min(bbox.width, bbox.height);
+    var sizeThresholds = [400, 800, 1200];
+    var sizeClasses = ["btn-xs", "btn-sm", ""];
+    var sizeClass = "btn-lg";
+    for (var i = 0; i < sizeThresholds.length; i++)
+        if (minSize <= sizeThresholds[i]) {
+            sizeClass = sizeClasses[i];
+            break;
+        }
+    d3.selectAll(viewClass + ".kyrixbuttondiv button")
+        .classed("btn-xs", false)
+        .classed("btn-sm", false)
+        .classed("btn-lg", false);
+    if (sizeClass != "")
+        d3.selectAll(viewClass + ".kyrixbuttondiv button").classed(
+            sizeClass,
+            true
+        );
 }
 
 // called after a new canvas is completely rendered

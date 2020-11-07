@@ -139,43 +139,41 @@ function processStyles() {
     }
 }
 
-// resize container svg to fit viewbox in kyrixdiv bounds
-function resizeKyrixSvg() {
-    // get containerSvg size
-    var containerW = d3.select("#containerSvg").attr("width");
-    var containerH = d3.select("#containerSvg").attr("height");
+// resize kyrix vis to fit in vis div bounds
+// also, call drawZoomButton to make buttons smaller/bigger
+function resizeKyrixStuff(viewId) {
+    drawZoomButtons(viewId);
 
-    // Update all elements of class kyrixdiv
-    var divs = document.getElementsByClassName("kyrixdiv");
-    for (var i = divs.length - 1; i >= 0; i--) {
-        var div = divs[i];
+    // for vis
+    var viewClass = ".view_" + viewId;
+    var div = d3.select(viewClass + ".kyrixvisdiv");
 
-        // maximum space allowed in the div
-        var bbox = div.getBoundingClientRect();
-        var maxW = bbox.width - param.buttonAreaWidth;
-        var maxH = bbox.height; // top margin == 0
+    // maximum space allowed in the div
+    var bbox = div.node().getBoundingClientRect();
+    var maxW = bbox.width;
+    var maxH = bbox.height;
 
-        // maximum space according to the ratio of container svg
-        var realW = Math.min(maxW, (maxH * containerW) / containerH);
-        var realH = (realW * containerH) / containerW;
+    // user-specified width/height
+    var viewSvg = d3.select(viewClass + ".viewsvg");
+    var viewWidth = viewSvg.attr("width");
+    var viewHeight = viewSvg.attr("height");
 
-        // set viewbox accordingly
-        var svg = div.firstElementChild;
-        svg.setAttribute(
-            "viewBox",
-            "0 0 " +
-                (containerW * containerW) / realW +
-                " " +
-                (containerH * containerH) / realH
-        );
-    }
+    // maximum space according to the ratio of view svg
+    var realW = Math.min(maxW, (maxH * viewWidth) / viewHeight);
+    var realH = (realW * viewHeight) / viewWidth;
+
+    // set viewbox accordingly
+    div.select("svg").attr(
+        "viewBox",
+        "0 0 " +
+            (viewWidth * viewWidth) / realW +
+            " " +
+            (viewHeight * viewHeight) / realH
+    );
 }
 
 // set up page
-function pageOnLoad(serverAddr) {
-    // this function can only be called once
-    if (globalVar.serverAddr != "N/A")
-        throw new Error("kyrix initialized already!");
+function pageOnLoad(serverAddr, kyrixRawDiv) {
     if (serverAddr != null) {
         // get rid of the last '/'
         if (serverAddr[serverAddr.length - 1] == "/")
@@ -184,10 +182,7 @@ function pageOnLoad(serverAddr) {
     } else globalVar.serverAddr = "";
 
     // create a div where kyrix vis lives in
-    var kyrixDiv = d3
-        .select("body")
-        .append("div")
-        .classed("kyrixdiv", true);
+    var kyrixDiv = d3.select(kyrixRawDiv).classed("kyrixdiv", true);
 
     // get information about the first canvas to render
     $.ajax({
@@ -224,44 +219,37 @@ function pageOnLoad(serverAddr) {
             d3.select(window).on("resize.popover", removePopovers);
             //d3.select(window).on("click", removePopovers);
 
-            // set up container SVG
-            var containerW = 0,
-                containerH = 0;
+            // create view layouts
             var viewSpecs = globalVar.project.views;
-            for (var i = 0; i < viewSpecs.length; i++) {
-                containerW = Math.max(
-                    containerW,
-                    viewSpecs[i].minx +
-                        viewSpecs[i].width +
-                        param.viewPadding * 2
-                );
-                containerH = Math.max(
-                    containerH,
-                    viewSpecs[i].miny +
-                        viewSpecs[i].height +
-                        param.viewPadding * 2
-                );
-            }
-
-            // Set kyrixDiv max size (don't allow div to get bigger than svg)
-            kyrixDiv
-                .style("max-width", containerW + param.buttonAreaWidth + "px")
-                .style("max-height", containerH + "px");
-
-            // Create container svg and set its top-left corner at (0, 90) in kyrixDiv
-            kyrixDiv
-                .append("svg")
-                .attr("id", "containerSvg")
-                .style("top", "0px") // top margin = 0
-                .style("left", param.buttonAreaWidth + "px") // left margin == 20 + button_width + 20
-                .attr("width", containerW)
-                .attr("height", containerH);
-
             for (var i = 0; i < viewSpecs.length; i++) {
                 // get a reference for current globalvar dict
                 var viewId = viewSpecs[i].id;
                 globalVar.views[viewId] = {};
                 var gvd = globalVar.views[viewId];
+
+                // create a view div, a button div and a vis div
+                var viewDiv = kyrixDiv
+                    .append("div")
+                    .classed("kyrixviewdiv", true)
+                    .classed("view_" + viewId, true);
+                var buttonDiv = viewDiv
+                    .append("div")
+                    .classed("kyrixbuttondiv", true)
+                    .classed("view_" + viewId, true);
+                var visDiv = viewDiv
+                    .append("div")
+                    .classed("kyrixvisdiv", true)
+                    .classed("view_" + viewId, true);
+
+                // make things responsive
+                new ResizeSensor(
+                    visDiv.node(),
+                    (function(viewId) {
+                        return function() {
+                            resizeKyrixStuff(viewId);
+                        };
+                    })(viewId)
+                );
 
                 // initial setup
                 gvd.initialViewportX = viewSpecs[i].initialViewportX;
@@ -288,12 +276,19 @@ function pageOnLoad(serverAddr) {
                         else gvd.predicates.push({});
                 }
 
+                // Set kyrixDiv max size (don't allow div to get bigger than svg)
+                var visWidth = gvd.viewportWidth + param.viewPadding * 2;
+                var visHeight = gvd.viewportHeight + param.viewPadding * 2;
+                // visDiv
+                //     .style("max-width", visWidth + "px")
+                //     .style("max-height",visHeight + "px");
+
                 // set up view svg
-                d3.select("#containerSvg")
+                visDiv
                     .append("svg")
                     .classed("view_" + viewId + " viewsvg", true)
-                    .attr("width", gvd.viewportWidth + param.viewPadding * 2)
-                    .attr("height", gvd.viewportHeight + param.viewPadding * 2)
+                    .attr("width", visWidth)
+                    .attr("height", visHeight)
                     .attr("x", viewSpecs[i].minx)
                     .attr("y", viewSpecs[i].miny)
                     .append("g")
@@ -349,12 +344,6 @@ function pageOnLoad(serverAddr) {
                 }
             }
         }
-    });
-
-    // add resize event listener to kyrixdiv
-    new ResizeSensor(kyrixDiv.node(), function() {
-        resizeKyrixSvg();
-        for (var viewId in globalVar.views) drawZoomButtons(viewId);
     });
 
     // return div node instead of selection

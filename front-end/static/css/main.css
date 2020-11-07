@@ -4,20 +4,38 @@ body {
 }
 
 .kyrixdiv {
-    overflow: hidden;
     width: 100%;
     height: 100%;
+    display: flex;
+    overflow: hidden;
 }
 
-#containerSvg {
+.kyrixviewdiv {
+    height: 100%;
+    display: flex;
+    overflow: hidden;
+}
+
+.kyrixvisdiv {
+    flex: 1 1 0;
+    overflow: hidden;
+}
+
+.kyrixbuttondiv {
+    width: auto;
+    height: auto;
+    overflow: hidden;
+}
+
+.kyrixbuttondiv button {
     display: block;
-    position: absolute;
-    margin: auto;
+    margin: 6px;
 }
 
 .viewsvg {
     display: block;
-    margin: auto;
+    margin-top: 5px;
+    margin-left: 5px;
 }
 
 #jumppopover {
@@ -48,16 +66,4 @@ body {
 #jumppopover > div {
     text-align: center;
     font-family: "Source Serif Pro", sans-serif !important;
-}
-
-.gobackbutton {
-    position: absolute;
-}
-
-.zoominbutton {
-    position: absolute;
-}
-
-.zoomoutbutton {
-    position: absolute;
 }
