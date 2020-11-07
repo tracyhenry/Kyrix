@@ -6,6 +6,7 @@
             Filter team that starts with:
             <input type="text" id="test_input" name="filter" value="" /><br />
         </div>
+        <div class="kyrixdiv"></div>
     </body>
     <head>
         <link
@@ -39,7 +40,7 @@
             var serverAddr = "http://127.0.0.1:8000";
 
             // initializeApp() loads kyrix vis into a div, and returns this div
-            kyrix.initializeApp(serverAddr);
+            kyrix.initializeApp(serverAddr, d3.select(".kyrixdiv").node());
 
             // logs to console every time a jump is finished
             kyrix.on("jumpstart", "nba", function() {
