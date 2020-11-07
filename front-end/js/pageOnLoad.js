@@ -218,7 +218,7 @@ function pageOnLoad(serverAddr, kyrixRawDiv) {
 
             // remove all jump option popovers when the window is resized
             d3.select(window).on("resize.popover", removePopovers);
-            //d3.select(window).on("click", removePopovers);
+            d3.select(window).on("click", removePopovers);
 
             // create view layouts
             var viewSpecs = globalVar.project.views;
