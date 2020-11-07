@@ -163,7 +163,7 @@ function resizeKyrixStuff(viewId) {
     var realH = (realW * viewHeight) / viewWidth;
 
     // set viewbox accordingly
-    div.select("svg").attr(
+    viewSvg.attr(
         "viewBox",
         "0 0 " +
             (viewWidth * viewWidth) / realW +
