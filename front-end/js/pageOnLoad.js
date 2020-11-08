@@ -277,7 +277,7 @@ function pageOnLoad(serverAddr, kyrixRawDiv) {
                         else gvd.predicates.push({});
                 }
 
-                // Set viewdiv max size (don't allow div to get bigger than svg)
+                // Set  max size (don't allow div to get bigger than svg)
                 var visWidth = gvd.viewportWidth + param.viewPadding * 2;
                 var visHeight = gvd.viewportHeight + param.viewPadding * 2;
                 // visDiv

@@ -375,29 +375,32 @@ function registerJumps(viewId, svg, layerId) {
             // create a jumpoption popover using bootstrap
             d3.select("body")
                 .append("div")
-                .classed("view_" + viewId + " popover fade right in", true)
+                .classed(
+                    "view_" + viewId + " jumppopover popover fade right in",
+                    true
+                )
                 .attr("role", "tooltip")
-                .attr("id", "jumppopover")
                 .append("div")
-                .classed("view_" + viewId + " arrow popoverarrow", true)
-                .attr("id", "popoverarrow");
-            d3.select(viewClass + "#jumppopover")
+                .classed("view_" + viewId + " popoverarrow arrow", true);
+            d3.select(viewClass + ".jumppopover")
                 .append("h2")
                 .classed("view_" + viewId + " popover-title", true)
-                .attr("id", "popovertitle")
                 .html("Jump Options")
                 .append("a")
-                .classed("view_" + viewId + " close", true)
+                .classed("view_" + viewId + " popoverclose close", true)
                 .attr("href", "#")
-                .attr("id", "popoverclose")
                 .html("&times;")
                 .on("click", function() {
                     removePopovers(viewId);
                 });
-            d3.select(viewClass + "#jumppopover")
+            d3.select(viewClass + ".jumppopover")
                 .append("div")
-                .classed("view_" + viewId + " popover-content list-group", true)
-                .attr("id", "popovercontent");
+                .classed(
+                    "view_" +
+                        viewId +
+                        " popovercontent popover-content list-group",
+                    true
+                );
 
             // add jump options
             for (var k = 0; k < jumps.length; k++) {
@@ -416,7 +419,7 @@ function registerJumps(viewId, svg, layerId) {
                 )
                     continue;
 
-                // create table cell and append it to #popovercontent
+                // create table cell and append it to .popovercontent
                 var optionText = "<b>ZOOM IN </b>";
                 if (jumps[k].type == param.load)
                     optionText =
@@ -432,7 +435,7 @@ function registerJumps(viewId, svg, layerId) {
                         ? jumps[k].name
                         : jumps[k].name.parseFunction()(d, optionalArgs);
                 var jumpOption = d3
-                    .select(viewClass + "#popovercontent")
+                    .select(viewClass + ".popovercontent")
                     .append("a")
                     .classed("list-group-item", true)
                     .attr("href", "#")
@@ -450,10 +453,10 @@ function registerJumps(viewId, svg, layerId) {
 
             // position jump popover according to event x/y and its width/height
             var popoverHeight = d3
-                .select(viewClass + "#jumppopover")
+                .select(viewClass + ".jumppopover")
                 .node()
                 .getBoundingClientRect().height;
-            d3.select(viewClass + "#jumppopover")
+            d3.select(viewClass + ".jumppopover")
                 .style("left", d3.event.pageX + "px")
                 .style("top", d3.event.pageY - popoverHeight / 2 + "px");
         });
