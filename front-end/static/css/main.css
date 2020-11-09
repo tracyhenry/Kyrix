@@ -34,8 +34,7 @@ body {
 
 .viewsvg {
     display: block;
-    margin-top: 5px;
-    margin-left: 5px;
+    position: relative;
 }
 
 div.jumppopover {
