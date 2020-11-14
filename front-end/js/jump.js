@@ -330,6 +330,37 @@ function startJump(viewId, d, jump, optionalArgs) {
     else if (jump.type == param.highlight) highlight(predArray, jump);
 }
 
+// send updates to DB
+function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs) {
+  // find field in newObjAttrs that is the primary key identifier (like "id")
+  let idColumn;
+  const attributes = Object.keys(newObjAttrs);
+  for (let idx = 0; idx < attributes.length; idx++) {
+    const val = attributes[idx];
+    if (val.includes("id")) {
+      idColumn = val;
+      break;
+    }
+  }
+
+  const postData = {
+    canvasId: canvasId,
+    layerId: layerId,
+    primaryKeyColumn: idColumn,
+    objectAttributes: newObjAttrs,
+  };
+  $.ajax({
+    type: "POST",
+    url: globalVar.serverAddr + "/update",
+    data: JSON.stringify(postData),
+    success: function (data, status) {
+      console.log(`update succeeded with data: ${JSON.stringify(data)}`);
+    },
+    async: false,
+  });
+}
+
+
 // register jump info
 function registerJumps(viewId, svg, layerId) {
     var gvd = globalVar.views[viewId];
@@ -532,6 +563,99 @@ function registerJumps(viewId, svg, layerId) {
                       d3.select(".mainsvg").select("g").selectAll("path")
                       .style("stroke", "white")
                       .style("stroke-width", "0.5");
+
+                      //  TODO: create helper function for this repeat code!
+                      d3.select(".mainsvg").select("g").selectAll("path")
+                        .each((d,i) => {
+                          let currentObject = d3.select(".mainsvg")
+                              .select("g")
+                              .selectAll("path")
+                              .filter(function (data) {
+                                return data == d;
+                            });
+                          const triangle_bbox = triangle.node().getBoundingClientRect();
+                          const tri_minx = triangle_bbox.left;
+                          const tri_miny = triangle_bbox.top;
+                          const tri_maxx = triangle_bbox.right;
+                          const tri_maxy = triangle_bbox.bottom;
+                          const tri_cx = (tri_minx + tri_maxx) / 2.0;
+                          const tri_cy = (tri_miny + tri_maxy) / 2.0;
+                          const region_bbox = currentObject.node().getBoundingClientRect();
+                          const minx = region_bbox.left;
+                          const miny = region_bbox.top;
+                          const maxx = region_bbox.right;
+                          const maxy = region_bbox.bottom;
+                          const cx = (minx + maxx) / 2.0;
+                          const cy = (miny + maxy) / 2.0;
+                          const width = maxx - minx;
+                          const height = maxy - miny;
+                          // console.log(`object ${i} has screen bbox: ${JSON.stringify(region_bbox)}`);
+                          // console.log(`kyrix object ${i} has data: ${JSON.stringify(d)}`);
+                          const r = Math.min(width,height) / 2.0;
+                          // let overlapsX = tri_minx >= minx && maxx >= tri_maxx;
+                          // let overlapsY = tri_miny >= miny && maxy >= tri_maxy;
+                          // let tri_dist = Math.sqrt((tri_cx - cx)**2 + (tri_cy - cy)**2);
+                          let tri_dist = Math.abs(tri_cx - cx) + Math.abs(tri_cy - cy);
+                          if (tri_dist < r) {
+                            console.log(`triangle is within ${tri_dist} of object ${i}`);
+                            // let newData = d;
+                            // newData.rate = parseFloat(d.rate) + 5.0;
+                            // currentObject
+                            //   .data()
+                            // gvd - data for current view, current canvas, transform, etc.
+
+                            // hard-coded layerid for now, fix this!
+                            // let queryText = gvd.curCanvas.layers[1].transform.query;
+                            // console.log(`query text for layerid: ${1} is: ${queryText}`);
+
+                            // use regex to extract db column names from user-defined transform
+                            // queryText = queryText.split("select")[1];
+                            // let res = queryText.split("from");
+                            // queryText = res[0];
+                            // let tableName = res[1];
+                            // tableName = tableName.replace(/[\s;]+/g, "").trim();
+                            // queryText = queryText.replace(/\s+/g, "").trim();
+                            // let queryFields = queryText.split(",");
+
+                            let visFields = gvd.curCanvas.layers[1].transform.columnNames;
+
+                            // find only directly mapped columns from object attributes
+                            let directMappedColumns = {};
+                            // const objectAttributes = Object.keys(p);
+                            for (let idx in visFields) {
+                              const field = visFields[idx];
+                              // if (objectAttributes.includes(field)) {
+                              directMappedColumns[field] = d[field];
+                              // }
+                            }
+
+                            directMappedColumns["rate"] = parseFloat(d["rate"]) + 100.0;
+                            // doDBUpdate(viewId, gvd.curCanvasId, 1, tableName, directMappedColumns);
+
+                            d3.select(".mainsvg").select("g").selectAll("path")
+                              .data(directMappedColumns)
+                              .enter()
+                              .append("path")
+                              .attr("d", function(d) {
+                                  var feature = JSON.parse(d.geomstr);
+                                  return path(feature);
+                              })
+                              .style("stroke", "#fff")
+                              .style("stroke-width", "0.5")
+                              .style("fill", function(d) {
+                                  return color(d.rate);
+                              });
+                            // d3.select(".mainsvg").select("g").selectAll("path")
+                            // .style("stroke", "white")
+                            // .style("stroke-width", "0.5");
+
+                            
+                            // currentObject
+                            //   .style("stroke", "green")
+                            //   .style("stroke-width", "5.0");
+                            return;
+                          }
+                      });
 
                       
                       dx = 0;
