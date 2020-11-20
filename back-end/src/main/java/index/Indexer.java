@@ -229,7 +229,7 @@ public abstract class Indexer implements Serializable {
             }
 
             // width
-            if (width_func.substring(0, 4).equals("full")) width_dbl = Double.MAX_VALUE;
+            if (width_func.substring(0, 4).equals("full")) width_dbl = Integer.MAX_VALUE;
             else if (width_func.substring(0, 3).equals("con"))
                 width_dbl = Double.parseDouble(width_func.substring(4));
             else {
@@ -239,7 +239,7 @@ public abstract class Indexer implements Serializable {
             }
 
             // height
-            if (height_func.substring(0, 4).equals("full")) height_dbl = Double.MAX_VALUE;
+            if (height_func.substring(0, 4).equals("full")) height_dbl = Integer.MAX_VALUE;
             else if (height_func.substring(0, 3).equals("con"))
                 height_dbl = Double.parseDouble(height_func.substring(4));
             else {

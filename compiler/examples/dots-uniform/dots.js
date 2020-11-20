@@ -34,7 +34,7 @@ p.addCanvas(bottomCanvas);
 bottomCanvas.addLayer(dotsLayer);
 
 // ================== Views ===================
-var view = new View("dotview", 0, 0, 1000, 1000);
+var view = new View("dotview", 1000, 1000);
 p.addView(view);
 p.setInitialStates(view, topCanvas, 5000, 5000);
 

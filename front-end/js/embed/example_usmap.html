@@ -1,7 +1,9 @@
 <html>
     <body>
         <div id="controldiv"></div>
-        <div id="kyrixcontainer"></div>
+        <div id="kyrixcontainer">
+            <div></div>
+        </div>
     </body>
     <head>
         <link
@@ -35,9 +37,13 @@
             var serverAddr = "http://127.0.0.1:8000";
 
             // initializeApp() loads kyrix vis into a div, and returns this div
-            d3.select("#kyrixcontainer")
-                .node()
-                .appendChild(kyrix.initializeApp(serverAddr));
+            kyrix.initializeApp(
+                serverAddr,
+                d3
+                    .select("#kyrixcontainer")
+                    .select("div")
+                    .node()
+            );
 
             //--------------------------US Map-------------------------
             //pan by arrow

@@ -1,7 +1,7 @@
-// initialize app, pass in server url (and possibly app name in the future)
-// return a div that kyrix vis is contained in
-export function initializeApp(serverAddr) {
-    return pageOnLoad(serverAddr);
+// initialize app, pass in server url and a div for holding kyrix vis
+// return a promise that resolves when kyrix loads
+export function initializeApp(serverAddr, kyrixDiv) {
+    return pageOnLoad(serverAddr, kyrixDiv);
 }
 
 export function filteredNodes(viewId, layerId, filterFunc) {

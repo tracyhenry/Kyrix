@@ -10,16 +10,10 @@ var p = new Project("usmap_cmv", "../../../config.txt");
 // ================== Views ===================
 var stateMapWidth = 2000;
 var stateMapHeight = 1000;
-var view = new View("state", 0, 0, stateMapWidth, stateMapHeight);
+var view = new View("state", stateMapWidth, stateMapHeight);
 p.addView(view);
 
-var rightView = new View(
-    "county",
-    stateMapWidth + 150,
-    0,
-    stateMapWidth,
-    stateMapHeight
-);
+var rightView = new View("county", stateMapWidth, stateMapHeight);
 p.addView(rightView);
 
 // specify args

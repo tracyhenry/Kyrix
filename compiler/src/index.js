@@ -61,21 +61,9 @@ function Project(name, configFile) {
 
 // Add a view to a project.
 function addView(view) {
-    for (var i = 0; i < this.views.length; i++) {
+    for (var i = 0; i < this.views.length; i++)
         if (this.views[i].id == view.id)
             throw new Error("Adding View: view id already existed.");
-        if (
-            this.views[i].minx > view.minx + view.width ||
-            this.views[i].miny > view.miny + view.height ||
-            view.minx > this.views[i].minx + this.views[i].width ||
-            view.miny > this.views[i].miny + this.views[i].height
-        )
-            continue;
-        else
-            throw new Error(
-                "Adding View: this view intersects with an existing view."
-            );
-    }
     this.views.push(view);
 }
 
@@ -242,8 +230,6 @@ function addTable(table, args) {
     if (!args.view) {
         var tableView = new View(
             table.name + "_view",
-            0,
-            0,
             Math.floor(table.sum_width * 0.8),
             700
         );
@@ -431,13 +417,7 @@ function addSSV(ssv, args) {
     // create a new view if not specified
     if (!args.view) {
         var viewId = "ssv" + (this.ssvs.length - 1);
-        var view = new View(
-            viewId,
-            0,
-            0,
-            ssv.topLevelWidth,
-            ssv.topLevelHeight
-        );
+        var view = new View(viewId, ssv.topLevelWidth, ssv.topLevelHeight);
         this.addView(view);
         // initialize view
         this.setInitialStates(view, curPyramid[0], 0, 0);
@@ -527,8 +507,6 @@ function addUSMap(usmap, args) {
     if (!("view" in args)) {
         var view = new View(
             "usmap" + (this.usmaps.length - 1),
-            0,
-            0,
             usmap.stateMapWidth,
             usmap.stateMapHeight
         );

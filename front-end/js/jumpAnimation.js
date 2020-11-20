@@ -53,14 +53,14 @@ function animateSemanticZoom(viewId, jump, newVpX, newVpY, tuple) {
                 // because here we use client coordinates to infer svg coordinates,
                 // we need to multiply a scale factor
                 // which is how much the svg viewport has been scaled,
-                // which equals to curViewport[2] / containerW (see comments in zoomButton.js)
-                var containerW = d3.select("#containerSvg").attr("width");
-                var curViewport = d3.select("#containerSvg").attr("viewBox");
+                // which equals to curViewport[2] / viewW
+                var viewW = d3.select(viewClass + ".viewsvg").attr("width");
+                var curViewport = d3
+                    .select(viewClass + ".viewsvg")
+                    .attr("viewBox");
                 var curViewportW =
-                    curViewport == null
-                        ? containerW
-                        : curViewport.split(" ")[2];
-                var m = curViewportW / containerW;
+                    curViewport == null ? viewW : curViewport.split(" ")[2];
+                var m = curViewportW / viewW;
 
                 // now get minx, miny, maxx, maxy
                 minx = Math.min(minx, dx * m);
