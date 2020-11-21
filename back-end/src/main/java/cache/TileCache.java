@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import main.Config;
+import main.Main;
 import project.Canvas;
 import project.Layer;
 
@@ -22,10 +23,14 @@ public class TileCache {
                 };
     }
 
+    public static void clear() {
+        tileCache.clear();
+    }
+
     public static ArrayList<ArrayList<ArrayList<String>>> getTile(
             Canvas c, int minx, int miny, ArrayList<String> predicates) throws Exception {
-
-        String key = c + "-" + minx + "-" + miny + "-" + predicates;
+        String projectName = Main.getProject().getName();
+        String key = projectName + '-' + c.getId() + "-" + minx + "-" + miny + "-" + predicates;
         ArrayList<ArrayList<ArrayList<String>>> data = new ArrayList<>();
 
         // cache hit
@@ -39,7 +44,8 @@ public class TileCache {
         for (int i = 0; i < c.getLayers().size(); i++) {
             Layer curLayer = c.getLayers().get(i);
             // add an empty placeholder for static layers
-            if (curLayer.isStatic()) data.add(new ArrayList<>());
+            if (curLayer.isStatic() || !curLayer.getFetchingScheme().equals("tiling"))
+                data.add(new ArrayList<>());
             else
                 data.add(
                         curLayer.getIndexer().getDataFromTile(c, i, minx, miny, predicates.get(i)));

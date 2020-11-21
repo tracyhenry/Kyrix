@@ -39,8 +39,12 @@ public class Main {
 
     public static void setProject(Project newProject) {
 
-        System.out.println("Current project set to: " + newProject.getName());
+        System.out.println(
+                "Current project set to: " + (newProject != null ? newProject.getName() : "null"));
         project = newProject;
+
+        // clear cache whenever there is a project switch
+        TileCache.clear();
     }
 
     public static void setProjectClean() throws SQLException, ClassNotFoundException {
@@ -54,6 +58,17 @@ public class Main {
                         + project.getName()
                         + "\';";
         DbConnector.executeUpdate(Config.databaseName, sql);
+    }
+
+    public static void printUsedMemory(String message) {
+        System.gc();
+        System.out.println(
+                message
+                        + ": "
+                        + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())
+                                / 1024
+                                / 1024
+                        + "MB.");
     }
 
     private static void readConfigFile() throws IOException {

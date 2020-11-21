@@ -23,7 +23,8 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
     if (
         type == "semantic_zoom" ||
         type == "geometric_semantic_zoom" ||
-        type == "load"
+        type == "load" ||
+        type == "slide"
     )
         if (
             !("selector" in optional) ||
@@ -43,6 +44,20 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
             throw new Error(
                 "Constructing Jump: missing customization functions for highlight."
             );
+    if (
+        "slideDirection" in optional &&
+        (optional.slideDirection < 0 || optional.slideDirection >= 360)
+    )
+        throw new Error(
+            "Constructing Jump: slide direction must be a number between 0 and 360."
+        );
+    if (
+        "slideSuperman" in optional &&
+        typeof optional.slideSuperman != "boolean"
+    )
+        throw new Error(
+            "Constructing Jump: slideSuperman must be true or false"
+        );
 
     this.type = type;
     this.sourceId = sourceCanvas.id;
@@ -54,6 +69,10 @@ function Jump(sourceCanvas, destCanvas, type, optional) {
     this.sourceViewId = "sourceView" in optional ? optional.sourceView.id : "";
     this.destViewId = "destView" in optional ? optional.destView.id : "";
     this.noPrefix = "noPrefix" in optional ? optional.noPrefix : false;
+    this.slideDirection =
+        "slideDirection" in optional ? optional.slideDirection : 0;
+    this.slideSuperman =
+        "slideSuperman" in optional ? optional.slideSuperman : false;
 }
 
 // exports

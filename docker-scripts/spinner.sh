@@ -11,10 +11,9 @@
 sp="/-\|"
 sc=0
 spin_msg_printed=0
-PRINT_EVERY_N_SECS=4
 spin() {
-    if (( $spin_msg_printed % 4 == 0 )); then
-	printf "$1...  "
+    if (( $spin_msg_printed % 30 == 0 )); then
+	printf "\n$1...  "
     else
 	printf "\b${sp:sc++:1}"
 	((sc==${#sp})) && sc=0

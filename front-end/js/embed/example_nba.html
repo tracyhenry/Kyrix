@@ -6,18 +6,46 @@
             Filter team that starts with:
             <input type="text" id="test_input" name="filter" value="" /><br />
         </div>
+        <div class="kyrixdiv"></div>
     </body>
     <head>
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="../../static/css/main.css"
+        />
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        />
+        <link
+            href="https://fonts.googleapis.com/css?family=Source Serif Pro"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css?family=Open+Sans"
+            rel="stylesheet"
+        />
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/gpu.js@2.0.0-rc.19/dist/gpu-browser.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.min.js"></script>
         <script src="https://d3js.org/d3.v5.min.js"></script>
-        <script src="http://128.52.164.24:8000/kyrix.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/css-element-queries@1.2.1/src/ElementQueries.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/css-element-queries@1.2.1/src/ResizeSensor.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.min.js"></script>
+        <script src="kyrix.js"></script>
         <script>
             // TODO: change the address where the kyrix backend is running, has to start with http://
             var serverAddr = "http://127.0.0.1:8000";
 
             // initializeApp() loads kyrix vis into a div, and returns this div
-            kyrix.initializeApp(serverAddr);
+            kyrix.initializeApp(serverAddr, d3.select(".kyrixdiv").node());
+
+            // logs to console every time a jump is finished
+            kyrix.on("jumpstart", "nba", function() {
+                console.log("Jump to " + kyrix.getCurrentCanvasId("nba"));
+            });
 
             //--------------------------NBA-------------------------
             // filter data upon input change -- this will filter all teams that start with the input letters
@@ -47,20 +75,5 @@
                     kyrix.triggerJump("nba", visibleLogos[0], 0, 0);
             });
         </script>
-
-        <link
-            rel="stylesheet"
-            type="text/css"
-            href="../../static/css/main.css"
-        />
-        <link
-            rel="stylesheet"
-            type="text/css"
-            href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-        />
-        <link
-            href="https://fonts.googleapis.com/css?family=Source Serif Pro"
-            rel="stylesheet"
-        />
     </head>
 </html>

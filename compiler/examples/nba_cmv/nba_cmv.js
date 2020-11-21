@@ -90,11 +90,11 @@ statsLayer.addPlacement(placements.boxscorePlacement);
 statsLayer.addRenderingFunc(renderers.boxscoreStatsRendering);
 
 // ================== Views ===================
-var leftView = new View("left", 0, 0, 1000, 1000);
+var leftView = new View("left", 1000, 1000);
 p.addView(leftView);
 p.setInitialStates(leftView, teamLogoCanvas, 0, 0);
 
-var rightView = new View("right", 1100, 0, 1000, 1000);
+var rightView = new View("right", 1000, 1000);
 p.addView(rightView);
 
 // ================== teamlogo -> teamtimeline (load) ===================

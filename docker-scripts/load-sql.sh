@@ -1,8 +1,25 @@
 #!/bin/bash
 
-# check input sql file exists
+usage="load-sql.sh: a script to load a SQL dump file into Kyrix's PostgreSQL container. Usage:
+
+    ./docker-scripts/load-sql.sh SQL_DUMP_FILE [OPTIONS]  (must be run under root Kyrix folder)
+
+where OPTIONS include:
+    --dbname DBNAME: name of the database that you want to load the SQL dump file into.
+
+--dbname defaults to the name of the SQL dump file (without the .sql suffix).
+If the database does not exist, it will be created. "
+
 SQL_FILE="$1"
 shift
+
+# output usage
+if [ "x$SQL_FILE" = "x-h" ] || [ "x$SQL_FILE" = "x--help" ]; then
+    echo "$usage"
+    exit
+fi
+
+# check input sql file exists
 if [ ! -f $SQL_FILE ]; then
     echo "Input file $SQL_FILE Not found"
     exit
@@ -51,7 +68,3 @@ docker cp $SQL_FILE kyrix_db_1:/$FILE_NAME
 
 # import sql file content into the selected database
 docker exec -it kyrix_db_1 /bin/sh -c "psql postgresql://postgres:kyrixftw@localhost/${DB_NAME} < ${FILE_NAME}"
-
-
-
-

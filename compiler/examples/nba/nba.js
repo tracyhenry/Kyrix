@@ -89,7 +89,7 @@ statsLayer.addPlacement(placements.boxscorePlacement);
 statsLayer.addRenderingFunc(renderers.boxscoreStatsRendering);
 
 // ================== Views ===================
-var view = new View("nba", 0, 0, 1000, 1000);
+var view = new View("nba", 1000, 1000);
 p.addView(view);
 p.setInitialStates(view, teamLogoCanvas, 0, 0);
 

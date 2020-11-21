@@ -1,7 +1,7 @@
-// initialize app, pass in server url (and possibly app name in the future)
-// return a div that kyrix vis is contained in
-export function initializeApp(serverAddr) {
-    return pageOnLoad(serverAddr);
+// initialize app, pass in server url and a div for holding kyrix vis
+// return a promise that resolves when kyrix loads
+export function initializeApp(serverAddr, kyrixDiv) {
+    return pageOnLoad(serverAddr, kyrixDiv);
 }
 
 export function filteredNodes(viewId, layerId, filterFunc) {
@@ -66,14 +66,31 @@ export function triggerPan(viewId, panX, panY) {
 
 export function getRenderData(viewId) {
     var gvd = globalVar.views[viewId];
-    var renderData = [];
-    var numLayers = gvd.curCanvas.layers.length;
-    for (var i = 0; i < numLayers; i++)
-        renderData.push(getRenderDataOfLayer(viewId, i));
-    return renderData;
+    var ret = [];
+    for (var i = 0; i < gvd.renderData.length; i++) {
+        if (gvd.curCanvas.layers[i].isStatic) ret.push(gvd.curStaticData[i]);
+        else ret.push(gvd.renderData[i]);
+    }
+    return ret;
 }
 
 export function getRenderDataOfLayer(viewId, layerId) {
+    var gvd = globalVar.views[viewId];
+    if (gvd.curCanvas.layers[layerId].isStatic)
+        return gvd.curStaticData[layerId];
+    else return gvd.renderData[layerId];
+}
+
+export function getObjectData(viewId) {
+    var gvd = globalVar.views[viewId];
+    var renderData = [];
+    var numLayers = gvd.curCanvas.layers.length;
+    for (var i = 0; i < numLayers; i++)
+        renderData.push(getObjectDataOfLayer(viewId, i));
+    return renderData;
+}
+
+export function getObjectDataOfLayer(viewId, layerId) {
     var viewClass = ".view_" + viewId;
     var curlayerData = [];
     var mp = {}; // hashset
@@ -125,9 +142,31 @@ export function getCurrentViewport(viewId) {
     }
 }
 
-export function onPan(viewId, callback) {
+export function on(evt, viewId, callback) {
+    function throwError() {
+        throw new Error("kyrix.on: unrecognized Kyrix event type.");
+    }
     var gvd = globalVar.views[viewId];
-    gvd.onPanHandler = callback;
+    var evtTypes = ["pan", "zoom", "jumpstart", "jumpend"];
+    for (var evtType of evtTypes)
+        if (evt.startsWith(evtType)) {
+            if (evt.length > evtType.length && evt[evtType.length] != ".")
+                throwError();
+            var gvdKey =
+                "on" +
+                evtType[0].toUpperCase() +
+                evtType.substring(1) +
+                "Handlers";
+            if (!gvd[gvdKey]) gvd[gvdKey] = {};
+            var subEvt = "";
+            if (evt.length > evtType.length)
+                subEvt = evt.substring(evtType.length + 1);
+            if (typeof callback == "undefined") return gvd[gvdKey][subEvt];
+            gvd[gvdKey][subEvt] = callback;
+
+            return;
+        }
+    throwError();
 }
 
 export function reRender(viewId, layerId, additionalArgs) {
@@ -140,6 +179,9 @@ export function reRender(viewId, layerId, additionalArgs) {
     var oldArgs = getOptionalArgs(viewId);
     oldArgs["viewportX"] = curVp["vpX"];
     oldArgs["viewportY"] = curVp["vpY"];
+    oldArgs["layerId"] = layerId;
+    oldArgs["ssvId"] = gvd.curCanvas.layers[layerId].ssvId;
+    oldArgs["usmapId"] = gvd.curCanvas.layers[layerId].usmapId;
     var allArgs = Object.assign({}, oldArgs, additionalArgs);
 
     // re render the svg
@@ -153,6 +195,13 @@ export function reRender(viewId, layerId, additionalArgs) {
         .each(function() {
             // run render function
             renderFunc(d3.select(this), renderData, allArgs);
+
+            // tooltips
+            makeTooltips(
+                d3.select(this).selectAll("*"),
+                gvd.curCanvas.layers[layerId].tooltipColumns,
+                gvd.curCanvas.layers[layerId].tooltipAliases
+            );
 
             // register jumps
             registerJumps(viewId, d3.select(this), layerId);
@@ -175,4 +224,39 @@ export function triggerJump(viewId, selector, layerId, jumpId) {
 
     // start jump
     startJump(viewId, curDatum, jump, optionalArgs);
+}
+
+export function addRenderingParameters(params) {
+    var keys = Object.keys(params);
+    for (var i = 0; i < keys.length; i++)
+        globalVar.renderingParams[keys[i]] = params[keys[i]];
+}
+
+export function getRenderingParameters() {
+    return globalVar.renderingParams;
+}
+
+export function getGlobalVarDictionary(viewId) {
+    return globalVar.views[viewId];
+}
+
+export function triggerPredicate(viewId, predDict) {
+    var gvd = globalVar.views[viewId];
+
+    var vp = getCurrentViewport(viewId);
+
+    // step 1: get predicates, viewport, scale
+    var predArray = [];
+    var numLayer = gvd.curCanvas.layers.length;
+    for (var i = 0; i < numLayer; i++)
+        if ("layer" + i in predDict) predArray.push(predDict["layer" + i]);
+        else predArray.push({});
+
+    var newVpX = vp.vpX;
+    var newVpY = vp.vpY;
+    var viewClass = ".view_" + viewId + ".maing";
+    var k = d3.zoomTransform(d3.select(viewClass).node()).k;
+
+    // step 2: load
+    load(predArray, newVpX, newVpY, k, viewId, gvd.curCanvasId, {type: "load"});
 }

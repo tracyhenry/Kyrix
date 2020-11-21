@@ -1,0 +1,127 @@
+{
+    "type": "object",
+    "definitions": {
+        "canvas": {
+            "type": "object",
+            "properties": {
+                "table": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "column": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                },
+                "step": {
+                    "type": "number",
+                    "default": 0
+                },
+                "colorCount": {
+                    "type": "integer",
+                    "default": 7,
+                    "minimum": 2,
+                    "maximum": 8
+                }
+            },
+            "required": ["table", "column", "range"],
+            "additionalProperties": false
+        }
+    },
+    "properties": {
+        "db": {
+            "type": "string",
+            "minLength": 1
+        },
+        "state": {"$ref": "#/definitions/canvas"},
+        "county": {"$ref": "#/definitions/canvas"},
+        "colorScheme": {
+            "enum": [
+                "schemeBlues",
+                "schemeBrBG",
+                "schemeBuGn",
+                "schemeBuPu",
+                "schemeGnBu",
+                "schemeGreens",
+                "schemeGreys",
+                "schemeOrRd",
+                "schemeOranges",
+                "schemePRGn",
+                "schemePiYG",
+                "schemePuBu",
+                "schemePuBuGn",
+                "schemePuOr",
+                "schemePuRd",
+                "schemePurples",
+                "schemeRdBu",
+                "schemeRdGy",
+                "schemeRdPu",
+                "schemeRdYlBu",
+                "schemeRdYlGn",
+                "schemeReds",
+                "schemeSpectral",
+                "schemeYlGn",
+                "schemeYlGnBu",
+                "schemeYlOrBr",
+                "schemeYlOrRd"
+            ],
+            "default": "schemeYlOrRd"
+        },
+        "projection": {
+            "enum": ["geoAlbersUsa", "geoMercator"],
+            "default": "geoAlbersUsa"
+        },
+        "stateMapWidth": {
+            "type": "integer",
+            "default": 2000
+        },
+        "stateMapHeight": {
+            "type": "integer",
+            "default": 1000
+        },
+        "zoomFactor": {
+            "type": "integer"
+        },
+        "zoomType": {
+            "enum": ["literal", "jump", "none"]
+        },
+        "legendTitle": {
+            "type": "string",
+            "maxLength": 80,
+            "default": ""
+        },
+        "tooltipAlias": {
+            "type": "string",
+            "maxLength": 20,
+            "default": "Rate"
+        }
+    },
+    "required": ["db", "state"],
+    "additionalProperties": false,
+    "if": {
+        "required": ["county"]
+    },
+    "then": {
+        "properties": {
+            "zoomFactor": {
+                "default": 6
+            },
+            "zoomType": {
+                "default": "literal"
+            }
+        }
+    },
+    "else": {
+        "properties": {
+            "zoomFactor": {"type": "null"},
+            "zoomType": {"type": "null"}
+        }
+    }
+}

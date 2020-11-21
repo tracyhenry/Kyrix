@@ -7,7 +7,8 @@ public class Jump {
     private String type;
     private String selector, viewport, predicates, name;
     private String sourceViewId, destViewId;
-    private Boolean noPrefix;
+    private Boolean noPrefix, slideSuperman;
+    private double slideDirection;
 
     public String getSourceId() {
         return sourceId;
@@ -49,6 +50,14 @@ public class Jump {
         return noPrefix;
     }
 
+    public double getSlideDirection() {
+        return slideDirection;
+    }
+
+    public Boolean getSlideSuperman() {
+        return slideSuperman;
+    }
+
     @Override
     public String toString() {
         return "Jump{"
@@ -79,9 +88,12 @@ public class Jump {
                 + ", destViewId='"
                 + destViewId
                 + '\''
-                + ", noPrefix='"
+                + ", noPrefix="
                 + noPrefix
-                + '\''
+                + ", slideSuperman="
+                + slideSuperman
+                + ", slideDirection="
+                + slideDirection
                 + '}';
     }
 }

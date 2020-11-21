@@ -2,18 +2,22 @@ package project;
 
 import index.Indexer;
 import java.io.Serializable;
+import java.sql.SQLException;
+import java.util.ArrayList;
 
 /** Created by wenbo on 4/3/18. */
 public class Layer implements Serializable {
 
     private Transform transform;
     private boolean isStatic;
+    private String fetchingScheme;
+    private boolean deltaBox;
     private Placement placement;
     private String rendering;
-    private Indexer indexer;
-    private boolean isAutoDDLayer;
-    private String autoDDId;
-    private boolean retainSizeZoom;
+    private ArrayList<String> tooltipColumns, tooltipAliases;
+    private transient Indexer indexer;
+    private String ssvId, usmapId;
+    private String indexerType;
 
     public Transform getTransform() {
         return transform;
@@ -21,6 +25,14 @@ public class Layer implements Serializable {
 
     public boolean isStatic() {
         return isStatic;
+    }
+
+    public String getFetchingScheme() {
+        return fetchingScheme;
+    }
+
+    public boolean isDeltaBox() {
+        return deltaBox;
     }
 
     public Placement getPlacement() {
@@ -39,24 +51,28 @@ public class Layer implements Serializable {
         return indexer;
     }
 
-    public boolean isAutoDDLayer() {
-        return isAutoDDLayer;
+    public String getSSVId() {
+        return ssvId;
     }
 
-    public String getAutoDDId() {
-        return autoDDId;
+    public String getUsmapId() {
+        return usmapId;
     }
 
-    public boolean isRetainSizeZoom() {
-        return retainSizeZoom;
+    public void setIndexerType(String indexerType) {
+        this.indexerType = indexerType;
     }
 
-    public String getColStr(String tableName) {
+    public String getIndexerType() {
+        return indexerType;
+    }
+
+    public String getColStr(String tableName) throws SQLException, ClassNotFoundException {
 
         String colListStr = "";
         for (String col : transform.getColumnNames())
             colListStr += (tableName.isEmpty() ? "" : tableName + ".") + col + ", ";
-        if (isAutoDDLayer) colListStr += "cluster_num, ";
+        if (getIndexerType().equals("SSVInMemoryIndexer")) colListStr += "clusterAgg, ";
         colListStr += "cx, cy, minx, miny, maxx, maxy";
         return colListStr;
     }
@@ -68,17 +84,19 @@ public class Layer implements Serializable {
                 + transform
                 + ", isStatic="
                 + isStatic
+                + ", fetchingScheme="
+                + fetchingScheme
+                + ", deltaBox="
+                + deltaBox
                 + ", placement="
                 + placement
                 + ", rendering='"
                 + rendering
                 + '\''
-                + ", isAutoDDLayer="
-                + isAutoDDLayer
-                + ", autoDDId="
-                + autoDDId
-                + ", retainSizeZoom="
-                + retainSizeZoom
+                + ", ssvId="
+                + ssvId
+                + ", usmapId="
+                + usmapId
                 + '}';
     }
 }

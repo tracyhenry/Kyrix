@@ -27,6 +27,10 @@ function getCurCanvas(viewId) {
         data: postData,
         success: function(data) {
             gvd.curCanvas = JSON.parse(data).canvas;
+            if (gvd.curCanvas.w < gvd.viewportWidth)
+                gvd.curCanvas.w = gvd.viewportWidth;
+            if (gvd.curCanvas.h < gvd.viewportHeight)
+                gvd.curCanvas.h = gvd.viewportHeight;
             gvd.curStaticData = JSON.parse(data).staticData;
             setupLayerLayouts(viewId);
 
@@ -48,21 +52,21 @@ function setupLayerLayouts(viewId) {
     // number of layers
     var numLayers = gvd.curCanvas.layers.length;
 
-    // set box flag
-    if (param.fetchingScheme == "dbox") {
-        gvd.boxX = [-1e5];
-        gvd.boxY = [-1e5];
-        gvd.boxH = [-1e5];
-        gvd.boxW = [-1e5];
-    }
+    // set box coordinates
+    gvd.boxX = [-1e5];
+    gvd.boxY = [-1e5];
+    gvd.boxH = [-1e5];
+    gvd.boxW = [-1e5];
 
     // set render data
     gvd.renderData = [];
-    for (var i = numLayers - 1; i >= 0; i--) gvd.renderData.push([]);
+    for (var i = 0; i < numLayers; i++) gvd.renderData.push([]);
+    gvd.tileRenderData = {};
 
     // create layers
     for (var i = numLayers - 1; i >= 0; i--) {
-        var isStatic = gvd.curCanvas.layers[i].isStatic;
+        var curLayer = gvd.curCanvas.layers[i];
+        var isStatic = curLayer.isStatic;
         // add new <g>
         d3.select(".view_" + viewId + ".maing")
             .append("g")
@@ -70,6 +74,8 @@ function setupLayerLayouts(viewId) {
             .append("svg")
             .classed("view_" + viewId + " mainsvg", true)
             .classed("static", isStatic)
+            .classed("dbox", !isStatic && curLayer.fetchingScheme == "dbox")
+            .classed("tiling", !isStatic && curLayer.fetchingScheme == "tiling")
             .attr("width", gvd.viewportWidth)
             .attr("height", gvd.viewportHeight)
             .attr("preserveAspectRatio", "none")
@@ -87,7 +93,10 @@ function setupLayerLayouts(viewId) {
                           " " +
                           gvd.viewportHeight
             )
-            .classed("lowestsvg", isStatic || param.fetchingScheme == "dbox");
+            .classed(
+                "lowestsvg",
+                isStatic || curLayer.fetchingScheme == "dbox"
+            );
     }
 }
 
@@ -97,6 +106,15 @@ function processRenderingParams() {
         var curValue = globalVar.renderingParams[key];
         if (typeof curValue == "string" && curValue.parseFunction() != null)
             globalVar.renderingParams[key] = curValue.parseFunction();
+        // check if it's ssv parameters
+        // if so, do a nested round of converting
+        if (key.startsWith("ssv_")) {
+            for (key in curValue) {
+                var curV = curValue[key];
+                if (typeof curV == "string" && curV.parseFunction() != null)
+                    curValue[key] = curV.parseFunction();
+            }
+        }
     }
 }
 
@@ -121,11 +139,46 @@ function processStyles() {
     }
 }
 
+// resize kyrix vis to fit in vis div bounds
+// also, call drawZoomButton to make buttons smaller/bigger
+function resizeKyrixStuff(viewId) {
+    drawZoomButtons(viewId);
+
+    // for vis
+    var viewClass = ".view_" + viewId;
+    var div = d3.select(viewClass + ".kyrixvisdiv");
+
+    // maximum space allowed in the div
+    var bbox = div.node().getBoundingClientRect();
+    var maxW = bbox.width;
+    var maxH = bbox.height;
+
+    // user-specified width/height
+    var viewSvg = d3.select(viewClass + ".viewsvg");
+    var viewWidth = viewSvg.attr("width");
+    var viewHeight = viewSvg.attr("height");
+
+    // maximum space according to the ratio of view svg
+    var realW = Math.min(maxW, (maxH * viewWidth) / viewHeight);
+    var realH = (realW * viewHeight) / viewWidth;
+
+    // set viewbox accordingly
+    viewSvg.attr(
+        "viewBox",
+        "0 0 " +
+            (viewWidth * viewWidth) / realW +
+            " " +
+            (viewHeight * viewHeight) / realH
+    );
+
+    // center
+    viewSvg
+        .style("left", bbox.width / 2 - realW / 2)
+        .style("top", bbox.height / 2 - realH / 2);
+}
+
 // set up page
-function pageOnLoad(serverAddr) {
-    // this function can only be called once
-    if (globalVar.serverAddr != "N/A")
-        throw new Error("kyrix initialized already!");
+function pageOnLoad(serverAddr, kyrixRawDiv) {
     if (serverAddr != null) {
         // get rid of the last '/'
         if (serverAddr[serverAddr.length - 1] == "/")
@@ -134,13 +187,11 @@ function pageOnLoad(serverAddr) {
     } else globalVar.serverAddr = "";
 
     // create a div where kyrix vis lives in
-    var kyrixDiv = d3
-        .select("body")
-        .append("div")
-        .classed("kyrixdiv", true);
+    var kyrixDiv = d3.select(kyrixRawDiv).classed("kyrixdiv", true);
 
     // get information about the first canvas to render
-    $.ajax({
+    // and return a promise representing whether kyrix is loaded
+    return $.ajax({
         type: "GET",
         url: globalVar.serverAddr + "/first",
         data: {},
@@ -150,9 +201,21 @@ function pageOnLoad(serverAddr) {
             globalVar.project = response.project;
             globalVar.tileW = +response.tileW;
             globalVar.tileH = +response.tileH;
+            // merge BGRP and rendering params
             globalVar.renderingParams = JSON.parse(
                 globalVar.project.renderingParams
             );
+            var BGRPKeys = Object.keys(globalVar.project.BGRP);
+            for (var i = 0; i < BGRPKeys.length; i++) {
+                var curBGRPKey = BGRPKeys[i];
+                if (!(curBGRPKey in globalVar.renderingParams))
+                    globalVar.renderingParams[curBGRPKey] = {};
+                var curRPEntry = globalVar.renderingParams[curBGRPKey];
+                globalVar.renderingParams[curBGRPKey] = {
+                    ...curRPEntry,
+                    ...globalVar.project.BGRP[curBGRPKey]
+                };
+            }
             processRenderingParams();
 
             // process user-defined CSS styles
@@ -160,37 +223,39 @@ function pageOnLoad(serverAddr) {
 
             // remove all jump option popovers when the window is resized
             d3.select(window).on("resize.popover", removePopovers);
-            //d3.select(window).on("click", removePopovers);
+            d3.select(window).on("click", removePopovers);
 
-            // set up container SVG
-            var containerW = 0,
-                containerH = 0;
+            // create view layouts
             var viewSpecs = globalVar.project.views;
-            for (var i = 0; i < viewSpecs.length; i++) {
-                containerW = Math.max(
-                    containerW,
-                    viewSpecs[i].minx +
-                        viewSpecs[i].width +
-                        param.viewPadding * 2
-                );
-                containerH = Math.max(
-                    containerH,
-                    viewSpecs[i].miny +
-                        viewSpecs[i].height +
-                        param.viewPadding * 2
-                );
-            }
-            kyrixDiv
-                .append("svg")
-                .attr("id", "containerSvg")
-                .attr("width", containerW)
-                .attr("height", containerH);
-
             for (var i = 0; i < viewSpecs.length; i++) {
                 // get a reference for current globalvar dict
                 var viewId = viewSpecs[i].id;
                 globalVar.views[viewId] = {};
                 var gvd = globalVar.views[viewId];
+
+                // create a view div, a button div and a vis div
+                var viewDiv = kyrixDiv
+                    .append("div")
+                    .classed("kyrixviewdiv", true)
+                    .classed("view_" + viewId, true);
+                var buttonDiv = viewDiv
+                    .append("div")
+                    .classed("kyrixbuttondiv", true)
+                    .classed("view_" + viewId, true);
+                var visDiv = viewDiv
+                    .append("div")
+                    .classed("kyrixvisdiv", true)
+                    .classed("view_" + viewId, true);
+
+                // make things responsive
+                new ResizeSensor(
+                    visDiv.node(),
+                    (function(viewId) {
+                        return function() {
+                            resizeKyrixStuff(viewId);
+                        };
+                    })(viewId)
+                );
 
                 // initial setup
                 gvd.initialViewportX = viewSpecs[i].initialViewportX;
@@ -199,7 +264,8 @@ function pageOnLoad(serverAddr) {
                 gvd.viewportHeight = viewSpecs[i].height;
                 gvd.curCanvasId = viewSpecs[i].initialCanvasId;
                 gvd.renderData = null;
-                gvd.pendingBoxRequest = false;
+                gvd.tileRenderData = null;
+                gvd.pendingBoxRequest = null;
                 gvd.curCanvas = null;
                 gvd.curJump = null;
                 gvd.curStaticData = null;
@@ -216,12 +282,19 @@ function pageOnLoad(serverAddr) {
                         else gvd.predicates.push({});
                 }
 
+                var visWidth = gvd.viewportWidth + param.viewPadding * 2;
+                var visHeight = gvd.viewportHeight + param.viewPadding * 2;
+                // Set  max size (don't allow div to get bigger than svg)
+                // visDiv
+                //     .style("max-width", visWidth + "px")
+                //     .style("max-height",visHeight + "px");
+
                 // set up view svg
-                d3.select("#containerSvg")
+                visDiv
                     .append("svg")
                     .classed("view_" + viewId + " viewsvg", true)
-                    .attr("width", gvd.viewportWidth + param.viewPadding * 2)
-                    .attr("height", gvd.viewportHeight + param.viewPadding * 2)
+                    .attr("width", visWidth)
+                    .attr("height", visHeight)
                     .attr("x", viewSpecs[i].minx)
                     .attr("y", viewSpecs[i].miny)
                     .append("g")
@@ -256,9 +329,6 @@ function pageOnLoad(serverAddr) {
 
                 // initialize zoom buttons, must before getCurCanvas is called
                 drawZoomButtons(viewId);
-                d3.select(window).on("resize.zoombutton", function() {
-                    for (var viewId in globalVar.views) drawZoomButtons(viewId);
-                });
 
                 // render this view
                 if (gvd.curCanvasId != "") {
@@ -273,7 +343,7 @@ function pageOnLoad(serverAddr) {
                                 setupZoom(viewId, 1);
 
                                 // set button state
-                                setButtonState(viewId);
+                                setBackButtonState(viewId);
                             };
                         })(viewId)
                     );
@@ -281,6 +351,4 @@ function pageOnLoad(serverAddr) {
             }
         }
     });
-
-    return kyrixDiv;
 }

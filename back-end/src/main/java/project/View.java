@@ -4,7 +4,7 @@ package project;
 public class View {
 
     private String id;
-    private int minx, miny, width, height;
+    private int width, height;
     private String initialCanvasId;
     private int initialViewportX;
     private int initialViewportY;
@@ -12,14 +12,6 @@ public class View {
 
     public String getId() {
         return id;
-    }
-
-    public int getMinx() {
-        return minx;
-    }
-
-    public int getMiny() {
-        return miny;
     }
 
     public int getWidth() {
@@ -49,11 +41,7 @@ public class View {
     @Override
     public String toString() {
         return "View{"
-                + "minx="
-                + minx
-                + ", miny="
-                + miny
-                + ", width="
+                + "width="
                 + width
                 + ", height="
                 + height

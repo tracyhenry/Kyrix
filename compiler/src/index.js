@@ -8,6 +8,8 @@ const View = require("./View").View;
 const Jump = require("./Jump").Jump;
 const Layer = require("./Layer").Layer;
 const Transform = require("./Transform").Transform;
+const getBodyStringOfFunction = require("./template-api/Utilities")
+    .getBodyStringOfFunction;
 
 /**
  *
@@ -41,36 +43,27 @@ function Project(name, configFile) {
     // set of jump transitions
     this.jumps = [];
 
-    // set of autoDDs
-    this.autoDDs = [];
+    // set of ssv(s)
+    this.ssvs = [];
+
+    // set of tables
+    this.tables = [];
+
+    // set of usmaps
+    this.usmaps = [];
 
     // rendering parameters
     this.renderingParams = "{}";
 
     // style sheets
     this.styles = [];
-
-    // pyramids
-    this.pyramids = [];
 }
 
 // Add a view to a project.
 function addView(view) {
-    for (var i = 0; i < this.views.length; i++) {
+    for (var i = 0; i < this.views.length; i++)
         if (this.views[i].id == view.id)
             throw new Error("Adding View: view id already existed.");
-        if (
-            this.views[i].minx > view.minx + view.width ||
-            this.views[i].miny > view.miny + view.height ||
-            view.minx > this.views[i].minx + this.views[i].width ||
-            view.miny > this.views[i].miny + this.views[i].height
-        )
-            continue;
-        else
-            throw new Error(
-                "Adding View: this view intersects with an existing view."
-            );
-    }
     this.views.push(view);
 }
 
@@ -186,74 +179,163 @@ function addJump(jump) {
     this.jumps.push(jump);
 }
 
+// Add a Tabular vis to a project
+function addTable(table, args) {
+    if (args == null) args = {};
+
+    this.tables.push(table);
+    table.name = "kyrix_table_" + (this.tables.length - 1);
+
+    table.renderingParams = {
+        [table.name]: {
+            x: table.x,
+            y: table.y,
+            heads: {
+                height: table.heads_height,
+                names: table.heads_names
+            },
+            width: table.width,
+            cell_height: table.cell_height,
+            fields: table.schema.slice(0, table.schema.indexOf("rn"))
+        }
+    };
+
+    var canvas = new Canvas(
+        table.name,
+        Math.ceil(table.sum_width),
+        0,
+        "",
+        `0:select count(*) * ${table.cell_height} + ${table.heads_height} from ${table.table}`
+    );
+    this.addCanvas(canvas);
+    this.addStyles(__dirname + "/template-api/css/table.css");
+    this.addRenderingParams(table.renderingParams);
+    var transform_func = table.getTableTransformFunc();
+    var tableTransform = new Transform(
+        table.query,
+        table.db,
+        transform_func,
+        table.schema,
+        true
+    );
+
+    var tableLayer = new Layer(tableTransform, false);
+    tableLayer.addPlacement(table.placement);
+    tableLayer.addRenderingFunc(table.getTableRenderer());
+    if (table.group_by.length > 0) {
+        tableLayer.setIndexerType("PsqlPredicatedTableIndexer");
+    }
+    canvas.addLayer(tableLayer);
+
+    if (!args.view) {
+        var tableView = new View(
+            table.name + "_view",
+            Math.floor(table.sum_width * 0.8),
+            700
+        );
+        this.addView(tableView);
+        this.setInitialStates(tableView, canvas, 0, 0);
+    } else if (!(args.view instanceof View))
+        throw new Error("Constructing Table: view must be a View object");
+
+    return {canvas, view: args.view ? args.view : tableView};
+}
+
 /**
- * Add an autoDD to a project, this will create a hierarchy of canvases that form a pyramid shape
- * @param autoDD an AutoDD object
+ * Add an ssv to a project, this will create a hierarchy of canvases that form a pyramid shape
+ * @param ssv an SSV object
  * @param args an dictionary that contains customization parameters, see doc
- * @returns {Array} an array of canvas objects that correspond to the hierarchy
  */
-function addAutoDD(autoDD, args) {
+function addSSV(ssv, args) {
     if (args == null) args = {};
 
     // add to project
-    this.autoDDs.push(autoDD);
+    this.ssvs.push(ssv);
 
-    // add stuff to renderingParam for circle agg rendering
-    this.addRenderingParams({
-        textwrap: require("./template-api/Renderers").textwrap
-    });
-
-    // add one pyramid placeholder if specified
-    if (args.newPyramid) this.pyramids.push([]);
-    else if (this.pyramids.length == 0)
-        throw new Error("Adding autoDD: no pyramid available.");
+    // add stuff to renderingParam
+    var renderingParams = {
+        textwrap: require("./template-api/Utilities").textwrap,
+        processClusterAgg: require("./template-api/SSV").processClusterAgg,
+        serializePath: require("./template-api/Utilities").serializePath,
+        translatePathSegments: require("./template-api/Utilities")
+            .translatePathSegments,
+        parsePathIntoSegments: require("./template-api/Utilities")
+            .parsePathIntoSegments,
+        aggKeyDelimiter: ssv.aggKeyDelimiter,
+        loX: ssv.loX,
+        loY: ssv.loY,
+        hiX: ssv.hiX,
+        hiY: ssv.hiY,
+        bboxW: ssv.bboxW,
+        bboxH: ssv.bboxH,
+        zoomFactor: ssv.zoomFactor,
+        fadeInDuration: 200,
+        geoInitialLevel: ssv.geoInitialLevel,
+        geoInitialCenterLat: ssv.geoLat,
+        geoInitialCenterLon: ssv.geoLon
+    };
+    renderingParams = {
+        ...renderingParams,
+        ...ssv.clusterParams,
+        ...ssv.aggregateParams,
+        ...ssv.hoverParams,
+        ...ssv.legendParams,
+        ...ssv.axisParams
+    };
+    var rpKey = "ssv_" + (this.ssvs.length - 1);
+    var rpDict = {};
+    rpDict[rpKey] = renderingParams;
+    this.addRenderingParams(rpDict);
 
     // construct canvases
-    var autoDDCanvases = [];
-    var transform = new Transform(autoDD.query, autoDD.db, "", [], true);
+    var curPyramid = [];
+    var transform = new Transform(ssv.query, ssv.db, "", [], true);
     var numLevels = Math.min(
-        autoDD.numLevels,
-        args.newPyramid ? 1e10 : this.pyramids[this.pyramids.length - 1].length
+        ssv.numLevels,
+        args.pyramid ? args.pyramid.length : 1e10
     );
     for (var i = 0; i < numLevels; i++) {
-        var width = (autoDD.topLevelWidth * Math.pow(autoDD.zoomFactor, i)) | 0;
-        var height =
-            (autoDD.topLevelHeight * Math.pow(autoDD.zoomFactor, i)) | 0;
+        var width = (ssv.topLevelWidth * Math.pow(ssv.zoomFactor, i)) | 0;
+        var height = (ssv.topLevelHeight * Math.pow(ssv.zoomFactor, i)) | 0;
 
         // construct a new canvas
         var curCanvas;
-        if (!args.newPyramid) {
-            curCanvas = this.pyramids[this.pyramids.length - 1][i];
+        if (args.pyramid) {
+            curCanvas = args.pyramid[i];
             if (
                 Math.abs(curCanvas.width - width) > 1e-3 ||
                 Math.abs(curCanvas.height - height) > 1e-3
             )
-                throw new Error("Adding AutoDD: Canvas sizes do not match.");
+                throw new Error("Adding SSV: Canvas sizes do not match.");
         } else {
             curCanvas = new Canvas(
-                "pyramid" + (this.pyramids.length - 1) + "_" + "level" + i,
+                "ssv" + (this.ssvs.length - 1) + "_" + "level" + i,
                 width,
                 height
             );
             this.addCanvas(curCanvas);
         }
-        autoDDCanvases.push(curCanvas);
+        curPyramid.push(curCanvas);
+
+        // add static legend layer
+        var staticLayer = new Layer(null, true);
+        curCanvas.addLayer(staticLayer);
+        staticLayer.addRenderingFunc(ssv.getLegendRenderer());
+        staticLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
 
         // create one layer
         var curLayer = new Layer(transform, false);
         curCanvas.addLayer(curLayer);
 
-        // set isAutoDD and autoDD ID
-        curLayer.setIsAutoDD(true);
-        curLayer.setAutoDDId(this.autoDDs.length - 1 + "_" + i);
+        // set fetching scheme
+        if (ssv.clusterMode == "contour" || ssv.clusterMode == "heatmap")
+            curLayer.setFetchingScheme("dbox", false);
+        //curLayer.setFetchingScheme("tiling");
 
-        // set retainSizeZoom
-        curLayer.setRetainSizeZoom(
-            autoDD.renderingMode == "contour only" ||
-                autoDD.renderingMode == "contour+object"
-                ? false
-                : true
-        );
+        // set ssv ID
+        curLayer.setIndexerType("SSVInMemoryIndexer");
+        //curLayer.setIndexerType("SSVCitusIndexer");
+        curLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
 
         // dummy placement
         curLayer.addPlacement({
@@ -264,78 +346,312 @@ function addAutoDD(autoDD, args) {
         });
 
         // construct rendering function
-        curLayer.addRenderingFunc(autoDD.getLayerRenderer());
+        curLayer.addRenderingFunc(ssv.getLayerRenderer());
+
+        // tooltips
+        curLayer.addTooltip(ssv.tooltipColumns, ssv.tooltipAliases);
+
+        // map layer
+        if (ssv.mapBackground) {
+            var mapLayer = new Layer(
+                require("./Transform").defaultEmptyTransform,
+                false
+            );
+            curCanvas.addLayer(mapLayer);
+            mapLayer.addRenderingFunc(ssv.getMapRenderer());
+            mapLayer.addPlacement({
+                centroid_x: "con:0",
+                centroid_y: "con:0",
+                width: "con:0",
+                height: "con:0"
+            });
+            mapLayer.setFetchingScheme("dbox", false);
+            mapLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
+        }
 
         // axes
-        if (autoDD.axis) {
-            curCanvas.addAxes(autoDD.getAxesRenderer(i));
+        if (ssv.axis) {
+            curCanvas.addAxes(
+                ssv.getAxesRenderer(i),
+                "ssv_" + (this.ssvs.length - 1)
+            );
         }
     }
 
     // literal zooms
-    for (var i = 0; i + 1 < autoDD.numLevels; i++) {
+    for (var i = 0; i + 1 < ssv.numLevels; i++) {
         var hasLiteralZoomIn = false;
         var hasLiteralZoomOut = false;
         for (var j = 0; j < this.jumps.length; j++) {
             if (
-                this.jumps[j].sourceId == autoDDCanvases[i].id &&
+                this.jumps[j].sourceId == curPyramid[i].id &&
                 this.jumps[j].type == "literal_zoom_in"
             ) {
-                if (this.jumps[j].destId != autoDDCanvases[i + 1].id)
+                if (this.jumps[j].destId != curPyramid[i + 1].id)
                     throw new Error(
-                        "Adding AutoDD: malformed literal zoom pyramid."
+                        "Adding SSV: malformed literal zoom pyramid."
                     );
                 hasLiteralZoomIn = true;
             }
             if (
-                this.jumps[j].sourceId == autoDDCanvases[i + 1].id &&
+                this.jumps[j].sourceId == curPyramid[i + 1].id &&
                 this.jumps[j].type == "literal_zoom_out"
             ) {
-                if (this.jumps[j].destId != autoDDCanvases[i].id)
+                if (this.jumps[j].destId != curPyramid[i].id)
                     throw new Error(
-                        "Adding AutoDD: malformed literal zoom pyramid."
+                        "Adding SSV: malformed literal zoom pyramid."
                     );
                 hasLiteralZoomOut = true;
             }
         }
         if (!hasLiteralZoomIn)
             this.addJump(
-                new Jump(
-                    autoDDCanvases[i],
-                    autoDDCanvases[i + 1],
-                    "literal_zoom_in"
-                )
+                new Jump(curPyramid[i], curPyramid[i + 1], "literal_zoom_in")
             );
         if (!hasLiteralZoomOut)
             this.addJump(
-                new Jump(
-                    autoDDCanvases[i + 1],
-                    autoDDCanvases[i],
-                    "literal_zoom_out"
-                )
+                new Jump(curPyramid[i + 1], curPyramid[i], "literal_zoom_out")
             );
     }
 
-    // populate the new pyramid if specified
-    if (args.newPyramid)
-        this.pyramids[this.pyramids.length - 1] = autoDDCanvases;
-    // create a new view if specified
-    if (args.newView) {
-        var viewId = "autodd" + (this.autoDDs.length - 1);
+    // create a new view if not specified
+    if (!args.view) {
+        var viewId = "ssv" + (this.ssvs.length - 1);
+        var view = new View(viewId, ssv.topLevelWidth, ssv.topLevelHeight);
+        this.addView(view);
+        // initialize view
+        this.setInitialStates(view, curPyramid[0], 0, 0);
+    } else if (!(args.view instanceof View))
+        throw new Error("Constructing SSV: view must be a View object");
+
+    return {pyramid: curPyramid, view: args.view ? args.view : view};
+}
+
+/**
+ * Add a USMap template object to a project
+ * @param usmap a USMap object
+ * @param args an dictionary that contains customization parameters, see doc
+ */
+function addUSMap(usmap, args) {
+    if (args == null) args = {};
+    var numCanvas = "county" in usmap ? 2 : 1;
+    if ("pyramid" in args && args.pyramid.length != numCanvas)
+        throw new Error(
+            "Adding USMap: args.pyramid does not have matching number of canvases"
+        );
+
+    // add to project
+    this.usmaps.push(usmap);
+
+    // rendering params
+    var rpKey = "usmap_" + (this.usmaps.length - 1);
+    var rpDict = {};
+    rpDict[rpKey] = usmap.params;
+    this.addRenderingParams(rpDict);
+
+    // ================== state map canvas ===================
+    var canvases = [];
+    var stateMapCanvas;
+    if ("pyramid" in args) stateMapCanvas = args.pyramid[0];
+    else
+        stateMapCanvas = new Canvas(
+            "usmap" + (this.usmaps.length - 1) + "_" + "state",
+            usmap.stateMapWidth,
+            usmap.stateMapHeight
+        );
+    if (
+        stateMapCanvas.w != usmap.stateMapWidth ||
+        stateMapCanvas.h != usmap.stateMapHeight
+    )
+        throw new Error("Adding USMap: state canvas sizes do not match");
+    this.addCanvas(stateMapCanvas);
+
+    // static legends layer
+    var stateMapLegendLayer = new Layer(null, true);
+    stateMapCanvas.addLayer(stateMapLegendLayer);
+    stateMapLegendLayer.addRenderingFunc(
+        usmap.getUSMapRenderer("stateMapLegendRendering")
+    );
+    stateMapLegendLayer.setUSMapId(this.usmaps.length - 1 + "_" + 0);
+
+    // state boundary layer
+    var stateMapTransform = new Transform(
+        `SELECT name, ${usmap.stateRateCol}, geomstr 
+         FROM ${usmap.stateTable}`,
+        usmap.db,
+        usmap.getUSMapTransformFunc("stateMapTransform"),
+        ["bbox_x", "bbox_y", "name", "rate", "geomstr"],
+        true
+    );
+    var stateBoundaryLayer = new Layer(stateMapTransform, false);
+    stateMapCanvas.addLayer(stateBoundaryLayer);
+    stateBoundaryLayer.addPlacement({
+        centroid_x: "col:bbox_x",
+        centroid_y: "col:bbox_y",
+        width: `con:${usmap.stateMapWidth / usmap.zoomFactor}`,
+        height: `con:${usmap.stateMapWidth / usmap.zoomFactor}`
+    });
+    stateBoundaryLayer.addRenderingFunc(
+        usmap.getUSMapRenderer("stateMapRendering")
+    );
+    stateBoundaryLayer.addTooltip(
+        ["name", "rate"],
+        ["State", usmap.tooltipAlias]
+    );
+    stateBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 0);
+
+    // add to canvases (return)
+    canvases.push(stateMapCanvas);
+
+    // ==========  Views ===============
+    if (!("view" in args)) {
         var view = new View(
-            viewId,
-            0,
-            0,
-            autoDD.topLevelWidth,
-            autoDD.topLevelHeight
+            "usmap" + (this.usmaps.length - 1),
+            usmap.stateMapWidth,
+            usmap.stateMapHeight
         );
         this.addView(view);
-
-        // initialize view
-        this.setInitialStates(view, autoDDCanvases[0], 0, 0);
+        this.setInitialStates(view, stateMapCanvas, 0, 0);
+    } else if (!(args.view instanceof View)) {
+        throw new Error("Constructing USMap: view must be a View object");
     }
 
-    return this;
+    // ================== county map canvas ===================
+    if ("countyTable" in usmap) {
+        var countyMapCanvas;
+        if ("pyramid" in args) countyMapCanvas = args.pyramid[1];
+        else
+            countyMapCanvas = new Canvas(
+                "usmap" + (this.usmaps.length - 1) + "_" + "county",
+                usmap.stateMapWidth * usmap.zoomFactor,
+                usmap.stateMapHeight * usmap.zoomFactor
+            );
+        if (
+            countyMapCanvas.w != usmap.stateMapWidth * usmap.zoomFactor ||
+            countyMapCanvas.h != usmap.stateMapHeight * usmap.zoomFactor
+        )
+            throw new Error("Adding USMap: county canvas sizes do not match");
+        this.addCanvas(countyMapCanvas);
+
+        // static legends layer
+        var countyMapLegendLayer = new Layer(null, true);
+        countyMapCanvas.addLayer(countyMapLegendLayer);
+        countyMapLegendLayer.addRenderingFunc(
+            usmap.getUSMapRenderer("countyMapLegendRendering")
+        );
+        countyMapLegendLayer.setUSMapId(this.usmaps.length - 1 + "_" + 1);
+
+        // thick state boundary layer
+        var countyMapStateBoundaryTransform = new Transform(
+            `SELECT geomstr FROM ${usmap.stateTable}`,
+            usmap.db,
+            usmap.getUSMapTransformFunc("countyMapStateBoundaryTransform"),
+            ["bbox_x", "bbox_y", "bbox_w", "bbox_h", "geomstr"],
+            true
+        );
+        var countyMapStateBoundaryLayer = new Layer(
+            countyMapStateBoundaryTransform,
+            false
+        );
+        countyMapCanvas.addLayer(countyMapStateBoundaryLayer);
+        countyMapStateBoundaryLayer.addPlacement({
+            centroid_x: "col:bbox_x",
+            centroid_y: "col:bbox_y",
+            width: "col:bbox_w",
+            height: "col:bbox_h"
+        });
+        countyMapStateBoundaryLayer.addRenderingFunc(
+            usmap.getUSMapRenderer("countyMapStateBoundaryRendering")
+        );
+        countyMapStateBoundaryLayer.setUSMapId(
+            this.usmaps.length - 1 + "_" + 1
+        );
+
+        // county boundary layer
+        var countyMapTransform = new Transform(
+            `SELECT name, ${usmap.countyRateCol}, geomstr
+        FROM ${usmap.countyTable};`,
+            usmap.db,
+            usmap.getUSMapTransformFunc("countyMapTransform"),
+            ["bbox_x", "bbox_y", "bbox_w", "bbox_h", "name", "rate", "geomstr"],
+            true
+        );
+        var countyBoundaryLayer = new Layer(countyMapTransform, false);
+        countyMapCanvas.addLayer(countyBoundaryLayer);
+        countyBoundaryLayer.addPlacement({
+            centroid_x: "col:bbox_x",
+            centroid_y: "col:bbox_y",
+            width: "col:bbox_w",
+            height: "col:bbox_h"
+        });
+        countyBoundaryLayer.addRenderingFunc(
+            usmap.getUSMapRenderer("countyMapRendering")
+        );
+        countyBoundaryLayer.addTooltip(
+            ["name", "rate"],
+            ["County", usmap.tooltipAlias]
+        );
+        countyBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 1);
+
+        // add to canvases (return)
+        canvases.push(countyMapCanvas);
+
+        // =============== jump ===============
+        if (usmap.zoomType == "literal") {
+            this.addJump(
+                new Jump(stateMapCanvas, countyMapCanvas, "literal_zoom_in")
+            );
+            this.addJump(
+                new Jump(countyMapCanvas, stateMapCanvas, "literal_zoom_out")
+            );
+        } else if (usmap.zoomType == "jump") {
+            var selector = new Function(
+                "row",
+                "args",
+                `return args.layerId = ${stateMapCanvas.layers.length - 1}`
+            );
+            var newPredicates = function() {
+                return {};
+            };
+            var newViewportBody = function(row, args) {
+                var zoomFactor = REPLACE_ME_zoomfactor;
+                var vpW = args.viewportW;
+                var vpH = args.viewportH;
+                return {
+                    constant: [
+                        row.bbox_x * zoomFactor - vpW / 2,
+                        row.bbox_y * zoomFactor - vpH / 2
+                    ]
+                };
+            };
+            var newViewport = new Function(
+                "row",
+                "args",
+                getBodyStringOfFunction(newViewportBody).replace(
+                    /REPLACE_ME_zoomfactor/g,
+                    usmap.zoomFactor
+                )
+            );
+            var jumpName = function(row) {
+                return "County map of " + row.name;
+            };
+            this.addJump(
+                new Jump(
+                    stateMapCanvas,
+                    countyMapCanvas,
+                    "geometric_semantic_zoom",
+                    {
+                        selector: selector,
+                        viewport: newViewport,
+                        predicates: newPredicates,
+                        name: jumpName
+                    }
+                )
+            );
+        }
+    }
+
+    return {pyramid: canvases, view: args.view ? args.view : view};
 }
 
 // Add a rendering parameter object
@@ -361,13 +677,13 @@ function addStyles(styles) {
     if (!styles || typeof styles != "string") return;
 
     //match http:// and https://
+    var rules;
     if (styles.match(/https?:\/\//)) {
-        var rules = styles;
+        rules = styles;
     } else if (styles.match(".css")) {
-        var rules = fs.readFileSync(styles).toString();
+        rules = fs.readFileSync(styles).toString();
     } else {
-        console.log("STYLES NOT CSS FILE, BUT STRING", styles);
-        var rules = styles;
+        rules = styles;
     }
 
     // merge with current CSS
@@ -398,22 +714,35 @@ function setInitialStates(
     viewportY,
     predicates
 ) {
+    // check whether viewObj is in the project
+    var viewExist = 0;
+    for (var i = 0; i < this.views.length; i++)
+        if (this.views[i].id == viewObj.id) viewExist = 1;
+    if (!viewExist) throw new Error("Initialize view: unidentified viewObj.");
+
     // check whether canvasObj has an id field
     if (canvasObj.id == null)
-        throw new Error("Initial canvas: unidentified canvasObj.");
+        throw new Error("Initialize view: unidentified canvasObj.");
 
     // check if this id exists
     var canvasId = -1;
     for (var i = 0; i < this.canvases.length; i++)
         if (this.canvases[i].id === canvasObj.id) canvasId = i;
     if (canvasId == -1)
-        throw new Error("Initial canvas: unidentified canvasObj.");
+        throw new Error("Initialize view: unidentified canvasObj.");
 
     // check viewport range
-    if (viewportX < 0 || viewportX + viewObj.width > this.canvases[canvasId].w)
-        throw new Error("Initial canvas: viewportX out of range.");
-    if (viewportY < 0 || viewportY + viewObj.height > this.canvases[canvasId].h)
-        throw new Error("Initial canvas: viewportY out of range.");
+    if (
+        this.canvases[canvasId].w > 0 &&
+        (viewportX < 0 || viewportX + viewObj.width > this.canvases[canvasId].w)
+    )
+        throw new Error("Initialize view: viewportX out of range.");
+    if (
+        this.canvases[canvasId].h > 0 &&
+        (viewportY < 0 ||
+            viewportY + viewObj.height > this.canvases[canvasId].h)
+    )
+        throw new Error("Initialize view: viewportY out of range.");
 
     // check if the size of the predicates array equals the number of layers
     if (predicates == null) predicates = {};
@@ -423,6 +752,21 @@ function setInitialStates(
     viewObj.initialViewportX = viewportX;
     viewObj.initialViewportY = viewportY;
     viewObj.initialPredicates = JSON.stringify(predicates);
+}
+
+/**
+ * set fetching schemes for all layers
+ * @param fetchingScheme
+ * @param deltaBox
+ */
+function setFetchingScheme(fetchingScheme, deltaBox) {
+    for (var i = 0; i < this.canvases.length; i++)
+        for (var j = 0; j < this.canvases[i].layers.length; j++)
+            if (!this.canvases[i].layers[j].isStatic)
+                this.canvases[i].layers[j].setFetchingScheme(
+                    fetchingScheme,
+                    deltaBox
+                );
 }
 
 function sendProjectRequestToBackend(portNumber, projectJSON) {
@@ -466,10 +810,12 @@ function saveProject() {
     var config = this.config;
 
     // final checks before saving
-    if (this.autoDDs.length > 0 && config.database == "mysql")
+    if (this.ssvs.length > 0 && config.database == "mysql")
         throw new Error(
             "Auto drill down for MySQL is not supported right now."
         );
+    if (this.views.length == 0)
+        throw new Error("No view object specified in the project.");
     for (var i = 0; i < this.canvases.length; i++) {
         // a canvas should have at least one layer
         if (this.canvases[i].layers.length == 0)
@@ -585,7 +931,7 @@ function saveProject() {
         },
         4
     );
-    console.log(logJSON);
+    //console.log(logJSON);
 
     // add escape character to projectJSON
     var projectJSONEscapedMySQL = (projectJSON + "")
@@ -596,7 +942,8 @@ function saveProject() {
     // construct queries
     var createTableQuery =
         "CREATE TABLE IF NOT EXISTS project (name VARCHAR(255), content TEXT, dirty int" +
-        ", CONSTRAINT PK_project PRIMARY KEY (name));";
+        ", CONSTRAINT PK_project PRIMARY KEY (name));" +
+        "CREATE TABLE IF NOT EXISTS stats (ID serial PRIMARY KEY, project_name VARCHAR(255), canvas_id TEXT, query_type TEXT, fetch_time_ms FLOAT, rows_fetched INT)";
     var deleteProjQuery =
         "DELETE FROM project where name = '" + this.name + "'";
     var insertProjQueryMySQL =
@@ -655,12 +1002,20 @@ function saveProject() {
             host: config.serverName,
             user: config.userName,
             password: config.password,
-            qdatabase: "postgres"
+            database: "postgres"
         });
 
         // create Kyrix DB and ignore error
         postgresConn.connect(function(err) {
+            if (err)
+                console.error(
+                    "****** Error in connecting to postgres db\n****** Call Stack from Node:"
+                );
+            else console.log("connected");
+            if (err) throw err;
+
             postgresConn.query(createDbQuery, function(err) {
+                // ignoring the error here
                 var dbConn = new psql.Client({
                     host: config.serverName,
                     user: config.userName,
@@ -670,16 +1025,20 @@ function saveProject() {
 
                 // connect and pose queries
                 dbConn.connect(function(err) {
-                    // log to console
-                    if (err) console.error("connection error", err.stack);
+                    if (err)
+                        console.error(
+                            "****** Error in connecting to kyrix db\n****** Call Stack from Node:"
+                        );
                     else console.log("connected");
                     if (err) throw err;
 
                     // create a table and ignore the error
                     dbConn.query(createTableQuery, function(err) {
                         if (err)
-                            console.error("error with CREATE TABLE", err.stack);
-                        else console.log("table created");
+                            console.error(
+                                "****** Error in creating the project table\n****** Call Stack from Node:"
+                            );
+                        else console.log("project table created");
                         if (err) throw err;
 
                         // delete the project if exists
@@ -724,11 +1083,14 @@ Project.prototype = {
     addView,
     addCanvas,
     addJump,
-    addStyles,
+    addTable,
+    addUSMap,
     addPie,
-    addAutoDD,
+    addSSV,
     addRenderingParams,
+    addStyles,
     setInitialStates,
+    setFetchingScheme,
     saveProject
 };
 

@@ -12,10 +12,11 @@ const placements = require("../dots-uniform/placements");
 
 // construct a project
 var p = new Project("dots_skewed_80_20", "../../../config.txt");
+p.addRenderingParams(renderers.renderingParams);
 
 // ================== top zoom level ===================
-var topWidth = 1000000,
-    topHeight = 1000000;
+var topWidth = renderers.topLevelWidth;
+topHeight = topLevelHeight;
 var topCanvas = new Canvas("top", topWidth, topHeight);
 p.addCanvas(topCanvas);
 
@@ -31,7 +32,7 @@ p.addCanvas(bottomCanvas);
 bottomCanvas.addLayer(dotsLayer);
 
 // ================== Views ===================
-var view = new View("dotview", 0, 0, 1000, 1000);
+var view = new View("dotview", 1000, 1000);
 p.addView(view);
 p.setInitialStates(view, topCanvas, 5000, 5000);
 

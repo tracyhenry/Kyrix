@@ -18,7 +18,7 @@ var renderingParams = {
     teamlogoradius: 24,
     avgcharwidth: 20,
     shadowrectwidth: 5,
-    textwrap: require("../../src/template-api/Renderers").textwrap
+    textwrap: require("../../src/template-api/Utilities").textwrap
 };
 
 var teamLogoRendering = function(svg, data) {
@@ -75,7 +75,8 @@ var teamTimelineRendering = function(svg, data, args) {
         .attr("rx", 10)
         .attr("ry", 10)
         .attr("width", rectWidth)
-        .attr("height", rectHeight + dateHeight);
+        .attr("height", rectHeight + dateHeight)
+        .classed("kyrix-retainsizezoom", true); // for NBA SSVs
 
     // home logo
     g.selectAll(".homeimage")
@@ -96,7 +97,8 @@ var teamTimelineRendering = function(svg, data, args) {
                 d.home_team +
                 ".svg"
             );
-        });
+        })
+        .classed("kyrix-retainsizezoom", true); // for NBA SSVs
 
     // away logo
     g.selectAll(".awayimage")
@@ -117,7 +119,8 @@ var teamTimelineRendering = function(svg, data, args) {
                 d.away_team +
                 ".svg"
             );
-        });
+        })
+        .classed("kyrix-retainsizezoom", true); // for NBA SSVs
 
     // home score
     g.selectAll(".homescore")
@@ -135,7 +138,8 @@ var teamTimelineRendering = function(svg, data, args) {
             return +d.cy - d2Delta - scoreYDelta;
         })
         .attr("font-size", scoreFontSize)
-        .attr("dy", ".35em");
+        .attr("dy", ".35em")
+        .classed("kyrix-retainsizezoom", true); // for NBA SSVs
 
     // away score
     g.selectAll(".awayscore")
@@ -153,7 +157,8 @@ var teamTimelineRendering = function(svg, data, args) {
             return +d.cy - d2Delta + scoreYDelta;
         })
         .attr("font-size", scoreFontSize)
-        .attr("dy", ".35em");
+        .attr("dy", ".35em")
+        .classed("kyrix-retainsizezoom", true); // for NBA SSVs
 
     // date
     g.selectAll(".date")
@@ -172,9 +177,10 @@ var teamTimelineRendering = function(svg, data, args) {
         .attr("y", function(d) {
             return +d.cy - d2Delta + rectHeight / 2 + dateYDelta;
         })
-        .attr("dy", ".35em");
+        .attr("dy", ".35em")
+        .classed("kyrix-retainsizezoom", true); // for NBA SSVs
 
-    // line
+    // line -- for nba app, SSVs don't need this
     if (data.length > 0 && "timeline" in data[0])
         g.selectAll("line")
             .data(data)
@@ -511,9 +517,9 @@ var teamTimelineStaticBkg = function(svg, data) {
 
     // axis line
     g.append("line")
-        .attr("x1", -1000)
+        .attr("x1", 0)
         .attr("y1", 625)
-        .attr("x2", 2000)
+        .attr("x2", 1000)
         .attr("y2", 625)
         .style("stroke", "#CCC")
         .style("stroke-width", 3);

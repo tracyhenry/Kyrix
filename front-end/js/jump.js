@@ -1,12 +1,14 @@
 function removePopovers(viewId) {
     var selector = ".popover";
     if (viewId != null) selector += ".view_" + viewId;
+    selector += ",.kyrixtooltip";
     d3.selectAll(selector).remove();
 }
 
 function removePopoversSmooth(viewId) {
     var selector = ".popover";
     if (viewId != null) selector += ".view_" + viewId;
+    selector += ",.kyrixtooltip";
     d3.selectAll(selector)
         .transition()
         .duration(param.popoverOutDuration)
@@ -15,9 +17,17 @@ function removePopoversSmooth(viewId) {
 }
 
 // disable and remove stuff before jump
-function preJump(viewId) {
+function preJump(viewId, jump) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
+
+    // execute jumpstart events
+    if (gvd.onJumpstartHandlers != null) {
+        var subEvts = Object.keys(gvd.onJumpstartHandlers);
+        for (var subEvt of subEvts)
+            if (typeof gvd.onJumpstartHandlers[subEvt] == "function")
+                gvd.onJumpstartHandlers[subEvt](jump);
+    }
 
     // unbind zoom
     d3.select(viewClass + ".maing").on(".zoom", null);
@@ -30,30 +40,35 @@ function preJump(viewId) {
     removePopoversSmooth(viewId);
 
     // change .mainsvg to .oldmainsvg, and .layerg to .oldlayerg
-    d3.selectAll(viewClass + ".mainsvg")
-        .classed("mainsvg", false)
-        .classed("oldmainsvg", true);
+    d3.selectAll(viewClass + ".oldlayerg").remove();
     d3.selectAll(viewClass + ".layerg")
         .classed("layerg", false)
         .classed("oldlayerg", true);
+
+    d3.selectAll(viewClass + ".mainsvg")
+        .classed("mainsvg", false)
+        .classed("oldmainsvg", true);
 
     // remove cursor pointers and onclick listeners
     d3.select(viewClass + ".viewsvg")
         .selectAll("*")
         .style("cursor", "auto")
-        .on("click", null);
+        .on("click", null)
+        .on(".kyrixtooltip", null);
     d3.selectAll("button" + viewClass).attr("disabled", true);
 
-    gvd.animation = true;
+    gvd.animation = jump.type;
+    gvd.initialScale = null;
 }
 
-function postJump(viewId, zoomType) {
+function postJump(viewId, jump) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
+    var jumpType = jump.type;
 
     function postOldLayerRemoval() {
         // set up zoom
-        if (zoomType == param.literalZoomOut)
+        if (jumpType == param.literalZoomOut)
             setupZoom(
                 viewId,
                 Math.max(
@@ -61,10 +76,14 @@ function postJump(viewId, zoomType) {
                     gvd.curCanvas.zoomInFactorY
                 ) - param.eps
             );
-        else setupZoom(viewId, 1);
+        // hardcode for load for now
+        // in the future we shouldn't need these if-elses
+        // gvd.initialScale should be set prior to all jumps.
+        // relevant: https://github.com/tracyhenry/Kyrix/issues/12
+        else setupZoom(viewId, gvd.initialScale || 1);
 
         // set up button states
-        setButtonState(viewId);
+        setBackButtonState(viewId);
 
         // animation stopped now
         gvd.animation = false;
@@ -77,7 +96,7 @@ function postJump(viewId, zoomType) {
             var nViewClass = ".view_" + nViewId;
             for (var j = 0; j < nGvd.curCanvas.layers.length; j++) {
                 var curLayer = nGvd.curCanvas.layers[j];
-                if (!curLayer.isStatic && param.fetchingScheme == "tiling")
+                if (!curLayer.isStatic && curLayer.fetchingScheme == "tiling")
                     d3.select(nViewClass + ".layerg.layer" + j)
                         .select("svg")
                         .selectAll(".lowestsvg")
@@ -120,26 +139,36 @@ function postJump(viewId, zoomType) {
         .duration(param.axesInDuration)
         .style("opacity", 1);
 
-    // use a d3 transition to remove things based on zoom type
-    var removalDelay = 0;
-    if (zoomType == param.geometricSemanticZoom)
-        removalDelay = param.oldRemovalDelay;
-    var numOldLayer = d3.selectAll(viewClass + ".oldlayerg").size();
-    d3.selectAll(viewClass + ".oldlayerg")
-        .transition()
-        .duration(removalDelay)
-        .remove()
-        .on("end", postOldLayerRemoval);
-    if (numOldLayer == 0) postOldLayerRemoval();
+    // remove old layers if appropriate
+    for (var i = 0; i < gvd.curCanvas.layers.length; i++)
+        if (gvd.curCanvas.layers[i].isStatic)
+            d3.selectAll(viewClass + ".oldlayerg" + ".layer" + i).remove();
+    if (
+        !(
+            jumpType == param.geometricSemanticZoom ||
+            jumpType == param.literalZoomIn ||
+            jumpType == param.literalZoomOut ||
+            jumpType == param.load
+        )
+    )
+        d3.selectAll(viewClass + ".oldlayerg").remove();
+    postOldLayerRemoval();
+
+    // execute on jump handlers
+    if (gvd.onJumpendHandlers != null) {
+        var subEvts = Object.keys(gvd.onJumpendHandlers);
+        for (var subEvt of subEvts)
+            if (typeof gvd.onJumpendHandlers[subEvt] == "function")
+                gvd.onJumpendHandlers[subEvt](jump);
+    }
 }
 
-// animate semantic zoom
-function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
+// animate semantic jumps (semantic_zoom, geometric_semantic_zoom, slide)
+function semanticJump(viewId, jump, predArray, newVpX, newVpY, tuple) {
     var gvd = globalVar.views[viewId];
-    var viewClass = ".view_" + viewId;
 
     // log history
-    logHistory(viewId, jump.type);
+    logHistory(viewId, jump);
 
     // change global vars
     gvd.curCanvasId = jump.destId;
@@ -176,191 +205,20 @@ function semanticZoom(viewId, jump, predArray, newVpX, newVpY, tuple) {
     }
 
     // disable stuff before animation
-    preJump(viewId);
+    preJump(viewId, jump);
 
-    // whether this semantic zoom is also geometric
-    var zoomType = gvd.history[gvd.history.length - 1].zoomType;
-    var enteringAnimation = zoomType == param.semanticZoom ? true : false;
-
-    // calculate tuple boundary
-    var curViewport = [0, 0, gvd.viewportWidth, gvd.viewportHeight];
-    if (d3.select(viewClass + ".oldmainsvg:not(.static)").size())
-        curViewport = d3
-            .select(viewClass + ".oldmainsvg:not(.static)")
-            .attr("viewBox")
-            .split(" ");
-    for (var i = 0; i < curViewport.length; i++)
-        curViewport[i] = +curViewport[i];
-    var tupleWidth = +tuple.maxx - tuple.minx;
-    var tupleHeight = +tuple.maxy - tuple.miny;
-    var minx, maxx, miny, maxy;
-    if (tupleWidth == 0 || tupleHeight == 0) {
-        // check when placement func does not exist
-        minx = gvd.curCanvas.w;
-        miny = gvd.curCanvas.h;
-        maxx = maxy = 0;
-        d3.select(viewClass + ".viewsvg")
-            .selectAll("*")
-            .filter(function(d) {
-                return d == tuple;
-            })
-            .each(function() {
-                var ancestor = this.parentElement;
-                while (!ancestor.classList.contains("maing"))
-                    ancestor = ancestor.parentElement;
-                var thisbox = this.getBoundingClientRect();
-                var ancestorbox = ancestor.getBoundingClientRect();
-                minx = Math.min(minx, thisbox.x - ancestorbox.x);
-                miny = Math.min(miny, thisbox.y - ancestorbox.y);
-                maxx = Math.max(
-                    maxx,
-                    thisbox.x - ancestorbox.x + thisbox.width
-                );
-                maxy = Math.max(
-                    maxy,
-                    thisbox.y - ancestorbox.y + thisbox.height
-                );
-            });
-    } else {
-        minx = +tuple.cx - tupleWidth / 2.0;
-        maxx = +tuple.cx + tupleWidth / 2.0;
-        miny = +tuple.cy - tupleHeight / 2.0;
-        maxy = +tuple.cy + tupleHeight / 2.0;
-    }
-
-    // use tuple boundary to calculate start and end views, and log them to the last history object
-    var startView = [
-        curViewport[2] / 2.0,
-        curViewport[3] / 2.0,
-        curViewport[2]
-    ];
-    var endView = [
-        minx + (maxx - minx) / 2.0 - curViewport[0],
-        miny + (maxy - miny) / 2.0 - curViewport[1],
-        (maxx - minx) / (enteringAnimation ? param.semanticZoomScaleFactor : 1)
-    ];
-    gvd.history[gvd.history.length - 1].startView = startView;
-    gvd.history[gvd.history.length - 1].endView = endView;
-
-    // set up zoom transitions
-    param.zoomDuration = d3.interpolateZoom(startView, endView).duration;
-    param.enteringDelay = Math.round(
-        param.zoomDuration * param.semanticZoomEnteringDelta
-    );
-    d3.transition("zoomInTween_" + viewId)
-        .duration(param.zoomDuration)
-        .tween("zoomInTween", function() {
-            var i = d3.interpolateZoom(startView, endView);
-            return function(t) {
-                zoomAndFade(t, i(t));
-            };
-        })
-        .on("start", function() {
-            // schedule a new entering transition
-            if (enteringAnimation)
-                d3.transition("enterTween_" + viewId)
-                    .delay(param.enteringDelay)
-                    .duration(param.semanticZoomEnteringDuration)
-                    .tween("enterTween", function() {
-                        return function(t) {
-                            enterAndScale(d3.easeCircleOut(t));
-                        };
-                    })
-                    .on("start", function() {
-                        // get the canvas object for the destination canvas
-                        var gotCanvas = getCurCanvas(viewId);
-                        gotCanvas.then(function() {
-                            // static trim
-                            renderStaticLayers(viewId);
-
-                            // render
-                            RefreshDynamicLayers(viewId, newVpX, newVpY);
-                        });
-                    })
-                    .on("end", function() {
-                        postJump(viewId, zoomType);
-                    });
-        })
-        .on("end", function() {
-            if (!enteringAnimation) {
-                // get the canvas object for the destination canvas
-                var gotCanvas = getCurCanvas(viewId);
-                gotCanvas.then(function() {
-                    // static trim
-                    renderStaticLayers(viewId);
-
-                    // render
-                    RefreshDynamicLayers(viewId, newVpX, newVpY);
-
-                    // clean up
-                    postJump(viewId, zoomType);
-                });
-            }
-        });
-
-    function zoomAndFade(t, v) {
-        var vWidth = v[2];
-        var vHeight = (gvd.viewportHeight / gvd.viewportWidth) * vWidth;
-        var minx = curViewport[0] + v[0] - vWidth / 2.0;
-        var miny = curViewport[1] + v[1] - vHeight / 2.0;
-
-        // change viewBox of dynamic layers
-        d3.selectAll(viewClass + ".oldmainsvg:not(.static)").attr(
-            "viewBox",
-            minx + " " + miny + " " + vWidth + " " + vHeight
-        );
-
-        // change viewBox of static layers
-        minx = v[0] - vWidth / 2.0;
-        miny = v[1] - vHeight / 2.0;
-        d3.selectAll(viewClass + ".oldmainsvg.static").attr(
-            "viewBox",
-            minx + " " + miny + " " + vWidth + " " + vHeight
-        );
-
-        // change opacity
-        if (enteringAnimation) {
-            var threshold = param.fadeThreshold;
-            if (t >= threshold) {
-                d3.selectAll(viewClass + ".oldmainsvg").style(
-                    "opacity",
-                    1.0 - (t - threshold) / (1.0 - threshold)
-                );
-            }
-        }
-    }
-
-    function enterAndScale(t) {
-        var vWidth =
-            (gvd.viewportWidth * param.enteringScaleFactor) /
-            (1.0 + (param.enteringScaleFactor - 1.0) * t);
-        var vHeight =
-            (gvd.viewportHeight * param.enteringScaleFactor) /
-            (1.0 + (param.enteringScaleFactor - 1.0) * t);
-        var minx = newVpX + gvd.viewportWidth / 2.0 - vWidth / 2.0;
-        var miny = newVpY + gvd.viewportHeight / 2.0 - vHeight / 2.0;
-
-        // change viewBox of dynamic layers
-        d3.selectAll(viewClass + ".mainsvg:not(.static)").attr(
-            "viewBox",
-            minx + " " + miny + " " + vWidth + " " + vHeight
-        );
-
-        // change viewbox of static layers
-        minx = gvd.viewportWidth / 2 - vWidth / 2;
-        miny = gvd.viewportHeight / 2 - vHeight / 2;
-        d3.selectAll(viewClass + ".mainsvg.static").attr(
-            "viewBox",
-            minx + " " + miny + " " + vWidth + " " + vHeight
-        );
-
-        // change opacity
-        d3.selectAll(viewClass + ".mainsvg").style("opacity", t);
-    }
+    // animate semantic zoom
+    if (
+        jump.type == param.semanticZoom ||
+        jump.type == param.geometricSemanticZoom
+    )
+        animateSemanticZoom(viewId, jump, newVpX, newVpY, tuple);
+    else if (jump.type == param.slide)
+        animateSlide(viewId, jump.slideDirection, newVpX, newVpY, 1, jump);
 }
 
-function load(predArray, newVpX, newVpY, jump) {
-    var destViewId = jump.destViewId;
+function load(predArray, newVpX, newVpY, newScale, viewId, canvasId, jump) {
+    var destViewId = viewId;
 
     // stop any tweens
     d3.selection().interrupt("zoomInTween_" + destViewId);
@@ -371,17 +229,18 @@ function load(predArray, newVpX, newVpY, jump) {
 
     // reset global vars
     var gvd = globalVar.views[destViewId];
-    gvd.curCanvasId = jump.destId;
+    gvd.curCanvasId = canvasId;
     gvd.predicates = predArray;
     gvd.highlightPredicates = [];
     gvd.initialViewportX = newVpX;
     gvd.initialViewportY = newVpY;
+    gvd.initialScale = newScale;
     gvd.renderData = null;
-    gvd.pendingBoxRequest = false;
+    gvd.pendingBoxRequest = null;
     gvd.history = [];
 
     // pre animation
-    preJump(destViewId);
+    preJump(destViewId, jump);
 
     // draw buttons because they were not created if it was an empty view
     drawZoomButtons(destViewId);
@@ -391,9 +250,8 @@ function load(predArray, newVpX, newVpY, jump) {
     gotCanvas.then(function() {
         // render static layers
         renderStaticLayers(destViewId);
-
         // post animation
-        postJump(destViewId);
+        postJump(destViewId, jump);
     });
 }
 
@@ -463,10 +321,12 @@ function startJump(viewId, d, jump, optionalArgs) {
 
     if (
         jump.type == param.semanticZoom ||
-        jump.type == param.geometricSemanticZoom
+        jump.type == param.geometricSemanticZoom ||
+        jump.type == param.slide
     )
-        semanticZoom(viewId, jump, predArray, newVpX, newVpY, d);
-    else if (jump.type == param.load) load(predArray, newVpX, newVpY, jump);
+        semanticJump(viewId, jump, predArray, newVpX, newVpY, d);
+    else if (jump.type == param.load)
+        load(predArray, newVpX, newVpY, 1, jump.destViewId, jump.destId, jump);
     else if (jump.type == param.highlight) highlight(predArray, jump);
 }
 
@@ -487,6 +347,7 @@ function registerJumps(viewId, svg, layerId) {
             if (
                 (jumps[k].type == param.semanticZoom ||
                     jumps[k].type == param.geometricSemanticZoom ||
+                    jumps[k].type == param.slide ||
                     (jumps[k].type == param.load &&
                         jumps[k].sourceViewId == viewId) ||
                     (jumps[k].type == param.highlight &&
@@ -512,31 +373,34 @@ function registerJumps(viewId, svg, layerId) {
             removePopovers(viewId);
 
             // create a jumpoption popover using bootstrap
-            d3.select(".kyrixdiv")
+            d3.select("body")
                 .append("div")
-                .classed("view_" + viewId + " popover fade right in", true)
+                .classed(
+                    "view_" + viewId + " jumppopover popover fade right in",
+                    true
+                )
                 .attr("role", "tooltip")
-                .attr("id", "jumppopover")
                 .append("div")
-                .classed("view_" + viewId + " arrow popoverarrow", true)
-                .attr("id", "popoverarrow");
-            d3.select(viewClass + "#jumppopover")
+                .classed("view_" + viewId + " popoverarrow arrow", true);
+            d3.select(viewClass + ".jumppopover")
                 .append("h2")
                 .classed("view_" + viewId + " popover-title", true)
-                .attr("id", "popovertitle")
                 .html("Jump Options")
                 .append("a")
-                .classed("view_" + viewId + " close", true)
+                .classed("view_" + viewId + " popoverclose close", true)
                 .attr("href", "#")
-                .attr("id", "popoverclose")
                 .html("&times;")
                 .on("click", function() {
                     removePopovers(viewId);
                 });
-            d3.select(viewClass + "#jumppopover")
+            d3.select(viewClass + ".jumppopover")
                 .append("div")
-                .classed("view_" + viewId + " popover-content list-group", true)
-                .attr("id", "popovercontent");
+                .classed(
+                    "view_" +
+                        viewId +
+                        " popovercontent popover-content list-group",
+                    true
+                );
 
             // add jump options
             for (var k = 0; k < jumps.length; k++) {
@@ -544,6 +408,7 @@ function registerJumps(viewId, svg, layerId) {
                 if (
                     (jumps[k].type != param.semanticZoom &&
                         jumps[k].type != param.geometricSemanticZoom &&
+                        jumps[k].type != param.slide &&
                         (jumps[k].type != param.load ||
                             jumps[k].sourceViewId != viewId) &&
                         (jumps[k].type != param.highlight ||
@@ -554,7 +419,7 @@ function registerJumps(viewId, svg, layerId) {
                 )
                     continue;
 
-                // create table cell and append it to #popovercontent
+                // create table cell and append it to .popovercontent
                 var optionText = "<b>ZOOM IN </b>";
                 if (jumps[k].type == param.load)
                     optionText =
@@ -570,7 +435,7 @@ function registerJumps(viewId, svg, layerId) {
                         ? jumps[k].name
                         : jumps[k].name.parseFunction()(d, optionalArgs);
                 var jumpOption = d3
-                    .select(viewClass + "#popovercontent")
+                    .select(viewClass + ".popovercontent")
                     .append("a")
                     .classed("list-group-item", true)
                     .attr("href", "#")
@@ -588,12 +453,12 @@ function registerJumps(viewId, svg, layerId) {
 
             // position jump popover according to event x/y and its width/height
             var popoverHeight = d3
-                .select(viewClass + "#jumppopover")
+                .select(viewClass + ".jumppopover")
                 .node()
                 .getBoundingClientRect().height;
-            d3.select(viewClass + "#jumppopover")
-                .style("left", d3.event.pageX)
-                .style("top", d3.event.pageY - popoverHeight / 2);
+            d3.select(viewClass + ".jumppopover")
+                .style("left", d3.event.pageX + "px")
+                .style("top", d3.event.pageY - popoverHeight / 2 + "px");
         });
     });
 }

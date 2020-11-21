@@ -21,9 +21,20 @@ public class Project {
     private ArrayList<View> views;
     private ArrayList<Canvas> canvases;
     private ArrayList<Jump> jumps;
-    private ArrayList<AutoDD> autoDDs;
+    private ArrayList<SSV> ssvs;
+    private ArrayList<Table> tables;
     private String renderingParams;
-    private String[] styles;
+    private ArrayList<String> styles;
+
+    // Back-end Generated Rendering parameters
+    // The key of the hashmap is used to minimize occupied
+    // namespace of the global rendering parameter dictionary
+    // currently, it's only used by SSV indexers, which registers
+    // keys like "ssv_0", "ssv_1", "ssv_2"...
+    // the value of the hashmap is a regular dictionary mapping from
+    // names to values. This is merged with compiler generated ones
+    // in the frontend (pageOnLoad.js)
+    private HashMap<String, HashMap<String, String>> BGRP = new HashMap<>();
 
     public String getName() {
         return name;
@@ -41,15 +52,33 @@ public class Project {
         return jumps;
     }
 
-    public ArrayList<AutoDD> getAutoDDs() {
-        return autoDDs;
+    public ArrayList<SSV> getSsvs() {
+        return ssvs;
+    }
+
+    public ArrayList<Table> getTables() {
+        return tables;
     }
 
     public String getRenderingParams() {
         return renderingParams;
     }
 
-    public String[] getStyles() {
+    public HashMap<String, HashMap<String, String>> getBGRP() {
+        return BGRP;
+    }
+
+    public void setBGRP(HashMap<String, HashMap<String, String>> BGRP) {
+        this.BGRP = BGRP;
+    }
+
+    public void addBGRP(String key1, String key2, String val) {
+
+        if (!BGRP.containsKey(key1)) BGRP.put(key1, new HashMap<>());
+        BGRP.get(key1).put(key2, val);
+    }
+
+    public ArrayList<String> getStyles() {
         return styles;
     }
 
@@ -96,10 +125,13 @@ public class Project {
                 + canvases
                 + ", jumps="
                 + jumps
-                + ", autoDDs="
-                + autoDDs
+                + ", ssvs="
+                + ssvs
                 + ", renderingParams='"
                 + renderingParams
+                + '\''
+                + ", BGRP='"
+                + BGRP
                 + '\''
                 + ", styles='"
                 + styles

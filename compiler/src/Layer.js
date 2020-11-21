@@ -18,8 +18,14 @@ function Layer(transform, isStatic) {
     this.transform = transform;
     if (isStatic == null) this.isStatic = false;
     else this.isStatic = isStatic;
-    this.isAutoDDLayer = false;
-    this.retainSizeZoom = false;
+    this.fetchingScheme = "dbox";
+    this.deltaBox = true;
+    this.rendering = "";
+    this.tooltipColumns = [];
+    this.tooltipAliases = [];
+    this.indexerType = "";
+    this.ssvId = "";
+    this.usmapId = "";
 }
 
 /**
@@ -60,36 +66,63 @@ function addRenderingFunc(rendering) {
 }
 
 /**
- * set isAutoDD, which tells the backend that this layer should use the autodd indexer
- * @param isAutoDD
+ * @param tooltipColumns - an array of column names to be displayed in the tooltip
+ * @param tooltipAliases - an array of aliases to tooltipColumns
  */
-function setIsAutoDD(isAutoDD) {
-    this.isAutoDDLayer = isAutoDD;
+function addTooltip(tooltipColumns, tooltipAliases) {
+    this.tooltipColumns = tooltipColumns == null ? [] : tooltipColumns;
+    this.tooltipAliases =
+        tooltipAliases == null ? tooltipColumns : tooltipAliases;
+}
+
+function setFetchingScheme(fetchingScheme, deltaBox) {
+    if (this.isStatic)
+        throw new Error(
+            "Constructing Layer: static layer does not need fetching scheme."
+        );
+    if (fetchingScheme != "dbox" && fetchingScheme != "tiling")
+        throw new Error("Constructing Layer: unrecognized fetching scheme.");
+    this.fetchingScheme = fetchingScheme;
+    this.deltaBox = deltaBox ? true : false;
 }
 
 /**
- * set autoDD ID
- * @param autoDDId
+ * set ssv ID
+ * @param ssvId
  */
-function setAutoDDId(autoDDId) {
-    this.autoDDId = autoDDId;
+function setSSVId(ssvId) {
+    this.ssvId = ssvId;
 }
 
 /**
- * set retainSizeZoom,
- * @param retainSizeZoom
+ * set usmap ID
+ * @param usmapId
  */
-function setRetainSizeZoom(retainSizeZoom) {
-    this.retainSizeZoom = retainSizeZoom;
+function setUSMapId(usmapId) {
+    this.usmapId = usmapId;
+}
+
+/**
+ * set indexer, which tells the backend that which indexer this layer should use
+ * @param indexer
+ */
+function setIndexerType(indexerType) {
+    if (typeof indexerType !== "string")
+        throw new Error(
+            "Constructing Layer: the type of an indexer must be a string!"
+        );
+    this.indexerType = indexerType;
 }
 
 // define prototype
 Layer.prototype = {
     addPlacement,
     addRenderingFunc,
-    setIsAutoDD,
-    setAutoDDId,
-    setRetainSizeZoom
+    addTooltip,
+    setFetchingScheme,
+    setSSVId,
+    setUSMapId,
+    setIndexerType
 };
 
 // exports
