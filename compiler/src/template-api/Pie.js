@@ -25,9 +25,8 @@ function Pie(args_) {
     // check constraints/add defaults that can't be expressed by json-schema
     if (!("tooltip" in args))
         args.tooltip = {
-            columns: [],
-            aliases: [],
-            measureAlias: args.query.measure
+            columns: args.query.dimensions.concat([args.query.measure]),
+            aliases: args.query.dimensions.concat([args.query.measure])
         };
     if (args.tooltip.columns.length !== args.tooltip.aliases.length)
         throw new Error(
@@ -39,14 +38,14 @@ function Pie(args_) {
     for (var key in keys) this[key] = args[key];
 }
 
-function getPieRenderer(pie_name) {
-    renderFuncBody = getBodyStringOfFunction(renderer);
-    renderFuncBody = renderFuncBody.replace(/REPLACE_ME_name/g, pie_name);
-
+function getPieRenderer() {
+    var renderFuncBody = getBodyStringOfFunction(renderer);
     return new Function("svg", "data", "rend_args", renderFuncBody);
 
-    function renderer(svg, data, rend_args) {
-        var params = rend_args.renderingParams["REPLACE_ME_name"];
+    function renderer(svg, data, args) {
+        var rpKey = "pie_" + args.pieId.substring(0, args.pieId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
+
         var extent = d3.extent(
             d3.values(
                 data.map(function(d) {

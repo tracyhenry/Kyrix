@@ -8,6 +8,10 @@
         "query": {
             "type": "object",
             "properties": {
+                "table": {
+                    "type": "string",
+                    "minLength": 1
+                },
                 "dimensions": {
                     "type": "array",
                     "item": {
@@ -41,13 +45,9 @@
                         "type": "string",
                         "minLength": 1
                     }
-                },
-                "measureAlias": {
-                    "type": "string",
-                    "minLength": 1
                 }
             },
-            "required": ["columns", "aliases", "measureAlias"],
+            "required": ["columns", "aliases"],
             "additionalProperties": false
         },
         "radius": {

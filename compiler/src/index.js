@@ -684,17 +684,12 @@ function addPie(pie, args) {
     this.addRenderingParams(rpDict);
 
     // construct query
-    // SELECT columns are from pie.query.measure, pie.query.dimensions, pie.tooltip.columns
+    // SELECT columns are from pie.query.measure & pie.query.dimensions
     // merge them and then dedup
-    var query = "SELECT ";
-    var columns = pie.query.dimensions.concat(pie.tooltip.columns);
-    columns.push(pie.query.measure);
-    var columnsDeduped = [];
-    for (var i = 0; i < columns.length; i++)
-        if (columnsDeduped.indexOf(columns[i]) < 0)
-            columnsDeduped.push(columns[i]);
-    for (var i = 0; i < columnsDeduped.length; i++)
-        query += columnsDeduped[i] + ", ";
+    var query = "SELECT " + pie.query.measure;
+    for (var i = 0; i < pie.query.dimensions.length; i++)
+        query += ", " + pie.query.dimensions[i];
+    query += " FROM " + pie.query.table + ";";
 
     // construct transform
     var pieTransform = new Transform(query, pie.db, "", [], true);
@@ -703,10 +698,7 @@ function addPie(pie, args) {
     var pieLayer = new Layer(pieTransform, true);
     pieCanvas.addLayer(pieLayer);
     pieLayer.addRenderingFunc(pie.getPieRenderer());
-    pieLayer.addTooltip(
-        pie.tooltip.columns.concat([pie.query.measure]),
-        pie.tooltip.aliases.concat([pie.tooltip.measureAlias])
-    );
+    pieLayer.addTooltip(pie.tooltip.columns, pie.tooltip.aliases);
     pieLayer.setPieId(this.pies.length - 1 + "_" + 0);
 
     // add stylesheet
