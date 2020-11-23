@@ -569,6 +569,5 @@ USMap.prototype = {
 };
 
 module.exports = {
-    USMap,
-    getUSMapRenderer
+    USMap
 };

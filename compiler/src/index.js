@@ -52,6 +52,9 @@ function Project(name, configFile) {
     // set of usmaps
     this.usmaps = [];
 
+    // set of pies
+    this.pies = [];
+
     // rendering parameters
     this.renderingParams = "{}";
 
@@ -236,7 +239,7 @@ function addTable(table, args) {
         this.addView(tableView);
         this.setInitialStates(tableView, canvas, 0, 0);
     } else if (!(args.view instanceof View))
-        throw new Error("Constructing Table: view must be a View object");
+        throw new Error("Adding Table: view must be a View object");
 
     return {canvas, view: args.view ? args.view : tableView};
 }
@@ -422,7 +425,7 @@ function addSSV(ssv, args) {
         // initialize view
         this.setInitialStates(view, curPyramid[0], 0, 0);
     } else if (!(args.view instanceof View))
-        throw new Error("Constructing SSV: view must be a View object");
+        throw new Error("Adding SSV: view must be a View object");
 
     return {pyramid: curPyramid, view: args.view ? args.view : view};
 }
@@ -453,18 +456,19 @@ function addUSMap(usmap, args) {
     var canvases = [];
     var stateMapCanvas;
     if ("pyramid" in args) stateMapCanvas = args.pyramid[0];
-    else
+    else {
         stateMapCanvas = new Canvas(
             "usmap" + (this.usmaps.length - 1) + "_" + "state",
             usmap.stateMapWidth,
             usmap.stateMapHeight
         );
+        this.addCanvas(stateMapCanvas);
+    }
     if (
         stateMapCanvas.w != usmap.stateMapWidth ||
         stateMapCanvas.h != usmap.stateMapHeight
     )
         throw new Error("Adding USMap: state canvas sizes do not match");
-    this.addCanvas(stateMapCanvas);
 
     // static legends layer
     var stateMapLegendLayer = new Layer(null, true);
@@ -513,25 +517,26 @@ function addUSMap(usmap, args) {
         this.addView(view);
         this.setInitialStates(view, stateMapCanvas, 0, 0);
     } else if (!(args.view instanceof View)) {
-        throw new Error("Constructing USMap: view must be a View object");
+        throw new Error("Adding USMap: view must be a View object");
     }
 
     // ================== county map canvas ===================
     if ("countyTable" in usmap) {
         var countyMapCanvas;
         if ("pyramid" in args) countyMapCanvas = args.pyramid[1];
-        else
+        else {
             countyMapCanvas = new Canvas(
                 "usmap" + (this.usmaps.length - 1) + "_" + "county",
                 usmap.stateMapWidth * usmap.zoomFactor,
                 usmap.stateMapHeight * usmap.zoomFactor
             );
+            this.addCanvas(countyMapCanvas);
+        }
         if (
             countyMapCanvas.w != usmap.stateMapWidth * usmap.zoomFactor ||
             countyMapCanvas.h != usmap.stateMapHeight * usmap.zoomFactor
         )
             throw new Error("Adding USMap: county canvas sizes do not match");
-        this.addCanvas(countyMapCanvas);
 
         // static legends layer
         var countyMapLegendLayer = new Layer(null, true);
@@ -591,7 +596,7 @@ function addUSMap(usmap, args) {
             ["name", "rate"],
             ["County", usmap.tooltipAlias]
         );
-        countyBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 1);
+        countyBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 2);
 
         // add to canvases (return)
         canvases.push(countyMapCanvas);
@@ -654,6 +659,73 @@ function addUSMap(usmap, args) {
     return {pyramid: canvases, view: args.view ? args.view : view};
 }
 
+function addPie(pie, args) {
+    if (args == null) args = {};
+
+    // add to project
+    this.pies.push(pie);
+
+    // construct canvas
+    var pieCanvas;
+    if ("canvas" in args) pieCanvas = args.canvas;
+    else
+        pieCanvas = new Canvas(
+            "pie_" + (this.pies.length - 1),
+            pie.width,
+            pie.height
+        );
+    if (pieCanvas.w != pie.width || pieCanvas.h != pie.height)
+        throw new Error("Adding Pie: canvas sizes do not match.");
+
+    // add rendering params
+    var rpKey = "pie_" + (this.pies.length - 1);
+    var rpDict = {};
+    rpDict[rpKey] = {};
+    this.addRenderingParams(rpDict);
+
+    // construct query
+    // SELECT columns are from pie.query.measure, pie.query.dimensions, pie.tooltip.columns
+    // merge them and then dedup
+    var query = "SELECT ";
+    var columns = pie.query.dimensions.concat(pie.tooltip.columns);
+    columns.push(pie.query.measure);
+    var columnsDeduped = [];
+    for (var i = 0; i < columns.length; i++)
+        if (columnsDeduped.indexOf(columns[i]) < 0)
+            columnsDeduped.push(columns[i]);
+    for (var i = 0; i < columnsDeduped.length; i++)
+        query += columnsDeduped[i] + ", ";
+
+    // construct transform
+    var pieTransform = new Transform(query, pie.db, "", [], true);
+
+    // construct layer
+    var pieLayer = new Layer(pieTransform, true);
+    pieCanvas.addLayer(pieLayer);
+    pieLayer.addRenderingFunc(pie.getPieRenderer());
+    pieLayer.addTooltip(
+        pie.tooltip.columns.concat([pie.query.measure]),
+        pie.tooltip.aliases.concat([pie.tooltip.measureAlias])
+    );
+    pieLayer.setPieId(this.pies.length - 1 + "_" + 0);
+
+    // add stylesheet
+    this.addStyles(__dirname + "/template-api/css/pie.css");
+
+    // view
+    if (!("view" in args)) {
+        var view = new View(
+            "pie" + (this.pies.length - 1),
+            pie.width,
+            pie.height
+        );
+        this.addView(view);
+        this.setInitialStates(view, pieCanvas, 0, 0);
+    } else if (!(args.view instanceof View)) {
+        throw new Error("Adding Pie: view must be a View object");
+    }
+}
+
 // Add a rendering parameter object
 function addRenderingParams(renderingParams) {
     if (renderingParams == null) return;
@@ -688,16 +760,6 @@ function addStyles(styles) {
 
     // merge with current CSS
     this.styles.push(rules);
-}
-
-function addPie(pie, canvas) {
-    if (!canvas) {
-        canvas = new Canvas("pieCanvas_Kyrix", 1500, 1500);
-    }
-    this.addStyles(__dirname + "/template-api/css/pie.css");
-    this.addRenderingParams(pie.renderingParams);
-    canvas.addLayer(pie);
-    return canvas;
 }
 
 /**

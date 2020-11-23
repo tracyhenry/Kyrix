@@ -1,139 +1,42 @@
-const Transform = require("../Transform").Transform;
-const Layer = require("../Layer").Layer;
+const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
+const formatAjvErrorMessage = require("./Utilities").formatAjvErrorMessage;
+
 /*
  * Constructor of a pie / doughnut
  * @param args
  * @constructor
  * by xinli on 07/22/19
  */
-function Pie(args) {
-    args = args || {};
-
-    // check required args
-    var requiredArgs = ["name", "db", "table", "value"];
-    var requiredArgsTypes = ["string", "string", "string", "string"];
-    for (var i = 0; i < requiredArgs.length; i++) {
-        if (!(requiredArgs[i] in args))
-            throw new Error(
-                "Constructing Pie: " + requiredArgs[i] + " missing."
-            );
-        if (typeof args[requiredArgs[i]] !== requiredArgsTypes[i])
-            throw new Error(
-                "Constructing Pie: " +
-                    requiredArgs[i] +
-                    " must be " +
-                    requiredArgsTypes[i] +
-                    "."
-            );
-        if (requiredArgsTypes[i] == "string")
-            if (args[requiredArgs[i]].length == 0)
-                throw new Error(
-                    "Constructing Pie: " +
-                        requiredArgs[i] +
-                        " cannot be an empty string."
-                );
-    }
-
-    var reg = /^[a-zA-Z\$_][a-zA-Z\d_]*$/;
-    if (!reg.test(args.name)) {
-        throw new Error("Name of a pie should be a legal variable name");
-    }
-    var pie_name = args.name + "_pie_kyrix";
-
-    var query = genQuery();
-
-    var transform_func = getPieTransformFunc(pie_name);
-
-    args.indices = args.indices || [];
-    var schema = args.indices.concat(["value", "label"]);
-
-    // console.log("schema:", schema);
-
-    var transform = new Transform(query, args.db, transform_func, schema, true);
-
-    // Pie is a dynamic layer
-    Layer.call(this, transform, true);
-
-    this.innerRadius = args.innerRadius || 0.01;
-    this.outerRadius = args.outerRadius || 200;
-
-    this.renderingParams = {
-        [pie_name]: {
-            innerRadius: this.innerRadius,
-            outerRadius: this.outerRadius,
-            colorInterpolator: args.colorInterpolator || "Viridis",
-            cornerRadius: args.cornerRadius || 0,
-            padAngle: args.padAngle || 0,
-            transitions: args.transitions || [],
-            indices: args.indices || []
-        }
-    };
-
-    var rendering_func = getPieRenderer(pie_name);
-
-    this.addRenderingFunc(rendering_func);
-
-    function genQuery() {
-        var ret = "select ";
-        if ("indices" in args) {
-            for (var index in args.indices) {
-                ret += args.indices[index] + ", ";
-            }
-        }
-        ret += args.value + ", ";
-        if ("label" in args) {
-            ret += args.label + " ";
-        } else {
-            ret += "row_number() over(";
-            if (args.order_by) {
-                ret += " order by ";
-                ret += args.order_by;
-                if (args.order == ("asc" || "ASC")) {
-                    ret += " asc ) as rn_kyrix";
-                } else if (args.order == ("desc" || "DESC") || !args.order) {
-                    ret += " desc ) as rn_kyrix";
-                } else {
-                    throw new Error("unknown order");
-                }
-            } else {
-                ret += ")";
-            }
-        }
-        ret += " from ";
-        ret += args.table;
-        ret += ";";
-        return ret;
-    }
-}
-(function() {
-    // create a class with no instance method
-    var Super = function() {};
-    Super.prototype = Layer.prototype;
-    // use its instance as the prototype of Pie
-    Pie.prototype = new Super();
-})();
-
-function getPieTransformFunc(pie_name) {
-    transformFuncBody = getBodyStringOfFunction(transform_function);
-    transformFuncBody = transformFuncBody.replace(/REPLACE_ME_name/g, pie_name);
-
-    return new Function(
-        "row",
-        "w_canvas",
-        "h_canvas",
-        "renderParams",
-        transformFuncBody
+function Pie(args_) {
+    // verify against schema
+    // defaults are assigned at the same time
+    var args = JSON.parse(JSON.stringify(args_));
+    var schema = JSON.parse(
+        fs.readFileSync("../../src/template-api/json-schema/Pie.json")
     );
+    var ajv = new require("ajv")({useDefaults: true});
+    var validator = ajv.compile(schema);
+    var valid = validator(args);
+    if (!valid)
+        throw new Error(
+            "Constructing Pie: " + formatAjvErrorMessage(validator.errors[0])
+        );
 
-    function transform_function(row, w_canvas, h_canvas, renderParams) {
-        var ret = [];
-        // row: value, (label),  rn_kyrix
-        var args = renderParams["REPLACE_ME_name"];
-        for (var i = 0; i < row.length; i++) {
-            ret.push(row[i]);
-        }
-        return Java.to(ret, "java.lang.String[]");
-    }
+    // check constraints/add defaults that can't be expressed by json-schema
+    if (!("tooltip" in args))
+        args.tooltip = {
+            columns: [],
+            aliases: [],
+            measureAlias: args.query.measure
+        };
+    if (args.tooltip.columns.length !== args.tooltip.aliases.length)
+        throw new Error(
+            "Constructing Pie: Tooltip columns and aliases should have the same length."
+        );
+
+    // get args into "this"
+    var keys = Object.keys(args);
+    for (var key in keys) this[key] = args[key];
 }
 
 function getPieRenderer(pie_name) {
@@ -376,12 +279,9 @@ function getPieRenderer(pie_name) {
     }
 }
 
-function getBodyStringOfFunction(func) {
-    var funcStr = func.toString();
-    const bodyStart = funcStr.indexOf("{") + 1;
-    const bodyEnd = funcStr.lastIndexOf("}");
-    return "\n" + funcStr.substring(bodyStart, bodyEnd) + "\n";
-}
+Pie.prototype = {
+    getPieRenderer
+};
 
 module.exports = {
     Pie
