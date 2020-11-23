@@ -2,10 +2,6 @@ td {
     text-align: center;
 }
 
-.gPie {
-    text-anchor: middle;
-}
-
 path.value {
     stroke: grey;
     stroke-width: 2px;

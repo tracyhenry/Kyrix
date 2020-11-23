@@ -680,7 +680,17 @@ function addPie(pie, args) {
     // add rendering params
     var rpKey = "pie_" + (this.pies.length - 1);
     var rpDict = {};
-    rpDict[rpKey] = {};
+    rpDict[rpKey] = {
+        dimensions: pie.query.dimensions,
+        measure: pie.query.measure,
+        innerRadius: 0,
+        outerRadius: pie.radius,
+        cornerRadius: 5,
+        padAngle: 0,
+        colorScheme: pie.colorScheme,
+        transition: pie.transition,
+        legendTitle: pie.legendTitle
+    };
     this.addRenderingParams(rpDict);
 
     // construct query

@@ -43,33 +43,33 @@ function getPieRenderer() {
     return new Function("svg", "data", "rend_args", renderFuncBody);
 
     function renderer(svg, data, args) {
+        var g = svg.append("g");
         var rpKey = "pie_" + args.pieId.substring(0, args.pieId.indexOf("_"));
         var params = args.renderingParams[rpKey];
 
-        var extent = d3.extent(
-            d3.values(
-                data.map(function(d) {
-                    return +d.value;
-                })
-            )
-        );
-        var color = d3
-            .scaleSequential(d3["interpolate" + params.colorInterpolator])
-            .domain(extent);
+        // aggregate data
+        var aggDataDict = {};
+        for (var i = 0; i < data.length; i++) {
+            var dimStr = "";
+            for (var j = 0; j < params.dimensions.length; j++)
+                dimStr += (j > 0 ? "_" : "") + data[i][params.dimensions[j]];
+            aggDataDict[dimStr] += data[i][params.measure];
+        }
+
+        // aggData array, for d3.pie
+        var aggData = [];
+        for (var dimStr in aggDataDict)
+            aggData.push({
+                dimStr: dimStr,
+                [params.measure]: aggDataDict[dimStr]
+            });
+
+        // d3 pie
         var pie = d3.pie().value(function(d) {
-            return d.value;
+            return d[params.measure];
         });
 
-        var cooked = pie(data);
-        cooked.forEach(entry => {
-            for (x in entry.data) {
-                entry[x] = entry.data[x];
-            }
-            delete entry.data;
-        });
-
-        var g = svg.append("g").attr("class", "gPie");
-
+        // d3 arc
         var arc = d3
             .arc()
             .innerRadius(params.innerRadius)
@@ -77,21 +77,40 @@ function getPieRenderer() {
             .cornerRadius(params.cornerRadius)
             .padAngle(params.padAngle);
 
+        // d3 color scale
+        var color = d3
+            .scaleOrdinal()
+            .domain(Object.keys(aggDataDict))
+            .range(d3[params.colorScheme]);
+
+        var cooked = pie(aggData);
+        cooked.forEach(function(d) {
+            var dimValues = d.data.dimStr.split("_");
+            for (var i = 0; i < params.dimensions.length; i++)
+                d[params.dimensions[i]] = dimValues[i];
+            d[params.measure] = d.value;
+            d.dimStr = d.data.dimStr;
+            delete d.data;
+        });
+
         var slices = g
-            .selectAll("path.value")
+            .selectAll("g")
             .data(cooked)
             .enter()
             .append("g");
         slices
             .append("path")
-            .attr("class", function(d, i) {
-                return "value";
+            .classed("value", true)
+            .attr("fill", function(d) {
+                return color(d.dimStr);
             })
             .attr("d", arc)
-            .attr("fill", function(d, i) {
-                var ret = color(d.value);
-                return ret;
-            });
+            .attr(
+                "transform",
+                `translate(${args.viewportW / 2}, ${args.viewportH / 2})`
+            );
+
+        if (!params.transition) return;
 
         var random = d3.randomUniform(0, data.length);
         for (var i = params.transitions.length - 1; i >= 0; i--) {
@@ -129,14 +148,14 @@ function getPieRenderer() {
                 .range([0, 360]);
             slices.style("opacity", 0);
 
-            if (tr.type == "rotate") {
+            if (tr.type === "rotate") {
                 slices.attr("transform", function(d) {
                     var ret = "rotate(-" + arc2degree(d.startAngle) + ")";
                     return ret;
                 });
                 slices
                     .transition()
-                    .delay((d, i, nodes) => {
+                    .delay(function(d, i, nodes) {
                         if (tr.order == "desc") {
                             return d.index * tr.gap + tr.delay;
                         } else if (tr.order == "asc") {
@@ -149,7 +168,7 @@ function getPieRenderer() {
                     })
                     .duration(tr.duration)
                     .ease(d3["ease" + tr.ease])
-                    .attrTween("transform", (d, i) => {
+                    .attrTween("transform", function(d, i) {
                         return d3.interpolate(
                             "rotate(-" + arc2degree(d.startAngle) + ")",
                             "rotate(0)"
@@ -169,12 +188,12 @@ function getPieRenderer() {
                     }
                     return ret;
                 };
-                slices.attr("transform", () => {
+                slices.attr("transform", function() {
                     return tr_f("start");
                 });
                 slices
                     .transition()
-                    .delay((d, i, nodes) => {
+                    .delay(function(d, i, nodes) {
                         if (tr.order == "desc") {
                             return d.index * tr.gap + tr.delay;
                         } else if (tr.order == "asc") {
@@ -189,7 +208,7 @@ function getPieRenderer() {
                     })
                     .duration(tr.duration)
                     .ease(d3["ease" + tr.ease])
-                    .attr("transform", () => {
+                    .attr("transform", function() {
                         return tr_f("end");
                     })
                     .style("opacity", 1)
@@ -215,7 +234,7 @@ function getPieRenderer() {
             slices
                 .select("path")
                 .transition()
-                .delay((d, i, nodes) => {
+                .delay(function(d, i, nodes) {
                     if (tr.order == "desc") {
                         return d.index * tr.gap + tr.delay;
                     } else if (tr.order == "asc") {
@@ -244,7 +263,7 @@ function getPieRenderer() {
             slices
                 .on("mouseover.pizza", function(d) {
                     d3.select(this)
-                        .filter(d => {
+                        .filter(function(d) {
                             return !d.pizzaFlag;
                         })
                         .transition()
@@ -262,7 +281,7 @@ function getPieRenderer() {
                 })
                 .on("mouseout.pizza", function(d) {
                     d3.select(this)
-                        .filter(d => {
+                        .filter(function(d) {
                             return d.pizzaFlag;
                         })
                         .transition()
