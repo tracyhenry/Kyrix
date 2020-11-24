@@ -122,7 +122,10 @@ public class CanvasRequestHandler implements HttpHandler {
             System.out.println(sql);
 
             // run query, add to response
-            data.add(DbConnector.getQueryResult(Config.databaseName, sql));
+            // hardcode for now for StaticAggregationIndexer
+            if (l.getIndexerType().equals("StaticAggregationIndexer"))
+                data.add(DbConnector.getQueryResult(l.getTransform().getDb(), sql));
+            else data.add(DbConnector.getQueryResult(Config.databaseName, sql));
         }
 
         return data;

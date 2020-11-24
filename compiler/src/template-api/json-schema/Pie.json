@@ -17,14 +17,23 @@
                     "item": {
                         "type": "string",
                         "minLength": 1
-                    }
+                    },
+                    "minItems": 1
                 },
                 "measure": {
                     "type": "string",
                     "pattern": "^(AVG|SUM|COUNT|MAX|MIN)\\(.+\\)$"
+                },
+                "sampleFields": {
+                    "type": "array",
+                    "item": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "default": []
                 }
             },
-            "required": ["dimensions", "measure"],
+            "required": ["table", "dimensions", "measure"],
             "additionalProperties": false
         },
         "tooltip": {
@@ -73,7 +82,7 @@
         },
         "transition": {
             "type": "boolean",
-            "default": "true"
+            "default": true
         },
         "legendTitle": {
             "type": "string",

@@ -44,13 +44,25 @@ public class BoxandData {
                     numFields++;
                 }
 
-                // bounding box fields
-                rowDict.put("cx", rowArray.get(numFields));
-                rowDict.put("cy", rowArray.get(numFields + 1));
-                rowDict.put("minx", rowArray.get(numFields + 2));
-                rowDict.put("miny", rowArray.get(numFields + 3));
-                rowDict.put("maxx", rowArray.get(numFields + 4));
-                rowDict.put("maxy", rowArray.get(numFields + 5));
+                // bounding box fields,
+                // need to check if rowArray has cx, cy, minx, ..
+                // since the introduction of StaticAggregationIndexer
+                // which does generate cx, cy, minx...
+                rowDict.put("cx", numFields >= rowArray.size() ? "0" : rowArray.get(numFields));
+                rowDict.put(
+                        "cy", numFields + 1 >= rowArray.size() ? "0" : rowArray.get(numFields + 1));
+                rowDict.put(
+                        "minx",
+                        numFields + 2 >= rowArray.size() ? "0" : rowArray.get(numFields + 2));
+                rowDict.put(
+                        "miny",
+                        numFields + 3 >= rowArray.size() ? "0" : rowArray.get(numFields + 3));
+                rowDict.put(
+                        "maxx",
+                        numFields + 4 >= rowArray.size() ? "0" : rowArray.get(numFields + 4));
+                rowDict.put(
+                        "maxy",
+                        numFields + 5 >= rowArray.size() ? "0" : rowArray.get(numFields + 5));
                 ret.get(i).add(rowDict);
             }
         }

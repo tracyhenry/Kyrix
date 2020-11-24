@@ -5,7 +5,7 @@ td {
 path.value {
     stroke: grey;
     stroke-width: 2px;
-    opacity: 0.5;
+    opacity: 0.8;
 }
 
 path.value:hover {

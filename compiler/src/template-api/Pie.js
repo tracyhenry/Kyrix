@@ -1,5 +1,6 @@
 const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
 const formatAjvErrorMessage = require("./Utilities").formatAjvErrorMessage;
+const fs = require("fs");
 
 /*
  * Constructor of a pie / doughnut
@@ -23,11 +24,38 @@ function Pie(args_) {
         );
 
     // check constraints/add defaults that can't be expressed by json-schema
+
+    // extract measureCol and measureFunc from args.query.measure
+    var pos = args.query.measure.indexOf("(");
+    args.query.measureCol = args.query.measure.substring(
+        pos + 1,
+        args.query.measure.length - 1
+    );
+    args.query.measureFunc = args.query.measure.substring(0, pos);
+
+    // check that query.dimensions, query.measure and query.sampleFields are disjoint
+    var allQueryFields = args.query.dimensions
+        .concat(args.query.sampleFields)
+        .concat([args.query.measureCol]);
+    var disjoint = true;
+    for (var i = 0; i < allQueryFields.length; i++)
+        for (var j = i + 1; j < allQueryFields.length; j++)
+            if (allQueryFields[j] === allQueryFields[i]) disjoint = false;
+    if (!disjoint)
+        throw new Error(
+            "Constructing Pie: query fields " +
+                "(query.dimensions, query.measure, query.sampleFields) have duplicates."
+        );
+
+    // add default tooltip columns and measures, which is the union of
+    // query dimensions and measure
     if (!("tooltip" in args))
         args.tooltip = {
             columns: args.query.dimensions.concat([args.query.measure]),
             aliases: args.query.dimensions.concat([args.query.measure])
         };
+
+    // tooltip column and aliases must have the same length
     if (args.tooltip.columns.length !== args.tooltip.aliases.length)
         throw new Error(
             "Constructing Pie: Tooltip columns and aliases should have the same length."
@@ -35,38 +63,21 @@ function Pie(args_) {
 
     // get args into "this"
     var keys = Object.keys(args);
-    for (var key in keys) this[key] = args[key];
+    for (var i = 0; i < keys.length; i++) this[keys[i]] = args[keys[i]];
 }
 
 function getPieRenderer() {
     var renderFuncBody = getBodyStringOfFunction(renderer);
-    return new Function("svg", "data", "rend_args", renderFuncBody);
+    return new Function("svg", "data", "args", renderFuncBody);
 
     function renderer(svg, data, args) {
         var g = svg.append("g");
         var rpKey = "pie_" + args.pieId.substring(0, args.pieId.indexOf("_"));
         var params = args.renderingParams[rpKey];
 
-        // aggregate data
-        var aggDataDict = {};
-        for (var i = 0; i < data.length; i++) {
-            var dimStr = "";
-            for (var j = 0; j < params.dimensions.length; j++)
-                dimStr += (j > 0 ? "_" : "") + data[i][params.dimensions[j]];
-            aggDataDict[dimStr] += data[i][params.measure];
-        }
-
-        // aggData array, for d3.pie
-        var aggData = [];
-        for (var dimStr in aggDataDict)
-            aggData.push({
-                dimStr: dimStr,
-                [params.measure]: aggDataDict[dimStr]
-            });
-
         // d3 pie
         var pie = d3.pie().value(function(d) {
-            return d[params.measure];
+            return +d.kyrixAggValue;
         });
 
         // d3 arc
@@ -80,16 +91,12 @@ function getPieRenderer() {
         // d3 color scale
         var color = d3
             .scaleOrdinal()
-            .domain(Object.keys(aggDataDict))
+            .domain(d3.range(0, data.length))
             .range(d3[params.colorScheme]);
 
-        var cooked = pie(aggData);
+        var cooked = pie(data);
         cooked.forEach(function(d) {
-            var dimValues = d.data.dimStr.split("_");
-            for (var i = 0; i < params.dimensions.length; i++)
-                d[params.dimensions[i]] = dimValues[i];
-            d[params.measure] = d.value;
-            d.dimStr = d.data.dimStr;
+            for (var key in d.data) d[key] = d.data[key];
             delete d.data;
         });
 
@@ -102,7 +109,7 @@ function getPieRenderer() {
             .append("path")
             .classed("value", true)
             .attr("fill", function(d) {
-                return color(d.dimStr);
+                return color(d.index);
             })
             .attr("d", arc)
             .attr(

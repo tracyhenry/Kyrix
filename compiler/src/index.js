@@ -668,12 +668,14 @@ function addPie(pie, args) {
     // construct canvas
     var pieCanvas;
     if ("canvas" in args) pieCanvas = args.canvas;
-    else
+    else {
         pieCanvas = new Canvas(
             "pie_" + (this.pies.length - 1),
             pie.width,
             pie.height
         );
+        this.addCanvas(pieCanvas);
+    }
     if (pieCanvas.w != pie.width || pieCanvas.h != pie.height)
         throw new Error("Adding Pie: canvas sizes do not match.");
 
@@ -682,11 +684,10 @@ function addPie(pie, args) {
     var rpDict = {};
     rpDict[rpKey] = {
         dimensions: pie.query.dimensions,
-        measure: pie.query.measure,
         innerRadius: 0,
         outerRadius: pie.radius,
         cornerRadius: 5,
-        padAngle: 0,
+        padAngle: 0.01,
         colorScheme: pie.colorScheme,
         transition: pie.transition,
         legendTitle: pie.legendTitle
@@ -694,22 +695,48 @@ function addPie(pie, args) {
     this.addRenderingParams(rpDict);
 
     // construct query
-    // SELECT columns are from pie.query.measure & pie.query.dimensions
+    // SELECT columns are from measureCol & pie.query.dimensions
     // merge them and then dedup
-    var query = "SELECT " + pie.query.measure;
-    for (var i = 0; i < pie.query.dimensions.length; i++)
-        query += ", " + pie.query.dimensions[i];
-    query += " FROM " + pie.query.table + ";";
+    var query = "SELECT " + pie.query.dimensions.join(", ");
+    query += (pie.query.dimensions.length ? ", " : "") + pie.query.measure;
+    query += " FROM " + pie.query.table + " GROUP BY ";
+    query += pie.query.dimensions.join(", ");
+    var pieTransform = new Transform(
+        query,
+        pie.db,
+        "",
+        pie.query.dimensions.concat(["kyrixAggValue"]),
+        true
+    );
 
-    // construct transform
-    var pieTransform = new Transform(query, pie.db, "", [], true);
-
-    // construct layer
+    // construct pie layer
     var pieLayer = new Layer(pieTransform, true);
     pieCanvas.addLayer(pieLayer);
     pieLayer.addRenderingFunc(pie.getPieRenderer());
     pieLayer.addTooltip(pie.tooltip.columns, pie.tooltip.aliases);
+    pieLayer.setIndexerType("StaticAggregationIndexer");
     pieLayer.setPieId(this.pies.length - 1 + "_" + 0);
+
+    // construct queries for the dummy sample layer
+    // construct the dummy sample layer
+    query =
+        "SELECT " +
+        pie.query.sampleFields.join(", ") +
+        (pie.query.sampleFields.length ? ", " : "") +
+        pie.query.dimensions.join(", ") +
+        (pie.query.sampleFields.length || pie.query.dimensions.length
+            ? ", "
+            : "") +
+        pie.query.measureCol +
+        " FROM " +
+        pie.query.table;
+
+    // construct sample layer
+    var sampleTransform = new Transform(query, pie.db, "", [], true);
+    var sampleLayer = new Layer(sampleTransform, true);
+    pieCanvas.addLayer(sampleLayer);
+    sampleLayer.addRenderingFunc(function() {});
+    sampleLayer.setIndexerType("StaticAggregationIndexer");
 
     // add stylesheet
     this.addStyles(__dirname + "/template-api/css/pie.css");
