@@ -19,7 +19,8 @@ var args = {
         aliases: ["Starting Position", "Average Rebound per Game"]
     },
     legendTitle: "Average Rebounds per Game by Starting Positions",
-    colorScheme: "schemePastel1"
+    colorScheme: "schemePastel1",
+    transition: true
 };
 
 // build project

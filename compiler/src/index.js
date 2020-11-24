@@ -684,7 +684,7 @@ function addPie(pie, args) {
     var rpDict = {};
     rpDict[rpKey] = {
         dimensions: pie.query.dimensions,
-        innerRadius: 0,
+        innerRadius: 70,
         outerRadius: pie.radius,
         cornerRadius: 5,
         padAngle: 0.01,
