@@ -320,12 +320,6 @@ function addSSV(ssv, args) {
         }
         curPyramid.push(curCanvas);
 
-        // add static legend layer
-        var staticLayer = new Layer(null, true);
-        curCanvas.addLayer(staticLayer);
-        staticLayer.addRenderingFunc(ssv.getLegendRenderer());
-        staticLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
-
         // create one layer
         var curLayer = new Layer(transform, false);
         curCanvas.addLayer(curLayer);
@@ -371,6 +365,12 @@ function addSSV(ssv, args) {
             mapLayer.setFetchingScheme("dbox", false);
             mapLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
         }
+
+        // add static legend layer
+        var staticLayer = new Layer(null, true);
+        curCanvas.addLayer(staticLayer);
+        staticLayer.addRenderingFunc(ssv.getLegendRenderer());
+        staticLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
 
         // axes
         if (ssv.axis) {
@@ -670,7 +670,7 @@ function addPie(pie, args) {
     if ("canvas" in args) pieCanvas = args.canvas;
     else {
         pieCanvas = new Canvas(
-            "pie_" + (this.pies.length - 1),
+            "pie" + (this.pies.length - 1),
             pie.width,
             pie.height
         );
@@ -707,7 +707,8 @@ function addPie(pie, args) {
         pie.db,
         "",
         pie.query.dimensions.concat(["kyrixAggValue"]),
-        true
+        true,
+        pie.query.dimensions.concat(pie.query.sampleFields)
     );
 
     // construct pie layer
@@ -725,10 +726,11 @@ function addPie(pie, args) {
         pie.query.sampleFields.join(", ") +
         (pie.query.sampleFields.length ? ", " : "") +
         pie.query.dimensions.join(", ") +
-        (pie.query.sampleFields.length || pie.query.dimensions.length
-            ? ", "
-            : "") +
-        pie.query.measureCol +
+        (pie.query.measureCol === "*"
+            ? ""
+            : (pie.query.sampleFields.length || pie.query.dimensions.length
+                  ? ", "
+                  : "") + pie.query.measureCol) +
         " FROM " +
         pie.query.table;
 
@@ -754,6 +756,8 @@ function addPie(pie, args) {
     } else if (!(args.view instanceof View)) {
         throw new Error("Adding Pie: view must be a View object");
     }
+
+    return {canvas: pieCanvas, view: args.view ? args.view : view};
 }
 
 // Add a rendering parameter object

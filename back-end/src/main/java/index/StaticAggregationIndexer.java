@@ -48,17 +48,23 @@ public class StaticAggregationIndexer extends Indexer {
     public String getStaticDataQuery(Canvas c, int layerId, String predicate) throws Exception {
 
         Layer l = c.getLayers().get(layerId);
+        String q = l.getTransform().getQuery();
         String sql = "SELECT 1;";
         switch (layerId) {
             case 0:
                 // aggregation layer
-                sql = l.getTransform().getQuery();
-                if (predicate.length() > 0) sql += " WHERE " + predicate;
+                // WHERE must occur before GROUP BY
+                // so we need to do insert WHERE into the middle
+                // of the original group by query
+                int groupByPos = q.indexOf("GROUP BY");
+                sql = q.substring(0, groupByPos);
+                if (predicate.length() > 0) sql += "WHERE " + predicate + " ";
+                sql += q.substring(groupByPos);
                 sql += ";";
                 break;
             case 1:
                 // sample layer
-                sql = l.getTransform().getQuery();
+                sql = q;
                 if (predicate.length() > 0) sql += " WHERE " + predicate;
                 sql += " LIMIT 300;";
                 break;

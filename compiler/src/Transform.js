@@ -23,7 +23,14 @@ function getFuncParamNames(func) {
  * @param {boolean} separable - whether the calculation of transformFunc is per-tuple based. If yes, the input to transformFunc is a single tuple. Otherwise their input is the whole query result. The separability of a layer depends on the separability of the data transform it uses.
  * @constructor
  */
-function Transform(query, db, transformFunc, columnNames, separable) {
+function Transform(
+    query,
+    db,
+    transformFunc,
+    columnNames,
+    separable,
+    filterableColumnNames
+) {
     if (typeof query == "object") {
         if (arguments.length > 1)
             throw new Error(
@@ -98,6 +105,8 @@ function Transform(query, db, transformFunc, columnNames, separable) {
     if (transformFunc == "") this.transformFuncBody = "";
     else this.transformFuncBody = getBodyStringOfFunction(this.transformFunc);
     this.separable = separable;
+    this.filterableColumnNames =
+        filterableColumnNames == null ? [] : filterableColumnNames;
 }
 
 defaultEmptyTransform = new Transform("", "", "", [], true);

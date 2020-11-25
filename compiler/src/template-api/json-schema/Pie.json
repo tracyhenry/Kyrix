@@ -101,13 +101,13 @@
         },
         "width": {
             "type": "number",
-            "minimum": 100,
+            "minimum": 600,
             "maximum": 1500,
             "default": 1000
         },
         "height": {
             "type": "number",
-            "minimum": 100,
+            "minimum": 600,
             "maximum": 1500,
             "default": 1000
         }
