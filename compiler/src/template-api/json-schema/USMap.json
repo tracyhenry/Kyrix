@@ -87,7 +87,8 @@
             "default": 1000
         },
         "zoomFactor": {
-            "type": "integer"
+            "type": "number",
+            "minimum": 2
         },
         "zoomType": {
             "enum": ["literal", "jump", "none"]
