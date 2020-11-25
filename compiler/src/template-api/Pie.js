@@ -116,9 +116,47 @@ function getPieRenderer() {
                 `translate(${args.viewportW / 2}, ${args.viewportH / 2})`
             );
 
+        // legend
+        g.append("g")
+            .attr("class", "legendOrdinal")
+            .attr("transform", "translate(50,50) scale(1.7)");
+
+        var domains = cooked
+            .map(function(d) {
+                var dimValues = [];
+                params.dimensions.forEach(function(p) {
+                    dimValues.push(d[p]);
+                });
+                var dimStr = dimValues.join("__");
+                if (dimStr in params.legendDomain)
+                    dimStr = params.legendDomain[dimStr];
+                return {index: d.index, domain: dimStr};
+            })
+            .sort(function(a, b) {
+                return a.index - b.index;
+            })
+            .map(function(d) {
+                return d.domain;
+            });
+        var color = d3
+            .scaleOrdinal()
+            .domain(domains)
+            .range(d3[params.colorScheme]);
+
+        var legendOrdinal = d3
+            .legendColor()
+            .shape("rect")
+            //.orient("horizontal")
+            .shapePadding(10)
+            .title(params.legendTitle)
+            .labelOffset(15)
+            .scale(color);
+
+        svg.select(".legendOrdinal").call(legendOrdinal);
+
+        // transition
         if (!params.transition) return;
 
-        var random = d3.randomUniform(0, data.length);
         var transitionParams = {
             duration: 1500,
             ease: "Cubic",

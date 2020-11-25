@@ -18,7 +18,15 @@ var args = {
         columns: ["start_position", "value"],
         aliases: ["Starting Position", "Average Rebound per Game"]
     },
-    legendTitle: "Average Rebounds per Game by Starting Positions",
+    legend: {
+        title: "Average Rebounds per Game by Starting Positions",
+        domain: {
+            "": "Bench",
+            C: "Center",
+            F: "Forward",
+            G: "Guard"
+        }
+    },
     colorScheme: "schemePastel1",
     transition: true
 };

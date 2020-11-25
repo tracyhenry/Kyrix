@@ -690,7 +690,8 @@ function addPie(pie, args) {
         padAngle: 0.01,
         colorScheme: pie.colorScheme,
         transition: pie.transition,
-        legendTitle: pie.legendTitle
+        legendTitle: pie.legend.title,
+        legendDomain: pie.legend.domain
     };
     this.addRenderingParams(rpDict);
 

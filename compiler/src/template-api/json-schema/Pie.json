@@ -84,10 +84,20 @@
             "type": "boolean",
             "default": true
         },
-        "legendTitle": {
-            "type": "string",
-            "maxLength": 80,
-            "default": ""
+        "legend": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "default": ""
+                },
+                "domain": {
+                    "type": "object",
+                    "default": {}
+                }
+            },
+            "additionalProperties": false
         },
         "width": {
             "type": "number",
