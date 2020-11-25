@@ -596,7 +596,7 @@ function addUSMap(usmap, args) {
             ["name", "rate"],
             ["County", usmap.tooltipAlias]
         );
-        countyBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 2);
+        countyBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 1);
 
         // add to canvases (return)
         canvases.push(countyMapCanvas);
