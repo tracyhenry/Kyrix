@@ -88,11 +88,21 @@ function getPieRenderer() {
             .padAngle(params.padAngle);
 
         // d3 color scale
+        var numCategories = Math.min(
+            data.length,
+            d3[params.colorScheme].length
+        );
         var color = d3
             .scaleOrdinal()
-            .domain(d3.range(0, data.length))
+            .domain(d3.range(0, numCategories))
             .range(d3[params.colorScheme]);
 
+        // only draw numCategories pies
+        var data = data
+            .sort(function(a, b) {
+                return b.kyrixAggValue - a.kyrixAggValue;
+            })
+            .slice(0, numCategories);
         var cooked = pie(data);
         cooked.forEach(function(d) {
             for (var key in d.data) d[key] = d.data[key];
