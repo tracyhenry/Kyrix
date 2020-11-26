@@ -365,7 +365,7 @@ function registerJumps(viewId, svg, layerId) {
         d3.select(this).style("cursor", "zoom-in");
 
         // register onclick listener
-        d3.select(this).on("click", function(d) {
+        d3.select(this).on("click.popover", function(d) {
             // stop the click event from propagating up
             d3.event.stopPropagation();
 

@@ -20,10 +20,18 @@ function getFuncParamNames(func) {
  * @param {string} db - the database that query is run in.
  * @param transformFunc - a Javascript function receiving the SQL query result as input and doing some data transforms.
  * @param columnNames - an array containing the names of the columns after data transformation
- * @param {boolean} separable - whether the calculation of transformFunc is per-tuple based. If yes, the input to transformFunc is a single tuple. Otherwise their input is the whole query result. The separability of a layer depends on the separability of the data transform it uses.
+ * @param {boolean} separable - whether the calculation of transformFunc is per-tuple based. If yes, the input to transformFunc is a single tuple. Otherwise their input is the whole query result. The separability of a layer depends on the separability of the data transform it uses. This is not functioning, to be removed.
+ * @param filterableColumnNames the columns that can be applied filters on. May be different from columnNames.
  * @constructor
  */
-function Transform(query, db, transformFunc, columnNames, separable) {
+function Transform(
+    query,
+    db,
+    transformFunc,
+    columnNames,
+    separable,
+    filterableColumnNames
+) {
     if (typeof query == "object") {
         if (arguments.length > 1)
             throw new Error(
@@ -98,6 +106,8 @@ function Transform(query, db, transformFunc, columnNames, separable) {
     if (transformFunc == "") this.transformFuncBody = "";
     else this.transformFuncBody = getBodyStringOfFunction(this.transformFunc);
     this.separable = separable;
+    this.filterableColumnNames =
+        filterableColumnNames == null ? [] : filterableColumnNames;
 }
 
 defaultEmptyTransform = new Transform("", "", "", [], true);

@@ -1,0 +1,14 @@
+td {
+    text-align: center;
+}
+
+path.value {
+    stroke: grey;
+    stroke-width: 2px;
+    opacity: 0.8;
+}
+
+path.value:hover {
+    opacity: 1;
+    transition: opacity 0.5s;
+}

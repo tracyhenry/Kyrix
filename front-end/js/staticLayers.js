@@ -24,6 +24,7 @@ function renderStaticLayers(viewId) {
         args["layerId"] = i;
         args["ssvId"] = curLayer.ssvId;
         args["usmapId"] = curLayer.usmapId;
+        args["pieId"] = curLayer.pieId;
         renderFunc(curSvg, gvd.curStaticData[i], args);
 
         // tooltips

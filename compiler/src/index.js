@@ -52,6 +52,9 @@ function Project(name, configFile) {
     // set of usmaps
     this.usmaps = [];
 
+    // set of pies
+    this.pies = [];
+
     // rendering parameters
     this.renderingParams = "{}";
 
@@ -236,7 +239,7 @@ function addTable(table, args) {
         this.addView(tableView);
         this.setInitialStates(tableView, canvas, 0, 0);
     } else if (!(args.view instanceof View))
-        throw new Error("Constructing Table: view must be a View object");
+        throw new Error("Adding Table: view must be a View object");
 
     return {canvas, view: args.view ? args.view : tableView};
 }
@@ -317,12 +320,6 @@ function addSSV(ssv, args) {
         }
         curPyramid.push(curCanvas);
 
-        // add static legend layer
-        var staticLayer = new Layer(null, true);
-        curCanvas.addLayer(staticLayer);
-        staticLayer.addRenderingFunc(ssv.getLegendRenderer());
-        staticLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
-
         // create one layer
         var curLayer = new Layer(transform, false);
         curCanvas.addLayer(curLayer);
@@ -368,6 +365,12 @@ function addSSV(ssv, args) {
             mapLayer.setFetchingScheme("dbox", false);
             mapLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
         }
+
+        // add static legend layer
+        var staticLayer = new Layer(null, true);
+        curCanvas.addLayer(staticLayer);
+        staticLayer.addRenderingFunc(ssv.getLegendRenderer());
+        staticLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
 
         // axes
         if (ssv.axis) {
@@ -422,7 +425,7 @@ function addSSV(ssv, args) {
         // initialize view
         this.setInitialStates(view, curPyramid[0], 0, 0);
     } else if (!(args.view instanceof View))
-        throw new Error("Constructing SSV: view must be a View object");
+        throw new Error("Adding SSV: view must be a View object");
 
     return {pyramid: curPyramid, view: args.view ? args.view : view};
 }
@@ -453,18 +456,19 @@ function addUSMap(usmap, args) {
     var canvases = [];
     var stateMapCanvas;
     if ("pyramid" in args) stateMapCanvas = args.pyramid[0];
-    else
+    else {
         stateMapCanvas = new Canvas(
             "usmap" + (this.usmaps.length - 1) + "_" + "state",
             usmap.stateMapWidth,
             usmap.stateMapHeight
         );
+        this.addCanvas(stateMapCanvas);
+    }
     if (
         stateMapCanvas.w != usmap.stateMapWidth ||
         stateMapCanvas.h != usmap.stateMapHeight
     )
         throw new Error("Adding USMap: state canvas sizes do not match");
-    this.addCanvas(stateMapCanvas);
 
     // static legends layer
     var stateMapLegendLayer = new Layer(null, true);
@@ -513,25 +517,26 @@ function addUSMap(usmap, args) {
         this.addView(view);
         this.setInitialStates(view, stateMapCanvas, 0, 0);
     } else if (!(args.view instanceof View)) {
-        throw new Error("Constructing USMap: view must be a View object");
+        throw new Error("Adding USMap: view must be a View object");
     }
 
     // ================== county map canvas ===================
     if ("countyTable" in usmap) {
         var countyMapCanvas;
         if ("pyramid" in args) countyMapCanvas = args.pyramid[1];
-        else
+        else {
             countyMapCanvas = new Canvas(
                 "usmap" + (this.usmaps.length - 1) + "_" + "county",
                 usmap.stateMapWidth * usmap.zoomFactor,
                 usmap.stateMapHeight * usmap.zoomFactor
             );
+            this.addCanvas(countyMapCanvas);
+        }
         if (
             countyMapCanvas.w != usmap.stateMapWidth * usmap.zoomFactor ||
             countyMapCanvas.h != usmap.stateMapHeight * usmap.zoomFactor
         )
             throw new Error("Adding USMap: county canvas sizes do not match");
-        this.addCanvas(countyMapCanvas);
 
         // static legends layer
         var countyMapLegendLayer = new Layer(null, true);
@@ -654,6 +659,107 @@ function addUSMap(usmap, args) {
     return {pyramid: canvases, view: args.view ? args.view : view};
 }
 
+function addPie(pie, args) {
+    if (args == null) args = {};
+
+    // add to project
+    this.pies.push(pie);
+
+    // construct canvas
+    var pieCanvas;
+    if ("canvas" in args) pieCanvas = args.canvas;
+    else {
+        pieCanvas = new Canvas(
+            "pie" + (this.pies.length - 1),
+            pie.width,
+            pie.height
+        );
+        this.addCanvas(pieCanvas);
+    }
+    if (pieCanvas.w != pie.width || pieCanvas.h != pie.height)
+        throw new Error("Adding Pie: canvas sizes do not match.");
+
+    // add rendering params
+    var rpKey = "pie_" + (this.pies.length - 1);
+    var rpDict = {};
+    rpDict[rpKey] = {
+        dimensions: pie.query.dimensions,
+        innerRadius: 70,
+        outerRadius: pie.radius,
+        cornerRadius: 5,
+        padAngle: 0.01,
+        colorScheme: pie.colorScheme,
+        transition: pie.transition,
+        legendTitle: pie.legend.title,
+        legendDomain: pie.legend.domain
+    };
+    this.addRenderingParams(rpDict);
+
+    // construct query
+    // SELECT columns are from measureCol & pie.query.dimensions
+    // merge them and then dedup
+    var query = "SELECT " + pie.query.dimensions.join(", ");
+    query += (pie.query.dimensions.length ? ", " : "") + pie.query.measure;
+    query += " FROM " + pie.query.table + " GROUP BY ";
+    query += pie.query.dimensions.join(", ");
+    var pieTransform = new Transform(
+        query,
+        pie.db,
+        "",
+        pie.query.dimensions.concat(["kyrixAggValue"]),
+        true,
+        pie.query.dimensions.concat(pie.query.sampleFields)
+    );
+
+    // construct pie layer
+    var pieLayer = new Layer(pieTransform, true);
+    pieCanvas.addLayer(pieLayer);
+    pieLayer.addRenderingFunc(pie.getPieRenderer());
+    pieLayer.addTooltip(pie.tooltip.columns, pie.tooltip.aliases);
+    pieLayer.setIndexerType("StaticAggregationIndexer");
+    pieLayer.setPieId(this.pies.length - 1 + "_" + 0);
+
+    // construct queries for the dummy sample layer
+    // construct the dummy sample layer
+    query =
+        "SELECT " +
+        pie.query.sampleFields.join(", ") +
+        (pie.query.sampleFields.length ? ", " : "") +
+        pie.query.dimensions.join(", ") +
+        (pie.query.measureCol === "*"
+            ? ""
+            : (pie.query.sampleFields.length || pie.query.dimensions.length
+                  ? ", "
+                  : "") + pie.query.measureCol) +
+        " FROM " +
+        pie.query.table;
+
+    // construct sample layer
+    var sampleTransform = new Transform(query, pie.db, "", [], true);
+    var sampleLayer = new Layer(sampleTransform, true);
+    pieCanvas.addLayer(sampleLayer);
+    sampleLayer.addRenderingFunc(function() {});
+    sampleLayer.setIndexerType("StaticAggregationIndexer");
+
+    // add stylesheet
+    this.addStyles(__dirname + "/template-api/css/pie.css");
+
+    // view
+    if (!("view" in args)) {
+        var view = new View(
+            "pie" + (this.pies.length - 1),
+            pie.width,
+            pie.height
+        );
+        this.addView(view);
+        this.setInitialStates(view, pieCanvas, 0, 0);
+    } else if (!(args.view instanceof View)) {
+        throw new Error("Adding Pie: view must be a View object");
+    }
+
+    return {canvas: pieCanvas, view: args.view ? args.view : view};
+}
+
 // Add a rendering parameter object
 function addRenderingParams(renderingParams) {
     if (renderingParams == null) return;
@@ -686,8 +792,8 @@ function addStyles(styles) {
         rules = styles;
     }
 
-    this.styles.push(rules);
     // merge with current CSS
+    this.styles.push(rules);
 }
 
 /**
@@ -1075,6 +1181,7 @@ Project.prototype = {
     addJump,
     addTable,
     addUSMap,
+    addPie,
     addSSV,
     addRenderingParams,
     addStyles,

@@ -18,6 +18,7 @@ public class Transform implements Serializable {
     private String transformFunc;
     private String transformFuncBody;
     private ArrayList<String> columnNames, queriedColumnNames = null;
+    private ArrayList<String> filterableColumnNames;
     private boolean separable;
 
     public String getId() {
@@ -75,6 +76,13 @@ public class Transform implements Serializable {
 
     public boolean isSeparable() {
         return separable;
+    }
+
+    public ArrayList<String> getFilterableColumnNames()
+            throws SQLException, ClassNotFoundException {
+        if (filterableColumnNames.size() == 0) return getColumnNames();
+
+        return filterableColumnNames;
     }
 
     @Override

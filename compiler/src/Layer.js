@@ -26,6 +26,7 @@ function Layer(transform, isStatic) {
     this.indexerType = "";
     this.ssvId = "";
     this.usmapId = "";
+    this.pieId = "";
 }
 
 /**
@@ -103,6 +104,14 @@ function setUSMapId(usmapId) {
 }
 
 /**
+ * set pie ID
+ * @param pieId
+ */
+function setPieId(pieId) {
+    this.pieId = pieId;
+}
+
+/**
  * set indexer, which tells the backend that which indexer this layer should use
  * @param indexer
  */
@@ -122,6 +131,7 @@ Layer.prototype = {
     setFetchingScheme,
     setSSVId,
     setUSMapId,
+    setPieId,
     setIndexerType
 };
 
