@@ -15,7 +15,7 @@ var args = {
         sampleFields: ["game_id", "team_city", "player_name"]
     },
     tooltip: {
-        columns: ["start_position", "value"],
+        columns: ["start_position", "kyrixAggValue"],
         aliases: ["Starting Position", "Average Rebound per Game"]
     },
     legend: {
@@ -27,8 +27,7 @@ var args = {
             G: "Guard"
         }
     },
-    colorScheme: "schemePastel1",
-    transition: true
+    colorScheme: "schemePastel1"
 };
 
 // build project

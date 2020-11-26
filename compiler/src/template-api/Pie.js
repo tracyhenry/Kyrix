@@ -50,7 +50,7 @@ function Pie(args_) {
     // query dimensions and measure
     if (!("tooltip" in args))
         args.tooltip = {
-            columns: args.query.dimensions.concat([args.query.measure]),
+            columns: args.query.dimensions.concat(["kyrixAggValue"]),
             aliases: args.query.dimensions.concat([args.query.measure])
         };
 
@@ -107,6 +107,7 @@ function getPieRenderer() {
         cooked.forEach(function(d) {
             for (var key in d.data) d[key] = d.data[key];
             delete d.data;
+            delete d.value;
         });
 
         var slices = g

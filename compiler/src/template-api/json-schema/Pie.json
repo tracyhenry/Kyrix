@@ -61,7 +61,7 @@
         },
         "radius": {
             "type": "number",
-            "minimum": 20,
+            "minimum": 100,
             "maximum": 400,
             "default": 300
         },
