@@ -16,7 +16,7 @@ public class Layer implements Serializable {
     private String rendering;
     private ArrayList<String> tooltipColumns, tooltipAliases;
     private transient Indexer indexer;
-    private String ssvId, usmapId, pieId;
+    private String ssvId, usmapId, pieId, staticTreemapId;
     private String indexerType;
 
     public Transform getTransform() {
@@ -63,6 +63,10 @@ public class Layer implements Serializable {
         return pieId;
     }
 
+    public String getStaticTreemapId() {
+        return staticTreemapId;
+    }
+
     public void setIndexerType(String indexerType) {
         this.indexerType = indexerType;
     }
@@ -103,6 +107,8 @@ public class Layer implements Serializable {
                 + usmapId
                 + ", pieId="
                 + pieId
+                + ", staticTreemapId="
+                + staticTreemapId
                 + '}';
     }
 }

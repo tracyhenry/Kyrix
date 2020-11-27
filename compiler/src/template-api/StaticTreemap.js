@@ -73,6 +73,51 @@ function getStaticTreemapRenderer() {
                 args.staticTreemapId.indexOf("_")
             );
         var params = args.renderingParams[rpKey];
+
+        // construct data needed to pass in d3.treemap
+        var treemapData = {children: []};
+        for (var i = 0; i < data.length; i++)
+            treemapData.children.push(data[i]);
+
+        // use d3.treemap to calculate coordinates
+        var ysft = 40;
+        var root = d3
+            .treemap()
+            .size([args.viewportW, args.viewportH - ysft])
+            .padding(3)
+            .round(true)(
+            d3
+                .hierarchy(treemapData)
+                .sum(d => d.kyrixAggValue)
+                .sort((a, b) => b.data.kyrixAggValue - a.data.kyrixAggValue)
+        );
+
+        // color scale
+        var areas = root.leaves().map(d => d.data.kyrixAggValue);
+        var minArea = d3.min(areas);
+        var maxArea = d3.max(areas);
+        var color = d3
+            .scaleSequential(d3[params.colorScheme])
+            .domain([minArea, maxArea]);
+
+        // draw rectangles
+        var bindingData = root.leaves().map(function(d) {
+            var ret = {x0: d.x0, y0: d.y0, x1: d.x1, y1: d.y1};
+            var keys = Object.keys(d.data);
+            for (var i = 0; i < keys.length; i++)
+                ret[keys[i]] = d.data[keys[i]];
+            return ret;
+        });
+
+        var g = svg.append("g");
+        g.selectAll(".treemaprect")
+            .data(bindingData)
+            .join("rect")
+            .attr("x", d => d.x0)
+            .attr("y", d => d.y0 + ysft)
+            .attr("width", d => d.x1 - d.x0)
+            .attr("height", d => d.y1 - d.y0)
+            .attr("fill", d => color(d.kyrixAggValue));
     }
 }
 

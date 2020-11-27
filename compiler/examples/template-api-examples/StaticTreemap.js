@@ -10,29 +10,22 @@ var p = new Project("static_treemap_template", "../../../config.txt");
 var args = {
     db: "nba",
     query: {
-        table: "player_boxscore",
-        dimensions: ["start_position"],
-        measure: "AVG(reb)",
-        sampleFields: ["game_id", "team_city", "player_name"]
+        table: "team_boxscore",
+        dimensions: ["team_city"],
+        measure: "SUM(fg3a)",
+        sampleFields: ["game_id", "fgm", "fga", "fg3m", "pts"]
     },
     tooltip: {
-        columns: ["start_position", "kyrixAggValue"],
-        aliases: ["Starting Position", "Average Rebound per Game"]
+        columns: ["team_city", "kyrixAggValue"],
+        aliases: ["Team", "Total 3 Pointer Attempts"]
     },
     legend: {
-        title: "Average Rebounds per Game by Starting Positions",
-        domain: {
-            "": "Bench",
-            C: "Center",
-            F: "Forward",
-            G: "Guard"
-        }
-    },
-    colorScheme: "schemePastel1"
+        title: "Number of 3 pointer Attempts by Team"
+    }
 };
 
 // build project
-var pieProject = new StaticTreemap(args);
-p.addPie(pieProject);
+var staticTreemapProject = new StaticTreemap(args);
+p.addStaticTreemap(staticTreemapProject);
 
 p.saveProject();
