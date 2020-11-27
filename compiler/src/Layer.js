@@ -27,6 +27,7 @@ function Layer(transform, isStatic) {
     this.ssvId = "";
     this.usmapId = "";
     this.pieId = "";
+    this.staticTreemapId = "";
 }
 
 /**
@@ -112,6 +113,14 @@ function setPieId(pieId) {
 }
 
 /**
+ * set static treemap ID
+ * @param staticTreemapId
+ */
+function setStaticTreemapId(staticTreemapId) {
+    this.staticTreemapId = staticTreemapId;
+}
+
+/**
  * set indexer, which tells the backend that which indexer this layer should use
  * @param indexer
  */
@@ -132,6 +141,7 @@ Layer.prototype = {
     setSSVId,
     setUSMapId,
     setPieId,
+    setStaticTreemapId,
     setIndexerType
 };
 
