@@ -7,6 +7,8 @@ const addTable = require("./template-api/addTable").addTable;
 const addSSV = require("./template-api/addSSV").addSSV;
 const addUSMap = require("./template-api/addUSMap").addUSMap;
 const addPie = require("./template-api/addPie").addPie;
+const addStaticTreemap = require("./template-api/addStaticTreemap")
+    .addStaticTreemap;
 
 /**
  *
@@ -51,6 +53,9 @@ function Project(name, configFile) {
 
     // set of pies
     this.pies = [];
+
+    // set of static treemaps
+    this.staticTreemaps = [];
 
     // rendering parameters
     this.renderingParams = "{}";
@@ -598,10 +603,11 @@ Project.prototype = {
     addView,
     addCanvas,
     addJump,
+    addSSV,
     addTable,
     addUSMap,
     addPie,
-    addSSV,
+    addStaticTreemap,
     addRenderingParams,
     addStyles,
     setInitialStates,
