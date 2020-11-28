@@ -37,10 +37,11 @@ function addStaticTreemap(staticTreemap, args) {
     var rpDict = {};
     rpDict[rpKey] = {
         dimensions: staticTreemap.query.dimensions,
+        padding: staticTreemap.padding,
+        textField: staticTreemap.textField,
         colorScheme: staticTreemap.colorScheme,
         transition: staticTreemap.transition,
-        legendTitle: staticTreemap.legend.title,
-        padding: staticTreemap.padding
+        legendTitle: staticTreemap.legend.title
     };
     this.addRenderingParams(rpDict);
 

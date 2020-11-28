@@ -178,7 +178,7 @@ function getStaticTreemapRenderer() {
             tickFormat = d3.format(",f");
         }
 
-        // ticks
+        // legend ticks
         g.append("g")
             .attr(
                 "transform",
@@ -196,6 +196,36 @@ function getStaticTreemapRenderer() {
             )
             .call(tickAdjust)
             .call(g => g.select(".domain").remove());
+
+        // rectangle text
+        if (params.textField.length > 0) {
+            g.selectAll(".orgnametext")
+                .data(rectData)
+                .join("text")
+                .text(function(d) {
+                    return d[params.textField];
+                })
+                .attr("text-anchor", "left")
+                .attr("x", function(d) {
+                    return d.x0 + 10;
+                })
+                .attr("y", function(d) {
+                    return d.y0 + 30 + ysft;
+                })
+                .attr("font-size", 15)
+                .attr("fill", function(d) {
+                    if (minArea == maxArea) return "#000";
+                    if ((d.kyrixAggValue - minArea) / (maxArea - minArea) > 0.5)
+                        return "#FFF";
+                    return "#000";
+                })
+                .style("opacity", function(d) {
+                    var w = d.x1 - d.x0;
+                    var h = d.y1 - d.y0;
+                    if (w > d[params.textField].length * 11 && h > 40) return 1;
+                    else return 0;
+                });
+        }
     }
 }
 

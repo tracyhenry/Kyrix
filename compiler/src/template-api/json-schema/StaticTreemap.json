@@ -65,6 +65,10 @@
             "maximum": 15,
             "default": 3
         },
+        "textField": {
+            "type": "string",
+            "default": ""
+        },
         "colorScheme": {
             "enum": [
                 "interpolateBlues",
