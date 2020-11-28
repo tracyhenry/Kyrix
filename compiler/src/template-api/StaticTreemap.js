@@ -93,7 +93,7 @@ function getStaticTreemapRenderer() {
         );
 
         // color scale
-        var areas = root.leaves().map(d => d.data.kyrixAggValue);
+        var areas = root.leaves().map(d => +d.data.kyrixAggValue);
         var minArea = d3.min(areas);
         var maxArea = d3.max(areas);
         var color = d3
