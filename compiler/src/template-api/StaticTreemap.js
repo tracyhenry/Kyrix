@@ -115,7 +115,8 @@ function getStaticTreemapRenderer() {
             .attr("y", d => d.y0 + ysft)
             .attr("width", d => d.x1 - d.x0)
             .attr("height", d => d.y1 - d.y0)
-            .attr("fill", d => color(d.kyrixAggValue));
+            .attr("fill", d => color(d.kyrixAggValue))
+            .style("opacity", params.transition ? 0 : 1);
 
         // title
         g.append("text")
@@ -199,9 +200,10 @@ function getStaticTreemapRenderer() {
 
         // rectangle text
         if (params.textField.length > 0) {
-            g.selectAll(".orgnametext")
+            g.selectAll(".textfield")
                 .data(rectData)
                 .join("text")
+                .classed("textfield", true)
                 .text(function(d) {
                     return d[params.textField];
                 })
@@ -220,12 +222,104 @@ function getStaticTreemapRenderer() {
                     return "#000";
                 })
                 .style("opacity", function(d) {
+                    if (params.transition) return 0;
                     var w = d.x1 - d.x0;
                     var h = d.y1 - d.y0;
                     if (w > d[params.textField].length * 11 && h > 40) return 1;
                     else return 0;
                 });
         }
+
+        // transition
+        if (!params.transition) return;
+
+        // use DP to calculate a minimum enter time for each rectangle
+        var dp = [];
+        for (var i = 0; i < rectData.length; i++) {
+            var minOrder = 0;
+            for (var j = 0; j < dp.length; j++)
+                if (
+                    (rectData[j].y1 + params.padding === rectData[i].y0 &&
+                        rectData[j].x1 > rectData[i].x0 &&
+                        rectData[j].x0 < rectData[i].x1) ||
+                    (rectData[j].x1 + params.padding === rectData[i].x0 &&
+                        rectData[j].y1 > rectData[i].y0 &&
+                        rectData[j].y0 < rectData[j].y1)
+                )
+                    minOrder = Math.max(minOrder, dp[j] + 1);
+            dp.push(minOrder);
+        }
+        var maxOrder = d3.max(dp);
+        var enterTime = 300;
+        var transitionEndTime = 2000;
+        var delayTime = (transitionEndTime - enterTime) / maxOrder;
+
+        // animate rects
+        g.selectAll(".treemaprect")
+            .transition()
+            .delay(function(d, i) {
+                return dp[i] * delayTime;
+            })
+            .ease(d3.easeExpOut)
+            .duration(enterTime)
+            .tween("enter", function(d, i) {
+                var x0 = d.x0;
+                var y0 = d.y0;
+                return function(t) {
+                    if (i % 2 == 0)
+                        d3.select(this)
+                            .attr("x", x0 + (1 - t) * args.viewportW)
+                            .style("opacity", t);
+                    else
+                        d3.select(this)
+                            .attr("y", y0 + ysft + (1 - t) * args.viewportH)
+                            .style("opacity", t);
+                };
+            });
+
+        // animate texts
+        g.selectAll(".textfield")
+            .transition()
+            .delay(function(d, i) {
+                return dp[i] * delayTime;
+            })
+            .ease(d3.easeExpOut)
+            .duration(enterTime)
+            .tween("enter", function(d, i) {
+                var x0 = d.x0;
+                var y0 = d.y0;
+                return function(t) {
+                    if (i % 2 == 0)
+                        d3.select(this)
+                            .attr("x", x0 + 10 + (1 - t) * args.viewportW)
+                            .style("opacity", function(d) {
+                                var w = d.x1 - d.x0;
+                                var h = d.y1 - d.y0;
+                                if (
+                                    w > d[params.textField].length * 11 &&
+                                    h > 40
+                                )
+                                    return t;
+                                else return 0;
+                            });
+                    else
+                        d3.select(this)
+                            .attr(
+                                "y",
+                                y0 + 30 + ysft + (1 - t) * args.viewportH
+                            )
+                            .style("opacity", function(d) {
+                                var w = d.x1 - d.x0;
+                                var h = d.y1 - d.y0;
+                                if (
+                                    w > d[params.textField].length * 11 &&
+                                    h > 40
+                                )
+                                    return t;
+                                else return 0;
+                            });
+                };
+            });
     }
 }
 
