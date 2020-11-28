@@ -38,7 +38,7 @@ function addStaticTreemap(staticTreemap, args) {
     rpDict[rpKey] = {
         dimensions: staticTreemap.query.dimensions,
         padding: staticTreemap.padding,
-        textField: staticTreemap.textField,
+        textFields: staticTreemap.textFields,
         colorScheme: staticTreemap.colorScheme,
         transition: staticTreemap.transition,
         legendTitle: staticTreemap.legend.title

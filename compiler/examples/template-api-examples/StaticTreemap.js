@@ -19,7 +19,7 @@ var args = {
         columns: ["team_city", "kyrixAggValue"],
         aliases: ["Team", "Total 3 Pointer Attempts"]
     },
-    textField: "team_city",
+    textFields: ["team_city"],
     legend: {
         title: "Number of 3-Pointer Attempts by Team"
     }

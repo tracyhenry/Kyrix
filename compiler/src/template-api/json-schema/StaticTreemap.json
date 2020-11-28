@@ -65,9 +65,13 @@
             "maximum": 15,
             "default": 3
         },
-        "textField": {
-            "type": "string",
-            "default": ""
+        "textFields": {
+            "type": "array",
+            "item": {
+                "type": "string",
+                "minLength": 1
+            },
+            "default": []
         },
         "colorScheme": {
             "enum": [

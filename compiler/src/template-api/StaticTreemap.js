@@ -55,6 +55,15 @@ function StaticTreemap(args_) {
             "Constructing Static Treemap: Tooltip columns and aliases should have the same length."
         );
 
+    // columns in textFields must be from args.query.dimensions
+    for (var i = 0; i < args.textFields.length; i++)
+        if (args.query.dimensions.indexOf(args.textFields[i]) < 0)
+            throw new Error(
+                "Constructing Static Treemap: text field " +
+                    args.textFields[i] +
+                    " is not present in query.dimensions."
+            );
+
     // get args into "this"
     var keys = Object.keys(args);
     for (var i = 0; i < keys.length; i++) this[keys[i]] = args[keys[i]];
@@ -199,13 +208,17 @@ function getStaticTreemapRenderer() {
             .call(g => g.select(".domain").remove());
 
         // rectangle text
-        if (params.textField.length > 0) {
+        if (params.textFields.length > 0) {
             g.selectAll(".textfield")
                 .data(rectData)
                 .join("text")
                 .classed("textfield", true)
                 .text(function(d) {
-                    return d[params.textField];
+                    return params.textFields
+                        .map(function(p) {
+                            return d[p];
+                        })
+                        .join(", ");
                 })
                 .attr("text-anchor", "left")
                 .attr("x", function(d) {
@@ -225,7 +238,7 @@ function getStaticTreemapRenderer() {
                     if (params.transition) return 0;
                     var w = d.x1 - d.x0;
                     var h = d.y1 - d.y0;
-                    if (w > d[params.textField].length * 11 && h > 40) return 1;
+                    if (w > this.textContent.length * 11 && h > 40) return 1;
                     else return 0;
                 });
         }
@@ -295,10 +308,7 @@ function getStaticTreemapRenderer() {
                             .style("opacity", function(d) {
                                 var w = d.x1 - d.x0;
                                 var h = d.y1 - d.y0;
-                                if (
-                                    w > d[params.textField].length * 11 &&
-                                    h > 40
-                                )
+                                if (w > this.textContent.length * 11 && h > 40)
                                     return t;
                                 else return 0;
                             });
@@ -311,10 +321,7 @@ function getStaticTreemapRenderer() {
                             .style("opacity", function(d) {
                                 var w = d.x1 - d.x0;
                                 var h = d.y1 - d.y0;
-                                if (
-                                    w > d[params.textField].length * 11 &&
-                                    h > 40
-                                )
+                                if (w > this.textContent.length * 11 && h > 40)
                                     return t;
                                 else return 0;
                             });
