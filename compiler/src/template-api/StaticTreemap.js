@@ -80,11 +80,11 @@ function getStaticTreemapRenderer() {
             treemapData.children.push(data[i]);
 
         // use d3.treemap to calculate coordinates
-        var ysft = 40;
+        var ysft = 80;
         var root = d3
             .treemap()
             .size([args.viewportW, args.viewportH - ysft])
-            .padding(3)
+            .padding(params.padding)
             .round(true)(
             d3
                 .hierarchy(treemapData)
@@ -101,23 +101,101 @@ function getStaticTreemapRenderer() {
             .domain([minArea, maxArea]);
 
         // draw rectangles
-        var bindingData = root.leaves().map(function(d) {
-            var ret = {x0: d.x0, y0: d.y0, x1: d.x1, y1: d.y1};
-            var keys = Object.keys(d.data);
-            for (var i = 0; i < keys.length; i++)
-                ret[keys[i]] = d.data[keys[i]];
+        var rectData = root.leaves().map(function(d) {
+            var ret = Object.assign({}, d, d.data);
+            delete ret.data;
             return ret;
         });
-
         var g = svg.append("g");
         g.selectAll(".treemaprect")
-            .data(bindingData)
+            .data(rectData)
             .join("rect")
+            .classed("treemaprect", true)
             .attr("x", d => d.x0)
             .attr("y", d => d.y0 + ysft)
             .attr("width", d => d.x1 - d.x0)
             .attr("height", d => d.y1 - d.y0)
             .attr("fill", d => color(d.kyrixAggValue));
+
+        // title
+        g.append("text")
+            .text(params.legendTitle)
+            .style("font-size", 23)
+            .attr("x", 15)
+            .attr("y", 45);
+
+        // legend
+        var tickSize = 6;
+        var width = 320;
+        var height = 50 + tickSize;
+        var marginTop = 18,
+            marginRight = 0;
+        var marginBottom = 16 + tickSize,
+            marginLeft = 0;
+        var ticks = width / 64;
+        var ramp = function(color, n = 256) {
+            const canvas = document.createElement("canvas");
+            canvas.width = n;
+            canvas.height = 1;
+            const context = canvas.getContext("2d");
+            for (var i = 0; i < n; ++i) {
+                context.fillStyle = color(i / (n - 1));
+                context.fillRect(i, 0, 1, 1);
+            }
+            return canvas;
+        };
+        var tickAdjust = g =>
+            g
+                .selectAll(".tick line")
+                .attr("y1", marginTop + marginBottom - height);
+        var x = Object.assign(
+            color
+                .copy()
+                .interpolator(
+                    d3.interpolateRound(marginLeft, width - marginRight)
+                ),
+            {
+                range() {
+                    return [marginLeft, width - marginRight];
+                }
+            }
+        );
+        g.append("g")
+            .attr("transform", `translate(${args.viewportW - width - 70}, 15)`)
+            .append("image")
+            .attr("x", marginLeft)
+            .attr("y", marginTop)
+            .attr("width", width - marginLeft - marginRight)
+            .attr("height", height - marginTop - marginBottom)
+            .attr("preserveAspectRatio", "none")
+            .attr("xlink:href", ramp(color.interpolator()).toDataURL());
+        var tickValues, tickFormat;
+        if (!x.ticks) {
+            const n = Math.round(ticks + 1);
+            tickValues = d3
+                .range(n)
+                .map(i => d3.quantile(color.domain(), i / (n - 1)));
+            tickFormat = d3.format(",f");
+        }
+
+        // ticks
+        g.append("g")
+            .attr(
+                "transform",
+                `translate(${args.viewportW - width - 70},${height -
+                    marginBottom +
+                    15})`
+            )
+            .call(
+                d3
+                    .axisBottom(x)
+                    .ticks(ticks, tickFormat)
+                    .tickFormat(tickFormat)
+                    .tickSize(tickSize)
+                    .tickValues(tickValues)
+            )
+            .call(tickAdjust)
+            .call(g => g.select(".domain").remove());
     }
 }
 

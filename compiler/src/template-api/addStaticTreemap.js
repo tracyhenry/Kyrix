@@ -39,7 +39,8 @@ function addStaticTreemap(staticTreemap, args) {
         dimensions: staticTreemap.query.dimensions,
         colorScheme: staticTreemap.colorScheme,
         transition: staticTreemap.transition,
-        legendTitle: staticTreemap.legend.title
+        legendTitle: staticTreemap.legend.title,
+        padding: staticTreemap.padding
     };
     this.addRenderingParams(rpDict);
 
