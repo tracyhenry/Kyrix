@@ -7,10 +7,12 @@ function StaticHierarchy(args_) {
     // defaults are assigned at the same time
     var args = JSON.parse(JSON.stringify(args_));
     var pieSchema = JSON.parse(
-        fs.readFileSync("../../src/template-api/json-schema/pie.json")
+        fs.readFileSync("../../src/template-api/json-schema/Pie.json")
     );
     var staticHierarchySchema = JSON.parse(
-        fs.readFileSync("../../src/template-api/json-schema/StaticHierarchy.json")
+        fs.readFileSync(
+            "../../src/template-api/json-schema/StaticHierarchy.json"
+        )
     );
     var ajv = new require("ajv")({useDefaults: true});
     ajv.addSchema(pieSchema, "pie");
