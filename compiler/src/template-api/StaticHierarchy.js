@@ -358,7 +358,12 @@ function getStaticCirclePackRenderer() {
         var root = d3
             .pack()
             .size([args.viewportW, args.viewportH - ysft])
-            .padding(3)(d3.hierarchy(packData).sum(d => d.kyrixAggValue));
+            .padding(3)(
+            d3
+                .hierarchy(packData)
+                .sum(d => d.kyrixAggValue)
+                .sort((a, b) => b.data.kyrixAggValue - a.data.kyrixAggValue)
+        );
 
         // color scale
         var circles = root.leaves().map(d => +d.data.kyrixAggValue);
@@ -474,7 +479,7 @@ function getStaticCirclePackRenderer() {
         // // rectangle text
         if (params.textFields.length > 0) {
             g.selectAll(".textfield")
-                .data(circleData)
+                .data(circleData.slice(0, 10))
                 .join("text")
                 .classed("textfield", true)
                 .text(function(d) {
@@ -489,12 +494,11 @@ function getStaticCirclePackRenderer() {
                     return d.x;
                 })
                 .attr("y", function(d) {
-                    return d.y + ysft;
+                    return d.y + 7 + ysft;
                 })
                 .attr("font-size", function(d) {
                     return d.r * 0.3;
                 })
-                .attr("dy", "0.35em")
                 .attr("fill", function(d) {
                     if (minArea == maxArea) return "#000";
                     if ((d.kyrixAggValue - minArea) / (maxArea - minArea) > 0.5)
