@@ -19,6 +19,7 @@ var args = {
         columns: ["month", "kyrixAggValue"],
         aliases: ["Month", "Total Games Played"]
     },
+    colorScheme: "interpolateYlGn",
     textFields: ["month"],
     legend: {
         title: "Total Games Played by Month"

@@ -494,7 +494,7 @@ function getStaticCirclePackRenderer() {
                     return d.x;
                 })
                 .attr("y", function(d) {
-                    return d.y + 7 + ysft;
+                    return d.y + d.r * 0.14 + ysft;
                 })
                 .attr("font-size", function(d) {
                     return d.r * 0.3;
