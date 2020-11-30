@@ -48,6 +48,9 @@
     "properties": {
         "db": {"$ref": "pieSchema#/definitions/db"},
         "query": {"$ref": "pieSchema#/definitions/query"},
+        "type": {
+          "enum": ["treemap", "circle pack"]
+        },
         "tooltip": {"$ref": "pieSchema#/definitions/tooltip"},
         "padding": {"$ref": "#/definitions/padding", "default": 3},
         "textFields": {"$ref": "#/definitions/textFields", "default": []},
@@ -63,6 +66,6 @@
         "width": {"$ref": "pieSchema#/definitions/width", "default": 1000},
         "height": {"$ref": "pieSchema#/definitions/height", "default": 1000}
     },
-    "required": ["db", "query"],
+    "required": ["db", "query", "type"],
     "additionalProperties": false
 }

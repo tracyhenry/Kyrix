@@ -27,7 +27,7 @@ function Layer(transform, isStatic) {
     this.ssvId = "";
     this.usmapId = "";
     this.pieId = "";
-    this.staticTreemapId = "";
+    this.staticHierarchyId = "";
 }
 
 /**
@@ -113,11 +113,11 @@ function setPieId(pieId) {
 }
 
 /**
- * set static treemap ID
- * @param staticTreemapId
+ * set static hierarchy ID
+ * @param staticHierarchyId
  */
-function setStaticTreemapId(staticTreemapId) {
-    this.staticTreemapId = staticTreemapId;
+function setStaticHierarchyId(staticHierarchyId) {
+    this.staticHierarchyId = staticHierarchyId;
 }
 
 /**
@@ -141,7 +141,7 @@ Layer.prototype = {
     setSSVId,
     setUSMapId,
     setPieId,
-    setStaticTreemapId,
+    setStaticHierarchyId,
     setIndexerType
 };
 

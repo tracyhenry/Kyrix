@@ -269,8 +269,8 @@ function renderTiles(viewId, viewportX, viewportY, vpW, vpH, optionalArgs) {
                     optionalArgsMore["ssvId"] = curLayer.ssvId;
                     optionalArgsMore["usmapId"] = curLayer.usmapId;
                     optionalArgsMore["pieId"] = curLayer.pieId;
-                    optionalArgsMore["staticTreemapId"] =
-                        curLayer.staticTreemapId;
+                    optionalArgsMore["staticHierarchyId"] =
+                        curLayer.staticHierarchyId;
                     curLayer.rendering.parseFunction()(
                         tileSvg,
                         renderData[i],
@@ -489,8 +489,8 @@ function renderDynamicBoxes(
                     optionalArgsMore["ssvId"] = curLayer.ssvId;
                     optionalArgsMore["usmapId"] = curLayer.usmapId;
                     optionalArgsMore["pieId"] = curLayer.pieId;
-                    optionalArgsMore["staticTreemapId"] =
-                        curLayer.staticTreemapId;
+                    optionalArgsMore["staticHierarchyId"] =
+                        curLayer.staticHierarchyId;
                     curLayer.rendering.parseFunction()(
                         dboxSvg,
                         renderData[i],

@@ -2,23 +2,23 @@ const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
 const formatAjvErrorMessage = require("./Utilities").formatAjvErrorMessage;
 const fs = require("fs");
 
-function StaticTreemap(args_) {
+function StaticHierarchy(args_) {
     // verify against schema
     // defaults are assigned at the same time
     var args = JSON.parse(JSON.stringify(args_));
     var pieSchema = JSON.parse(
         fs.readFileSync("../../src/template-api/json-schema/pie.json")
     );
-    var staticTreemapSchema = JSON.parse(
-        fs.readFileSync("../../src/template-api/json-schema/StaticTreemap.json")
+    var staticHierarchySchema = JSON.parse(
+        fs.readFileSync("../../src/template-api/json-schema/StaticHierarchy.json")
     );
     var ajv = new require("ajv")({useDefaults: true});
     ajv.addSchema(pieSchema, "pie");
-    ajv.addSchema(staticTreemapSchema, "staticTreemap");
-    var valid = ajv.validate("staticTreemap", args);
+    ajv.addSchema(staticHierarchySchema, "staticHierarchy");
+    var valid = ajv.validate("staticHierarchy", args);
     if (!valid)
         throw new Error(
-            "Constructing Static Treemap: " +
+            "Constructing Static Hierarchy: " +
                 formatAjvErrorMessage(ajv.errors[0])
         );
 
@@ -41,7 +41,7 @@ function StaticTreemap(args_) {
             if (allQueryFields[j] === allQueryFields[i]) disjoint = false;
     if (!disjoint)
         throw new Error(
-            "Constructing Static Treemap: query fields " +
+            "Constructing Static Hierarchy: query fields " +
                 "(query.dimensions, query.measure, query.sampleFields) have duplicates."
         );
 
@@ -56,14 +56,14 @@ function StaticTreemap(args_) {
     // tooltip column and aliases must have the same length
     if (args.tooltip.columns.length !== args.tooltip.aliases.length)
         throw new Error(
-            "Constructing Static Treemap: Tooltip columns and aliases should have the same length."
+            "Constructing Static Hierarchy: Tooltip columns and aliases should have the same length."
         );
 
     // columns in textFields must be from args.query.dimensions
     for (var i = 0; i < args.textFields.length; i++)
         if (args.query.dimensions.indexOf(args.textFields[i]) < 0)
             throw new Error(
-                "Constructing Static Treemap: text field " +
+                "Constructing Static Hierarchy: text field " +
                     args.textFields[i] +
                     " is not present in query.dimensions."
             );
@@ -80,10 +80,10 @@ function getStaticTreemapRenderer() {
     function renderer(svg, data, args) {
         var g = svg.append("g");
         var rpKey =
-            "staticTreemap_" +
-            args.staticTreemapId.substring(
+            "staticHierarchy_" +
+            args.staticHierarchyId.substring(
                 0,
-                args.staticTreemapId.indexOf("_")
+                args.staticHierarchyId.indexOf("_")
             );
         var params = args.renderingParams[rpKey];
 
@@ -334,10 +334,10 @@ function getStaticTreemapRenderer() {
     }
 }
 
-StaticTreemap.prototype = {
+StaticHierarchy.prototype = {
     getStaticTreemapRenderer
 };
 
 module.exports = {
-    StaticTreemap
+    StaticHierarchy
 };
