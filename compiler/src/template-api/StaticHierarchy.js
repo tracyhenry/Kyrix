@@ -489,9 +489,12 @@ function getStaticCirclePackRenderer() {
                     return d.x;
                 })
                 .attr("y", function(d) {
-                    return d.y + 5 + ysft;
+                    return d.y + ysft;
                 })
-                .attr("font-size", 15)
+                .attr("font-size", function(d) {
+                    return d.r * 0.3;
+                })
+                .attr("dy", "0.35em")
                 .attr("fill", function(d) {
                     if (minArea == maxArea) return "#000";
                     if ((d.kyrixAggValue - minArea) / (maxArea - minArea) > 0.5)

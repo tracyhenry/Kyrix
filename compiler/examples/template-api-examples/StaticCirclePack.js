@@ -10,19 +10,18 @@ var p = new Project("static_circle_pack_template", "../../../config.txt");
 var args = {
     db: "nba",
     query: {
-        table: "team_boxscore",
-        dimensions: ["team_city"],
-        measure: "SUM(fg3a)",
-        sampleFields: ["game_id", "fgm", "fga", "fg3m", "pts"]
+        table: "games",
+        dimensions: ["month"],
+        measure: "COUNT(*)"
     },
     type: "circlePack",
     tooltip: {
-        columns: ["team_city", "kyrixAggValue"],
-        aliases: ["Team", "Total 3 Pointer Attempts"]
+        columns: ["month", "kyrixAggValue"],
+        aliases: ["Month", "Total Games Played"]
     },
-    textFields: ["team_city"],
+    textFields: ["month"],
     legend: {
-        title: "Number of 3-Pointer Attempts by Team"
+        title: "Total Games Played by Month"
     }
 };
 
