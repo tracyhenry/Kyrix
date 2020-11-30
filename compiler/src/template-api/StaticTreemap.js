@@ -6,16 +6,20 @@ function StaticTreemap(args_) {
     // verify against schema
     // defaults are assigned at the same time
     var args = JSON.parse(JSON.stringify(args_));
-    var schema = JSON.parse(
+    var pieSchema = JSON.parse(
+        fs.readFileSync("../../src/template-api/json-schema/pie.json")
+    );
+    var staticTreemapSchema = JSON.parse(
         fs.readFileSync("../../src/template-api/json-schema/StaticTreemap.json")
     );
     var ajv = new require("ajv")({useDefaults: true});
-    var validator = ajv.compile(schema);
-    var valid = validator(args);
+    ajv.addSchema(pieSchema, "pie");
+    ajv.addSchema(staticTreemapSchema, "staticTreemap");
+    var valid = ajv.validate("staticTreemap", args);
     if (!valid)
         throw new Error(
             "Constructing Static Treemap: " +
-                formatAjvErrorMessage(validator.errors[0])
+                formatAjvErrorMessage(ajv.errors[0])
         );
 
     // check constraints/add defaults that can't be expressed by json-schema
