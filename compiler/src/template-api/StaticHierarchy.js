@@ -121,7 +121,6 @@ function getStaticTreemapRenderer() {
             delete ret.data;
             return ret;
         });
-        var g = svg.append("g");
         g.selectAll(".treemaprect")
             .data(rectData)
             .join("rect")
@@ -336,8 +335,179 @@ function getStaticTreemapRenderer() {
     }
 }
 
+function getStaticCirclePackRenderer() {
+    var renderFuncBody = getBodyStringOfFunction(renderer);
+    return new Function("svg", "data", "args", renderFuncBody);
+
+    function renderer(svg, data, args) {
+        var g = svg.append("g");
+        var rpKey =
+            "staticHierarchy_" +
+            args.staticHierarchyId.substring(
+                0,
+                args.staticHierarchyId.indexOf("_")
+            );
+        var params = args.renderingParams[rpKey];
+
+        // construct data needed to pass in d3.pack
+        var packData = {children: []};
+        for (var i = 0; i < data.length; i++) packData.children.push(data[i]);
+
+        // use d3.treemap to calculate coordinates
+        var ysft = 80;
+        var root = d3
+            .pack()
+            .size([args.viewportW, args.viewportH - ysft])
+            .padding(3)(d3.hierarchy(packData).sum(d => d.kyrixAggValue));
+
+        // color scale
+        var circles = root.leaves().map(d => +d.data.kyrixAggValue);
+        var minArea = d3.min(circles);
+        var maxArea = d3.max(circles);
+        var color = d3
+            .scaleSequential(d3[params.colorScheme])
+            .domain([minArea, maxArea]);
+
+        // draw rectangles
+        var circleData = root.leaves().map(function(d) {
+            var ret = Object.assign({}, d, d.data);
+            delete ret.data;
+            return ret;
+        });
+
+        g.selectAll(".packcircle")
+            .data(circleData)
+            .join("circle")
+            .classed("packcircle", true)
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y + ysft)
+            .attr("r", d => d.r)
+            .attr("fill", d => color(d.kyrixAggValue));
+
+        // title
+        g.append("text")
+            .text(params.legendTitle)
+            .style("font-size", 23)
+            .attr("x", 15)
+            .attr("y", 45);
+
+        // legend
+        var tickSize = 6;
+        var width = 320;
+        var height = 50 + tickSize;
+        var marginTop = 18,
+            marginRight = 0;
+        var marginBottom = 16 + tickSize,
+            marginLeft = 0;
+        var ticks = width / 64;
+        var ramp = function(color, n = 256) {
+            const canvas = document.createElement("canvas");
+            canvas.width = n;
+            canvas.height = 1;
+            const context = canvas.getContext("2d");
+            for (var i = 0; i < n; ++i) {
+                context.fillStyle = color(i / (n - 1));
+                context.fillRect(i, 0, 1, 1);
+            }
+            return canvas;
+        };
+        var tickAdjust = g =>
+            g
+                .selectAll(".tick line")
+                .attr("y1", marginTop + marginBottom - height);
+        var x = Object.assign(
+            color
+                .copy()
+                .interpolator(
+                    d3.interpolateRound(marginLeft, width - marginRight)
+                ),
+            {
+                range() {
+                    return [marginLeft, width - marginRight];
+                }
+            }
+        );
+        g.append("g")
+            .attr("transform", `translate(${args.viewportW - width - 70}, 15)`)
+            .append("image")
+            .attr("x", marginLeft)
+            .attr("y", marginTop)
+            .attr("width", width - marginLeft - marginRight)
+            .attr("height", height - marginTop - marginBottom)
+            .attr("preserveAspectRatio", "none")
+            .attr("xlink:href", ramp(color.interpolator()).toDataURL());
+        var tickValues, tickFormat;
+        if (!x.ticks) {
+            const n = Math.round(ticks + 1);
+            tickValues = d3
+                .range(n)
+                .map(i => d3.quantile(color.domain(), i / (n - 1)));
+            tickFormat = d3.format(",f");
+        }
+
+        // legend ticks
+        g.append("g")
+            .attr(
+                "transform",
+                `translate(${args.viewportW - width - 70},${height -
+                    marginBottom +
+                    15})`
+            )
+            .call(
+                d3
+                    .axisBottom(x)
+                    .ticks(ticks, tickFormat)
+                    .tickFormat(tickFormat)
+                    .tickSize(tickSize)
+                    .tickValues(tickValues)
+            )
+            .call(tickAdjust)
+            .call(g => g.select(".domain").remove());
+
+        // // rectangle text
+        // if (params.textFields.length > 0) {
+        //     g.selectAll(".textfield")
+        //         .data(circleData)
+        //         .join("text")
+        //         .classed("textfield", true)
+        //         .text(function(d) {
+        //             return params.textFields
+        //                 .map(function(p) {
+        //                     return d[p];
+        //                 })
+        //                 .join(", ");
+        //         })
+        //         .attr("text-anchor", "left")
+        //         .attr("x", function(d) {
+        //             return d.x0 + 10;
+        //         })
+        //         .attr("y", function(d) {
+        //             return d.y0 + 30 + ysft;
+        //         })
+        //         .attr("font-size", 15)
+        //         .attr("fill", function(d) {
+        //             if (minArea == maxArea) return "#000";
+        //             if ((d.kyrixAggValue - minArea) / (maxArea - minArea) > 0.5)
+        //                 return "#FFF";
+        //             return "#000";
+        //         })
+        //         .style("opacity", function(d) {
+        //             if (params.transition) return 0;
+        //             var w = d.x1 - d.x0;
+        //             var h = d.y1 - d.y0;
+        //             if (w > this.textContent.length * 11 && h > 40) return 1;
+        //             else return 0;
+        //         });
+        // }
+
+        // transition
+        if (!params.transition) return;
+    }
+}
+
 StaticHierarchy.prototype = {
-    getStaticTreemapRenderer
+    getStaticTreemapRenderer,
+    getStaticCirclePackRenderer
 };
 
 module.exports = {
