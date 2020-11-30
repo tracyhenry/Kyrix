@@ -379,9 +379,16 @@ function getStaticCirclePackRenderer() {
             .data(circleData)
             .join("circle")
             .classed("packcircle", true)
-            .attr("cx", d => d.x)
-            .attr("cy", d => d.y + ysft)
-            .attr("r", d => d.r)
+            .attr("cx", function(d) {
+                return d.x;
+            })
+            .attr("cy", function(d) {
+                return d.y + ysft;
+            })
+            .attr("r", function(d) {
+                if (params.transition) return 0;
+                else return d.r;
+            })
             .attr("fill", d => color(d.kyrixAggValue));
 
         // title
@@ -465,43 +472,60 @@ function getStaticCirclePackRenderer() {
             .call(g => g.select(".domain").remove());
 
         // // rectangle text
-        // if (params.textFields.length > 0) {
-        //     g.selectAll(".textfield")
-        //         .data(circleData)
-        //         .join("text")
-        //         .classed("textfield", true)
-        //         .text(function(d) {
-        //             return params.textFields
-        //                 .map(function(p) {
-        //                     return d[p];
-        //                 })
-        //                 .join(", ");
-        //         })
-        //         .attr("text-anchor", "left")
-        //         .attr("x", function(d) {
-        //             return d.x0 + 10;
-        //         })
-        //         .attr("y", function(d) {
-        //             return d.y0 + 30 + ysft;
-        //         })
-        //         .attr("font-size", 15)
-        //         .attr("fill", function(d) {
-        //             if (minArea == maxArea) return "#000";
-        //             if ((d.kyrixAggValue - minArea) / (maxArea - minArea) > 0.5)
-        //                 return "#FFF";
-        //             return "#000";
-        //         })
-        //         .style("opacity", function(d) {
-        //             if (params.transition) return 0;
-        //             var w = d.x1 - d.x0;
-        //             var h = d.y1 - d.y0;
-        //             if (w > this.textContent.length * 11 && h > 40) return 1;
-        //             else return 0;
-        //         });
-        // }
+        if (params.textFields.length > 0) {
+            g.selectAll(".textfield")
+                .data(circleData)
+                .join("text")
+                .classed("textfield", true)
+                .text(function(d) {
+                    return params.textFields
+                        .map(function(p) {
+                            return d[p];
+                        })
+                        .join(", ");
+                })
+                .attr("text-anchor", "middle")
+                .attr("x", function(d) {
+                    return d.x;
+                })
+                .attr("y", function(d) {
+                    return d.y + 5 + ysft;
+                })
+                .attr("font-size", 15)
+                .attr("fill", function(d) {
+                    if (minArea == maxArea) return "#000";
+                    if ((d.kyrixAggValue - minArea) / (maxArea - minArea) > 0.5)
+                        return "#FFF";
+                    return "#000";
+                })
+                .style("opacity", function(d) {
+                    if (params.transition) return 0;
+                    if (d.r * 2 > Math.max(this.textContent.length * 11, 40))
+                        return 1;
+                    else return 0;
+                });
+        }
 
         // transition
         if (!params.transition) return;
+
+        g.selectAll(".packcircle")
+            .transition()
+            .duration(500)
+            .attr("r", function(d) {
+                return d.r;
+            })
+            .on("end", function(d, i) {
+                if (i == 0)
+                    g.selectAll(".textfield").style("opacity", function(p) {
+                        if (
+                            p.r * 2 >
+                            Math.max(this.textContent.length * 11, 40)
+                        )
+                            return 1;
+                        else return 0;
+                    });
+            });
     }
 }
 
