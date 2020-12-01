@@ -1,6 +1,7 @@
 {
     "type": "object",
-    "properties": {
+    "$id": "pieSchema",
+    "definitions": {
         "db": {
             "type": "string",
             "minLength": 1
@@ -59,12 +60,6 @@
             "required": ["columns", "aliases"],
             "additionalProperties": false
         },
-        "radius": {
-            "type": "number",
-            "minimum": 100,
-            "maximum": 400,
-            "default": 300
-        },
         "colorScheme": {
             "enum": [
                 "schemeAccent",
@@ -77,12 +72,10 @@
                 "schemeSet2",
                 "schemeSet3",
                 "schemeTableau10"
-            ],
-            "default": "schemeTableau10"
+            ]
         },
         "transition": {
-            "type": "boolean",
-            "default": true
+            "type": "boolean"
         },
         "legend": {
             "type": "object",
@@ -102,13 +95,40 @@
         "width": {
             "type": "number",
             "minimum": 600,
-            "maximum": 1500,
-            "default": 1000
+            "maximum": 1500
         },
         "height": {
             "type": "number",
             "minimum": 600,
             "maximum": 1500,
+            "default": 1000
+        }
+    },
+    "properties": {
+        "db": {"$ref": "#/definitions/db"},
+        "query": {"$ref": "#/definitions/query"},
+        "tooltip": {"$ref": "#/definitions/tooltip"},
+        "radius": {
+            "type": "number",
+            "minimum": 100,
+            "maximum": 400,
+            "default": 300
+        },
+        "colorScheme": {
+            "$ref": "#/definitions/colorScheme",
+            "default": "schemeTableau10"
+        },
+        "transition": {
+            "$ref": "#/definitions/transition",
+            "default": true
+        },
+        "legend": {"$ref": "#/definitions/legend"},
+        "width": {
+            "$ref": "#/definitions/width",
+            "default": 1000
+        },
+        "height": {
+            "$ref": "#/definitions/height",
             "default": 1000
         }
     },

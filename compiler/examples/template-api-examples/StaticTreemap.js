@@ -1,7 +1,7 @@
 // libraries
 const Project = require("../../src/index").Project;
-const StaticTreemap = require("../../src/template-api/StaticTreemap")
-    .StaticTreemap;
+const StaticHierarchy = require("../../src/template-api/StaticHierarchy")
+    .StaticHierarchy;
 
 // construct project
 var p = new Project("static_treemap_template", "../../../config.txt");
@@ -15,6 +15,7 @@ var args = {
         measure: "SUM(fg3a)",
         sampleFields: ["game_id", "fgm", "fga", "fg3m", "pts"]
     },
+    type: "treemap",
     tooltip: {
         columns: ["team_city", "kyrixAggValue"],
         aliases: ["Team", "Total 3 Pointer Attempts"]
@@ -26,7 +27,7 @@ var args = {
 };
 
 // build project
-var staticTreemapProject = new StaticTreemap(args);
-p.addStaticTreemap(staticTreemapProject);
+var staticTreemapProject = new StaticHierarchy(args);
+p.addStaticHierarchy(staticTreemapProject);
 
 p.saveProject();

@@ -2,20 +2,26 @@ const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
 const formatAjvErrorMessage = require("./Utilities").formatAjvErrorMessage;
 const fs = require("fs");
 
-function StaticTreemap(args_) {
+function StaticHierarchy(args_) {
     // verify against schema
     // defaults are assigned at the same time
     var args = JSON.parse(JSON.stringify(args_));
-    var schema = JSON.parse(
-        fs.readFileSync("../../src/template-api/json-schema/StaticTreemap.json")
+    var pieSchema = JSON.parse(
+        fs.readFileSync("../../src/template-api/json-schema/Pie.json")
+    );
+    var staticHierarchySchema = JSON.parse(
+        fs.readFileSync(
+            "../../src/template-api/json-schema/StaticHierarchy.json"
+        )
     );
     var ajv = new require("ajv")({useDefaults: true});
-    var validator = ajv.compile(schema);
-    var valid = validator(args);
+    ajv.addSchema(pieSchema, "pie");
+    ajv.addSchema(staticHierarchySchema, "staticHierarchy");
+    var valid = ajv.validate("staticHierarchy", args);
     if (!valid)
         throw new Error(
-            "Constructing Static Treemap: " +
-                formatAjvErrorMessage(validator.errors[0])
+            "Constructing Static Hierarchy: " +
+                formatAjvErrorMessage(ajv.errors[0])
         );
 
     // check constraints/add defaults that can't be expressed by json-schema
@@ -37,7 +43,7 @@ function StaticTreemap(args_) {
             if (allQueryFields[j] === allQueryFields[i]) disjoint = false;
     if (!disjoint)
         throw new Error(
-            "Constructing Static Treemap: query fields " +
+            "Constructing Static Hierarchy: query fields " +
                 "(query.dimensions, query.measure, query.sampleFields) have duplicates."
         );
 
@@ -52,14 +58,14 @@ function StaticTreemap(args_) {
     // tooltip column and aliases must have the same length
     if (args.tooltip.columns.length !== args.tooltip.aliases.length)
         throw new Error(
-            "Constructing Static Treemap: Tooltip columns and aliases should have the same length."
+            "Constructing Static Hierarchy: Tooltip columns and aliases should have the same length."
         );
 
     // columns in textFields must be from args.query.dimensions
     for (var i = 0; i < args.textFields.length; i++)
         if (args.query.dimensions.indexOf(args.textFields[i]) < 0)
             throw new Error(
-                "Constructing Static Treemap: text field " +
+                "Constructing Static Hierarchy: text field " +
                     args.textFields[i] +
                     " is not present in query.dimensions."
             );
@@ -76,10 +82,10 @@ function getStaticTreemapRenderer() {
     function renderer(svg, data, args) {
         var g = svg.append("g");
         var rpKey =
-            "staticTreemap_" +
-            args.staticTreemapId.substring(
+            "staticHierarchy_" +
+            args.staticHierarchyId.substring(
                 0,
-                args.staticTreemapId.indexOf("_")
+                args.staticHierarchyId.indexOf("_")
             );
         var params = args.renderingParams[rpKey];
 
@@ -115,7 +121,6 @@ function getStaticTreemapRenderer() {
             delete ret.data;
             return ret;
         });
-        var g = svg.append("g");
         g.selectAll(".treemaprect")
             .data(rectData)
             .join("rect")
@@ -330,10 +335,212 @@ function getStaticTreemapRenderer() {
     }
 }
 
-StaticTreemap.prototype = {
-    getStaticTreemapRenderer
+function getStaticCirclePackRenderer() {
+    var renderFuncBody = getBodyStringOfFunction(renderer);
+    return new Function("svg", "data", "args", renderFuncBody);
+
+    function renderer(svg, data, args) {
+        var g = svg.append("g");
+        var rpKey =
+            "staticHierarchy_" +
+            args.staticHierarchyId.substring(
+                0,
+                args.staticHierarchyId.indexOf("_")
+            );
+        var params = args.renderingParams[rpKey];
+
+        // construct data needed to pass in d3.pack
+        var packData = {children: []};
+        for (var i = 0; i < data.length; i++) packData.children.push(data[i]);
+
+        // use d3.treemap to calculate coordinates
+        var ysft = 80;
+        var root = d3
+            .pack()
+            .size([args.viewportW, args.viewportH - ysft])
+            .padding(3)(
+            d3
+                .hierarchy(packData)
+                .sum(d => d.kyrixAggValue)
+                .sort((a, b) => b.data.kyrixAggValue - a.data.kyrixAggValue)
+        );
+
+        // color scale
+        var circles = root.leaves().map(d => +d.data.kyrixAggValue);
+        var minArea = d3.min(circles);
+        var maxArea = d3.max(circles);
+        var color = d3
+            .scaleSequential(d3[params.colorScheme])
+            .domain([minArea, maxArea]);
+
+        // draw rectangles
+        var circleData = root.leaves().map(function(d) {
+            var ret = Object.assign({}, d, d.data);
+            delete ret.data;
+            return ret;
+        });
+
+        g.selectAll(".packcircle")
+            .data(circleData)
+            .join("circle")
+            .classed("packcircle", true)
+            .attr("cx", function(d) {
+                return d.x;
+            })
+            .attr("cy", function(d) {
+                return d.y + ysft;
+            })
+            .attr("r", function(d) {
+                if (params.transition) return 0;
+                else return d.r;
+            })
+            .attr("fill", d => color(d.kyrixAggValue));
+
+        // title
+        g.append("text")
+            .text(params.legendTitle)
+            .style("font-size", 23)
+            .attr("x", 15)
+            .attr("y", 45);
+
+        // legend
+        var tickSize = 6;
+        var width = 320;
+        var height = 50 + tickSize;
+        var marginTop = 18,
+            marginRight = 0;
+        var marginBottom = 16 + tickSize,
+            marginLeft = 0;
+        var ticks = width / 64;
+        var ramp = function(color, n = 256) {
+            const canvas = document.createElement("canvas");
+            canvas.width = n;
+            canvas.height = 1;
+            const context = canvas.getContext("2d");
+            for (var i = 0; i < n; ++i) {
+                context.fillStyle = color(i / (n - 1));
+                context.fillRect(i, 0, 1, 1);
+            }
+            return canvas;
+        };
+        var tickAdjust = g =>
+            g
+                .selectAll(".tick line")
+                .attr("y1", marginTop + marginBottom - height);
+        var x = Object.assign(
+            color
+                .copy()
+                .interpolator(
+                    d3.interpolateRound(marginLeft, width - marginRight)
+                ),
+            {
+                range() {
+                    return [marginLeft, width - marginRight];
+                }
+            }
+        );
+        g.append("g")
+            .attr("transform", `translate(${args.viewportW - width - 70}, 15)`)
+            .append("image")
+            .attr("x", marginLeft)
+            .attr("y", marginTop)
+            .attr("width", width - marginLeft - marginRight)
+            .attr("height", height - marginTop - marginBottom)
+            .attr("preserveAspectRatio", "none")
+            .attr("xlink:href", ramp(color.interpolator()).toDataURL());
+        var tickValues, tickFormat;
+        if (!x.ticks) {
+            const n = Math.round(ticks + 1);
+            tickValues = d3
+                .range(n)
+                .map(i => d3.quantile(color.domain(), i / (n - 1)));
+            tickFormat = d3.format(",f");
+        }
+
+        // legend ticks
+        g.append("g")
+            .attr(
+                "transform",
+                `translate(${args.viewportW - width - 70},${height -
+                    marginBottom +
+                    15})`
+            )
+            .call(
+                d3
+                    .axisBottom(x)
+                    .ticks(ticks, tickFormat)
+                    .tickFormat(tickFormat)
+                    .tickSize(tickSize)
+                    .tickValues(tickValues)
+            )
+            .call(tickAdjust)
+            .call(g => g.select(".domain").remove());
+
+        // // rectangle text
+        if (params.textFields.length > 0) {
+            g.selectAll(".textfield")
+                .data(circleData.slice(0, 10))
+                .join("text")
+                .classed("textfield", true)
+                .text(function(d) {
+                    return params.textFields
+                        .map(function(p) {
+                            return d[p];
+                        })
+                        .join(", ");
+                })
+                .attr("text-anchor", "middle")
+                .attr("x", function(d) {
+                    return d.x;
+                })
+                .attr("y", function(d) {
+                    return d.y + d.r * 0.14 + ysft;
+                })
+                .attr("font-size", function(d) {
+                    return d.r * 0.3;
+                })
+                .attr("fill", function(d) {
+                    if (minArea == maxArea) return "#000";
+                    if ((d.kyrixAggValue - minArea) / (maxArea - minArea) > 0.5)
+                        return "#FFF";
+                    return "#000";
+                })
+                .style("opacity", function(d) {
+                    if (params.transition) return 0;
+                    if (d.r * 2 > Math.max(this.textContent.length * 11, 40))
+                        return 1;
+                    else return 0;
+                });
+        }
+
+        // transition
+        if (!params.transition) return;
+
+        g.selectAll(".packcircle")
+            .transition()
+            .duration(500)
+            .attr("r", function(d) {
+                return d.r;
+            })
+            .on("end", function(d, i) {
+                if (i == 0)
+                    g.selectAll(".textfield").style("opacity", function(p) {
+                        if (
+                            p.r * 2 >
+                            Math.max(this.textContent.length * 11, 40)
+                        )
+                            return 1;
+                        else return 0;
+                    });
+            });
+    }
+}
+
+StaticHierarchy.prototype = {
+    getStaticTreemapRenderer,
+    getStaticCirclePackRenderer
 };
 
 module.exports = {
-    StaticTreemap
+    StaticHierarchy
 };
