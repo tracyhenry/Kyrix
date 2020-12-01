@@ -1,6 +1,7 @@
 // libraries
 const Project = require("../../src/index").Project;
-const Pie = require("../../src/template-api/Pie").Pie;
+const StaticTemplate = require("../../src/template-api/StaticTemplate")
+    .staticTemplate;
 
 // construct project
 var p = new Project("pie_template", "../../../config.txt");
@@ -14,6 +15,7 @@ var args = {
         measure: "AVG(reb)",
         sampleFields: ["game_id", "team_city", "player_name"]
     },
+    type: "pie",
     tooltip: {
         columns: ["start_position", "kyrixAggValue"],
         aliases: ["Starting Position", "Average Rebound per Game"]
@@ -31,7 +33,7 @@ var args = {
 };
 
 // build project
-var pieProject = new Pie(args);
-p.addPie(pieProject);
+var staticTemplate = new StaticTemplate(args);
+p.addStaticTemplate(staticTemplate);
 
 p.saveProject();

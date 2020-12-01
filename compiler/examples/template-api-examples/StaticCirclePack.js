@@ -1,7 +1,7 @@
 // libraries
 const Project = require("../../src/index").Project;
-const StaticHierarchy = require("../../src/template-api/StaticHierarchy")
-    .StaticHierarchy;
+const StaticTemplate = require("../../src/template-api/StaticTemplate")
+    .staticTemplate;
 
 // construct project
 var p = new Project("static_circle_pack_template", "../../../config.txt");
@@ -27,7 +27,7 @@ var args = {
 };
 
 // build project
-var staticTreemapProject = new StaticHierarchy(args);
-p.addStaticHierarchy(staticTreemapProject);
+var staticTemplate = new StaticTemplate(args);
+p.addStaticTemplate(staticTemplate);
 
 p.saveProject();
