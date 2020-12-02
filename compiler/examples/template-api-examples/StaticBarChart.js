@@ -28,8 +28,7 @@ var args = {
             F: "Forward",
             G: "Guard"
         }
-    },
-    colorScheme: "schemePastel1"
+    }
 };
 
 // build project

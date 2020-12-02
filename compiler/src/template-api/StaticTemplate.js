@@ -786,7 +786,6 @@ function getRenderer(type) {
         var vh = args.viewportH;
         var xsft = 100;
         var ysft = 80;
-        var barSpanLength = majorDomains.length * 80;
         var x = d3
             .scaleBand()
             .domain(majorDomains)
@@ -813,17 +812,7 @@ function getRenderer(type) {
             .range([vh - ysft, ysft * 1.5]);
 
         // color scale
-        var color;
-        if (params.stackDimensions.length == 0)
-            color = d3
-                .scaleOrdinal()
-                .domain(majorDomains)
-                .range(d3[params.colorScheme]);
-        else
-            color = d3
-                .scaleOrdinal()
-                .domain(stackDomains)
-                .range(d3[params.colorScheme]);
+        var color = d3[params.colorScheme];
 
         // append rectangles
         for (var i = 0; i < majorDomains.length; i++) {
@@ -831,15 +820,19 @@ function getRenderer(type) {
             var dataItems = data.filter(function(d) {
                 return d.majorDomain == majorDomain;
             });
-            if (params.stackDimensions.length == 0)
+            if (params.stackDimensions.length == 0) {
+                var curHeight = y(+dataItems[0].kyrixAggValue);
                 g.append("rect")
                     .datum(dataItems[0])
-                    .attr("x", x(dataItems[0].majorDomain))
-                    .attr("y", y(dataItems[0].kyrixAggValue))
+                    .attr("x", x(majorDomain))
+                    .attr("y", curHeight)
                     .attr("width", x.bandwidth())
-                    .attr("height", vh - ysft - y(dataItems[0].kyrixAggValue))
-                    .attr("fill", color(dataItems[0].majorDomain));
-            else {
+                    .attr("height", vh - ysft - curHeight)
+                    .attr(
+                        "fill",
+                        color[majorDomains.indexOf(majorDomain) % color.length]
+                    );
+            } else {
                 var curH = 0;
                 for (var j = 0; j < stackDomains.length; j++) {
                     var stackDomain = stackDomains[j];
@@ -855,7 +848,12 @@ function getRenderer(type) {
                         .attr("y", y(curH))
                         .attr("width", x.bandwidth())
                         .attr("height", vh - ysft - y(curAggValue))
-                        .attr("fill", color(stackDomain));
+                        .attr(
+                            "fill",
+                            color[
+                                stackDomains.indexOf(stackDomain) % color.length
+                            ]
+                        );
                 }
             }
         }
@@ -892,22 +890,36 @@ function getRenderer(type) {
             .attr("x", 15)
             .attr("y", 45);
 
-        // // legend
-        // var allColors = [];
-        // for (var i = 0; i < minorUses.length; i++) allColors.push(colors[i % 12]);
-        // var colorScale = d3.scaleOrdinal(minorUses, allColors);
-        // var legendOrdinal = d3
-        //     .legendColor()
-        //     .shape("rect")
-        //     .shapePadding(5)
-        //     .labelOffset(13)
-        //     .scale(colorScale);
-        //
-        // var legendG = g.append("g").attr("transform", "translate(700, 200)");
-        // legendG
-        //     .append("g")
-        //     .attr("transform", "translate(0, 20) scale(1.3)")
-        //     .call(legendOrdinal);
+        // legend
+        if (params.stackDimensions.length > 0) {
+            var cookedStackDomains = stackDomains.map(function(d) {
+                if ([d] in params.legendDomain) return params.legendDomain[d];
+                else return d;
+            });
+            var allColors = [];
+            for (var i = 0; i < stackDomains.length; i++)
+                allColors.push(color[i % color.length]);
+            var colorScale = d3.scaleOrdinal(cookedStackDomains, allColors);
+            var legendOrdinal = d3
+                .legendColor()
+                .shape("rect")
+                .shapePadding(
+                    d3.max(cookedStackDomains, function(d) {
+                        return d.length;
+                    }) * 5
+                )
+                .labelOffset(13)
+                .orient("horizontal")
+                .scale(colorScale);
+
+            var legendG = g
+                .append("g")
+                .attr("transform", `translate(20, ${ysft * 0.75})`);
+            legendG
+                .append("g")
+                .attr("transform", "translate(0, 20) scale(1.3)")
+                .call(legendOrdinal);
+        }
     }
 }
 

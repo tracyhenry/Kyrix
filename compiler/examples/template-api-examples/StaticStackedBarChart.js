@@ -32,8 +32,7 @@ var args = {
     axis: {
         xTitle: "Team Division",
         yTitle: "Average 3PM per Game"
-    },
-    colorScheme: "schemePastel1"
+    }
 };
 
 // build project

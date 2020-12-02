@@ -60,6 +60,7 @@ function addStaticTemplate(staticTemplate, args) {
         });
     else if (staticTemplate.type == "bar")
         rpDict[rpKey] = Object.assign({}, rpDict[rpKey], {
+            legendDomain: staticTemplate.legend.domain,
             xAxisTitle: staticTemplate.axis.xTitle,
             yAxisTitle: staticTemplate.axis.yTitle
         });
