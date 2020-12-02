@@ -37,6 +37,7 @@ function addStaticTemplate(staticTemplate, args) {
     var rpDict = {};
     rpDict[rpKey] = {
         dimensions: staticTemplate.query.dimensions,
+        stackDimensions: staticTemplate.query.stackDimensions,
         colorScheme: staticTemplate.colorScheme,
         transition: staticTemplate.transition,
         legendTitle: staticTemplate.legend.title
@@ -57,26 +58,30 @@ function addStaticTemplate(staticTemplate, args) {
             padding: staticTemplate.padding,
             textFields: staticTemplate.textFields
         });
+    else if (staticTemplate.type == "bar")
+        rpDict[rpKey] = Object.assign({}, rpDict[rpKey], {
+            xAxisTitle: staticTemplate.axis.xTitle,
+            yAxisTitle: staticTemplate.axis.yTitle
+        });
     this.addRenderingParams(rpDict);
 
     // construct query
     // SELECT columns are from measureCol & staticTemplate.query.dimensions
     // merge them and then dedup
-    var query = "SELECT " + staticTemplate.query.dimensions.join(", ");
-    query +=
-        (staticTemplate.query.dimensions.length ? ", " : "") +
-        staticTemplate.query.measure;
+    var query = "SELECT ";
+    var dimensions = staticTemplate.query.dimensions.concat(
+        staticTemplate.query.stackDimensions
+    );
+    query += dimensions.join(", ") + ", " + staticTemplate.query.measure;
     query += " FROM " + staticTemplate.query.table + " GROUP BY ";
-    query += staticTemplate.query.dimensions.join(", ");
+    query += dimensions.join(", ");
     var staticTemplateTransform = new Transform(
         query,
         staticTemplate.db,
         "",
-        staticTemplate.query.dimensions.concat(["kyrixAggValue"]),
+        dimensions.concat(["kyrixAggValue"]),
         true,
-        staticTemplate.query.dimensions.concat(
-            staticTemplate.query.sampleFields
-        )
+        dimensions.concat(staticTemplate.query.sampleFields)
     );
 
     // construct static template layer
@@ -100,13 +105,10 @@ function addStaticTemplate(staticTemplate, args) {
         "SELECT " +
         staticTemplate.query.sampleFields.join(", ") +
         (staticTemplate.query.sampleFields.length ? ", " : "") +
-        staticTemplate.query.dimensions.join(", ") +
+        dimensions.join(", ") +
         (staticTemplate.query.measureCol === "*"
             ? ""
-            : (staticTemplate.query.sampleFields.length ||
-              staticTemplate.query.dimensions.length
-                  ? ", "
-                  : "") + staticTemplate.query.measureCol) +
+            : ", " + staticTemplate.query.measureCol) +
         " FROM " +
         staticTemplate.query.table;
 

@@ -1,5 +1,21 @@
 {
     "type": "object",
+    "definitions": {
+        "categoricalColors": {
+            "enum": [
+                "schemeAccent",
+                "schemeCategory10",
+                "schemeDark2",
+                "schemePaired",
+                "schemePastel1",
+                "schemePastel2",
+                "schemeSet1",
+                "schemeSet2",
+                "schemeSet3",
+                "schemeTableau10"
+            ]
+        }
+    },
     "properties": {
         "db": {
             "type": "string",
@@ -31,13 +47,20 @@
                         "minLength": 1
                     },
                     "default": []
+                },
+                "stackDimensions": {
+                    "type": "array",
+                    "item": {
+                        "type": "string",
+                        "minLength": 1
+                    }
                 }
             },
             "required": ["table", "dimensions", "measure"],
             "additionalProperties": false
         },
         "type": {
-            "enum": ["pie", "treemap", "circlePack"]
+            "enum": ["pie", "treemap", "circlePack", "bar"]
         },
         "tooltip": {
             "type": "object",
@@ -76,8 +99,7 @@
                     "default": ""
                 },
                 "domain": {
-                    "type": "object",
-                    "default": {}
+                    "type": "object"
                 }
             },
             "additionalProperties": false
@@ -110,6 +132,17 @@
             "type": "number",
             "minimum": 100,
             "maximum": 400
+        },
+        "axis": {
+            "type": "object",
+            "properties": {
+                "xTitle": {
+                    "type": "string"
+                },
+                "yTitle": {
+                    "type": "string"
+                }
+            }
         }
     },
     "required": ["db", "query", "type"],
@@ -125,19 +158,22 @@
             },
             "then": {
                 "properties": {
+                    "query": {
+                        "properties": {
+                            "stackDimensions": {
+                                "type": "null"
+                            }
+                        }
+                    },
+                    "legend": {
+                        "properties": {
+                            "domain": {
+                                "default": {}
+                            }
+                        }
+                    },
                     "colorScheme": {
-                        "enum": [
-                            "schemeAccent",
-                            "schemeCategory10",
-                            "schemeDark2",
-                            "schemePaired",
-                            "schemePastel1",
-                            "schemePastel2",
-                            "schemeSet1",
-                            "schemeSet2",
-                            "schemeSet3",
-                            "schemeTableau10"
-                        ],
+                        "$ref": "#/definitions/categoricalColors",
                         "default": "schemeTableau10"
                     },
                     "radius": {
@@ -147,6 +183,9 @@
                         "type": "null"
                     },
                     "padding": {
+                        "type": "null"
+                    },
+                    "axis": {
                         "type": "null"
                     }
                 }
@@ -162,6 +201,20 @@
             },
             "then": {
                 "properties": {
+                    "query": {
+                        "properties": {
+                            "stackDimensions": {
+                                "type": "null"
+                            }
+                        }
+                    },
+                    "legend": {
+                        "properties": {
+                            "domain": {
+                                "type": "null"
+                            }
+                        }
+                    },
                     "colorScheme": {
                         "enum": [
                             "interpolateBlues",
@@ -198,6 +251,49 @@
                     },
                     "padding": {
                         "default": 3
+                    },
+                    "radius": {
+                        "type": "null"
+                    },
+                    "axis": {
+                        "type": "null"
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "type": {
+                        "enum": ["bar"]
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "query": {
+                        "properties": {
+                            "stackDimensions": {
+                                "default": []
+                            }
+                        }
+                    },
+                    "legend": {
+                        "properties": {
+                            "domain": {
+                                "default": {}
+                            }
+                        }
+                    },
+                    "colorScheme": {
+                        "$ref": "#/definitions/categoricalColors",
+                        "default": "schemeTableau10"
+                    },
+                    "textFields": {
+                        "type": "null"
+                    },
+                    "padding": {
+                        "type": "null"
                     },
                     "radius": {
                         "type": "null"

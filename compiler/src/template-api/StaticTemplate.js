@@ -2,11 +2,6 @@ const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
 const formatAjvErrorMessage = require("./Utilities").formatAjvErrorMessage;
 const fs = require("fs");
 
-/*
- * Constructor of a static template
- * @constructor
- * by xinli on 07/22/19
- */
 function StaticTemplate(args_) {
     // verify against schema
     // defaults are assigned at the same time
@@ -35,7 +30,9 @@ function StaticTemplate(args_) {
     args.query.measureFunc = args.query.measure.substring(0, pos);
 
     // check that query.dimensions, query.measure and query.sampleFields are disjoint
+    if (!("stackDimensions" in args.query)) args.query.stackDimensions = [];
     var allQueryFields = args.query.dimensions
+        .concat(args.query.stackDimensions)
         .concat(args.query.sampleFields)
         .concat([args.query.measureCol]);
     var disjoint = true;
@@ -45,7 +42,7 @@ function StaticTemplate(args_) {
     if (!disjoint)
         throw new Error(
             "Constructing StaticTemplate: query fields " +
-                "(query.dimensions, query.measure, query.sampleFields) have duplicates."
+                "(query.dimensions, query.stackDimensions, query.measure, query.sampleFields) have duplicates."
         );
 
     // add default tooltip columns and measures, which is the union of
@@ -72,6 +69,12 @@ function StaticTemplate(args_) {
                         " is not present in query.dimensions."
                 );
 
+    // default axis titles
+    if (!("axis" in args)) args.axis = {};
+    if (!("xTitle" in args.axis))
+        args.axis.xTitle = args.query.dimensions.join(", ");
+    if (!("yTitle" in args.axis)) args.axis.yTitle = args.query.measure;
+
     // get args into "this"
     var keys = Object.keys(args);
     for (var i = 0; i < keys.length; i++) this[keys[i]] = args[keys[i]];
@@ -79,14 +82,17 @@ function StaticTemplate(args_) {
 
 function getRenderer(type) {
     var renderFuncBody;
-    if (type == "pie") renderFuncBody = getBodyStringOfFunction(pieRenderer);
+    if (type == "pie")
+        renderFuncBody = getBodyStringOfFunction(pieChartRenderer);
     else if (type == "treemap")
         renderFuncBody = getBodyStringOfFunction(treemapRenderer);
     else if (type == "circlePack")
         renderFuncBody = getBodyStringOfFunction(circlePackRenderer);
+    else if (type == "bar")
+        renderFuncBody = getBodyStringOfFunction(barChartRenderer);
     return new Function("svg", "data", "args", renderFuncBody);
 
-    function pieRenderer(svg, data, args) {
+    function pieChartRenderer(svg, data, args) {
         var g = svg.append("g");
         var rpKey =
             "staticTemplate_" +
@@ -731,6 +737,177 @@ function getRenderer(type) {
                         else return 0;
                     });
             });
+    }
+
+    function barChartRenderer(svg, data, args) {
+        function dedupArray(x) {
+            var ret = [];
+            for (var i = 0; i < x.length; i++)
+                if (ret.indexOf(x[i]) < 0) ret.push(x[i]);
+            return ret;
+        }
+
+        var g = svg.append("g");
+        var rpKey =
+            "staticTemplate_" +
+            args.staticTemplateId.substring(
+                0,
+                args.staticTemplateId.indexOf("_")
+            );
+        var params = args.renderingParams[rpKey];
+
+        // get domains
+        data.map(function(d) {
+            d.majorDomain = params.dimensions
+                .map(function(p) {
+                    return d[p];
+                })
+                .join(", ");
+            d.stackDomain = params.stackDimensions
+                .map(function(p) {
+                    return d[p];
+                })
+                .join(", ");
+        });
+
+        var majorDomains = dedupArray(
+            data.map(function(d) {
+                return d.majorDomain;
+            })
+        ).sort();
+        var stackDomains = dedupArray(
+            data.map(function(d) {
+                return d.stackDomain;
+            })
+        ).sort();
+
+        // set up scales
+        var vw = args.viewportW;
+        var vh = args.viewportH;
+        var xsft = 100;
+        var ysft = 80;
+        var barSpanLength = majorDomains.length * 80;
+        var x = d3
+            .scaleBand()
+            .domain(majorDomains)
+            .range([xsft, vw - xsft])
+            .padding(0.2);
+        var y = d3
+            .scaleLinear()
+            .domain([
+                0,
+                d3.max(
+                    majorDomains.map(function(d) {
+                        return d3.sum(
+                            data
+                                .filter(function(p) {
+                                    return p.majorDomain == d;
+                                })
+                                .map(function(p) {
+                                    return p.kyrixAggValue;
+                                })
+                        );
+                    })
+                )
+            ])
+            .range([vh - ysft, ysft * 1.5]);
+
+        // color scale
+        var color;
+        if (params.stackDimensions.length == 0)
+            color = d3
+                .scaleOrdinal()
+                .domain(majorDomains)
+                .range(d3[params.colorScheme]);
+        else
+            color = d3
+                .scaleOrdinal()
+                .domain(stackDomains)
+                .range(d3[params.colorScheme]);
+
+        // append rectangles
+        for (var i = 0; i < majorDomains.length; i++) {
+            var majorDomain = majorDomains[i];
+            var dataItems = data.filter(function(d) {
+                return d.majorDomain == majorDomain;
+            });
+            if (params.stackDimensions.length == 0)
+                g.append("rect")
+                    .datum(dataItems[0])
+                    .attr("x", x(dataItems[0].majorDomain))
+                    .attr("y", y(dataItems[0].kyrixAggValue))
+                    .attr("width", x.bandwidth())
+                    .attr("height", vh - ysft - y(dataItems[0].kyrixAggValue))
+                    .attr("fill", color(dataItems[0].majorDomain));
+            else {
+                var curH = 0;
+                for (var j = 0; j < stackDomains.length; j++) {
+                    var stackDomain = stackDomains[j];
+                    var stackDataItems = dataItems.filter(function(d) {
+                        return d.stackDomain == stackDomain;
+                    });
+                    if (stackDataItems.length == 0) continue;
+                    var curAggValue = +stackDataItems[0].kyrixAggValue;
+                    curH += curAggValue;
+                    g.append("rect")
+                        .datum(stackDataItems[0])
+                        .attr("x", x(majorDomain))
+                        .attr("y", y(curH))
+                        .attr("width", x.bandwidth())
+                        .attr("height", vh - ysft - y(curAggValue))
+                        .attr("fill", color(stackDomain));
+                }
+            }
+        }
+
+        // x axis
+        g.append("g")
+            .attr("transform", `translate(0,${vh - ysft})`)
+            .call(d3.axisBottom(x).tickSizeOuter(0))
+            .call(g => g.selectAll(".domain").remove())
+            .style("font-size", "20px")
+            .append("text")
+            .text(params.xAxisTitle)
+            .attr("fill", "black")
+            .attr("text-anchor", "middle")
+            .attr("transform", "translate(" + vw / 2 + ", 60)");
+
+        // y axis
+        g.append("g")
+            .attr("transform", `translate(${xsft},0)`)
+            .call(d3.axisLeft(y).ticks(null, "s"))
+            .call(g => g.selectAll(".domain").remove())
+            .style("font-size", "20px")
+            .append("text")
+            .text(params.yAxisTitle)
+            .attr("fill", "black")
+            .attr("text-anchor", "middle")
+            .attr("transform", `translate(-60, ${vh / 2}) rotate(-90)`);
+
+        // title
+        g.append("text")
+            .text(params.legendTitle)
+            .style("font-size", 23)
+            .style("font-size", 23)
+            .attr("x", 15)
+            .attr("y", 45);
+
+        // // legend
+        // var allColors = [];
+        // for (var i = 0; i < minorUses.length; i++) allColors.push(colors[i % 12]);
+        // var colorScale = d3.scaleOrdinal(minorUses, allColors);
+        // var legendOrdinal = d3
+        //     .legendColor()
+        //     .shape("rect")
+        //     .shapePadding(5)
+        //     .labelOffset(13)
+        //     .scale(colorScale);
+        //
+        // var legendG = g.append("g").attr("transform", "translate(700, 200)");
+        // legendG
+        //     .append("g")
+        //     .attr("transform", "translate(0, 20) scale(1.3)")
+        //     .call(legendOrdinal);
     }
 }
 

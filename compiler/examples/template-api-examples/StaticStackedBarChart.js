@@ -1,33 +1,37 @@
 // libraries
 const Project = require("../../src/index").Project;
 const StaticTemplate = require("../../src/template-api/StaticTemplate")
-    .staticTemplate;
+    .StaticTemplate;
 
 // construct project
-var p = new Project("pie_template", "../../../config.txt");
+var p = new Project("bar_template", "../../../config.txt");
 
 // specify args
 var args = {
     db: "nba",
     query: {
         table: "player_boxscore",
-        dimensions: ["start_position"],
-        measure: "AVG(reb)",
-        sampleFields: ["game_id", "team_city", "player_name"]
+        dimensions: ["division"],
+        stackDimensions: ["start_position"],
+        measure: "AVG(fg3m)"
     },
-    type: "pie",
+    type: "bar",
     tooltip: {
-        columns: ["start_position", "kyrixAggValue"],
-        aliases: ["Starting Position", "Average Rebound per Game"]
+        columns: ["division", "start_position", "kyrixAggValue"],
+        aliases: ["Team Division", "Starting Position", "Average 3PM per Game"]
     },
     legend: {
-        title: "Average Rebounds per Game by Starting Positions",
+        title:
+            "Average 3 Pointers Made per Game by Division and Starting Position",
         domain: {
-            "": "Bench",
             C: "Center",
             F: "Forward",
             G: "Guard"
         }
+    },
+    axis: {
+        xTitle: "Team Division",
+        yTitle: "Average 3PM per Game"
     },
     colorScheme: "schemePastel1"
 };
