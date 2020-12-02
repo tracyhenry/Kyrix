@@ -7,19 +7,22 @@ const fs = require("fs");
  * @constructor
  * by xinli on 07/22/19
  */
-function staticTemplate(args_) {
+function StaticTemplate(args_) {
     // verify against schema
     // defaults are assigned at the same time
     var args = JSON.parse(JSON.stringify(args_));
     var schema = JSON.parse(
-        fs.readFileSync("../../src/template-api/json-schema/staticTemplate.json")
+        fs.readFileSync(
+            "../../src/template-api/json-schema/StaticTemplate.json"
+        )
     );
     var ajv = new require("ajv")({useDefaults: true});
     var validator = ajv.compile(schema);
     var valid = validator(args);
     if (!valid)
         throw new Error(
-            "Constructing staticTemplate: " + formatAjvErrorMessage(validator.errors[0])
+            "Constructing StaticTemplate: " +
+                formatAjvErrorMessage(validator.errors[0])
         );
 
     // check constraints/add defaults that can't be expressed by json-schema
@@ -41,7 +44,7 @@ function staticTemplate(args_) {
             if (allQueryFields[j] === allQueryFields[i]) disjoint = false;
     if (!disjoint)
         throw new Error(
-            "Constructing staticTemplate: query fields " +
+            "Constructing StaticTemplate: query fields " +
                 "(query.dimensions, query.measure, query.sampleFields) have duplicates."
         );
 
@@ -56,7 +59,7 @@ function staticTemplate(args_) {
     // tooltip column and aliases must have the same length
     if (args.tooltip.columns.length !== args.tooltip.aliases.length)
         throw new Error(
-            "Constructing staticTemplate: Tooltip columns and aliases should have the same length."
+            "Constructing StaticTemplate: Tooltip columns and aliases should have the same length."
         );
 
     // columns in textFields must be from args.query.dimensions
@@ -65,8 +68,8 @@ function staticTemplate(args_) {
             if (args.query.dimensions.indexOf(args.textFields[i]) < 0)
                 throw new Error(
                     "Constructing Static Template: text field " +
-                    args.textFields[i] +
-                    " is not present in query.dimensions."
+                        args.textFields[i] +
+                        " is not present in query.dimensions."
                 );
 
     // get args into "this"
@@ -76,8 +79,7 @@ function staticTemplate(args_) {
 
 function getRenderer(type) {
     var renderFuncBody;
-    if (type == "pie")
-        renderFuncBody = getBodyStringOfFunction(pieRenderer);
+    if (type == "pie") renderFuncBody = getBodyStringOfFunction(pieRenderer);
     else if (type == "treemap")
         renderFuncBody = getBodyStringOfFunction(treemapRenderer);
     else if (type == "circlePack")
@@ -86,7 +88,12 @@ function getRenderer(type) {
 
     function pieRenderer(svg, data, args) {
         var g = svg.append("g");
-        var rpKey = "staticTemplate_" + args.staticTemplateId.substring(0, args.staticTemplateId.indexOf("_"));
+        var rpKey =
+            "staticTemplate_" +
+            args.staticTemplateId.substring(
+                0,
+                args.staticTemplateId.indexOf("_")
+            );
         var params = args.renderingParams[rpKey];
 
         // d3 pie
@@ -297,11 +304,11 @@ function getRenderer(type) {
             .size([args.viewportW, args.viewportH - ysft])
             .padding(params.padding)
             .round(true)(
-                d3
-                    .hierarchy(treemapData)
-                    .sum(d => d.kyrixAggValue)
-                    .sort((a, b) => b.data.kyrixAggValue - a.data.kyrixAggValue)
-            );
+            d3
+                .hierarchy(treemapData)
+                .sum(d => d.kyrixAggValue)
+                .sort((a, b) => b.data.kyrixAggValue - a.data.kyrixAggValue)
+        );
 
         // color scale
         var areas = root.leaves().map(d => +d.data.kyrixAggValue);
@@ -394,8 +401,8 @@ function getRenderer(type) {
             .attr(
                 "transform",
                 `translate(${args.viewportW - width - 70},${height -
-                marginBottom +
-                15})`
+                    marginBottom +
+                    15})`
             )
             .call(
                 d3
@@ -550,11 +557,11 @@ function getRenderer(type) {
             .pack()
             .size([args.viewportW, args.viewportH - ysft])
             .padding(3)(
-                d3
-                    .hierarchy(packData)
-                    .sum(d => d.kyrixAggValue)
-                    .sort((a, b) => b.data.kyrixAggValue - a.data.kyrixAggValue)
-            );
+            d3
+                .hierarchy(packData)
+                .sum(d => d.kyrixAggValue)
+                .sort((a, b) => b.data.kyrixAggValue - a.data.kyrixAggValue)
+        );
 
         // color scale
         var circles = root.leaves().map(d => +d.data.kyrixAggValue);
@@ -653,8 +660,8 @@ function getRenderer(type) {
             .attr(
                 "transform",
                 `translate(${args.viewportW - width - 70},${height -
-                marginBottom +
-                15})`
+                    marginBottom +
+                    15})`
             )
             .call(
                 d3
@@ -727,10 +734,10 @@ function getRenderer(type) {
     }
 }
 
-staticTemplate.prototype = {
+StaticTemplate.prototype = {
     getRenderer
 };
 
 module.exports = {
-    staticTemplate
+    StaticTemplate
 };

@@ -1,7 +1,7 @@
 // libraries
 const Project = require("../../src/index").Project;
 const StaticTemplate = require("../../src/template-api/StaticTemplate")
-    .staticTemplate;
+    .StaticTemplate;
 
 // construct project
 var p = new Project("static_treemap_template", "../../../config.txt");
