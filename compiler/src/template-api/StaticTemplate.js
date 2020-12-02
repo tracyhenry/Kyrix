@@ -824,16 +824,25 @@ function getRenderer(type) {
                 var curHeight = y(+dataItems[0].kyrixAggValue);
                 g.append("rect")
                     .datum(dataItems[0])
+                    .classed("barrect", true)
                     .attr("x", x(majorDomain))
-                    .attr("y", curHeight)
+                    .attr("y", params.transition ? vh - ysft : curHeight)
                     .attr("width", x.bandwidth())
-                    .attr("height", vh - ysft - curHeight)
+                    .attr(
+                        "height",
+                        params.transition ? 0 : vh - ysft - curHeight
+                    )
                     .attr(
                         "fill",
                         color[majorDomains.indexOf(majorDomain) % color.length]
                     );
             } else {
                 var curH = 0;
+                var totalH = d3.sum(
+                    dataItems.map(function(d) {
+                        return d.kyrixAggValue;
+                    })
+                );
                 for (var j = 0; j < stackDomains.length; j++) {
                     var stackDomain = stackDomains[j];
                     var stackDataItems = dataItems.filter(function(d) {
@@ -842,12 +851,23 @@ function getRenderer(type) {
                     if (stackDataItems.length == 0) continue;
                     var curAggValue = +stackDataItems[0].kyrixAggValue;
                     curH += curAggValue;
+                    stackDataItems[0].kyrixBarCurH = curH;
+                    stackDataItems[0].kyrixBarTotalH = totalH;
                     g.append("rect")
                         .datum(stackDataItems[0])
+                        .classed("barrect", true)
                         .attr("x", x(majorDomain))
-                        .attr("y", y(curH))
+                        .attr(
+                            "y",
+                            params.transition ? y(curH - curAggValue) : y(curH)
+                        )
                         .attr("width", x.bandwidth())
-                        .attr("height", vh - ysft - y(curAggValue))
+                        .attr(
+                            "height",
+                            params.transition
+                                ? 0
+                                : y(curH - curAggValue) - y(curH)
+                        )
                         .attr(
                             "fill",
                             color[
@@ -919,6 +939,44 @@ function getRenderer(type) {
                 .append("g")
                 .attr("transform", "translate(0, 20) scale(1.3)")
                 .call(legendOrdinal);
+        }
+
+        // transition
+        if (params.transition) {
+            if (params.stackDimensions.length == 0) {
+                d3.selectAll(".barrect")
+                    .transition()
+                    .duration(500)
+                    .attr("y", function(d) {
+                        return y(d.kyrixAggValue);
+                    })
+                    .attr("height", function(d) {
+                        return vh - ysft - y(d.kyrixAggValue);
+                    });
+            } else {
+                d3.selectAll(".barrect")
+                    .transition()
+                    .ease(d3.easeLinear)
+                    .delay(function(d) {
+                        return (
+                            ((d.kyrixBarCurH - d.kyrixAggValue) /
+                                d.kyrixBarTotalH) *
+                            500
+                        );
+                    })
+                    .duration(function(d) {
+                        return (d.kyrixAggValue / d.kyrixBarTotalH) * 500;
+                    })
+                    .attr("y", function(d) {
+                        return y(d.kyrixBarCurH);
+                    })
+                    .attr("height", function(d) {
+                        return (
+                            y(d.kyrixBarCurH - d.kyrixAggValue) -
+                            y(d.kyrixBarCurH)
+                        );
+                    });
+            }
         }
     }
 }
