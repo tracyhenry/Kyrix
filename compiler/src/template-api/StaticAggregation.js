@@ -790,7 +790,7 @@ function getRenderer(type) {
             .scaleBand()
             .domain(majorDomains)
             .range([marginLeft, vw - marginLeft])
-            .padding(0.2);
+            .padding(0.4);
 
         // calculate margin bottom
         var marginBottom;
@@ -963,7 +963,7 @@ function getRenderer(type) {
                 .shapePadding(
                     d3.max(cookedStackDomains, function(d) {
                         return d.length;
-                    }) * 5
+                    }) * 8
                 )
                 .labelOffset(13)
                 .orient("horizontal")
