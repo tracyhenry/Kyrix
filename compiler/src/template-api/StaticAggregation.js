@@ -781,7 +781,7 @@ function getRenderer(type) {
             })
         ).sort();
 
-        // set up scales
+        // x scale
         var vw = args.viewportW;
         var vh = args.viewportH;
         var marginLeft = 100;
@@ -796,13 +796,15 @@ function getRenderer(type) {
         var marginBottom;
         var maxXLabelLength = d3.max(
             majorDomains.map(function(d) {
-                return d.length * 10;
+                return Math.min(d.length + 3, 21) * 10;
             })
         );
         var xLabelDirection =
             maxXLabelLength > x.bandwidth() ? "vertical" : "horizontal";
         if (xLabelDirection == "vertical") marginBottom = maxXLabelLength + 70;
         else marginBottom = 80;
+
+        // y scale
         var y = d3
             .scaleLinear()
             .domain([
@@ -907,7 +909,12 @@ function getRenderer(type) {
                 .attr("x", 9)
                 .attr("dy", ".35em")
                 .attr("transform", "rotate(90)")
-                .style("text-anchor", "start");
+                .style("text-anchor", "start")
+                .text(function() {
+                    var t = this.textContent;
+                    if (t.length > 21) return t.substring(0, 18) + "...";
+                    else return t;
+                });
         xAxis
             .append("text")
             .text(params.xAxisTitle)
