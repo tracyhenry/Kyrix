@@ -2,13 +2,13 @@ const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
 const formatAjvErrorMessage = require("./Utilities").formatAjvErrorMessage;
 const fs = require("fs");
 
-function StaticTemplate(args_) {
+function StaticAggregation(args_) {
     // verify against schema
     // defaults are assigned at the same time
     var args = JSON.parse(JSON.stringify(args_));
     var schema = JSON.parse(
         fs.readFileSync(
-            "../../src/template-api/json-schema/StaticTemplate.json"
+            "../../src/template-api/json-schema/StaticAggregation.json"
         )
     );
     var ajv = new require("ajv")({useDefaults: true});
@@ -16,7 +16,7 @@ function StaticTemplate(args_) {
     var valid = validator(args);
     if (!valid)
         throw new Error(
-            "Constructing StaticTemplate: " +
+            "Constructing StaticAggregation: " +
                 formatAjvErrorMessage(validator.errors[0])
         );
 
@@ -41,7 +41,7 @@ function StaticTemplate(args_) {
             if (allQueryFields[j] === allQueryFields[i]) disjoint = false;
     if (!disjoint)
         throw new Error(
-            "Constructing StaticTemplate: query fields " +
+            "Constructing StaticAggregation: query fields " +
                 "(query.dimensions, query.stackDimensions, query.measure, query.sampleFields) have duplicates."
         );
 
@@ -56,7 +56,7 @@ function StaticTemplate(args_) {
     // tooltip column and aliases must have the same length
     if (args.tooltip.columns.length !== args.tooltip.aliases.length)
         throw new Error(
-            "Constructing StaticTemplate: Tooltip columns and aliases should have the same length."
+            "Constructing StaticAggregation: Tooltip columns and aliases should have the same length."
         );
 
     // columns in textFields must be from args.query.dimensions
@@ -64,7 +64,7 @@ function StaticTemplate(args_) {
         for (var i = 0; i < args.textFields.length; i++)
             if (args.query.dimensions.indexOf(args.textFields[i]) < 0)
                 throw new Error(
-                    "Constructing Static Template: text field " +
+                    "Constructing Static Aggregation: text field " +
                         args.textFields[i] +
                         " is not present in query.dimensions."
                 );
@@ -95,10 +95,10 @@ function getRenderer(type) {
     function pieChartRenderer(svg, data, args) {
         var g = svg.append("g");
         var rpKey =
-            "staticTemplate_" +
-            args.staticTemplateId.substring(
+            "staticAggregation_" +
+            args.staticAggregationId.substring(
                 0,
-                args.staticTemplateId.indexOf("_")
+                args.staticAggregationId.indexOf("_")
             );
         var params = args.renderingParams[rpKey];
 
@@ -291,10 +291,10 @@ function getRenderer(type) {
     function treemapRenderer(svg, data, args) {
         var g = svg.append("g");
         var rpKey =
-            "staticTemplate_" +
-            args.staticTemplateId.substring(
+            "staticAggregation_" +
+            args.staticAggregationId.substring(
                 0,
-                args.staticTemplateId.indexOf("_")
+                args.staticAggregationId.indexOf("_")
             );
         var params = args.renderingParams[rpKey];
 
@@ -546,10 +546,10 @@ function getRenderer(type) {
     function circlePackRenderer(svg, data, args) {
         var g = svg.append("g");
         var rpKey =
-            "staticTemplate_" +
-            args.staticTemplateId.substring(
+            "staticAggregation_" +
+            args.staticAggregationId.substring(
                 0,
-                args.staticTemplateId.indexOf("_")
+                args.staticAggregationId.indexOf("_")
             );
         var params = args.renderingParams[rpKey];
 
@@ -749,10 +749,10 @@ function getRenderer(type) {
 
         var g = svg.append("g");
         var rpKey =
-            "staticTemplate_" +
-            args.staticTemplateId.substring(
+            "staticAggregation_" +
+            args.staticAggregationId.substring(
                 0,
-                args.staticTemplateId.indexOf("_")
+                args.staticAggregationId.indexOf("_")
             );
         var params = args.renderingParams[rpKey];
 
@@ -1011,10 +1011,10 @@ function getRenderer(type) {
     }
 }
 
-StaticTemplate.prototype = {
+StaticAggregation.prototype = {
     getRenderer
 };
 
 module.exports = {
-    StaticTemplate
+    StaticAggregation
 };

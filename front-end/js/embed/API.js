@@ -182,8 +182,8 @@ export function reRender(viewId, layerId, additionalArgs) {
     oldArgs["layerId"] = layerId;
     oldArgs["ssvId"] = gvd.curCanvas.layers[layerId].ssvId;
     oldArgs["usmapId"] = gvd.curCanvas.layers[layerId].usmapId;
-    oldArgs["staticTemplateId"] =
-        gvd.curCanvas.layers[layerId].staticTemplateId;
+    oldArgs["staticAggregationId"] =
+        gvd.curCanvas.layers[layerId].staticAggregationId;
     var allArgs = Object.assign({}, oldArgs, additionalArgs);
 
     // re render the svg

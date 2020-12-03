@@ -1,10 +1,10 @@
 // libraries
 const Project = require("../../src/index").Project;
-const StaticTemplate = require("../../src/template-api/StaticTemplate")
-    .StaticTemplate;
+const StaticAggregation = require("../../src/template-api/StaticAggregation")
+    .StaticAggregation;
 
 // construct project
-var p = new Project("pie_template", "../../../config.txt");
+var p = new Project("staticAggregation_bar_chart", "../../../config.txt");
 
 // specify args
 var args = {
@@ -12,10 +12,9 @@ var args = {
     query: {
         table: "player_boxscore",
         dimensions: ["start_position"],
-        measure: "AVG(reb)",
-        sampleFields: ["game_id", "team_city", "player_name"]
+        measure: "AVG(reb)"
     },
-    type: "pie",
+    type: "bar",
     tooltip: {
         columns: ["start_position", "kyrixAggValue"],
         aliases: ["Starting Position", "Average Rebound per Game"]
@@ -27,12 +26,11 @@ var args = {
             F: "Forward",
             G: "Guard"
         }
-    },
-    colorScheme: "schemePastel1"
+    }
 };
 
 // build project
-var staticTemplate = new StaticTemplate(args);
-p.addStaticTemplate(staticTemplate);
+var staticAggregation = new StaticAggregation(args);
+p.addStaticAggregation(staticAggregation);
 
 p.saveProject();

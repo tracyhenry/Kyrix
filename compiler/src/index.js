@@ -6,8 +6,8 @@ const http = require("http");
 const addTable = require("./template-api/addTable").addTable;
 const addSSV = require("./template-api/addSSV").addSSV;
 const addUSMap = require("./template-api/addUSMap").addUSMap;
-const addStaticTemplate = require("./template-api/addStaticTemplate")
-    .addStaticTemplate;
+const addStaticAggregation = require("./template-api/addStaticAggregation")
+    .addStaticAggregation;
 
 /**
  *
@@ -50,8 +50,8 @@ function Project(name, configFile) {
     // set of usmaps
     this.usmaps = [];
 
-    // set of static templates
-    this.staticTemplates = [];
+    // set of static aggregations
+    this.staticAggregations = [];
 
     // rendering parameters
     this.renderingParams = "{}";
@@ -602,7 +602,7 @@ Project.prototype = {
     addSSV,
     addTable,
     addUSMap,
-    addStaticTemplate,
+    addStaticAggregation,
     addRenderingParams,
     addStyles,
     setInitialStates,

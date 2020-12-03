@@ -26,7 +26,7 @@ function Layer(transform, isStatic) {
     this.indexerType = "";
     this.ssvId = "";
     this.usmapId = "";
-    this.staticTemplateId = "";
+    this.staticAggregationId = "";
 }
 
 /**
@@ -104,11 +104,11 @@ function setUSMapId(usmapId) {
 }
 
 /**
- * set staticTemplate ID
- * @param staticTemplateId
+ * set staticAggregation ID
+ * @param staticAggregationId
  */
-function setStaticTemplateId(staticTemplateId) {
-    this.staticTemplateId = staticTemplateId;
+function setStaticAggregationId(staticAggregationId) {
+    this.staticAggregationId = staticAggregationId;
 }
 
 /**
@@ -131,7 +131,7 @@ Layer.prototype = {
     setFetchingScheme,
     setSSVId,
     setUSMapId,
-    setStaticTemplateId,
+    setStaticAggregationId,
     setIndexerType
 };
 

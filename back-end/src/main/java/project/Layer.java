@@ -16,7 +16,7 @@ public class Layer implements Serializable {
     private String rendering;
     private ArrayList<String> tooltipColumns, tooltipAliases;
     private transient Indexer indexer;
-    private String ssvId, usmapId, staticTemplateId;
+    private String ssvId, usmapId, staticAggregationId;
     private String indexerType;
 
     public Transform getTransform() {
@@ -59,8 +59,8 @@ public class Layer implements Serializable {
         return usmapId;
     }
 
-    public String getStaticTemplateId() {
-        return staticTemplateId;
+    public String getStaticAggregationId() {
+        return staticAggregationId;
     }
 
     public void setIndexerType(String indexerType) {
@@ -101,8 +101,8 @@ public class Layer implements Serializable {
                 + ssvId
                 + ", usmapId="
                 + usmapId
-                + ", staticTemplateId="
-                + staticTemplateId
+                + ", staticAggregationId="
+                + staticAggregationId
                 + '}';
     }
 }
