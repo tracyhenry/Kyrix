@@ -849,10 +849,7 @@ function getRenderer(type) {
                         "height",
                         params.transition ? 0 : vh - marginBottom - curHeight
                     )
-                    .attr(
-                        "fill",
-                        color[majorDomains.indexOf(majorDomain) % color.length]
-                    );
+                    .attr("fill", "#80b1d3");
             } else {
                 var curH = 0;
                 var totalH = d3.sum(
