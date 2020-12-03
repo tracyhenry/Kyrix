@@ -784,13 +784,25 @@ function getRenderer(type) {
         // set up scales
         var vw = args.viewportW;
         var vh = args.viewportH;
-        var xsft = 100;
-        var ysft = 80;
+        var marginLeft = 100;
+        var marginTop = 150;
         var x = d3
             .scaleBand()
             .domain(majorDomains)
-            .range([xsft, vw - xsft])
+            .range([marginLeft, vw - marginLeft])
             .padding(0.2);
+
+        // calculate margin bottom
+        var marginBottom;
+        var maxXLabelLength = d3.max(
+            majorDomains.map(function(d) {
+                return d.length * 10;
+            })
+        );
+        var xLabelDirection =
+            maxXLabelLength > x.bandwidth() ? "vertical" : "horizontal";
+        if (xLabelDirection == "vertical") marginBottom = maxXLabelLength + 70;
+        else marginBottom = 80;
         var y = d3
             .scaleLinear()
             .domain([
@@ -809,7 +821,7 @@ function getRenderer(type) {
                     })
                 )
             ])
-            .range([vh - ysft, ysft * 1.5]);
+            .range([vh - marginBottom, marginTop]);
 
         // color scale
         var color = d3[params.colorScheme];
@@ -826,11 +838,14 @@ function getRenderer(type) {
                     .datum(dataItems[0])
                     .classed("barrect", true)
                     .attr("x", x(majorDomain))
-                    .attr("y", params.transition ? vh - ysft : curHeight)
+                    .attr(
+                        "y",
+                        params.transition ? vh - marginBottom : curHeight
+                    )
                     .attr("width", x.bandwidth())
                     .attr(
                         "height",
-                        params.transition ? 0 : vh - ysft - curHeight
+                        params.transition ? 0 : vh - marginBottom - curHeight
                     )
                     .attr(
                         "fill",
@@ -879,20 +894,35 @@ function getRenderer(type) {
         }
 
         // x axis
-        g.append("g")
-            .attr("transform", `translate(0,${vh - ysft})`)
+        var xAxis = g
+            .append("g")
+            .attr("transform", `translate(0,${vh - marginBottom})`)
             .call(d3.axisBottom(x).tickSizeOuter(0))
             .call(g => g.selectAll(".domain").remove())
-            .style("font-size", "20px")
+            .style("font-size", "20px");
+        if (xLabelDirection == "vertical")
+            xAxis
+                .selectAll("text")
+                .attr("y", 0)
+                .attr("x", 9)
+                .attr("dy", ".35em")
+                .attr("transform", "rotate(90)")
+                .style("text-anchor", "start");
+        xAxis
             .append("text")
             .text(params.xAxisTitle)
             .attr("fill", "black")
             .attr("text-anchor", "middle")
-            .attr("transform", "translate(" + vw / 2 + ", 60)");
+            .attr(
+                "transform",
+                `translate(${vw / 2}, ${
+                    xLabelDirection == "vertical" ? maxXLabelLength + 50 : 60
+                })`
+            );
 
         // y axis
         g.append("g")
-            .attr("transform", `translate(${xsft},0)`)
+            .attr("transform", `translate(${marginLeft},0)`)
             .call(d3.axisLeft(y).ticks(null, "s"))
             .call(g => g.selectAll(".domain").remove())
             .style("font-size", "20px")
@@ -934,7 +964,7 @@ function getRenderer(type) {
 
             var legendG = g
                 .append("g")
-                .attr("transform", `translate(20, ${ysft * 0.75})`);
+                .attr("transform", `translate(20, ${marginTop * 0.3})`);
             legendG
                 .append("g")
                 .attr("transform", "translate(0, 20) scale(1.3)")
@@ -951,7 +981,7 @@ function getRenderer(type) {
                         return y(d.kyrixAggValue);
                     })
                     .attr("height", function(d) {
-                        return vh - ysft - y(d.kyrixAggValue);
+                        return vh - marginBottom - y(d.kyrixAggValue);
                     });
             } else {
                 d3.selectAll(".barrect")

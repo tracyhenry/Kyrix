@@ -12,8 +12,7 @@ var args = {
     query: {
         table: "player_boxscore",
         dimensions: ["start_position"],
-        measure: "AVG(reb)",
-        sampleFields: ["game_id", "team_city", "player_name"]
+        measure: "AVG(reb)"
     },
     type: "bar",
     tooltip: {
@@ -23,7 +22,6 @@ var args = {
     legend: {
         title: "Average Rebounds per Game by Starting Positions",
         domain: {
-            "": "Bench",
             C: "Center",
             F: "Forward",
             G: "Guard"
