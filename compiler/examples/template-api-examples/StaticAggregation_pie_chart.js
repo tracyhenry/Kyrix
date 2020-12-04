@@ -1,9 +1,10 @@
 // libraries
 const Project = require("../../src/index").Project;
-const Pie = require("../../src/template-api/Pie").Pie;
+const StaticAggregation = require("../../src/template-api/StaticAggregation")
+    .StaticAggregation;
 
 // construct project
-var p = new Project("pie_template", "../../../config.txt");
+var p = new Project("staticAggregation_pie_chart", "../../../config.txt");
 
 // specify args
 var args = {
@@ -14,6 +15,7 @@ var args = {
         measure: "AVG(reb)",
         sampleFields: ["game_id", "team_city", "player_name"]
     },
+    type: "pie",
     tooltip: {
         columns: ["start_position", "kyrixAggValue"],
         aliases: ["Starting Position", "Average Rebound per Game"]
@@ -21,7 +23,6 @@ var args = {
     legend: {
         title: "Average Rebounds per Game by Starting Positions",
         domain: {
-            "": "Bench",
             C: "Center",
             F: "Forward",
             G: "Guard"
@@ -31,7 +32,7 @@ var args = {
 };
 
 // build project
-var pieProject = new Pie(args);
-p.addPie(pieProject);
+var staticAggregation = new StaticAggregation(args);
+p.addStaticAggregation(staticAggregation);
 
 p.saveProject();

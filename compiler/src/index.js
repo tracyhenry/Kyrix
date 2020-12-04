@@ -6,9 +6,8 @@ const http = require("http");
 const addTable = require("./template-api/addTable").addTable;
 const addSSV = require("./template-api/addSSV").addSSV;
 const addUSMap = require("./template-api/addUSMap").addUSMap;
-const addPie = require("./template-api/addPie").addPie;
-const addStaticHierarchy = require("./template-api/addStaticHierarchy")
-    .addStaticHierarchy;
+const addStaticAggregation = require("./template-api/addStaticAggregation")
+    .addStaticAggregation;
 
 /**
  *
@@ -51,11 +50,8 @@ function Project(name, configFile) {
     // set of usmaps
     this.usmaps = [];
 
-    // set of pies
-    this.pies = [];
-
-    // set of static hierarchies
-    this.staticHierarchies = [];
+    // set of static aggregations
+    this.staticAggregations = [];
 
     // rendering parameters
     this.renderingParams = "{}";
@@ -606,8 +602,7 @@ Project.prototype = {
     addSSV,
     addTable,
     addUSMap,
-    addPie,
-    addStaticHierarchy,
+    addStaticAggregation,
     addRenderingParams,
     addStyles,
     setInitialStates,

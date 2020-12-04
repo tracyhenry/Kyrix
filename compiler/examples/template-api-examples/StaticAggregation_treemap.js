@@ -1,10 +1,10 @@
 // libraries
 const Project = require("../../src/index").Project;
-const StaticHierarchy = require("../../src/template-api/StaticHierarchy")
-    .StaticHierarchy;
+const StaticAggregation = require("../../src/template-api/StaticAggregation")
+    .StaticAggregation;
 
 // construct project
-var p = new Project("static_treemap_template", "../../../config.txt");
+var p = new Project("staticAggregation_treemap", "../../../config.txt");
 
 // specify args
 var args = {
@@ -27,7 +27,7 @@ var args = {
 };
 
 // build project
-var staticTreemapProject = new StaticHierarchy(args);
-p.addStaticHierarchy(staticTreemapProject);
+var staticAggregation = new StaticAggregation(args);
+p.addStaticAggregation(staticAggregation);
 
 p.saveProject();

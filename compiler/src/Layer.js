@@ -26,8 +26,7 @@ function Layer(transform, isStatic) {
     this.indexerType = "";
     this.ssvId = "";
     this.usmapId = "";
-    this.pieId = "";
-    this.staticHierarchyId = "";
+    this.staticAggregationId = "";
 }
 
 /**
@@ -105,19 +104,11 @@ function setUSMapId(usmapId) {
 }
 
 /**
- * set pie ID
- * @param pieId
+ * set staticAggregation ID
+ * @param staticAggregationId
  */
-function setPieId(pieId) {
-    this.pieId = pieId;
-}
-
-/**
- * set static hierarchy ID
- * @param staticHierarchyId
- */
-function setStaticHierarchyId(staticHierarchyId) {
-    this.staticHierarchyId = staticHierarchyId;
+function setStaticAggregationId(staticAggregationId) {
+    this.staticAggregationId = staticAggregationId;
 }
 
 /**
@@ -140,8 +131,7 @@ Layer.prototype = {
     setFetchingScheme,
     setSSVId,
     setUSMapId,
-    setPieId,
-    setStaticHierarchyId,
+    setStaticAggregationId,
     setIndexerType
 };
 
