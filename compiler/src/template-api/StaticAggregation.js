@@ -980,7 +980,7 @@ function getRenderer(type) {
             if (params.stackDimensions.length == 0) {
                 d3.selectAll(".barrect")
                     .transition()
-                    .duration(500)
+                    .duration(800)
                     .attr("y", function(d) {
                         return y(d.kyrixAggValue);
                     })
@@ -999,7 +999,7 @@ function getRenderer(type) {
                         );
                     })
                     .duration(function(d) {
-                        return (d.kyrixAggValue / d.kyrixBarTotalH) * 500;
+                        return (d.kyrixAggValue / d.kyrixBarTotalH) * 800;
                     })
                     .attr("y", function(d) {
                         return y(d.kyrixBarCurH);
