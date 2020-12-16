@@ -447,6 +447,15 @@ function addSSV(ssv, args) {
     return {pyramid: curPyramid, view: args.view ? args.view : view};
 }
 
+const stateQuery = `SELECT cs.name, cs.total_dem_votes, cs.total_votes, (cs.total_dem_votes / (cs.total_votes+0.01)) as rate, cs.geomstr
+FROM 
+(SELECT s.name, s.state_id, s.total_votes, SUM(c.dem_votes) as total_dem_votes, s.geomstr
+FROM state s
+LEFT JOIN county c on c.state_id = s.state_id
+GROUP BY s.name, s.state_id, s.total_votes, s.geomstr) as cs;`;
+
+const countyQuery = `SELECT name, dem_votes, total_votes, (dem_votes / (total_votes+0.01)) as rate, geomstr FROM county;`;
+
 /**
  * Add a USMap template object to a project
  * @param usmap a USMap object
@@ -495,13 +504,21 @@ function addUSMap(usmap, args) {
     stateMapLegendLayer.setUSMapId(this.usmaps.length - 1 + "_" + 0);
 
     // state boundary layer
+    // var stateMapTransform = new Transform(
+    //     `SELECT name, , geomstr 
+    //      FROM ${usmap.stateTable}`,
+    //     usmap.db,
+    //     usmap.getUSMapTransformFunc("stateMapTransform"),
+    //     ["bbox_x", "bbox_y", "name", "rate", "geomstr"],
+    //     true
+    // );
+
     var stateMapTransform = new Transform(
-        `SELECT name, ${usmap.stateRateCol}, geomstr 
-         FROM ${usmap.stateTable}`,
-        usmap.db,
-        usmap.getUSMapTransformFunc("stateMapTransform"),
-        ["bbox_x", "bbox_y", "name", "rate", "geomstr"],
-        true
+      stateQuery,
+      usmap.db,
+      usmap.getUSMapTransformFunc("stateMapTransform"),
+      ["bbox_x", "bbox_y", "name", "dem_votes", "total_votes", "rate", "geomstr"],
+      true
     );
     var stateBoundaryLayer = new Layer(stateMapTransform, false);
     stateMapCanvas.addLayer(stateBoundaryLayer);
@@ -514,6 +531,8 @@ function addUSMap(usmap, args) {
     stateBoundaryLayer.addRenderingFunc(
         usmap.getUSMapRenderer("stateMapRendering")
     );
+    // how do tooltips change? do they use the db column value or the actual d3 object value?
+    // should be the actual d3 object value
     stateBoundaryLayer.addTooltip(
         ["name", "rate"],
         ["State", usmap.tooltipAlias]
@@ -590,13 +609,23 @@ function addUSMap(usmap, args) {
         );
 
         // county boundary layer
+        // var countyMapTransform = new Transform(
+        //     `SELECT name, ${usmap.countyRateCol}, geomstr
+        // FROM ${usmap.countyTable};`,
+        //     usmap.db,
+        //     usmap.getUSMapTransformFunc("countyMapTransform"),
+        //     ["bbox_x", "bbox_y", "bbox_w", "bbox_h", "name", "rate", "geomstr"],
+        //     true
+        // );
+
+        // TODO: support reverse function object in this transform, more important for counties than states..
+        // b/c have to be able to adjust # of people and then update rate at county and then state level
         var countyMapTransform = new Transform(
-            `SELECT name, ${usmap.countyRateCol}, geomstr
-        FROM ${usmap.countyTable};`,
-            usmap.db,
-            usmap.getUSMapTransformFunc("countyMapTransform"),
-            ["bbox_x", "bbox_y", "bbox_w", "bbox_h", "name", "rate", "geomstr"],
-            true
+          countyQuery,
+          usmap.db,
+          usmap.getUSMapTransformFunc("countyMapTransform"),
+          ["bbox_x", "bbox_y", "bbox_w", "bbox_h", "name", "dem_votes", "total_votes", "rate", "geomstr"],
+          true
         );
         var countyBoundaryLayer = new Layer(countyMapTransform, false);
         countyMapCanvas.addLayer(countyBoundaryLayer);
