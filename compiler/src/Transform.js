@@ -24,6 +24,7 @@ function getFuncParamNames(func) {
  * @constructor
  */
 function Transform(query, db, transformFunc, columnNames, separable) {
+    let numColumns;
     if (typeof query == "object") {
         if (arguments.length > 1)
             throw new Error(
@@ -50,10 +51,24 @@ function Transform(query, db, transformFunc, columnNames, separable) {
                 "Constructing Transform: transformFunc must take parameters (whose names match the dbsource output)"
             );
 
-        this.columnNames = matches
+
+        if (Array.isArray(columnNames)) {
+          this.columnNames = matches
             .join(",")
             .replace(/\/\/ *@result: */g, "")
             .split(","); // safe bec we restricted the charset above
+          numColumns = columnNames.length;
+        } else {
+          this.columnNames = Object.keys(columnNames);
+          numColumns = this.columnNames.length;
+          this.reverseFunctions = {}
+          for (let i=0; i < numColumns; i++) {
+            let colName = this.columnNames[i];
+            let funcBody = columnNames[colName].toString();
+            funcBody = "let reverseFunc = " + funcBody;
+            this.reverseFunctions[colName] = funcBody;
+          }
+        }
         console.log("columnNames=" + this.columnNames);
 
         this.dbsource = query["dbsource"];
@@ -81,11 +96,12 @@ function Transform(query, db, transformFunc, columnNames, separable) {
 
     if (typeof separable !== "boolean")
         throw new Error("Constructing Transform: separable must be boolean.");
-    if (!Array.isArray(columnNames))
-        throw new Error(
-            "Constructing Transform: column names must be an array."
-        );
-    if (columnNames.length == 0 && transformFunc != "")
+    // Note: with reverse functions, column names can be an object too
+    // if (!Array.isArray(columnNames))
+    //     throw new Error(
+    //         "Constructing Transform: column names must be an array."
+    //     );
+    if (numColumns == 0 && transformFunc != "")
         throw new Error(
             "Constructing Transform: column names must be provided if transform function exists."
         );

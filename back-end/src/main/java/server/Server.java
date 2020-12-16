@@ -37,6 +37,7 @@ public class Server {
         server.createContext("/canvas", new CanvasRequestHandler());
         server.createContext("/viewport", new ViewportRequestHandler());
         server.createContext("/project", new ProjectRequestHandler());
+        server.createContext("/update", new UpdateRequestHandler());
         server.setExecutor(
                 null); // java.util.concurrent.Executors.newFixedThreadPool(Config.numThread));
         terminated = false;
