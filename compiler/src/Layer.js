@@ -26,6 +26,7 @@ function Layer(transform, isStatic) {
     this.indexerType = "";
     this.ssvId = "";
     this.usmapId = "";
+    this.allowUpdates = false;
 }
 
 /**
@@ -114,6 +115,10 @@ function setIndexerType(indexerType) {
     this.indexerType = indexerType;
 }
 
+function setAllowUpdates() {
+  this.allowUpdates = true;
+}
+
 // define prototype
 Layer.prototype = {
     addPlacement,
@@ -122,7 +127,8 @@ Layer.prototype = {
     setFetchingScheme,
     setSSVId,
     setUSMapId,
-    setIndexerType
+    setIndexerType,
+    setAllowUpdates,
 };
 
 // exports

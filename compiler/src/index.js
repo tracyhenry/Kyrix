@@ -614,6 +614,7 @@ function addUSMap(usmap, args) {
             ["County", usmap.tooltipAlias]
         );
         countyBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 1);
+        countyBoundaryLayer.setAllowUpdates();
 
         // add to canvases (return)
         canvases.push(countyMapCanvas);
