@@ -27,6 +27,7 @@ function Layer(transform, isStatic) {
     this.ssvId = "";
     this.usmapId = "";
     this.staticAggregationId = "";
+    this.allowUpdates = false;
 }
 
 /**

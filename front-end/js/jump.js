@@ -360,6 +360,164 @@ function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs) {
   });
 }
 
+function createUpdatePopover(gvd, viewId, layerId, p) {
+  console.log(gvd);
+
+  // stop the right click event from propagating up
+  d3.event.preventDefault();
+  d3.event.stopPropagation();
+  
+  // gvd - data for current view, current canvas, transform, etc.
+  let canvasId = gvd.curCanvasId;
+  const viewClass = ".view_" + viewId;
+  let queryText = gvd.curCanvas.layers[layerId].transform.query;
+  console.log(`queryText is: ${queryText} for layerId: ${layerId}`);
+
+  // use regex to extract db column names from user-defined transform
+  queryText = queryText.split("SELECT")[1];
+  console.log(`querytext is now: ${queryText}`);
+  [queryText, tableName] = queryText.split("FROM");
+  tableName = tableName.replace(/[\s;]+/g, "").trim();
+  queryText = queryText.replace(/\s+/g, "").trim();
+  let queryFields = queryText.split(",");
+  console.log(`query fields are now: ${queryFields}`);
+  console.log(`object data is: ${JSON.stringify(p)}`);
+
+  // find only directly mapped columns from object attributes
+  let directMappedColumns = {};
+  const objectAttributes = Object.keys(p);
+  for (let idx in queryFields) {
+      const field = queryFields[idx];
+      // if (objectAttributes.includes(field)) {
+          directMappedColumns[field] = p[field];
+      // }
+  }
+  const directMappedColNames = Object.keys(directMappedColumns);
+
+  // remove all popovers first
+  // removePopovers(viewId);
+
+  // create popover for editing attributes
+  d3.select(".kyrixdiv")
+      .append("div")
+      .classed("view_" + viewId + " popover fade right in", true)
+      .attr("role", "tooltip")
+      .attr("id", "updatepopover")
+      .append("div")
+      .classed("view_" + viewId + " arrow popoverarrow", true)
+      .attr("id", "popoverarrow");
+  d3.select(viewClass + "#updatepopover")
+      .append("h2")
+      .classed("view_" + viewId + " popover-title", true)
+      .attr("id", "popovertitle")
+      .html("Update Attributes")
+      .append("a")
+      .classed("view_" + viewId + " close", true)
+      .attr("href", "#")
+      .attr("id", "popoverclose")
+      .html("&times;")
+      .on("click", function() {
+          removePopovers(viewId);
+      });
+  d3.select(viewClass + "#updatepopover")
+      .append("div")
+      .classed("view_" + viewId + " popover-content list-group", true)
+      .attr("id", "popovercontent");
+
+  // add attribute input boxes
+  let k;
+  for (k = 0; k < directMappedColNames.length; k++) {
+      let attrName = "<b>" + directMappedColNames[k] + "</b>";
+      let attrValue = directMappedColumns[directMappedColNames[k]];
+
+      let updateAttrs = d3
+          .select(viewClass + "#popovercontent")
+          .append("div")
+          .classed("input-group mb-3", true)
+          .attr("id", "attr-input-group-" + k);
+      
+      updateAttrs
+          .append("div")
+          .classed("input-group-prepend", true)
+          .append("span")
+          .classed("input-group-text", true)
+          .attr("id", "inputGroup-sizing-default")
+          .html(attrName);
+
+      updateAttrs
+          .append("input")
+          .classed("form-control attr-inputs", true)
+          .attr("type", "text")
+          .attr("value", attrValue)
+          .attr("aria-label", "Default")
+          .attr("aria-describedby", "inputGroup-sizing-default");
+  }
+
+  // add save changes button to bottom of popover
+  d3.select("#attr-input-group-" + (k-1))
+      .append("div")
+      .classed("popover-footer", true)
+      .append("button")
+      .classed("btn btn-success", true)
+      .attr("type", "button")
+      .attr("id", "update-button")
+      .html("Save");
+
+  // add listener to save changes button, sends updates to backend
+  d3.select("#update-button").on("click", function(d) {
+      d3.event.preventDefault();
+      let newAttrValues = [];
+      let objectKV = {};
+      d3.selectAll(".attr-inputs").each(function(d,i) {
+          newAttrValues.push(d3.select(this).property("value"));
+      });
+
+      console.log(`column names -> ${directMappedColNames}`);
+      console.log(`new attr values -> ${newAttrValues}`);
+
+
+      for (let i = 0; i < directMappedColNames.length; i++) {
+          let colName = directMappedColNames[i];
+          objectKV[colName] = newAttrValues[i];
+      }
+
+      console.log(JSON.stringify(objectKV));
+
+      // TODO: update UI with new data, while DB gets update asynchronously 
+      // what if DB doesn't get update?
+      doDBUpdate(viewId, canvasId, layerId, tableName, objectKV);
+      // re-load dynamic data from db
+      getCurCanvas(viewId);
+      if (!gvd.animation) {
+          var curViewport = d3
+              .select(viewClass + ".mainsvg:not(.static)")
+              .attr("viewBox")
+              .split(" ");
+          RefreshDynamicLayers(
+              viewId,
+              curViewport[0],
+              curViewport[1]
+          );
+      }
+      removePopovers(viewId);
+  });
+
+  // finally position updates popover according to event x/y and its width/height
+  let updatePopoverHeight = d3
+      .select(viewClass + "#updatepopover")
+      .node()
+      .getBoundingClientRect().height;
+  let kyrixDivBox = d3
+      .select(".kyrixdiv")
+      .node()
+      .getBoundingClientRect();
+  d3.select(viewClass + "#updatepopover")
+      .style("left", d3.event.pageX - kyrixDivBox.left + "px")
+      .style(
+          "top",
+          d3.event.pageY - kyrixDivBox.top - updatePopoverHeight / 2 + "px"
+  );   
+}
 
 // register jump info
 function registerJumps(viewId, svg, layerId) {
@@ -370,6 +528,8 @@ function registerJumps(viewId, svg, layerId) {
     var shapes = svg.select("g:last-of-type").selectAll("*");
     var optionalArgs = getOptionalArgs(viewId);
     optionalArgs["layerId"] = layerId;
+    
+    let layerObj = gvd.curCanvas.layers[layerId];
 
     shapes.each(function(p) {
         // check if this shape has jumps
@@ -390,7 +550,7 @@ function registerJumps(viewId, svg, layerId) {
                 hasJump = true;
                 break;
             }
-        if (!hasJump) return;
+        if (!hasJump && !layerObj.allowUpdates) return;
 
         // make cursor a hand when hovering over this shape
         d3.select(this).style("cursor", "zoom-in");
@@ -400,309 +560,7 @@ function registerJumps(viewId, svg, layerId) {
             // stop the click event from propagating up
             d3.event.stopPropagation();
 
-            console.log(
-              `selected object is T/F -> ${d3.select(this).classed("addObject")}`
-            );
-      
-            if (d3.select(this).classed("addObject")) {
-              // d3.selectAll(".view_" + viewId + ".layerg.layer" + )
-              // .select(".svg")
-      
-              let newG = svg.append("g");
-
-              let triangleG = newG.append("g");
-
-              let triangle = triangleG
-                .append("path")
-                // .attr("x", width - bkgRectWidth - bkgRectXOffset)
-                // .attr("y", 40)
-                .attr("d", d3.symbol().size(5000).type(d3.symbolTriangle))
-                .style("fill", "royalblue")
-                .attr('party', 'dem');
-              // .attr("transform", `translate(${gvd.curCanvas.w - 100},${300})`);
-      
-              let triangleText = triangleG
-                .append("text")
-                .attr("id", "triangle")
-                .attr("dx", -20)
-                .attr("dy", ".35em")
-                // .attr("x", gvd.curCanvas.w)
-                // .attr("y", 300)
-                // .attr("transform", `translate(${gvd.curCanvas.w - 100 - 12},${300})`)
-                .style('fill', 'white')
-                .text("2000");
-
-              
-
-              let sliderVertical = d3
-                  .sliderLeft()
-                  .max(1000.00)
-                  .min(10000.00)
-                  .height(300)
-                  .tickFormat(d3.format(',.0f'))
-                  .ticks(10)
-                  .default(5000.00)
-                  .on("onchange", val => {
-                    console.log("in onchange slider")
-                    d3.select("#triangle").text(d3.format(',.0f')(val));
-                  });
-              
-              let gVertical = newG
-                .append("svg")
-                .attr("width", 200)
-                .attr("height", 400)
-                // .append("text")
-                // .attr("dx", 0)
-                // .attr("dy", -100)
-                // .text("Increase in Population")
-                .append("g");
-
-              gVertical
-                .attr("transform", `translate(150,50)`);
-
-              let updateLabel = newG
-              .append("text")
-              .attr("id", "slider-label")
-              // .attr("dx", 0)
-              // .attr("dy", -200)
-              // .attr("x", gvd.curCanvas.w)
-              // .attr("y", 300)
-              // .attr("transform", `translate(${gvd.curCanvas.w - 100 - 12},${300})`)
-              .text("Increase in Dem. Voters");
-                
-
-              gVertical.call(sliderVertical);
-      
-              newG.attr("transform", `translate(${gvd.curCanvas.w - 250},${200})`);
-              triangleG.attr("transform", "translate(0,200)");
-
-              // triangle dragging handler
-              let dx = 0;
-              let dy = 0;
-              triangle.call(
-                d3
-                  .drag()
-                  .on("start", function (d) {
-                    console.log("starting drag");
-                    dx = 0;
-                    dy = 0;
-                  })
-                  .on("drag", function (d) {
-                    dx += d3.event.dx;
-                    dy += d3.event.dy;
-                    triangle.attr("transform", "translate(" + dx + "," + dy + ")");
-                    triangleText.attr("transform", "translate(" + dx + "," + dy + ")");
-
-                    const triangle_bbox = triangle.node().getBoundingClientRect();
-                    const tri_minx = triangle_bbox.left;
-                    const tri_miny = triangle_bbox.top;
-                    const tri_maxx = triangle_bbox.right;
-                    const tri_maxy = triangle_bbox.bottom;
-                    // const tri_cx = (tri_minx + tri_maxx) / 2.0  + 650;
-                    // const tri_cy = (tri_miny + tri_maxy) / 2.0  + 250;
-                    const tri_cx = (tri_minx + tri_maxx) / 2.0;
-                    const tri_cy = (tri_miny + tri_maxy) / 2.0;
-                    // let tri_startx = gvd.curCanvas.w - 250;
-                    // let tri_starty = 400;
-                    // let tri_cx = tri_startx + dx;
-                    // let tri_cy = tri_starty + dy;
-                    // let min_dist = 10000.0;
-                    //   let min_obj;
-                    d3.select(".mainsvg").select("g").selectAll("path")
-                        .each((d,i) => {
-                          let currentObject = d3.select(".mainsvg")
-                              .select("g")
-                              .selectAll("path")
-                              .filter(function (data) {
-                                return data == d;
-                            });
-                          const region_bbox = currentObject.node().getBoundingClientRect();
-                          const minx = region_bbox.left;
-                          const miny = region_bbox.top;
-                          const maxx = region_bbox.right;
-                          const maxy = region_bbox.bottom;
-                          const cx = (minx + maxx) / 2.0;
-                          const cy = (miny + maxy) / 2.0;
-                          // const cx = parseFloat(d.cx);
-                          // const cy = parseFloat(d.cy);
-                          // const minx = parseFloat(d.minx);
-                          // const miny = parseFloat(d.miny);
-                          // const maxx = parseFloat(d.maxx);
-                          // const maxy = parseFloat(d.maxy);
-                          const width = maxx - minx;
-                          const height = maxy - miny;
-                          // console.log(`object ${i} has screen bbox: ${JSON.stringify(region_bbox)}`);
-                          // console.log(`kyrix object ${i} has data: ${JSON.stringify(d)}`);
-                          const r = Math.min(width,height) / 2.0;
-                          // let overlapsX = tri_minx >= minx && maxx >= tri_maxx;
-                          // let overlapsY = tri_miny >= miny && maxy >= tri_maxy;
-                          // let tri_dist = Math.sqrt((tri_cx - cx)**2 + (tri_cy - cy)**2);
-                          let tri_dist = Math.abs(tri_cx - cx) + Math.abs(tri_cy - cy);
-                          if (tri_dist < r) {
-                            console.log(`triangle is within ${tri_dist} of object ${i}`);
-                            // min_dist = tri_dist;
-                            // min_obj = d;
-                            // do some stuff
-                            d3.select(".mainsvg").select("g").selectAll("path")
-                            .style("stroke", "white")
-                            .style("stroke-width", "0.5");
-
-                            
-                            currentObject
-                              .style("stroke", "green")
-                              .style("stroke-width", "5.0");
-                          }
-                      });
-
-
-                  })
-                  .on("end", function (d) {
-                    if (Math.abs(dx) > 50 || Math.abs(dy) > 50) {
-                      // console.log("ended object drag");
-                      // console.log(`triangle transform: ${d3.zoomTransform(triangle.node())}`);
-                      d3.select(".mainsvg").select("g").selectAll("path")
-                      .style("stroke", "white")
-                      .style("stroke-width", "0.5");
-
-                      //  TODO: create helper function for this repeat code!
-                      d3.select(".mainsvg").select("g").selectAll("path")
-                        .each((d,i) => {
-                          let currentObject = d3.select(".mainsvg")
-                              .select("g")
-                              .selectAll("path")
-                              .filter(function (data) {
-                                return data == d;
-                            });
-                          const triangle_bbox = triangle.node().getBoundingClientRect();
-                          const tri_minx = triangle_bbox.left;
-                          const tri_miny = triangle_bbox.top;
-                          const tri_maxx = triangle_bbox.right;
-                          const tri_maxy = triangle_bbox.bottom;
-                          const tri_cx = (tri_minx + tri_maxx) / 2.0;
-                          const tri_cy = (tri_miny + tri_maxy) / 2.0;
-                          const region_bbox = currentObject.node().getBoundingClientRect();
-                          const minx = region_bbox.left;
-                          const miny = region_bbox.top;
-                          const maxx = region_bbox.right;
-                          const maxy = region_bbox.bottom;
-                          const cx = (minx + maxx) / 2.0;
-                          const cy = (miny + maxy) / 2.0;
-                          const width = maxx - minx;
-                          const height = maxy - miny;
-                          // console.log(`object ${i} has screen bbox: ${JSON.stringify(region_bbox)}`);
-                          // console.log(`kyrix object ${i} has data: ${JSON.stringify(d)}`);
-                          const r = Math.min(width,height) / 2.0;
-                          // let overlapsX = tri_minx >= minx && maxx >= tri_maxx;
-                          // let overlapsY = tri_miny >= miny && maxy >= tri_maxy;
-                          // let tri_dist = Math.sqrt((tri_cx - cx)**2 + (tri_cy - cy)**2);
-                          let tri_dist = Math.abs(tri_cx - cx) + Math.abs(tri_cy - cy);
-                          if (tri_dist < r) {
-                            console.log(`triangle is within ${tri_dist} of object ${i}`);
-                            // let newData = d;
-                            // newData.rate = parseFloat(d.rate) + 5.0;
-                            // currentObject
-                            //   .data()
-                            // gvd - data for current view, current canvas, transform, etc.
-
-                            // hard-coded layerid for now, fix this!
-                            // let queryText = gvd.curCanvas.layers[1].transform.query;
-                            // console.log(`query text for layerid: ${1} is: ${queryText}`);
-
-                            // use regex to extract db column names from user-defined transform
-                            // queryText = queryText.split("select")[1];
-                            // let res = queryText.split("from");
-                            // queryText = res[0];
-                            // let tableName = res[1];
-                            // tableName = tableName.replace(/[\s;]+/g, "").trim();
-                            // queryText = queryText.replace(/\s+/g, "").trim();
-                            // let queryFields = queryText.split(",");
-
-                            let visFields = gvd.curCanvas.layers[1].transform.columnNames;
-
-                            // find only directly mapped columns from object attributes
-                            let directMappedColumns = {};
-                            // const objectAttributes = Object.keys(p);
-                            for (let idx in visFields) {
-                              const field = visFields[idx];
-                              // if (objectAttributes.includes(field)) {
-                              directMappedColumns[field] = d[field];
-                              // }
-                            }
-
-                            directMappedColumns["rate"] = parseFloat(d["rate"]) + 100.0;
-                            // doDBUpdate(viewId, gvd.curCanvasId, 1, tableName, directMappedColumns);
-
-                            d3.select(".mainsvg").select("g").selectAll("path")
-                              .data(directMappedColumns)
-                              .enter()
-                              .append("path")
-                              .attr("d", function(d) {
-                                  var feature = JSON.parse(d.geomstr);
-                                  return path(feature);
-                              })
-                              .style("stroke", "#fff")
-                              .style("stroke-width", "0.5")
-                              .style("fill", function(d) {
-                                  return color(d.rate);
-                              });
-                            // d3.select(".mainsvg").select("g").selectAll("path")
-                            // .style("stroke", "white")
-                            // .style("stroke-width", "0.5");
-
-                            
-                            // currentObject
-                            //   .style("stroke", "green")
-                            //   .style("stroke-width", "5.0");
-                            return;
-                          }
-                      });
-
-                      
-                      dx = 0;
-                      dy = 0;
-                      triangle.attr("transform", "translate(0,0)");
-                      triangleText.attr("transform", "translate(0,0)");
-                    }
-                  })
-              );
-
-              triangle.on("click", () => {
-                let party = triangle.attr('party');
-                console.log(`triangle is currently party: ${party}`);
-                if (party == "dem") {
-                  triangle
-                    .style('fill', 'red')
-                    .attr('party', 'rep');
-                  updateLabel
-                    .text("Increase in Rep. Voters");
-                } else {
-                  triangle
-                    .style('fill', 'royalblue')
-                    .attr('party', 'dem');
-                  updateLabel
-                    .text("Increase in Dem. Voters");
-                }
-              });
-              
-
-                // svg.select("g").selectAll("path")
-              //   // .data(data)
-              //   // .enter()
-              //   // .append("path")
-              //   // .attr("d", function(d) {
-              //   //     var feature = JSON.parse(d.geomstr);
-              //   //     return path(feature);
-              //   // })
-              //   .style("stroke", "green")
-              //   .style("stroke-width", "1.0");
-              //   // .style("fill", function(d) {
-              //   //     return color(d.rate);
-              //   // });
-              
-              
-              return;
-            }
-
+            
             // remove all popovers first
             removePopovers(viewId);
 
@@ -785,6 +643,24 @@ function registerJumps(viewId, svg, layerId) {
                 });
             }
 
+            // create update option in popover
+            if (layerObj.allowUpdates) {
+              let updateText = "<b>UPDATE ATTRIBUTES in " + gvd.curCanvasId + "</b>";
+              let updateJumpOption = d3
+                  .select(viewClass + "#popovercontent")
+                  .append("a")
+                  .classed("list-group-item", true)
+                  .attr("href", "#")
+                  // .attr("id", "update-button")
+                  .datum(d)
+                  .html(updateText);
+
+              // if update option selected, set up new popover with options for changing all 
+              updateJumpOption.on("click", function(d) {
+                createUpdatePopover(gvd, viewId, layerId, d);
+              });
+            }
+            
             // position jump popover according to event x/y and its width/height
             var popoverHeight = d3
                 .select(viewClass + ".jumppopover")
