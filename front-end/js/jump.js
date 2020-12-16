@@ -388,9 +388,9 @@ function createUpdatePopover(gvd, viewId, layerId, p) {
   const objectAttributes = Object.keys(p);
   for (let idx in queryFields) {
       const field = queryFields[idx];
-      // if (objectAttributes.includes(field)) {
+      if (objectAttributes.includes(field)) {
           directMappedColumns[field] = p[field];
-      // }
+      }
   }
   const directMappedColNames = Object.keys(directMappedColumns);
 

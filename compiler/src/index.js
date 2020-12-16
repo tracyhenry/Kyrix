@@ -376,8 +376,9 @@ function saveProject() {
                     placementColNames.push(curPlacement.height.substr(4));
                 for (var k = 0; k < placementColNames.length; k++) {
                     var exist = false;
-                    for (var p = 0; p < curTransform.columnNames.length; p++)
-                        if (placementColNames[k] == curTransform.columnNames[p])
+                    let colNamesLst = Array.isArray(curTransform.columnNames) ? curTransform.columnNames : Object.keys(curTransform.columnNames);
+                    for (var p = 0; p < colNamesLst.length; p++)
+                        if (placementColNames[k] == colNamesLst[p])
                             exist = true;
                     if (!exist)
                         throw new Error(
