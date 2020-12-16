@@ -74,13 +74,16 @@ function getUSMapTransformFunc(transformName) {
         }
 
         var path = d3.geoPath().projection(projection);
-        var feature = JSON.parse(row[2]);
+        var feature = JSON.parse(row[4]);
         var centroid = path.centroid(feature);
+        var rate = row[3] * 100.0;
         ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
         ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
         ret.push(row[0]);
         ret.push(row[1]);
         ret.push(row[2]);
+        ret.push(rate);
+        ret.push(row[4]);
 
         return Java.to(ret, "java.lang.String[]");
     }
@@ -143,9 +146,10 @@ function getUSMapTransformFunc(transformName) {
         }
 
         var path = d3.geoPath().projection(projection);
-        var feature = JSON.parse(row[2]);
+        var feature = JSON.parse(row[4]);
         var centroid = path.centroid(feature);
         var bounds = path.bounds(feature);
+        var rate = row[3] * 100.0;
         ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
         ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
         ret.push(
@@ -158,7 +162,11 @@ function getUSMapTransformFunc(transformName) {
                 ? 0
                 : bounds[1][1] - bounds[0][1]
         );
-        for (var i = 0; i < 3; i++) ret.push(row[i]);
+        ret.push(row[0]);
+        ret.push(row[1]);
+        ret.push(row[2]);
+        ret.push(rate);
+        ret.push(row[4]);
 
         return Java.to(ret, "java.lang.String[]");
     }
