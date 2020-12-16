@@ -54,9 +54,21 @@ function USMap(args_) {
 
 function getUSMapTransformFunc(transformName) {
     //------------Transforms--------------------
-
+    /*
+      SELECT cs.name, cs.state_id, cs.total_dem_votes, cs.total_votes, (cs.total_dem_votes / (cs.total_votes+0.01)) as rate,
+        cs.geomstr FROM (SELECT s.name, s.state_id, s.total_votes, SUM(c.dem_votes) as total_dem_votes, s.geomstr
+        FROM state s LEFT JOIN county c on c.state_id = s.state_id
+        GROUP BY s.name, s.state_id, s.total_votes, s.geomstr) as cs;
+    */
     function stateMapTransformFunc(row, width, height) {
         var ret = [];
+        var name = row[0];
+        var stateId = row[1];
+        var demVotes = row[2];
+        var totalVotes = row[3];
+        var repVotes = totalVotes - demVotes;
+        var rate = row[4] * 100.0;
+        var geomstr = row[5];
 
         var projectionStr = "REPLACE_ME_projection";
         var projection;
@@ -74,16 +86,17 @@ function getUSMapTransformFunc(transformName) {
         }
 
         var path = d3.geoPath().projection(projection);
-        var feature = JSON.parse(row[4]);
+        var feature = JSON.parse(geomstr);
         var centroid = path.centroid(feature);
-        var rate = row[3] * 100.0;
         ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
         ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
-        ret.push(row[0]);
-        ret.push(row[1]);
-        ret.push(row[2]);
+        ret.push(name);
+        ret.push(stateId);
+        ret.push(demVotes);
+        ret.push(repVotes);
+        ret.push(totalVotes);
         ret.push(rate);
-        ret.push(row[4]);
+        ret.push(geomstr);
 
         return Java.to(ret, "java.lang.String[]");
     }
@@ -127,8 +140,19 @@ function getUSMapTransformFunc(transformName) {
         return Java.to(ret, "java.lang.String[]");
     }
 
+    /*
+      SELECT name, county_id, dem_votes, total_votes,
+      (dem_votes / (total_votes+0.01)) as rate, geomstr FROM county;
+    */
     function countyMapTransformFunc(row, width, height) {
         var ret = [];
+        var name = row[0];
+        var countyId = row[1];
+        var demVotes = row[2];
+        var totalVotes = row[3];
+        var repVotes = totalVotes - demVotes;
+        var rate = row[4] * 100.0;
+        var geomstr = row[5];
 
         var projectionStr = "REPLACE_ME_projection";
         var projection;
@@ -146,10 +170,9 @@ function getUSMapTransformFunc(transformName) {
         }
 
         var path = d3.geoPath().projection(projection);
-        var feature = JSON.parse(row[4]);
+        var feature = JSON.parse(geomstr);
         var centroid = path.centroid(feature);
         var bounds = path.bounds(feature);
-        var rate = row[3] * 100.0;
         ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
         ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
         ret.push(
@@ -162,11 +185,13 @@ function getUSMapTransformFunc(transformName) {
                 ? 0
                 : bounds[1][1] - bounds[0][1]
         );
-        ret.push(row[0]);
-        ret.push(row[1]);
-        ret.push(row[2]);
+        ret.push(name);
+        ret.push(countyId);
+        ret.push(demVotes);
+        ret.push(repVotes);
+        ret.push(totalVotes);
         ret.push(rate);
-        ret.push(row[4]);
+        ret.push(geomstr);
 
         return Java.to(ret, "java.lang.String[]");
     }
