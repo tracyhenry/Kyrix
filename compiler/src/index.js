@@ -447,14 +447,14 @@ function addSSV(ssv, args) {
     return {pyramid: curPyramid, view: args.view ? args.view : view};
 }
 
-const stateQuery = `SELECT cs.name, cs.total_dem_votes, cs.total_votes, (cs.total_dem_votes / (cs.total_votes+0.01)) as rate, cs.geomstr
+const stateQuery = `SELECT cs.name, cs.state_id, cs.total_dem_votes, cs.total_votes, (cs.total_dem_votes / (cs.total_votes+0.01)) as rate, cs.geomstr
 FROM 
 (SELECT s.name, s.state_id, s.total_votes, SUM(c.dem_votes) as total_dem_votes, s.geomstr
 FROM state s
 LEFT JOIN county c on c.state_id = s.state_id
 GROUP BY s.name, s.state_id, s.total_votes, s.geomstr) as cs;`;
 
-const countyQuery = `SELECT name, dem_votes, total_votes, (dem_votes / (total_votes+0.01)) as rate, geomstr FROM county;`;
+const countyQuery = `SELECT name, county_id, dem_votes, total_votes, (dem_votes / (total_votes+0.01)) as rate, geomstr FROM county;`;
 
 /**
  * Add a USMap template object to a project
@@ -517,7 +517,7 @@ function addUSMap(usmap, args) {
       stateQuery,
       usmap.db,
       usmap.getUSMapTransformFunc("stateMapTransform"),
-      ["bbox_x", "bbox_y", "name", "dem_votes", "total_votes", "rate", "geomstr"],
+      ["bbox_x", "bbox_y", "name", "state_id", "dem_votes", "rep_votes", "total_votes", "rate", "geomstr"],
       true
     );
 
@@ -535,8 +535,8 @@ function addUSMap(usmap, args) {
     // how do tooltips change? do they use the db column value or the actual d3 object value?
     // should be the actual d3 object value
     stateBoundaryLayer.addTooltip(
-        ["name", "rate", "total_votes"],
-        ["State", usmap.tooltipAlias, "Total Voters"]
+        ["name", "rate", "dem_votes", "rep_votes", "total_votes"],
+        ["State", usmap.tooltipAlias, "Dem. Voters", "Rep. Voters", "Total Voters"]
     );
     stateBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 0);
 
@@ -625,7 +625,30 @@ function addUSMap(usmap, args) {
           countyQuery,
           usmap.db,
           usmap.getUSMapTransformFunc("countyMapTransform"),
-          ["bbox_x", "bbox_y", "bbox_w", "bbox_h", "name", "dem_votes", "total_votes", "rate", "geomstr"],
+          // ["bbox_x", "bbox_y", "bbox_w", "bbox_h", "name", "dem_votes", "total_votes", "rate", "geomstr"],
+          {
+            "bbox_x": null,
+            "bbox_y": null,
+            "bbox_w": null,
+            "bbox_h": null,
+            "name": null,
+            "county_id": null,
+            "dem_votes": function (oldRow, width, height) {
+              let newRow = oldRow;
+              let repVotes = newRow["total_votes"] - newRow["dem_votes"];
+              newRow["rep_votes"] = repVotes;
+              return newRow;
+            },
+            "rep_votes": function (oldRow, width, height) {
+              let newRow = oldRow;
+              let demVotes = newRow["total_votes"] - newRow["rep_votes"];
+              newRow["dem_votes"] = demVotes;
+              return newRow;
+            },
+            "total_votes": null,
+            "rate": null,
+            "geomstr": null,
+          },
           true
         );
         var countyBoundaryLayer = new Layer(countyMapTransform, false);
@@ -640,9 +663,10 @@ function addUSMap(usmap, args) {
             usmap.getUSMapRenderer("countyMapRendering")
         );
         countyBoundaryLayer.addTooltip(
-            ["name", "rate", "total_votes"],
-            ["County", usmap.tooltipAlias, "Total Voters"]
+          ["name", "rate", "dem_votes", "rep_votes", "total_votes"],
+          ["County", usmap.tooltipAlias, "Dem. Voters", "Rep. Voters", "Total Voters"]
         );
+        
         countyBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 1);
         countyBoundaryLayer.setAllowUpdates();
 

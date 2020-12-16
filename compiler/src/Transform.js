@@ -64,9 +64,11 @@ function Transform(query, db, transformFunc, columnNames, separable) {
           this.reverseFunctions = {}
           for (let i=0; i < numColumns; i++) {
             let colName = this.columnNames[i];
-            let funcBody = columnNames[colName].toString();
-            funcBody = "let reverseFunc = " + funcBody;
-            this.reverseFunctions[colName] = funcBody;
+            if (columnNames[colName] !== null) {
+              let funcBody = columnNames[colName].toString();
+              funcBody = "return " + funcBody;
+              this.reverseFunctions[colName] = funcBody;
+            }
           }
         }
         console.log("columnNames=" + this.columnNames);
@@ -94,6 +96,26 @@ function Transform(query, db, transformFunc, columnNames, separable) {
         return;
     }
 
+    // same block of code as above, but for other case!
+    // TODO: remove duplicate code
+    if (Array.isArray(columnNames)) {
+      this.columnNames = columnNames;
+      numColumns = columnNames.length;
+    } else {
+        this.columnNames = Object.keys(columnNames);
+        numColumns = this.columnNames.length;
+        this.reverseFunctions = {}
+        for (let i=0; i < numColumns; i++) {
+            let colName = this.columnNames[i];
+            if (columnNames[colName] !== null) {
+              let funcBody = columnNames[colName].toString();
+              funcBody = "return " + funcBody;
+              this.reverseFunctions[colName] = funcBody;
+            }
+        }
+    }
+    console.log("columnNames=" + this.columnNames);
+
     if (typeof separable !== "boolean")
         throw new Error("Constructing Transform: separable must be boolean.");
     // Note: with reverse functions, column names can be an object too
@@ -109,7 +131,6 @@ function Transform(query, db, transformFunc, columnNames, separable) {
     // assign fields
     this.query = query;
     this.db = db;
-    this.columnNames = columnNames;
     this.transformFunc = transformFunc;
     if (transformFunc == "") this.transformFuncBody = "";
     else this.transformFuncBody = getBodyStringOfFunction(this.transformFunc);
