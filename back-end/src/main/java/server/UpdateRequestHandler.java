@@ -10,10 +10,13 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.List;
 import java.util.Set;
@@ -22,6 +25,7 @@ import javax.net.ssl.HttpsURLConnection;
 import main.Config;
 import main.DbConnector;
 import main.Main;
+import project.*;
 
 public class UpdateRequestHandler implements HttpHandler {
     
@@ -38,7 +42,8 @@ public class UpdateRequestHandler implements HttpHandler {
             String response;
             String canvasId;
             String layerId;
-            List<String> keyColumns;
+            ArrayList<String> keyColumns;
+            HashMap<String, String> objectAttrs;
             String baseTable;
             String projName;
 
@@ -49,37 +54,44 @@ public class UpdateRequestHandler implements HttpHandler {
             }
 
             // get body data of POST request
-            String body = new String(readBody(httpExchange), "utf-8");
+            // String body = new String(readBody(httpExchange), "utf-8");
+            // extract project object & headers
+            InputStreamReader isr = new InputStreamReader(httpExchange.getRequestBody(), "utf-8");
+            BufferedReader br = new BufferedReader(isr);
+            String projectJSON = br.readLine();
+            UpdateRequest updateRequest = gson.fromJson(projectJSON, UpdateRequest.class);
 
-            HashMap<String, String> map = new HashMap<String, String>();
-            JSONObject jObject = new JSONObject(body);
-            Iterator<?> keys = jObject.keys();
-            while( keys.hasNext() ){
-                String key = (String)keys.next();
-                String value = jObject.getString(key); 
-                map.put(key, value);
-            }
+            // HashMap<String, String> map = new HashMap<String, String>();
+            // JSONObject jObject = new JSONObject(body);
+            // Iterator<?> keys = jObject.keys();
+            // while( keys.hasNext() ){
+            //     String key = (String)keys.next();
+            //     String value = jObject.getString(key); 
+            //     map.put(key, value);
+            // }
 
-            canvasId = map.get("canvasId").toString();
-            layerId = map.get("layerId").toString();
-            keyColumns = map.get("primaryKeyColumn").toString();
-            baseTable = map.get("baseTable").toString();
-            projName = map.get("projectName").toString();
-            System.out.println("proj name is: " + projName);
-            System.out.println("base table name is: " + baseTable);
-            System.out.println("canvas id is: " + canvasId);
-            System.out.println("layer id is: " + layerId);
-            System.out.println("key column is: " + keyColumn);
-            String rawAttributes = map.get("objectAttributes").toString();
-            System.out.println("attributes string ->" + rawAttributes);
-            HashMap<String, String> objectAttrs = new HashMap<String, String>();
-            JSONObject attrJson = new JSONObject(rawAttributes);
-            Iterator<?> attrKeys = attrJson.keys();
-            while ( attrKeys.hasNext() ) {
-                String key = (String)attrKeys.next();
-                String value = attrJson.getString(key);
-                objectAttrs.put(key, value);
-            }
+            // canvasId = map.get("canvasId").toString();
+            // layerId = map.get("layerId").toString();
+            // keyColumns = map.get("primaryKeyColumn").toString();
+            // baseTable = map.get("baseTable").toString();
+            // projName = map.get("projectName").toString();
+            canvasId = updateRequest.getCanvasId();
+            layerId = updateRequest.getLayerId();
+            keyColumns = updateRequest.getKeyColumns();
+            objectAttrs = updateRequest.getObjectAttributes();
+            baseTable = updateRequest.getBaseTable();
+            projName = updateRequest.getProjectName();
+             // String rawAttributes = map.get("objectAttributes").toString();
+
+            // System.out.println("attributes string ->" + rawAttributes);
+            // HashMap<String, String> objectAttrs = new HashMap<String, String>();
+            // JSONObject attrJson = new JSONObject(rawAttributes);
+            // Iterator<?> attrKeys = attrJson.keys();
+            // while ( attrKeys.hasNext() ) {
+            //     String key = (String)attrKeys.next();
+            //     String value = attrJson.getString(key);
+            //     objectAttrs.put(key, value);
+            // }
             System.out.println("object attrs: " + objectAttrs);
 
             String tableName = "bbox_" + Main.getProject().getName()
@@ -188,31 +200,41 @@ public class UpdateRequestHandler implements HttpHandler {
             baseRestQuery += " AS " + baseColumnSubQuery;
             baseRestQuery += " WHERE t.";
 
-            String keyColumnType = attrColumnTypes.get(keyColumn);
-            switch (keyColumnType) {
-                case "double precision":
-                    restQuery += keyColumn + "=" + objectAttrs.get(keyColumn);
-                    break;
+            int i = 0;
+            for (String key : keyColumns) {
+              String keyColumnType = attrColumnTypes.get(key);
+              switch (keyColumnType) {
+                  case "double precision":
+                      restQuery += key + "=" + objectAttrs.get(key);
+                      break;
+                  case "text":
+                      restQuery += key + "='" + objectAttrs.get(key) + "'";  
+                      break;
+                  default:
+                      // default is same as text column, most common
+                      restQuery += key + "='" + objectAttrs.get(key) + "'";  
+                      break;
+              }
+              String baseKeyColType = baseAttrColTypes.get(key);
+              switch (baseKeyColType) {
+                case "integer":
+                  baseRestQuery += key + "=" + objectAttrs.get(key);
+                  break;
                 case "text":
-                    restQuery += keyColumn + "='" + objectAttrs.get(keyColumn) + "'";  
-                    break;
+                  baseRestQuery += key += "='" + objectAttrs.get(key) + "'";
+                  break;
                 default:
-                    // default is same as text column, most common
-                    restQuery += keyColumn + "='" + objectAttrs.get(keyColumn) + "'";  
-                    break;
+                  baseRestQuery += key += "='" + objectAttrs.get(key) + "'";
+                  break;
+              }
+
+              if (i < (keyColumns.size() - 1)) {
+                restQuery += " AND t.";
+                baseRestQuery += " AND t.";
+              }
+              i++;
             }
-            String baseKeyColType = baseAttrColTypes.get(keyColumn);
-            switch (baseKeyColType) {
-              case "integer":
-                baseRestQuery += keyColumn + "=" + objectAttrs.get(keyColumn);
-                break;
-              case "text":
-                baseRestQuery += keyColumn += "='" + objectAttrs.get(keyColumn) + "'";
-                break;
-              default:
-                baseRestQuery += keyColumn += "='" + objectAttrs.get(keyColumn) + "'";
-                break;
-            }
+            
             restQuery += ";";
             updateQuery += restQuery;
             baseRestQuery += ";";

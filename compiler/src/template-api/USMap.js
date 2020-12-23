@@ -141,18 +141,19 @@ function getUSMapTransformFunc(transformName) {
     }
 
     /*
-      SELECT name, county_id, dem_votes, rep_votes, total_votes, 
+      SELECT name, state_id, county_id, dem_votes, rep_votes, total_votes, 
       (dem_votes / (total_votes+0.01)) as rate, geomstr FROM county;
     */
     function countyMapTransformFunc(row, width, height) {
         var ret = [];
         var name = row[0];
-        var countyId = row[1];
-        var demVotes = row[2];
-        var repVotes = row[3];
-        var totalVotes = row[4];
-        var rate = row[5] * 100.0;
-        var geomstr = row[6];
+        var stateId = row[1];
+        var countyId = row[2];
+        var demVotes = row[3];
+        var repVotes = row[4];
+        var totalVotes = row[5];
+        var rate = row[6] * 100.0;
+        var geomstr = row[7];
 
         var projectionStr = "REPLACE_ME_projection";
         var projection;
@@ -186,6 +187,7 @@ function getUSMapTransformFunc(transformName) {
                 : bounds[1][1] - bounds[0][1]
         );
         ret.push(name);
+        ret.push(stateId);
         ret.push(countyId);
         ret.push(demVotes);
         ret.push(repVotes);
