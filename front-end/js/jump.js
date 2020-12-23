@@ -333,24 +333,27 @@ function startJump(viewId, d, jump, optionalArgs) {
 }
 
 // send updates to DB
-function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs) {
+function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs, projName) {
   // find field in newObjAttrs that is the primary key identifier (like "id")
-  let idColumn;
+  let idColumns = []; 
   const attributes = Object.keys(newObjAttrs);
   for (let idx = 0; idx < attributes.length; idx++) {
     const val = attributes[idx];
     if (val.includes("id")) {
-      idColumn = val;
-      break;
+      idColumns.push(val);
     }
   }
 
   const postData = {
     canvasId: canvasId,
     layerId: layerId,
-    primaryKeyColumn: idColumn,
+    keyColumns: idColumns,
     objectAttributes: newObjAttrs,
+    baseTable: tableName,
+    projectName: projName,
   };
+  
+  console.log(`sending HTTP request to /update with data: ${JSON.stringify(postData)}`);
   $.ajax({
     type: "POST",
     url: globalVar.serverAddr + "/update",
@@ -360,61 +363,6 @@ function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs) {
     },
     async: false,
   });
-}
-
-function handleUpdateButton(gvd, viewId, canvasId, layerId, tableName, updateAttr, directMappedColNames) {
-  console.log(`update button was clicked with attr: ${updateAttr}`);
-  d3.event.preventDefault();
-  const viewClass = ".view_" + viewId;
-  let newAttrValues = [];
-  let objectKV = {};
-  d3.selectAll(".attr-inputs").each(function(d,i) {
-      newAttrValues.push(d3.select(this).property("value"));
-  });
-
-  console.log(`column names -> ${directMappedColNames}`);
-  console.log(`new attr values -> ${newAttrValues}`);
-
-
-  for (let i = 0; i < directMappedColNames.length; i++) {
-      let colName = directMappedColNames[i];
-      objectKV[colName] = newAttrValues[i];
-  }
-
-  // reverse function code
-  const reverseFuncString = 
-    gvd.curCanvas.layers[layerId].transform.reverseFunctions[
-      updateAttr
-    ];
-  console.log(
-    `reverse function string for attr: ${updateAttr} in layer: ${layerId} is ${reverseFuncString}`
-  );
-
-  const reverseFunc = Function(reverseFuncString)();
-  let width = gvd.curCanvas.w;
-  let height = gvd.curCanvas.h;
-  console.log(`width of cur layer is: ${width} and height is: ${height}`);
-  objectKV = reverseFunc(objectKV, width, height);
-  console.log(JSON.stringify(objectKV));
-
-
-  // TODO: update UI with new data, while DB gets update asynchronously 
-  // what if DB doesn't get update?
-  doDBUpdate(viewId, canvasId, layerId, tableName, objectKV);
-  // re-load dynamic data from db
-  getCurCanvas(viewId);
-  if (!gvd.animation) {
-      var curViewport = d3
-          .select(viewClass + ".mainsvg:not(.static)")
-          .attr("viewBox")
-          .split(" ");
-      RefreshDynamicLayers(
-          viewId,
-          curViewport[0],
-          curViewport[1]
-      );
-  }
-  removePopovers(viewId);
 }
 
 function createUpdatePopover(gvd, viewId, layerId, p) {
@@ -438,13 +386,11 @@ function createUpdatePopover(gvd, viewId, layerId, p) {
   let queryFields = queryText.split(",");
 
   // find only directly mapped columns from object attributes
-  let reverseFuncDict = gvd.curCanvas.layers[layerId].transform.reverseFunctions;
   let directMappedColumns = {};
   const objectAttributes = Object.keys(p);
   for (let idx in queryFields) {
       const field = queryFields[idx];
-      if (objectAttributes.includes(field) && reverseFuncDict[field] !== undefined) {
-        console.log(`direct mapped col: ${field} has rv func: ${reverseFuncDict[field]}`);
+      if (objectAttributes.includes(field)) {
         directMappedColumns[field] = p[field];
       }
   }
@@ -481,11 +427,19 @@ function createUpdatePopover(gvd, viewId, layerId, p) {
       .attr("id", "popovercontent");
 
   // add attribute input boxes
+  let updateAttributes = []
+  let revFuncDict = gvd.curCanvas.layers[layerId].transform.reverseFunctions;
+  for (let idx in queryFields) {
+    const field = queryFields[idx];
+    if (revFuncDict[field] !== undefined) {
+      updateAttributes.push(field);
+    }
+  } 
   let k;
   let updateBtnIds = [];
-  for (k = 0; k < directMappedColNames.length; k++) {
-      let attrName = "<b>" + directMappedColNames[k] + "</b>";
-      let attrValue = directMappedColumns[directMappedColNames[k]];
+  for (k = 0; k < updateAttributes.length; k++) {
+      let attrName = "<b>" + updateAttributes[k] + "</b>";
+      let attrValue = p[updateAttributes[k]];
       let updateBtnName = "update-button-" + k;
       updateBtnIds.push(updateBtnName);
 
@@ -493,7 +447,7 @@ function createUpdatePopover(gvd, viewId, layerId, p) {
           .select(viewClass + "#popovercontent")
           .append("div");
           
-          
+  
       updateAttrs
           .classed("input-group", true)
           .attr("id", "attr-input-group-" + k);
@@ -510,6 +464,7 @@ function createUpdatePopover(gvd, viewId, layerId, p) {
         .append("input")
         .classed("form-control attr-inputs", true)
         .attr("type", "text")
+        .attr("id", "attr-input-" + k)
         .attr("value", attrValue);
         // .attr("aria-label", "Default")
         // .attr("aria-describedby", "inputGroup-sizing-default");
@@ -522,7 +477,7 @@ function createUpdatePopover(gvd, viewId, layerId, p) {
           .classed("btn btn-default", true)
           .attr("id", updateBtnName)
           .attr("type", "button")
-          .attr("updateAttr", directMappedColNames[k])
+          .attr("updateAttr", updateAttributes[k])
           .style("margin-top", "20px")
           .html("Save");
   }
@@ -541,8 +496,67 @@ function createUpdatePopover(gvd, viewId, layerId, p) {
   for (let i=0; i < updateBtnIds.length; i++) {
     let btnObj = d3.select(`#${updateBtnIds[i]}`);
     let updateAttr = btnObj.attr("updateAttr");
+    let inputId = "#attr-input-" + i;
     btnObj.on("click", function(d) {
-      handleUpdateButton(gvd, viewId, canvasId, layerId, tableName, updateAttr, directMappedColNames);
+      console.log(`update button was clicked with attr: ${updateAttr}`);
+      let attrValue = d3.select(inputId).property("value");
+      console.log(`new attr value of field: ${updateAttr} is -> ${attrValue}`);
+      const viewClass = ".view_" + viewId;
+      let newAttrValues = [];
+      let objectKV = {};
+      console.log(`data p: ${JSON.stringify(p)} and direct mapped cols: ${JSON.stringify(directMappedColNames)}`);
+      // d3.selectAll(".attr-inputs").each(function(d,i) {
+      //     newAttrValues.push(d3.select(this).property("value"));
+      // });
+      for (let i=0; i < directMappedColNames.length; i++) {
+        let colName = directMappedColNames[i];
+        newAttrValues.push(p[colName]);
+      }
+      for (let i = 0; i < directMappedColNames.length; i++) {
+        let colName = directMappedColNames[i];
+        objectKV[colName] = newAttrValues[i];
+      }
+      objectKV[updateAttr] = attrValue;
+
+      console.log(`column names -> ${directMappedColNames}`);
+      console.log(`new attr values -> ${JSON.stringify(objectKV)}`);
+
+
+      // reverse function code
+      const reverseFuncString = 
+        gvd.curCanvas.layers[layerId].transform.reverseFunctions[
+          updateAttr
+        ];
+      console.log(
+        `reverse function string for attr: ${updateAttr} in layer: ${layerId} is ${reverseFuncString}`
+      );
+
+      const reverseFunc = Function(reverseFuncString)();
+      let width = gvd.curCanvas.w;
+      let height = gvd.curCanvas.h;
+      console.log(`width of cur layer is: ${width} and height is: ${height}`);
+      objectKV = reverseFunc(objectKV, width, height);
+      console.log(`attr values after reverse are -> JSON.stringify(objectKV)`);
+
+
+      // TODO: update UI with new data, while DB gets update asynchronously 
+      // what if DB doesn't get update?
+      const projName = globalVar.project.name;
+      doDBUpdate(viewId, canvasId, layerId, tableName, objectKV, projName);
+      // re-load dynamic data from db
+      getCurCanvas(viewId);
+      if (!gvd.animation) {
+          var curViewport = d3
+              .select(viewClass + ".mainsvg:not(.static)")
+              .attr("viewBox")
+              .split(" ");
+          RefreshDynamicLayers(
+              viewId,
+              curViewport[0],
+              curViewport[1]
+          );
+      }
+      removePopovers(viewId);
     });
   }
   
@@ -699,7 +713,7 @@ function registerJumps(viewId, svg, layerId) {
 
               // if update option selected, set up new popover with options for changing all 
               updateJumpOption.on("click", function(d) {
-                createUpdatePopover(gvd, viewId, layerId, d);
+                createUpdatePopover(gvd, viewId, layerId, p);
               });
             }
             

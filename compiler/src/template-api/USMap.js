@@ -55,9 +55,9 @@ function USMap(args_) {
 function getUSMapTransformFunc(transformName) {
     //------------Transforms--------------------
     /*
-      SELECT cs.name, cs.state_id, cs.total_dem_votes, cs.total_votes, (cs.total_dem_votes / (cs.total_votes+0.01)) as rate,
-        cs.geomstr FROM (SELECT s.name, s.state_id, s.total_votes, SUM(c.dem_votes) as total_dem_votes, s.geomstr
-        FROM state s LEFT JOIN county c on c.state_id = s.state_id
+      SELECT cs.name, cs.state_id, cs.total_dem_votes, cs.total_rep_votes, cs.total_votes, (cs.total_dem_votes / (cs.total_votes+0.01)) as rate,
+       cs.geomstr FROM (SELECT s.name, s.state_id, s.total_votes, SUM(c.dem_votes) as total_dem_votes, SUM(c.rep_votes) as total_rep_votes, s.geomstr
+       FROM state s LEFT JOIN county c on c.state_id = s.state_id
         GROUP BY s.name, s.state_id, s.total_votes, s.geomstr) as cs;
     */
     function stateMapTransformFunc(row, width, height) {
@@ -65,10 +65,10 @@ function getUSMapTransformFunc(transformName) {
         var name = row[0];
         var stateId = row[1];
         var demVotes = row[2];
-        var totalVotes = row[3];
-        var repVotes = totalVotes - demVotes;
-        var rate = row[4] * 100.0;
-        var geomstr = row[5];
+        var repVotes = row[3];
+        var totalVotes = row[4];
+        var rate = row[5] * 100.0;
+        var geomstr = row[6];
 
         var projectionStr = "REPLACE_ME_projection";
         var projection;
@@ -141,7 +141,7 @@ function getUSMapTransformFunc(transformName) {
     }
 
     /*
-      SELECT name, county_id, dem_votes, total_votes,
+      SELECT name, county_id, dem_votes, rep_votes, total_votes, 
       (dem_votes / (total_votes+0.01)) as rate, geomstr FROM county;
     */
     function countyMapTransformFunc(row, width, height) {
@@ -149,10 +149,10 @@ function getUSMapTransformFunc(transformName) {
         var name = row[0];
         var countyId = row[1];
         var demVotes = row[2];
-        var totalVotes = row[3];
-        var repVotes = totalVotes - demVotes;
-        var rate = row[4] * 100.0;
-        var geomstr = row[5];
+        var repVotes = row[3];
+        var totalVotes = row[4];
+        var rate = row[5] * 100.0;
+        var geomstr = row[6];
 
         var projectionStr = "REPLACE_ME_projection";
         var projection;
