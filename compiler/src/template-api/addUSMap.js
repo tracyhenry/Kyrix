@@ -12,7 +12,7 @@ FROM state s
 LEFT JOIN county c on c.state_id = s.state_id
 GROUP BY s.name, s.state_id, s.total_votes, s.geomstr) as cs;`;
 
-const countyQuery = `SELECT name, county_id, dem_votes, rep_votes, total_votes, (dem_votes / (total_votes+0.01)) as rate, geomstr FROM county;`;
+const countyQuery = `SELECT name, state_id, county_id, dem_votes, rep_votes, total_votes, (dem_votes / (total_votes+0.01)) as rate, geomstr FROM county;`;
 
 /**
  * Add a USMap template object to a project
@@ -190,6 +190,7 @@ function addUSMap(usmap, args) {
             "bbox_w": null,
             "bbox_h": null,
             "name": null,
+            "state_id": null,
             "county_id": null,
             "dem_votes": function (oldRow, width, height) {
               let newRow = oldRow;
