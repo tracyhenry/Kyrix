@@ -46,6 +46,13 @@ public class IndexHandler implements HttpHandler {
             else if (path.contains(".jpg"))
                 Server.sendResponse(
                         httpExchange, HttpsURLConnection.HTTP_OK, content, len, "image/jpg");
+            else if (path.contains(".js"))
+                Server.sendResponse(
+                        httpExchange,
+                        HttpsURLConnection.HTTP_OK,
+                        content,
+                        len,
+                        "application/javascript");
             else Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, content, len);
         } catch (Exception e) {
             e.printStackTrace();

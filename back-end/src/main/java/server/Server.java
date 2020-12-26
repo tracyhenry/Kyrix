@@ -281,6 +281,7 @@ public class Server {
             httpExchange.sendResponseHeaders(HttpsURLConnection.HTTP_NO_CONTENT, -1);
             return;
         }
+        httpExchange.getResponseHeaders().add("Content-Type", "text/plain");
         sendResponse(httpExchange, responseCode, response.getBytes(), response.getBytes().length);
     }
 

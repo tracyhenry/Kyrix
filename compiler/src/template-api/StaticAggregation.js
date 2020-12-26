@@ -995,7 +995,7 @@ function getRenderer(type) {
                         return (
                             ((d.kyrixBarCurH - d.kyrixAggValue) /
                                 d.kyrixBarTotalH) *
-                            500
+                            800
                         );
                     })
                     .duration(function(d) {
