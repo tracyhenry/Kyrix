@@ -447,12 +447,11 @@ function addSSV(ssv, args) {
     return {pyramid: curPyramid, view: args.view ? args.view : view};
 }
 
-const stateQuery = `SELECT cs.name, cs.state_id, cs.total_dem_votes, cs.total_rep_votes, cs.total_votes, (cs.total_dem_votes / (cs.total_votes+0.01)) as rate, cs.geomstr
-FROM 
-(SELECT s.name, s.state_id, s.total_votes, SUM(c.dem_votes) as total_dem_votes, SUM(c.rep_votes) as total_rep_votes, s.geomstr
-FROM state s
-LEFT JOIN county c on c.state_id = s.state_id
-GROUP BY s.name, s.state_id, s.total_votes, s.geomstr) as cs;`;
+const stateQuery = `SELECT cs.name, cs.state_id, cs.total_dem_votes, cs.total_rep_votes,
+  cs.total_votes, (cs.total_dem_votes / (cs.total_votes+0.01)) as rate, cs.geomstr
+  FROM (SELECT s.name, s.state_id, s.total_votes, SUM(c.dem_votes) as total_dem_votes, SUM(c.rep_votes) as total_rep_votes, s.geomstr
+  FROM state s LEFT JOIN county c on c.state_id = s.state_id
+  GROUP BY s.name, s.state_id, s.total_votes, s.geomstr) as cs;`;
 
 const countyQuery = `SELECT name, state_id, county_id, dem_votes, rep_votes, total_votes, (dem_votes / (total_votes+0.01)) as rate, geomstr FROM county;`;
 
@@ -653,6 +652,8 @@ function addUSMap(usmap, args) {
           true
         );
         var countyBoundaryLayer = new Layer(countyMapTransform, false);
+        console.log(`transform dependency func: ${countyBoundaryLayer.addTransformDependency}`);
+        countyBoundaryLayer.addTransformDependency(stateBoundaryLayer);
         countyMapCanvas.addLayer(countyBoundaryLayer);
         countyBoundaryLayer.addPlacement({
             centroid_x: "col:bbox_x",

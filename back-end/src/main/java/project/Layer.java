@@ -19,6 +19,8 @@ public class Layer implements Serializable {
     private String ssvId, usmapId;
     private String indexerType;
     private boolean allowUpdates;
+    private String canvasId;
+    private String id;
 
     public Transform getTransform() {
         return transform;
@@ -72,6 +74,14 @@ public class Layer implements Serializable {
         return indexerType;
     }
 
+    public String getCanvasId() {
+        return canvasId;
+    }
+
+    public String getId() {
+        return id;
+    }
+
     public String getColStr(String tableName) throws SQLException, ClassNotFoundException {
 
         String colListStr = "";
@@ -104,6 +114,10 @@ public class Layer implements Serializable {
                 + usmapId
                 + ", allowUpdates="
                 + allowUpdates
+                + ", canvasId="
+                + canvasId
+                + ", id="
+                + id
                 + '}';
     }
 }

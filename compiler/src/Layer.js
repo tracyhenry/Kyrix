@@ -26,7 +26,10 @@ function Layer(transform, isStatic) {
     this.indexerType = "";
     this.ssvId = "";
     this.usmapId = "";
+    // these fields used for updates
     this.allowUpdates = false;
+    this.canvasId = -1;
+    this.id = -1;
 }
 
 /**
@@ -119,6 +122,10 @@ function setAllowUpdates() {
   this.allowUpdates = true;
 }
 
+function addTransformDependency(otherLayer) {
+  this.transform.dependencies.push([otherLayer.canvasId, otherLayer.id.toString()]);
+}
+
 // define prototype
 Layer.prototype = {
     addPlacement,
@@ -129,6 +136,7 @@ Layer.prototype = {
     setUSMapId,
     setIndexerType,
     setAllowUpdates,
+    addTransformDependency,
 };
 
 // exports

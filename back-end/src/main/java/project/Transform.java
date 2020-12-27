@@ -21,6 +21,7 @@ public class Transform implements Serializable {
     private ArrayList<String> columnNames, queriedColumnNames = null;
     private Map<String, String> reverseFunctions;
     private boolean separable;
+    private ArrayList<ArrayList<String>> dependencies;
 
     public String getId() {
         return id;
@@ -36,6 +37,10 @@ public class Transform implements Serializable {
 
     public String getDbsource() {
         return dbsource;
+    }
+
+    public ArrayList<ArrayList<String>> getDependencies() {
+        return dependencies;
     }
 
     public String getTransformFunc() {
@@ -98,6 +103,8 @@ public class Transform implements Serializable {
                 + columnNames
                 + ", separable="
                 + separable
+                + ", dependencies="
+                + dependencies
                 + '}';
     }
 }
