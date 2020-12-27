@@ -254,7 +254,7 @@ public class UpdateRequestHandler implements HttpHandler {
             String transDb = projName;
             String baseTransQuery = trans.getQuery();
             baseTransQuery = baseTransQuery.replaceAll(";", "");
-            String keyCondition = generateKeySubQuery(objectAttrs, attrColumnTypes, keyColumns, true);
+            String keyCondition = generateKeySubQuery(objectAttrs, baseAttrColTypes, keyColumns, true);
             keyCondition += ";";
             baseTransQuery += keyCondition;
             System.out.println("db=" + transDb + " - query=" + baseTransQuery);
@@ -285,11 +285,11 @@ public class UpdateRequestHandler implements HttpHandler {
               assert(transformedRow.size() == trans.getColumnNames().size());
               ArrayList<String> transformedColNames = trans.getColumnNames();
               HashMap<String,String> transformedColMap = zipLists(transformedColNames, transformedRow);
-              String rerunTransformQuery = createUpdateQuery(tableName, transformedColMap, attrColumnTypes, keyColumns, true);
+              String rerunTransformQuery = createUpdateQuery(tableName, transformedColMap, attrColumnTypes, keyColumns, false);
 
               System.out.println();
               System.out.println("[UpdateRequestHandler] re-run transform query: " +  rerunTransformQuery);
-              stmt.executeUpdate(updateQuery);
+              stmt.executeUpdate(rerunTransformQuery);
             }
             
 
