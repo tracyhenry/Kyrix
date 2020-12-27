@@ -46,6 +46,107 @@ public class UpdateRequestHandler implements HttpHandler {
         gson = new GsonBuilder().create();
     }
 
+    private static HashMap<String, String> zipLists(ArrayList<String> attrNames, ArrayList<String> attrVals) {
+      assert(attrNames.size() == attrVals.size());
+      HashMap<String, String> attrMap = new HashMap<String,String>();
+      for (int i=0; i < attrNames.size(); i++) {
+        String name = attrNames.get(i);
+        String val = attrVals.get(i);
+        attrMap.put(name, val);
+      }
+      return attrMap;
+    }
+
+    private String generateKeySubQuery(HashMap<String,String> objectAttrs, HashMap<String,String> attrColumnTypes, ArrayList<String> keyColumns, boolean isTransformQuery) {
+      String keyCondition;
+      if (isTransformQuery) {
+        keyCondition = " WHERE ";
+      } else {
+        keyCondition = " WHERE t.";
+      }
+
+      int i = 0;
+      for (String key : keyColumns) {
+        String keyColumnType = attrColumnTypes.get(key);
+        switch (keyColumnType) {
+            case "double precision":
+                keyCondition += key + "=" + objectAttrs.get(key);
+                break;
+            case "integer":
+                keyCondition += key + "=" + objectAttrs.get(key);
+                break;
+            case "text":
+                keyCondition += key + "='" + objectAttrs.get(key) + "'";  
+                break;
+            default:
+                // default is same as text column, most common
+                keyCondition += key + "='" + objectAttrs.get(key) + "'";  
+                break;
+        }
+        if (i < (keyColumns.size() - 1)) {
+          if (isTransformQuery) {
+            keyCondition += " AND ";
+          } else {
+            keyCondition += " AND t.";
+          }
+        }
+        i++;
+      }
+
+      return keyCondition;
+    }
+
+    private String createUpdateQuery(String tableName,  HashMap<String, String> objectAttrs, HashMap<String, String> attrColumnTypes, ArrayList<String> keyColumns, boolean isTransform) {
+      String colName;
+      String colType;
+      Set<String> attrNames = objectAttrs.keySet();
+      String updateQuery = 
+                "UPDATE " + tableName + " as t SET ";
+      String restQuery = "";
+      String valuesSubQuery = "(";
+      String columnSubQuery = "c(";
+      Iterator<String> attrNameIterator = attrNames.iterator();
+      while (attrNameIterator.hasNext()) {
+          colName = attrNameIterator.next();
+          colType = attrColumnTypes.get(colName);
+          restQuery += colName + "=" + "c." + colName;
+
+          columnSubQuery += colName;
+          switch (colType) {
+            case "double precision":
+                valuesSubQuery += objectAttrs.get(colName);
+                break;
+            case "integer":
+                valuesSubQuery += objectAttrs.get(colName);
+                break;
+            case "text":
+                valuesSubQuery += "'" + objectAttrs.get(colName) + "'";  
+                break;
+            default:
+                // default is same as text column, most common
+                valuesSubQuery += "'" + objectAttrs.get(colName) + "'";  
+                break;
+          }
+          if (attrNameIterator.hasNext()) {
+              restQuery += ", ";
+              columnSubQuery += ", ";
+              valuesSubQuery += ", ";
+          }
+      }
+      valuesSubQuery += ")";
+      columnSubQuery += ")";
+      // add subqueries to update query
+      restQuery += " FROM (values " + valuesSubQuery + " )";
+      restQuery += " AS " + columnSubQuery; 
+      String keyCondition = generateKeySubQuery(objectAttrs, attrColumnTypes, keyColumns, isTransform);
+      restQuery += keyCondition;
+
+      restQuery += ";";
+      updateQuery += restQuery;
+
+      return updateQuery;
+    } 
+
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         System.out.println("Serving /update");
@@ -72,37 +173,13 @@ public class UpdateRequestHandler implements HttpHandler {
             String projectJSON = br.readLine();
             UpdateRequest updateRequest = gson.fromJson(projectJSON, UpdateRequest.class);
 
-            // HashMap<String, String> map = new HashMap<String, String>();
-            // JSONObject jObject = new JSONObject(body);
-            // Iterator<?> keys = jObject.keys();
-            // while( keys.hasNext() ){
-            //     String key = (String)keys.next();
-            //     String value = jObject.getString(key); 
-            //     map.put(key, value);
-            // }
-
-            // canvasId = map.get("canvasId").toString();
-            // layerId = map.get("layerId").toString();
-            // keyColumns = map.get("primaryKeyColumn").toString();
-            // baseTable = map.get("baseTable").toString();
-            // projName = map.get("projectName").toString();
             canvasId = updateRequest.getCanvasId();
             layerId = updateRequest.getLayerId();
             keyColumns = updateRequest.getKeyColumns();
             objectAttrs = updateRequest.getObjectAttributes();
             baseTable = updateRequest.getBaseTable();
             projName = updateRequest.getProjectName();
-             // String rawAttributes = map.get("objectAttributes").toString();
 
-            // System.out.println("attributes string ->" + rawAttributes);
-            // HashMap<String, String> objectAttrs = new HashMap<String, String>();
-            // JSONObject attrJson = new JSONObject(rawAttributes);
-            // Iterator<?> attrKeys = attrJson.keys();
-            // while ( attrKeys.hasNext() ) {
-            //     String key = (String)attrKeys.next();
-            //     String value = attrJson.getString(key);
-            //     objectAttrs.put(key, value);
-            // }
             System.out.println("object attrs: " + objectAttrs);
 
             String tableName = "bbox_" + Main.getProject().getName()
@@ -148,114 +225,10 @@ public class UpdateRequestHandler implements HttpHandler {
             }
             System.out.println("base column types -> " + baseAttrColTypes);
 
-            String updateQuery = 
-                "UPDATE " + tableName + " as t SET ";
-            String baseUpdateQuery = "UPDATE " + baseTable + " as t SET "; 
-            String restQuery = "";
-            String baseRestQuery = "";
-            String valuesSubQuery = "(";
-            String baseValuesSubQuery = "(";
-            String columnSubQuery = "c(";
-            String baseColumnSubQuery = "c(";
-            String keyCondition = "";
-            Iterator<String> attrNameIterator = attrNames.iterator();
-            while (attrNameIterator.hasNext()) {
-                colName = attrNameIterator.next();
-                colType = attrColumnTypes.get(colName);
-                baseColType = baseAttrColTypes.get(colName);
-                restQuery += colName + "=" + "c." + colName;
-                baseRestQuery += colName + "=" + "c." + colName;
+            String updateQuery = createUpdateQuery(tableName, objectAttrs, attrColumnTypes, keyColumns, false);
+            String baseUpdateQuery = createUpdateQuery(baseTable, objectAttrs, baseAttrColTypes, keyColumns, false);
 
-                columnSubQuery += colName;
-                baseColumnSubQuery += colName;
-                switch (colType) {
-                  case "double precision":
-                      valuesSubQuery += objectAttrs.get(colName);
-                      break;
-                  case "text":
-                      valuesSubQuery += "'" + objectAttrs.get(colName) + "'";  
-                      break;
-                  default:
-                      // default is same as text column, most common
-                      valuesSubQuery += "'" + objectAttrs.get(colName) + "'";  
-                      break;
-                }
-                switch (baseColType) {
-                  case "integer":
-                    baseValuesSubQuery += objectAttrs.get(colName);
-                    break;
-                  case "text":
-                    baseValuesSubQuery += "'" + objectAttrs.get(colName) + "'";
-                    break;
-                  default:
-                    valuesSubQuery += "'" + objectAttrs.get(colName) + "'";  
-                    break;
-                }
-                if (attrNameIterator.hasNext()) {
-                    restQuery += ", ";
-                    baseRestQuery += ", ";
-                    columnSubQuery += ", ";
-                    baseColumnSubQuery += ", ";
-                    valuesSubQuery += ", ";
-                    baseValuesSubQuery += ", ";
-                }
-            }
-            valuesSubQuery += ")";
-            columnSubQuery += ")";
-            baseValuesSubQuery += ")";
-            baseColumnSubQuery += ")";
-            // add subqueries to update query
-            restQuery += " FROM (values " + valuesSubQuery + " )";
-            restQuery += " AS " + columnSubQuery; 
-            restQuery += " WHERE t.";
-            keyCondition += " WHERE ";
-            baseRestQuery += " FROM (values " + baseValuesSubQuery + " )";
-            baseRestQuery += " AS " + baseColumnSubQuery;
-            baseRestQuery += " WHERE t.";
-
-            int i = 0;
-            for (String key : keyColumns) {
-              String keyColumnType = attrColumnTypes.get(key);
-              switch (keyColumnType) {
-                  case "double precision":
-                      restQuery += key + "=" + objectAttrs.get(key);
-                      break;
-                  case "text":
-                      restQuery += key + "='" + objectAttrs.get(key) + "'";  
-                      break;
-                  default:
-                      // default is same as text column, most common
-                      restQuery += key + "='" + objectAttrs.get(key) + "'";  
-                      break;
-              }
-              String baseKeyColType = baseAttrColTypes.get(key);
-              switch (baseKeyColType) {
-                case "integer":
-                  baseRestQuery += key + "=" + objectAttrs.get(key);
-                  keyCondition += key + "=" + objectAttrs.get(key);
-                  break;
-                case "text":
-                  baseRestQuery += key + "='" + objectAttrs.get(key) + "'";
-                  keyCondition += key + "='" + objectAttrs.get(key) + "'";
-                  break;
-                default:
-                  baseRestQuery += key + "='" + objectAttrs.get(key) + "'";
-                  keyCondition += key + "='" + objectAttrs.get(key) + "'";
-                  break;
-              }
-
-              if (i < (keyColumns.size() - 1)) {
-                restQuery += " AND t.";
-                baseRestQuery += " AND t.";
-                keyCondition += " AND ";
-              }
-              i++;
-            }
             
-            restQuery += ";";
-            updateQuery += restQuery;
-            baseRestQuery += ";";
-            baseUpdateQuery += baseRestQuery;
             // baseUpdateQuery += restQuery;
             System.out.println("Kyrix Index Update Query: " + updateQuery);
             stmt.executeUpdate(updateQuery);
@@ -281,6 +254,7 @@ public class UpdateRequestHandler implements HttpHandler {
             String transDb = projName;
             String baseTransQuery = trans.getQuery();
             baseTransQuery = baseTransQuery.replaceAll(";", "");
+            String keyCondition = generateKeySubQuery(objectAttrs, attrColumnTypes, keyColumns, true);
             keyCondition += ";";
             baseTransQuery += keyCondition;
             System.out.println("db=" + transDb + " - query=" + baseTransQuery);
@@ -290,9 +264,6 @@ public class UpdateRequestHandler implements HttpHandler {
             boolean isNullTransform = trans.getTransformFunc().equals("");
             int numColumn = rs.getMetaData().getColumnCount();
 
-
-
-
             while (rs.next()) {
 
               // count log - important to increment early so modulo-zero doesn't trigger on first
@@ -301,7 +272,7 @@ public class UpdateRequestHandler implements HttpHandler {
   
               // get raw row
               ArrayList<String> curRawRow = new ArrayList<>();
-              for (i = 1; i <= numColumn; i++)
+              for (int i = 1; i <= numColumn; i++)
                   curRawRow.add(rs.getString(i) == null ? "" : rs.getString(i));
   
               // step 3: run transform function on this tuple
@@ -311,79 +282,13 @@ public class UpdateRequestHandler implements HttpHandler {
               System.out.println("[UpdateRequestHandler] re-running transform, row: "
                                    + rowCount + " has values: " + transformedRow);
               System.out.println("[UpdateRequestHandler] column names are: " + trans.getColumnNames());
-
-
-              updateQuery = 
-                "UPDATE " + tableName + " as t SET ";
-              restQuery = "";
-              valuesSubQuery = "(";
-              columnSubQuery = "c(";
-              keyCondition = "";
               assert(transformedRow.size() == trans.getColumnNames().size());
-              Iterator<String> colIterator = trans.getColumnNames().iterator();
-              int colNum = 0;
-              while (colIterator.hasNext()) {
-                  colName = colIterator.next();
-                  System.out.println();
-                  System.out.println("[re-run tranform] col name-> " + colName);
-                  colType = attrColumnTypes.get(colName);
-                  System.out.println("[re-run tranform] col type-> " + colType);
-                  restQuery += colName + "=" + "c." + colName;
-                  String colValue = transformedRow.get(colNum);
+              ArrayList<String> transformedColNames = trans.getColumnNames();
+              HashMap<String,String> transformedColMap = zipLists(transformedColNames, transformedRow);
+              String rerunTransformQuery = createUpdateQuery(tableName, transformedColMap, attrColumnTypes, keyColumns, true);
 
-                  columnSubQuery += colName;
-                  switch (colType) {
-                    case "double precision":
-                        valuesSubQuery += colValue;
-                        break;
-                    case "text":
-                        valuesSubQuery += "'" + colValue + "'";  
-                        break;
-                    default:
-                        // default is same as text column, most common
-                        valuesSubQuery += "'" + colValue + "'";  
-                        break;
-                  }
-                  if (colIterator.hasNext()) {
-                      restQuery += ", ";
-                      columnSubQuery += ", ";
-                      valuesSubQuery += ", ";
-                  }
-                  colNum++;
-              }
-              valuesSubQuery += ")";
-              columnSubQuery += ")";
-              // add subqueries to update query
-              restQuery += " FROM (values " + valuesSubQuery + " )";
-              restQuery += " AS " + columnSubQuery; 
-              restQuery += " WHERE t.";
-
-              i = 0;
-              for (String key : keyColumns) {
-                String keyColumnType = attrColumnTypes.get(key);
-                switch (keyColumnType) {
-                    case "double precision":
-                        restQuery += key + "=" + objectAttrs.get(key);
-                        break;
-                    case "text":
-                        restQuery += key + "='" + objectAttrs.get(key) + "'";  
-                        break;
-                    default:
-                        // default is same as text column, most common
-                        restQuery += key + "='" + objectAttrs.get(key) + "'";  
-                        break;
-                }
-
-                if (i < (keyColumns.size() - 1)) {
-                  restQuery += " AND t.";
-                }
-                i++;
-              }
-              
-              restQuery += ";";
-              updateQuery += restQuery;
               System.out.println();
-              System.out.println("[UpdateRequestHandler] re-run transform query: " +  updateQuery);
+              System.out.println("[UpdateRequestHandler] re-run transform query: " +  rerunTransformQuery);
               stmt.executeUpdate(updateQuery);
             }
             
