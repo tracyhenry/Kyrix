@@ -22,9 +22,10 @@
     "license": "ISC",
     "devDependencies": {},
     "dependencies": {
+        "ajv": "^6.12.6",
         "d3": "^4.12.2",
+        "lodash.clonedeep": "^4.5.0",
         "mysql": "^2.15.0",
-        "pg": "^7.4.3",
-        "ajv": "^6.12.6"
+        "pg": "^7.4.3"
     }
 }
