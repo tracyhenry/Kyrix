@@ -14,6 +14,8 @@ function getFuncParamNames(func) {
     return result;
 }
 
+
+
 /**
  * Constructor for a data transform.
  * @param {string} query - a SQL query. The result of this query is fed as input to the transform function.
@@ -100,6 +102,7 @@ function Transform(
             console.log(this.query);
         }
         this.separable = query["separable"] || true;
+        this.dependencies = [];
         return;
     }
 
@@ -144,6 +147,7 @@ function Transform(
     this.separable = separable;
     this.filterableColumnNames =
         filterableColumnNames == null ? [] : filterableColumnNames;
+    this.dependencies = [];
 }
 
 defaultEmptyTransform = new Transform("", "", "", [], true);
@@ -151,5 +155,5 @@ defaultEmptyTransform = new Transform("", "", "", [], true);
 // exports
 module.exports = {
     Transform,
-    defaultEmptyTransform
+    defaultEmptyTransform,
 };

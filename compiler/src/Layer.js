@@ -28,6 +28,8 @@ function Layer(transform, isStatic) {
     this.usmapId = "";
     this.staticAggregationId = "";
     this.allowUpdates = false;
+    this.canvasId = -1;
+    this.id = -1;
 }
 
 /**
@@ -124,6 +126,10 @@ function setIndexerType(indexerType) {
     this.indexerType = indexerType;
 }
 
+function addTransformDependency(otherLayer) {
+  this.transform.dependencies.push([otherLayer.canvasId, otherLayer.id.toString()]);
+}
+
 // define prototype
 Layer.prototype = {
     addPlacement,
@@ -133,7 +139,8 @@ Layer.prototype = {
     setSSVId,
     setUSMapId,
     setStaticAggregationId,
-    setIndexerType
+    setIndexerType,
+    addTransformDependency,
 };
 
 // exports

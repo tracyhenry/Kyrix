@@ -55,8 +55,12 @@ function USMap(args_) {
 function getUSMapTransformFunc(transformName) {
     //------------Transforms--------------------
     /*
-      SELECT cs.name, cs.state_id, cs.total_dem_votes, cs.total_rep_votes, cs.total_votes, (cs.total_dem_votes / (cs.total_votes+0.01)) as rate,
-       cs.geomstr FROM (SELECT s.name, s.state_id, s.total_votes, SUM(c.dem_votes) as total_dem_votes, SUM(c.rep_votes) as total_rep_votes, s.geomstr
+      SELECT cs.name, cs.state_id, cs.total_dem_votes,
+       cs.total_rep_votes, cs.total_votes,
+        (cs.total_dem_votes / (cs.total_votes+0.01)) as rate,
+       cs.geomstr FROM (SELECT s.name, s.state_id, s.total_votes,
+         SUM(c.dem_votes) as total_dem_votes, 
+         SUM(c.rep_votes) as total_rep_votes, s.geomstr
        FROM state s LEFT JOIN county c on c.state_id = s.state_id
         GROUP BY s.name, s.state_id, s.total_votes, s.geomstr) as cs;
     */
