@@ -1,60 +1,40 @@
 const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
-const setPropertiesIfNotExists = require("./Utilities")
-    .setPropertiesIfNotExists;
+const formatAjvErrorMessage = require("./Utilities").formatAjvErrorMessage;
+const fs = require("fs");
+const cloneDeep = require("lodash.clonedeep");
 
 /**
  * Constructor of an SSV object
  * @param args
  * @constructor
  */
-function SSV(args) {
-    if (args == null) args = {};
-
-    /******************************
-     * check clusterMode is correct
-     ******************************/
-    if (
-        !("marks" in args) ||
-        !"cluster" in args.marks ||
-        !("mode" in args.marks.cluster)
-    )
+function SSV(args_) {
+    // verify against schema
+    // defaults are assigned at the same time
+    var args = cloneDeep(args_);
+    var schema = JSON.parse(
+        fs.readFileSync("../../src/template-api/json-schema/SSV.json")
+    );
+    var ajv = new require("ajv")({useDefaults: true});
+    ajv.addKeyword("typeofFunction", {
+        compile: () => data => data instanceof Function
+    });
+    var validator = ajv.compile(schema);
+    var valid = validator(args);
+    if (!valid)
         throw new Error(
-            "Constructing SSV: cluster mode (marks.cluster.mode) missing."
+            "Constructing SSV: " + formatAjvErrorMessage(validator.errors[0])
         );
-    var allClusterModes = new Set([
-        "custom",
-        "circle",
-        "contour",
-        "heatmap",
-        "radar",
-        "pie"
-    ]);
-    if (!allClusterModes.has(args.marks.cluster.mode))
-        throw new Error("Constructing SSV: unsupported cluster mode.");
 
-    /**************************************************************
-     * augment args with optional stuff that is omitted in the spec
-     **************************************************************/
-    if (!("config" in args)) args.config = {};
-    if (!("hover" in args.marks)) args.marks.hover = {};
-    if (!("legend" in args)) args.legend = {};
-    if (!("aggregate" in args.marks.cluster))
-        args.marks.cluster.aggregate = {dimensions: [], measures: []};
-    if (!("dimensions" in args.marks.cluster.aggregate))
-        args.marks.cluster.aggregate.dimensions = [];
-    if (!("measures" in args.marks.cluster.aggregate))
-        args.marks.cluster.aggregate.measures = [];
+    /*******************************************************************************
+     * check constraints/add defaults that can't be easily expressed by json-schema
+     *******************************************************************************/
+    // no limit in the query
+    if (args.data.query.toLowerCase().includes("limit"))
+        throw new Error("Constructing SSV: LIMIT is not allowed in data.query");
 
     // succinct object notation of the measures
     if (!("length" in args.marks.cluster.aggregate.measures)) {
-        if (
-            !("fields" in args.marks.cluster.aggregate.measures) ||
-            !("function" in args.marks.cluster.aggregate.measures)
-        )
-            throw new Error(
-                "Constructing SSV: fields or function not found" +
-                    "in the object notation of args.marks.cluster.aggregate.measures."
-            );
         var measureArray = [];
         for (
             var i = 0;
@@ -72,126 +52,6 @@ function SSV(args) {
         args.marks.cluster.aggregate.measures = measureArray;
     }
 
-    /*********************
-     * check required args
-     *********************/
-    var requiredArgs = [
-        ["data", "query"],
-        ["data", "db"],
-        ["layout", "x", "field"],
-        ["layout", "y", "field"],
-        ["layout", "z", "field"],
-        ["layout", "z", "order"]
-    ];
-    var requiredArgsTypes = [
-        "string",
-        "string",
-        "string",
-        "string",
-        "string",
-        "string"
-    ];
-    for (var i = 0; i < requiredArgs.length; i++) {
-        var curObj = args;
-        for (var j = 0; j < requiredArgs[i].length; j++)
-            if (!(requiredArgs[i][j] in curObj))
-                throw new Error(
-                    "Constructing SSV: " +
-                        requiredArgs[i].join(".") +
-                        " missing."
-                );
-            else curObj = curObj[requiredArgs[i][j]];
-        if (typeof curObj !== requiredArgsTypes[i])
-            throw new Error(
-                "Constructing SSV: " +
-                    requiredArgs[i].join(".") +
-                    " must be typed " +
-                    requiredArgsTypes[i] +
-                    "."
-            );
-        if (requiredArgsTypes[i] == "string")
-            if (curObj.length == 0)
-                throw new Error(
-                    "Constructing SSV: " +
-                        requiredArgs[i].join(".") +
-                        " cannot be an empty string."
-                );
-    }
-
-    /*******************
-     * other constraints
-     *******************/
-    if (
-        args.layout.x.extent != null &&
-        (!Array.isArray(args.layout.x.extent) ||
-            args.layout.x.extent.length != 2 ||
-            typeof args.layout.x.extent[0] != "number" ||
-            typeof args.layout.x.extent[1] != "number")
-    )
-        throw new Error("Constructing SSV: malformed x.extent");
-    if (
-        args.layout.y.extent != null &&
-        (!Array.isArray(args.layout.y.extent) ||
-            args.layout.y.extent.length != 2 ||
-            typeof args.layout.y.extent[0] != "number" ||
-            typeof args.layout.y.extent[1] != "number")
-    )
-        throw new Error("Constructing SSV: malformed y.extent");
-    if (args.layout.geo != null) {
-        if (!("level" in args.layout.geo))
-            throw new Error(
-                "Constructing SSV: zoom level needs to be specified in layout.geo."
-            );
-        if (!("center" in args.layout.geo))
-            throw new Error(
-                "Constructing SSV: viewport center needs to be specified in layout.geo."
-            );
-        if (args.layout.x.extent != null || args.layout.y.extent != null)
-            throw new Error(
-                "Constructing SSV: extent shouldn't exist when layout.geo exists."
-            );
-        if (args.layout.geo.level < 0 || args.layout.geo.level > 19)
-            throw new Error(
-                "Constructing SSV: geo initial zoom level must be between 0 and 19."
-            );
-        if (!Array.isArray(args.layout.geo.center))
-            throw new Error(
-                "Constructing SSV: geo center must be specified as an array with two float numbers."
-            );
-        if (
-            args.layout.geo.center[0] < -90 ||
-            args.layout.geo.center[0] > 90 ||
-            args.layout.geo.center[1] < -180 ||
-            args.layout.geo.center[1] > 180
-        )
-            throw new Error(
-                "Constructing SSV: invalid lat/lon specified in layout.geo.center."
-            );
-    }
-    if (
-        "axis" in args.marks &&
-        (args.layout.x.extent == null || args.layout.y.extent == null)
-    )
-        throw new Error(
-            "Constructing SSV: raw data domain needs to be specified for rendering an axis."
-        );
-    if (
-        args.marks.cluster.mode == "custom" &&
-        !("custom" in args.marks.cluster)
-    )
-        throw new Error(
-            "Constructing SSV: object renderer (marks.cluster.object) missing."
-        );
-    if (
-        (args.marks.cluster.mode == "radar" ||
-            args.marks.cluster.mode == "circle" ||
-            args.marks.cluster.mode == "heatmap" ||
-            args.marks.cluster.mode == "contour") &&
-        args.marks.cluster.aggregate.dimensions.length > 0
-    )
-        throw new Error(
-            "Constructing SSV: dimension columns (args.marks.cluster.aggregate.dimensions) not allowed for the given cluster mode."
-        );
     if (
         (args.marks.cluster.mode == "circle" ||
             args.marks.cluster.mode == "heatmap" ||
@@ -204,26 +64,6 @@ function SSV(args) {
                 args.marks.cluster.mode +
                 " mode."
         );
-    for (var i = 0; i < args.marks.cluster.aggregate.dimensions.length; i++) {
-        if (!("field" in args.marks.cluster.aggregate.dimensions[i]))
-            throw new Error(
-                "Constructing SSV: field not found in aggregate dimensions."
-            );
-        if (!("domain" in args.marks.cluster.aggregate.dimensions[i]))
-            throw new Error(
-                "Constructing SSV: domain not found in aggregate dimensions."
-            );
-    }
-    for (var i = 0; i < args.marks.cluster.aggregate.measures.length; i++) {
-        if (!("field" in args.marks.cluster.aggregate.measures[i]))
-            throw new Error(
-                "Constructing SSV: field not found in aggregate measures."
-            );
-        if (!("function" in args.marks.cluster.aggregate.measures[i]))
-            throw new Error(
-                "Constructing SSV: function not found in aggregate measures."
-            );
-    }
     if (args.marks.cluster.mode == "radar")
         for (var i = 0; i < args.marks.cluster.aggregate.measures.length; i++)
             if (!("extent" in args.marks.cluster.aggregate.measures[i]))
@@ -242,75 +82,16 @@ function SSV(args) {
             throw new Error(
                 "Constructing SSV: rankList and tooltip cannot be specified together."
             );
-        if (!("mode" in args.marks.hover.rankList))
-            throw new Error(
-                "Constructing SSV: hover rankList mode (marks.hover.rankList.mode) is missing."
-            );
-        if (args.marks.hover.rankList.mode == "custom") {
-            if (!("custom" in args.marks.hover.rankList))
-                throw new Error(
-                    "Constructing SSV: custom hover rankList renderer (marks.hover.rankList.custom) is missing."
-                );
-            if (typeof args.marks.hover.rankList.custom != "function")
-                throw new Error(
-                    "Constructing SSV: hover object renderer (marks.cluster.hover.rankList.custom) is not a function."
-                );
-            if (
-                !("config" in args.marks.hover.rankList) ||
-                !("bboxH" in args.marks.hover.rankList.config) ||
-                !("bboxW" in args.marks.hover.rankList.config)
-            )
-                throw new Error(
-                    "Constructing SSV: custom hover ranklist bounding box size missing."
-                );
-        }
-        if (
-            args.marks.cluster.mode == "custom" &&
-            !("selector" in args.marks.hover)
-        )
-            throw new Error(
-                "Constructing SSV: hover selector (marks.hover.selector) missing for the custom cluster mode."
-            );
-        if (
-            args.marks.hover.rankList.mode == "tabular" &&
-            !("fields" in args.marks.hover.rankList)
-        )
-            throw new Error(
-                "Constructing SSV: fields for tabular hover rankList (marks.hover.rankList.fields) is missing."
-            );
-    }
-    if ("boundary" in args.marks.hover) {
-        if (
-            !(args.marks.hover.boundary == "convexhull") &&
-            !(args.marks.hover.boundary == "bbox")
-        )
-            throw new Error(
-                "Constructing SSV: unrecognized hover boundary type " +
-                    args.marks.hover.boundary
-            );
-        if (
-            args.marks.cluster.mode == "custom" &&
-            !("selector" in args.marks.hover)
-        )
-            throw new Error(
-                "Constructing SSV: hover selector (marks.hover.selector) missing for the custom cluster mode."
-            );
     }
     if ("tooltip" in args.marks.hover) {
-        if (!("columns" in args.marks.hover.tooltip))
-            throw new Error(
-                "Constructing SSV: tooltip columns (marks.hover.tooltip.columns) missing."
-            );
-        if (!Array.isArray(args.marks.hover.tooltip.columns))
-            throw new Error(
-                "Constructing SSV: tooltip columns (marks.hover.tooltip.columns) must be an array."
-            );
         if (
             "aliases" in args.marks.hover.tooltip &&
-            !Array.isArray(args.marks.hover.tooltip.aliases)
+            args.marks.hover.tooltip.aliases.length !==
+                args.marks.hover.tooltip.columns.length
         )
             throw new Error(
-                "Constructing SSV: tooltip aliases (marks.hover.tooltip.aliases) must be an array."
+                "Constructing SSV: tooltip aliases (marks.hover.tooltip.aliases) " +
+                    "must have the same number of elements as columns (marks.hover.tooltip.columns)."
             );
     }
 
@@ -318,48 +99,16 @@ function SSV(args) {
      * setting generic params
      ************************/
     this.aggKeyDelimiter = "__";
-    this.loX = args.layout.x.extent != null ? args.layout.x.extent[0] : null;
-    this.loY = args.layout.y.extent != null ? args.layout.y.extent[0] : null;
-    this.hiX = args.layout.x.extent != null ? args.layout.x.extent[1] : null;
-    this.hiY = args.layout.y.extent != null ? args.layout.y.extent[1] : null;
+    this.loX = "extent" in args.layout.x ? args.layout.x.extent[0] : null;
+    this.loY = "extent" in args.layout.y ? args.layout.y.extent[0] : null;
+    this.hiX = "extent" in args.layout.x ? args.layout.x.extent[1] : null;
+    this.hiY = "extent" in args.layout.y ? args.layout.y.extent[1] : null;
 
     /************************
      * setting cluster params
      ************************/
-    this.clusterParams =
-        "config" in args.marks.cluster ? args.marks.cluster.config : {};
-    setPropertiesIfNotExists(this.clusterParams, {
-        numberFormat: ".2~s"
-    });
-    if (args.marks.cluster.mode == "circle")
-        setPropertiesIfNotExists(this.clusterParams, {
-            circleMinSize: 30,
-            circleMaxSize: 70
-        });
-    if (args.marks.cluster.mode == "contour")
-        setPropertiesIfNotExists(this.clusterParams, {
-            contourBandwidth: 30,
-            contourRadius: 30 * 4,
-            contourColorScheme: "interpolateViridis",
-            contourOpacity: 1
-        });
-    if (args.marks.cluster.mode == "heatmap")
-        setPropertiesIfNotExists(this.clusterParams, {
-            heatmapRadius: 80,
-            heatmapOpacity: 1
-        });
-    if (args.marks.cluster.mode == "radar")
-        setPropertiesIfNotExists(this.clusterParams, {
-            radarRadius: 80,
-            radarTicks: 5
-        });
-    if (args.marks.cluster.mode == "pie")
-        setPropertiesIfNotExists(this.clusterParams, {
-            pieInnerRadius: 1,
-            pieOuterRadius: 80,
-            pieCornerRadius: 5,
-            padAngle: 0.05
-        });
+    this.clusterParams = args.marks.cluster.config;
+    this.clusterParams.numberFormat = args.config.numberFormat;
 
     /********************************
      * setting aggregation parameters
@@ -408,8 +157,7 @@ function SSV(args) {
     this.hoverParams = {};
     if ("rankList" in args.marks.hover) {
         // get in everything in config
-        if ("config" in args.marks.hover.rankList)
-            this.hoverParams = args.marks.hover.rankList.config;
+        this.hoverParams = args.marks.hover.rankList.config;
 
         // mode: currently either tabular or custom
         this.hoverParams.hoverRankListMode = args.marks.hover.rankList.mode;
@@ -425,27 +173,15 @@ function SSV(args) {
                 args.marks.hover.rankList.custom;
 
         // topk is 1 by default if unspecified
-        this.hoverParams.topk =
-            "topk" in args.marks.hover.rankList
-                ? args.marks.hover.rankList.topk
-                : 1;
+        this.hoverParams.topk = args.marks.hover.rankList.topk;
 
         // orientation of custom ranks
         this.hoverParams.hoverRankListOrientation =
-            "orientation" in args.marks.hover.rankList
-                ? args.marks.hover.rankList.orientation
-                : "vertical";
-
-        // less important cosmetic parameters are in marks.hover.rankList.config
-        // and we set default values here if unspecified:
-        setPropertiesIfNotExists(this.hoverParams, {
-            // hoverTableCellWidth: 100  <-- change
-            // hoverTableCellHeight: 50  <-- change
-        });
+            args.marks.hover.rankList.orientation;
     }
     if ("boundary" in args.marks.hover)
         this.hoverParams.hoverBoundary = args.marks.hover.boundary;
-    this.topk = this.hoverParams.topk != null ? this.hoverParams.topk : 0;
+    this.topk = "topk" in this.hoverParams ? this.hoverParams.topk : 0;
     this.hoverSelector =
         "selector" in args.marks.hover ? args.marks.hover.selector : null;
     this.tooltipColumns = this.tooltipAliases = null;
@@ -461,8 +197,7 @@ function SSV(args) {
      ***************************/
     // TODO: legend params for different templates
     this.legendParams = {};
-    this.legendParams.legendTitle =
-        "legendTitle" in args.config ? args.config.legendTitle : "Legend";
+    this.legendParams.legendTitle = args.config.legendTitle;
     if ("legendDomain" in args.config)
         this.legendParams.legendDomain = args.config.legendDomain;
 
@@ -470,7 +205,7 @@ function SSV(args) {
      * setting axis parameters
      ***************************/
     this.axisParams = {};
-    this.axis = "axis" in args.config ? args.config.axis : false;
+    this.axis = args.config.axis;
     this.axisParams.xAxisTitle =
         "xAxisTitle" in args.config
             ? args.config.xAxisTitle
@@ -546,19 +281,16 @@ function SSV(args) {
     }
     this.clusterCustomRenderer =
         "custom" in args.marks.cluster ? args.marks.cluster.custom : null;
-    this.columnNames = "columnNames" in args.data ? args.data.columnNames : [];
-    this.numLevels = "numLevels" in args.config ? args.config.numLevels : 10;
-    this.topLevelWidth =
-        "topLevelWidth" in args.config ? args.config.topLevelWidth : 1000;
-    this.topLevelHeight =
-        "topLevelHeight" in args.config ? args.config.topLevelHeight : 1000;
+    this.columnNames = args.data.columnNames;
+    this.numLevels = args.config.numLevels;
+    this.topLevelWidth = args.config.topLevelWidth;
+    this.topLevelHeight = args.config.topLevelHeight;
     if ("geo" in args.layout) {
         (this.loX = 0), (this.hiX = this.topLevelWidth);
         (this.loY = 0), (this.hiY = this.topLevelHeight);
     }
-    this.mapBackground =
-        "geo" in args.layout && ("map" in args.config ? args.config.map : true);
-    this.zoomFactor = "zoomFactor" in args.config ? args.config.zoomFactor : 2;
+    this.mapBackground = args.config.map;
+    this.zoomFactor = args.config.zoomFactor;
     this.overlap =
         "overlap" in args.layout
             ? args.layout.overlap

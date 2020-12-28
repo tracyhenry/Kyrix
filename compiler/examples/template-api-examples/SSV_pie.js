@@ -73,7 +73,8 @@ var ssv = {
         topLevelHeight: 1000,
         axis: true,
         legendTitle: "Age Groups of Soccer Players in FIFA 2020",
-        legendDomain: ["Under 20", "Under 23", "Under 29", "Older"]
+        legendDomain: ["Under 20", "Under 23", "Under 29", "Older"],
+        numberFormat: ".2~s"
     }
 };
 

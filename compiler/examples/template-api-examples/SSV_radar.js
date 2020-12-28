@@ -77,7 +77,8 @@ var ssv = {
     config: {
         topLevelWidth: 1600,
         topLevelHeight: 1000,
-        axis: true
+        axis: true,
+        numberFormat: ".2~s"
     }
 };
 

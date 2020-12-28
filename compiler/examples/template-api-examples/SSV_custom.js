@@ -44,8 +44,7 @@ var ssv = {
             }
         },
         hover: {
-            boundary: "convexhull",
-            selector: "*"
+            boundary: "convexhull"
         }
     },
     config: {
