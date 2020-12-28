@@ -21,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ArrayList;
@@ -55,6 +56,17 @@ public class UpdateRequestHandler implements HttpHandler {
         attrMap.put(name, val);
       }
       return attrMap;
+    }
+
+    private ArrayList<String> filterTransformColumns(Transform trans, ArrayList<String> columns) throws SQLException, ClassNotFoundException {
+      ArrayList<String> columnsInTable = new ArrayList<String>();
+      ArrayList<String> transColumns = trans.getColumnNames();
+      for (String col : columns) {
+        if (transColumns.contains(col)) {
+          columnsInTable.add(col);
+        }
+      }
+      return columnsInTable;
     }
 
     private String generateKeySubQuery(HashMap<String,String> objectAttrs, HashMap<String,String> attrColumnTypes, ArrayList<String> keyColumns, boolean isTransformQuery) {
@@ -291,7 +303,62 @@ public class UpdateRequestHandler implements HttpHandler {
               System.out.println("[UpdateRequestHandler] re-run transform query: " +  rerunTransformQuery);
               stmt.executeUpdate(rerunTransformQuery);
             }
-            
+
+            // re-run higher level transforms
+            ArrayList<ArrayList<String>> dependencies = trans.getDependencies();
+            // dependencies are structures like [[1, "usmap0_state"]] where 1 is the layerId and "usmap0_state" is the canvasId
+            System.out.println();
+            for (ArrayList<String> dep : dependencies) {
+              assert(dep.size() == 2);
+              String depLayerId = dep.get(0);
+              String depCanvasId = dep.get(1);
+              String depTableName = "bbox_" + Main.getProject().getName()
+                                     + "_" + depCanvasId + "layer" + depLayerId;
+              System.out.println("processing dependency with layerId: " + depLayerId + " and canvasId: " + depCanvasId + " and tableName: " + depTableName);
+              
+              // TODO?: recurse through dependent transforms to propagate changes to current tranform
+              // this only handles having one level of dependency...
+              Canvas depCanvas = Main.getProject().getCanvas(depCanvasId);
+              int depLayerIdNum = Integer.parseInt(depLayerId);
+              Layer depLayer = depCanvas.getLayers().get(depLayerIdNum);
+              Transform depTrans = depLayer.getTransform();
+              String depTransDb = projName;
+              String depTransQuery = depTrans.getQuery();
+              depTransQuery = depTransQuery.replaceAll(";", "");
+              ArrayList<String> depKeyColumns = filterTransformColumns(depTrans, keyColumns);
+              String depKeyCondition = generateKeySubQuery(objectAttrs, baseAttrColTypes, depKeyColumns, true);
+              depKeyCondition += ";";
+              depTransQuery += depKeyCondition;
+              System.out.println("[dependent transform] db=" + transDb + " - query=" + depTransQuery);
+              Statement depDBStmt = DbConnector.getStmtByDbName(depTransDb, true);
+              rs = DbConnector.getQueryResultIterator(depDBStmt, depTransQuery);
+              if (!trans.getTransformFunc().equals("")) engine = setupNashorn(depTrans.getTransformFunc());
+              rowCount = 0;
+              isNullTransform = depTrans.getTransformFunc().equals("");
+              numColumn = rs.getMetaData().getColumnCount();
+              while (rs.next()) {
+                rowCount++;
+                ArrayList<String> preTransformRow = new ArrayList<>();
+
+                for (int i=1; i <= numColumn; i++) {
+                  System.out.println("[UpdateRequestHandler] transform attr: " + i + " has value: " + rs.getString(i));
+                  preTransformRow.add(rs.getString(i) == null ? "" : rs.getString(i));
+                }
+
+                ArrayList<String> transformedRow = isNullTransform ? preTransformRow : getTransformedRow(depCanvas, preTransformRow, engine);
+                System.out.println("[UpdateRequestHandler] running dependent transform for row: " + rowCount + " has values: " + transformedRow);
+                System.out.println("[UpdateRequestHandler] and column names are: " + depTrans.getColumnNames());
+                assert(transformedRow.size() == trans.getColumnNames().size());
+                HashMap<String,String> depTransformColMap = zipLists(depTrans.getColumnNames(), transformedRow);
+                String depTransUpdateQuery = createUpdateQuery(depTableName, depTransformColMap, attrColumnTypes, depKeyColumns, false);
+
+                System.out.println();
+                System.out.println("[UpdateRequestHandler] re-run dependent transform query: " + depTransUpdateQuery);
+                stmt.executeUpdate(depTransUpdateQuery);
+              }
+
+            }
+
 
 
             Map<String, Object> respMap = new HashMap<>();
