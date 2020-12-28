@@ -16,9 +16,8 @@ function SSV(args_) {
         fs.readFileSync("../../src/template-api/json-schema/SSV.json")
     );
     var ajv = new require("ajv")({useDefaults: true});
-    const CLASSES = {Function: Function};
-    ajv.addKeyword("instanceof", {
-        compile: schema => data => data instanceof CLASSES[schema]
+    ajv.addKeyword("typeofFunction", {
+        compile: () => data => data instanceof Function
     });
     var validator = ajv.compile(schema);
     var valid = validator(args);
@@ -27,9 +26,9 @@ function SSV(args_) {
             "Constructing SSV: " + formatAjvErrorMessage(validator.errors[0])
         );
 
-    /************************************************************************
-     * check constraints/add defaults that can't be expressed by json-schema
-     ************************************************************************/
+    /*******************************************************************************
+     * check constraints/add defaults that can't be easily expressed by json-schema
+     *******************************************************************************/
     // succinct object notation of the measures
     if (!("length" in args.marks.cluster.aggregate.measures)) {
         var measureArray = [];
@@ -50,36 +49,6 @@ function SSV(args_) {
     }
 
     // TODO: check that query doesn't have LIMIT
-    if ("geo" in args.layout) {
-        if (args.layout.x.extent != null || args.layout.y.extent != null)
-            throw new Error(
-                "Constructing SSV: extent shouldn't exist when layout.geo exists."
-            );
-    }
-    if (
-        "axis" in args.config &&
-        (args.layout.x.extent == null || args.layout.y.extent == null)
-    )
-        throw new Error(
-            "Constructing SSV: raw data domain needs to be specified for rendering an axis."
-        );
-    if (
-        args.marks.cluster.mode == "custom" &&
-        !("custom" in args.marks.cluster)
-    )
-        throw new Error(
-            "Constructing SSV: object renderer (marks.cluster.object) missing."
-        );
-    if (
-        (args.marks.cluster.mode == "radar" ||
-            args.marks.cluster.mode == "circle" ||
-            args.marks.cluster.mode == "heatmap" ||
-            args.marks.cluster.mode == "contour") &&
-        args.marks.cluster.aggregate.dimensions.length > 0
-    )
-        throw new Error(
-            "Constructing SSV: dimension columns (args.marks.cluster.aggregate.dimensions) not allowed for the given cluster mode."
-        );
     if (
         (args.marks.cluster.mode == "circle" ||
             args.marks.cluster.mode == "heatmap" ||
@@ -110,43 +79,6 @@ function SSV(args_) {
             throw new Error(
                 "Constructing SSV: rankList and tooltip cannot be specified together."
             );
-        if (args.marks.hover.rankList.mode == "custom") {
-            if (!("custom" in args.marks.hover.rankList))
-                throw new Error(
-                    "Constructing SSV: custom hover rankList renderer (marks.hover.rankList.custom) is missing."
-                );
-            if (
-                !("config" in args.marks.hover.rankList) ||
-                !("bboxH" in args.marks.hover.rankList.config) ||
-                !("bboxW" in args.marks.hover.rankList.config)
-            )
-                throw new Error(
-                    "Constructing SSV: custom hover ranklist bounding box size missing."
-                );
-        }
-        if (
-            args.marks.cluster.mode == "custom" &&
-            !("selector" in args.marks.hover)
-        )
-            throw new Error(
-                "Constructing SSV: hover selector (marks.hover.selector) missing for the custom cluster mode."
-            );
-        if (
-            args.marks.hover.rankList.mode == "tabular" &&
-            !("fields" in args.marks.hover.rankList)
-        )
-            throw new Error(
-                "Constructing SSV: fields for tabular hover rankList (marks.hover.rankList.fields) is missing."
-            );
-    }
-    if ("boundary" in args.marks.hover) {
-        if (
-            args.marks.cluster.mode == "custom" &&
-            !("selector" in args.marks.hover)
-        )
-            throw new Error(
-                "Constructing SSV: hover selector (marks.hover.selector) missing for the custom cluster mode."
-            );
     }
     if ("tooltip" in args.marks.hover) {
         if (
@@ -158,7 +90,6 @@ function SSV(args_) {
                 "Constructing SSV: tooltip aliases (marks.hover.tooltip.aliases) " +
                     "must have the same number of elements as columns (marks.hover.tooltip.columns)."
             );
-        // TODO repeated checks for selector in ranklist and boundary
     }
 
     /************************
