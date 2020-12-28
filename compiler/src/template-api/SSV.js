@@ -52,7 +52,6 @@ function SSV(args_) {
         args.marks.cluster.aggregate.measures = measureArray;
     }
 
-    // TODO: check that query doesn't have LIMIT
     if (
         (args.marks.cluster.mode == "circle" ||
             args.marks.cluster.mode == "heatmap" ||
@@ -289,9 +288,7 @@ function SSV(args_) {
         (this.loX = 0), (this.hiX = this.topLevelWidth);
         (this.loY = 0), (this.hiY = this.topLevelHeight);
     }
-    // TODO: check that if geo does not exist, map should be false
-    this.mapBackground =
-        "geo" in args.layout && ("map" in args.config ? args.config.map : true);
+    this.mapBackground = args.config.map;
     this.zoomFactor = args.config.zoomFactor;
     this.overlap =
         "overlap" in args.layout
