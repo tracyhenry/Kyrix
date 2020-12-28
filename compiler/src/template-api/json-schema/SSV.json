@@ -466,7 +466,8 @@
                             "enum": ["bbox", "convexhull"]
                         },
                         "selector": {
-                            "$ref": "#/definitions/nonEmptyString"
+                            "$ref": "#/definitions/nonEmptyString",
+                            "default": "*"
                         }
                     },
                     "additionalProperties": false,
@@ -474,35 +475,7 @@
                 }
             },
             "required": ["cluster"],
-            "additionalProperties": false,
-            "allOf": [
-                {
-                    "if": {
-                        "properties": {
-                            "cluster": {
-                                "properties": {
-                                    "mode": {
-                                        "enum": ["custom"]
-                                    }
-                                }
-                            },
-                            "hover": {
-                                "anyOf": [
-                                    {"required": ["rankList"]},
-                                    {"required": ["boundary"]}
-                                ]
-                            }
-                        }
-                    },
-                    "then": {
-                        "properties": {
-                            "hover": {
-                                "required": ["selector"]
-                            }
-                        }
-                    }
-                }
-            ]
+            "additionalProperties": false
         },
         "config": {
             "type": "object",
