@@ -29,6 +29,10 @@ function SSV(args_) {
     /*******************************************************************************
      * check constraints/add defaults that can't be easily expressed by json-schema
      *******************************************************************************/
+    // no limit in the query
+    if (args.data.query.toLowerCase().includes("limit"))
+        throw new Error("Constructing SSV: LIMIT is not allowed in data.query");
+
     // succinct object notation of the measures
     if (!("length" in args.marks.cluster.aggregate.measures)) {
         var measureArray = [];
