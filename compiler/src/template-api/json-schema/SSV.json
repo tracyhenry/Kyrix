@@ -323,10 +323,6 @@
                                     "maximum": 0.5,
                                     "default": 0.05
                                 },
-                                "numberFormat": {
-                                    "type": "string",
-                                    "default": ".2~s"
-                                },
                                 "clusterCount": {
                                     "type": "boolean",
                                     "default": false
@@ -524,6 +520,10 @@
                 "map": {
                     "type": "boolean",
                     "default": false
+                },
+                "numberFormat": {
+                    "type": "string",
+                    "default": "~s"
                 }
             },
             "additionalProperties": false,

@@ -108,6 +108,7 @@ function SSV(args_) {
      * setting cluster params
      ************************/
     this.clusterParams = args.marks.cluster.config;
+    this.clusterParams.numberFormat = args.config.numberFormat;
 
     /********************************
      * setting aggregation parameters
