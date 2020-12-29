@@ -192,15 +192,6 @@ function SSV(args_) {
     }
 
     /***************************
-     * setting legend parameters
-     ***************************/
-    // TODO: legend params for different templates
-    this.legendParams = {};
-    this.legendParams.legendTitle = args.config.legendTitle;
-    if ("legendDomain" in args.config)
-        this.legendParams.legendDomain = args.config.legendDomain;
-
-    /***************************
      * setting axis parameters
      ***************************/
     this.axisParams = {};
@@ -1426,8 +1417,8 @@ function getLegendRenderer() {
         var color = d3
             .scaleOrdinal(d3.schemeTableau10)
             .domain(
-                "legendDomain" in params
-                    ? params.legendDomain
+                "pieLegendDomain" in params
+                    ? params.pieLegendDomain
                     : params.aggDomain
             );
         var legendOrdinal = d3
@@ -1439,7 +1430,7 @@ function getLegendRenderer() {
             .shape("rect")
             //.orient("horizontal")
             .shapePadding(10)
-            .title(params.legendTitle)
+            .title(params.pieLegendTitle)
             .labelOffset(15)
             //.titleWidth(200)
             // .labelAlign("start")

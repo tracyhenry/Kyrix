@@ -324,6 +324,13 @@
                                     "maximum": 0.5,
                                     "default": 0.05
                                 },
+                                "pieLegendTitle": {
+                                    "$ref": "#/definitions/nonEmptyString",
+                                    "default": "Legend"
+                                },
+                                "pieLegendDomain": {
+                                    "$ref": "#/definitions/nonEmptyStringArray"
+                                },
                                 "dotSizeDomain": {
                                     "$ref": "#/definitions/twoNumberArray"
                                 },
@@ -571,13 +578,6 @@
                     "minimum": 1.1,
                     "maximum": 5,
                     "default": 2
-                },
-                "legendTitle": {
-                    "$ref": "#/definitions/nonEmptyString",
-                    "default": "Legend"
-                },
-                "legendDomain": {
-                    "$ref": "#/definitions/nonEmptyStringArray"
                 },
                 "map": {
                     "type": "boolean",
