@@ -17,10 +17,10 @@ sudo ./compile.sh SSV_circle.js                                                 
 Replace `circle` in the last line with `contour` or `custom` to see `SSV_circle` or `SSV_custom`. 
 
 ## FIFA video game SSVs
-Files `SSV_radar.js`, `SSV_pie.js` and `SSV_dot.js` correspond to three different SSVs of players in the video game FIFA20. On the left is a radar-chart-based SSV where clusters of players are represented using radar charts that show aggregated player stats on 8 axes. In the middle is a pie-chart-based SSV where each pie represents the age group of a cluster of players. On the right is a simple dot-based SSV where each dot is a player, its size maps to the player's defensive rating and its color maps to the age group of the player. 
+Files `SSV_radar.js`, `SSV_pie.js` and `SSV_dot.js` correspond to three different SSVs of players in the video game FIFA20. In the top left is a radar-chart-based SSV where clusters of players are represented using radar charts that show aggregated player stats on 8 axes. In the top right  is a simple dot-based SSV where each dot is a player, its size maps to the player's defensive rating and its color maps to the age group of the player. In the bottom is a pie-chart-based SSV where each pie represents the age group of a cluster of players. 
 
 <p align="center">
-  <img src="https://media.giphy.com/media/JThqBUcoeCw2rhZB1k/giphy.gif" width="750" />
+  <img src="https://media.giphy.com/media/LdBGX7V5GqbUNU0iVw/giphy.gif" width="750" />
 </p>
 
 To get these three applications running, run the following commands:
