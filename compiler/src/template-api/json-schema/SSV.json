@@ -331,8 +331,14 @@
                                 "pieLegendDomain": {
                                     "$ref": "#/definitions/nonEmptyStringArray"
                                 },
+                                "dotSizeColumn": {
+                                    "$ref": "#/definitions/nonEmptyString"
+                                },
                                 "dotSizeDomain": {
                                     "$ref": "#/definitions/twoNumberArray"
+                                },
+                                "dotSizeLegendTitle": {
+                                    "$ref": "#/definitions/nonEmptyString"
                                 },
                                 "dotMaxSize": {
                                     "type": "integer",
@@ -340,10 +346,7 @@
                                     "maximum": 50,
                                     "default": 15
                                 },
-                                "dotSizeColumn": {
-                                    "$ref": "#/definitions/nonEmptyString"
-                                },
-                                "dotSizeLegendTitle": {
+                                "dotColorColumn": {
                                     "$ref": "#/definitions/nonEmptyString"
                                 },
                                 "dotColorDomain": {
@@ -353,9 +356,6 @@
                                     },
                                     "minItems": 1,
                                     "maxItems": 8
-                                },
-                                "dotColorColumn": {
-                                    "$ref": "#/definitions/nonEmptyString"
                                 },
                                 "dotColorLegendTitle": {
                                     "$ref": "#/definitions/nonEmptyString"
