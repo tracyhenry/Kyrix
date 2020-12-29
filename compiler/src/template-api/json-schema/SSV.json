@@ -241,29 +241,29 @@
                             "type": "object",
                             "properties": {
                                 "bboxW": {
-                                    "type": "number"
+                                    "type": "integer"
                                 },
                                 "bboxH": {
-                                    "type": "number"
+                                    "type": "integer"
                                 },
                                 "circleMinSize": {
-                                    "type": "number",
+                                    "type": "integer",
                                     "minimum": 30,
                                     "maximum": 100,
                                     "default": 30
                                 },
                                 "circleMaxSize": {
-                                    "type": "number",
+                                    "type": "integer",
                                     "minimum": 30,
                                     "maximum": 100,
                                     "default": 70
                                 },
                                 "contourBandwidth": {
-                                    "type": "number",
+                                    "type": "integer",
                                     "default": 30
                                 },
                                 "contourRadius": {
-                                    "type": "number",
+                                    "type": "integer",
                                     "default": 120
                                 },
                                 "contourColorScheme": {
@@ -277,7 +277,7 @@
                                     "default": 1
                                 },
                                 "heatmapRadius": {
-                                    "type": "number",
+                                    "type": "integer",
                                     "minimum": 30,
                                     "maximum": 120,
                                     "default": 80
@@ -289,31 +289,31 @@
                                     "default": 1
                                 },
                                 "radarRadius": {
-                                    "type": "number",
+                                    "type": "integer",
                                     "minimum": 30,
                                     "maximum": 120,
                                     "default": 80
                                 },
                                 "radarTicks": {
-                                    "type": "number",
+                                    "type": "integer",
                                     "minimum": 2,
                                     "maximum": 10,
                                     "default": 5
                                 },
                                 "pieInnerRadius": {
-                                    "type": "number",
+                                    "type": "integer",
                                     "minimum": 0,
                                     "maximum": 40,
                                     "default": 1
                                 },
                                 "pieOuterRadius": {
-                                    "type": "number",
+                                    "type": "integer",
                                     "minimum": 20,
                                     "maximum": 120,
                                     "default": 80
                                 },
                                 "pieCornerRadius": {
-                                    "type": "number",
+                                    "type": "integer",
                                     "minimum": 0,
                                     "maximum": 15,
                                     "default": 5
@@ -335,7 +335,7 @@
                                     "$ref": "#/definitions/twoNumberArray"
                                 },
                                 "dotMaxSize": {
-                                    "type": "number",
+                                    "type": "integer",
                                     "minimum": 5,
                                     "maximum": 50,
                                     "default": 15
@@ -344,8 +344,7 @@
                                     "$ref": "#/definitions/nonEmptyString"
                                 },
                                 "dotSizeLegendTitle": {
-                                    "$ref": "#/definitions/nonEmptyString",
-                                    "default": "Point Size"
+                                    "$ref": "#/definitions/nonEmptyString"
                                 },
                                 "dotColorDomain": {
                                     "type": "array",
@@ -359,8 +358,7 @@
                                     "$ref": "#/definitions/nonEmptyString"
                                 },
                                 "dotColorLegendTitle": {
-                                    "$ref": "#/definitions/nonEmptyString",
-                                    "default": "Point Color"
+                                    "$ref": "#/definitions/nonEmptyString"
                                 },
                                 "clusterCount": {
                                     "type": "boolean",
@@ -368,7 +366,59 @@
                                 }
                             },
                             "default": {},
-                            "additionalProperties": false
+                            "additionalProperties": false,
+                            "allOf": [
+                                {
+                                    "if": {
+                                        "anyOf": [
+                                            {
+                                                "required": ["dotSizeDomain"]
+                                            },
+                                            {
+                                                "required": [
+                                                    "dotSizeLegendTitle"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "then": {
+                                        "required": ["dotSizeColumn"]
+                                    }
+                                },
+                                {
+                                    "if": {
+                                        "required": ["dotSizeColumn"]
+                                    },
+                                    "then": {
+                                        "required": ["dotSizeDomain"]
+                                    }
+                                },
+                                {
+                                    "if": {
+                                        "anyOf": [
+                                            {
+                                                "required": ["dotColorDomain"]
+                                            },
+                                            {
+                                                "required": [
+                                                    "dotColorLegendTitle"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "then": {
+                                        "required": ["dotColorColumn"]
+                                    }
+                                },
+                                {
+                                    "if": {
+                                        "required": ["dotColorColumn"]
+                                    },
+                                    "then": {
+                                        "required": ["dotColorDomain"]
+                                    }
+                                }
+                            ]
                         }
                     },
                     "required": ["mode"],
@@ -431,12 +481,6 @@
                                                 "maxItems": 0
                                             }
                                         }
-                                    },
-                                    "config": {
-                                        "required": [
-                                            "dotSizeColumn",
-                                            "dotColorColumn"
-                                        ]
                                     }
                                 }
                             }
