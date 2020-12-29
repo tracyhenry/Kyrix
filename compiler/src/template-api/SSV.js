@@ -1029,7 +1029,7 @@ function getLayerRenderer() {
                 if (i == 0 || arr[i] !== arr[i - 1])
                     params.dotColorDomain.push(arr[i]);
         }
-        var circleColorScale = d3.scaleOrdinal(
+        var dotColorScale = d3.scaleOrdinal(
             params.dotColorDomain,
             d3.schemeTableau10
         );
@@ -1041,7 +1041,7 @@ function getLayerRenderer() {
             .attr("cx", d => +d.cx)
             .attr("cy", d => +d.cy)
             .style("fill-opacity", 0)
-            .attr("stroke", d => circleColorScale(d[params.dotColorColumn]))
+            .attr("stroke", d => dotColorScale(d[params.dotColorColumn]))
             .style("stroke-width", "2px")
             .classed("kyrix-retainsizezoom", true);
     }
@@ -1416,12 +1416,13 @@ function getAxesRenderer() {
 
 function getLegendRenderer() {
     function pieLegendRendererBody() {
-        svg.append("g")
+        var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
+        var g = svg
+            .append("g")
             .attr("class", "legendOrdinal")
             .attr("transform", "translate(50,50) scale(2.0)");
 
-        var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
-        var params = args.renderingParams[rpKey];
         var color = d3
             .scaleOrdinal(d3.schemeTableau10)
             .domain(
@@ -1444,12 +1445,86 @@ function getLegendRenderer() {
             // .labelAlign("start")
             .scale(color);
 
-        svg.select(".legendOrdinal").call(legendOrdinal);
+        // add legend to g
+        g.call(legendOrdinal);
+    }
+
+    function dotLegendRendererBody() {
+        var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
+
+        // size legend
+        if (!("dotSizeDomain" in params))
+            params.dotSizeDomain = d3.extent(
+                data.map(d => +d[params.dotSizeColumn])
+            );
+        var dotSizeScale = d3
+            .scaleLinear()
+            .domain(params.dotSizeDomain)
+            .range([0, params.dotMaxSize]);
+        var legendSize = d3
+            .legendSize()
+            .scale(dotSizeScale)
+            .shape("circle")
+            .shapePadding(25)
+            .labelOffset(20)
+            .title(params.dotSizeLegendTitle)
+            .orient("horizontal");
+        var legendG = svg
+            .append("g")
+            .classed("ssv_dot_legend", true)
+            .style("opacity", 0.5)
+            .attr("transform", "translate(50, 0)");
+        legendG
+            .append("g")
+            .attr("transform", "translate(120, 20)")
+            .call(legendSize);
+
+        // color legend
+        if (!("dotColorDomain" in params)) {
+            params.dotColorDomain = [];
+            var arr = data.map(d => d.dotColorColumn).sort();
+            for (var i = 0; i < arr.length; i++)
+                if (i == 0 || arr[i] !== arr[i - 1])
+                    params.dotColorDomain.push(arr[i]);
+        }
+        var dotColorScale = d3.scaleOrdinal(
+            params.dotColorDomain,
+            d3.schemeTableau10
+        );
+        var legendColor = d3
+            .legendColor()
+            .shape("rect")
+            .shapePadding(5)
+            .title(params.dotColorLegendTitle)
+            .labelOffset(13)
+            .scale(dotColorScale);
+        legendG
+            .append("g")
+            .attr("transform", "translate(0, 20) scale(1)")
+            .call(legendColor);
+
+        // transparent rectangle to receive hover events
+        legendG
+            .append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", legendG.node().getBBox().width)
+            .attr("height", legendG.node().getBBox().height)
+            .style("opacity", 0)
+            .on("mouseover", function() {
+                d3.selectAll(".ssv_dot_legend").style("opacity", 1);
+            })
+            .on("mouseout", function() {
+                d3.selectAll(".ssv_dot_legend").style("opacity", 0.5);
+            });
     }
 
     var renderFuncBody = "";
     if (this.clusterMode == "pie")
         renderFuncBody = getBodyStringOfFunction(pieLegendRendererBody);
+    else if (this.clusterMode == "dot")
+        renderFuncBody = getBodyStringOfFunction(dotLegendRendererBody);
     return new Function("svg", "data", "args", renderFuncBody);
 }
 

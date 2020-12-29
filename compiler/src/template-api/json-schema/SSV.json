@@ -336,6 +336,10 @@
                                 "dotSizeColumn": {
                                     "$ref": "#/definitions/nonEmptyString"
                                 },
+                                "dotSizeLegendTitle": {
+                                    "$ref": "#/definitions/nonEmptyString",
+                                    "default": "Point Size"
+                                },
                                 "dotColorDomain": {
                                     "type": "array",
                                     "items": {
@@ -346,6 +350,10 @@
                                 },
                                 "dotColorColumn": {
                                     "$ref": "#/definitions/nonEmptyString"
+                                },
+                                "dotColorLegendTitle": {
+                                    "$ref": "#/definitions/nonEmptyString",
+                                    "default": "Point Color"
                                 },
                                 "clusterCount": {
                                     "type": "boolean",
