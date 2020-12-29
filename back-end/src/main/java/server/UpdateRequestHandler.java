@@ -192,8 +192,10 @@ public class UpdateRequestHandler implements HttpHandler {
             baseTable = updateRequest.getBaseTable();
             projName = updateRequest.getProjectName();
 
+            long startTime = System.currentTimeMillis();
             System.out.println("object attrs: " + objectAttrs);
 
+            long currTime = System.currentTimeMillis();
             String tableName = "bbox_" + Main.getProject().getName()
                                      + "_" + canvasId + "layer" + layerId;
             
@@ -247,7 +249,10 @@ public class UpdateRequestHandler implements HttpHandler {
             // stmt.close();
             System.out.println("Base table update query: " + baseUpdateQuery);
             baseStmt.executeUpdate(baseUpdateQuery);
-            baseStmt.close();
+
+            double midTime = System.currentTimeMillis() - startTime;
+            double midTimeSec = midTime / 1000.0;
+            System.out.println("updating up to re-running transform took: " + midTimeSec + " sec.");
 
             // now re-run transform on the relevant rows in the Kyrix index table
             // only update the rows that are selected by the key columns
@@ -260,8 +265,8 @@ public class UpdateRequestHandler implements HttpHandler {
             
             // re-run transform for the current layer
             // step 1: set up nashorn environment for running javascript code
-            NashornScriptEngine engine = null;
-            if (!trans.getTransformFunc().equals("")) engine = setupNashorn(trans.getTransformFunc());
+            NashornScriptEngine engine = setupMultipleTransformNashorn(trans);
+            int transformFuncId = 0;
 
             String transDb = projName;
             String baseTransQuery = trans.getQuery();
@@ -270,8 +275,8 @@ public class UpdateRequestHandler implements HttpHandler {
             keyCondition += ";";
             baseTransQuery += keyCondition;
             System.out.println("db=" + transDb + " - query=" + baseTransQuery);
-            Statement rawDBStmt = DbConnector.getStmtByDbName(transDb, true);
-            rs = DbConnector.getQueryResultIterator(rawDBStmt, baseTransQuery);
+            // Statement rawDBStmt = DbConnector.getStmtByDbName(transDb, true);
+            rs = DbConnector.getQueryResultIterator(baseStmt, baseTransQuery);
             int rowCount = 0;
             boolean isNullTransform = trans.getTransformFunc().equals("");
             int numColumn = rs.getMetaData().getColumnCount();
@@ -287,10 +292,15 @@ public class UpdateRequestHandler implements HttpHandler {
               for (int i = 1; i <= numColumn; i++)
                   curRawRow.add(rs.getString(i) == null ? "" : rs.getString(i));
   
+              long currLvlTime = System.currentTimeMillis();
               // step 3: run transform function on this tuple
               ArrayList<String> transformedRow =
-                      isNullTransform ? curRawRow : getTransformedRow(c, curRawRow, engine);
+                      isNullTransform ? curRawRow : getTransformedRow(c, curRawRow, engine, transformFuncId);
 
+              double currLvlDiff = System.currentTimeMillis() - currLvlTime;
+              double currLvlSec = currLvlDiff / 1000.0;
+              System.out.println("current level transform took: " + currLvlDiff + " ms and took: " + currLvlSec + " sec");
+              System.out.println();
               System.out.println("[UpdateRequestHandler] re-running transform, row: "
                                    + rowCount + " has values: " + transformedRow);
               System.out.println("[UpdateRequestHandler] column names are: " + trans.getColumnNames());
@@ -301,11 +311,17 @@ public class UpdateRequestHandler implements HttpHandler {
 
               System.out.println();
               System.out.println("[UpdateRequestHandler] re-run transform query: " +  rerunTransformQuery);
+              currLvlTime = System.currentTimeMillis();
               stmt.executeUpdate(rerunTransformQuery);
+              currLvlDiff = System.currentTimeMillis() - currLvlTime;
+              currLvlSec = currLvlDiff / 1000.0;
+              System.out.println("current level kyrix index update query took: " + currLvlDiff + " ms and took: " + currLvlSec + " sec");
+              System.out.println();
             }
 
             // re-run higher level transforms
             ArrayList<ArrayList<String>> dependencies = trans.getDependencies();
+            transformFuncId++;
             // dependencies are structures like [[1, "usmap0_state"]] where 1 is the layerId and "usmap0_state" is the canvasId
             System.out.println();
             for (ArrayList<String> dep : dependencies) {
@@ -330,9 +346,8 @@ public class UpdateRequestHandler implements HttpHandler {
               depKeyCondition += ";";
               depTransQuery += depKeyCondition;
               System.out.println("[dependent transform] db=" + transDb + " - query=" + depTransQuery);
-              Statement depDBStmt = DbConnector.getStmtByDbName(depTransDb, true);
-              rs = DbConnector.getQueryResultIterator(depDBStmt, depTransQuery);
-              if (!trans.getTransformFunc().equals("")) engine = setupNashorn(depTrans.getTransformFunc());
+              // Statement depDBStmt = DbConnector.getStmtByDbName(depTransDb, true);
+              rs = DbConnector.getQueryResultIterator(baseStmt, depTransQuery);
               rowCount = 0;
               isNullTransform = depTrans.getTransformFunc().equals("");
               numColumn = rs.getMetaData().getColumnCount();
@@ -345,7 +360,12 @@ public class UpdateRequestHandler implements HttpHandler {
                   preTransformRow.add(rs.getString(i) == null ? "" : rs.getString(i));
                 }
 
-                ArrayList<String> transformedRow = isNullTransform ? preTransformRow : getTransformedRow(depCanvas, preTransformRow, engine);
+                long depLvlTime = System.currentTimeMillis();
+                ArrayList<String> transformedRow = isNullTransform ? preTransformRow : getTransformedRow(depCanvas, preTransformRow, engine, transformFuncId);
+                double depLvlDiff = System.currentTimeMillis() - depLvlTime;
+                double depLvlSec = depLvlDiff / 1000.0;
+                System.out.println("higher level transform took: " + depLvlDiff + " ms and took: " + depLvlSec + " sec");
+                System.out.println();
                 System.out.println("[UpdateRequestHandler] running dependent transform for row: " + rowCount + " has values: " + transformedRow);
                 System.out.println("[UpdateRequestHandler] and column names are: " + depTrans.getColumnNames());
                 assert(transformedRow.size() == trans.getColumnNames().size());
@@ -354,13 +374,21 @@ public class UpdateRequestHandler implements HttpHandler {
 
                 System.out.println();
                 System.out.println("[UpdateRequestHandler] re-run dependent transform query: " + depTransUpdateQuery);
+                depLvlTime = System.currentTimeMillis();
                 stmt.executeUpdate(depTransUpdateQuery);
+                depLvlDiff = System.currentTimeMillis() - depLvlTime;
+                depLvlSec = depLvlDiff / 1000.0;
+                System.out.println("higher level kyrix index update query took: " + depLvlDiff + " ms and took: " + depLvlSec + " sec");
+                System.out.println();
               }
-
+              transformFuncId++;
             }
 
-
-
+            double timeDiff = System.currentTimeMillis() - currTime;
+            double timeSec = timeDiff / 1000.0;
+            System.out.println("Update took: " + timeDiff + " ms and took: " + timeSec + " sec");
+            stmt.close();
+            baseStmt.close();
             Map<String, Object> respMap = new HashMap<>();
             response = gson.toJson(respMap);
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
@@ -371,17 +399,58 @@ public class UpdateRequestHandler implements HttpHandler {
         }
     }
 
-    protected static NashornScriptEngine setupNashorn(String transformFunc) throws ScriptException {
+    protected NashornScriptEngine setupMultipleTransformNashorn(Transform trans) throws Exception {
+      NashornScriptEngine engine = null;
+
+      ArrayList<ArrayList<String>> dependencies = trans.getDependencies();
+      ArrayList<String> transformFuncs = new ArrayList<String>();
+      transformFuncs.add(trans.getTransformFunc());
+
+      for (ArrayList<String> dep : dependencies) {
+        assert(dep.size() == 2);
+        String depLayerId = dep.get(0);
+        String depCanvasId = dep.get(1);
+
+        System.out.println("initializing nashorn func with layerId: " + depLayerId + " and canvasId: " + depCanvasId);
+        
+        // TODO?: recurse through dependent transforms to propagate changes to current tranform
+        // this only handles having one level of dependency...
+        Canvas depCanvas = Main.getProject().getCanvas(depCanvasId);
+        int depLayerIdNum = Integer.parseInt(depLayerId);
+        Layer depLayer = depCanvas.getLayers().get(depLayerIdNum);
+        Transform depTrans = depLayer.getTransform();
+        transformFuncs.add(depTrans.getTransformFunc()); 
+      }
+
+      try {
+        engine = setupNashorn(transformFuncs);
+      } catch (Exception e) {
+        throw new Exception("nashorn initialization went wrong: " + e.getMessage());
+      }
+
+      return engine;
+    }
+
+    protected static NashornScriptEngine setupNashorn(ArrayList<String> transformFuncs) throws ScriptException {
 
       NashornScriptEngine engine =
               (NashornScriptEngine) new ScriptEngineManager().getEngineByName("nashorn");
+      System.out.println("creating d3 folder in: " + Config.d3Dir);
       FilesystemFolder rootFolder = FilesystemFolder.create(new File(Config.d3Dir), "UTF-8");
       Require.enable(engine, rootFolder);
 
       // register the data transform function with nashorn
       String script =
               "var d3 = require('d3');\n"; // TODO: let users specify all required d3 libraries.
-      script += "var trans = " + transformFunc + ";\n";
+      
+      String transformStrings = "";
+      int count = 0;
+      for (String transformFuncStr : transformFuncs) {
+        transformStrings += "var trans" + String.valueOf(count) + " = " + transformFuncStr + ";\n";
+        count++;
+      }
+      script += transformStrings;
+
       engine.eval(script);
 
       // get rendering parameters
@@ -392,15 +461,16 @@ public class UpdateRequestHandler implements HttpHandler {
 
     // run the transformed function on a row to get a transformed row
     protected static ArrayList<String> getTransformedRow(
-            Canvas c, ArrayList<String> row, NashornScriptEngine engine)
+            Canvas c, ArrayList<String> row, NashornScriptEngine engine, int funcIdx)
             throws ScriptException, NoSuchMethodException {
 
+        String funcName = "trans" + String.valueOf(funcIdx);
         // TODO: figure out why row.slice does not work. learn more about nashorn types
         ArrayList<String> transRow = new ArrayList<>();
         JSObject renderingParamsObj = (JSObject) engine.eval("JSON.parse(renderingParams)");
         String[] strArray =
                 (String[])
-                        engine.invokeFunction("trans", row, c.getW(), c.getH(), renderingParamsObj);
+                        engine.invokeFunction(funcName, row, c.getW(), c.getH(), renderingParamsObj);
         for (int i = 0; i < strArray.length; i++) transRow.add(strArray[i]);
 
         return transRow;
