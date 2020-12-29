@@ -53,10 +53,9 @@ function SSV(args_) {
     }
 
     if (
-        (args.marks.cluster.mode == "circle" ||
-            args.marks.cluster.mode == "heatmap" ||
-            args.marks.cluster.mode == "contour" ||
-            args.marks.cluster.mode == "pie") &&
+        ["circle", "heatmap", "contour", "pie"].includes(
+            args.marks.cluster.mode
+        ) &&
         args.marks.cluster.aggregate.measures.length > 1
     )
         throw new Error(
@@ -235,7 +234,10 @@ function SSV(args_) {
     else if (args.marks.cluster.mode == "radar")
         // tuned by hand :)
         this.bboxW = this.bboxH = 290;
-    else if (args.marks.cluster.mode == "pie") this.bboxW = this.bboxH = 290; // tuned by hand :)
+    else if (args.marks.cluster.mode == "pie") this.bboxW = this.bboxH = 290;
+    // tuned by hand :)
+    else if (args.marks.cluster.mode == "dot")
+        this.bboxW = this.bboxH = this.clusterParams.dotMaxSize * 2;
 
     // assign other fields
     this.query = args.data.query.toLowerCase();
@@ -721,7 +723,6 @@ function getLayerRenderer() {
         if (!data || data.length == 0) return;
         var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
         var params = args.renderingParams[rpKey];
-        var aggKeyDelimiter = params.aggKeyDelimiter;
         var g = svg.append("g");
         g.style("opacity", 0);
 
@@ -1004,6 +1005,47 @@ function getLayerRenderer() {
         var hoverSelector = ".piehover";
     }
 
+    function renderDotBody() {
+        var rpKey = "ssv_" + args.ssvId.substring(0, args.ssvId.indexOf("_"));
+        var params = args.renderingParams[rpKey];
+        var g = svg.append("g");
+        params.processClusterAgg(data, params);
+
+        // size scale
+        if (!("dotSizeDomain" in params))
+            params.dotSizeDomain = d3.extent(
+                data.map(d => +d[params.dotSizeColumn])
+            );
+        var dotSizeScale = d3
+            .scaleLinear()
+            .domain(params.dotSizeDomain)
+            .range([0, params.dotMaxSize]);
+
+        // color scale
+        if (!("dotColorDomain" in params)) {
+            params.dotColorDomain = [];
+            var arr = data.map(d => d.dotColorColumn).sort();
+            for (var i = 0; i < arr.length; i++)
+                if (i == 0 || arr[i] !== arr[i - 1])
+                    params.dotColorDomain.push(arr[i]);
+        }
+        var circleColorScale = d3.scaleOrdinal(
+            params.dotColorDomain,
+            d3.schemeTableau10
+        );
+
+        g.selectAll(".ssvdot")
+            .data(data)
+            .join("circle")
+            .attr("r", d => dotSizeScale(+d[params.dotSizeColumn]))
+            .attr("cx", d => +d.cx)
+            .attr("cy", d => +d.cy)
+            .style("fill-opacity", 0)
+            .attr("stroke", d => circleColorScale(d[params.dotColorColumn]))
+            .style("stroke-width", "2px")
+            .classed("kyrix-retainsizezoom", true);
+    }
+
     function regularHoverBody() {
         function convexRenderer(svg, d) {
             var line = d3
@@ -1270,6 +1312,9 @@ function getLayerRenderer() {
         renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     } else if (this.clusterMode == "pie") {
         renderFuncBody = getBodyStringOfFunction(renderPieBody);
+        renderFuncBody += getBodyStringOfFunction(regularHoverBody);
+    } else if (this.clusterMode == "dot") {
+        renderFuncBody = getBodyStringOfFunction(renderDotBody);
         renderFuncBody += getBodyStringOfFunction(regularHoverBody);
     }
     return new Function("svg", "data", "args", renderFuncBody);

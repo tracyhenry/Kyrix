@@ -159,7 +159,8 @@
                                 "contour",
                                 "heatmap",
                                 "radar",
-                                "pie"
+                                "pie",
+                                "dot"
                             ]
                         },
                         "aggregate": {
@@ -323,6 +324,29 @@
                                     "maximum": 0.5,
                                     "default": 0.05
                                 },
+                                "dotSizeDomain": {
+                                    "$ref": "#/definitions/twoNumberArray"
+                                },
+                                "dotMaxSize": {
+                                    "type": "number",
+                                    "minimum": 5,
+                                    "maximum": 50,
+                                    "default": 15
+                                },
+                                "dotSizeColumn": {
+                                    "$ref": "#/definitions/nonEmptyString"
+                                },
+                                "dotColorDomain": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "minItems": 1,
+                                    "maxItems": 8
+                                },
+                                "dotColorColumn": {
+                                    "$ref": "#/definitions/nonEmptyString"
+                                },
                                 "clusterCount": {
                                     "type": "boolean",
                                     "default": false
@@ -368,6 +392,36 @@
                                                 "maxItems": 0
                                             }
                                         }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "if": {
+                                "properties": {
+                                    "mode": {
+                                        "enum": ["dot"]
+                                    }
+                                }
+                            },
+                            "then": {
+                                "properties": {
+                                    "aggregate": {
+                                        "properties": {
+                                            "measures": {
+                                                "type": "array",
+                                                "maxItems": 0
+                                            },
+                                            "dimensions": {
+                                                "maxItems": 0
+                                            }
+                                        }
+                                    },
+                                    "config": {
+                                        "required": [
+                                            "dotSizeColumn",
+                                            "dotColorColumn"
+                                        ]
                                     }
                                 }
                             }
