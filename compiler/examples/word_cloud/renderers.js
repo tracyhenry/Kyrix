@@ -428,7 +428,6 @@ var wordCloudRendering = function(svg, data, args) {
     /**
      * Now Kyrix renderer starts
      */
-
     var g = svg.append("g");
     var words = d3Cloud()
         .words(data.map((d, i) => ({text: d.wordCol, value: i})))

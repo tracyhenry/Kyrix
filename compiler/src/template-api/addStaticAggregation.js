@@ -64,6 +64,16 @@ function addStaticAggregation(staticAggregation, args) {
             xAxisTitle: staticAggregation.axis.xTitle,
             yAxisTitle: staticAggregation.axis.yTitle
         });
+    else if (staticAggregation.type == "wordcloud")
+        rpDict[rpKey] = Object.assign({}, rpDict[rpKey], {
+            textFields: staticAggregation.textFields,
+            padding: staticAggregation.padding,
+            fontFamily: staticAggregation.cloud.fontFamily,
+            rotation: staticAggregation.cloud.rotation,
+            maxTextLength: staticAggregation.cloud.maxTextLength,
+            minTextSize: staticAggregation.cloud.minTextSize,
+            maxTextSize: staticAggregation.cloud.maxTextSize
+        });
     this.addRenderingParams(rpDict);
 
     // construct query

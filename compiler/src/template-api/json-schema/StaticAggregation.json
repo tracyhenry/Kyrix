@@ -60,7 +60,7 @@
             "additionalProperties": false
         },
         "type": {
-            "enum": ["pie", "treemap", "circlePack", "bar"]
+            "enum": ["pie", "treemap", "circlePack", "bar", "wordcloud"]
         },
         "tooltip": {
             "type": "object",
@@ -102,6 +102,7 @@
                     "type": "object"
                 }
             },
+            "default": {},
             "additionalProperties": false
         },
         "width": {
@@ -126,7 +127,7 @@
         "padding": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 15
+            "maximum": 30
         },
         "radius": {
             "type": "number",
@@ -141,6 +142,39 @@
                 },
                 "yTitle": {
                     "type": "string"
+                }
+            }
+        },
+        "cloud": {
+            "type": "object",
+            "properties": {
+                "fontFamily": {
+                    "type": "string",
+                    "minLength": 1,
+                    "default": "Impact"
+                },
+                "rotation": {
+                    "type": "array",
+                    "minItems": 1,
+                    "default": [0]
+                },
+                "maxTextLength": {
+                    "type": "integer",
+                    "minimum": 10,
+                    "maximum": 40,
+                    "default": 15
+                },
+                "minTextSize": {
+                    "type": "integer",
+                    "minimum": 10,
+                    "maximum": 40,
+                    "default": 15
+                },
+                "maxTextSize": {
+                    "type": "integer",
+                    "minimum": 10,
+                    "maximum": 100,
+                    "default": 60
                 }
             }
         }
@@ -186,6 +220,9 @@
                         "type": "null"
                     },
                     "axis": {
+                        "type": "null"
+                    },
+                    "cloud": {
                         "type": "null"
                     }
                 }
@@ -257,6 +294,9 @@
                     },
                     "axis": {
                         "type": "null"
+                    },
+                    "cloud": {
+                        "type": "null"
                     }
                 }
             }
@@ -297,8 +337,57 @@
                     },
                     "radius": {
                         "type": "null"
+                    },
+                    "cloud": {
+                        "type": "null"
                     }
                 }
+            }
+        },
+        {
+            "if": {
+                "properties": {
+                    "type": {
+                        "enum": ["wordcloud"]
+                    }
+                }
+            },
+            "then": {
+                "properties": {
+                    "query": {
+                        "properties": {
+                            "stackDimensions": {
+                                "type": "null"
+                            }
+                        }
+                    },
+                    "colorScheme": {
+                        "$ref": "#/definitions/categoricalColors",
+                        "default": "schemeTableau10"
+                    },
+                    "textFields": {
+                        "minItems": 1
+                    },
+                    "padding": {
+                        "default": 5
+                    },
+                    "radius": {
+                        "type": "null"
+                    },
+                    "axis": {
+                        "type": "null"
+                    },
+                    "cloud": {
+                        "default": {
+                            "fontFamily": "Impact",
+                            "rotation": [0],
+                            "maxTextLength": 15,
+                            "minTextSize": 15,
+                            "maxTextSize": 60
+                        }
+                    }
+                },
+                "required": ["textFields"]
             }
         }
     ]
