@@ -1473,18 +1473,18 @@ function getRenderer(type) {
             .range([params.minTextSize, params.maxTextSize]);
         var words = d3Cloud()
             .words(
-                data.map(d =>
-                    Object.assign(
+                data.map(d => {
+                    var t = params.textFields.map(p => d[p]).join(", ");
+                    return Object.assign(
                         {},
                         {data: d},
                         {
-                            text: params.textFields
-                                .map(p => d[p])
-                                .join(", ")
-                                .substring(0, params.maxTextLength)
+                            text:
+                                t.substring(0, params.maxTextLength) +
+                                (t.length > params.maxTextLength ? "..." : "")
                         }
-                    )
-                )
+                    );
+                })
             )
             .size([args.canvasW, args.canvasH - ysft])
             .rotate(() => {

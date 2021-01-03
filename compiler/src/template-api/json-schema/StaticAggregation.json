@@ -160,7 +160,7 @@
                 },
                 "maxTextLength": {
                     "type": "integer",
-                    "minimum": 10,
+                    "minimum": 5,
                     "maximum": 40,
                     "default": 15
                 },
