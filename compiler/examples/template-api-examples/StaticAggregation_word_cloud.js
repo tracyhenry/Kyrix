@@ -21,6 +21,9 @@ var args = {
         aliases: ["Team", "Total 3 Pointer Attempts"]
     },
     padding: 30,
+    legend: {
+        title: "Biggest Three-point-shooting Teams"
+    },
     textFields: ["team_city"],
     cloud: {
         maxTextSize: 100

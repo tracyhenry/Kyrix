@@ -1463,6 +1463,7 @@ function getRenderer(type) {
                 args.staticAggregationId.indexOf("_")
             );
         var params = args.renderingParams[rpKey];
+        var ysft = 80;
 
         var minAggValue = d3.min(data.map(d => +d.kyrixAggValue));
         var maxAggValue = d3.max(data.map(d => +d.kyrixAggValue));
@@ -1485,7 +1486,7 @@ function getRenderer(type) {
                     )
                 )
             )
-            .size([args.canvasW, args.canvasH])
+            .size([args.canvasW, args.canvasH - ysft])
             .rotate(() => {
                 return params.rotation[
                     Math.floor(Math.random() * params.rotation.length)
@@ -1496,6 +1497,7 @@ function getRenderer(type) {
             .padding(params.padding)
             .start();
 
+        // append svg text
         var colorScheme = d3[params.colorScheme];
         g.selectAll("text")
             .data(
@@ -1527,7 +1529,7 @@ function getRenderer(type) {
                     "translate(" +
                     [
                         d.kyrixWordCloudX + args.canvasW / 2,
-                        d.kyrixWordCloudY + args.canvasH / 2
+                        d.kyrixWordCloudY + (args.canvasH - ysft) / 2 + ysft
                     ] +
                     ")rotate(" +
                     d.kyrixWordCloudRotate +
@@ -1537,6 +1539,13 @@ function getRenderer(type) {
             .text(function(d) {
                 return d.kyrixWordCloudText;
             });
+
+        // title
+        g.append("text")
+            .text(params.legendTitle)
+            .style("font-size", 23)
+            .attr("x", 15)
+            .attr("y", 45);
     }
 }
 
