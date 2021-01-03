@@ -20,14 +20,14 @@ var args = {
         columns: ["team_city", "kyrixAggValue"],
         aliases: ["Team", "Total 3 Pointer Attempts"]
     },
-    padding: 30,
+    padding: 10,
     legend: {
-        title: "Biggest Three-point-shooting Teams"
+        title: "Most Prolific Three-point-shooting Teams"
     },
     textFields: ["team_city"],
     cloud: {
-        maxTextSize: 100
-        // rotation: [0, 90]
+        maxTextSize: 100,
+        rotation: [-60, -30, 0, 30, 60]
     }
 };
 

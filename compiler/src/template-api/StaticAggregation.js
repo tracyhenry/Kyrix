@@ -1499,7 +1499,10 @@ function getRenderer(type) {
 
         // append svg text
         var colorScheme = d3[params.colorScheme];
-        g.selectAll("text")
+        var diagLen = Math.sqrt(
+            args.canvasW * args.canvasW + args.canvasH * args.canvasH
+        );
+        g.selectAll(".cloudtext")
             .data(
                 words.map(d =>
                     Object.assign(
@@ -1516,6 +1519,7 @@ function getRenderer(type) {
                 )
             )
             .join("text")
+            .classed("cloudtext", true)
             .style("font-family", params.fontFamily)
             .style("fill", function(d, i) {
                 return colorScheme[i % colorScheme.length];
@@ -1525,12 +1529,29 @@ function getRenderer(type) {
                 return d.kyrixWordCloudSize + "px";
             })
             .attr("transform", function(d) {
+                d.screenX = d.kyrixWordCloudX + args.canvasW / 2;
+                d.screenY =
+                    d.kyrixWordCloudY + (args.canvasH - ysft) / 2 + ysft;
+                if (!params.transition)
+                    return (
+                        "translate(" +
+                        [d.screenX, d.screenY] +
+                        ")rotate(" +
+                        d.kyrixWordCloudRotate +
+                        ")"
+                    );
+                d.deltaDir = Math.random() < 0.5 ? 1 : -1;
+                d.deltaX =
+                    d.deltaDir *
+                    diagLen *
+                    Math.cos((d.kyrixWordCloudRotate / 180) * Math.PI);
+                d.deltaY =
+                    d.deltaDir *
+                    diagLen *
+                    Math.sin((d.kyrixWordCloudRotate / 180) * Math.PI);
                 return (
                     "translate(" +
-                    [
-                        d.kyrixWordCloudX + args.canvasW / 2,
-                        d.kyrixWordCloudY + (args.canvasH - ysft) / 2 + ysft
-                    ] +
+                    [d.screenX + d.deltaX, d.screenY + d.deltaY] +
                     ")rotate(" +
                     d.kyrixWordCloudRotate +
                     ")"
@@ -1538,7 +1559,8 @@ function getRenderer(type) {
             })
             .text(function(d) {
                 return d.kyrixWordCloudText;
-            });
+            })
+            .style("opacity", params.transition ? 0 : 1);
 
         // title
         g.append("text")
@@ -1546,6 +1568,38 @@ function getRenderer(type) {
             .style("font-size", 23)
             .attr("x", 15)
             .attr("y", 45);
+
+        // transition
+        if (!params.transition) return;
+
+        // animate text entering
+        var enterTime = 400;
+        var transitionEndTime = 1500;
+        var delayTime = (transitionEndTime - enterTime) / data.length;
+        g.selectAll(".cloudtext")
+            .transition()
+            .delay(function(d, i) {
+                return i * delayTime;
+            })
+            .ease(d3.easeExpOut)
+            .duration(enterTime)
+            .tween("enter", function(d) {
+                return function(t) {
+                    d3.select(this)
+                        .attr(
+                            "transform",
+                            "translate(" +
+                                [
+                                    d.screenX + (1 - t) * d.deltaX,
+                                    d.screenY + (1 - t) * d.deltaY
+                                ] +
+                                ")rotate(" +
+                                d.kyrixWordCloudRotate +
+                                ")"
+                        )
+                        .style("opacity", t);
+                };
+            });
     }
 }
 
