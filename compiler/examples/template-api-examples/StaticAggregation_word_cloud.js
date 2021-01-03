@@ -15,7 +15,7 @@ var args = {
         measure: "SUM(fg3a)",
         sampleFields: ["game_id", "fgm", "fga", "fg3m", "pts"]
     },
-    type: "wordcloud",
+    type: "wordCloud",
     tooltip: {
         columns: ["team_city", "kyrixAggValue"],
         aliases: ["Team", "Total 3 Pointer Attempts"]

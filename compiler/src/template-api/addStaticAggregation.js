@@ -64,7 +64,7 @@ function addStaticAggregation(staticAggregation, args) {
             xAxisTitle: staticAggregation.axis.xTitle,
             yAxisTitle: staticAggregation.axis.yTitle
         });
-    else if (staticAggregation.type == "wordcloud")
+    else if (staticAggregation.type == "wordCloud")
         rpDict[rpKey] = Object.assign({}, rpDict[rpKey], {
             textFields: staticAggregation.textFields,
             padding: staticAggregation.padding,
@@ -78,7 +78,6 @@ function addStaticAggregation(staticAggregation, args) {
 
     // construct query
     // SELECT columns are from measureCol & staticAggregation.query.dimensions
-    // merge them and then dedup
     var query = "SELECT ";
     var dimensions = staticAggregation.query.dimensions.concat(
         staticAggregation.query.stackDimensions
@@ -86,6 +85,18 @@ function addStaticAggregation(staticAggregation, args) {
     query += dimensions.join(", ") + ", " + staticAggregation.query.measure;
     query += " FROM " + staticAggregation.query.table + " GROUP BY ";
     query += dimensions.join(", ");
+
+    // LIMIT
+    var maxGroups = {
+        pie: 20,
+        treemap: 80,
+        circlePack: 150,
+        bar: 200,
+        wordCloud: 300
+    };
+    query += " LIMIT " + maxGroups[staticAggregation.type];
+
+    // construct transform
     var staticAggregationTransform = new Transform(
         query,
         staticAggregation.db,

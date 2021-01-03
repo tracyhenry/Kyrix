@@ -60,7 +60,7 @@
             "additionalProperties": false
         },
         "type": {
-            "enum": ["pie", "treemap", "circlePack", "bar", "wordcloud"]
+            "enum": ["pie", "treemap", "circlePack", "bar", "wordCloud"]
         },
         "tooltip": {
             "type": "object",
@@ -348,7 +348,7 @@
             "if": {
                 "properties": {
                     "type": {
-                        "enum": ["wordcloud"]
+                        "enum": ["wordCloud"]
                     }
                 }
             },

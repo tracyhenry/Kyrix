@@ -90,7 +90,7 @@ function getRenderer(type) {
         renderFuncBody = getBodyStringOfFunction(circlePackRenderer);
     else if (type == "bar")
         renderFuncBody = getBodyStringOfFunction(barChartRenderer);
-    else if (type == "wordcloud")
+    else if (type == "wordCloud")
         renderFuncBody = getBodyStringOfFunction(wordCloudRenderer);
     return new Function("svg", "data", "args", renderFuncBody);
 
