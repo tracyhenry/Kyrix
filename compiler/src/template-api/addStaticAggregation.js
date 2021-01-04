@@ -92,7 +92,7 @@ function addStaticAggregation(staticAggregation, args) {
         treemap: 80,
         circlePack: 150,
         bar: 200,
-        wordCloud: 300
+        wordCloud: 100
     };
     query += " LIMIT " + maxGroups[staticAggregation.type];
 

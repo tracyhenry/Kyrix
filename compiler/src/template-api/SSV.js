@@ -228,7 +228,9 @@ function SSV(args_) {
     else if (args.marks.cluster.mode == "pie") this.bboxW = this.bboxH = 290;
     // tuned by hand :)
     else if (args.marks.cluster.mode == "dot")
-        this.bboxW = this.bboxH = this.clusterParams.dotMaxSize * 3;
+        this.bboxW = this.bboxH = Math.floor(
+            this.clusterParams.dotMaxSize * 2.5
+        );
 
     // assign other fields
     this.query = args.data.query.toLowerCase();

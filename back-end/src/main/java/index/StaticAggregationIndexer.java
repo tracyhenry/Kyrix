@@ -66,7 +66,7 @@ public class StaticAggregationIndexer extends Indexer {
                 // sample layer
                 sql = q;
                 if (predicate.length() > 0) sql += " WHERE " + predicate;
-                sql += " LIMIT 150;";
+                sql += " LIMIT 75;";
                 break;
         }
         return sql;
