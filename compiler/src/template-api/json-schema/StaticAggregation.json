@@ -327,7 +327,7 @@
                     },
                     "colorScheme": {
                         "$ref": "#/definitions/categoricalColors",
-                        "default": "schemePastel1"
+                        "default": "schemeTableau10"
                     },
                     "textFields": {
                         "type": "null"
@@ -369,7 +369,7 @@
                         "minItems": 1
                     },
                     "padding": {
-                        "default": 5
+                        "default": 3
                     },
                     "radius": {
                         "type": "null"
