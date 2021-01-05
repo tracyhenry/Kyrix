@@ -107,14 +107,14 @@
         },
         "width": {
             "type": "number",
-            "minimum": 600,
-            "maximum": 1500,
+            "minimum": 300,
+            "maximum": 3000,
             "default": 1000
         },
         "height": {
             "type": "number",
-            "minimum": 600,
-            "maximum": 1500,
+            "minimum": 300,
+            "maximum": 3000,
             "default": 1000
         },
         "textFields": {
@@ -167,13 +167,13 @@
                 "minTextSize": {
                     "type": "integer",
                     "minimum": 10,
-                    "maximum": 40,
+                    "maximum": 100,
                     "default": 15
                 },
                 "maxTextSize": {
                     "type": "integer",
                     "minimum": 10,
-                    "maximum": 100,
+                    "maximum": 200,
                     "default": 60
                 }
             }
