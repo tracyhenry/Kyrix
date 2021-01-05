@@ -1565,7 +1565,7 @@ function getRenderer(type) {
         // title
         g.append("text")
             .text(params.legendTitle)
-            .style("font-size", 23)
+            .style("font-size", "23px")
             .attr("x", 15)
             .attr("y", 45);
 
