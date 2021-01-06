@@ -64,18 +64,44 @@ function addStaticAggregation(staticAggregation, args) {
             xAxisTitle: staticAggregation.axis.xTitle,
             yAxisTitle: staticAggregation.axis.yTitle
         });
+    else if (staticAggregation.type == "wordCloud")
+        rpDict[rpKey] = Object.assign({}, rpDict[rpKey], {
+            textFields: staticAggregation.textFields,
+            padding: staticAggregation.padding,
+            fontFamily: staticAggregation.cloud.fontFamily,
+            rotation: staticAggregation.cloud.rotation,
+            maxTextLength: staticAggregation.cloud.maxTextLength,
+            minTextSize: staticAggregation.cloud.minTextSize,
+            maxTextSize: staticAggregation.cloud.maxTextSize
+        });
     this.addRenderingParams(rpDict);
 
     // construct query
     // SELECT columns are from measureCol & staticAggregation.query.dimensions
-    // merge them and then dedup
     var query = "SELECT ";
     var dimensions = staticAggregation.query.dimensions.concat(
         staticAggregation.query.stackDimensions
     );
-    query += dimensions.join(", ") + ", " + staticAggregation.query.measure;
+    query +=
+        dimensions.join(", ") +
+        ", " +
+        staticAggregation.query.measure +
+        " AS kyrixAggValue";
     query += " FROM " + staticAggregation.query.table + " GROUP BY ";
     query += dimensions.join(", ");
+    query += " ORDER BY kyrixAggValue DESC ";
+
+    // LIMIT
+    var maxGroups = {
+        pie: 20,
+        treemap: 80,
+        circlePack: 150,
+        bar: 200,
+        wordCloud: 100
+    };
+    query += " LIMIT " + maxGroups[staticAggregation.type];
+
+    // construct transform
     var staticAggregationTransform = new Transform(
         query,
         staticAggregation.db,

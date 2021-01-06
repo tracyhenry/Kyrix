@@ -36,7 +36,11 @@ public class BoxandData {
                 // raw data fields
                 ArrayList<String> rowArray = data.get(i).get(j);
                 HashMap<String, String> rowDict = new HashMap<>();
-                for (int k = 0; k < numFields; k++) rowDict.put(fields.get(k), rowArray.get(k));
+                for (int k = 0; k < numFields; k++) {
+                    String v = rowArray.get(k);
+                    if (v == null) v = "";
+                    rowDict.put(fields.get(k), v);
+                }
 
                 // cluster number field for ssv layer
                 if (curLayer.getIndexerType().contains("SSV")) {
