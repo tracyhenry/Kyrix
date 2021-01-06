@@ -82,9 +82,14 @@ function addStaticAggregation(staticAggregation, args) {
     var dimensions = staticAggregation.query.dimensions.concat(
         staticAggregation.query.stackDimensions
     );
-    query += dimensions.join(", ") + ", " + staticAggregation.query.measure;
+    query +=
+        dimensions.join(", ") +
+        ", " +
+        staticAggregation.query.measure +
+        " AS kyrixAggValue";
     query += " FROM " + staticAggregation.query.table + " GROUP BY ";
     query += dimensions.join(", ");
+    query += " ORDER BY kyrixAggValue DESC ";
 
     // LIMIT
     var maxGroups = {
