@@ -28,9 +28,11 @@ public class UpdateRequest {
     private String canvasId;
     private String layerId;
     private ArrayList<String> keyColumns;
-    private HashMap<String, String> objectAttributes;
+    private HashMap<String, Object> objectAttributes;
     private String baseTable;
     private String projectName;
+    private boolean isSSV;
+    private int ssvLevel;
 
 
     public String getCanvasId() {
@@ -45,7 +47,7 @@ public class UpdateRequest {
       return keyColumns;
     }
 
-    public HashMap<String, String> getObjectAttributes() {
+    public HashMap<String, Object> getObjectAttributes() {
       return objectAttributes;
     }
 
@@ -55,6 +57,14 @@ public class UpdateRequest {
 
     public String getProjectName() {
       return projectName;
+    }
+
+    public boolean isSSV() {
+      return isSSV;
+    }
+
+    public int getSSVLevel() {
+      return ssvLevel;
     }
 
     @Override
@@ -75,6 +85,10 @@ public class UpdateRequest {
                 + ", projectName='"
                 + projectName
                 + '\''
+                + ", isSSV="
+                + isSSV
+                + ", ssvLevel="
+                + ssvLevel
                 + '}';
     }
 }

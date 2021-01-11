@@ -69,7 +69,7 @@ public class UpdateRequestHandler implements HttpHandler {
       return columnsInTable;
     }
 
-    private String generateKeySubQuery(HashMap<String,String> objectAttrs, HashMap<String,String> attrColumnTypes, ArrayList<String> keyColumns, boolean isTransformQuery) {
+    private String generateKeySubQuery(HashMap<String,Object> objectAttrs, HashMap<String,String> attrColumnTypes, ArrayList<String> keyColumns, boolean isTransformQuery) {
       String keyCondition;
       if (isTransformQuery) {
         keyCondition = " WHERE ";
@@ -80,19 +80,20 @@ public class UpdateRequestHandler implements HttpHandler {
       int i = 0;
       for (String key : keyColumns) {
         String keyColumnType = attrColumnTypes.get(key);
+        String keyColumnValue = objectAttrs.get(key).toString();
         switch (keyColumnType) {
             case "double precision":
-                keyCondition += key + "=" + objectAttrs.get(key);
+                keyCondition += key + "=" + keyColumnValue;
                 break;
             case "integer":
-                keyCondition += key + "=" + objectAttrs.get(key);
+                keyCondition += key + "=" + keyColumnValue;
                 break;
             case "text":
-                keyCondition += key + "='" + objectAttrs.get(key) + "'";  
+                keyCondition += key + "='" + keyColumnValue + "'";  
                 break;
             default:
                 // default is same as text column, most common
-                keyCondition += key + "='" + objectAttrs.get(key) + "'";  
+                keyCondition += key + "='" + keyColumnValue + "'";  
                 break;
         }
         if (i < (keyColumns.size() - 1)) {
@@ -108,7 +109,7 @@ public class UpdateRequestHandler implements HttpHandler {
       return keyCondition;
     }
 
-    private String createUpdateQuery(String tableName,  HashMap<String, String> objectAttrs, HashMap<String, String> attrColumnTypes, ArrayList<String> keyColumns, boolean isTransform) {
+    private String createUpdateQuery(String tableName,  HashMap<String, Object> objectAttrs, HashMap<String, String> attrColumnTypes, ArrayList<String> keyColumns, boolean isTransform) {
       String colName;
       String colType;
       Set<String> attrNames = objectAttrs.keySet();
@@ -120,23 +121,26 @@ public class UpdateRequestHandler implements HttpHandler {
       Iterator<String> attrNameIterator = attrNames.iterator();
       while (attrNameIterator.hasNext()) {
           colName = attrNameIterator.next();
+
           colType = attrColumnTypes.get(colName);
           restQuery += colName + "=" + "c." + colName;
+          String colValue = objectAttrs.get(colName).toString();
+
 
           columnSubQuery += colName;
           switch (colType) {
             case "double precision":
-                valuesSubQuery += objectAttrs.get(colName);
+                valuesSubQuery += colValue;
                 break;
             case "integer":
-                valuesSubQuery += objectAttrs.get(colName);
+                valuesSubQuery += colValue;
                 break;
             case "text":
-                valuesSubQuery += "'" + objectAttrs.get(colName) + "'";  
+                valuesSubQuery += "'" + colValue + "'";  
                 break;
             default:
                 // default is same as text column, most common
-                valuesSubQuery += "'" + objectAttrs.get(colName) + "'";  
+                valuesSubQuery += "'" + colValue + "'";  
                 break;
           }
           if (attrNameIterator.hasNext()) {
@@ -167,9 +171,11 @@ public class UpdateRequestHandler implements HttpHandler {
             String canvasId;
             String layerId;
             ArrayList<String> keyColumns;
-            HashMap<String, String> objectAttrs;
+            HashMap<String, Object> objectAttrs;
             String baseTable;
             String projName;
+            boolean isSSV;
+            int ssvLevel;
 
             // should be a POST request
             if (!httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
@@ -191,13 +197,24 @@ public class UpdateRequestHandler implements HttpHandler {
             objectAttrs = updateRequest.getObjectAttributes();
             baseTable = updateRequest.getBaseTable();
             projName = updateRequest.getProjectName();
+            isSSV = updateRequest.isSSV();
+            ssvLevel = updateRequest.getSSVLevel();
 
             long startTime = System.currentTimeMillis();
             System.out.println("object attrs: " + objectAttrs);
 
             long currTime = System.currentTimeMillis();
-            String tableName = "bbox_" + Main.getProject().getName()
-                                     + "_" + canvasId + "layer" + layerId;
+            // String tableName = "bbox_" + Main.getProject().getName()
+                                    //  + "_" + canvasId + "layer" + layerId;
+            String tableName;
+            if (isSSV) {
+              tableName = "bbox_" + Main.getProject().getName()
+                            +  "_" + canvasId + "layer" + layerId;
+            } else {
+              // For reference: bbox_ssv_circle_ssv0_level1layer0 where project name = 'ssv_circle'
+              tableName = "bbox_" + Main.getProject().getName() + "_ssv0_" 
+                            + "level" + ssvLevel + "layer" + layerId; 
+            }
             
             // get types of kyrix index table, will just be text for all columns in base table
             // and double precision for the bbox coordinates/placement
@@ -223,172 +240,43 @@ public class UpdateRequestHandler implements HttpHandler {
             System.out.println("column types -> " + attrColumnTypes);
 
             // get types of base data table, can be any type of data, which we will have to cast the text data into
-            HashMap<String, String> baseAttrColTypes = new HashMap<String, String>();
-            Statement baseStmt = DbConnector.getStmtByDbName(projName);
-            typeQuery = 
-                  "SELECT column_name, data_type  FROM information_schema.columns WHERE table_name = "
-                    + "'" + baseTable + "';";
-            ResultSet baseRs = baseStmt.executeQuery(typeQuery);
-            while (baseRs.next()) {
-              colName = baseRs.getString(1);
-              colType = baseRs.getString(2);
-              System.out.println("[base] colName, colType -> " + colName + ", " + colType);
-              // if (attrNames.contains(colName)) {
-                baseAttrColTypes.put(colName, colType);
-              // }
-            }
-            System.out.println("base column types -> " + baseAttrColTypes);
+            // HashMap<String, String> baseAttrColTypes = new HashMap<String, String>();
+            // Statement baseStmt = DbConnector.getStmtByDbName(projName);
+            // typeQuery = 
+            //       "SELECT column_name, data_type  FROM information_schema.columns WHERE table_name = "
+            //         + "'" + baseTable + "';";
+            // ResultSet baseRs = baseStmt.executeQuery(typeQuery);
+            // while (baseRs.next()) {
+            //   colName = baseRs.getString(1);
+            //   colType = baseRs.getString(2);
+            //   System.out.println("[base] colName, colType -> " + colName + ", " + colType);
+            //   // if (attrNames.contains(colName)) {
+            //     baseAttrColTypes.put(colName, colType);
+            //   // }
+            // }
+            // System.out.println("base column types -> " + baseAttrColTypes);
 
             String updateQuery = createUpdateQuery(tableName, objectAttrs, attrColumnTypes, keyColumns, false);
-            String baseUpdateQuery = createUpdateQuery(baseTable, objectAttrs, baseAttrColTypes, keyColumns, false);
+            // String baseUpdateQuery = createUpdateQuery(baseTable, objectAttrs, baseAttrColTypes, keyColumns, false);
 
             
             // baseUpdateQuery += restQuery;
             System.out.println("Kyrix Index Update Query: " + updateQuery);
             stmt.executeUpdate(updateQuery);
             // stmt.close();
-            System.out.println("Base table update query: " + baseUpdateQuery);
-            baseStmt.executeUpdate(baseUpdateQuery);
+            // System.out.println("Base table update query: " + baseUpdateQuery);
+            // baseStmt.executeUpdate(baseUpdateQuery);
 
             double midTime = System.currentTimeMillis() - startTime;
             double midTimeSec = midTime / 1000.0;
             System.out.println("updating up to re-running transform took: " + midTimeSec + " sec.");
 
-            // now re-run transform on the relevant rows in the Kyrix index table
-            // only update the rows that are selected by the key columns
-            // Layer l = c.getLayers().get(layerId);
-            Canvas c = Main.getProject().getCanvas(canvasId);
-            int layerIdNum = Integer.parseInt(layerId);
-            Layer l = c.getLayers().get(layerIdNum);
-            Transform trans = l.getTransform();
-            System.out.println("data dependencies for layer " + layerIdNum + " is: " + trans.getDependencies());
-            
-            // re-run transform for the current layer
-            // step 1: set up nashorn environment for running javascript code
-            NashornScriptEngine engine = setupMultipleTransformNashorn(trans);
-            int transformFuncId = 0;
-
-            String transDb = projName;
-            String baseTransQuery = trans.getQuery();
-            baseTransQuery = baseTransQuery.replaceAll(";", "");
-            String keyCondition = generateKeySubQuery(objectAttrs, baseAttrColTypes, keyColumns, true);
-            keyCondition += ";";
-            baseTransQuery += keyCondition;
-            System.out.println("db=" + transDb + " - query=" + baseTransQuery);
-            // Statement rawDBStmt = DbConnector.getStmtByDbName(transDb, true);
-            rs = DbConnector.getQueryResultIterator(baseStmt, baseTransQuery);
-            int rowCount = 0;
-            boolean isNullTransform = trans.getTransformFunc().equals("");
-            int numColumn = rs.getMetaData().getColumnCount();
-
-            while (rs.next()) {
-
-              // count log - important to increment early so modulo-zero doesn't trigger on first
-              // iteration
-              rowCount++;
-  
-              // get raw row
-              ArrayList<String> curRawRow = new ArrayList<>();
-              for (int i = 1; i <= numColumn; i++)
-                  curRawRow.add(rs.getString(i) == null ? "" : rs.getString(i));
-  
-              long currLvlTime = System.currentTimeMillis();
-              // step 3: run transform function on this tuple
-              ArrayList<String> transformedRow =
-                      isNullTransform ? curRawRow : getTransformedRow(c, curRawRow, engine, transformFuncId);
-
-              double currLvlDiff = System.currentTimeMillis() - currLvlTime;
-              double currLvlSec = currLvlDiff / 1000.0;
-              System.out.println("current level transform took: " + currLvlDiff + " ms and took: " + currLvlSec + " sec");
-              System.out.println();
-              System.out.println("[UpdateRequestHandler] re-running transform, row: "
-                                   + rowCount + " has values: " + transformedRow);
-              System.out.println("[UpdateRequestHandler] column names are: " + trans.getColumnNames());
-              assert(transformedRow.size() == trans.getColumnNames().size());
-              ArrayList<String> transformedColNames = trans.getColumnNames();
-              HashMap<String,String> transformedColMap = zipLists(transformedColNames, transformedRow);
-              String rerunTransformQuery = createUpdateQuery(tableName, transformedColMap, attrColumnTypes, keyColumns, false);
-
-              System.out.println();
-              System.out.println("[UpdateRequestHandler] re-run transform query: " +  rerunTransformQuery);
-              currLvlTime = System.currentTimeMillis();
-              stmt.executeUpdate(rerunTransformQuery);
-              currLvlDiff = System.currentTimeMillis() - currLvlTime;
-              currLvlSec = currLvlDiff / 1000.0;
-              System.out.println("current level kyrix index update query took: " + currLvlDiff + " ms and took: " + currLvlSec + " sec");
-              System.out.println();
-            }
-
-            // re-run higher level transforms
-            ArrayList<ArrayList<String>> dependencies = trans.getDependencies();
-            transformFuncId++;
-            // dependencies are structures like [[1, "usmap0_state"]] where 1 is the layerId and "usmap0_state" is the canvasId
-            System.out.println();
-            for (ArrayList<String> dep : dependencies) {
-              assert(dep.size() == 2);
-              String depLayerId = dep.get(0);
-              String depCanvasId = dep.get(1);
-              String depTableName = "bbox_" + Main.getProject().getName()
-                                     + "_" + depCanvasId + "layer" + depLayerId;
-              System.out.println("processing dependency with layerId: " + depLayerId + " and canvasId: " + depCanvasId + " and tableName: " + depTableName);
-              
-              // TODO?: recurse through dependent transforms to propagate changes to current tranform
-              // this only handles having one level of dependency...
-              Canvas depCanvas = Main.getProject().getCanvas(depCanvasId);
-              int depLayerIdNum = Integer.parseInt(depLayerId);
-              Layer depLayer = depCanvas.getLayers().get(depLayerIdNum);
-              Transform depTrans = depLayer.getTransform();
-              String depTransDb = projName;
-              String depTransQuery = depTrans.getQuery();
-              depTransQuery = depTransQuery.replaceAll(";", "");
-              ArrayList<String> depKeyColumns = filterTransformColumns(depTrans, keyColumns);
-              String depKeyCondition = generateKeySubQuery(objectAttrs, baseAttrColTypes, depKeyColumns, true);
-              depKeyCondition += ";";
-              depTransQuery += depKeyCondition;
-              System.out.println("[dependent transform] db=" + transDb + " - query=" + depTransQuery);
-              // Statement depDBStmt = DbConnector.getStmtByDbName(depTransDb, true);
-              rs = DbConnector.getQueryResultIterator(baseStmt, depTransQuery);
-              rowCount = 0;
-              isNullTransform = depTrans.getTransformFunc().equals("");
-              numColumn = rs.getMetaData().getColumnCount();
-              while (rs.next()) {
-                rowCount++;
-                ArrayList<String> preTransformRow = new ArrayList<>();
-
-                for (int i=1; i <= numColumn; i++) {
-                  System.out.println("[UpdateRequestHandler] transform attr: " + i + " has value: " + rs.getString(i));
-                  preTransformRow.add(rs.getString(i) == null ? "" : rs.getString(i));
-                }
-
-                long depLvlTime = System.currentTimeMillis();
-                ArrayList<String> transformedRow = isNullTransform ? preTransformRow : getTransformedRow(depCanvas, preTransformRow, engine, transformFuncId);
-                double depLvlDiff = System.currentTimeMillis() - depLvlTime;
-                double depLvlSec = depLvlDiff / 1000.0;
-                System.out.println("higher level transform took: " + depLvlDiff + " ms and took: " + depLvlSec + " sec");
-                System.out.println();
-                System.out.println("[UpdateRequestHandler] running dependent transform for row: " + rowCount + " has values: " + transformedRow);
-                System.out.println("[UpdateRequestHandler] and column names are: " + depTrans.getColumnNames());
-                assert(transformedRow.size() == trans.getColumnNames().size());
-                HashMap<String,String> depTransformColMap = zipLists(depTrans.getColumnNames(), transformedRow);
-                String depTransUpdateQuery = createUpdateQuery(depTableName, depTransformColMap, attrColumnTypes, depKeyColumns, false);
-
-                System.out.println();
-                System.out.println("[UpdateRequestHandler] re-run dependent transform query: " + depTransUpdateQuery);
-                depLvlTime = System.currentTimeMillis();
-                stmt.executeUpdate(depTransUpdateQuery);
-                depLvlDiff = System.currentTimeMillis() - depLvlTime;
-                depLvlSec = depLvlDiff / 1000.0;
-                System.out.println("higher level kyrix index update query took: " + depLvlDiff + " ms and took: " + depLvlSec + " sec");
-                System.out.println();
-              }
-              transformFuncId++;
-            }
 
             double timeDiff = System.currentTimeMillis() - currTime;
             double timeSec = timeDiff / 1000.0;
             System.out.println("Update took: " + timeDiff + " ms and took: " + timeSec + " sec");
             stmt.close();
-            baseStmt.close();
+            // baseStmt.close();
             Map<String, Object> respMap = new HashMap<>();
             response = gson.toJson(respMap);
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);

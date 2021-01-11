@@ -333,7 +333,7 @@ function startJump(viewId, d, jump, optionalArgs) {
 }
 
 // send updates to DB
-function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs, projName) {
+function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs, projName, isSSV, ssvLevel) {
   // find field in newObjAttrs that is the primary key identifier (like "id")
   let idColumns = []; 
   const attributes = Object.keys(newObjAttrs);
@@ -351,6 +351,8 @@ function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs, projName)
     objectAttributes: newObjAttrs,
     baseTable: tableName,
     projectName: projName,
+    isSSV: isSSV,
+    ssvLevel: ssvLevel,
   };
   
   console.log(`sending HTTP request to /update with data: ${JSON.stringify(postData)}`);
@@ -542,7 +544,7 @@ function createUpdatePopover(gvd, viewId, layerId, p) {
       // TODO: update UI with new data, while DB gets update asynchronously 
       // what if DB doesn't get update?
       const projName = globalVar.project.name;
-      doDBUpdate(viewId, canvasId, layerId, tableName, objectKV, projName);
+      doDBUpdate(viewId, canvasId, layerId, tableName, objectKV, projName, true, -1);
       // re-load dynamic data from db
       getCurCanvas(viewId);
       if (!gvd.animation) {
@@ -582,12 +584,16 @@ function createUpdatePopover(gvd, viewId, layerId, p) {
 function registerJumps(viewId, svg, layerId) {
     var gvd = globalVar.views[viewId];
     var viewClass = ".view_" + viewId;
+    let curLayer = gvd.curCanvas.layers[layerId];
 
     var jumps = gvd.curJump;
     var shapes = svg.select("g:last-of-type").selectAll("*");
     var optionalArgs = getOptionalArgs(viewId);
     optionalArgs["layerId"] = layerId;
-    
+    let dx = 0;
+    let dy = 0;
+    // assert(globalVar.project.ssvs.length > 0);
+    let ssvObj = globalVar.project.ssvs[0];
     let layerObj = gvd.curCanvas.layers[layerId];
 
     shapes.each(function(p) {
@@ -609,6 +615,119 @@ function registerJumps(viewId, svg, layerId) {
                 hasJump = true;
                 break;
             }
+
+        // attach drag to dynamic objects in SSV
+        if (curLayer.isStatic == false) {
+          let currentObject = d3
+            .select(viewClass + ".viewsvg")
+            .selectAll("*")
+            .filter(function (d) {
+              return d == p;
+          });
+
+          d3.select(viewClass + ".viewsvg")
+            .selectAll("*")
+            .filter(function (d) {
+              return d == p;
+            })
+            .call(
+              d3
+                .drag()
+                .on("start", function (d) {
+                  console.log("starting drag");
+                  dx = 0;
+                  dy = 0;
+                })
+                .on("drag", function (d) {
+                  console.log("attempting to drag object");
+                  dx += d3.event.dx;
+                  dy += d3.event.dy;
+
+                  currentObject.attr("transform", "translate(" + dx + "," + dy + ")");
+                })
+                .on("end", function (d) {
+                  if (Math.abs(dx) > 50) {
+                    console.log("ended object drag!");
+                    console.log(d);
+
+                    // gvd - data for current view, current canvas, transform, etc.
+                    let canvasId = gvd.curCanvasId;
+
+
+                    let newAttrValues = [];
+                    var objectKV = {};
+                    // d3.selectAll(".attr-inputs").each(function(d,i) {
+                    //     newAttrValues.push(d3.select(this).property("value"));
+                    // });
+                    console.log(`data's (x,y) before are (${d.cx}, ${d.cy})`);
+                    let data = Object.assign(d, {});
+
+                    for (let key in data) {
+                      if (ssvObj.queriedColumnNames.includes(key)) {
+                        objectKV[key] = data[key];
+                      }
+                    }
+
+                    // objectKV = Object.assign({}, data);
+                    // data.x = parseFloat(data.x) + dx;
+                    data.cx = parseFloat(data.cx) + dx;
+                    // data.y = parseFloat(data.y) + dy;
+                    data.cy = parseFloat(data.cy) + dy;
+                    console.log(`data's (x,y) after are (${data.cx}, ${data.cy})`);
+                    let dataKeys = Object.keys(data);
+
+
+                    console.log(`objectKV before reversing: ${JSON.stringify(objectKV)}`);
+
+                    var ssvId = curLayer.ssvId;
+                    var bboxW = ssvObj.bboxW + 2;
+                    var bboxH = ssvObj.bboxH + 2;
+                    var ssvLevel =  parseInt(ssvId.split("_")[1]);
+                    var new_x_value = (data.cx / Math.pow(ssvObj.zoomFactor, ssvLevel)
+                                         - bboxW/2.0) * (ssvObj.hiX - ssvObj.loX)
+                                          / (ssvObj.topLevelWidth - bboxW) + ssvObj.loX;
+                    new_x_value = Math.round(new_x_value);
+                    var new_y_value = (data.cy / Math.pow(ssvObj.zoomFactor, ssvLevel)
+                                        - bboxH/2.0) * (ssvObj.hiY - ssvObj.loY)
+                                          / (ssvObj.topLevelHeight - bboxH) + ssvObj.loY;
+                    new_y_value = Math.round(new_y_value);
+                    console.log(`After reversing (x,y): (${data.cx}, ${data.cy})
+                               => cols: [${ssvObj.xCol},${ssvObj.yCol}] = [${new_x_value}, ${new_y_value}]`); 
+                    
+                    objectKV["cx"] = data.cx;
+                    objectKV["cy"] = data.cy;
+                    objectKV["minx"] = objectKV["cx"] - (bboxW / 2.0);
+                    objectKV["maxx"] = objectKV["cx"] + (bboxW / 2.0);
+                    objectKV["miny"] = objectKV["cy"] - (bboxH / 2.0);
+                    objectKV["maxy"] = objectKV["cy"] + (bboxH / 2.0);
+                    objectKV[ssvObj.xCol] = new_x_value;
+                    objectKV[ssvObj.yCol] = new_y_value;
+
+                    console.log(`objectKV after reversing: ${JSON.stringify(objectKV)}`);
+
+                    // TODO: update UI with new data, while DB gets update asynchronously 
+                    // what if DB doesn't get update?
+                    const projName = globalVar.project.name;
+                    doDBUpdate(viewId, canvasId, layerId, "placeholder", objectKV, projName, false, ssvLevel);
+                    // re-load dynamic data from db
+                    getCurCanvas(viewId);
+                    if (!gvd.animation) {
+                        var curViewport = d3
+                            .select(viewClass + ".mainsvg:not(.static)")
+                            .attr("viewBox")
+                            .split(" ");
+                        RefreshDynamicLayers(
+                            viewId,
+                            curViewport[0],
+                            curViewport[1]
+                        );
+                    }
+                    removePopovers(viewId);
+                  }
+                })
+              );
+        }
+
         if (!hasJump && !layerObj.allowUpdates) return;
 
         // make cursor a hand when hovering over this shape

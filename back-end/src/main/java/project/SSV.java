@@ -235,6 +235,12 @@ public class SSV {
     public double getCanvasCoordinate(int level, double v, boolean isX) throws Exception {
 
         setXYExtent();
+        if (level == 0) {
+          System.out.println("[SSV: getCanvasCoordinate] calculating coordinates for a point at level: "
+                       + level + " , v: " + v + " , isX: " + isX);
+          System.out.println("[SSV: getCanvasCoordinate] topLevelWidth: " + topLevelWidth + " , bboxW: "
+                       + bboxW + " , loX: " + loX + " , hiX: " + hiX);
+        }
         if (isX)
             return ((topLevelWidth - bboxW) * (v - loX) / (hiX - loX) + bboxW / 2.0)
                     * Math.pow(zoomFactor, level);
