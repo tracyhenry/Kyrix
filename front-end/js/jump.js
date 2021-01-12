@@ -700,8 +700,8 @@ function registerJumps(viewId, svg, layerId) {
                     objectKV["maxx"] = objectKV["cx"] + (bboxW / 2.0);
                     objectKV["miny"] = objectKV["cy"] - (bboxH / 2.0);
                     objectKV["maxy"] = objectKV["cy"] + (bboxH / 2.0);
-                    objectKV[ssvObj.xCol] = new_x_value;
-                    objectKV[ssvObj.yCol] = new_y_value;
+                    objectKV[ssvObj.xCol] = new_x_value.toString();
+                    objectKV[ssvObj.yCol] = new_y_value.toString();
 
                     console.log(`objectKV after reversing: ${JSON.stringify(objectKV)}`);
 

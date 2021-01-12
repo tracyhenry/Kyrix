@@ -201,7 +201,6 @@ public class UpdateRequestHandler implements HttpHandler {
             isSSV = updateRequest.isSSV();
             ssvLevel = updateRequest.getSSVLevel();
 
-            long startTime = System.currentTimeMillis();
             System.out.println("object attrs: " + objectAttrs);
 
             long currTime = System.currentTimeMillis();
@@ -239,23 +238,6 @@ public class UpdateRequestHandler implements HttpHandler {
                 // }
             }
             System.out.println("column types -> " + attrColumnTypes);
-
-            // get types of base data table, can be any type of data, which we will have to cast the text data into
-            // HashMap<String, String> baseAttrColTypes = new HashMap<String, String>();
-            // Statement baseStmt = DbConnector.getStmtByDbName(projName);
-            // typeQuery = 
-            //       "SELECT column_name, data_type  FROM information_schema.columns WHERE table_name = "
-            //         + "'" + baseTable + "';";
-            // ResultSet baseRs = baseStmt.executeQuery(typeQuery);
-            // while (baseRs.next()) {
-            //   colName = baseRs.getString(1);
-            //   colType = baseRs.getString(2);
-            //   System.out.println("[base] colName, colType -> " + colName + ", " + colType);
-            //   // if (attrNames.contains(colName)) {
-            //     baseAttrColTypes.put(colName, colType);
-            //   // }
-            // }
-            // System.out.println("base column types -> " + baseAttrColTypes);
 
             String curSSVId = Main.getProject().getCanvas(canvasId).getLayers().get(layerIdNum).getSSVId();
             int ssvIndex = Integer.valueOf(curSSVId.substring(0, curSSVId.indexOf("_")));
@@ -307,16 +289,12 @@ public class UpdateRequestHandler implements HttpHandler {
               // System.out.println("Base table update query: " + baseUpdateQuery);
               // baseStmt.executeUpdate(baseUpdateQuery);
             }
-            
-
-            double midTime = System.currentTimeMillis() - startTime;
-            double midTimeSec = midTime / 1000.0;
-            System.out.println("updating up to re-running transform took: " + midTimeSec + " sec.");
-
+        
 
             double timeDiff = System.currentTimeMillis() - currTime;
             double timeSec = timeDiff / 1000.0;
             System.out.println("Update took: " + timeDiff + " ms and took: " + timeSec + " sec");
+            Server.sendStats(projName, canvasId, "update", timeDiff, numLevels);
             stmt.close();
             // baseStmt.close();
             Map<String, Object> respMap = new HashMap<>();
