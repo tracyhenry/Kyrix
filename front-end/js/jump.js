@@ -646,7 +646,7 @@ function registerJumps(viewId, svg, layerId) {
                   currentObject.attr("transform", "translate(" + dx + "," + dy + ")");
                 })
                 .on("end", function (d) {
-                  if (Math.abs(dx) > 50) {
+                  if (Math.abs(dx) > 30 || Math.abs(dy) > 30) {
                     console.log("ended object drag!");
                     console.log(d);
 
@@ -710,19 +710,65 @@ function registerJumps(viewId, svg, layerId) {
                     const projName = globalVar.project.name;
                     doDBUpdate(viewId, canvasId, layerId, "placeholder", objectKV, projName, false, ssvLevel);
                     // re-load dynamic data from db
-                    getCurCanvas(viewId);
-                    if (!gvd.animation) {
-                        var curViewport = d3
-                            .select(viewClass + ".mainsvg:not(.static)")
-                            .attr("viewBox")
-                            .split(" ");
-                        RefreshDynamicLayers(
-                            viewId,
-                            curViewport[0],
-                            curViewport[1]
-                        );
-                    }
-                    removePopovers(viewId);
+                    // getCurCanvas(viewId);
+                    // if (!gvd.animation) {
+                    //     var curViewport = d3
+                    //         .select(viewClass + ".mainsvg:not(.static)")
+                    //         .attr("viewBox")
+                    //         .split(" ");
+                    //     RefreshDynamicLayers(
+                    //         viewId,
+                    //         curViewport[0],
+                    //         curViewport[1]
+                    //     );
+                    // }
+                    // removePopovers(viewId);
+                    var curViewport = d3
+                      .select(viewClass + ".mainsvg:not(.static)")
+                      .attr("viewBox")
+                      .split(" ");
+                    console.log(`viewbox: ${JSON.stringify(curViewport)}`);
+                    console.log(
+                      `viewport x: ${curViewport[0]} and viewport y: ${curViewport[1]}`
+                    );
+                    // let curViewport = getCurrentViewport(viewId);
+                    let jump = { type: "drag" };
+                    preJump(viewId, jump);
+
+                    var gotCanvas = getCurCanvas(viewId);
+                    gotCanvas.then(function () {
+                      // static trim
+                      renderStaticLayers(viewId);
+
+                      // render
+
+                      RefreshDynamicLayers(viewId, curViewport[0], curViewport[1]);
+
+                      // clean up
+                      postJump(viewId, jump);
+
+                      d3.selectAll(viewClass + ".mainsvg:not(.static)")
+                        .attr(
+                          "viewBox",
+                          curViewport[0] +
+                            " " +
+                            curViewport[1] +
+                            " " +
+                            gvd.viewportWidth +
+                            " " +
+                            gvd.viewportHeight
+                        )
+                        .style("opacity", 1);
+                      d3.selectAll(viewClass + ".mainsvg.static")
+                        .attr(
+                          "viewBox",
+                          "0 0 " + gvd.viewportWidth + " " + gvd.viewportHeight
+                        )
+                        .style("opacity", 1);
+                      gvd.initialViewportX = curViewport[0];
+                      gvd.initialViewportY = curViewport[1];
+                    });
+                    console.log(`d's after (cx,cy) are (${d.x}, ${d.y})`);
                   }
                 })
               );
