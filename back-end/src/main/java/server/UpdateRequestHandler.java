@@ -193,6 +193,7 @@ public class UpdateRequestHandler implements HttpHandler {
 
             canvasId = updateRequest.getCanvasId();
             layerId = updateRequest.getLayerId();
+            int layerIdNum = Integer.valueOf(layerId);
             keyColumns = updateRequest.getKeyColumns();
             objectAttrs = updateRequest.getObjectAttributes();
             baseTable = updateRequest.getBaseTable();
@@ -256,16 +257,57 @@ public class UpdateRequestHandler implements HttpHandler {
             // }
             // System.out.println("base column types -> " + baseAttrColTypes);
 
-            String updateQuery = createUpdateQuery(tableName, objectAttrs, attrColumnTypes, keyColumns, false);
-            // String baseUpdateQuery = createUpdateQuery(baseTable, objectAttrs, baseAttrColTypes, keyColumns, false);
+            String curSSVId = Main.getProject().getCanvas(canvasId).getLayers().get(layerIdNum).getSSVId();
+            int ssvIndex = Integer.valueOf(curSSVId.substring(0, curSSVId.indexOf("_")));
 
+            SSV ssv = Main.getProject().getSsvs().get(ssvIndex);
+            String xColName = ssv.getxCol();
+            String yColName = ssv.getyCol();
+            double v_x = Double.valueOf(objectAttrs.get(xColName).toString());
+            double v_y = Double.valueOf(objectAttrs.get(yColName).toString());
+            int numLevels = ssv.getNumLevels();
+
+            System.out.println("hierarchically updating ssv with: " + numLevels 
+                                + " levels, x col: " + xColName + " with value: " + v_x
+                                + " and y col: " + yColName + " with value: " + v_y);
+
+           
+            for (int i=0; i < numLevels; i++) {
+              tableName = "bbox_" + Main.getProject().getName() + "_ssv0_" 
+                            + "level" + i + "layer" + layerId; 
+
+              // copy object attrs into a new object and change cx,cy,minx,miny,maxx,maxy attributes
+              // based on level
+              HashMap<String, Object> levelObjectAttrs = new HashMap<String, Object>();
+              for (String key : objectAttrs.keySet()) {
+                levelObjectAttrs.put(key, objectAttrs.get(key));
+              }
+              // calculate cx values
+              double cx = ssv.getCanvasCoordinate(i, v_x, true);
+              double cy = ssv.getCanvasCoordinate(i, v_y, false);
+              double minx = cx - (ssv.getBboxW() / 2.0);
+              double maxx = cx + (ssv.getBboxW() / 2.0);
+              double miny = cy - (ssv.getBboxH() / 2.0);
+              double maxy = cy + (ssv.getBboxH() / 2.0);
+              levelObjectAttrs.put("cx", Double.toString(cx));
+              levelObjectAttrs.put("cy", Double.toString(cy));
+              levelObjectAttrs.put("minx", Double.toString(minx));
+              levelObjectAttrs.put("maxx", Double.toString(maxx));
+              levelObjectAttrs.put("miny", Double.toString(miny));
+              levelObjectAttrs.put("maxy", Double.toString(maxy));
+
+              String updateQuery = createUpdateQuery(tableName, levelObjectAttrs, attrColumnTypes, keyColumns, false);
+              // String baseUpdateQuery = createUpdateQuery(baseTable, objectAttrs, baseAttrColTypes, keyColumns, false);
+
+              
+              // baseUpdateQuery += restQuery;
+              System.out.println("Kyrix Index Update Query for level " + i +  "is : " + updateQuery);
+              stmt.executeUpdate(updateQuery);
+              // stmt.close();
+              // System.out.println("Base table update query: " + baseUpdateQuery);
+              // baseStmt.executeUpdate(baseUpdateQuery);
+            }
             
-            // baseUpdateQuery += restQuery;
-            System.out.println("Kyrix Index Update Query: " + updateQuery);
-            stmt.executeUpdate(updateQuery);
-            // stmt.close();
-            // System.out.println("Base table update query: " + baseUpdateQuery);
-            // baseStmt.executeUpdate(baseUpdateQuery);
 
             double midTime = System.currentTimeMillis() - startTime;
             double midTimeSec = midTime / 1000.0;
