@@ -39,6 +39,8 @@ public class UpdateRequestHandler implements HttpHandler {
             String layerId;
             String keyColumn;
 
+            long startTime = System.currentTimeMillis();
+
             // should be a POST request
             if (!httpExchange.getRequestMethod().equalsIgnoreCase("POST")) {
                 Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_BAD_METHOD, "");
@@ -60,9 +62,11 @@ public class UpdateRequestHandler implements HttpHandler {
             canvasId = map.get("canvasId").toString();
             layerId = map.get("layerId").toString();
             keyColumn = map.get("primaryKeyColumn").toString();
+            String projName = map.get("projectName").toString();
             System.out.println("canvas id is: " + canvasId);
             System.out.println("layer id is: " + layerId);
             System.out.println("key column is: " + keyColumn);
+            System.out.println("project name is: " + projName);
             String rawAttributes = map.get("objectAttributes").toString();
             System.out.println("attributes string ->" + rawAttributes);
             HashMap<String, String> objectAttrs = new HashMap<String, String>();
@@ -146,6 +150,10 @@ public class UpdateRequestHandler implements HttpHandler {
             updateQuery += ";";
             System.out.println("Update Query: " + updateQuery);
             stmt.executeUpdate(updateQuery);
+
+            double updateTimeDiff = System.currentTimeMillis() - startTime;
+            Server.sendStats(projName, canvasId, "update", updateTimeDiff, 1);
+            System.out.println("[UpdateRequestHandler] update took: " + updateTimeDiff + " ms or " + (updateTimeDiff/1000) + " sec.");
             Map<String, Object> respMap = new HashMap<>();
             response = gson.toJson(respMap);
             Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);

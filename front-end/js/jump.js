@@ -339,6 +339,7 @@ function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs) {
     layerId: layerId,
     primaryKeyColumn: idColumn,
     objectAttributes: newObjAttrs,
+    projectName: globalVar.project.name,
   };
   $.ajax({
     type: "POST",
@@ -409,6 +410,8 @@ function registerJumps(viewId, svg, layerId) {
         hasJump = true;
         break;
       }
+    
+    if (!hasJump) return;
 
     let currentObject = d3
       .select(viewClass + ".viewsvg")
@@ -417,6 +420,9 @@ function registerJumps(viewId, svg, layerId) {
         return d == p;
       });
 
+    // if (gvd.curCanvas.id == "teamtimeline" && layerId == 0) {
+
+    // }
     d3.select(viewClass + ".viewsvg")
       .selectAll("*")
       .filter(function (d) {
@@ -577,7 +583,6 @@ function registerJumps(viewId, svg, layerId) {
           })
       );
     // console.log("somethijng!");
-    if (!hasJump) return;
     // console.log("item has jump");
 
     // make cursor a hand when hovering over this shape
