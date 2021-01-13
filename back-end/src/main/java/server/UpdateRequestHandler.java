@@ -191,11 +191,11 @@ public class UpdateRequestHandler implements HttpHandler {
             objectAttrs = updateRequest.getObjectAttributes();
             baseTable = updateRequest.getBaseTable();
             projName = updateRequest.getProjectName();
+            int fetchedRows = 0;
 
             long startTime = System.currentTimeMillis();
             System.out.println("object attrs: " + objectAttrs);
 
-            long currTime = System.currentTimeMillis();
             String tableName = "bbox_" + Main.getProject().getName()
                                      + "_" + canvasId + "layer" + layerId;
             
@@ -252,7 +252,10 @@ public class UpdateRequestHandler implements HttpHandler {
 
             double midTime = System.currentTimeMillis() - startTime;
             double midTimeSec = midTime / 1000.0;
+            fetchedRows++;
+            fetchedRows++;
             System.out.println("updating up to re-running transform took: " + midTimeSec + " sec.");
+            Server.sendStats(projName, canvasId, "update1", midTime, 1);
 
             // now re-run transform on the relevant rows in the Kyrix index table
             // only update the rows that are selected by the key columns
@@ -263,11 +266,16 @@ public class UpdateRequestHandler implements HttpHandler {
             Transform trans = l.getTransform();
             System.out.println("data dependencies for layer " + layerIdNum + " is: " + trans.getDependencies());
             
+            long preSetup = System.currentTimeMillis();
             // re-run transform for the current layer
             // step 1: set up nashorn environment for running javascript code
             NashornScriptEngine engine = setupMultipleTransformNashorn(trans);
+            long setupTimeDiff = System.currentTimeMillis() - preSetup;
+            System.out.println("setting up nashorn environment for transform took: " + setupTimeDiff + " ms and took: " + (setupTimeDiff / 1000) + " sec");
+            Server.sendStats(projName, canvasId, "setup-transform", setupTimeDiff, 0);
             int transformFuncId = 0;
 
+            long currLvlTime = System.currentTimeMillis();
             String transDb = projName;
             String baseTransQuery = trans.getQuery();
             baseTransQuery = baseTransQuery.replaceAll(";", "");
@@ -286,20 +294,19 @@ public class UpdateRequestHandler implements HttpHandler {
               // count log - important to increment early so modulo-zero doesn't trigger on first
               // iteration
               rowCount++;
-  
+
               // get raw row
               ArrayList<String> curRawRow = new ArrayList<>();
               for (int i = 1; i <= numColumn; i++)
                   curRawRow.add(rs.getString(i) == null ? "" : rs.getString(i));
   
-              long currLvlTime = System.currentTimeMillis();
               // step 3: run transform function on this tuple
               ArrayList<String> transformedRow =
                       isNullTransform ? curRawRow : getTransformedRow(c, curRawRow, engine, transformFuncId);
 
-              double currLvlDiff = System.currentTimeMillis() - currLvlTime;
-              double currLvlSec = currLvlDiff / 1000.0;
-              System.out.println("current level transform took: " + currLvlDiff + " ms and took: " + currLvlSec + " sec");
+              // double currLvlDiff = System.currentTimeMillis() - currLvlTime;
+              // double currLvlSec = currLvlDiff / 1000.0;
+              // System.out.println("current level transform took: " + currLvlDiff + " ms and took: " + currLvlSec + " sec");
               System.out.println();
               System.out.println("[UpdateRequestHandler] re-running transform, row: "
                                    + rowCount + " has values: " + transformedRow);
@@ -311,19 +318,23 @@ public class UpdateRequestHandler implements HttpHandler {
 
               System.out.println();
               System.out.println("[UpdateRequestHandler] re-run transform query: " +  rerunTransformQuery);
-              currLvlTime = System.currentTimeMillis();
               stmt.executeUpdate(rerunTransformQuery);
-              currLvlDiff = System.currentTimeMillis() - currLvlTime;
-              currLvlSec = currLvlDiff / 1000.0;
-              System.out.println("current level kyrix index update query took: " + currLvlDiff + " ms and took: " + currLvlSec + " sec");
-              System.out.println();
+              
+              fetchedRows++;
             }
+            double currLvlDiff = System.currentTimeMillis() - currLvlTime;
+            double currLvlSec = currLvlDiff / 1000.0;
+            System.out.println("current level kyrix index update query took: " + currLvlDiff + " ms and took: " + currLvlSec + " sec");
+            System.out.println();
+            Server.sendStats(projName, canvasId, "transform1", currLvlDiff, 1);
+
 
             // re-run higher level transforms
             ArrayList<ArrayList<String>> dependencies = trans.getDependencies();
             transformFuncId++;
             // dependencies are structures like [[1, "usmap0_state"]] where 1 is the layerId and "usmap0_state" is the canvasId
             System.out.println();
+            long depLvlTime = System.currentTimeMillis();
             for (ArrayList<String> dep : dependencies) {
               assert(dep.size() == 2);
               String depLayerId = dep.get(0);
@@ -360,11 +371,10 @@ public class UpdateRequestHandler implements HttpHandler {
                   preTransformRow.add(rs.getString(i) == null ? "" : rs.getString(i));
                 }
 
-                long depLvlTime = System.currentTimeMillis();
                 ArrayList<String> transformedRow = isNullTransform ? preTransformRow : getTransformedRow(depCanvas, preTransformRow, engine, transformFuncId);
-                double depLvlDiff = System.currentTimeMillis() - depLvlTime;
-                double depLvlSec = depLvlDiff / 1000.0;
-                System.out.println("higher level transform took: " + depLvlDiff + " ms and took: " + depLvlSec + " sec");
+                // double depLvlDiff = System.currentTimeMillis() - depLvlTime;
+                // double depLvlSec = depLvlDiff / 1000.0;
+                // System.out.println("higher level transform took: " + depLvlDiff + " ms and took: " + depLvlSec + " sec");
                 System.out.println();
                 System.out.println("[UpdateRequestHandler] running dependent transform for row: " + rowCount + " has values: " + transformedRow);
                 System.out.println("[UpdateRequestHandler] and column names are: " + depTrans.getColumnNames());
@@ -376,17 +386,21 @@ public class UpdateRequestHandler implements HttpHandler {
                 System.out.println("[UpdateRequestHandler] re-run dependent transform query: " + depTransUpdateQuery);
                 depLvlTime = System.currentTimeMillis();
                 stmt.executeUpdate(depTransUpdateQuery);
-                depLvlDiff = System.currentTimeMillis() - depLvlTime;
-                depLvlSec = depLvlDiff / 1000.0;
-                System.out.println("higher level kyrix index update query took: " + depLvlDiff + " ms and took: " + depLvlSec + " sec");
-                System.out.println();
+                fetchedRows++;
               }
               transformFuncId++;
             }
+            double depLvlDiff = System.currentTimeMillis() - depLvlTime;
+            double depLvlSec = depLvlDiff / 1000.0;
+            System.out.println("higher level kyrix index update query took: " + depLvlDiff + " ms and took: " + depLvlSec + " sec");
+            System.out.println();
+            Server.sendStats(projName, canvasId, "transform2", depLvlDiff, 1);
 
-            double timeDiff = System.currentTimeMillis() - currTime;
+
+            double timeDiff = System.currentTimeMillis() - startTime;
             double timeSec = timeDiff / 1000.0;
             System.out.println("Update took: " + timeDiff + " ms and took: " + timeSec + " sec");
+            Server.sendStats(projName, canvasId, "update", timeDiff, fetchedRows);
             stmt.close();
             baseStmt.close();
             Map<String, Object> respMap = new HashMap<>();
