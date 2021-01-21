@@ -60,7 +60,8 @@ function Transform(query, db, transformFunc, columnNames, separable) {
             .replace(/\/\/ *@result: */g, "")
             .split(","); // safe bec we restricted the charset above
           numColumns = columnNames.length;
-        } else {
+          this.allowUpdates = false;
+        } else if (typeof columnNames == "object") {
           this.columnNames = Object.keys(columnNames);
           numColumns = this.columnNames.length;
           this.reverseFunctions = {}
@@ -72,6 +73,9 @@ function Transform(query, db, transformFunc, columnNames, separable) {
               this.reverseFunctions[colName] = funcBody;
             }
           }
+          this.allowUpdates = true;
+        } else {
+          throw new Error("Constructing Transform: columnNames must be either an Array of strings or an Object mapping string -> function");
         }
         console.log("columnNames=" + this.columnNames);
 
@@ -104,7 +108,8 @@ function Transform(query, db, transformFunc, columnNames, separable) {
     if (Array.isArray(columnNames)) {
       this.columnNames = columnNames;
       numColumns = columnNames.length;
-    } else {
+      this.allowUpdates = false;
+    } else if (typeof columnNames == "object") {
         this.columnNames = Object.keys(columnNames);
         numColumns = this.columnNames.length;
         this.reverseFunctions = {}
@@ -116,6 +121,9 @@ function Transform(query, db, transformFunc, columnNames, separable) {
               this.reverseFunctions[colName] = funcBody;
             }
         }
+        this.allowUpdates = true;
+    } else {
+      throw new Error("Constructing Transform: columnNames must be either an Array of strings or an Object mapping string -> function");
     }
     console.log("columnNames=" + this.columnNames);
 

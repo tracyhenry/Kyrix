@@ -375,12 +375,13 @@ function createUpdatePopover(gvd, viewId, layerId, p) {
   // gvd - data for current view, current canvas, transform, etc.
   let canvasId = gvd.curCanvasId;
   const viewClass = ".view_" + viewId;
-  let queryText = gvd.curCanvas.layers[layerId].transform.query;
+  var queryText = gvd.curCanvas.layers[layerId].transform.query;
+  queryText = queryText.toLowerCase();
   console.log(`queryText is: ${queryText} for layerId: ${layerId}`);
 
   // use regex to extract db column names from user-defined transform
-  queryText = queryText.split("SELECT")[1];
-  [queryText, tableName] = queryText.split("FROM");
+  queryText = queryText.split("select")[1];
+  [queryText, tableName] = queryText.split("from");
   tableName = tableName.replace(/[\s;]+/g, "").trim();
   queryText = queryText.replace(/\s+/g, "").trim();
   let queryFields = queryText.split(",");

@@ -660,7 +660,6 @@ function addUSMap(usmap, args) {
         if (usmap.updatesEnabled == true) {
           console.log(`transform dependency func: ${countyBoundaryLayer.addTransformDependency}`);
           countyBoundaryLayer.addTransformDependency(stateBoundaryLayer);
-          countyBoundaryLayer.setAllowUpdates();
         }
 
         countyMapCanvas.addLayer(countyBoundaryLayer);

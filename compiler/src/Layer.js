@@ -18,6 +18,8 @@ function Layer(transform, isStatic) {
     this.transform = transform;
     if (isStatic == null) this.isStatic = false;
     else this.isStatic = isStatic;
+    if (transform.allowUpdates) this.allowUpdates = true;
+    else this.allowUpdates = false;
     this.fetchingScheme = "dbox";
     this.deltaBox = true;
     this.rendering = "";
@@ -27,7 +29,6 @@ function Layer(transform, isStatic) {
     this.ssvId = "";
     this.usmapId = "";
     // these fields used for updates
-    this.allowUpdates = false;
     this.canvasId = -1;
     this.id = -1;
 }
@@ -118,10 +119,6 @@ function setIndexerType(indexerType) {
     this.indexerType = indexerType;
 }
 
-function setAllowUpdates() {
-  this.allowUpdates = true;
-}
-
 function addTransformDependency(otherLayer) {
   this.transform.dependencies.push([otherLayer.canvasId, otherLayer.id.toString()]);
 }
@@ -135,7 +132,6 @@ Layer.prototype = {
     setSSVId,
     setUSMapId,
     setIndexerType,
-    setAllowUpdates,
     addTransformDependency,
 };
 
