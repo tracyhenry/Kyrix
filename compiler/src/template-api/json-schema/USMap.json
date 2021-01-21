@@ -102,6 +102,10 @@
             "type": "string",
             "maxLength": 20,
             "default": "Rate"
+        },
+        "updatesEnabled": {
+           "enum" : [ true, false ],
+           "default": false
         }
     },
     "required": ["db", "state"],

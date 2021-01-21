@@ -33,6 +33,7 @@ function USMap(args_) {
     this.zoomFactor = args.zoomFactor;
     this.zoomType = args.zoomType;
     this.tooltipAlias = args.tooltipAlias;
+    this.updatesEnabled = args.updatesEnabled;
     this.params = {
         colorScheme: args.colorScheme,
         projection: args.projection,
@@ -54,6 +55,115 @@ function USMap(args_) {
 
 function getUSMapTransformFunc(transformName) {
     //------------Transforms--------------------
+
+    function stateMapTransformFunc(row, width, height) {
+      var ret = [];
+
+      var projectionStr = "REPLACE_ME_projection";
+      var projection;
+      if (projectionStr == "geoAlbersUsa") {
+          projection = d3
+              .geoAlbersUsa()
+              .scale(width)
+              .translate([width / 2, height / 2]);
+      } else {
+          projection = d3
+              .geoMercator()
+              .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
+              .center([-98.5, 39.5])
+              .translate([width / 2, height / 2]);
+      }
+
+      var path = d3.geoPath().projection(projection);
+      var feature = JSON.parse(row[2]);
+      var centroid = path.centroid(feature);
+      ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
+      ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
+      ret.push(row[0]);
+      ret.push(row[1]);
+      ret.push(row[2]);
+
+      return Java.to(ret, "java.lang.String[]");
+    }
+
+    function countyMapStateBoundaryTransformFunc(row, width, height) {
+      var ret = [];
+
+      var projectionStr = "REPLACE_ME_projection";
+      var projection;
+      if (projectionStr == "geoAlbersUsa") {
+          projection = d3
+              .geoAlbersUsa()
+              .scale(width)
+              .translate([width / 2, height / 2]);
+      } else {
+          projection = d3
+              .geoMercator()
+              .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
+              .center([-98.5, 39.5])
+              .translate([width / 2, height / 2]);
+      }
+
+      var path = d3.geoPath().projection(projection);
+      var feature = JSON.parse(row[0]);
+      var centroid = path.centroid(feature);
+      var bounds = path.bounds(feature);
+      ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
+      ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
+      ret.push(
+          !isFinite(bounds[0][0]) || !isFinite(bounds[1][0])
+              ? 0
+              : bounds[1][0] - bounds[0][0]
+      );
+      ret.push(
+          !isFinite(bounds[0][1]) || !isFinite(bounds[1][1])
+              ? 0
+              : bounds[1][1] - bounds[0][1]
+      );
+      ret.push(row[0]);
+
+      return Java.to(ret, "java.lang.String[]");
+    }
+
+    function countyMapTransformFunc(row, width, height) {
+      var ret = [];
+
+      var projectionStr = "REPLACE_ME_projection";
+      var projection;
+      if (projectionStr == "geoAlbersUsa") {
+          projection = d3
+              .geoAlbersUsa()
+              .scale(width)
+              .translate([width / 2, height / 2]);
+      } else {
+          projection = d3
+              .geoMercator()
+              .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
+              .center([-98.5, 39.5])
+              .translate([width / 2, height / 2]);
+      }
+
+      var path = d3.geoPath().projection(projection);
+      var feature = JSON.parse(row[2]);
+      var centroid = path.centroid(feature);
+      var bounds = path.bounds(feature);
+      ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
+      ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
+      ret.push(
+          !isFinite(bounds[0][0]) || !isFinite(bounds[1][0])
+              ? 0
+              : bounds[1][0] - bounds[0][0]
+      );
+      ret.push(
+          !isFinite(bounds[0][1]) || !isFinite(bounds[1][1])
+              ? 0
+              : bounds[1][1] - bounds[0][1]
+      );
+      for (var i = 0; i < 3; i++) ret.push(row[i]);
+
+      return Java.to(ret, "java.lang.String[]");
+    }
+
     /*
       SELECT cs.name, cs.state_id, cs.total_dem_votes,
        cs.total_rep_votes, cs.total_votes,
@@ -64,7 +174,7 @@ function getUSMapTransformFunc(transformName) {
        FROM state s LEFT JOIN county c on c.state_id = s.state_id
         GROUP BY s.name, s.state_id, s.total_votes, s.geomstr) as cs;
     */
-    function stateMapTransformFunc(row, width, height) {
+    function updateStateMapTransformFunc(row, width, height) {
         var ret = [];
         var name = row[0];
         var stateId = row[1];
@@ -105,50 +215,11 @@ function getUSMapTransformFunc(transformName) {
         return Java.to(ret, "java.lang.String[]");
     }
 
-    function countyMapStateBoundaryTransformFunc(row, width, height) {
-        var ret = [];
-
-        var projectionStr = "REPLACE_ME_projection";
-        var projection;
-        if (projectionStr == "geoAlbersUsa") {
-            projection = d3
-                .geoAlbersUsa()
-                .scale(width)
-                .translate([width / 2, height / 2]);
-        } else {
-            projection = d3
-                .geoMercator()
-                .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
-                .center([-98.5, 39.5])
-                .translate([width / 2, height / 2]);
-        }
-
-        var path = d3.geoPath().projection(projection);
-        var feature = JSON.parse(row[0]);
-        var centroid = path.centroid(feature);
-        var bounds = path.bounds(feature);
-        ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
-        ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
-        ret.push(
-            !isFinite(bounds[0][0]) || !isFinite(bounds[1][0])
-                ? 0
-                : bounds[1][0] - bounds[0][0]
-        );
-        ret.push(
-            !isFinite(bounds[0][1]) || !isFinite(bounds[1][1])
-                ? 0
-                : bounds[1][1] - bounds[0][1]
-        );
-        ret.push(row[0]);
-
-        return Java.to(ret, "java.lang.String[]");
-    }
-
     /*
       SELECT name, state_id, county_id, dem_votes, rep_votes, total_votes, 
       (dem_votes / (total_votes+0.01)) as rate, geomstr FROM county;
     */
-    function countyMapTransformFunc(row, width, height) {
+    function updateCountyMapTransformFunc(row, width, height) {
         var ret = [];
         var name = row[0];
         var stateId = row[1];
@@ -220,6 +291,18 @@ function getUSMapTransformFunc(transformName) {
             transform = getBodyStringOfFunction(countyMapTransformFunc).replace(
                 /REPLACE_ME_projection/g,
                 this.params.projection
+            );
+            break;
+        case "updateStateMapTransform":
+            transform = getBodyStringOfFunction(updateStateMapTransformFunc).replace(
+              /REPLACE_ME_projection/g,
+              this.params.projection
+            );
+            break;
+        case "updateCountyMapTransform":
+            transform = getBodyStringOfFunction(updateCountyMapTransformFunc).replace(
+              /REPLACE_ME_projection/g,
+              this.params.projection
             );
             break;
         default:
