@@ -24,6 +24,7 @@ var args = {
   zoomType: "jump",
   legendTitle: "Percent Democrat Votes",
   tooltipAlias: "Percent Democrat",
+  updatesEnabled: true,
 };
 
 // build project
