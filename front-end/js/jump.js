@@ -367,37 +367,41 @@ function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs, projName)
 
 function createPopoverDivs(viewId) {
   var viewClass = ".view_" + viewId;
-  d3.select(".kyrixdiv")
-      .append("div")
-      .classed("view_" + viewId + " popover fade right in", true)
-      .attr("role", "tooltip")
-      .attr("id", "jumppopover")
-      .append("div")
-      .classed("view_" + viewId + " arrow popoverarrow", true)
-      .attr("id", "popoverarrow");
-  d3.select(viewClass + "#jumppopover")
-      .append("h2")
-      .classed("view_" + viewId + " popover-title", true)
-      .attr("id", "popovertitle")
-      .html("Jump Options")
-      .append("a")
-      .classed("view_" + viewId + " close", true)
-      .attr("href", "#")
-      .attr("id", "popoverclose")
-      .html("&times;")
-      .on("click", function() {
-          removePopovers(viewId);
-      });
-  d3.select(viewClass + "#jumppopover")
-      .append("div")
-      .classed("view_" + viewId + " popover-content list-group", true)
-      .attr("id", "popovercontent");
+  // create a jumpoption popover using bootstrap
+  d3.select("body")
+    .append("div")
+    .classed(
+        "view_" + viewId + " jumppopover popover fade right in",
+        true
+    )
+    .attr("role", "tooltip")
+    .append("div")
+    .classed("view_" + viewId + " popoverarrow arrow", true);
+  d3.select(viewClass + ".jumppopover")
+    .append("h2")
+    .classed("view_" + viewId + " popover-title", true)
+    .html("Jump Options")
+    .append("a")
+    .classed("view_" + viewId + " popoverclose close", true)
+    .attr("href", "#")
+    .html("&times;")
+    .on("click", function() {
+        console.log("clicked exit button");
+        removePopovers(viewId);
+    });
+  d3.select(viewClass + ".jumppopover")
+    .append("div")
+    .classed(
+        "view_" +
+            viewId +
+            " popovercontent popover-content list-group",
+        true
+    );
 }
 
 function addPopoverUpdateOptions(gvd, viewId, layerId, p) {
   console.log(gvd);
 
-  // stop the right click event from propagating up
   d3.event.preventDefault();
   d3.event.stopPropagation();
   
@@ -448,7 +452,7 @@ function addPopoverUpdateOptions(gvd, viewId, layerId, p) {
       updateBtnIds.push(updateBtnName);
 
       let updateAttrs = d3
-          .select(viewClass + "#popovercontent")
+          .select(viewClass + ".popovercontent")
           .append("div");
           
   
@@ -556,20 +560,14 @@ function addPopoverUpdateOptions(gvd, viewId, layerId, p) {
   
 
   // finally position updates popover according to event x/y and its width/height
-  let updatePopoverHeight = d3
-      .select(viewClass + "#jumppopover")
-      .node()
-      .getBoundingClientRect().height;
-  let kyrixDivBox = d3
-      .select(".kyrixdiv")
-      .node()
-      .getBoundingClientRect();
-  d3.select(viewClass + "#jumppopover")
-      .style("left", d3.event.pageX - kyrixDivBox.left + "px")
-      .style(
-          "top",
-          d3.event.pageY - kyrixDivBox.top - updatePopoverHeight / 2 + "px"
-  );   
+  // position jump popover according to event x/y and its width/height
+  var popoverHeight = d3
+    .select(viewClass + ".jumppopover")
+    .node()
+    .getBoundingClientRect().height;
+  d3.select(viewClass + ".jumppopover")
+    .style("left", d3.event.pageX + "px")
+    .style("top", d3.event.pageY - popoverHeight / 2 + "px");
 }
 
 // register jump info
@@ -768,7 +766,9 @@ function registerJumps(viewId, svg, layerId) {
         // register onclick listener
         d3.select(this).on("click.popover", function(d) {
             // stop the click event from propagating up
+            d3.event.preventDefault();
             d3.event.stopPropagation();
+            console.log("clicked on the popover");
 
             // remove all popovers first
             removePopovers(viewId);
@@ -830,7 +830,7 @@ function registerJumps(viewId, svg, layerId) {
             if (layerObj.allowUpdates) {
               let updateText = "<b>UPDATE ATTRIBUTES in " + gvd.curCanvasId + "</b>";
               let updateJumpOption = d3
-                  .select(viewClass + "#popovercontent")
+                  .select(viewClass + ".popovercontent")
                   .append("a")
                   .classed("list-group-item", true)
                   .attr("href", "#")
