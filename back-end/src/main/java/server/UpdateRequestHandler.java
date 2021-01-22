@@ -26,8 +26,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Properties;
-import java.util.List;
 import java.util.Set;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 
@@ -67,6 +65,16 @@ public class UpdateRequestHandler implements HttpHandler {
         }
       }
       return columnsInTable;
+    }
+
+    private HashMap<String,String> filterObjectAttrs(Set<String> colList, HashMap<String,String> objAttrs) throws SQLException, ClassNotFoundException {
+      HashMap<String,String> attrsInTable = new HashMap<String,String>();
+      for (String col : objAttrs.keySet()) {
+        if (colList.contains(col)) {
+          attrsInTable.put(col, objAttrs.get(col));
+        }
+      }
+      return attrsInTable;
     }
 
     private String generateKeySubQuery(HashMap<String,String> objectAttrs, HashMap<String,String> attrColumnTypes, ArrayList<String> keyColumns, boolean isTransformQuery) {
@@ -198,6 +206,10 @@ public class UpdateRequestHandler implements HttpHandler {
 
             String tableName = "bbox_" + Main.getProject().getName()
                                      + "_" + canvasId + "layer" + layerId;
+            Canvas c = Main.getProject().getCanvas(canvasId);
+            int layerIdNum = Integer.parseInt(layerId);
+            Layer l = c.getLayers().get(layerIdNum);
+            Transform trans = l.getTransform();
             
             // get types of kyrix index table, will just be text for all columns in base table
             // and double precision for the bbox coordinates/placement
@@ -228,6 +240,8 @@ public class UpdateRequestHandler implements HttpHandler {
             typeQuery = 
                   "SELECT column_name, data_type  FROM information_schema.columns WHERE table_name = "
                     + "'" + baseTable + "';";
+            System.out.println("baseTable name: " + baseTable);
+            System.out.println("project name: " + projName);
             ResultSet baseRs = baseStmt.executeQuery(typeQuery);
             while (baseRs.next()) {
               colName = baseRs.getString(1);
@@ -240,7 +254,9 @@ public class UpdateRequestHandler implements HttpHandler {
             System.out.println("base column types -> " + baseAttrColTypes);
 
             String updateQuery = createUpdateQuery(tableName, objectAttrs, attrColumnTypes, keyColumns, false);
-            String baseUpdateQuery = createUpdateQuery(baseTable, objectAttrs, baseAttrColTypes, keyColumns, false);
+            HashMap<String,String> baseObjectAttrs = filterObjectAttrs(baseAttrColTypes.keySet(), objectAttrs);
+            System.out.println("base object attrs:  " + baseObjectAttrs);
+            String baseUpdateQuery = createUpdateQuery(baseTable, baseObjectAttrs, baseAttrColTypes, keyColumns, false);
 
             
             // baseUpdateQuery += restQuery;
@@ -260,11 +276,23 @@ public class UpdateRequestHandler implements HttpHandler {
             // now re-run transform on the relevant rows in the Kyrix index table
             // only update the rows that are selected by the key columns
             // Layer l = c.getLayers().get(layerId);
-            Canvas c = Main.getProject().getCanvas(canvasId);
-            int layerIdNum = Integer.parseInt(layerId);
-            Layer l = c.getLayers().get(layerIdNum);
-            Transform trans = l.getTransform();
+            
             System.out.println("data dependencies for layer " + layerIdNum + " is: " + trans.getDependencies());
+
+            // return early if update has no dependencies (is non-hierarchical)
+            if (trans.getDependencies().size() == 0) {
+              System.out.println("Update has no dependencies, returning early...");
+              double timeDiff = System.currentTimeMillis() - startTime;
+              double timeSec = timeDiff / 1000.0;
+              System.out.println("Update took: " + timeDiff + " ms and took: " + timeSec + " sec");
+              Server.sendStats(projName, canvasId, "update", timeDiff, fetchedRows);
+              stmt.close();
+              baseStmt.close();
+              Map<String, Object> respMap = new HashMap<>();
+              response = gson.toJson(respMap);
+              Server.sendResponse(httpExchange, HttpsURLConnection.HTTP_OK, response);
+              return;
+            }
             
             long preSetup = System.currentTimeMillis();
             // re-run transform for the current layer
