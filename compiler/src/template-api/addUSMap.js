@@ -112,8 +112,6 @@ function addUSMap(usmap, args) {
     if (!("view" in args)) {
         var view = new View(
             "usmap" + (this.usmaps.length - 1),
-            0,
-            0,
             usmap.stateMapWidth,
             usmap.stateMapHeight
         );
