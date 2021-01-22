@@ -32,7 +32,7 @@ var teamTimelineCanvas = new Canvas("teamtimeline", width, height);
 p.addCanvas(teamTimelineCanvas);
 
 // pannable timeline layer
-var timelineLayer = new Layer(transforms.teamTimelineTransform, false);
+var timelineLayer = new Layer(transforms.teamTimelineTransformUpdates, false);
 teamTimelineCanvas.addLayer(timelineLayer);
 timelineLayer.addPlacement(placements.teamTimelinePlacement);
 timelineLayer.addRenderingFunc(renderers.teamTimelineRendering);
