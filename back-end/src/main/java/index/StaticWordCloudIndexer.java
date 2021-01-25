@@ -45,7 +45,7 @@ public class StaticWordCloudIndexer extends StaticAggregationIndexer {
         System.out.println(sql);
         bboxStmt.executeUpdate(sql);
 
-        sql = "CREATE TEMPORARY TABLE wordCloudTemp (";
+        sql = "CREATE TABLE wordCloudTemp (";
         for (int i = 0; i < trans.getColumnNames().size(); i++)
             sql += (i == 0 ? "" : ", ") + trans.getColumnNames().get(i) + " text";
         sql += ")";
@@ -55,8 +55,9 @@ public class StaticWordCloudIndexer extends StaticAggregationIndexer {
         // prepare for writing into kyrix db
         int rowCount = 0;
         String insertSql = "INSERT INTO wordCloudTemp VALUES (";
-        for (int i = 0; i < trans.getColumnNames().size(); i++) insertSql += "?, ";
-        insertSql += "?, ?, ?, ?, ?, ?)";
+        for (int i = 0; i < trans.getColumnNames().size(); i++)
+            insertSql += (i > 0 ? ", " : "") + "?";
+        insertSql += ")";
         PreparedStatement preparedStmt =
                 DbConnector.getPreparedStatement(Config.databaseName, insertSql);
         int numColumn = trans.getColumnNames().size();
@@ -75,8 +76,8 @@ public class StaticWordCloudIndexer extends StaticAggregationIndexer {
             // get raw row
             ArrayList<String> curRawRow = aggResults.get(i);
             for (int j = 1; j <= numColumn; j++) {
-                if (curRawRow.get(j) == null) curRawRow.set(j, "");
-                preparedStmt.setString(j, curRawRow.get(j).replaceAll("\'", "\'\'"));
+                if (curRawRow.get(j - 1) == null) curRawRow.set(j - 1, "");
+                preparedStmt.setString(j, curRawRow.get(j - 1).replaceAll("\'", "\'\'"));
             }
             preparedStmt.addBatch();
         }
@@ -101,11 +102,11 @@ public class StaticWordCloudIndexer extends StaticAggregationIndexer {
         sql = "SELECT ";
         for (int i = 0; i < trans.getColumnNames().size(); i++) {
             String col = trans.getColumnNames().get(i);
-            sql += "(v->>" + col + ")::text AS " + col + ", ";
+            sql += "(v->>'" + col + "')::text AS " + col + ", ";
         }
         sql +=
-                "(v->>kyrixWCText)::text as kyrixWCText, (v->>kyrixWCSize)::int as kyrixWCSize, "
-                        + "(v->>kyrixWCRotate)::float as kyrixWCRotate, (v->>kyrixWCX)::float as kyrixWCX, (v->>kyrixWCY)::float as kyrixWCY"
+                "(v->>'kyrixWCText')::text as kyrixWCText, (v->>'kyrixWCSize')::int as kyrixWCSize, "
+                        + "(v->>'kyrixWCRotate')::float as kyrixWCRotate, (v->>'kyrixWCX')::float as kyrixWCX, (v->>'kyrixWCY')::float as kyrixWCY"
                         + " INTO "
                         + indexTablaName
                         + " FROM (SELECT getWordCloudCoordinates(array_agg(to_jsonb(wordCloudTemp)), "

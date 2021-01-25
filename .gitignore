@@ -185,3 +185,6 @@ front-end/js/embed/kyrix.js
 compile.sh
 !docker-scripts/compile.sh
 *.sql
+mvn-compile.out
+mvn-exec.out
+user_app/

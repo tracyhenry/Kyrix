@@ -1123,12 +1123,14 @@ function getRenderer(type) {
     }
 }
 
+// PLV8 function to calcualte word cloud coordinates
+// in the backend
 function getWordCloudCoordinates(
     data,
-    renderingParams,
-    rpKey,
-    canvasW,
-    canvasH
+    renderingparams,
+    rpkey,
+    canvasw,
+    canvash
 ) {
     /**
      * stuff from d3-cloud
@@ -1559,9 +1561,11 @@ function getWordCloudCoordinates(
     /**
      * Now coordinate calculation starts
      */
-    var params = renderingParams[rpKey];
+    var params = renderingparams[rpkey];
     var ysft = 80;
 
+    if (!("d3" in plv8)) plv8.d3 = require("d3");
+    var d3 = plv8.d3;
     var minAggValue = d3.min(data.map(d => +d.kyrixAggValue));
     var maxAggValue = d3.max(data.map(d => +d.kyrixAggValue));
     var sizeScale = d3
@@ -1583,7 +1587,7 @@ function getWordCloudCoordinates(
                 );
             })
         )
-        .size([canvasW, canvasH - ysft])
+        .size([canvasw, canvash - ysft])
         .rotate(() => {
             return params.rotation[
                 Math.floor(Math.random() * params.rotation.length)
