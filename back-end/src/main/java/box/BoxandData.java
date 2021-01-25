@@ -43,15 +43,22 @@ public class BoxandData {
                 }
 
                 // cluster number field for ssv layer
-                if (curLayer.getIndexerType().contains("SSV")) {
-                    rowDict.put("clusterAgg", rowArray.get(numFields));
-                    numFields++;
+                if (curLayer.getIndexerType().contains("SSV"))
+                    rowDict.put("clusterAgg", rowArray.get(numFields++));
+
+                // word cloud fields
+                if (curLayer.getIndexerType().contains("wordCloud")) {
+                    rowDict.put("kyrixWCText", rowArray.get(numFields++));
+                    rowDict.put("kyrixWCSize", rowArray.get(numFields++));
+                    rowDict.put("kyrixWCRotate", rowArray.get(numFields++));
+                    rowDict.put("kyrixWCX", rowArray.get(numFields++));
+                    rowDict.put("kyrixWCY", rowArray.get(numFields++));
                 }
 
                 // bounding box fields,
                 // need to check if rowArray has cx, cy, minx, ..
                 // since the introduction of StaticAggregationIndexer
-                // which does generate cx, cy, minx...
+                // which does not generate cx, cy, minx...
                 rowDict.put("cx", numFields >= rowArray.size() ? "0" : rowArray.get(numFields));
                 rowDict.put(
                         "cy", numFields + 1 >= rowArray.size() ? "0" : rowArray.get(numFields + 1));

@@ -156,6 +156,9 @@
                 "rotation": {
                     "type": "array",
                     "minItems": 1,
+                    "item": {
+                        "type": "integer"
+                    },
                     "default": [0]
                 },
                 "maxTextLength": {

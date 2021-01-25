@@ -121,7 +121,9 @@ function addStaticAggregation(staticAggregation, args) {
         staticAggregation.tooltip.columns,
         staticAggregation.tooltip.aliases
     );
-    staticAggregationLayer.setIndexerType("StaticAggregationIndexer");
+    if (staticAggregation.type == "wordCloud")
+        staticAggregationLayer.setIndexerType("StaticWordCloudIndexer");
+    else staticAggregationLayer.setIndexerType("StaticAggregationIndexer");
     staticAggregationLayer.setStaticAggregationId(
         this.staticAggregations.length - 1 + "_" + 0
     );
@@ -151,6 +153,9 @@ function addStaticAggregation(staticAggregation, args) {
     staticAggregationCanvas.addLayer(sampleLayer);
     sampleLayer.addRenderingFunc(function() {});
     sampleLayer.setIndexerType("StaticAggregationIndexer");
+    sampleLayer.setStaticAggregationId(
+        this.staticAggregations.length - 1 + "_" + 1
+    );
 
     // add stylesheet
     if (staticAggregation.type == "pie")
