@@ -13,7 +13,7 @@ FROM node:12-alpine
 
 # coreutils provides stdbuf; --update nodejs required to get npm
 RUN apk add --no-cache --virtual .build-dependencies -q --update \
-    nodejs nodejs-npm postgresql-client maven curl wget git openjdk8 coreutils python bash nss perl build-base g++ jpeg-dev cairo-dev giflib-dev pango-dev
+    nodejs nodejs-npm postgresql-client maven curl wget git openjdk8 coreutils python bash nss perl build-base g++ jpeg-dev cairo-dev giflib-dev pango-dev nano
 
 # for node-canvas fixed fonts
 RUN apk add --update  --repository http://dl-3.alpinelinux.org/alpine/edge/testing libmount ttf-dejavu ttf-droid ttf-freefont ttf-liberation ttf-ubuntu-font-family fontconfig
