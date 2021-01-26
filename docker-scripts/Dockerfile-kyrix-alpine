@@ -9,11 +9,14 @@
 #
 
 # start with alpine and node
-FROM node:8-alpine
+FROM node:12-alpine
 
 # coreutils provides stdbuf; --update nodejs required to get npm
 RUN apk add --no-cache --virtual .build-dependencies -q --update \
-    nodejs nodejs-npm postgresql-client maven curl wget git openjdk8 coreutils python bash nss perl
+    nodejs nodejs-npm postgresql-client maven curl wget git openjdk8 coreutils python bash nss perl build-base g++ jpeg-dev cairo-dev giflib-dev pango-dev
+
+# for node-canvas fixed fonts
+RUN apk add --update  --repository http://dl-3.alpinelinux.org/alpine/edge/testing libmount ttf-dejavu ttf-droid ttf-freefont ttf-liberation ttf-ubuntu-font-family fontconfig
 
 # optional: uncomment if instead you want to get from git...
 #RUN git clone https://github.com/tracyhenry/kyrix > git-clone.out
@@ -25,7 +28,7 @@ ADD ./front-end /kyrix/front-end/
 # setup Kyrix compiler
 ADD ./compiler /kyrix/compiler/
 WORKDIR /kyrix/compiler
-RUN rm -fr /kyrix/compiler/node_modules && npm install
+RUN rm -fr /kyrix/compiler/node_modules && npm install --build-from-source
 # workaround.  Note that alpine's sh requires different escapification vs ubuntu
 RUN sed -i 's/\(.\+equest\)/\/\/\1/g' node_modules/d3/build/d3.node.js
 
@@ -44,4 +47,3 @@ ENTRYPOINT exec /bin/sh -c "trap : TERM INT; (while true; do sleep 10000; done) 
 
 # override in kubernetes yaml with something like this
 # ENTRYPOINT sh -c 'sleep 5; PGHOST=${PGHOST} POSTGRES_PASSWORD=${PGPASS} USER_PASSWORD=${KYRIX_PASSWORD} /wait-for-postgres ${PGHOST}:5432 -t 60 -- /start-kyrix.sh'
-
