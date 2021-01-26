@@ -47,7 +47,7 @@ public class BoxandData {
                     rowDict.put("clusterAgg", rowArray.get(numFields++));
 
                 // word cloud fields
-                if (curLayer.getIndexerType().contains("wordCloud")) {
+                if (curLayer.getIndexerType().contains("WordCloud")) {
                     rowDict.put("kyrixWCText", rowArray.get(numFields++));
                     rowDict.put("kyrixWCSize", rowArray.get(numFields++));
                     rowDict.put("kyrixWCRotate", rowArray.get(numFields++));

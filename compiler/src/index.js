@@ -8,6 +8,8 @@ const addSSV = require("./template-api/addSSV").addSSV;
 const addUSMap = require("./template-api/addUSMap").addUSMap;
 const addStaticAggregation = require("./template-api/addStaticAggregation")
     .addStaticAggregation;
+const getWordCloudCoordinates = require("./template-api/StaticAggregation")
+    .getWordCloudCoordinates;
 
 /**
  *
@@ -322,7 +324,7 @@ function sendProjectRequestToBackend(portNumber, projectJSON) {
 }
 
 // save the current project, and send it to backend server
-function saveProject() {
+async function saveProject() {
     var config = this.config;
 
     // final checks before saving
@@ -514,84 +516,137 @@ function saveProject() {
         var useDbQuery = 'USE "' + config.kyrixDbName + '";';
 
         // construct a connection to the postgres db to create Kyrix db
-        var postgresConn = new psql.Client({
+        var pgClient = new psql.Client({
             host: config.serverName,
             user: config.userName,
             password: config.password,
             database: "postgres"
         });
 
-        // create Kyrix DB and ignore error
-        postgresConn.connect(function(err) {
-            if (err)
-                console.error(
-                    "****** Error in connecting to postgres db\n****** Call Stack from Node:"
-                );
-            else console.log("connected");
-            if (err) throw err;
+        // create a bunch of tables and dbs
+        try {
+            await pgClient.connect();
+            console.log("Connected to Postgres");
 
-            postgresConn.query(createDbQuery, function(err) {
-                // ignoring the error here
-                var dbConn = new psql.Client({
-                    host: config.serverName,
-                    user: config.userName,
-                    password: config.password,
-                    database: config.kyrixDbName
-                });
-
-                // connect and pose queries
-                dbConn.connect(function(err) {
-                    if (err)
-                        console.error(
-                            "****** Error in connecting to kyrix db\n****** Call Stack from Node:"
-                        );
-                    else console.log("connected");
-                    if (err) throw err;
-
-                    // create a table and ignore the error
-                    dbConn.query(createTableQuery, function(err) {
-                        if (err)
-                            console.error(
-                                "****** Error in creating the project table\n****** Call Stack from Node:"
-                            );
-                        else console.log("project table created");
-                        if (err) throw err;
-
-                        // delete the project if exists
-                        dbConn.query(deleteProjQuery, function(err) {
-                            if (err)
-                                console.error(
-                                    "error with delete project",
-                                    err.stack
-                                );
-                            else console.log("old project record deleted");
-                            if (err) throw err;
-
-                            // insert the JSON blob into the project table
-                            dbConn.query(insertProjQueryPSQL, function(err) {
-                                if (err)
-                                    console.error(
-                                        "error with insert project",
-                                        err.stack
-                                    );
-                                else console.log("new project record inserted");
-                                if (err) throw err;
-
-                                sendProjectRequestToBackend(
-                                    config.serverPortNumber,
-                                    projectJSON
-                                );
-                                dbConn.end();
-                                postgresConn.end();
-                            });
-                        });
-                    });
-                });
+            await pgClient.query(createDbQuery).catch(err => {});
+            var kyrixClient = new psql.Client({
+                host: config.serverName,
+                user: config.userName,
+                password: config.password,
+                database: config.kyrixDbName
             });
-        });
+
+            await kyrixClient.connect();
+            console.log("Connected to Kyrix DB");
+
+            await kyrixClient.query(createTableQuery);
+            console.log("project table created");
+
+            await kyrixClient.query(deleteProjQuery);
+            console.log("old project record deleted");
+
+            await kyrixClient.query(insertProjQueryPSQL);
+            console.log("new project record inserted");
+        } catch (err) {
+            console.error(err);
+        }
+
+        // recalculate word-cloud indexes in here because
+        // (1) the word cloud renderer is too slow so we need serverside rendering
+        // (2) the word cloud renderer needs to access dom, so we need something like node-canvas
+        // (3) node-canvas requires binary .node files, so we can't get a bundled JS file, which PLV8 requires
+        if (
+            this.staticAggregations.filter(d => d.type == "wordCloud").length >
+                0 &&
+            !(process.argv.length == 3 && process.argv[2] == "-s")
+        )
+            await this.indexWordClouds();
+
+        // send a project request to backend
+        sendProjectRequestToBackend(config.serverPortNumber, projectJSON);
+        kyrixClient.end();
+        pgClient.end();
     } else {
         console.error("unknown database type", config.database);
     }
+}
+
+async function indexWordClouds() {
+    console.log("Indexing word clouds...");
+    var config = this.config;
+    var kyrixClient = new psql.Client({
+        host: config.serverName,
+        user: config.userName,
+        password: config.password,
+        database: config.kyrixDbName
+    });
+    await kyrixClient.connect();
+    for (var i = 0; i < this.canvases.length; i++) {
+        var l = this.canvases[i].layers[0];
+        let saId = l.staticAggregationId;
+        if (saId.length == 0 || !l.indexerType.includes("WordCloud")) continue;
+
+        // get sql query results in
+        var aggResult;
+        try {
+            var rawClient = new psql.Client({
+                host: config.serverName,
+                user: config.userName,
+                password: config.password,
+                database: l.transform.db
+            });
+            await rawClient.connect();
+            aggResult = await rawClient.query(l.transform.query);
+            rawClient.end();
+        } catch (err) {
+            console.error(err);
+        }
+
+        // run getWordCloudCoordinates
+        var renderingParams = JSON.parse(this.renderingParams);
+        var rpKey = "staticAggregation_" + saId.substring(0, saId.indexOf("_"));
+        var canvasW = this.canvases[i].w;
+        var canvasH = this.canvases[i].h;
+        var words = getWordCloudCoordinates(
+            aggResult.rows,
+            renderingParams,
+            rpKey,
+            canvasW,
+            canvasH
+        );
+
+        // write to kyrix db
+        try {
+            // drop index table if exists already
+            var indexTableName =
+                "bbox_" + this.name + "_" + this.canvases[i].id + "layer0";
+            var sql = `DROP TABLE IF EXISTS ${indexTableName};`;
+            // console.log(sql);
+            await kyrixClient.query(sql);
+
+            // create index table
+            sql = `CREATE TABLE ${indexTableName} (`;
+            for (var field of aggResult.fields) sql += field.name + " text, ";
+            sql +=
+                "kyrixWCText text, kyrixWCSize int, kyrixWCRotate int, kyrixWCX int, kyrixWCY int);";
+            // console.log(sql);
+            await kyrixClient.query(sql);
+
+            // write to index table
+            for (var word of words) {
+                sql = `INSERT INTO ${indexTableName} VALUES (`;
+                for (var field of aggResult.fields)
+                    sql += `'${word[field.name]}', `;
+                sql += `'${word.kyrixWCText}', ${word.kyrixWCSize}, ${word.kyrixWCRotate}, ${word.kyrixWCX}, ${word.kyrixWCY})`;
+                // console.log(sql);
+                await kyrixClient.query(sql);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    kyrixClient.end();
+    console.log("Done indexing word clouds...");
 }
 
 // define prototype functions
@@ -607,7 +662,8 @@ Project.prototype = {
     addStyles,
     setInitialStates,
     setFetchingScheme,
-    saveProject
+    saveProject,
+    indexWordClouds
 };
 
 // exports

@@ -1,6 +1,7 @@
 const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
 const formatAjvErrorMessage = require("./Utilities").formatAjvErrorMessage;
 const fs = require("fs");
+const d3 = require("d3");
 
 function StaticAggregation(args_) {
     // verify against schema
@@ -78,11 +79,6 @@ function StaticAggregation(args_) {
     // get args into "this"
     var keys = Object.keys(args);
     for (var i = 0; i < keys.length; i++) this[keys[i]] = args[keys[i]];
-
-    // add getWordCloudCoordinates
-    this.getWordCloudCoordinatesBody = getBodyStringOfFunction(
-        getWordCloudCoordinates
-    );
 }
 
 function getRenderer(type) {
@@ -1050,8 +1046,8 @@ function getRenderer(type) {
                 return d.kyrixWCSize + "px";
             })
             .attr("transform", function(d) {
-                d.screenX = d.kyrixWCX + args.canvasW / 2;
-                d.screenY = d.kyrixWCY + (args.canvasH - ysft) / 2 + ysft;
+                d.screenX = +d.kyrixWCX + args.canvasW / 2;
+                d.screenY = +d.kyrixWCY + (args.canvasH - ysft) / 2 + ysft;
                 if (!params.transition)
                     return (
                         "translate(" +
@@ -1127,10 +1123,10 @@ function getRenderer(type) {
 // in the backend
 function getWordCloudCoordinates(
     data,
-    renderingparams,
-    rpkey,
-    canvasw,
-    canvash
+    renderingParams,
+    rpKey,
+    canvasW,
+    canvasH
 ) {
     /**
      * stuff from d3-cloud
@@ -1140,7 +1136,7 @@ function getWordCloudCoordinates(
     var cloudRadians = Math.PI / 180,
         cw = (1 << 11) >> 5,
         ch = 1 << 11;
-
+    const {createCanvas} = require("canvas");
     var d3Cloud = function() {
         var size = [256, 256],
             text = cloudText,
@@ -1361,7 +1357,6 @@ function getWordCloudCoordinates(
         if (d.sprite) return;
         var c = contextAndRatio.context,
             ratio = contextAndRatio.ratio;
-
         c.clearRect(0, 0, (cw << 5) / ratio, ch / ratio);
         var x = 0,
             y = 0,
@@ -1542,7 +1537,7 @@ function getWordCloudCoordinates(
     }
 
     function cloudCanvas() {
-        return document.createElement("canvas");
+        return createCanvas(1, 1);
     }
 
     function functor(d) {
@@ -1561,13 +1556,11 @@ function getWordCloudCoordinates(
     /**
      * Now coordinate calculation starts
      */
-    var params = renderingparams[rpkey];
+    var params = renderingParams[rpKey];
     var ysft = 80;
 
-    if (!("d3" in plv8)) plv8.d3 = require("d3");
-    var d3 = plv8.d3;
-    var minAggValue = d3.min(data.map(d => +d.kyrixAggValue));
-    var maxAggValue = d3.max(data.map(d => +d.kyrixAggValue));
+    var minAggValue = d3.min(data.map(d => +d.kyrixaggvalue));
+    var maxAggValue = d3.max(data.map(d => +d.kyrixaggvalue));
     var sizeScale = d3
         .scaleLinear()
         .domain([minAggValue, maxAggValue])
@@ -1587,31 +1580,29 @@ function getWordCloudCoordinates(
                 );
             })
         )
-        .size([canvasw, canvash - ysft])
+        .size([canvasW, canvasH - ysft])
         .rotate(() => {
             return params.rotation[
                 Math.floor(Math.random() * params.rotation.length)
             ];
         })
         .font(params.fontFamily)
-        .fontSize(d => sizeScale(+d.data.kyrixAggValue))
+        .fontSize(d => sizeScale(+d.data.kyrixaggvalue))
         .padding(params.padding)
-        .start()
-        .map(d =>
-            Object.assign(
-                {},
-                {
-                    kyrixWCText: d.text,
-                    kyrixWCSize: d.size,
-                    kyrixWCRotate: d.rotate,
-                    kyrixWCX: d.x,
-                    kyrixWCY: d.y
-                },
-                d.data
-            )
-        );
-
-    return words;
+        .start();
+    return words.map(d =>
+        Object.assign(
+            {},
+            {
+                kyrixWCText: d.text,
+                kyrixWCSize: d.size,
+                kyrixWCRotate: d.rotate,
+                kyrixWCX: d.x,
+                kyrixWCY: d.y
+            },
+            d.data
+        )
+    );
 }
 
 StaticAggregation.prototype = {
@@ -1619,5 +1610,6 @@ StaticAggregation.prototype = {
 };
 
 module.exports = {
-    StaticAggregation
+    StaticAggregation,
+    getWordCloudCoordinates
 };

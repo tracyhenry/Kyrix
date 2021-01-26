@@ -23,7 +23,6 @@ public class Project {
     private ArrayList<Jump> jumps;
     private ArrayList<SSV> ssvs;
     private ArrayList<Table> tables;
-    private ArrayList<StaticAggregation> staticAggregations;
     private String renderingParams;
     private ArrayList<String> styles;
 
@@ -59,10 +58,6 @@ public class Project {
 
     public ArrayList<Table> getTables() {
         return tables;
-    }
-
-    public ArrayList<StaticAggregation> getStaticAggregations() {
-        return staticAggregations;
     }
 
     public String getRenderingParams() {
@@ -132,10 +127,6 @@ public class Project {
                 + jumps
                 + ", ssvs="
                 + ssvs
-                + ", tables="
-                + tables
-                + ", staticAggregations="
-                + staticAggregations
                 + ", renderingParams='"
                 + renderingParams
                 + '\''

@@ -65,10 +65,10 @@ public class DbConnector {
         return result;
     }
 
-    public static ArrayList<ArrayList<String>> getQueryResult(String dbName, String sql)
+    public static ArrayList<ArrayList<String>> getQueryResult(
+            String dbName, String sql, boolean isBatch)
             throws SQLException, ClassNotFoundException {
-
-        Statement stmt = DbConnector.getStmtByDbName(dbName, true);
+        Statement stmt = DbConnector.getStmtByDbName(dbName, isBatch);
         ArrayList<ArrayList<String>> ret = getQueryResult(stmt, sql);
         stmt.close();
 
@@ -81,6 +81,12 @@ public class DbConnector {
         // Closing the connection is then done by Server.java
         // every time there is a new project request coming in
         return ret;
+    }
+
+    public static ArrayList<ArrayList<String>> getQueryResult(String dbName, String sql)
+            throws SQLException, ClassNotFoundException {
+
+        return getQueryResult(dbName, sql, true);
     }
 
     public static ResultSet getQueryResultIterator(Statement stmt, String sql)
