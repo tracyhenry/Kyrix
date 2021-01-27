@@ -16,8 +16,6 @@ public class Project {
     private Map<String, Canvas> canvasMap;
     private Map<String, View> viewMap;
 
-    // these fields are used for hierarchical updates
-
     // JSON fields
     private String name;
     private ArrayList<View> views;
