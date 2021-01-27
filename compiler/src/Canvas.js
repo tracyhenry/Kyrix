@@ -46,7 +46,9 @@ function Canvas(id, w, h, wString, hString) {
 
 // add layer to a canvas
 function addLayer(layer) {
-    console.log(`adding new layer in canvas: ${this.id} with id: ${this.layers.length}`);
+    console.log(
+        `adding new layer in canvas: ${this.id} with id: ${this.layers.length}`
+    );
     layer.id = this.id;
     layer.canvasId = this.layers.length;
     this.layers.push(layer);

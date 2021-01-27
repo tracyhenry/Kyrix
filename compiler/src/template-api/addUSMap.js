@@ -37,9 +37,11 @@ function addUSMap(usmap, args) {
 
     // transform queries
     const defaultStateQuery = `SELECT name, ${usmap.stateRateCol}, geomstr FROM ${usmap.stateTable};`;
-    const stateQuery = (usmap.updatesEnabled == true) ? updateStateQuery : defaultStateQuery;
+    const stateQuery =
+        usmap.updatesEnabled == true ? updateStateQuery : defaultStateQuery;
     const defaultCountyQuery = `SELECT name, ${usmap.countyRateCol}, geomstr FROM ${usmap.countyTable};`;
-    const countyQuery = (usmap.updatesEnabled == true) ? updateCountyQuery : defaultCountyQuery;
+    const countyQuery =
+        usmap.updatesEnabled == true ? updateCountyQuery : defaultCountyQuery;
 
     // ================== state map canvas ===================
     var canvases = [];
@@ -66,19 +68,39 @@ function addUSMap(usmap, args) {
     );
     stateMapLegendLayer.setUSMapId(this.usmaps.length - 1 + "_" + 0);
 
-    const updateStateColNames = ["bbox_x", "bbox_y", "name", "state_id", "dem_votes", "rep_votes", "total_votes", "rate", "geomstr"];
-    const defaultStateColNames = ["bbox_x", "bbox_y", "name", "rate", "geomstr"];
-    const stateColNames = (usmap.updatesEnabled == true) ? updateStateColNames : defaultStateColNames;
-    const stateTransformFunc = (usmap.updatesEnabled == true)
-        ? usmap.getUSMapTransformFunc("updateStateMapTransform")
-        : usmap.getUSMapTransformFunc("stateMapTransform");
-    
+    const updateStateColNames = [
+        "bbox_x",
+        "bbox_y",
+        "name",
+        "state_id",
+        "dem_votes",
+        "rep_votes",
+        "total_votes",
+        "rate",
+        "geomstr"
+    ];
+    const defaultStateColNames = [
+        "bbox_x",
+        "bbox_y",
+        "name",
+        "rate",
+        "geomstr"
+    ];
+    const stateColNames =
+        usmap.updatesEnabled == true
+            ? updateStateColNames
+            : defaultStateColNames;
+    const stateTransformFunc =
+        usmap.updatesEnabled == true
+            ? usmap.getUSMapTransformFunc("updateStateMapTransform")
+            : usmap.getUSMapTransformFunc("stateMapTransform");
+
     var stateMapTransform = new Transform(
-      stateQuery,
-      usmap.db,
-      stateTransformFunc,
-      stateColNames,
-      true
+        stateQuery,
+        usmap.db,
+        stateTransformFunc,
+        stateColNames,
+        true
     );
 
     var stateBoundaryLayer = new Layer(stateMapTransform, false);
@@ -92,17 +114,24 @@ function addUSMap(usmap, args) {
     stateBoundaryLayer.addRenderingFunc(
         usmap.getUSMapRenderer("stateMapRendering")
     );
-   
+
     var stateToolCols = ["name", "rate"];
     var stateToolLabels = ["State", usmap.tooltipAlias];
     if (usmap.updatesEnabled == true) {
-      stateToolCols = [...stateToolCols, "dem_votes", "rep_votes", "total_votes"];
-      stateToolLabels = [...stateToolLabels, "Dem. Voters", "Rep. Voters", "Total Voters"];
+        stateToolCols = [
+            ...stateToolCols,
+            "dem_votes",
+            "rep_votes",
+            "total_votes"
+        ];
+        stateToolLabels = [
+            ...stateToolLabels,
+            "Dem. Voters",
+            "Rep. Voters",
+            "Total Voters"
+        ];
     }
-    stateBoundaryLayer.addTooltip(
-      stateToolCols,
-      stateToolLabels
-    );
+    stateBoundaryLayer.addTooltip(stateToolCols, stateToolLabels);
     stateBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 0);
 
     // add to canvases (return)
@@ -172,50 +201,66 @@ function addUSMap(usmap, args) {
             this.usmaps.length - 1 + "_" + 1
         );
         const updateCountyColNames = {
-          "bbox_x": null,
-          "bbox_y": null,
-          "bbox_w": null,
-          "bbox_h": null,
-          "name": null,
-          "state_id": null,
-          "county_id": null,
-          "dem_votes": function (oldRow, width, height) {
-            let newRow = oldRow;
-            let repVotes = newRow["total_votes"] - newRow["dem_votes"];
-            newRow["rep_votes"] = repVotes;
-            return newRow;
-          },
-          "rep_votes": function (oldRow, width, height) {
-            let newRow = oldRow;
-            let demVotes = newRow["total_votes"] - newRow["rep_votes"];
-            newRow["dem_votes"] = demVotes;
-            return newRow;
-          },
-          "total_votes": null,
-          "rate": null,
-          "geomstr": null,
+            bbox_x: null,
+            bbox_y: null,
+            bbox_w: null,
+            bbox_h: null,
+            name: null,
+            state_id: null,
+            county_id: null,
+            dem_votes: function(oldRow, width, height) {
+                let newRow = oldRow;
+                let repVotes = newRow["total_votes"] - newRow["dem_votes"];
+                newRow["rep_votes"] = repVotes;
+                return newRow;
+            },
+            rep_votes: function(oldRow, width, height) {
+                let newRow = oldRow;
+                let demVotes = newRow["total_votes"] - newRow["rep_votes"];
+                newRow["dem_votes"] = demVotes;
+                return newRow;
+            },
+            total_votes: null,
+            rate: null,
+            geomstr: null
         };
 
-        const defaultCountyColNames = ["bbox_x", "bbox_y", "bbox_w", "bbox_h", "name", "rate", "geomstr"];
-        const countyColNames = (usmap.updatesEnabled == true) ? updateCountyColNames : defaultCountyColNames;
-        console.log(`[index.js] updates enabled for county layer: ${usmap.updatesEnabled}`);
-        const countyTransformFunc = (usmap.updatesEnabled == true) 
-            ?  usmap.getUSMapTransformFunc("updateCountyMapTransform")
-            :  usmap.getUSMapTransformFunc("countyMapTransform");
-        
+        const defaultCountyColNames = [
+            "bbox_x",
+            "bbox_y",
+            "bbox_w",
+            "bbox_h",
+            "name",
+            "rate",
+            "geomstr"
+        ];
+        const countyColNames =
+            usmap.updatesEnabled == true
+                ? updateCountyColNames
+                : defaultCountyColNames;
+        console.log(
+            `[index.js] updates enabled for county layer: ${usmap.updatesEnabled}`
+        );
+        const countyTransformFunc =
+            usmap.updatesEnabled == true
+                ? usmap.getUSMapTransformFunc("updateCountyMapTransform")
+                : usmap.getUSMapTransformFunc("countyMapTransform");
+
         var countyMapTransform = new Transform(
-          countyQuery,
-          usmap.db,
-          countyTransformFunc,
-          countyColNames,
-          true
+            countyQuery,
+            usmap.db,
+            countyTransformFunc,
+            countyColNames,
+            true
         );
         var countyBoundaryLayer = new Layer(countyMapTransform, false);
 
         // enable hierarchical updates between county and state transform
         if (usmap.updatesEnabled == true) {
-          console.log(`transform dependency func: ${countyBoundaryLayer.addTransformDependency}`);
-          countyBoundaryLayer.addTransformDependency(stateBoundaryLayer);
+            console.log(
+                `transform dependency func: ${countyBoundaryLayer.addTransformDependency}`
+            );
+            countyBoundaryLayer.addTransformDependency(stateBoundaryLayer);
         }
 
         countyMapCanvas.addLayer(countyBoundaryLayer);
@@ -229,18 +274,24 @@ function addUSMap(usmap, args) {
             usmap.getUSMapRenderer("countyMapRendering")
         );
 
-
         var countyToolCols = ["name", "rate"];
         var countyToolLabels = ["County", usmap.tooltipAlias];
         if (usmap.updatesEnabled == true) {
-          countyToolCols = [...countyToolCols, "dem_votes", "rep_votes", "total_votes"];
-          countyToolLabels = [...countyToolLabels, "Dem. Voters", "Rep. Voters", "Total Voters"];
+            countyToolCols = [
+                ...countyToolCols,
+                "dem_votes",
+                "rep_votes",
+                "total_votes"
+            ];
+            countyToolLabels = [
+                ...countyToolLabels,
+                "Dem. Voters",
+                "Rep. Voters",
+                "Total Voters"
+            ];
         }
-        countyBoundaryLayer.addTooltip(
-          countyToolCols,
-          countyToolLabels
-        );
-        
+        countyBoundaryLayer.addTooltip(countyToolCols, countyToolLabels);
+
         countyBoundaryLayer.setUSMapId(this.usmaps.length - 1 + "_" + 1);
 
         // add to canvases (return)

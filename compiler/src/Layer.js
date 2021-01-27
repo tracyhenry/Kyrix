@@ -128,7 +128,10 @@ function setIndexerType(indexerType) {
 }
 
 function addTransformDependency(otherLayer) {
-  this.transform.dependencies.push([otherLayer.canvasId, otherLayer.id.toString()]);
+    this.transform.dependencies.push([
+        otherLayer.canvasId,
+        otherLayer.id.toString()
+    ]);
 }
 
 // define prototype
@@ -141,7 +144,7 @@ Layer.prototype = {
     setUSMapId,
     setStaticAggregationId,
     setIndexerType,
-    addTransformDependency,
+    addTransformDependency
 };
 
 // exports

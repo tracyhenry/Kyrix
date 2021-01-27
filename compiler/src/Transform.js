@@ -14,8 +14,6 @@ function getFuncParamNames(func) {
     return result;
 }
 
-
-
 /**
  * Constructor for a data transform.
  * @param {string} query - a SQL query. The result of this query is fed as input to the transform function.
@@ -60,29 +58,30 @@ function Transform(
                 "Constructing Transform: transformFunc must take parameters (whose names match the dbsource output)"
             );
 
-
         if (Array.isArray(columnNames)) {
-          this.columnNames = matches
-            .join(",")
-            .replace(/\/\/ *@result: */g, "")
-            .split(","); // safe bec we restricted the charset above
-          numColumns = columnNames.length;
-          this.allowUpdates = false;
+            this.columnNames = matches
+                .join(",")
+                .replace(/\/\/ *@result: */g, "")
+                .split(","); // safe bec we restricted the charset above
+            numColumns = columnNames.length;
+            this.allowUpdates = false;
         } else if (typeof columnNames == "object") {
-          this.columnNames = Object.keys(columnNames);
-          numColumns = this.columnNames.length;
-          this.reverseFunctions = {}
-          for (let i=0; i < numColumns; i++) {
-            let colName = this.columnNames[i];
-            if (columnNames[colName] !== null) {
-              let funcBody = columnNames[colName].toString();
-              funcBody = "return " + funcBody;
-              this.reverseFunctions[colName] = funcBody;
+            this.columnNames = Object.keys(columnNames);
+            numColumns = this.columnNames.length;
+            this.reverseFunctions = {};
+            for (let i = 0; i < numColumns; i++) {
+                let colName = this.columnNames[i];
+                if (columnNames[colName] !== null) {
+                    let funcBody = columnNames[colName].toString();
+                    funcBody = "return " + funcBody;
+                    this.reverseFunctions[colName] = funcBody;
+                }
             }
-          }
-          this.allowUpdates = true;
+            this.allowUpdates = true;
         } else {
-          throw new Error("Constructing Transform: columnNames must be either an Array of strings or an Object mapping string -> function");
+            throw new Error(
+                "Constructing Transform: columnNames must be either an Array of strings or an Object mapping string -> function"
+            );
         }
         console.log("columnNames=" + this.columnNames);
 
@@ -113,24 +112,26 @@ function Transform(
     // same block of code as above, but for other case!
     // TODO: remove duplicate code
     if (Array.isArray(columnNames)) {
-      this.columnNames = columnNames;
-      numColumns = columnNames.length;
-      this.allowUpdates = false;
+        this.columnNames = columnNames;
+        numColumns = columnNames.length;
+        this.allowUpdates = false;
     } else if (typeof columnNames == "object") {
         this.columnNames = Object.keys(columnNames);
         numColumns = this.columnNames.length;
-        this.reverseFunctions = {}
-        for (let i=0; i < numColumns; i++) {
+        this.reverseFunctions = {};
+        for (let i = 0; i < numColumns; i++) {
             let colName = this.columnNames[i];
             if (columnNames[colName] !== null) {
-              let funcBody = columnNames[colName].toString();
-              funcBody = "return " + funcBody;
-              this.reverseFunctions[colName] = funcBody;
+                let funcBody = columnNames[colName].toString();
+                funcBody = "return " + funcBody;
+                this.reverseFunctions[colName] = funcBody;
             }
         }
         this.allowUpdates = true;
     } else {
-      throw new Error("Constructing Transform: columnNames must be either an Array of strings or an Object mapping string -> function");
+        throw new Error(
+            "Constructing Transform: columnNames must be either an Array of strings or an Object mapping string -> function"
+        );
     }
     console.log("columnNames=" + this.columnNames);
 
@@ -163,5 +164,5 @@ defaultEmptyTransform = new Transform("", "", "", [], true);
 // exports
 module.exports = {
     Transform,
-    defaultEmptyTransform,
+    defaultEmptyTransform
 };

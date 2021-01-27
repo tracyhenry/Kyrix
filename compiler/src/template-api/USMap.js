@@ -57,111 +57,111 @@ function getUSMapTransformFunc(transformName) {
     //------------Transforms--------------------
 
     function stateMapTransformFunc(row, width, height) {
-      var ret = [];
+        var ret = [];
 
-      var projectionStr = "REPLACE_ME_projection";
-      var projection;
-      if (projectionStr == "geoAlbersUsa") {
-          projection = d3
-              .geoAlbersUsa()
-              .scale(width)
-              .translate([width / 2, height / 2]);
-      } else {
-          projection = d3
-              .geoMercator()
-              .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
-              .center([-98.5, 39.5])
-              .translate([width / 2, height / 2]);
-      }
+        var projectionStr = "REPLACE_ME_projection";
+        var projection;
+        if (projectionStr == "geoAlbersUsa") {
+            projection = d3
+                .geoAlbersUsa()
+                .scale(width)
+                .translate([width / 2, height / 2]);
+        } else {
+            projection = d3
+                .geoMercator()
+                .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
+                .center([-98.5, 39.5])
+                .translate([width / 2, height / 2]);
+        }
 
-      var path = d3.geoPath().projection(projection);
-      var feature = JSON.parse(row[2]);
-      var centroid = path.centroid(feature);
-      ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
-      ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
-      ret.push(row[0]);
-      ret.push(row[1]);
-      ret.push(row[2]);
+        var path = d3.geoPath().projection(projection);
+        var feature = JSON.parse(row[2]);
+        var centroid = path.centroid(feature);
+        ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
+        ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
+        ret.push(row[0]);
+        ret.push(row[1]);
+        ret.push(row[2]);
 
-      return Java.to(ret, "java.lang.String[]");
+        return Java.to(ret, "java.lang.String[]");
     }
 
     function countyMapStateBoundaryTransformFunc(row, width, height) {
-      var ret = [];
+        var ret = [];
 
-      var projectionStr = "REPLACE_ME_projection";
-      var projection;
-      if (projectionStr == "geoAlbersUsa") {
-          projection = d3
-              .geoAlbersUsa()
-              .scale(width)
-              .translate([width / 2, height / 2]);
-      } else {
-          projection = d3
-              .geoMercator()
-              .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
-              .center([-98.5, 39.5])
-              .translate([width / 2, height / 2]);
-      }
+        var projectionStr = "REPLACE_ME_projection";
+        var projection;
+        if (projectionStr == "geoAlbersUsa") {
+            projection = d3
+                .geoAlbersUsa()
+                .scale(width)
+                .translate([width / 2, height / 2]);
+        } else {
+            projection = d3
+                .geoMercator()
+                .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
+                .center([-98.5, 39.5])
+                .translate([width / 2, height / 2]);
+        }
 
-      var path = d3.geoPath().projection(projection);
-      var feature = JSON.parse(row[0]);
-      var centroid = path.centroid(feature);
-      var bounds = path.bounds(feature);
-      ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
-      ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
-      ret.push(
-          !isFinite(bounds[0][0]) || !isFinite(bounds[1][0])
-              ? 0
-              : bounds[1][0] - bounds[0][0]
-      );
-      ret.push(
-          !isFinite(bounds[0][1]) || !isFinite(bounds[1][1])
-              ? 0
-              : bounds[1][1] - bounds[0][1]
-      );
-      ret.push(row[0]);
+        var path = d3.geoPath().projection(projection);
+        var feature = JSON.parse(row[0]);
+        var centroid = path.centroid(feature);
+        var bounds = path.bounds(feature);
+        ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
+        ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
+        ret.push(
+            !isFinite(bounds[0][0]) || !isFinite(bounds[1][0])
+                ? 0
+                : bounds[1][0] - bounds[0][0]
+        );
+        ret.push(
+            !isFinite(bounds[0][1]) || !isFinite(bounds[1][1])
+                ? 0
+                : bounds[1][1] - bounds[0][1]
+        );
+        ret.push(row[0]);
 
-      return Java.to(ret, "java.lang.String[]");
+        return Java.to(ret, "java.lang.String[]");
     }
 
     function countyMapTransformFunc(row, width, height) {
-      var ret = [];
+        var ret = [];
 
-      var projectionStr = "REPLACE_ME_projection";
-      var projection;
-      if (projectionStr == "geoAlbersUsa") {
-          projection = d3
-              .geoAlbersUsa()
-              .scale(width)
-              .translate([width / 2, height / 2]);
-      } else {
-          projection = d3
-              .geoMercator()
-              .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
-              .center([-98.5, 39.5])
-              .translate([width / 2, height / 2]);
-      }
+        var projectionStr = "REPLACE_ME_projection";
+        var projection;
+        if (projectionStr == "geoAlbersUsa") {
+            projection = d3
+                .geoAlbersUsa()
+                .scale(width)
+                .translate([width / 2, height / 2]);
+        } else {
+            projection = d3
+                .geoMercator()
+                .scale((((1 << 13) / Math.PI / 2) * width) / 2000)
+                .center([-98.5, 39.5])
+                .translate([width / 2, height / 2]);
+        }
 
-      var path = d3.geoPath().projection(projection);
-      var feature = JSON.parse(row[2]);
-      var centroid = path.centroid(feature);
-      var bounds = path.bounds(feature);
-      ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
-      ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
-      ret.push(
-          !isFinite(bounds[0][0]) || !isFinite(bounds[1][0])
-              ? 0
-              : bounds[1][0] - bounds[0][0]
-      );
-      ret.push(
-          !isFinite(bounds[0][1]) || !isFinite(bounds[1][1])
-              ? 0
-              : bounds[1][1] - bounds[0][1]
-      );
-      for (var i = 0; i < 3; i++) ret.push(row[i]);
+        var path = d3.geoPath().projection(projection);
+        var feature = JSON.parse(row[2]);
+        var centroid = path.centroid(feature);
+        var bounds = path.bounds(feature);
+        ret.push(!isFinite(centroid[0]) ? 0 : centroid[0]);
+        ret.push(!isFinite(centroid[1]) ? 0 : centroid[1]);
+        ret.push(
+            !isFinite(bounds[0][0]) || !isFinite(bounds[1][0])
+                ? 0
+                : bounds[1][0] - bounds[0][0]
+        );
+        ret.push(
+            !isFinite(bounds[0][1]) || !isFinite(bounds[1][1])
+                ? 0
+                : bounds[1][1] - bounds[0][1]
+        );
+        for (var i = 0; i < 3; i++) ret.push(row[i]);
 
-      return Java.to(ret, "java.lang.String[]");
+        return Java.to(ret, "java.lang.String[]");
     }
 
     /*
@@ -294,16 +294,14 @@ function getUSMapTransformFunc(transformName) {
             );
             break;
         case "updateStateMapTransform":
-            transform = getBodyStringOfFunction(updateStateMapTransformFunc).replace(
-              /REPLACE_ME_projection/g,
-              this.params.projection
-            );
+            transform = getBodyStringOfFunction(
+                updateStateMapTransformFunc
+            ).replace(/REPLACE_ME_projection/g, this.params.projection);
             break;
         case "updateCountyMapTransform":
-            transform = getBodyStringOfFunction(updateCountyMapTransformFunc).replace(
-              /REPLACE_ME_projection/g,
-              this.params.projection
-            );
+            transform = getBodyStringOfFunction(
+                updateCountyMapTransformFunc
+            ).replace(/REPLACE_ME_projection/g, this.params.projection);
             break;
         default:
         // do nothing
@@ -504,7 +502,6 @@ function getUSMapRenderer(renderer) {
         //     "transform",
         //     `translate(${width - bkgRectXOffset - 100},${legendRectY + 60})`
         //   );
-
     }
 
     function countyMapStateBoundaryRendering(svg, data, args) {

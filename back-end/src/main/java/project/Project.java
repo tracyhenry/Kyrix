@@ -18,7 +18,6 @@ public class Project {
 
     // these fields are used for hierarchical updates
 
-
     // JSON fields
     private String name;
     private ArrayList<View> views;
