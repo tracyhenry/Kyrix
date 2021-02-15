@@ -340,6 +340,12 @@
                                 "dotSizeLegendTitle": {
                                     "$ref": "#/definitions/nonEmptyString"
                                 },
+                                "dotMinSize": {
+                                    "type": "integer",
+                                    "minimum": 2,
+                                    "maximum": 30,
+                                    "default": 2
+                                },
                                 "dotMaxSize": {
                                     "type": "integer",
                                     "minimum": 5,

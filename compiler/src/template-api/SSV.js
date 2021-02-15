@@ -1012,7 +1012,7 @@ function getLayerRenderer() {
             dotSizeScale = d3
                 .scaleLinear()
                 .domain(params.dotSizeDomain)
-                .range([0, params.dotMaxSize])
+                .range([params.dotMinSize, params.dotMaxSize])
                 .clamp(true);
 
         // color scale
@@ -1466,7 +1466,7 @@ function getLegendRenderer() {
             var dotSizeScale = d3
                 .scaleLinear()
                 .domain(params.dotSizeDomain)
-                .range([0, params.dotMaxSize]);
+                .range([params.dotMinSize, params.dotMaxSize]);
             var legendSize = d3
                 .legendSize()
                 .scale(dotSizeScale)
