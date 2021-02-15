@@ -480,7 +480,7 @@ function getRenderer(type) {
         }
         var maxOrder = d3.max(dp);
         var enterTime = 300;
-        var transitionEndTime = 2000;
+        var transitionEndTime = Math.min(rectData.length * 60, 2000);
         var delayTime = (transitionEndTime - enterTime) / maxOrder;
 
         // animate rects
