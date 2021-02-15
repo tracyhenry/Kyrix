@@ -1455,7 +1455,7 @@ function getLegendRenderer() {
             .append("g")
             .classed("ssv_dot_legend", true)
             .style("opacity", 0.5)
-            .attr("transform", "translate(50, 0)");
+            .attr("transform", "translate(50, 50)");
 
         // horizontal offset
         var offset = 0;
@@ -1471,6 +1471,7 @@ function getLegendRenderer() {
                 .shape("circle")
                 .shapePadding(25)
                 .labelOffset(20)
+                .labelFormat(",.1s")
                 .title(
                     "dotSizeLegendTitle" in params
                         ? params.dotSizeLegendTitle
