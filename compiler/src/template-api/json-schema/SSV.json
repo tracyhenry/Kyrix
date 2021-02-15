@@ -346,6 +346,10 @@
                                     "maximum": 50,
                                     "default": 15
                                 },
+                                "dotColor": {
+                                    "$ref": "#/definitions/nonEmptyString",
+                                    "default": "#38c2e0"
+                                },
                                 "dotColorColumn": {
                                     "$ref": "#/definitions/nonEmptyString"
                                 },
@@ -416,6 +420,24 @@
                                     },
                                     "then": {
                                         "required": ["dotColorDomain"]
+                                    }
+                                },
+                                {
+                                    "if": {
+                                        "required": ["dotColor"]
+                                    },
+                                    "then": {
+                                        "properties": {
+                                            "dotColorColumn": {
+                                                "type": "null"
+                                            },
+                                            "dotColorDomain": {
+                                                "type": "null"
+                                            },
+                                            "dotColorLegendTitle": {
+                                                "type": "null"
+                                            }
+                                        }
                                     }
                                 }
                             ]

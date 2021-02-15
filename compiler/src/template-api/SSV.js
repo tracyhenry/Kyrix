@@ -284,7 +284,7 @@ function SSV(args_) {
         (this.loX = 0), (this.hiX = this.topLevelWidth);
         (this.loY = 0), (this.hiY = this.topLevelHeight);
     }
-    this.mapBackground = args.config.map;
+    this.mapBackground = "geo" in args.layout ? true : args.config.map;
     this.zoomFactor = args.config.zoomFactor;
     this.overlap =
         "overlap" in args.layout
@@ -1012,7 +1012,8 @@ function getLayerRenderer() {
             dotSizeScale = d3
                 .scaleLinear()
                 .domain(params.dotSizeDomain)
-                .range([0, params.dotMaxSize]);
+                .range([0, params.dotMaxSize])
+                .clamp(true);
 
         // color scale
         var dotColorScale = null;
@@ -1036,7 +1037,7 @@ function getLayerRenderer() {
             .attr("stroke", d =>
                 "dotColorColumn" in params
                     ? dotColorScale(d[params.dotColorColumn])
-                    : "#38c2e0"
+                    : params.dotColor
             )
             .style("stroke-width", "2px")
             .classed("kyrix-retainsizezoom", true);
@@ -1544,9 +1545,9 @@ function getMapRenderer() {
         var vy = args["viewportY"];
         var vw = args["viewportW"];
         var vh = args["viewportH"];
-        var topLevelWidth = params.hiX - params.loX;
-        var topLevelHeight = params.hiY - params.loY;
         var level = +args.ssvId.substring(args.ssvId.indexOf("_") + 1);
+        var curWidth = (params.hiX - params.loX) * (1 << level);
+        var curHeight = (params.hiY - params.loY) * (1 << level);
         var initialLon = params.geoInitialCenterLon;
         var initialLat = params.geoInitialCenterLat;
         var initialLevel = params.geoInitialLevel;
@@ -1554,18 +1555,36 @@ function getMapRenderer() {
         var cx = (projection([initialLon, initialLat])[0] + 0.5) * scale;
         var cy = (projection([initialLon, initialLat])[1] + 0.5) * scale;
 
+        var ratioX = 1 - params.bboxW / (params.hiX - params.loX);
+        var ratioY = 1 - params.bboxH / (params.hiY - params.loY);
+        var vpX = cx - curWidth / 2;
+        var vpY = cy - curHeight / 2;
+        var offsetX = (params.bboxW * (1 << level)) / 2;
+        var offsetY = (params.bboxH * (1 << level)) / 2;
+
         // note: vw/3 because dynamic boxes fetch a box slightly larger than viewport
-        var minTileX = Math.floor(
-            (cx - (topLevelWidth * (1 << level)) / 2 + vx - vw / 3) / 256
+        // because we reserve params.bboxW/params.bboxH pixels on the top level
+        // to show objects in its entirety, we need to convert between kyrix canvas
+        // coordinates and geo coordinates
+        // Immediately down blow are translating from kyrix canvas coordinates
+        // to geo coordinates. The equations are based on the easier, inverse transformation,
+        // i.e., from geo to kyrix canvas, which is illustrated down below
+        // in the positioning of the tile images
+        var minTileX = Math.max(
+            0,
+            Math.floor((vpX + (vx - vw / 3 - offsetX) / ratioX) / 256)
         );
-        var maxTileX = Math.floor(
-            (cx - (topLevelWidth * (1 << level)) / 2 + vx + vw + vw / 3) / 256
+        var maxTileX = Math.min(
+            (1 << (initialLevel + level)) - 1,
+            Math.floor((vpX + (vx + vw + vw / 3 - offsetX) / ratioX) / 256)
         );
-        var minTileY = Math.floor(
-            (cy - (topLevelHeight * (1 << level)) / 2 + vy - vh / 3) / 256
+        var minTileY = Math.max(
+            0,
+            Math.floor((vpY + (vy - vh / 3 - offsetY) / ratioY) / 256)
         );
-        var maxTileY = Math.floor(
-            (cy - (topLevelHeight * (1 << level)) / 2 + vy + vh + vh / 3) / 256
+        var maxTileY = Math.min(
+            (1 << (initialLevel + level)) - 1,
+            Math.floor((vpY + (vy + vh + vh / 3 - offsetY) / ratioY) / 256)
         );
         var tiles = [];
         for (var i = minTileX; i <= maxTileX; i++)
@@ -1579,7 +1598,7 @@ function getMapRenderer() {
         });
         image.exit().remove();
 
-        var deltaX = image
+        image
             .enter()
             .append("image")
             .attr("xlink:href", function(d) {
@@ -1596,13 +1615,13 @@ function getMapRenderer() {
                 );
             })
             .attr("x", function(d) {
-                return d[0] * 256 - (cx - (topLevelWidth * (1 << level)) / 2);
+                return (d[0] * 256 - vpX) * ratioX + offsetX;
             })
             .attr("y", function(d) {
-                return d[1] * 256 - (cy - (topLevelHeight * (1 << level)) / 2);
+                return (d[1] * 256 - vpY) * ratioY + offsetY;
             })
-            .attr("width", 256)
-            .attr("height", 256);
+            .attr("width", 256 * ratioX)
+            .attr("height", 256 * ratioY);
     }
     var renderFuncBody = getBodyStringOfFunction(mapRendererBodyTemplate);
     return new Function("svg", "data", "args", renderFuncBody);

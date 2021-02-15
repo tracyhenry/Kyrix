@@ -109,7 +109,7 @@ function addSSV(ssv, args) {
         // map layer
         if (ssv.mapBackground) {
             var mapLayer = new Layer(
-                require("./Transform").defaultEmptyTransform,
+                require("../Transform").defaultEmptyTransform,
                 false
             );
             curCanvas.addLayer(mapLayer);

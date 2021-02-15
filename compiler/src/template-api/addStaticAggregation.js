@@ -89,6 +89,7 @@ function addStaticAggregation(staticAggregation, args) {
         " AS kyrixAggValue";
     query += " FROM " + staticAggregation.query.table + " GROUP BY ";
     query += dimensions.join(", ");
+    query += " HAVING " + staticAggregation.query.measure + " IS NOT NULL ";
     query += " ORDER BY kyrixAggValue DESC ";
 
     // LIMIT
@@ -96,7 +97,7 @@ function addStaticAggregation(staticAggregation, args) {
         pie: 20,
         treemap: 80,
         circlePack: 150,
-        bar: 200,
+        bar: 25,
         wordCloud: 100
     };
     query += " LIMIT " + maxGroups[staticAggregation.type];
