@@ -1037,7 +1037,9 @@ function getLayerRenderer() {
             .attr("stroke", d =>
                 "dotColorColumn" in params
                     ? dotColorScale(d[params.dotColorColumn])
-                    : params.dotColor
+                    : "dotColor" in params
+                    ? params.dotColor
+                    : "#38c2e0"
             )
             .style("stroke-width", "2px")
             .classed("kyrix-retainsizezoom", true);

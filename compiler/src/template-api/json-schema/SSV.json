@@ -347,8 +347,7 @@
                                     "default": 15
                                 },
                                 "dotColor": {
-                                    "$ref": "#/definitions/nonEmptyString",
-                                    "default": "#38c2e0"
+                                    "$ref": "#/definitions/nonEmptyString"
                                 },
                                 "dotColorColumn": {
                                     "$ref": "#/definitions/nonEmptyString"
