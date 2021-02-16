@@ -126,7 +126,7 @@ function addSSV(ssv, args) {
                 width: "con:0",
                 height: "con:0"
             });
-            mapLayer.setFetchingScheme("dbox", false);
+            mapLayer.setFetchingScheme("dbox", true);
             mapLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
         }
 

@@ -1591,40 +1591,76 @@ function getMapRenderer() {
         );
         var tiles = [];
         for (var i = minTileX; i <= maxTileX; i++)
-            for (var j = minTileY; j <= maxTileY; j++)
-                tiles.push([i, j, initialLevel + level]);
+            for (var j = minTileY; j <= maxTileY; j++) {
+                var minx = (i * 256 - vpX) * ratioX + offsetX;
+                var miny = (j * 256 - vpY) * ratioY + offsetY;
+                tiles.push({
+                    x: i,
+                    y: j,
+                    z: initialLevel + level,
+                    minx: minx,
+                    miny: miny,
+                    maxx: minx + 256 * ratioX,
+                    maxy: miny + 256 * ratioX
+                });
+            }
 
         var raster = svg.selectAll("g");
         if (raster.size() == 0) raster = svg.append("g");
         var image = raster.selectAll("image").data(tiles, function(d) {
-            return d;
+            return JSON.stringify(d);
         });
         image.exit().remove();
 
+        const loadImageBase64 = url =>
+            new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.addEventListener("load", () => {
+                    var canvas = document.createElement("CANVAS"),
+                        ctx = canvas.getContext("2d"),
+                        dataURL;
+                    canvas.height = img.height;
+                    canvas.width = img.width;
+                    ctx.drawImage(img, 0, 0);
+                    dataURL = canvas.toDataURL();
+                    canvas = null;
+                    resolve(dataURL);
+                });
+                img.addEventListener("error", err => reject(err));
+                img.src = url;
+            });
+
+        const getUrl = d =>
+            "http://" +
+            "abc"[d.y % 3] +
+            ".tile.openstreetmap.org/" +
+            d.z +
+            "/" +
+            d.x +
+            "/" +
+            d.y +
+            ".png";
+
         image
             .enter()
-            .append("image")
-            .attr("xlink:href", function(d) {
-                return (
-                    "http://" +
-                    "abc"[d[1] % 3] +
-                    ".tile.openstreetmap.org/" +
-                    d[2] +
-                    "/" +
-                    d[0] +
-                    "/" +
-                    d[1] +
-                    ".png"
-                );
-            })
-            .attr("x", function(d) {
-                return (d[0] * 256 - vpX) * ratioX + offsetX;
-            })
-            .attr("y", function(d) {
-                return (d[1] * 256 - vpY) * ratioY + offsetY;
-            })
-            .attr("width", 256 * ratioX)
-            .attr("height", 256 * ratioY);
+            .data()
+            .forEach(d => {
+                loadImageBase64(getUrl(d)).then(res => {
+                    raster
+                        .append("image")
+                        .datum(d)
+                        .attr("xlink:href", res)
+                        .attr("x", function(d) {
+                            return d.minx;
+                        })
+                        .attr("y", function(d) {
+                            return d.miny;
+                        })
+                        .attr("width", 256 * ratioX)
+                        .attr("height", 256 * ratioY);
+                });
+            });
     }
     var renderFuncBody = getBodyStringOfFunction(mapRendererBodyTemplate);
     return new Function("svg", "data", "args", renderFuncBody);
