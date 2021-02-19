@@ -1601,7 +1601,7 @@ function getMapRenderer() {
                     minx: minx,
                     miny: miny,
                     maxx: minx + 256 * ratioX,
-                    maxy: miny + 256 * ratioX
+                    maxy: miny + 256 * ratioY
                 });
             }
 
@@ -1651,6 +1651,7 @@ function getMapRenderer() {
                         .append("image")
                         .datum(d)
                         .attr("xlink:href", res)
+                        .attr("preserveAspectRatio", "none")
                         .attr("x", function(d) {
                             return d.minx;
                         })
