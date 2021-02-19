@@ -760,7 +760,10 @@ function getRenderer(type) {
 
         // get domains
         data.map(function(d) {
-            d.majorDomain = params.dimensions
+            let dims = params.dimensions;
+            // hardcode for population bar chart
+            if (dims[dims.length - 1] == "year") dims = ["year"];
+            d.majorDomain = dims
                 .map(function(p) {
                     return d[p];
                 })
@@ -782,6 +785,25 @@ function getRenderer(type) {
                 return d.stackDomain;
             })
         ).sort();
+
+        // sort by values
+        majorDomains.sort(function(a, b) {
+            function getH(majorDomain) {
+                var dataItems = data.filter(function(d) {
+                    return d.majorDomain == majorDomain;
+                });
+                if (params.stackDimensions.length == 0)
+                    return +dataItems[0].kyrixAggValue;
+                else
+                    return d3.sum(
+                        dataItems.map(function(d) {
+                            return d.kyrixAggValue;
+                        })
+                    );
+            }
+
+            return getH(a) - getH(b);
+        });
 
         // x scale
         var vw = args.viewportW;
