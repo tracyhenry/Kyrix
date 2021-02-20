@@ -689,11 +689,17 @@ function getRenderer(type) {
                 .join("text")
                 .classed("textfield", true)
                 .text(function(d) {
-                    return params.textFields
+                    var t = params.textFields
                         .map(function(p) {
                             return d[p];
                         })
                         .join(", ");
+                    var coef = 1;
+                    if (0.3 * coef * t.length > 2) {
+                        var maxLen = Math.floor(2 / 0.3 / coef) - 3;
+                        t = t.substring(0, maxLen) + "...";
+                    }
+                    return t;
                 })
                 .attr("text-anchor", "middle")
                 .attr("x", function(d) {
@@ -710,13 +716,13 @@ function getRenderer(type) {
                     if ((d.kyrixAggValue - minArea) / (maxArea - minArea) > 0.5)
                         return "#FFF";
                     return "#000";
-                })
-                .style("opacity", function(d) {
-                    if (params.transition) return 0;
-                    if (d.r * 2 > Math.max(this.textContent.length * 11, 40))
-                        return 1;
-                    else return 0;
                 });
+            // .style("opacity", function(d) {
+            //     if (params.transition) return 0;
+            //     if (d.r * 2 > Math.max(this.textContent.length * 11, 40))
+            //         return 1;
+            //     else return 0;
+            // });
         }
 
         // transition
