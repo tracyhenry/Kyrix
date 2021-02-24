@@ -694,7 +694,7 @@ function getRenderer(type) {
                             return d[p];
                         })
                         .join(", ");
-                    var coef = 1;
+                    var coef = 0.5;
                     if (0.3 * coef * t.length > 2) {
                         var maxLen = Math.floor(2 / 0.3 / coef) - 3;
                         t = t.substring(0, maxLen) + "...";
@@ -794,6 +794,7 @@ function getRenderer(type) {
 
         // sort by values
         majorDomains.sort(function(a, b) {
+            if (params.dimensions.includes("year")) return a - b;
             function getH(majorDomain) {
                 var dataItems = data.filter(function(d) {
                     return d.majorDomain == majorDomain;
@@ -807,7 +808,6 @@ function getRenderer(type) {
                         })
                     );
             }
-
             return getH(a) - getH(b);
         });
 

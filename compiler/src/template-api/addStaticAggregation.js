@@ -134,7 +134,8 @@ function addStaticAggregation(staticAggregation, args) {
         staticAggregation.query.sampleFields.join(", ") +
         (staticAggregation.query.sampleFields.length ? ", " : "") +
         dimensions.join(", ") +
-        (staticAggregation.query.measureCol === "*"
+        (staticAggregation.query.measureCol === "*" ||
+        staticAggregation.query.measureCol.includes("distinct")
             ? ""
             : ", " + staticAggregation.query.measureCol) +
         " FROM " +
