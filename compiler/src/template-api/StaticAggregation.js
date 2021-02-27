@@ -694,7 +694,7 @@ function getRenderer(type) {
                             return d[p];
                         })
                         .join(", ");
-                    var coef = 0.5;
+                    var coef = 0.55;
                     if (0.3 * coef * t.length > 2) {
                         var maxLen = Math.floor(2 / 0.3 / coef) - 3;
                         t = t.substring(0, maxLen) + "...";
@@ -735,15 +735,7 @@ function getRenderer(type) {
                 return d.r;
             })
             .on("end", function(d, i) {
-                if (i == 0)
-                    g.selectAll(".textfield").style("opacity", function(p) {
-                        if (
-                            p.r * 2 >
-                            Math.max(this.textContent.length * 11, 40)
-                        )
-                            return 1;
-                        else return 0;
-                    });
+                if (i == 0) g.selectAll(".textfield").style("opacity", 1);
             });
     }
 
