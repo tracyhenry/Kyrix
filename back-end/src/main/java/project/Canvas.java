@@ -7,12 +7,12 @@ import java.util.ArrayList;
 public class Canvas implements Serializable {
 
     private String id;
-    private int w;
-    private int h;
-    private int pyramidLevel;
+    private Integer w;
+    private Integer h;
+    private Integer pyramidLevel;
     private String wSql, hSql, wLayerId, hLayerId;
-    private double zoomInFactorX, zoomInFactorY;
-    private double zoomOutFactorX, zoomOutFactorY;
+    private Double zoomInFactorX, zoomInFactorY;
+    private Double zoomOutFactorX, zoomOutFactorY;
     private ArrayList<Layer> layers;
     private String axes, axesSSVRPKey;
 
@@ -35,14 +35,6 @@ public class Canvas implements Serializable {
         for (int i = 0; i < layers.size(); i++)
             copy.getLayers().get(i).setIndexer(layers.get(i).getIndexer());
         return copy;
-    }
-
-    public void setW(int w) {
-        this.w = w;
-    }
-
-    public void setH(int h) {
-        this.h = h;
     }
 
     public int getPyramidLevel() {
@@ -124,6 +116,42 @@ public class Canvas implements Serializable {
 
     public void sethLayerId(String hLayerId) {
         this.hLayerId = hLayerId;
+    }
+
+    public void setW(Integer w) {
+        this.w = w;
+    }
+
+    public void setH(Integer h) {
+        this.h = h;
+    }
+
+    public void setPyramidLevel(Integer pyramidLevel) {
+        this.pyramidLevel = pyramidLevel;
+    }
+
+    public void setZoomInFactorX(Double zoomInFactorX) {
+        this.zoomInFactorX = zoomInFactorX;
+    }
+
+    public void setZoomInFactorY(Double zoomInFactorY) {
+        this.zoomInFactorY = zoomInFactorY;
+    }
+
+    public void setZoomOutFactorX(Double zoomOutFactorX) {
+        this.zoomOutFactorX = zoomOutFactorX;
+    }
+
+    public void setZoomOutFactorY(Double zoomOutFactorY) {
+        this.zoomOutFactorY = zoomOutFactorY;
+    }
+
+    public void setAxes(String axes) {
+        this.axes = axes;
+    }
+
+    public void setAxesSSVRPKey(String axesSSVRPKey) {
+        this.axesSSVRPKey = axesSSVRPKey;
     }
 
     @Override

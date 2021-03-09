@@ -9,9 +9,9 @@ import java.util.ArrayList;
 public class Layer implements Serializable {
 
     private Transform transform;
-    private boolean isStatic;
+    private Boolean isStatic;
     private String fetchingScheme;
-    private boolean deltaBox;
+    private Boolean deltaBox;
     private Placement placement;
     private String rendering;
     private ArrayList<String> tooltipColumns, tooltipAliases;
@@ -93,10 +93,6 @@ public class Layer implements Serializable {
         this.placement = placement;
     }
 
-    public void setDeltaBox(boolean deltaBox) {
-        this.deltaBox = deltaBox;
-    }
-
     public void setFetchingScheme(String fetchingScheme) {
         this.fetchingScheme = fetchingScheme;
     }
@@ -119,6 +115,14 @@ public class Layer implements Serializable {
 
     public void setStaticAggregationId(String staticAggregationId) {
         this.staticAggregationId = staticAggregationId;
+    }
+
+    public void setStatic(Boolean aStatic) {
+        isStatic = aStatic;
+    }
+
+    public void setDeltaBox(Boolean deltaBox) {
+        this.deltaBox = deltaBox;
     }
 
     @Override

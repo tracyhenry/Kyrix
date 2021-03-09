@@ -43,6 +43,15 @@ public class FirstRequestHandler implements HttpHandler {
                 c.sethSql(null);
                 c.setwLayerId(null);
                 c.sethLayerId(null);
+                c.setW(null);
+                c.setH(null);
+                c.setPyramidLevel(null);
+                c.setZoomInFactorX(null);
+                c.setZoomInFactorY(null);
+                c.setZoomOutFactorX(null);
+                c.setZoomOutFactorY(null);
+                c.setAxes(null);
+                c.setAxesSSVRPKey(null);
                 for (Layer l : c.getLayers()) {
                     l.setRendering(null);
                     l.setTransform(null);
@@ -54,6 +63,8 @@ public class FirstRequestHandler implements HttpHandler {
                     l.setUsmapId(null);
                     l.setFetchingScheme(null);
                     l.setIndexerType(null);
+                    l.setStatic(null);
+                    l.setDeltaBox(null);
                 }
             }
 

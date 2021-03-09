@@ -10,7 +10,7 @@ public class Jump implements Serializable {
     private String selector, viewport, predicates, name;
     private String sourceViewId, destViewId;
     private Boolean noPrefix, slideSuperman;
-    private double slideDirection;
+    private Double slideDirection;
 
     public String getSourceId() {
         return sourceId;
@@ -58,6 +58,50 @@ public class Jump implements Serializable {
 
     public Boolean getSlideSuperman() {
         return slideSuperman;
+    }
+
+    public void setDestId(String destId) {
+        this.destId = destId;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public void setSelector(String selector) {
+        this.selector = selector;
+    }
+
+    public void setViewport(String viewport) {
+        this.viewport = viewport;
+    }
+
+    public void setPredicates(String predicates) {
+        this.predicates = predicates;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setSourceViewId(String sourceViewId) {
+        this.sourceViewId = sourceViewId;
+    }
+
+    public void setDestViewId(String destViewId) {
+        this.destViewId = destViewId;
+    }
+
+    public void setNoPrefix(Boolean noPrefix) {
+        this.noPrefix = noPrefix;
+    }
+
+    public void setSlideSuperman(Boolean slideSuperman) {
+        this.slideSuperman = slideSuperman;
+    }
+
+    public void setSlideDirection(Double slideDirection) {
+        this.slideDirection = slideDirection;
     }
 
     @Override
