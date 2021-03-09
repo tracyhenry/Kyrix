@@ -81,6 +81,46 @@ public class Layer implements Serializable {
         return colListStr;
     }
 
+    public void setRendering(String rendering) {
+        this.rendering = rendering;
+    }
+
+    public void setTransform(Transform transform) {
+        this.transform = transform;
+    }
+
+    public void setPlacement(Placement placement) {
+        this.placement = placement;
+    }
+
+    public void setDeltaBox(boolean deltaBox) {
+        this.deltaBox = deltaBox;
+    }
+
+    public void setFetchingScheme(String fetchingScheme) {
+        this.fetchingScheme = fetchingScheme;
+    }
+
+    public void setTooltipColumns(ArrayList<String> tooltipColumns) {
+        this.tooltipColumns = tooltipColumns;
+    }
+
+    public void setTooltipAliases(ArrayList<String> tooltipAliases) {
+        this.tooltipAliases = tooltipAliases;
+    }
+
+    public void setSsvId(String ssvId) {
+        this.ssvId = ssvId;
+    }
+
+    public void setUsmapId(String usmapId) {
+        this.usmapId = usmapId;
+    }
+
+    public void setStaticAggregationId(String staticAggregationId) {
+        this.staticAggregationId = staticAggregationId;
+    }
+
     @Override
     public String toString() {
         return "Layer{"

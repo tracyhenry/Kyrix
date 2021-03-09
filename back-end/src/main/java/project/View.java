@@ -1,7 +1,9 @@
 package project;
 
+import java.io.Serializable;
+
 /** Created by wenbo on 1/29/19. */
-public class View {
+public class View implements Serializable {
 
     private String id;
     private int width, height;

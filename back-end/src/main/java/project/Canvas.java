@@ -106,6 +106,26 @@ public class Canvas implements Serializable {
         return getLayers().get(Integer.valueOf(layerId)).getTransform().getDb();
     }
 
+    public void setLayers(ArrayList<Layer> layers) {
+        this.layers = layers;
+    }
+
+    public void setwSql(String wSql) {
+        this.wSql = wSql;
+    }
+
+    public void sethSql(String hSql) {
+        this.hSql = hSql;
+    }
+
+    public void setwLayerId(String wLayerId) {
+        this.wLayerId = wLayerId;
+    }
+
+    public void sethLayerId(String hLayerId) {
+        this.hLayerId = hLayerId;
+    }
+
     @Override
     public String toString() {
         return "Canvas{"

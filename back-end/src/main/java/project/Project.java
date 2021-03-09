@@ -1,11 +1,12 @@
 package project;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 /** Created by wenbo on 1/4/18. */
-public class Project {
+public class Project implements Serializable {
 
     public Project() {
         mapInitialized = false;
@@ -25,6 +26,20 @@ public class Project {
     private ArrayList<Table> tables;
     private String renderingParams;
     private ArrayList<String> styles;
+
+    public Project deepCopy() throws IOException, ClassNotFoundException {
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(this);
+        oos.flush();
+        oos.close();
+        bos.close();
+        byte[] byteData = bos.toByteArray();
+        ByteArrayInputStream bais = new ByteArrayInputStream(byteData);
+        Project copy = (Project) new ObjectInputStream(bais).readObject();
+        return copy;
+    }
 
     // Back-end Generated Rendering parameters
     // The key of the hashmap is used to minimize occupied

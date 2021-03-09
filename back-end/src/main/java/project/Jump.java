@@ -1,7 +1,9 @@
 package project;
 
+import java.io.Serializable;
+
 /** Created by wenbo on 1/4/18. */
-public class Jump {
+public class Jump implements Serializable {
 
     private String sourceId, destId;
     private String type;

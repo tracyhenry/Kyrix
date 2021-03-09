@@ -1,5 +1,6 @@
 package project;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -7,7 +8,7 @@ import main.Config;
 import main.DbConnector;
 
 /** Created by wenbo on 3/31/19. */
-public class SSV {
+public class SSV implements Serializable {
 
     private String query, db, rawTable;
     private String xCol, yCol, zCol;

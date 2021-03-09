@@ -1,9 +1,10 @@
 package project;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /** Created by xinli on 8/15/19. */
-public class Table {
+public class Table implements Serializable {
     private String query, db, table, name;
     private double x, y, cell_height, heads_height, sum_width;
     private ArrayList<String> schema, group_by;
