@@ -61,6 +61,7 @@ function addStaticAggregation(staticAggregation, args) {
     else if (staticAggregation.type == "bar")
         rpDict[rpKey] = Object.assign({}, rpDict[rpKey], {
             legendDomain: staticAggregation.legend.domain,
+            textFields: staticAggregation.textFields,
             xAxisTitle: staticAggregation.axis.xTitle,
             yAxisTitle: staticAggregation.axis.yTitle
         });

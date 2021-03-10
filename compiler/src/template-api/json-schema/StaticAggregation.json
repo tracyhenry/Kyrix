@@ -330,7 +330,7 @@
                         "default": "schemeTableau10"
                     },
                     "textFields": {
-                        "type": "null"
+                        "default": []
                     },
                     "padding": {
                         "type": "null"

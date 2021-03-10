@@ -759,8 +759,7 @@ function getRenderer(type) {
         // get domains
         data.map(function(d) {
             let dims = params.dimensions;
-            // hardcode for population bar chart
-            if (dims[dims.length - 1] == "year") dims = ["year"];
+            if (params.textFields.length > 0) dims = params.textFields;
             d.majorDomain = dims
                 .map(function(p) {
                     return d[p];
