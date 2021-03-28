@@ -2,13 +2,11 @@ package project;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 /** Created by wenbo on 1/4/18. */
 public class UpdateRequest {
 
-    public UpdateRequest() {
-    }
+    public UpdateRequest() {}
 
     // private variables
     // private boolean mapInitialized = false;
@@ -32,29 +30,28 @@ public class UpdateRequest {
     private String baseTable;
     private String projectName;
 
-
     public String getCanvasId() {
-      return canvasId;
+        return canvasId;
     }
 
     public String getLayerId() {
-      return layerId;
+        return layerId;
     }
 
     public ArrayList<String> getKeyColumns() {
-      return keyColumns;
+        return keyColumns;
     }
 
     public HashMap<String, String> getObjectAttributes() {
-      return objectAttributes;
+        return objectAttributes;
     }
 
     public String getBaseTable() {
-      return baseTable;
+        return baseTable;
     }
 
     public String getProjectName() {
-      return projectName;
+        return projectName;
     }
 
     @Override
