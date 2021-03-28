@@ -488,6 +488,12 @@ function addPopoverUpdateOptions(gvd, viewId, layerId, p) {
           .attr("updateAttr", updateAttributes[k])
           .style("margin-top", "20px")
           .html("Save");
+
+      updateAttrs
+        .selectAll(".attr-inputs")
+        .on("click", function(d) {
+          d3.event.stopPropagation();
+        });
   }
 
   // add listener to save changes button, sends updates to backend
