@@ -165,6 +165,8 @@ function getUSMapTransformFunc(transformName) {
     }
 
     /*
+      Transform query:
+
       SELECT cs.name, cs.state_id, cs.total_dem_votes,
        cs.total_rep_votes, cs.total_votes,
         (cs.total_dem_votes / (cs.total_votes+0.01)) as rate,
@@ -216,6 +218,8 @@ function getUSMapTransformFunc(transformName) {
     }
 
     /*
+      Transform Query:
+
       SELECT name, state_id, county_id, dem_votes, rep_votes, total_votes, 
       (dem_votes / (total_votes+0.01)) as rate, geomstr FROM county;
     */
@@ -490,18 +494,6 @@ function getUSMapRenderer(renderer) {
             );
         axis.style("font-size", tickFontSize);
         axis.select(".domain").remove();
-
-        // g.append("g")
-        //   .append("path")
-        //   // .attr("x", width - bkgRectWidth - bkgRectXOffset)
-        //   // .attr("y", 40)
-        //   .attr("d", d3.symbol().type(d3.symbolCross).size(600))
-        //   .style("fill", "green")
-        //   .classed("addObject", true)
-        //   .attr(
-        //     "transform",
-        //     `translate(${width - bkgRectXOffset - 100},${legendRectY + 60})`
-        //   );
     }
 
     function countyMapStateBoundaryRendering(svg, data, args) {

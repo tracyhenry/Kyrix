@@ -73,7 +73,6 @@ var teamTimelineTransformUpdates = new Transform(
             newRow["year"] = year;
             return newRow;
         },
-        // TODO: provide default function for rows that don't need reversing...
         y: function(oldRow, width, height) {
             return oldRow;
         },

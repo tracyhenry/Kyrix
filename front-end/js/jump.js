@@ -360,16 +360,10 @@ function doDBUpdate(
         projectName: projName
     };
 
-    console.log(
-        `sending HTTP request to /update with data: ${JSON.stringify(postData)}`
-    );
     $.ajax({
         type: "POST",
         url: globalVar.serverAddr + "/update",
         data: JSON.stringify(postData),
-        success: function(data, status) {
-            console.log(`update succeeded with data: ${JSON.stringify(data)}`);
-        },
         async: false
     });
 }
@@ -392,7 +386,6 @@ function createPopoverDivs(viewId) {
         .attr("href", "#")
         .html("&times;")
         .on("click", function() {
-            console.log("clicked exit button");
             removePopovers(viewId);
         });
     d3.select(viewClass + ".jumppopover")
@@ -404,8 +397,6 @@ function createPopoverDivs(viewId) {
 }
 
 function addPopoverUpdateOptions(gvd, viewId, layerId, p) {
-    console.log(gvd);
-
     d3.event.preventDefault();
     d3.event.stopPropagation();
 
@@ -414,7 +405,6 @@ function addPopoverUpdateOptions(gvd, viewId, layerId, p) {
     const viewClass = ".view_" + viewId;
     var queryText = gvd.curCanvas.layers[layerId].transform.query;
     queryText = queryText.toLowerCase();
-    console.log(`queryText is: ${queryText} for layerId: ${layerId}`);
 
     // use regex to extract db column names from user-defined transform
     queryText = queryText.split("select")[1];
@@ -477,12 +467,9 @@ function addPopoverUpdateOptions(gvd, viewId, layerId, p) {
             .attr("type", "text")
             .attr("id", "attr-input-" + k)
             .attr("value", attrValue);
-        // .attr("aria-label", "Default")
-        // .attr("aria-describedby", "inputGroup-sizing-default");
 
       updateAttrs
           .append("span")
-          // .classed("popover-footer", true)
           .classed("input-group-btn", true)
           .append("button")
           .classed("btn btn-default", true)
@@ -505,16 +492,10 @@ function addPopoverUpdateOptions(gvd, viewId, layerId, p) {
     let updateAttr = btnObj.attr("updateAttr");
     let inputId = "#attr-input-" + i;
     btnObj.on("click", function(d) {
-      console.log(`update button was clicked with attr: ${updateAttr}`);
       let attrValue = d3.select(inputId).property("value");
-      console.log(`new attr value of field: ${updateAttr} is -> ${attrValue}`);
       const viewClass = ".view_" + viewId;
       let newAttrValues = [];
       let objectKV = {};
-      console.log(`data p: ${JSON.stringify(p)} and direct mapped cols: ${JSON.stringify(directMappedColNames)}`);
-      // d3.selectAll(".attr-inputs").each(function(d,i) {
-      //     newAttrValues.push(d3.select(this).property("value"));
-      // });
       for (let i=0; i < directMappedColNames.length; i++) {
         let colName = directMappedColNames[i];
         newAttrValues.push(p[colName]);
@@ -525,29 +506,17 @@ function addPopoverUpdateOptions(gvd, viewId, layerId, p) {
       }
       objectKV[updateAttr] = attrValue;
 
-      console.log(`column names -> ${directMappedColNames}`);
-      console.log(`new attr values -> ${JSON.stringify(objectKV)}`);
-
-
       // reverse function code
       const reverseFuncString = 
         gvd.curCanvas.layers[layerId].transform.reverseFunctions[
           updateAttr
         ];
-      console.log(
-        `reverse function string for attr: ${updateAttr} in layer: ${layerId} is ${reverseFuncString}`
-      );
 
       const reverseFunc = Function(reverseFuncString)();
       let width = gvd.curCanvas.w;
       let height = gvd.curCanvas.h;
-      console.log(`width of cur layer is: ${width} and height is: ${height}`);
       objectKV = reverseFunc(objectKV, width, height);
-      console.log(`attr values after reverse are -> JSON.stringify(objectKV)`);
 
-
-      // TODO: update UI with new data, while DB gets update asynchronously 
-      // what if DB doesn't get update?
       const projName = globalVar.project.name;
       doDBUpdate(viewId, canvasId, layerId, tableName, objectKV, projName);
       // re-load dynamic data from db
@@ -626,9 +595,6 @@ function registerJumps(viewId, svg, layerId) {
                 layerObj.transform.reverseFunctions["y"] != undefined
             )
                 allowsYUpdate = true;
-            console.log(
-                `layers allows x update: ${allowsXUpdate} and allows y update: ${allowsYUpdate}`
-            );
             if (allowsXUpdate || allowsYUpdate) {
                 let currentObject = d3
                     .select(viewClass + ".viewsvg")
@@ -646,12 +612,10 @@ function registerJumps(viewId, svg, layerId) {
                         d3
                             .drag()
                             .on("start", function(d) {
-                                console.log("starting drag");
                                 dx = 0;
                                 dy = 0;
                             })
                             .on("drag", function(d) {
-                                console.log("dragging object");
                                 dx += d3.event.dx;
                                 dy += d3.event.dy;
                                 currentObject.attr(
@@ -661,17 +625,11 @@ function registerJumps(viewId, svg, layerId) {
                             })
                             .on("end", function(d) {
                                 if (Math.abs(dx) > 50 || Math.abs(dy) > 50) {
-                                    console.log("ended object drag!");
-                                    console.log(d);
-
                                     let canvasId = gvd.curCanvasId;
                                     var queryText =
                                         gvd.curCanvas.layers[layerId].transform
                                             .query;
                                     queryText = queryText.toLowerCase();
-                                    console.log(
-                                        `queryText is: ${queryText} for layerId: ${layerId}`
-                                    );
 
                                     // use regex to extract db column names from user-defined transform
                                     queryText = queryText.split("select")[1];
@@ -699,18 +657,12 @@ function registerJumps(viewId, svg, layerId) {
                                     const directMappedColNames = Object.keys(
                                         directMappedColumns
                                     );
-                                    console.log(
-                                        `(x,y) before update are (${d.x}, ${d.y})`
-                                    );
+                                    
                                     let data = Object.assign(d, {});
                                     data.x = parseFloat(data.x) + dx;
                                     data.cx = data.x;
                                     data.y = parseFloat(data.y) + dy;
                                     data.cy = data.y;
-                                    console.log(
-                                        `(x,y) after update are (${data.x}, ${data.y})`
-                                    );
-
                                     var objectKV = {};
                                     for (let key in data) {
                                         if (queryFields.includes(key)) {
@@ -722,19 +674,11 @@ function registerJumps(viewId, svg, layerId) {
 
                                     let width = gvd.curCanvas.w;
                                     let height = gvd.curCanvas.h;
-                                    console.log(
-                                        `objectKV before reversing: ${JSON.stringify(
-                                            objectKV
-                                        )}`
-                                    );
                                     if (allowsXUpdate) {
                                         const xReverseFuncString =
                                             layerObj.transform.reverseFunctions[
                                                 "x"
                                             ];
-                                        console.log(
-                                            `reverse function string for attr x  is: ${xReverseFuncString}`
-                                        );
                                         const xReverseFunc = Function(
                                             xReverseFuncString
                                         )();
@@ -750,9 +694,6 @@ function registerJumps(viewId, svg, layerId) {
                                             layerObj.transform.reverseFunctions[
                                                 "y"
                                             ];
-                                        console.log(
-                                            `reverse function string for attr y  is: ${yReverseFuncString}`
-                                        );
                                         const yReverseFunc = Function(
                                             yReverseFuncString
                                         )();
@@ -768,11 +709,6 @@ function registerJumps(viewId, svg, layerId) {
                                     if (allowsYUpdate)
                                         objectKV["cy"] = objectKV["y"];
                                     const projName = globalVar.project.name;
-                                    console.log(
-                                        `objectKV after reversing: ${JSON.stringify(
-                                            objectKV
-                                        )}`
-                                    );
 
                                     doDBUpdate(
                                         viewId,
@@ -789,17 +725,7 @@ function registerJumps(viewId, svg, layerId) {
                                         )
                                         .attr("viewBox")
                                         .split(" ");
-                                    console.log(
-                                        `viewbox: ${JSON.stringify(
-                                            curViewport
-                                        )}`
-                                    );
-                                    console.log(
-                                        `viewport x: ${
-                                            curViewport[0]
-                                        } and viewport y: ${curViewport[1]}`
-                                    );
-                                    // let curViewport = getCurrentViewport(viewId);
+
                                     let jump = {type: "drag"};
                                     preJump(viewId, jump);
 
@@ -809,7 +735,6 @@ function registerJumps(viewId, svg, layerId) {
                                         renderStaticLayers(viewId);
 
                                         // render
-
                                         RefreshDynamicLayers(
                                             viewId,
                                             curViewport[0],
@@ -861,7 +786,6 @@ function registerJumps(viewId, svg, layerId) {
             // stop the click event from propagating up
             d3.event.preventDefault();
             d3.event.stopPropagation();
-            console.log("clicked on the popover");
 
             // remove all popovers first
             removePopovers(viewId);
@@ -927,7 +851,6 @@ function registerJumps(viewId, svg, layerId) {
                     .append("a")
                     .classed("list-group-item", true)
                     .attr("href", "#")
-                    // .attr("id", "update-button")
                     .datum(d)
                     .html(updateText);
 

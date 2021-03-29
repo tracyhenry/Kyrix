@@ -3,25 +3,16 @@ package project;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-/** Created by wenbo on 1/4/18. */
+/** Created by peter on 12/23/20 */
 public class UpdateRequest {
 
-    public UpdateRequest() {}
+    /**
+     * UpdateRequest is an object that holds
+     * the data of a POST request body to /update.
+     * See UpdateRequestHandler.java for usage
+     */
 
-    // private variables
-    // private boolean mapInitialized = false;
-    // private Map<String, Canvas> canvasMap;
-    // private Map<String, View> viewMap;
-
-    // // JSON fields
-    // private String name;
-    // private ArrayList<View> views;
-    // private ArrayList<Canvas> canvases;
-    // private ArrayList<Jump> jumps;
-    // private ArrayList<SSV> ssvs;
-    // private ArrayList<Table> tables;
-    // private String renderingParams;
-    // private ArrayList<String> styles;
+    public UpdateRequest() {} 
 
     private String canvasId;
     private String layerId;
