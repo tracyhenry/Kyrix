@@ -83,7 +83,6 @@ function Transform(
                 "Constructing Transform: columnNames must be either an Array of strings or an Object mapping string -> function"
             );
         }
-        console.log("columnNames=" + this.columnNames);
 
         this.dbsource = query["dbsource"];
         this.db = "src_db_same_as_kyrix";
@@ -133,7 +132,6 @@ function Transform(
             "Constructing Transform: columnNames must be either an Array of strings or an Object mapping string -> function"
         );
     }
-    console.log("columnNames=" + this.columnNames);
 
     if (typeof separable !== "boolean")
         throw new Error("Constructing Transform: separable must be boolean.");
@@ -160,9 +158,12 @@ function Transform(
 }
 
 defaultEmptyTransform = new Transform("", "", "", [], true);
+identityFunction = function (oldRow, width, height) { return oldRow };
+
 
 // exports
 module.exports = {
     Transform,
-    defaultEmptyTransform
+    defaultEmptyTransform,
+    identityFunction
 };

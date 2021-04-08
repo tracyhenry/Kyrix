@@ -1,4 +1,5 @@
 const Transform = require("../../src/Transform").Transform;
+const identityFunction = require("../../src/Transform").identityFunction;
 
 var teamLogoTransform = new Transform(
     "select * from teams;",
@@ -55,9 +56,7 @@ var teamTimelineTransformUpdates = new Transform(
         return Java.to(ret, "java.lang.String[]");
     },
     {
-        game_id: function(oldRow, width, height) {
-            return oldRow;
-        },
+        game_id: null,
         x: function(oldRow, width, height) {
             let newRow = oldRow;
             let x = newRow["x"];
@@ -73,33 +72,15 @@ var teamTimelineTransformUpdates = new Transform(
             newRow["year"] = year;
             return newRow;
         },
-        y: function(oldRow, width, height) {
-            return oldRow;
-        },
-        year: function(oldRow, width, height) {
-            return oldRow;
-        },
-        month: function(oldRow, width, height) {
-            return oldRow;
-        },
-        day: function(oldRow, width, height) {
-            return oldRow;
-        },
-        home_team: function(oldRow, width, height) {
-            return oldRow;
-        },
-        away_team: function(oldRow, width, height) {
-            return oldRow;
-        },
-        home_score: function(oldRow, width, height) {
-            return oldRow;
-        },
-        away_score: function(oldRow, width, height) {
-            return oldRow;
-        },
-        timeline: function(oldRow, width, height) {
-            return oldRow;
-        }
+        y: identityFunction,
+        year: identityFunction,
+        month: identityFunction,
+        day: identityFunction,
+        home_team: null,
+        away_team: null,
+        home_score: identityFunction,
+        away_score: identityFunction,
+        timeline: null,
     },
     true
 );

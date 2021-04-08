@@ -3,6 +3,7 @@ const View = require("../View").View;
 const Jump = require("../Jump").Jump;
 const Layer = require("../Layer").Layer;
 const Transform = require("../Transform").Transform;
+const identityFunction = require("../Transform").identityFunction;
 const getBodyStringOfFunction = require("./Utilities").getBodyStringOfFunction;
 
 const updateStateQuery = `SELECT cs.name, cs.state_id, cs.total_dem_votes, cs.total_rep_votes,
@@ -220,7 +221,7 @@ function addUSMap(usmap, args) {
                 newRow["dem_votes"] = demVotes;
                 return newRow;
             },
-            total_votes: null,
+            total_votes: identityFunction,
             rate: null,
             geomstr: null
         };
@@ -238,9 +239,7 @@ function addUSMap(usmap, args) {
             usmap.updatesEnabled == true
                 ? updateCountyColNames
                 : defaultCountyColNames;
-        console.log(
-            `[index.js] updates enabled for county layer: ${usmap.updatesEnabled}`
-        );
+
         const countyTransformFunc =
             usmap.updatesEnabled == true
                 ? usmap.getUSMapTransformFunc("updateCountyMapTransform")
@@ -257,9 +256,6 @@ function addUSMap(usmap, args) {
 
         // enable hierarchical updates between county and state transform
         if (usmap.updatesEnabled == true) {
-            console.log(
-                `transform dependency func: ${countyBoundaryLayer.addTransformDependency}`
-            );
             countyBoundaryLayer.addTransformDependency(stateBoundaryLayer);
         }
 

@@ -104,8 +104,8 @@
             "default": "Rate"
         },
         "updatesEnabled": {
-            "enum": [true, false],
-            "default": false
+          "type": "boolean",
+          "default": false
         }
     },
     "required": ["db", "state"],
