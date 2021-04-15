@@ -201,19 +201,29 @@ function addUSMap(usmap, args) {
         countyMapStateBoundaryLayer.setUSMapId(
             this.usmaps.length - 1 + "_" + 1
         );
-        const updateCountyColNames = {
-            bbox_x: null,
-            bbox_y: null,
-            bbox_w: null,
-            bbox_h: null,
-            name: null,
-            state_id: null,
-            county_id: null,
+        const updateCountyColNames = [
+            "bbox_x",
+            "bbox_y",
+            "bbox_w",
+            "bbox_h",
+            "name",
+            "state_id",
+            "county_id",
+            "dem_votes",
+            "rep_votes",
+            "total_votes",
+            "rate",
+            "geomstr"
+        ];
+
+        var countyReverseFuncs = {};
+        if (usmap.updatesEnabled == true) {
+          countyReverseFuncs = {
             dem_votes: function(oldRow, width, height) {
-                let newRow = oldRow;
-                let repVotes = newRow["total_votes"] - newRow["dem_votes"];
-                newRow["rep_votes"] = repVotes;
-                return newRow;
+              let newRow = oldRow;
+              let repVotes = newRow["total_votes"] - newRow["dem_votes"];
+              newRow["rep_votes"] = repVotes;
+              return newRow;
             },
             rep_votes: function(oldRow, width, height) {
                 let newRow = oldRow;
@@ -222,9 +232,9 @@ function addUSMap(usmap, args) {
                 return newRow;
             },
             total_votes: identityFunction,
-            rate: null,
-            geomstr: null
-        };
+          };
+        }
+        
 
         const defaultCountyColNames = [
             "bbox_x",
@@ -250,7 +260,8 @@ function addUSMap(usmap, args) {
             usmap.db,
             countyTransformFunc,
             countyColNames,
-            true
+            true,
+            updateFuncs=countyReverseFuncs
         );
         var countyBoundaryLayer = new Layer(countyMapTransform, false);
 

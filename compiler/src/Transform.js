@@ -21,6 +21,7 @@ function getFuncParamNames(func) {
  * @param transformFunc - a Javascript function receiving the SQL query result as input and doing some data transforms.
  * @param columnNames - an array containing the names of the columns after data transformation
  * @param {boolean} separable - whether the calculation of transformFunc is per-tuple based. If yes, the input to transformFunc is a single tuple. Otherwise their input is the whole query result. The separability of a layer depends on the separability of the data transform it uses. This is not functioning, to be removed.
+ * @param {object} updateFuncs - (only used if layer is updatable): an object mapping updatable attributes in the layer to its reverse function.
  * @param filterableColumnNames the columns that can be applied filters on. May be different from columnNames.
  * @constructor
  */
@@ -30,6 +31,7 @@ function Transform(
     transformFunc,
     columnNames,
     separable,
+    updateFuncs=undefined,
     filterableColumnNames
 ) {
     if (typeof query == "object") {
@@ -65,23 +67,26 @@ function Transform(
                 .split(","); // safe bec we restricted the charset above
             numColumns = columnNames.length;
             this.allowUpdates = false;
-        } else if (typeof columnNames == "object") {
-            this.columnNames = Object.keys(columnNames);
-            numColumns = this.columnNames.length;
-            this.reverseFunctions = {};
-            for (let i = 0; i < numColumns; i++) {
-                let colName = this.columnNames[i];
-                if (columnNames[colName] !== null) {
-                    let funcBody = columnNames[colName].toString();
-                    funcBody = "return " + funcBody;
-                    this.reverseFunctions[colName] = funcBody;
-                }
-            }
-            this.allowUpdates = true;
         } else {
             throw new Error(
-                "Constructing Transform: columnNames must be either an Array of strings or an Object mapping string -> function"
+                "Constructing Transform: columnNames must be an Array of strings"
             );
+        } 
+        
+        this.allowUpdates = false;
+        if (updateFuncs != undefined) {
+          let updateAttrs = Object.keys(updateFuncs);
+          this.reverseFunctions = {};
+          let numUpdateAttrs = updateAttrs.length;
+          for (let i = 0; i < numUpdateAttrs; i++) {
+            let attrName = updateAttrs[i];
+            if (updateFuncs[attrName] !== null) {
+              let funcBody = updateFuncs[attrName].toString();
+              funcBody = "return " + funcBody;
+              this.reverseFunctions[attrName] = funcBody;
+            }
+          }
+          this.allowUpdates = true;
         }
 
         this.dbsource = query["dbsource"];
@@ -108,38 +113,34 @@ function Transform(
         return;
     }
 
-    // same block of code as above, but for other case!
-    // TODO: remove duplicate code
     if (Array.isArray(columnNames)) {
         this.columnNames = columnNames;
         numColumns = columnNames.length;
-        this.allowUpdates = false;
-    } else if (typeof columnNames == "object") {
-        this.columnNames = Object.keys(columnNames);
-        numColumns = this.columnNames.length;
-        this.reverseFunctions = {};
-        for (let i = 0; i < numColumns; i++) {
-            let colName = this.columnNames[i];
-            if (columnNames[colName] !== null) {
-                let funcBody = columnNames[colName].toString();
-                funcBody = "return " + funcBody;
-                this.reverseFunctions[colName] = funcBody;
-            }
-        }
-        this.allowUpdates = true;
     } else {
         throw new Error(
-            "Constructing Transform: columnNames must be either an Array of strings or an Object mapping string -> function"
+            "Constructing Transform: columnNames must be an Array of strings"
         );
     }
 
+    this.allowUpdates = false;
+    if (updateFuncs != undefined) {
+      let updateAttrs = Object.keys(updateFuncs);
+      this.reverseFunctions = {};
+      let numUpdateAttrs = updateAttrs.length;
+      for (let i = 0; i < numUpdateAttrs; i++) {
+        let attrName = updateAttrs[i];
+        if (updateFuncs[attrName] !== null) {
+          let funcBody = updateFuncs[attrName].toString();
+          funcBody = "return " + funcBody;
+          this.reverseFunctions[attrName] = funcBody;
+        }
+      }
+      this.allowUpdates = true;
+    } 
+
     if (typeof separable !== "boolean")
         throw new Error("Constructing Transform: separable must be boolean.");
-    // Note: with reverse functions, column names can be an object too
-    // if (!Array.isArray(columnNames))
-    //     throw new Error(
-    //         "Constructing Transform: column names must be an array."
-    //     );
+  
     if (numColumns == 0 && transformFunc != "")
         throw new Error(
             "Constructing Transform: column names must be provided if transform function exists."
