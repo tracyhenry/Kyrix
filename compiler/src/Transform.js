@@ -60,6 +60,12 @@ function Transform(
                 "Constructing Transform: transformFunc must take parameters (whose names match the dbsource output)"
             );
 
+        this.columnNames = matches
+            .join(",")
+            .replace(/\/\/ *@result: */g, "")
+            .split(","); // safe bec we restricted the charset above
+        console.log("columnNames=" + this.columnNames);
+
         this.dbsource = query["dbsource"];
         this.db = "src_db_same_as_kyrix";
         if (typeof this.dbsource !== "string")
@@ -83,30 +89,12 @@ function Transform(
         return;
     }
 
+    if (typeof separable !== "boolean")
+        throw new Error("Constructing Transform: separable must be boolean.");
     if (!Array.isArray(columnNames))
         throw new Error(
             "Constructing Transform: column names must be an array."
         );
-
-    this.allowUpdates = false;
-    if (updateFuncs != undefined) {
-        let updateAttrs = Object.keys(updateFuncs);
-        this.reverseFunctions = {};
-        let numUpdateAttrs = updateAttrs.length;
-        for (let i = 0; i < numUpdateAttrs; i++) {
-            let attrName = updateAttrs[i];
-            if (updateFuncs[attrName] !== null) {
-                let funcBody = updateFuncs[attrName].toString();
-                funcBody = "return " + funcBody;
-                this.reverseFunctions[attrName] = funcBody;
-            }
-        }
-        this.allowUpdates = true;
-    }
-
-    if (typeof separable !== "boolean")
-        throw new Error("Constructing Transform: separable must be boolean.");
-
     if (columnNames.length == 0 && transformFunc != "")
         throw new Error(
             "Constructing Transform: column names must be provided if transform function exists."
@@ -123,6 +111,22 @@ function Transform(
     this.filterableColumnNames =
         filterableColumnNames == null ? [] : filterableColumnNames;
     this.dependencies = [];
+    // update stuff
+    this.allowUpdates = false;
+    if (updateFuncs != undefined) {
+        let updateAttrs = Object.keys(updateFuncs);
+        this.reverseFunctions = {};
+        let numUpdateAttrs = updateAttrs.length;
+        for (let i = 0; i < numUpdateAttrs; i++) {
+            let attrName = updateAttrs[i];
+            if (updateFuncs[attrName] !== null) {
+                let funcBody = updateFuncs[attrName].toString();
+                funcBody = "return " + funcBody;
+                this.reverseFunctions[attrName] = funcBody;
+            }
+        }
+        this.allowUpdates = true;
+    }
 }
 
 defaultEmptyTransform = new Transform("", "", "", [], true);
