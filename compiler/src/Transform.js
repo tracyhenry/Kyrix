@@ -31,7 +31,7 @@ function Transform(
     transformFunc,
     columnNames,
     separable,
-    updateFuncs=undefined,
+    updateFuncs = undefined,
     filterableColumnNames
 ) {
     if (typeof query == "object") {
@@ -60,35 +60,6 @@ function Transform(
                 "Constructing Transform: transformFunc must take parameters (whose names match the dbsource output)"
             );
 
-        if (Array.isArray(columnNames)) {
-            this.columnNames = matches
-                .join(",")
-                .replace(/\/\/ *@result: */g, "")
-                .split(","); // safe bec we restricted the charset above
-            numColumns = columnNames.length;
-            this.allowUpdates = false;
-        } else {
-            throw new Error(
-                "Constructing Transform: columnNames must be an Array of strings"
-            );
-        } 
-        
-        this.allowUpdates = false;
-        if (updateFuncs != undefined) {
-          let updateAttrs = Object.keys(updateFuncs);
-          this.reverseFunctions = {};
-          let numUpdateAttrs = updateAttrs.length;
-          for (let i = 0; i < numUpdateAttrs; i++) {
-            let attrName = updateAttrs[i];
-            if (updateFuncs[attrName] !== null) {
-              let funcBody = updateFuncs[attrName].toString();
-              funcBody = "return " + funcBody;
-              this.reverseFunctions[attrName] = funcBody;
-            }
-          }
-          this.allowUpdates = true;
-        }
-
         this.dbsource = query["dbsource"];
         this.db = "src_db_same_as_kyrix";
         if (typeof this.dbsource !== "string")
@@ -109,39 +80,34 @@ function Transform(
             console.log(this.query);
         }
         this.separable = query["separable"] || true;
-        this.dependencies = [];
         return;
     }
 
-    if (Array.isArray(columnNames)) {
-        this.columnNames = columnNames;
-        numColumns = columnNames.length;
-    } else {
+    if (!Array.isArray(columnNames))
         throw new Error(
-            "Constructing Transform: columnNames must be an Array of strings"
+            "Constructing Transform: column names must be an array."
         );
-    }
 
     this.allowUpdates = false;
     if (updateFuncs != undefined) {
-      let updateAttrs = Object.keys(updateFuncs);
-      this.reverseFunctions = {};
-      let numUpdateAttrs = updateAttrs.length;
-      for (let i = 0; i < numUpdateAttrs; i++) {
-        let attrName = updateAttrs[i];
-        if (updateFuncs[attrName] !== null) {
-          let funcBody = updateFuncs[attrName].toString();
-          funcBody = "return " + funcBody;
-          this.reverseFunctions[attrName] = funcBody;
+        let updateAttrs = Object.keys(updateFuncs);
+        this.reverseFunctions = {};
+        let numUpdateAttrs = updateAttrs.length;
+        for (let i = 0; i < numUpdateAttrs; i++) {
+            let attrName = updateAttrs[i];
+            if (updateFuncs[attrName] !== null) {
+                let funcBody = updateFuncs[attrName].toString();
+                funcBody = "return " + funcBody;
+                this.reverseFunctions[attrName] = funcBody;
+            }
         }
-      }
-      this.allowUpdates = true;
-    } 
+        this.allowUpdates = true;
+    }
 
     if (typeof separable !== "boolean")
         throw new Error("Constructing Transform: separable must be boolean.");
-  
-    if (numColumns == 0 && transformFunc != "")
+
+    if (columnNames.length == 0 && transformFunc != "")
         throw new Error(
             "Constructing Transform: column names must be provided if transform function exists."
         );
@@ -149,6 +115,7 @@ function Transform(
     // assign fields
     this.query = query;
     this.db = db;
+    this.columnNames = columnNames;
     this.transformFunc = transformFunc;
     if (transformFunc == "") this.transformFuncBody = "";
     else this.transformFuncBody = getBodyStringOfFunction(this.transformFunc);
@@ -159,8 +126,9 @@ function Transform(
 }
 
 defaultEmptyTransform = new Transform("", "", "", [], true);
-identityFunction = function (oldRow, width, height) { return oldRow };
-
+identityFunction = function(oldRow, width, height) {
+    return oldRow;
+};
 
 // exports
 module.exports = {
