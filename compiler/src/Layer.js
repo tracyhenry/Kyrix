@@ -18,6 +18,8 @@ function Layer(transform, isStatic) {
     this.transform = transform;
     if (isStatic == null) this.isStatic = false;
     else this.isStatic = isStatic;
+    if (transform.allowUpdates) this.allowUpdates = true;
+    else this.allowUpdates = false;
     this.fetchingScheme = "dbox";
     this.deltaBox = true;
     this.rendering = "";

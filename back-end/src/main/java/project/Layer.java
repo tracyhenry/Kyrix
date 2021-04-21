@@ -18,6 +18,7 @@ public class Layer implements Serializable {
     private transient Indexer indexer;
     private String ssvId, usmapId, staticAggregationId;
     private String indexerType;
+    private boolean allowUpdates;
 
     public Transform getTransform() {
         return transform;
@@ -63,6 +64,10 @@ public class Layer implements Serializable {
         return staticAggregationId;
     }
 
+    public boolean getUpdatesAllowed() {
+        return allowUpdates;
+    }
+
     public void setIndexerType(String indexerType) {
         this.indexerType = indexerType;
     }
@@ -103,6 +108,8 @@ public class Layer implements Serializable {
                 + usmapId
                 + ", staticAggregationId="
                 + staticAggregationId
+                + ", allowUpdates="
+                + allowUpdates
                 + '}';
     }
 }
