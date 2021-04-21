@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Map;
 import main.Config;
 import main.DbConnector;
 
@@ -19,6 +20,7 @@ public class Transform implements Serializable {
     private String transformFuncBody;
     private ArrayList<String> columnNames, queriedColumnNames = null;
     private ArrayList<String> filterableColumnNames;
+    private Map<String, String> reverseFunctions;
     private boolean separable;
 
     public String getId() {
