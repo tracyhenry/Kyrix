@@ -110,7 +110,6 @@ function Transform(
     this.separable = separable;
     this.filterableColumnNames =
         filterableColumnNames == null ? [] : filterableColumnNames;
-    this.dependencies = [];
     // update stuff
     this.allowUpdates = false;
     if (updateFuncs != undefined) {
