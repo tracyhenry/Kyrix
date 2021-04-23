@@ -394,7 +394,8 @@ function createPopoverDivs(viewId) {
         );
 }
 
-function addPopoverUpdateOptions(gvd, viewId, layerId, p) {
+function addPopoverUpdateOptions(viewId, layerId, p) {
+    var gvd = globalVar.views[viewId];
     d3.event.preventDefault();
     d3.event.stopPropagation();
 
@@ -546,23 +547,23 @@ function addPopoverUpdateOptions(gvd, viewId, layerId, p) {
         .style("top", d3.event.pageY - popoverHeight / 2 + "px");
 }
 
-function registerDragNDropUpdateListener(p, layerId) {
+function registerDragNDropUpdateListener(viewId, p, layerId) {
+    var gvd = globalVar.views[viewId];
+    var viewClass = ".view_" + viewId;
     let layerObj = gvd.curCanvas.layers[layerId];
     var allowsXUpdate = false;
     var allowsYUpdate = false;
     if ("x" in layerObj.transform.reverseFunctions) allowsXUpdate = true;
     if ("y" in layerObj.transform.reverseFunctions) allowsYUpdate = true;
-
     if (!allowsXUpdate && !allowsYUpdate) return;
 
+    // attach drag handler to dynamic objects in layer
     let currentObject = d3
         .select(viewClass + ".viewsvg")
         .selectAll("*")
         .filter(function(d) {
             return d == p;
         });
-
-    // attach drag handler to dynamic objects in layer
     let dx = 0;
     let dy = 0;
     d3.select(viewClass + ".viewsvg")
@@ -727,7 +728,7 @@ function registerJumps(viewId, svg, layerId) {
         if (!hasJump && !allowUpdates) return;
 
         // register drag-and-drop listeners
-        if (allowUpdates) registerDragNDropUpdateListener(p, layerId);
+        if (allowUpdates) registerDragNDropUpdateListener(viewId, p, layerId);
 
         // make cursor a hand when hovering over this shape
         d3.select(this).style("cursor", "zoom-in");
@@ -807,7 +808,7 @@ function registerJumps(viewId, svg, layerId) {
 
                 // if update option selected, set up new popover with options for changing all
                 updateJumpOption.on("click", function(d) {
-                    addPopoverUpdateOptions(gvd, viewId, layerId, p);
+                    addPopoverUpdateOptions(viewId, layerId, p);
                 });
             }
 
