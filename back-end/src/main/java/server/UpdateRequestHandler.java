@@ -48,18 +48,6 @@ public class UpdateRequestHandler implements HttpHandler {
         return attrMap;
     }
 
-    private ArrayList<String> filterTransformColumns(Transform trans, ArrayList<String> columns)
-            throws SQLException, ClassNotFoundException {
-        ArrayList<String> columnsInTable = new ArrayList<String>();
-        ArrayList<String> transColumns = trans.getColumnNames();
-        for (String col : columns) {
-            if (transColumns.contains(col)) {
-                columnsInTable.add(col);
-            }
-        }
-        return columnsInTable;
-    }
-
     private HashMap<String, String> filterObjectAttrs(
             Set<String> colList, HashMap<String, String> objAttrs)
             throws SQLException, ClassNotFoundException {
@@ -199,7 +187,7 @@ public class UpdateRequestHandler implements HttpHandler {
             keyColumns = updateRequest.getKeyColumns();
             objectAttrs = updateRequest.getObjectAttributes();
             baseTable = updateRequest.getBaseTable();
-            projName = updateRequest.getProjectName();
+            projName = Main.getProject().getName();
             int fetchedRows = 0;
 
             long startTime = System.currentTimeMillis();
@@ -235,7 +223,7 @@ public class UpdateRequestHandler implements HttpHandler {
 
             // get types of base data table, can be any type of data, which we will have to cast the
             // text data into
-            HashMap<String, String> baseAttrColTypes = new HashMap<String, String>();
+            HashMap<String, String> baseAttrColTypes = new HashMap<>();
             Statement baseStmt = DbConnector.getStmtByDbName(projName);
             typeQuery =
                     "SELECT column_name, data_type  FROM information_schema.columns WHERE table_name = "

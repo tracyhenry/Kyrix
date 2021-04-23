@@ -17,7 +17,6 @@ public class UpdateRequest {
     private ArrayList<String> keyColumns;
     private HashMap<String, String> objectAttributes;
     private String baseTable;
-    private String projectName;
 
     public String getCanvasId() {
         return canvasId;
@@ -39,10 +38,6 @@ public class UpdateRequest {
         return baseTable;
     }
 
-    public String getProjectName() {
-        return projectName;
-    }
-
     @Override
     public String toString() {
         return "UpdateRequest {"
@@ -57,9 +52,6 @@ public class UpdateRequest {
                 + objectAttributes
                 + ", baseTable='"
                 + baseTable
-                + '\''
-                + ", projectName='"
-                + projectName
                 + '\''
                 + '}';
     }

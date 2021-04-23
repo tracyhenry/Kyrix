@@ -331,14 +331,7 @@ function startJump(viewId, d, jump, optionalArgs) {
 }
 
 // send updates to DB
-function doDBUpdate(
-    viewId,
-    canvasId,
-    layerId,
-    tableName,
-    newObjAttrs,
-    projName
-) {
+function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs) {
     // find field in newObjAttrs that is the primary key identifier (like "id")
     let idColumns = [];
     const attributes = Object.keys(newObjAttrs);
@@ -354,8 +347,7 @@ function doDBUpdate(
         layerId: layerId,
         keyColumns: idColumns,
         objectAttributes: newObjAttrs,
-        baseTable: tableName,
-        projectName: projName
+        baseTable: tableName
     };
 
     $.ajax({
@@ -514,15 +506,7 @@ function addPopoverUpdateOptions(viewId, layerId, p) {
             let height = gvd.curCanvas.h;
             objectKV = reverseFunc(objectKV, width, height);
 
-            const projName = globalVar.project.name;
-            doDBUpdate(
-                viewId,
-                canvasId,
-                layerId,
-                tableName,
-                objectKV,
-                projName
-            );
+            doDBUpdate(viewId, canvasId, layerId, tableName, objectKV);
             // re-load dynamic data from db
             getCurCanvas(viewId);
             if (!gvd.animation) {
@@ -566,133 +550,120 @@ function registerDragNDropUpdateListener(viewId, p, layerId) {
         });
     let dx = 0;
     let dy = 0;
-    d3.select(viewClass + ".viewsvg")
-        .selectAll("*")
-        .filter(function(d) {
-            return d == p;
-        })
-        .call(
-            d3
-                .drag()
-                .on("start", function(d) {
-                    dx = 0;
-                    dy = 0;
-                })
-                .on("drag", function(d) {
-                    dx += d3.event.dx;
-                    dy += d3.event.dy;
-                    currentObject.attr(
-                        "transform",
-                        "translate(" + dx + "," + dy + ")"
-                    );
-                })
-                .on("end", function(d) {
-                    if (Math.abs(dx) > 50 || Math.abs(dy) > 50) {
-                        let canvasId = gvd.curCanvasId;
-                        var queryText =
-                            gvd.curCanvas.layers[layerId].transform.query;
-                        queryText = queryText.toLowerCase();
+    currentObject.call(
+        d3
+            .drag()
+            .on("start", function(d) {
+                dx = 0;
+                dy = 0;
+            })
+            .on("drag", function(d) {
+                dx += d3.event.dx;
+                dy += d3.event.dy;
+                currentObject.attr(
+                    "transform",
+                    "translate(" + dx + "," + dy + ")"
+                );
+            })
+            .on("end", function(d) {
+                if (Math.abs(dx) > 50 || Math.abs(dy) > 50) {
+                    let canvasId = gvd.curCanvasId;
+                    var queryText =
+                        gvd.curCanvas.layers[layerId].transform.query;
+                    queryText = queryText.toLowerCase();
 
-                        // use regex to extract db column names from user-defined transform
-                        queryText = queryText.split("select")[1];
-                        [queryText, tableName] = queryText.split("from");
-                        tableName = tableName.replace(/[\s;]+/g, "").trim();
-                        queryText = queryText.replace(/\s+/g, "").trim();
-                        let queryFields = queryText.split(",");
+                    // use regex to extract db column names from user-defined transform
+                    queryText = queryText.split("select")[1];
+                    [queryText, tableName] = queryText.split("from");
+                    tableName = tableName.replace(/[\s;]+/g, "").trim();
+                    queryText = queryText.replace(/\s+/g, "").trim();
+                    let queryFields = queryText.split(",");
 
-                        let data = Object.assign(d, {});
-                        data.x = parseFloat(data.x) + dx;
-                        data.cx = data.x;
-                        data.y = parseFloat(data.y) + dy;
-                        data.cy = data.y;
-                        var objectKV = {};
-                        for (let key in data) {
-                            if (queryFields.includes(key)) {
-                                objectKV[key] = data[key];
-                            }
+                    let data = Object.assign(d, {});
+                    data.x = parseFloat(data.x) + dx;
+                    data.cx = data.x;
+                    data.y = parseFloat(data.y) + dy;
+                    data.cy = data.y;
+                    var objectKV = {};
+                    for (let key in data) {
+                        if (queryFields.includes(key)) {
+                            objectKV[key] = data[key];
                         }
-                        objectKV["x"] = data.x;
-                        objectKV["y"] = data.y;
+                    }
+                    objectKV["x"] = data.x;
+                    objectKV["y"] = data.y;
 
-                        let width = gvd.curCanvas.w;
-                        let height = gvd.curCanvas.h;
-                        if (allowsXUpdate) {
-                            const xReverseFuncString =
-                                layerObj.transform.reverseFunctions["x"];
-                            const xReverseFunc = Function(xReverseFuncString)();
-                            objectKV = xReverseFunc(objectKV, width, height);
-                        }
+                    let width = gvd.curCanvas.w;
+                    let height = gvd.curCanvas.h;
+                    if (allowsXUpdate) {
+                        const xReverseFuncString =
+                            layerObj.transform.reverseFunctions["x"];
+                        const xReverseFunc = Function(xReverseFuncString)();
+                        objectKV = xReverseFunc(objectKV, width, height);
+                    }
 
-                        if (allowsYUpdate) {
-                            const yReverseFuncString =
-                                layerObj.transform.reverseFunctions["y"];
-                            const yReverseFunc = Function(yReverseFuncString)();
-                            objectKV = yReverseFunc(objectKV, width, height);
-                        }
+                    if (allowsYUpdate) {
+                        const yReverseFuncString =
+                            layerObj.transform.reverseFunctions["y"];
+                        const yReverseFunc = Function(yReverseFuncString)();
+                        objectKV = yReverseFunc(objectKV, width, height);
+                    }
 
-                        if (allowsXUpdate) objectKV["cx"] = objectKV["x"];
-                        if (allowsYUpdate) objectKV["cy"] = objectKV["y"];
-                        const projName = globalVar.project.name;
+                    if (allowsXUpdate) objectKV["cx"] = objectKV["x"];
+                    if (allowsYUpdate) objectKV["cy"] = objectKV["y"];
 
-                        doDBUpdate(
+                    doDBUpdate(viewId, canvasId, layerId, tableName, objectKV);
+
+                    var curViewport = d3
+                        .select(viewClass + ".mainsvg:not(.static)")
+                        .attr("viewBox")
+                        .split(" ");
+
+                    let jump = {type: "drag"};
+                    preJump(viewId, jump);
+
+                    var gotCanvas = getCurCanvas(viewId);
+                    gotCanvas.then(function() {
+                        // static trim
+                        renderStaticLayers(viewId);
+
+                        // render
+                        RefreshDynamicLayers(
                             viewId,
-                            canvasId,
-                            layerId,
-                            tableName,
-                            objectKV,
-                            projName
+                            curViewport[0],
+                            curViewport[1]
                         );
 
-                        var curViewport = d3
-                            .select(viewClass + ".mainsvg:not(.static)")
-                            .attr("viewBox")
-                            .split(" ");
+                        // clean up
+                        postJump(viewId, jump);
 
-                        let jump = {type: "drag"};
-                        preJump(viewId, jump);
-
-                        var gotCanvas = getCurCanvas(viewId);
-                        gotCanvas.then(function() {
-                            // static trim
-                            renderStaticLayers(viewId);
-
-                            // render
-                            RefreshDynamicLayers(
-                                viewId,
-                                curViewport[0],
-                                curViewport[1]
-                            );
-
-                            // clean up
-                            postJump(viewId, jump);
-
-                            d3.selectAll(viewClass + ".mainsvg:not(.static)")
-                                .attr(
-                                    "viewBox",
-                                    curViewport[0] +
-                                        " " +
-                                        curViewport[1] +
-                                        " " +
-                                        gvd.viewportWidth +
-                                        " " +
-                                        gvd.viewportHeight
-                                )
-                                .style("opacity", 1);
-                            d3.selectAll(viewClass + ".mainsvg.static")
-                                .attr(
-                                    "viewBox",
-                                    "0 0 " +
-                                        gvd.viewportWidth +
-                                        " " +
-                                        gvd.viewportHeight
-                                )
-                                .style("opacity", 1);
-                            gvd.initialViewportX = curViewport[0];
-                            gvd.initialViewportY = curViewport[1];
-                        });
-                    } // end if x/y drag diff big enough
-                }) // end drag end event
-        );
+                        d3.selectAll(viewClass + ".mainsvg:not(.static)")
+                            .attr(
+                                "viewBox",
+                                curViewport[0] +
+                                    " " +
+                                    curViewport[1] +
+                                    " " +
+                                    gvd.viewportWidth +
+                                    " " +
+                                    gvd.viewportHeight
+                            )
+                            .style("opacity", 1);
+                        d3.selectAll(viewClass + ".mainsvg.static")
+                            .attr(
+                                "viewBox",
+                                "0 0 " +
+                                    gvd.viewportWidth +
+                                    " " +
+                                    gvd.viewportHeight
+                            )
+                            .style("opacity", 1);
+                        gvd.initialViewportX = curViewport[0];
+                        gvd.initialViewportY = curViewport[1];
+                    });
+                } // end if x/y drag diff big enough
+            }) // end drag end event
+    );
 }
 
 // register jump info
