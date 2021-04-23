@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import index.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -36,22 +35,10 @@ public class UpdateRequestHandler implements HttpHandler {
         gson = new GsonBuilder().create();
     }
 
-    private static HashMap<String, String> zipLists(
-            ArrayList<String> attrNames, ArrayList<String> attrVals) {
-        assert (attrNames.size() == attrVals.size());
-        HashMap<String, String> attrMap = new HashMap<String, String>();
-        for (int i = 0; i < attrNames.size(); i++) {
-            String name = attrNames.get(i);
-            String val = attrVals.get(i);
-            attrMap.put(name, val);
-        }
-        return attrMap;
-    }
-
     private HashMap<String, String> filterObjectAttrs(
             Set<String> colList, HashMap<String, String> objAttrs)
             throws SQLException, ClassNotFoundException {
-        HashMap<String, String> attrsInTable = new HashMap<String, String>();
+        HashMap<String, String> attrsInTable = new HashMap<>();
         for (String col : objAttrs.keySet()) {
             if (colList.contains(col)) {
                 attrsInTable.put(col, objAttrs.get(col));
@@ -198,11 +185,10 @@ public class UpdateRequestHandler implements HttpHandler {
             Canvas c = Main.getProject().getCanvas(canvasId);
             int layerIdNum = Integer.parseInt(layerId);
             Layer l = c.getLayers().get(layerIdNum);
-            Transform trans = l.getTransform();
 
             // get types of kyrix index table, will just be text for all columns in base table
             // and double precision for the bbox coordinates/placement
-            HashMap<String, String> attrColumnTypes = new HashMap<String, String>();
+            HashMap<String, String> attrColumnTypes = new HashMap<>();
             Statement stmt = DbConnector.getStmtByDbName(Config.databaseName);
             String typeQuery =
                     "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = "
@@ -212,8 +198,7 @@ public class UpdateRequestHandler implements HttpHandler {
             ResultSet rs = stmt.executeQuery(typeQuery);
             String colName;
             String colType;
-            // String baseColType;
-            // Set<String> attrNames = objectAttrs.keySet();
+
             while (rs.next()) {
                 // Note: getString is 1-indexed, so the 1st column is 1, etc.
                 colName = rs.getString(1);
@@ -237,7 +222,7 @@ public class UpdateRequestHandler implements HttpHandler {
                 baseAttrColTypes.put(colName, colType);
             }
 
-            String updateQuery =
+            String kyrixUpdateQuery =
                     createUpdateQuery(tableName, objectAttrs, attrColumnTypes, keyColumns, false);
             HashMap<String, String> baseObjectAttrs =
                     filterObjectAttrs(baseAttrColTypes.keySet(), objectAttrs);
@@ -245,7 +230,10 @@ public class UpdateRequestHandler implements HttpHandler {
                     createUpdateQuery(
                             baseTable, baseObjectAttrs, baseAttrColTypes, keyColumns, false);
 
-            stmt.executeUpdate(updateQuery);
+            System.out.println("Kyrix index table update query: " + kyrixUpdateQuery);
+            System.out.println("Base table update query: " + baseUpdateQuery);
+
+            stmt.executeUpdate(kyrixUpdateQuery);
             baseStmt.executeUpdate(baseUpdateQuery);
 
             double midTime = System.currentTimeMillis() - startTime;
