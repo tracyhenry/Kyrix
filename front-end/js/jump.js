@@ -496,12 +496,9 @@ function addPopoverUpdateOptions(viewId, layerId, p) {
             objectKV[updateAttr] = attrValue;
 
             // reverse function code
-            const reverseFuncString =
-                gvd.curCanvas.layers[layerId].transform.reverseFunctions[
-                    updateAttr
-                ];
-
-            const reverseFunc = Function(reverseFuncString)();
+            const reverseFunc = gvd.curCanvas.layers[
+                layerId
+            ].transform.reverseFunctions[updateAttr].parseFunction();
             let width = gvd.curCanvas.w;
             let height = gvd.curCanvas.h;
             objectKV = reverseFunc(objectKV, width, height);
@@ -595,19 +592,15 @@ function registerDragNDropUpdateListener(viewId, p, layerId) {
 
                     let width = gvd.curCanvas.w;
                     let height = gvd.curCanvas.h;
-                    if (allowsXUpdate) {
-                        const xReverseFuncString =
-                            layerObj.transform.reverseFunctions["x"];
-                        const xReverseFunc = Function(xReverseFuncString)();
-                        objectKV = xReverseFunc(objectKV, width, height);
-                    }
+                    if (allowsXUpdate)
+                        objectKV = layerObj.transform.reverseFunctions[
+                            "x"
+                        ].parseFunction()(objectKV, width, height);
 
-                    if (allowsYUpdate) {
-                        const yReverseFuncString =
-                            layerObj.transform.reverseFunctions["y"];
-                        const yReverseFunc = Function(yReverseFuncString)();
-                        objectKV = yReverseFunc(objectKV, width, height);
-                    }
+                    if (allowsYUpdate)
+                        objectKV = layerObj.transform.reverseFunctions[
+                            "y"
+                        ].parseFunction()(objectKV, width, height);
 
                     if (allowsXUpdate) objectKV["cx"] = objectKV["x"];
                     if (allowsYUpdate) objectKV["cy"] = objectKV["y"];

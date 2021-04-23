@@ -113,17 +113,7 @@ function Transform(
     // update stuff
     this.allowUpdates = false;
     if (updateFuncs != undefined) {
-        let updateAttrs = Object.keys(updateFuncs);
-        this.reverseFunctions = {};
-        let numUpdateAttrs = updateAttrs.length;
-        for (let i = 0; i < numUpdateAttrs; i++) {
-            let attrName = updateAttrs[i];
-            if (updateFuncs[attrName] !== null) {
-                let funcBody = updateFuncs[attrName].toString();
-                funcBody = "return " + funcBody;
-                this.reverseFunctions[attrName] = funcBody;
-            }
-        }
+        this.reverseFunctions = updateFuncs;
         this.allowUpdates = true;
     }
 }
