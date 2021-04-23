@@ -1,16 +1,12 @@
 package server;
 
-import com.coveo.nashorn_modules.FilesystemFolder;
-import com.coveo.nashorn_modules.Require;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import index.*;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,27 +17,19 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import javax.net.ssl.HttpsURLConnection;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import jdk.nashorn.api.scripting.JSObject;
-import jdk.nashorn.api.scripting.NashornScriptEngine;
 import main.Config;
 import main.DbConnector;
 import main.Main;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import project.*;
 
 /** Created by peter on 08/24/20 */
 public class UpdateRequestHandler implements HttpHandler {
 
     /**
-     * UpdateRequestHandler serves requests to /update
-     * Given a canvas, layer, and information about the transform,
-     * the handler will udpate the data for the relevant
-     * layer/canvas and propagate those updates to the index tables
-     * and/or up to higher levels if hierarchical
+     * UpdateRequestHandler serves requests to /update Given a canvas, layer, and information about
+     * the transform, the handler will udpate the data for the relevant layer/canvas and propagate
+     * those updates to the index tables and/or up to higher levels if hierarchical
      */
-
     private final Gson gson;
 
     public UpdateRequestHandler() {
@@ -278,9 +266,14 @@ public class UpdateRequestHandler implements HttpHandler {
             Server.sendStats(projName, canvasId, "update1", midTime, 1);
 
             double timeDiff = System.currentTimeMillis() - startTime;
-            System.out.println("end-to-end update on canvas: "
-                  + canvasId + "and layer: "
-                  + layerId + " took " + timeDiff + " ms");
+            System.out.println(
+                    "end-to-end update on canvas: "
+                            + canvasId
+                            + "and layer: "
+                            + layerId
+                            + " took "
+                            + timeDiff
+                            + " ms");
             Server.sendStats(projName, canvasId, "update", timeDiff, fetchedRows);
             stmt.close();
             baseStmt.close();

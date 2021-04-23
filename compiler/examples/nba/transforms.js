@@ -56,41 +56,41 @@ var teamTimelineTransformUpdates = new Transform(
         return Java.to(ret, "java.lang.String[]");
     },
     [
-      "game_id",
-      "x",
-      "y",
-      "year",
-      "month",
-      "day",
-      "home_team",
-      "away_team",
-      "home_score",
-      "away_score",
-      "timeline"
+        "game_id",
+        "x",
+        "y",
+        "year",
+        "month",
+        "day",
+        "home_team",
+        "away_team",
+        "home_score",
+        "away_score",
+        "timeline"
     ],
     true,
     {
-      x: function(oldRow, width, height) {
-        let newRow = oldRow;
-        let x = newRow["x"];
-        let reverseDate = d3
-            .scaleLinear()
-            .domain([82, width - 82])
-            .range([new Date(2017, 9, 17), new Date(2018, 3, 11)])(x);
-        let month = reverseDate.getUTCMonth() + 1;
-        let day = reverseDate.getUTCDate();
-        let year = reverseDate.getUTCFullYear();
-        newRow["month"] = month;
-        newRow["day"] = day;
-        newRow["year"] = year;
-        return newRow;
-      },
-      y: identityFunction,
-      year: identityFunction,
-      month: identityFunction,
-      day: identityFunction,
-      home_score: identityFunction,
-      away_score: identityFunction,
+        x: function(oldRow, width, height) {
+            let newRow = oldRow;
+            let x = newRow["x"];
+            let reverseDate = d3
+                .scaleLinear()
+                .domain([82, width - 82])
+                .range([new Date(2017, 9, 17), new Date(2018, 3, 11)])(x);
+            let month = reverseDate.getUTCMonth() + 1;
+            let day = reverseDate.getUTCDate();
+            let year = reverseDate.getUTCFullYear();
+            newRow["month"] = month;
+            newRow["day"] = day;
+            newRow["year"] = year;
+            return newRow;
+        },
+        y: identityFunction,
+        year: identityFunction,
+        month: identityFunction,
+        day: identityFunction,
+        home_score: identityFunction,
+        away_score: identityFunction
     }
 );
 

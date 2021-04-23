@@ -7,12 +7,10 @@ import java.util.HashMap;
 public class UpdateRequest {
 
     /**
-     * UpdateRequest is an object that holds
-     * the data of a POST request body to /update.
-     * See UpdateRequestHandler.java for usage
+     * UpdateRequest is an object that holds the data of a POST request body to /update. See
+     * UpdateRequestHandler.java for usage
      */
-
-    public UpdateRequest() {} 
+    public UpdateRequest() {}
 
     private String canvasId;
     private String layerId;
