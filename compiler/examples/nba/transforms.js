@@ -68,9 +68,9 @@ var teamTimelineTransform = new Transform(
         "away_score",
         "timeline"
     ],
-    true
+    true,
     // uncomment below to enable updates on the timeline canvas
-    /*
+
     {
         x: function(oldRow, width, height) {
             let newRow = oldRow;
@@ -80,8 +80,7 @@ var teamTimelineTransform = new Transform(
                 .domain([82, width - 82])
                 .range([new Date(2017, 9, 17), new Date(2018, 3, 11)])(x);
             let y = newRow["y"];
-            if (Math.abs(y - 510) > Math.abs(y - 740))
-                y = 740;
+            if (Math.abs(y - 510) > Math.abs(y - 740)) y = 740;
             else y = 510;
             newRow["y"] = y;
             let month = reverseDate.getUTCMonth() + 1;
@@ -99,7 +98,6 @@ var teamTimelineTransform = new Transform(
         home_score: identityFunction,
         away_score: identityFunction
     }
-*/
 );
 
 var teamTimelineStaticTransform = new Transform(

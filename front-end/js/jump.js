@@ -507,7 +507,16 @@ function addPopoverUpdateOptions(viewId, layerId, p) {
                 .select(viewClass + ".mainsvg:not(.static)")
                 .attr("viewBox")
                 .split(" ");
-            RefreshDynamicLayers(viewId, curViewport[0], curViewport[1]);
+            var k = d3.zoomTransform(d3.select(viewClass + ".maing").node()).k;
+            load(
+                gvd.predicates,
+                curViewport[0],
+                curViewport[1],
+                k,
+                viewId,
+                canvasId,
+                {type: param.load}
+            );
             removePopovers(viewId);
         });
     }
