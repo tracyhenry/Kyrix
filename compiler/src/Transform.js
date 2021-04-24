@@ -110,12 +110,7 @@ function Transform(
     this.separable = separable;
     this.filterableColumnNames =
         filterableColumnNames == null ? [] : filterableColumnNames;
-    // update stuff
-    this.allowUpdates = false;
-    if (updateFuncs != undefined) {
-        this.reverseFunctions = updateFuncs;
-        this.allowUpdates = true;
-    }
+    this.reverseFunctions = updateFuncs;
 }
 
 defaultEmptyTransform = new Transform("", "", "", [], true);
