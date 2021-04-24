@@ -23,77 +23,6 @@ var teamLogoTransform = new Transform(
     true
 );
 
-var teamTimelineTransformUpdates = new Transform(
-    "select game_id, year, month, day, home_team, away_team, home_score, away_score, 1 from games;",
-    "nba",
-    function(row, width, height, renderParams) {
-        var ret = [];
-        // id
-        ret.push(row[0]);
-        // x
-        var curDate = new Date(row[1], row[2] - 1, row[3]);
-        ret.push(
-            d3
-                .scaleTime()
-                .domain([new Date(2017, 9, 17), new Date(2018, 3, 11)])
-                .range([82, width - 82])(curDate)
-        );
-        // y
-        var beginDate = new Date(2000, 0, 1);
-        var oneDay = 24 * 60 * 60 * 1000;
-        var daysPassed = Math.round(
-            Math.abs((curDate.getTime() - beginDate.getTime()) / oneDay)
-        );
-        ret.push(
-            daysPassed % 2 == 0
-                ? renderParams.timelineUpperY
-                : renderParams.timelineLowerY
-        );
-
-        // rest of the attributes
-        for (var i = 1; i <= 8; i++) ret.push(row[i]);
-
-        return Java.to(ret, "java.lang.String[]");
-    },
-    [
-        "game_id",
-        "x",
-        "y",
-        "year",
-        "month",
-        "day",
-        "home_team",
-        "away_team",
-        "home_score",
-        "away_score",
-        "timeline"
-    ],
-    true,
-    {
-        x: function(oldRow, width, height) {
-            let newRow = oldRow;
-            let x = newRow["x"];
-            let reverseDate = d3
-                .scaleLinear()
-                .domain([82, width - 82])
-                .range([new Date(2017, 9, 17), new Date(2018, 3, 11)])(x);
-            let month = reverseDate.getUTCMonth() + 1;
-            let day = reverseDate.getUTCDate();
-            let year = reverseDate.getUTCFullYear();
-            newRow["month"] = month;
-            newRow["day"] = day;
-            newRow["year"] = year;
-            return newRow;
-        },
-        y: identityFunction,
-        year: identityFunction,
-        month: identityFunction,
-        day: identityFunction,
-        home_score: identityFunction,
-        away_score: identityFunction
-    }
-);
-
 var teamTimelineTransform = new Transform(
     "select game_id, year, month, day, home_team, away_team, home_score, away_score, 1 from games;",
     "nba",
@@ -140,6 +69,32 @@ var teamTimelineTransform = new Transform(
         "timeline"
     ],
     true
+    // uncomment below to enable updates on the timeline canvas
+    /*
+    {
+        x: function(oldRow, width, height) {
+            let newRow = oldRow;
+            let x = newRow["x"];
+            let reverseDate = d3
+                .scaleLinear()
+                .domain([82, width - 82])
+                .range([new Date(2017, 9, 17), new Date(2018, 3, 11)])(x);
+            let month = reverseDate.getUTCMonth() + 1;
+            let day = reverseDate.getUTCDate();
+            let year = reverseDate.getUTCFullYear();
+            newRow["month"] = month;
+            newRow["day"] = day;
+            newRow["year"] = year;
+            return newRow;
+        },
+        y: identityFunction,
+        year: identityFunction,
+        month: identityFunction,
+        day: identityFunction,
+        home_score: identityFunction,
+        away_score: identityFunction
+    }
+    */
 );
 
 var teamTimelineStaticTransform = new Transform(
@@ -221,7 +176,6 @@ var boxscoreTransform = new Transform(
 module.exports = {
     teamLogoTransform,
     teamTimelineTransform,
-    teamTimelineTransformUpdates,
     teamTimelineStaticTransform,
     playByPlayTransform,
     playByPlayStaticTransform,
