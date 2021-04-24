@@ -24,6 +24,59 @@ import project.*;
 /** Created by peter on 08/24/20 */
 public class UpdateRequestHandler implements HttpHandler {
 
+    private class UpdateRequest {
+
+        /**
+         * UpdateRequest is an object that holds the data of a POST request body to /update. See
+         * UpdateRequestHandler for usage
+         */
+        public UpdateRequest() {}
+
+        private String canvasId;
+        private String layerId;
+        private ArrayList<String> keyColumns;
+        private HashMap<String, String> objectAttributes;
+        private String baseTable;
+
+        public String getCanvasId() {
+            return canvasId;
+        }
+
+        public String getLayerId() {
+            return layerId;
+        }
+
+        public ArrayList<String> getKeyColumns() {
+            return keyColumns;
+        }
+
+        public HashMap<String, String> getObjectAttributes() {
+            return objectAttributes;
+        }
+
+        public String getBaseTable() {
+            return baseTable;
+        }
+
+        @Override
+        public String toString() {
+            return "UpdateRequest {"
+                    + "canvasId='"
+                    + canvasId
+                    + '\''
+                    + ", layerId="
+                    + layerId
+                    + ", keyColumns="
+                    + keyColumns
+                    + ", objectAttributes="
+                    + objectAttributes
+                    + ", baseTable='"
+                    + baseTable
+                    + '\''
+                    + '}';
+        }
+    }
+
     /**
      * UpdateRequestHandler serves requests to /update Given a canvas, layer, and information about
      * the transform, the handler will udpate the data for the relevant layer/canvas and propagate
