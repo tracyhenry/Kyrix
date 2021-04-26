@@ -538,8 +538,8 @@ function registerDragNDropUpdateListener(viewId, p, layerId) {
     let layerObj = gvd.curCanvas.layers[layerId];
     var allowsXUpdate = false;
     var allowsYUpdate = false;
-    if ("x" in layerObj.transform.reverseFunctions) allowsXUpdate = true;
-    if ("y" in layerObj.transform.reverseFunctions) allowsYUpdate = true;
+    if ("cx" in layerObj.transform.reverseFunctions) allowsXUpdate = true;
+    if ("cy" in layerObj.transform.reverseFunctions) allowsYUpdate = true;
     if (!allowsXUpdate && !allowsYUpdate) return;
 
     // attach drag handler to dynamic objects in layer
@@ -582,33 +582,28 @@ function registerDragNDropUpdateListener(viewId, p, layerId) {
                     let queryFields = queryText.split(",");
 
                     let data = Object.assign(d, {});
-                    data.x = parseFloat(data.x) + dx;
-                    data.cx = data.x;
-                    data.y = parseFloat(data.y) + dy;
-                    data.cy = data.y;
+                    data.cx = parseFloat(data.cx) + dx;
+                    data.cy = parseFloat(data.cy) + dy;
                     var objectKV = {};
                     for (let key in data) {
                         if (queryFields.includes(key)) {
                             objectKV[key] = data[key];
                         }
                     }
-                    objectKV["x"] = data.x;
-                    objectKV["y"] = data.y;
+                    objectKV["cx"] = data.cx;
+                    objectKV["cy"] = data.cy;
 
                     let width = gvd.curCanvas.w;
                     let height = gvd.curCanvas.h;
                     if (allowsXUpdate)
                         objectKV = layerObj.transform.reverseFunctions[
-                            "x"
+                            "cx"
                         ].parseFunction()(objectKV, width, height);
 
                     if (allowsYUpdate)
                         objectKV = layerObj.transform.reverseFunctions[
-                            "y"
+                            "cy"
                         ].parseFunction()(objectKV, width, height);
-
-                    if (allowsXUpdate) objectKV["cx"] = objectKV["x"];
-                    if (allowsYUpdate) objectKV["cy"] = objectKV["y"];
 
                     doDBUpdate(viewId, canvasId, layerId, tableName, objectKV);
                     var curViewport = d3
