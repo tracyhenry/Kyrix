@@ -21,6 +21,7 @@ function getFuncParamNames(func) {
  * @param transformFunc - a Javascript function receiving the SQL query result as input and doing some data transforms.
  * @param columnNames - an array containing the names of the columns after data transformation
  * @param {boolean} separable - whether the calculation of transformFunc is per-tuple based. If yes, the input to transformFunc is a single tuple. Otherwise their input is the whole query result. The separability of a layer depends on the separability of the data transform it uses. This is not functioning, to be removed.
+ * @param {object} updateFuncs - (only used if layer is updatable): an object mapping updatable attributes in the layer to their reverse function.
  * @param filterableColumnNames the columns that can be applied filters on. May be different from columnNames.
  * @constructor
  */
@@ -30,6 +31,7 @@ function Transform(
     transformFunc,
     columnNames,
     separable,
+    updateFuncs = undefined,
     filterableColumnNames
 ) {
     if (typeof query == "object") {
@@ -108,12 +110,17 @@ function Transform(
     this.separable = separable;
     this.filterableColumnNames =
         filterableColumnNames == null ? [] : filterableColumnNames;
+    this.reverseFunctions = updateFuncs;
 }
 
 defaultEmptyTransform = new Transform("", "", "", [], true);
+identityFunction = function(oldRow, width, height) {
+    return oldRow;
+};
 
 // exports
 module.exports = {
     Transform,
-    defaultEmptyTransform
+    defaultEmptyTransform,
+    identityFunction
 };
