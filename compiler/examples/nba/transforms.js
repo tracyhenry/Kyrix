@@ -1,4 +1,5 @@
 const Transform = require("../../src/Transform").Transform;
+const identityFunction = require("../../src/Transform").identityFunction;
 
 var teamLogoTransform = new Transform(
     "select * from teams;",
@@ -67,7 +68,36 @@ var teamTimelineTransform = new Transform(
         "away_score",
         "timeline"
     ],
-    true
+    true,
+    // uncomment below to enable updates on the timeline canvas
+
+    {
+        cx: function(oldRow, width, height) {
+            let newRow = oldRow;
+            let x = newRow["cx"];
+            let reverseDate = d3
+                .scaleLinear()
+                .domain([82, width - 82])
+                .range([new Date(2017, 9, 17), new Date(2018, 3, 11)])(x);
+            let y = newRow["cy"];
+            if (Math.abs(y - 510) > Math.abs(y - 740)) y = 740;
+            else y = 510;
+            newRow["cy"] = y;
+            let month = reverseDate.getUTCMonth() + 1;
+            let day = reverseDate.getUTCDate();
+            let year = reverseDate.getUTCFullYear();
+            newRow["month"] = month;
+            newRow["day"] = day;
+            newRow["year"] = year;
+            return newRow;
+        },
+        cy: identityFunction,
+        year: identityFunction,
+        month: identityFunction,
+        day: identityFunction,
+        home_score: identityFunction,
+        away_score: identityFunction
+    }
 );
 
 var teamTimelineStaticTransform = new Transform(

@@ -330,6 +330,303 @@ function startJump(viewId, d, jump, optionalArgs) {
     else if (jump.type == param.highlight) highlight(predArray, jump);
 }
 
+// send updates to DB
+function doDBUpdate(viewId, canvasId, layerId, tableName, newObjAttrs) {
+    // find field in newObjAttrs that is the primary key identifier (like "id")
+    let idColumns = [];
+    const attributes = Object.keys(newObjAttrs);
+    for (let idx = 0; idx < attributes.length; idx++) {
+        const val = attributes[idx];
+        if (val.includes("id")) {
+            idColumns.push(val);
+        }
+    }
+
+    const postData = {
+        canvasId: canvasId,
+        layerId: layerId,
+        keyColumns: idColumns,
+        objectAttributes: newObjAttrs,
+        baseTable: tableName
+    };
+
+    $.ajax({
+        type: "POST",
+        url: globalVar.serverAddr + "/update",
+        data: JSON.stringify(postData),
+        async: false
+    });
+}
+
+function createPopoverDivs(viewId) {
+    var viewClass = ".view_" + viewId;
+    // create a jumpoption popover using bootstrap
+    d3.select("body")
+        .append("div")
+        .classed("view_" + viewId + " jumppopover popover fade right in", true)
+        .attr("role", "tooltip")
+        .append("div")
+        .classed("view_" + viewId + " popoverarrow arrow", true);
+    d3.select(viewClass + ".jumppopover")
+        .append("h2")
+        .classed("view_" + viewId + " popover-title", true)
+        .html("Jump Options")
+        .append("a")
+        .classed("view_" + viewId + " popoverclose close", true)
+        .attr("href", "#")
+        .html("&times;")
+        .on("click", function() {
+            removePopovers(viewId);
+        });
+    d3.select(viewClass + ".jumppopover")
+        .append("div")
+        .classed(
+            "view_" + viewId + " popovercontent popover-content list-group",
+            true
+        );
+}
+
+function addPopoverUpdateOptions(viewId, layerId, p) {
+    var gvd = globalVar.views[viewId];
+    d3.event.preventDefault();
+    d3.event.stopPropagation();
+
+    // gvd - data for current view, current canvas, transform, etc.
+    let canvasId = gvd.curCanvasId;
+    const viewClass = ".view_" + viewId;
+    var queryText = gvd.curCanvas.layers[layerId].transform.query;
+    queryText = queryText.toLowerCase();
+
+    // use regex to extract db column names from user-defined transform
+    let tableName;
+    queryText = queryText.split("select")[1];
+    [queryText, tableName] = queryText.split("from");
+    tableName = tableName.replace(/[\s;]+/g, "").trim();
+    queryText = queryText.replace(/\s+/g, "").trim();
+    let queryFields = queryText.split(",");
+
+    // find only directly mapped columns from object attributes
+    let directMappedColumns = {};
+    const objectAttributes = Object.keys(p);
+    for (let idx in queryFields) {
+        const field = queryFields[idx];
+        if (objectAttributes.includes(field)) {
+            directMappedColumns[field] = p[field];
+        }
+    }
+    const directMappedColNames = Object.keys(directMappedColumns);
+
+    // remove all popovers first
+    removePopovers(viewId);
+    createPopoverDivs(viewId);
+
+    // add attribute input boxes
+    let updateAttributes = [];
+    let revFuncDict = gvd.curCanvas.layers[layerId].transform.reverseFunctions;
+    for (let field of queryFields)
+        if (field in revFuncDict) updateAttributes.push(field);
+    let k;
+    let updateBtnIds = [];
+    for (k = 0; k < updateAttributes.length; k++) {
+        let attrName = "<b>" + updateAttributes[k] + "</b>";
+        let attrValue = p[updateAttributes[k]];
+        let updateBtnName = "update-button-" + k;
+        updateBtnIds.push(updateBtnName);
+
+        let updateAttrs = d3
+            .select(viewClass + ".popovercontent")
+            .append("div");
+
+        updateAttrs
+            .classed("input-group", true)
+            .attr("id", "attr-input-group-" + k);
+
+        updateAttrs
+            .append("div")
+            .classed("input-group-prepend", true)
+            .append("span")
+            .classed("input-group-text", true)
+            .attr("id", "inputGroup-sizing-default")
+            .html(attrName);
+
+        updateAttrs
+            .append("input")
+            .classed("form-control attr-inputs", true)
+            .attr("type", "text")
+            .attr("id", "attr-input-" + k)
+            .attr("value", attrValue);
+
+        updateAttrs
+            .append("span")
+            .classed("input-group-btn", true)
+            .append("button")
+            .classed("btn btn-default", true)
+            .attr("id", updateBtnName)
+            .attr("type", "button")
+            .attr("updateAttr", updateAttributes[k])
+            .style("margin-top", "20px")
+            .html("Save");
+
+        updateAttrs.selectAll(".attr-inputs").on("click", function(d) {
+            d3.event.stopPropagation();
+        });
+    }
+
+    // add listener to save changes button, sends updates to backend
+    for (let i = 0; i < updateBtnIds.length; i++) {
+        let btnObj = d3.select(`#${updateBtnIds[i]}`);
+        let updateAttr = btnObj.attr("updateAttr");
+        let inputId = "#attr-input-" + i;
+        btnObj.on("click", function(d) {
+            let attrValue = d3.select(inputId).property("value");
+            const viewClass = ".view_" + viewId;
+            let newAttrValues = [];
+            let objectKV = {};
+            for (let i = 0; i < directMappedColNames.length; i++) {
+                let colName = directMappedColNames[i];
+                newAttrValues.push(p[colName]);
+            }
+            for (let i = 0; i < directMappedColNames.length; i++) {
+                let colName = directMappedColNames[i];
+                objectKV[colName] = newAttrValues[i];
+            }
+            objectKV[updateAttr] = attrValue;
+
+            // reverse function code
+            const reverseFunc = gvd.curCanvas.layers[
+                layerId
+            ].transform.reverseFunctions[updateAttr].parseFunction();
+            let width = gvd.curCanvas.w;
+            let height = gvd.curCanvas.h;
+            objectKV = reverseFunc(objectKV, width, height);
+
+            doDBUpdate(viewId, canvasId, layerId, tableName, objectKV);
+
+            // re-load dynamic data from db
+            var curViewport = d3
+                .select(viewClass + ".mainsvg:not(.static)")
+                .attr("viewBox")
+                .split(" ");
+            var k = d3.zoomTransform(d3.select(viewClass + ".maing").node()).k;
+            load(
+                gvd.predicates,
+                curViewport[0],
+                curViewport[1],
+                k,
+                viewId,
+                canvasId,
+                {type: param.load}
+            );
+            removePopovers(viewId);
+        });
+    }
+
+    // finally position updates popover according to event x/y and its width/height
+    // position jump popover according to event x/y and its width/height
+    var popoverHeight = d3
+        .select(viewClass + ".jumppopover")
+        .node()
+        .getBoundingClientRect().height;
+    d3.select(viewClass + ".jumppopover")
+        .style("left", d3.event.pageX + "px")
+        .style("top", d3.event.pageY - popoverHeight / 2 + "px");
+}
+
+function registerDragNDropUpdateListener(viewId, p, layerId) {
+    var gvd = globalVar.views[viewId];
+    var viewClass = ".view_" + viewId;
+    let layerObj = gvd.curCanvas.layers[layerId];
+    var allowsXUpdate = false;
+    var allowsYUpdate = false;
+    if ("cx" in layerObj.transform.reverseFunctions) allowsXUpdate = true;
+    if ("cy" in layerObj.transform.reverseFunctions) allowsYUpdate = true;
+    if (!allowsXUpdate && !allowsYUpdate) return;
+
+    // attach drag handler to dynamic objects in layer
+    let currentObject = d3
+        .select(viewClass + ".viewsvg")
+        .selectAll("*")
+        .filter(function(d) {
+            return d == p;
+        });
+    let dx = 0;
+    let dy = 0;
+    currentObject.call(
+        d3
+            .drag()
+            .on("start", function(d) {
+                dx = 0;
+                dy = 0;
+            })
+            .on("drag", function(d) {
+                dx += d3.event.dx;
+                dy += d3.event.dy;
+                currentObject.attr(
+                    "transform",
+                    "translate(" + dx + "," + dy + ")"
+                );
+            })
+            .on("end", function(d) {
+                if (Math.abs(dx) > 50 || Math.abs(dy) > 50) {
+                    let canvasId = gvd.curCanvasId;
+                    let queryText =
+                        gvd.curCanvas.layers[layerId].transform.query;
+                    queryText = queryText.toLowerCase();
+                    // use regex to extract db column names from user-defined transform
+                    queryText = queryText.split("select")[1];
+
+                    let tableName;
+                    [queryText, tableName] = queryText.split("from");
+                    tableName = tableName.replace(/[\s;]+/g, "").trim();
+                    queryText = queryText.replace(/\s+/g, "").trim();
+                    let queryFields = queryText.split(",");
+
+                    let data = Object.assign(d, {});
+                    data.cx = parseFloat(data.cx) + dx;
+                    data.cy = parseFloat(data.cy) + dy;
+                    var objectKV = {};
+                    for (let key in data) {
+                        if (queryFields.includes(key)) {
+                            objectKV[key] = data[key];
+                        }
+                    }
+                    objectKV["cx"] = data.cx;
+                    objectKV["cy"] = data.cy;
+
+                    let width = gvd.curCanvas.w;
+                    let height = gvd.curCanvas.h;
+                    if (allowsXUpdate)
+                        objectKV = layerObj.transform.reverseFunctions[
+                            "cx"
+                        ].parseFunction()(objectKV, width, height);
+
+                    if (allowsYUpdate)
+                        objectKV = layerObj.transform.reverseFunctions[
+                            "cy"
+                        ].parseFunction()(objectKV, width, height);
+
+                    doDBUpdate(viewId, canvasId, layerId, tableName, objectKV);
+                    var curViewport = d3
+                        .select(viewClass + ".mainsvg:not(.static)")
+                        .attr("viewBox")
+                        .split(" ");
+                    var k = d3.zoomTransform(
+                        d3.select(viewClass + ".maing").node()
+                    ).k;
+                    load(
+                        gvd.predicates,
+                        curViewport[0],
+                        curViewport[1],
+                        k,
+                        viewId,
+                        canvasId,
+                        {type: param.load}
+                    );
+                } // end if x/y drag diff big enough
+            }) // end drag end event
+    );
+}
+
 // register jump info
 function registerJumps(viewId, svg, layerId) {
     var gvd = globalVar.views[viewId];
@@ -339,6 +636,7 @@ function registerJumps(viewId, svg, layerId) {
     var shapes = svg.select("g:last-of-type").selectAll("*");
     var optionalArgs = getOptionalArgs(viewId);
     optionalArgs["layerId"] = layerId;
+    var allowUpdates = gvd.curCanvas.layers[layerId].allowUpdates;
 
     shapes.each(function(p) {
         // check if this shape has jumps
@@ -359,7 +657,10 @@ function registerJumps(viewId, svg, layerId) {
                 hasJump = true;
                 break;
             }
-        if (!hasJump) return;
+        if (!hasJump && !allowUpdates) return;
+
+        // register drag-and-drop listeners
+        if (allowUpdates) registerDragNDropUpdateListener(viewId, p, layerId);
 
         // make cursor a hand when hovering over this shape
         d3.select(this).style("cursor", "zoom-in");
@@ -367,40 +668,14 @@ function registerJumps(viewId, svg, layerId) {
         // register onclick listener
         d3.select(this).on("click.popover", function(d) {
             // stop the click event from propagating up
+            d3.event.preventDefault();
             d3.event.stopPropagation();
 
             // remove all popovers first
             removePopovers(viewId);
 
             // create a jumpoption popover using bootstrap
-            d3.select("body")
-                .append("div")
-                .classed(
-                    "view_" + viewId + " jumppopover popover fade right in",
-                    true
-                )
-                .attr("role", "tooltip")
-                .append("div")
-                .classed("view_" + viewId + " popoverarrow arrow", true);
-            d3.select(viewClass + ".jumppopover")
-                .append("h2")
-                .classed("view_" + viewId + " popover-title", true)
-                .html("Jump Options")
-                .append("a")
-                .classed("view_" + viewId + " popoverclose close", true)
-                .attr("href", "#")
-                .html("&times;")
-                .on("click", function() {
-                    removePopovers(viewId);
-                });
-            d3.select(viewClass + ".jumppopover")
-                .append("div")
-                .classed(
-                    "view_" +
-                        viewId +
-                        " popovercontent popover-content list-group",
-                    true
-                );
+            createPopoverDivs(viewId);
 
             // add jump options
             for (var k = 0; k < jumps.length; k++) {
@@ -448,6 +723,24 @@ function registerJumps(viewId, svg, layerId) {
                     d3.event.preventDefault();
                     var jump = jumps[d3.select(this).attr("data-jump-id")];
                     startJump(viewId, d, jump, optionalArgs);
+                });
+            }
+
+            // create update option in popover
+            if (allowUpdates) {
+                let updateText =
+                    "<b>UPDATE ATTRIBUTES in " + gvd.curCanvasId + "</b>";
+                let updateJumpOption = d3
+                    .select(viewClass + ".popovercontent")
+                    .append("a")
+                    .classed("list-group-item", true)
+                    .attr("href", "#")
+                    .datum(d)
+                    .html(updateText);
+
+                // if update option selected, set up new popover with options for changing all
+                updateJumpOption.on("click", function(d) {
+                    addPopoverUpdateOptions(viewId, layerId, p);
                 });
             }
 
