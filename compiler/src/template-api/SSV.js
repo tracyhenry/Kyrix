@@ -284,7 +284,7 @@ function SSV(args_) {
         (this.loX = 0), (this.hiX = this.topLevelWidth);
         (this.loY = 0), (this.hiY = this.topLevelHeight);
     }
-    this.mapBackground = args.config.map;
+    this.mapBackground = "geo" in args.layout ? true : args.config.map;
     this.zoomFactor = args.config.zoomFactor;
     this.overlap =
         "overlap" in args.layout
@@ -1012,7 +1012,8 @@ function getLayerRenderer() {
             dotSizeScale = d3
                 .scaleLinear()
                 .domain(params.dotSizeDomain)
-                .range([0, params.dotMaxSize]);
+                .range([params.dotMinSize, params.dotMaxSize])
+                .clamp(true);
 
         // color scale
         var dotColorScale = null;
@@ -1036,6 +1037,8 @@ function getLayerRenderer() {
             .attr("stroke", d =>
                 "dotColorColumn" in params
                     ? dotColorScale(d[params.dotColorColumn])
+                    : "dotColor" in params
+                    ? params.dotColor
                     : "#38c2e0"
             )
             .style("stroke-width", "2px")
@@ -1454,7 +1457,7 @@ function getLegendRenderer() {
             .append("g")
             .classed("ssv_dot_legend", true)
             .style("opacity", 0.5)
-            .attr("transform", "translate(50, 0)");
+            .attr("transform", "translate(50, 50)");
 
         // horizontal offset
         var offset = 0;
@@ -1463,13 +1466,14 @@ function getLegendRenderer() {
             var dotSizeScale = d3
                 .scaleLinear()
                 .domain(params.dotSizeDomain)
-                .range([0, params.dotMaxSize]);
+                .range([params.dotMinSize, params.dotMaxSize]);
             var legendSize = d3
                 .legendSize()
                 .scale(dotSizeScale)
                 .shape("circle")
                 .shapePadding(25)
                 .labelOffset(20)
+                .labelFormat(",.1s")
                 .title(
                     "dotSizeLegendTitle" in params
                         ? params.dotSizeLegendTitle
@@ -1544,9 +1548,9 @@ function getMapRenderer() {
         var vy = args["viewportY"];
         var vw = args["viewportW"];
         var vh = args["viewportH"];
-        var topLevelWidth = params.hiX - params.loX;
-        var topLevelHeight = params.hiY - params.loY;
         var level = +args.ssvId.substring(args.ssvId.indexOf("_") + 1);
+        var curWidth = (params.hiX - params.loX) * (1 << level);
+        var curHeight = (params.hiY - params.loY) * (1 << level);
         var initialLon = params.geoInitialCenterLon;
         var initialLat = params.geoInitialCenterLat;
         var initialLevel = params.geoInitialLevel;
@@ -1554,55 +1558,110 @@ function getMapRenderer() {
         var cx = (projection([initialLon, initialLat])[0] + 0.5) * scale;
         var cy = (projection([initialLon, initialLat])[1] + 0.5) * scale;
 
+        var ratioX = 1 - params.bboxW / (params.hiX - params.loX);
+        var ratioY = 1 - params.bboxH / (params.hiY - params.loY);
+        var vpX = cx - curWidth / 2;
+        var vpY = cy - curHeight / 2;
+        var offsetX = (params.bboxW * (1 << level)) / 2;
+        var offsetY = (params.bboxH * (1 << level)) / 2;
+
         // note: vw/3 because dynamic boxes fetch a box slightly larger than viewport
-        var minTileX = Math.floor(
-            (cx - (topLevelWidth * (1 << level)) / 2 + vx - vw / 3) / 256
+        // because we reserve params.bboxW/params.bboxH pixels on the top level
+        // to show objects in its entirety, we need to convert between kyrix canvas
+        // coordinates and geo coordinates
+        // Immediately down blow are translating from kyrix canvas coordinates
+        // to geo coordinates. The equations are based on the easier, inverse transformation,
+        // i.e., from geo to kyrix canvas, which is illustrated down below
+        // in the positioning of the tile images
+        var minTileX = Math.max(
+            0,
+            Math.floor((vpX + (vx - vw / 3 - offsetX) / ratioX) / 256)
         );
-        var maxTileX = Math.floor(
-            (cx - (topLevelWidth * (1 << level)) / 2 + vx + vw + vw / 3) / 256
+        var maxTileX = Math.min(
+            (1 << (initialLevel + level)) - 1,
+            Math.floor((vpX + (vx + vw + vw / 3 - offsetX) / ratioX) / 256)
         );
-        var minTileY = Math.floor(
-            (cy - (topLevelHeight * (1 << level)) / 2 + vy - vh / 3) / 256
+        var minTileY = Math.max(
+            0,
+            Math.floor((vpY + (vy - vh / 3 - offsetY) / ratioY) / 256)
         );
-        var maxTileY = Math.floor(
-            (cy - (topLevelHeight * (1 << level)) / 2 + vy + vh + vh / 3) / 256
+        var maxTileY = Math.min(
+            (1 << (initialLevel + level)) - 1,
+            Math.floor((vpY + (vy + vh + vh / 3 - offsetY) / ratioY) / 256)
         );
         var tiles = [];
         for (var i = minTileX; i <= maxTileX; i++)
-            for (var j = minTileY; j <= maxTileY; j++)
-                tiles.push([i, j, initialLevel + level]);
+            for (var j = minTileY; j <= maxTileY; j++) {
+                var minx = (i * 256 - vpX) * ratioX + offsetX;
+                var miny = (j * 256 - vpY) * ratioY + offsetY;
+                tiles.push({
+                    x: i,
+                    y: j,
+                    z: initialLevel + level,
+                    minx: minx,
+                    miny: miny,
+                    maxx: minx + 256 * ratioX,
+                    maxy: miny + 256 * ratioY
+                });
+            }
 
         var raster = svg.selectAll("g");
         if (raster.size() == 0) raster = svg.append("g");
         var image = raster.selectAll("image").data(tiles, function(d) {
-            return d;
+            return JSON.stringify(d);
         });
         image.exit().remove();
 
-        var deltaX = image
+        const loadImageBase64 = url =>
+            new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.addEventListener("load", () => {
+                    var canvas = document.createElement("CANVAS"),
+                        ctx = canvas.getContext("2d"),
+                        dataURL;
+                    canvas.height = img.height;
+                    canvas.width = img.width;
+                    ctx.drawImage(img, 0, 0);
+                    dataURL = canvas.toDataURL();
+                    canvas = null;
+                    resolve(dataURL);
+                });
+                img.addEventListener("error", err => reject(err));
+                img.src = url;
+            });
+
+        const getUrl = d =>
+            "http://" +
+            "abc"[d.y % 3] +
+            ".tile.openstreetmap.org/" +
+            d.z +
+            "/" +
+            d.x +
+            "/" +
+            d.y +
+            ".png";
+
+        image
             .enter()
-            .append("image")
-            .attr("xlink:href", function(d) {
-                return (
-                    "http://" +
-                    "abc"[d[1] % 3] +
-                    ".tile.openstreetmap.org/" +
-                    d[2] +
-                    "/" +
-                    d[0] +
-                    "/" +
-                    d[1] +
-                    ".png"
-                );
-            })
-            .attr("x", function(d) {
-                return d[0] * 256 - (cx - (topLevelWidth * (1 << level)) / 2);
-            })
-            .attr("y", function(d) {
-                return d[1] * 256 - (cy - (topLevelHeight * (1 << level)) / 2);
-            })
-            .attr("width", 256)
-            .attr("height", 256);
+            .data()
+            .forEach(d => {
+                loadImageBase64(getUrl(d)).then(res => {
+                    raster
+                        .append("image")
+                        .datum(d)
+                        .attr("xlink:href", res)
+                        .attr("preserveAspectRatio", "none")
+                        .attr("x", function(d) {
+                            return d.minx;
+                        })
+                        .attr("y", function(d) {
+                            return d.miny;
+                        })
+                        .attr("width", 256 * ratioX)
+                        .attr("height", 256 * ratioY);
+                });
+            });
     }
     var renderFuncBody = getBodyStringOfFunction(mapRendererBodyTemplate);
     return new Function("svg", "data", "args", renderFuncBody);

@@ -340,11 +340,20 @@
                                 "dotSizeLegendTitle": {
                                     "$ref": "#/definitions/nonEmptyString"
                                 },
+                                "dotMinSize": {
+                                    "type": "integer",
+                                    "minimum": 2,
+                                    "maximum": 30,
+                                    "default": 2
+                                },
                                 "dotMaxSize": {
                                     "type": "integer",
                                     "minimum": 5,
                                     "maximum": 50,
                                     "default": 15
+                                },
+                                "dotColor": {
+                                    "$ref": "#/definitions/nonEmptyString"
                                 },
                                 "dotColorColumn": {
                                     "$ref": "#/definitions/nonEmptyString"
@@ -416,6 +425,24 @@
                                     },
                                     "then": {
                                         "required": ["dotColorDomain"]
+                                    }
+                                },
+                                {
+                                    "if": {
+                                        "required": ["dotColor"]
+                                    },
+                                    "then": {
+                                        "properties": {
+                                            "dotColorColumn": {
+                                                "type": "null"
+                                            },
+                                            "dotColorDomain": {
+                                                "type": "null"
+                                            },
+                                            "dotColorLegendTitle": {
+                                                "type": "null"
+                                            }
+                                        }
                                     }
                                 }
                             ]

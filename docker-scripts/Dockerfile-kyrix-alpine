@@ -13,7 +13,7 @@ FROM node:8-alpine
 
 # coreutils provides stdbuf; --update nodejs required to get npm
 RUN apk add --no-cache --virtual .build-dependencies -q --update \
-    nodejs nodejs-npm postgresql-client maven curl wget git openjdk8 coreutils python bash nss perl
+    nodejs nodejs-npm postgresql-client maven curl wget git openjdk8 coreutils python bash nss perl nano
 
 # optional: uncomment if instead you want to get from git...
 #RUN git clone https://github.com/tracyhenry/kyrix > git-clone.out

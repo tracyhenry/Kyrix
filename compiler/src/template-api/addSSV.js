@@ -78,7 +78,13 @@ function addSSV(ssv, args) {
         }
         curPyramid.push(curCanvas);
 
-        // create one layer
+        // add static legend layer
+        var staticLayer = new Layer(null, true);
+        curCanvas.addLayer(staticLayer);
+        staticLayer.addRenderingFunc(ssv.getLegendRenderer());
+        staticLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
+
+        // add dynamic layer
         var curLayer = new Layer(transform, false);
         curCanvas.addLayer(curLayer);
 
@@ -109,7 +115,7 @@ function addSSV(ssv, args) {
         // map layer
         if (ssv.mapBackground) {
             var mapLayer = new Layer(
-                require("./Transform").defaultEmptyTransform,
+                require("../Transform").defaultEmptyTransform,
                 false
             );
             curCanvas.addLayer(mapLayer);
@@ -120,15 +126,9 @@ function addSSV(ssv, args) {
                 width: "con:0",
                 height: "con:0"
             });
-            mapLayer.setFetchingScheme("dbox", false);
+            mapLayer.setFetchingScheme("dbox", true);
             mapLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
         }
-
-        // add static legend layer
-        var staticLayer = new Layer(null, true);
-        curCanvas.addLayer(staticLayer);
-        staticLayer.addRenderingFunc(ssv.getLegendRenderer());
-        staticLayer.setSSVId(this.ssvs.length - 1 + "_" + i);
 
         // axes
         if (ssv.axis) {

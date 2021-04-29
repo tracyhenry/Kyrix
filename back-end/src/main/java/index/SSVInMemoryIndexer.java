@@ -290,7 +290,8 @@ public class SSVInMemoryIndexer extends PsqlNativeBoxIndexer {
             if (i == 0) break;
 
             // only sort for custom
-            if (ssv.getClusterMode().equals("custom")) Arrays.sort(curClusters, new SortByZ());
+            if (ssv.getClusterMode().equals("custom") || ssv.getClusterMode().equals("dot"))
+                Arrays.sort(curClusters, new SortByZ());
 
             // an Rtree for merged clusters
             rtree1 = RTree.star().create();

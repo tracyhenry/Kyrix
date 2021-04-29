@@ -395,13 +395,13 @@ function getRenderer(type) {
             .attr("height", height - marginTop - marginBottom)
             .attr("preserveAspectRatio", "none")
             .attr("xlink:href", ramp(color.interpolator()).toDataURL());
-        var tickValues, tickFormat;
+        var tickValues,
+            tickFormat = d3.format(",~s");
         if (!x.ticks) {
             const n = Math.round(ticks + 1);
             tickValues = d3
                 .range(n)
                 .map(i => d3.quantile(color.domain(), i / (n - 1)));
-            tickFormat = d3.format(",f");
         }
 
         // legend ticks
@@ -480,7 +480,7 @@ function getRenderer(type) {
         }
         var maxOrder = d3.max(dp);
         var enterTime = 300;
-        var transitionEndTime = 2000;
+        var transitionEndTime = Math.min(rectData.length * 60, 2000);
         var delayTime = (transitionEndTime - enterTime) / maxOrder;
 
         // animate rects
@@ -654,13 +654,13 @@ function getRenderer(type) {
             .attr("height", height - marginTop - marginBottom)
             .attr("preserveAspectRatio", "none")
             .attr("xlink:href", ramp(color.interpolator()).toDataURL());
-        var tickValues, tickFormat;
+        var tickValues,
+            tickFormat = d3.format(",~s");
         if (!x.ticks) {
             const n = Math.round(ticks + 1);
             tickValues = d3
                 .range(n)
                 .map(i => d3.quantile(color.domain(), i / (n - 1)));
-            tickFormat = d3.format(",f");
         }
 
         // legend ticks
