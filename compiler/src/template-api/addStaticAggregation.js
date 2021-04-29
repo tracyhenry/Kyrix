@@ -109,6 +109,7 @@ function addStaticAggregation(staticAggregation, args) {
         "",
         dimensions.concat(["kyrixAggValue"]),
         true,
+        undefined,
         dimensions.concat(staticAggregation.query.sampleFields)
     );
 
