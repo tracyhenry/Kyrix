@@ -64,6 +64,7 @@ public class Transform implements Serializable {
                 // assuming there is no limit 1
                 query += " LIMIT 1;";
             }
+System.out.println(query);
             ResultSet rs = DbConnector.getQueryResultIterator(rawDBStmt, query);
             int colCount = rs.getMetaData().getColumnCount();
             for (int i = 1; i <= colCount; i++)

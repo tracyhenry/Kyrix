@@ -246,9 +246,14 @@ public class Server {
             throws IOException {
 
         // write response
-        httpExchange.sendResponseHeaders(responseCode, len);
+//        httpExchange.sendResponseHeaders(responseCode, len);
+        httpExchange.sendResponseHeaders(responseCode, 0);
         OutputStream os = httpExchange.getResponseBody();
-        os.write(response, 0, len);
+        try {
+            os.write(response, 0, len);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         os.close();
         httpExchange.close();
     }

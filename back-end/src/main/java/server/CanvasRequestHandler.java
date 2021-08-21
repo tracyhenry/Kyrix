@@ -47,7 +47,7 @@ public class CanvasRequestHandler implements HttpHandler {
 
             // get the current canvas
             Canvas c = null;
-            c = Main.getProject().getCanvas(canvasId).deepCopy();
+            c = Main.getProject().getCanvas(canvasId);
 
             // list of predicates
             ArrayList<String> predicates = new ArrayList<>();
@@ -60,7 +60,7 @@ public class CanvasRequestHandler implements HttpHandler {
                         httpExchange, HttpsURLConnection.HTTP_BAD_REQUEST, "Bad predicates.");
                 return;
             }
-
+/*
             // calculate w or h if they are not pre-determined
             if (c.getwSql().length() > 0) {
                 String predicate = queryMap.get("predicate" + c.getwLayerId());
@@ -74,7 +74,7 @@ public class CanvasRequestHandler implements HttpHandler {
                 String db = c.getDbByLayerId(c.gethLayerId());
                 c.setH(getWidthOrHeightBySql(sql, db));
             }
-
+*/
             // get static data
             ArrayList<ArrayList<ArrayList<String>>> staticData = null;
             staticData = getStaticData(c, predicates);
